@@ -1,0 +1,202 @@
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ApiFailure, type RecordValue } from "./api";
+import { useMutation, useSession } from "./state";
+import { Icon } from "./icons";
+import { ErrorNotice, Notice } from "./primitives";
+import { draftKey, readDraft, writeDraft } from "./drafts";
+export function Composer({
+  workId,
+  onSent,
+}: {
+  workId?: string;
+  onSent: () => void;
+}) {
+  const [body, setBody] = useState(""),
+    [visibility, setVisibility] = useState("public"),
+    [file, setFile] = useState<File | null>(null),
+    [attachmentName, setAttachmentName] = useState(""),
+    [uploadError, setUploadError] = useState<unknown>(null),
+    [uploading, setUploading] = useState(false);
+  const key = useRef<string>(crypto.randomUUID()),
+    fileInput = useRef<HTMLInputElement>(null),
+    mutation = useMutation(),
+    { session } = useSession();
+  const privateAllowed = session.principal.roles.some((r) =>
+    ["owner", "operator", "hr"].includes(r),
+  );
+  const [savedDraftKey, setSavedDraftKey] = useState<string | null>(null);
+  const [draftError, setDraftError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setSavedDraftKey(null);
+    setDraftError(false);
+    setBody("");
+    setVisibility("public");
+    setFile(null);
+    setAttachmentName("");
+    draftKey(session, workId).then(storageKey => {
+      if (!active) return;
+      try {
+        const draft = readDraft(sessionStorage, storageKey, privateAllowed);
+        setBody(draft.body);
+        setVisibility(draft.visibility);
+        setAttachmentName(draft.attachmentName ?? "");
+        key.current = draft.messageId ?? crypto.randomUUID();
+      } catch { setDraftError(true); }
+      setSavedDraftKey(storageKey);
+    }).catch(() => { if (active) setDraftError(true); });
+    return () => { active = false; };
+  }, [session.csrfToken, session.principal.userId, session.principal.workspaceId, privateAllowed, workId]);
+  function updateDraft(nextBody: string, nextVisibility: string, nextAttachmentName = attachmentName) {
+    setBody(nextBody);
+    setVisibility(nextVisibility);
+    setAttachmentName(nextAttachmentName);
+    if (savedDraftKey) {
+      try { writeDraft(sessionStorage, savedDraftKey, { body: nextBody, visibility: nextVisibility, messageId: key.current, attachmentName: nextAttachmentName }); }
+      catch { setDraftError(true); }
+    }
+  }
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (attachmentName && !file) return;
+    setUploadError(null);
+    const result = await mutation.mutate<RecordValue>(
+      workId ? `/work/${workId}/messages` : "/work",
+      workId
+        ? { body, visibility, sourceMessageId: key.current }
+        : {
+            title: body.trim().split("\n")[0].slice(0, 150),
+            body,
+            deduplicationKey: key.current,
+          },
+    );
+    if (!result) return;
+    const target = workId ?? String(result.id);
+    if (file) {
+      setUploading(true);
+      try {
+        const response = await fetch(`/api/v1/work/${target}/attachments`, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "X-Linen-CSRF": session.csrfToken,
+            "X-Filename": file.name,
+            "X-Visibility": visibility,
+            "Content-Type": file.type || "application/octet-stream",
+          },
+          body: file,
+        });
+        if (!response.ok) {
+          const data = (await response.json()) as {
+            error?: { message?: string };
+          };
+          throw new ApiFailure(
+            response.status,
+            "attachment_failed",
+            `Your message was saved, but the attachment was not. ${data.error?.message ?? "Select it and send again."}`,
+          );
+        }
+        setFile(null);
+      } catch (error) {
+        setUploadError(error);
+        return;
+      } finally {
+        setUploading(false);
+      }
+    }
+    updateDraft("", visibility, "");
+    key.current = crypto.randomUUID();
+    onSent();
+    if (!workId) location.hash = `/work/${target}`;
+  }
+  return (
+    <form
+      className={`composer ${visibility === "private" ? "composer-private" : ""}`}
+      onSubmit={submit}
+    >
+      <label className="composer-label" htmlFor="conversation-message">
+        {visibility === "private" && <Icon name="lock" />}
+        {visibility === "private"
+          ? "A private note for the service team"
+          : workId
+            ? "Keep the conversation going"
+            : "What would make work easier?"}
+      </label>
+      <textarea
+        id="conversation-message"
+        value={body}
+        onChange={(event) => updateDraft(event.target.value, visibility)}
+        placeholder={
+          workId
+            ? "Add a detail, change a date, or tell us what is still not working…"
+            : "Ask in your own words. You don’t need to find a category or an approver."
+        }
+        rows={3}
+        disabled={!savedDraftKey && !draftError}
+        required
+        maxLength={50000}
+      />
+      <div className="composer-tools">
+        <label className="file-picker">
+          <Icon name="attachment" />
+          <span>{file?.name || attachmentName || "Attach a file"}</span>
+          <input
+            ref={fileInput}
+            type="file"
+            disabled={!savedDraftKey && !draftError}
+            aria-label="Attach a file"
+            onChange={(event) => {
+              const selected = event.target.files?.[0] ?? null;
+              setFile(selected);
+              updateDraft(body, visibility, selected?.name ?? "");
+            }}
+          />
+        </label>
+        {(file || attachmentName) && (
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => {
+              if (fileInput.current) fileInput.current.value = "";
+              setFile(null);
+              updateDraft(body, visibility, "");
+            }}
+          >
+            Remove file
+          </button>
+        )}
+        {workId && privateAllowed && (
+          <label className="visibility-picker">
+            <Icon name="lock" />
+            <select
+              aria-label="Message visibility"
+              value={visibility}
+              onChange={(event) => updateDraft(body, event.target.value)}
+            >
+              <option value="public">Shared reply</option>
+              <option value="private">Private note</option>
+            </select>
+          </label>
+        )}
+        <button
+          className="send"
+          type="submit"
+          disabled={mutation.pending || uploading || !body.trim() || Boolean(attachmentName && !file)}
+          aria-label={mutation.pending ? "Sending message" : "Send message"}
+        >
+          <span>{mutation.pending || uploading ? "Sending…" : "Send"}</span>
+          <Icon name="arrow" />
+        </button>
+      </div>
+      {visibility === "private" && (
+        <small>
+          This note is hidden from employees without service-team access.
+        </small>
+      )}
+      <ErrorNotice error={mutation.error} />
+      <ErrorNotice error={uploadError} />
+      {attachmentName && !file && <Notice>Reselect the attachment before sending, or remove it.</Notice>}
+      {draftError && <Notice>Draft storage is unavailable. Keep this page open until you send your message.</Notice>}
+    </form>
+  );
+}

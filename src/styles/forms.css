@@ -1,0 +1,329 @@
+/* Linen's forms (SPEC §2.4): visible labels, --input fields with a 1 px rule, the composer,
+   disclosed action forms and choice lists. */
+label {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 500;
+}
+input,
+textarea,
+select {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-input);
+  background: var(--input);
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 24px;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #85878c;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: var(--ink);
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+textarea {
+  resize: vertical;
+}
+select {
+  appearance: none;
+  padding-right: 40px;
+  background: var(--input)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%230E1C33' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E")
+    right 14px center / 16px 16px no-repeat;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  width: 20px;
+  min-height: 0;
+  height: 20px;
+  padding: 0;
+  accent-color: var(--ink);
+}
+label small,
+form > small {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 400;
+}
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+fieldset {
+  min-width: 0;
+  margin: 0 0 18px;
+  padding: 16px 18px 4px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-input);
+}
+legend {
+  padding: 0 6px;
+  font-weight: 500;
+}
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+  padding: 14px 16px 16px;
+}
+.checkbox-group > label {
+  margin: 0;
+  font-weight: 400;
+}
+.checkbox-group > small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.inline-form {
+  margin: 16px 0;
+  padding: 24px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.inline-form > p {
+  margin: 0 0 18px;
+  color: var(--ink-2);
+}
+.inline-form h2,
+.inline-form h3 {
+  margin: 0 0 16px;
+}
+.inline-form .notice {
+  box-shadow: none;
+}
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 20px;
+}
+.field-grid label:has(textarea),
+.field-grid fieldset {
+  grid-column: 1 / -1;
+}
+
+/* A disclosed action: its summary reads as a quiet row; opened, the form follows inline. */
+.action-disclosure {
+  margin: 12px 0 0;
+  border-top: 1px solid var(--rule);
+}
+.action-disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 26px;
+  list-style: none;
+}
+.action-disclosure > .inline-form {
+  margin: 0 0 16px;
+  padding: 4px 0 8px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* The composer: a card with a serif question, a 96 px textarea and its two pills. */
+.composer {
+  display: grid;
+  gap: 16px;
+  margin: 32px 0;
+  padding: 24px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.composer-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 500;
+}
+.composer-label .icon {
+  width: 20px;
+  height: 20px;
+}
+.composer textarea {
+  min-height: 96px;
+}
+.composer > small {
+  margin-top: -6px;
+}
+.composer > .notice {
+  margin: 0;
+  box-shadow: none;
+}
+.composer-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.file-picker,
+.visibility-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 20px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 400;
+  cursor: pointer;
+  max-width: 100%;
+}
+.file-picker span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-picker input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-picker:focus-within,
+.visibility-picker:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.file-picker .icon,
+.visibility-picker .icon {
+  width: 18px;
+  height: 18px;
+}
+.visibility-picker select {
+  min-height: 0;
+  padding: 8px 26px 8px 0;
+  border: 0;
+  background-color: transparent;
+  background-position: right 0 center;
+  font-size: 16px;
+}
+.visibility-picker select:focus-visible {
+  outline: 0;
+}
+.composer-tools .send {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  min-height: 44px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--card);
+  font-size: 18px;
+}
+.composer-tools .send .icon {
+  width: 18px;
+  height: 18px;
+}
+.composer-private {
+  border-color: #d9cdbd;
+  background: #f7f2ea;
+}
+
+/* Choices: options for a decision and items in a discovery review. */
+.option-list {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+}
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-input);
+  background: var(--card);
+  font-weight: 400;
+  cursor: pointer;
+}
+.option:has(input:checked) {
+  border-color: var(--ink);
+}
+.option input {
+  margin-top: 3px;
+}
+.option strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 19px;
+  line-height: 26px;
+  font-weight: 500;
+}
+.option span {
+  color: var(--ink-2);
+  font-size: 16px;
+}
+.review-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 0;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+  font-weight: 400;
+}
+.review-item input {
+  flex: 0 0 20px;
+  margin-top: 3px;
+}
+.review-item span {
+  display: grid;
+  gap: 2px;
+}
+.review-item small {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+@media (max-width: 600px) {
+  .field-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .composer,
+  .inline-form {
+    padding: 18px;
+  }
+  .composer-label {
+    font-size: 20px;
+    line-height: 28px;
+  }
+}

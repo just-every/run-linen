@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.output/
+.tanstack/
+.dev.vars
+.wrangler/
+
+.rer/
+.seed/
+exports/
+.dev.vars.previous
+.cache/

@@ -1,0 +1,1 @@
+CREATE TABLE adoption_artifacts(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,run_id TEXT NOT NULL,ordinal INTEGER NOT NULL,kind TEXT NOT NULL,blob_key TEXT NOT NULL,size INTEGER NOT NULL,sha256 TEXT NOT NULL,metadata_json TEXT NOT NULL,created_at TEXT NOT NULL);

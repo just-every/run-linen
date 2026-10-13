@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["../../src/features/adoption/**/*.ts", "./worker.ts"],
+  "exclude": ["../../src/ui", "../../dist", "../../node_modules"]
+}

@@ -1,0 +1,8 @@
+import type { Context } from 'hono'
+import type { AppEnv } from './types'
+import { ApiError } from './http'
+// Domain callers first authorize record access and bind the opaque R2 key to it.
+// URLs remain session-bound: possession of the URL does not grant membership.
+async function signature(secret:string,value:string){if(!secret)throw new ApiError(503,'signing_unavailable','Attachment signing is unavailable');const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('')}
+export async function signAttachment(c:Context<AppEnv>,key:string){const p=c.get('principal');if(!key.startsWith(p.workspaceId+'/'))throw new ApiError(403,'attachment_scope','Invalid attachment scope');const expires=Date.now()+300000;const value=`${p.workspaceId}:${p.userId}:${expires}:${key}`;return {key,expires,signature:await signature(c.env.SESSION_SECRET,value)}}
+export async function verifyAttachment(c:Context<AppEnv>,key:string,expires:number,supplied:string){const p=c.get('principal');if(!key.startsWith(p.workspaceId+'/')||!Number.isFinite(expires)||expires<Date.now()||expires>Date.now()+300000)throw new ApiError(403,'attachment_expired','Attachment permission expired');const expected=await signature(c.env.SESSION_SECRET,`${p.workspaceId}:${p.userId}:${expires}:${key}`);let diff=expected.length^supplied.length;for(let i=0;i<expected.length;i++)diff|=expected.charCodeAt(i)^supplied.charCodeAt(i);if(diff)throw new ApiError(403,'attachment_denied','Attachment permission invalid')}

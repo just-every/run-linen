@@ -1,0 +1,1 @@
+CREATE TABLE execution_automation_principals(workspace_id TEXT NOT NULL,user_id TEXT PRIMARY KEY,name TEXT NOT NULL,idempotency_key TEXT NOT NULL,created_at TEXT NOT NULL,revoked_at TEXT,UNIQUE(workspace_id,idempotency_key));

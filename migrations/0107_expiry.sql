@@ -1,0 +1,1 @@
+ALTER TABLE work_obligations ADD COLUMN is_expiry INTEGER NOT NULL DEFAULT 0;

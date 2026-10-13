@@ -1,0 +1,1 @@
+CREATE TABLE work_restore_records(workspace_id TEXT NOT NULL,source_id TEXT NOT NULL,source_key TEXT NOT NULL,table_name TEXT NOT NULL,record_id TEXT NOT NULL,restored_at TEXT NOT NULL,PRIMARY KEY(workspace_id,source_id,source_key));

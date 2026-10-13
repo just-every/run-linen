@@ -1,0 +1,3 @@
+CREATE TABLE work_intake_events(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,work_id TEXT,connection_id TEXT,source_message_id TEXT NOT NULL,sender TEXT,state TEXT NOT NULL,error TEXT,created_at TEXT NOT NULL,UNIQUE(workspace_id,connection_id,source_message_id));
+CREATE TABLE work_sender_identities(workspace_id TEXT NOT NULL,connection_id TEXT NOT NULL,email TEXT NOT NULL,user_id TEXT NOT NULL,PRIMARY KEY(workspace_id,connection_id,email));
+CREATE TABLE work_article_versions(workspace_id TEXT NOT NULL,article_id TEXT NOT NULL,revision INTEGER NOT NULL,content_json TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(workspace_id,article_id,revision));

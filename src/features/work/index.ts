@@ -1,0 +1,40 @@
+import { setWorkIntakePort } from "../intelligence/intake-port";
+import { workIntakePort } from "./intelligence-port";
+import type { Hono } from "hono";
+import type { AppEnv } from "../../platform/types";
+import { registerConversationRoutes } from "./conversation-routes";
+import { registerLifecycleRoutes } from "./lifecycle-routes";
+import { registerKnowledgeRoutes } from "./knowledge-routes";
+export * from "./core";
+export * from "./lifecycle";
+export * from "./resources";
+export * from "./knowledge";
+export * from "./attachments";
+export * from "./requests";
+export * from "./calendar";
+export * from "./execution";
+export * from "./intake";
+export { restoreAdoptionRecord } from "./restore";
+export { erasePerson, processBlobErasure } from "./privacy";
+export function registerWorkRoutes(app: Hono<AppEnv>) {
+  setWorkIntakePort(workIntakePort);
+  registerConversationRoutes(app);
+  registerLifecycleRoutes(app);
+  registerKnowledgeRoutes(app);
+}
+
+export * from "./delegation";
+
+export { workIntakePort } from "./intelligence-port";
+
+export { recordFulfilmentExecution } from "./fulfilment-execution";
+export type { FulfilmentExecutionInput } from "./fulfilment-execution";
+
+export { getFulfilment, amendFulfilment } from "./fulfilment-amend";
+export type { FulfilmentSnapshot, FulfilmentAmendInput, FulfilmentAmendResult } from "./fulfilment-amend";
+
+export { approveFulfilment, assertWorkFulfilmentAuthority, recordWorkManagerGrantApproval } from "./fulfilment-authority";
+
+export { listFulfilmentDecisions } from "./fulfilment-decisions";
+export type { FulfilmentDecision } from "./fulfilment-decisions";
+export { getFulfilmentReadiness } from "./fulfilment-readiness";

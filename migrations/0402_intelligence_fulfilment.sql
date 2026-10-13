@@ -1,0 +1,1 @@
+CREATE TABLE intelligence_fulfilment_runs(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,work_id TEXT NOT NULL,requester_id TEXT NOT NULL,actor_id TEXT NOT NULL,plan_id TEXT NOT NULL UNIQUE,operations_json TEXT NOT NULL,state TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);

@@ -1,0 +1,32 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { apiFor, finishFirstRun } from './connected-helpers.mjs';
+import { connectedSetup } from './connected-setup.mjs';
+import { connectedFrontier } from './connected-frontier.mjs';
+import { connectedCancellation } from './connected-cancellation.mjs';
+import { connectedLifecycle } from './connected-lifecycle.mjs';
+import { connectedChanges } from './connected-change.mjs';
+import { connectedRequest } from './connected-request.mjs';
+const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
+await mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:true});const context=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}});const page=await context.newPage();
+const errors=[],checks=[];page.on('pageerror',e=>errors.push(String(e)));page.setDefaultTimeout(15000);
+const fixture=async data=>{const r=await fetch(base+'/__fixture/state',{method:'POST',body:JSON.stringify(data)});assert.ok(r.ok);return r.json()};
+const tick=async()=>{const r=await fetch(base+'/__fixture/tick',{method:'POST'});assert.ok(r.ok,await r.clone().text())};
+const until=async(check,label)=>{for(let i=0;i<50;i++){await tick();if(await check())return;await new Promise(r=>setTimeout(r,300))}throw Error('Timed out: '+label)};
+try{
+ await page.goto(base + '/app');await page.getByLabel('Your name').fill('Fixture Owner');await page.getByLabel('Workspace name').fill('Native connected fixture');await page.getByLabel('Work email').fill('connected-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('Connected-browser-2026');await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Make room for good work.'}).waitFor();
+ await finishFirstRun(page,base);
+ const api=apiFor(page),env={browser,context,page,api,base,out,fixture,tick,until};
+ Object.assign(env,await connectedSetup(env));checks.push('J1 native connection validation, complete discovery, source review, mapping and unavailable provider recovery');
+ Object.assign(env,await connectedRequest(env));checks.push('J2 native missing fact and denied request, reviewed standing authority, actual fixture grant and independently verified due removal');
+ Object.assign(env,await connectedFrontier(env));checks.push('J6 native commitment, rival investigation, bounded source engineering, actual adoption, independent repair, matching reuse and rejected near-match/drift');
+ await connectedCancellation(env);checks.push('J2 native cancellation of reversible and unknown effects: separate removal authority, provider reconciliation, no duplicate grant, independently verified denial');
+ await connectedChanges(env);checks.push('J4 native controlled changes, conflicting windows, invalidated authority, distinct automatic cohort recovery, unknown effect, failed rollback, takeover, employee correction and actual delivery; J6 measured simplification with explicit total-work limits');
+ await connectedLifecycle(env);checks.push('J3 native leave independently verifies partial security, preserves retained rights and distinguishes cancelled unstarted duty from irreversible revoked sessions');
+ await writeFile(out+'/persistence.json',JSON.stringify({commitmentId:env.commitmentId,workId:env.workId,grants:await api('/grants'),operations:await api('/operations'),fixture:await (await fetch(base+'/__fixture/evidence')).json()}));
+ await env.issuerContext.close();
+ assert.deepEqual(errors,[]);
+ await writeFile(out+'/results.json',JSON.stringify({label:'Native emitted application; explicit external provider fixtures only',checks,pageErrors:errors},null,2));console.log(JSON.stringify({checks,pageErrors:errors}));
+}catch(error){await writeFile(out+'/failure-state.json',JSON.stringify({operations:await apiFor(page)('/operations').catch(()=>null),changes:await apiFor(page)('/changes').catch(()=>null),simplifications:await apiFor(page)('/simplifications').catch(()=>null),provider:await (await fetch(base+'/__fixture/evidence')).json()},null,2)).catch(()=>{});await page.screenshot({path:out+'/failure.png',fullPage:true}).catch(()=>{});await writeFile(out+'/failure.txt',String(error)+'\n'+await page.locator('body').innerText());throw error}finally{await browser.close()}

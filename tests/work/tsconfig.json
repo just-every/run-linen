@@ -1,0 +1,1 @@
+{"extends":"../../tsconfig.json","include":["../../src/features/work/**/*.ts"],"exclude":[]}

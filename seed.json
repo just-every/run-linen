@@ -1,0 +1,241 @@
+{
+  "id": "linen",
+  "name": "Linen",
+  "version": "0.1.0",
+  "maturity": "local-implementation; release-acceptance-pending",
+  "category": "itsm",
+  "spine": {
+    "id": "employee-service-desk",
+    "record": "Authenticated work record with conversation, ownership, authority and outcome history"
+  },
+  "description": "Employee service desk on TanStack Start, React and a Hono Worker with native D1 accounts and domain history, R2 attachments, Base local auth and Freshservice file migration.",
+  "capabilities": [
+    {
+      "id": "native-identity-and-privacy",
+      "clauses": [
+        "A1"
+      ]
+    },
+    {
+      "id": "employee-work-and-service-history",
+      "clauses": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6",
+        "E7"
+      ]
+    },
+    {
+      "id": "versioned-effect-authority",
+      "clauses": [
+        "A2"
+      ]
+    }
+  ],
+  "nonGoals": [
+    "Source publication is not hosted deployment or live provider acceptance.",
+    "Imported records and restored grants never confer permission to resume external effects."
+  ],
+  "externals": [
+    {
+      "id": "cloudflare",
+      "required": true,
+      "why": "Worker runtime, D1 database and R2 attachment storage",
+      "data": [
+        "Authenticated application requests",
+        "Native account and work records",
+        "Attachment bytes"
+      ],
+      "adapters": []
+    }
+  ],
+  "env": [
+    {
+      "name": "DB",
+      "why": "Native accounts, authority and domain data",
+      "secret": false,
+      "required": true
+    },
+    {
+      "name": "ATTACHMENTS",
+      "why": "Private attachments and retained source custody",
+      "secret": false,
+      "required": true
+    },
+    {
+      "name": "SESSION_SECRET",
+      "why": "Base authentication proof protection",
+      "secret": true,
+      "required": true
+    },
+    {
+      "name": "ENCRYPTION_KEY",
+      "why": "Encrypt provider configuration and retained erasure custody",
+      "secret": true,
+      "required": true
+    },
+    {
+      "name": "APP_ORIGIN",
+      "why": "Retained native origin compatibility; AUTH_ORIGIN takes precedence",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "AUTH_ORIGIN",
+      "why": "Canonical application and sign-in origin",
+      "secret": false,
+      "required": true
+    },
+    {
+      "name": "AUTH_LOCAL",
+      "why": "Explicit loopback-only local authentication mode",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "OWNER_EMAIL",
+      "why": "Configured initial owner identity",
+      "secret": false,
+      "required": true
+    },
+    {
+      "name": "SETUP_TOKEN",
+      "why": "Authorize first-owner claim",
+      "secret": true,
+      "required": false
+    },
+    {
+      "name": "BOOTSTRAP_TOKEN",
+      "why": "Retained legacy initial claim token when SETUP_TOKEN is absent",
+      "secret": true,
+      "required": false
+    },
+    {
+      "name": "ACCESS_ISSUER",
+      "why": "Optional existing Cloudflare Access issuer",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "ACCESS_AUDIENCE",
+      "why": "Optional existing Cloudflare Access audience",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "MAIL_PROVIDER",
+      "why": "Authentication email transport; development is local-only",
+      "secret": false,
+      "required": true
+    },
+    {
+      "name": "MAIL_FROM",
+      "why": "Authentication mail sender address",
+      "secret": false,
+      "required": true
+    },
+    {
+      "name": "MAIL_API_KEY",
+      "why": "Production mail provider credential",
+      "secret": true,
+      "required": false
+    },
+    {
+      "name": "MAIL_ACCOUNT_ID",
+      "why": "Mail provider account when required by transport",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "RER_DEV_ORIGIN",
+      "why": "Managed local process origin override",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "RER_DEV_KEY",
+      "why": "Local-only native dev identity and outbox admission",
+      "secret": true,
+      "required": false
+    },
+    {
+      "name": "RER_DEV_IDENTITY",
+      "why": "Local native dev identity mode",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "RER_INSTALLATION_ID",
+      "why": "Managed installation identity for local-mode exclusion",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "RER_MANAGEMENT_ORIGIN",
+      "why": "Managed installation origin for local-mode exclusion",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "ASSETS",
+      "why": "Built static asset binding",
+      "secret": false,
+      "required": false
+    },
+    {
+      "name": "RER_DEPLOY_SOURCE",
+      "required": false,
+      "secret": false,
+      "why": "Deployment source commit reported by health"
+    },
+    {
+      "name": "RER_DEPLOY_FINGERPRINT",
+      "required": false,
+      "secret": false,
+      "why": "Deployment artifact fingerprint reported by health"
+    },
+    {
+      "name": "RER_VERSION",
+      "required": false,
+      "secret": false,
+      "why": "Worker version metadata reported by health"
+    }
+  ],
+  "deploy": {
+    "healthPath": "/health",
+    "publicPaths": [
+      "/",
+      "/health",
+      "/setup",
+      "/signin",
+      "/app"
+    ],
+    "notes": "Lobby and native setup/sign-in are public; Linen application data requires a native scoped session. Deployment is blocked until the shared owner deploy contract can preserve existing Worker and storage identities."
+  },
+  "extensionPoints": {
+    "contributions": [],
+    "policies": [],
+    "events": [],
+    "slots": [],
+    "adapters": []
+  },
+  "limits": {
+    "status": "unmeasured"
+  },
+  "accessibility": {
+    "level": "WCAG 2.2 AA",
+    "status": "target; unaudited"
+  },
+  "operatingCost": {
+    "status": "unmeasured"
+  },
+  "composition": {
+    "base": "base",
+    "family": "linen-foundation",
+    "edition": "linen",
+    "modules": []
+  }
+}

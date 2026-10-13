@@ -1,0 +1,57 @@
+name: Verify
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install Linux engineering sandbox
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends bubblewrap apparmor-profiles
+          # Ubuntu's packaged profile permits bwrap's namespace setup while
+          # denying capabilities to its children; retain system-wide restrictions.
+          # https://discourse.ubuntu.com/t/understanding-apparmor-user-namespace-restriction/58007
+          sudo apparmor_parser --replace /usr/share/apparmor/extra-profiles/bwrap-userns-restrict
+      - name: Check Linux engineering sandbox prerequisites
+        shell: bash
+        run: |
+          # Exercise the mounts and namespace flags from engineering-agent/runner.mjs
+          # before the full verification, including setup-node's executable path.
+          sandbox_root=$(mktemp -d)
+          trap 'rm -rf "$sandbox_root"' EXIT
+          sandbox_work="$sandbox_root/work"
+          sandbox_temp="$sandbox_root/scratch"
+          mkdir "$sandbox_work" "$sandbox_temp"
+          node_executable=$(readlink -f "$(command -v node)")
+          mounts=()
+          for dir in /usr /bin /lib /lib64 /sbin "$(dirname "$node_executable")"; do
+            if [ -e "$dir" ]; then
+              mounts+=(--ro-bind "$dir" "$dir")
+            fi
+          done
+          bwrap --die-with-parent --unshare-all "${mounts[@]}" \
+            --bind "$sandbox_work" "$sandbox_work" --bind "$sandbox_temp" "$sandbox_temp" \
+            --proc /proc --dev /dev --chdir "$sandbox_work" \
+            "$node_executable" -e 'require("node:fs").writeFileSync("probe", "ok")'
+          test "$(cat "$sandbox_work/probe")" = ok
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec rer check --profile first-party
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec rer verify

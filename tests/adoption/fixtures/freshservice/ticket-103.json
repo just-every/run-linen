@@ -1,0 +1,17 @@
+{
+  "ticket": {
+    "id": 103,
+    "subject": "Unrelated printer history",
+    "description": "<p>Printer repaired before migration.</p>",
+    "description_text": "Printer repaired before migration.",
+    "status": 5,
+    "type": "Incident",
+    "requester_id": 77,
+    "responder_id": 55,
+    "created_at": "2026-10-01T03:00:00Z",
+    "updated_at": "2026-10-02T03:00:00Z",
+    "workspace_id": 2,
+    "custom_fields": {},
+    "attachments": []
+  }
+}

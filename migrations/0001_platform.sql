@@ -1,0 +1,12 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE workspaces(id TEXT PRIMARY KEY,name TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE TABLE users(id TEXT PRIMARY KEY,email TEXT NOT NULL UNIQUE COLLATE NOCASE,name TEXT NOT NULL,password_hash TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE TABLE memberships(workspace_id TEXT NOT NULL REFERENCES workspaces(id),user_id TEXT NOT NULL REFERENCES users(id),roles_json TEXT NOT NULL,active INTEGER NOT NULL DEFAULT 1,PRIMARY KEY(workspace_id,user_id));
+CREATE TABLE sessions(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),workspace_id TEXT NOT NULL REFERENCES workspaces(id),token_hash TEXT NOT NULL UNIQUE,csrf_token TEXT NOT NULL,expires_at TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE TABLE bootstrap_lock(id INTEGER PRIMARY KEY CHECK(id=1));
+CREATE TABLE audit_events(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,actor_id TEXT NOT NULL,action TEXT NOT NULL,target TEXT NOT NULL,detail_json TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE TABLE connections(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL REFERENCES workspaces(id),provider TEXT NOT NULL,name TEXT NOT NULL,config_json TEXT NOT NULL,secret_ciphertext TEXT,status TEXT NOT NULL DEFAULT 'unverified',revision INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE workspace_settings(workspace_id TEXT PRIMARY KEY REFERENCES workspaces(id),settings_json TEXT NOT NULL DEFAULT '{}',revision INTEGER NOT NULL DEFAULT 1);
+CREATE INDEX sessions_expiry ON sessions(expires_at);
+CREATE INDEX audit_workspace ON audit_events(workspace_id,created_at);
+CREATE TABLE login_limits(identity_hash TEXT PRIMARY KEY,attempts INTEGER NOT NULL,window_start INTEGER NOT NULL);

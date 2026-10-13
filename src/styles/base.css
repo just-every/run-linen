@@ -1,0 +1,406 @@
+/* Linen's shared elements (SPEC §2): type, controls, badges, notices, facts and the cloth.
+   Every value comes from tokens.css; the screens' layout lives in app.css. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/26px var(--serif);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1,
+h2,
+h3 {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 500;
+  text-wrap: balance;
+}
+h1 {
+  font-size: 56px;
+  line-height: 62px;
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 28px;
+  line-height: 34px;
+}
+h3 {
+  font-size: 20px;
+  line-height: 28px;
+}
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+a {
+  color: inherit;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+button,
+input,
+textarea,
+select,
+summary {
+  font: inherit;
+  color: inherit;
+}
+button,
+a,
+summary,
+label {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+button,
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+time,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+}
+svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+.icon .leaf-body {
+  fill: currentColor;
+  stroke: none;
+}
+.icon .leaf-rib {
+  stroke: var(--paper);
+  stroke-width: 1.15;
+}
+.eyebrow {
+  display: block;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 20px;
+}
+.lead {
+  color: var(--ink-2);
+  font-size: 20px;
+  line-height: 30px;
+}
+
+/* The madder running stitch: a 2 px dashed thread under one phrase, drawn per line box. */
+.stitch {
+  background: var(--stitch) repeat-x left 0 bottom 0.02em / 12px 4px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* The flax cloth: a frayed swatch behind content (hero, closing band, auth, empty states). */
+.cloth {
+  position: relative;
+  isolation: isolate;
+}
+.cloth::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* The cloth image is transparent around its fringe; the flax inset under it is the fallback. */
+  background:
+    var(--cloth-image, url("/design/cloth-card.webp")) center / 100% 100% no-repeat,
+    linear-gradient(var(--flax), var(--flax)) center / calc(100% - 36px) calc(100% - 36px) no-repeat;
+  filter: drop-shadow(0 10px 16px rgba(14, 28, 51, 0.07));
+}
+
+/* Buttons: ink pill, outline pill and text button. */
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.action.primary {
+  background: var(--ink);
+  color: var(--card);
+}
+.action.primary:hover:not(:disabled) {
+  background: #1c2c47;
+}
+.action.secondary:hover:not(:disabled) {
+  background: rgba(14, 28, 51, 0.05);
+}
+.action.small {
+  min-height: 36px;
+  padding: 0 18px;
+  font-size: 16px;
+}
+.action .icon {
+  width: 18px;
+  height: 18px;
+}
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-decoration: none;
+}
+.text-button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+.text-button .icon {
+  width: 18px;
+  height: 18px;
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+/* Badges and chips: pill 28 px, 16 px icon, label serif 15. */
+.badge,
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 15px;
+  line-height: 20px;
+  white-space: nowrap;
+  width: max-content;
+  max-width: 100%;
+}
+.badge .icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+.tone-ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.tone-wait {
+  background: var(--wait-bg);
+  color: var(--wait);
+}
+.tone-done {
+  background: var(--done-bg);
+  color: var(--done);
+}
+.tone-alert {
+  background: var(--alert-bg);
+  color: var(--alert);
+}
+.chip {
+  background: var(--tile);
+  color: var(--ink-2);
+}
+
+/* Notices: a card with a 2 px madder thread on its left edge. */
+.notice {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 16px 0;
+  padding: 18px 20px 18px 22px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card) var(--stitch-v) repeat-y 8px 12px / 4px 12px;
+  box-shadow: var(--shadow-card);
+  color: var(--ink-2);
+}
+.notice > .icon {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  color: var(--ink);
+}
+.notice > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.notice strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.notice a {
+  color: var(--ink);
+}
+.notice.error {
+  border-color: #ebc9c1;
+  background: var(--alert-bg);
+  color: var(--alert);
+}
+.notice.error > .icon,
+.notice.error strong {
+  color: var(--alert);
+}
+
+/* Facts: a two-column definition list. */
+.facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+.facts > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 34%) minmax(0, 1fr);
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+}
+.facts > div:first-child {
+  border-top: 0;
+}
+.facts dt {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 22px;
+}
+.facts dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+
+/* Empty: a small piece of frayed flax holding a title and one line. */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  padding: 56px 48px;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 24px;
+  line-height: 30px;
+}
+.empty p {
+  max-width: 46ch;
+  color: var(--ink-2);
+}
+
+/* Disclosed evidence and recorded details. */
+.evidence {
+  margin: 12px 0 0;
+  border-top: 1px solid var(--rule);
+}
+.evidence > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--ink-2);
+  font-size: 16px;
+}
+.evidence > summary .icon {
+  width: 18px;
+  height: 18px;
+}
+.evidence pre {
+  max-height: 320px;
+  margin: 0 0 12px;
+  padding: 14px 16px;
+  overflow: auto;
+  border-radius: var(--radius-input);
+  background: var(--input);
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  color: var(--muted);
+}
+.loading-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--madder);
+  animation: breathe 1.4s ease-in-out infinite;
+}
+@keyframes breathe {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 16px;
+  z-index: 100;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--card);
+}
+.skip-link:not(:focus) {
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+}
+/* Focus moved to a region for screen readers after navigation shows no ring; its controls still do. */
+[tabindex="-1"]:focus {
+  outline: none;
+}

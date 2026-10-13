@@ -1,0 +1,2 @@
+CREATE TABLE adoption_identity_map(workspace_id TEXT NOT NULL,source_id TEXT NOT NULL,source_key TEXT NOT NULL,target_id TEXT NOT NULL,kind TEXT NOT NULL,approved_by TEXT,created_at TEXT NOT NULL,PRIMARY KEY(workspace_id,source_id,source_key));
+CREATE TABLE adoption_erasure_jobs(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,identity_hash TEXT NOT NULL,state TEXT NOT NULL,ports_json TEXT NOT NULL,created_at TEXT NOT NULL);

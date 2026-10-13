@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "title": "Linen",
+  "groups": [
+    {
+      "id": "owner",
+      "label": "First owner"
+    }
+  ],
+  "fields": [
+    {
+      "name": "OWNER_EMAIL",
+      "label": "Owner email",
+      "help": "Sign-in links for this address appear in the local development outbox; no email is sent.",
+      "kind": "email",
+      "required": true,
+      "prefill": "account-email",
+      "group": "owner"
+    },
+    {
+      "name": "SESSION_SECRET",
+      "label": "Session secret",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": false,
+      "input": "managed",
+      "generate": "hex",
+      "group": "owner"
+    },
+    {
+      "name": "SETUP_TOKEN",
+      "label": "Setup token",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": true,
+      "generate": "hex",
+      "group": "owner"
+    },
+    {
+      "name": "ENCRYPTION_KEY",
+      "label": "Connection encryption key",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": false,
+      "input": "managed",
+      "generate": "base64",
+      "group": "owner"
+    }
+  ],
+  "steps": [
+    {
+      "type": "owner-claim",
+      "mode": "setup-token",
+      "emailField": "OWNER_EMAIL",
+      "tokenField": "SETUP_TOKEN"
+    }
+  ]
+}

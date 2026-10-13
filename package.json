@@ -1,0 +1,62 @@
+{
+  "name": "@linen-foundation/linen",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "repository": "https://github.com/just-every/run-linen",
+  "type": "module",
+  "engines": {
+    "node": "22.20.0"
+  },
+  "scripts": {
+    "build": "rer build",
+    "dev": "rer dev",
+    "preview": "rer preview",
+    "typecheck": "tsc --noEmit",
+    "verify": "rer verify",
+    "setup": "rer setup",
+    "deploy": "rer deploy",
+    "test:runtime": "node tests/runtime.mjs",
+    "test:platform": "node tests/platform/runtime.mjs",
+    "source:inspect": "node scripts/edition-authoring/cli.mjs inspect",
+    "source:check": "node scripts/edition-authoring/cli.mjs check",
+    "source:lock": "node scripts/edition-authoring/cli.mjs lock",
+    "test:ui": "node tests/ui/run.mjs",
+    "test:provider": "node tests/intelligence/provider-app-smoke.mjs",
+    "check": "rer check",
+    "describe": "rer describe",
+    "export": "rer export",
+    "import": "rer import",
+    "reset": "rer reset",
+    "outbox": "rer outbox",
+    "doctor": "rer doctor",
+    "rer": "rer",
+    "install:app": "rer install",
+    "build:app": "vite build",
+    "verify:app": "node scripts/verify.mjs",
+    "deps": "rer install",
+    "release": "rer release"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "1.170.33",
+    "@tanstack/react-start": "1.168.50",
+    "hono": "4.13.7",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.54.5",
+    "@cloudflare/workers-types": "5.20260908.1",
+    "@runeditrun/rer": "0.2.0",
+    "@types/node": "24.19.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "6.1.1",
+    "marked": "18.0.14",
+    "playwright": "1.63.0-alpha-2026-08-31",
+    "typescript": "5.9.3",
+    "vite": "8.2.2",
+    "wrangler": "4.129.1"
+  },
+  "packageManager": "pnpm@10.12.4"
+}

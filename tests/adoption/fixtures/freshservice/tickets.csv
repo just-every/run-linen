@@ -1,0 +1,3 @@
+Ticket Id,Subject,Description,Status,Agent,Requester Name,Requester Email,Created Time,Last Updated Time,Type,Approval Status
+101,"Laptop, docking issue","Display disconnects after sleep.",Open,Historical Agent,Alex Requester,alex@example.test,2026-10-01T09:30:00+10:00,2026-10-02T14:00:00+10:00,Incident,Approved
+102,Software request,Please retain the historical request.,Closed,,Unmapped Person,unmapped@example.test,2026-10-01T10:00:00+10:00,2026-10-03T10:00:00+10:00,Service Request,Approved

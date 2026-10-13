@@ -1,0 +1,1 @@
+CREATE TABLE execution_provider_attempts(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,connection_id TEXT NOT NULL,kind TEXT NOT NULL,state TEXT NOT NULL,http_status INTEGER,started_at TEXT NOT NULL,finished_at TEXT,elapsed_ms INTEGER,charge_status TEXT NOT NULL DEFAULT 'unknown');

@@ -1,0 +1,28 @@
+{
+  "sections": [
+    {
+      "title": "Start here",
+      "pages": [
+        { "slug": "getting-started", "title": "Get started", "file": "getting-started.md", "summary": "Install rer, start Linen on your own computer, confirm the owner and sign in." },
+        { "slug": "connections", "title": "Connections and setup", "file": "connections.md", "summary": "Connect your identity provider, existing desk and reasoning model, and review what Linen finds." },
+        { "slug": "people", "title": "People and permissions", "file": "people.md", "summary": "Add the people who use Linen and give each the roles they need." }
+      ]
+    },
+    {
+      "title": "Everyday work",
+      "pages": [
+        { "slug": "asking", "title": "Ask and follow a request", "file": "asking.md", "summary": "Ask in your own words, follow what is ready and what remains, and say when it is still not working." },
+        { "slug": "decisions", "title": "The choices that need you", "file": "decisions.md", "summary": "What lands in Needs your decision, and how to choose an option, defer or reject, with a reason." },
+        { "slug": "joining-moving-leaving", "title": "Joining, moving and leaving", "file": "joining-moving-leaving.md", "summary": "Record a person's change and follow access and devices, each to its own end." }
+      ]
+    },
+    {
+      "title": "Your records",
+      "pages": [
+        { "slug": "moving-in", "title": "Move in from Freshservice", "file": "moving-in.md", "summary": "Connect Freshservice, review what comes across, and run both desks while you decide." },
+        { "slug": "backup-and-restore", "title": "Back up and restore", "file": "backup-and-restore.md", "summary": "Make one archive of everything with rer export, and put it back with rer import." },
+        { "slug": "freshservice-saved-files", "title": "Freshservice saved files", "file": "FRESHSERVICE-MIGRATION.md", "summary": "Reference for importing saved Freshservice ticket and conversation files through the owner-only API." }
+      ]
+    }
+  ]
+}

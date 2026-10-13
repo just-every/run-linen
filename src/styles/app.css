@@ -1,0 +1,1137 @@
+/* Linen's app frame and screens (SPEC §2.3–2.4, §3): a 76 px top bar, a 930 px main column and a
+   426 px rail, white cards on warm paper, and the running stitch where steps join. */
+
+/* Top bar */
+.app-header {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  max-width: 1440px;
+  min-height: 76px;
+  margin: 0 auto;
+  padding: 0 56px;
+  border-bottom: 1px solid var(--rule);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+.brand .icon {
+  width: 30px;
+  height: 30px;
+}
+.app-header nav {
+  display: flex;
+  align-self: stretch;
+  gap: 28px;
+  margin-left: auto;
+  padding-right: 24px;
+  border-right: 1px solid var(--rule);
+  margin-block: 22px;
+}
+.app-header nav a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: var(--ink-2);
+  font-size: 17px;
+  text-decoration: none;
+}
+.app-header nav a:hover {
+  color: var(--ink);
+}
+.app-header nav a.active {
+  color: var(--ink);
+  font-weight: 500;
+}
+.app-header nav a.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -9px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--madder);
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.search-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 20px 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 17px;
+  text-decoration: none;
+}
+.search-pill:hover {
+  border-color: var(--ink);
+}
+.profile {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--card);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+.profile-menu {
+  position: absolute;
+  top: 68px;
+  right: 40px;
+  display: grid;
+  gap: 4px;
+  min-width: 260px;
+  padding: 20px 22px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: 0 1px 2px rgba(14, 28, 51, 0.05), 0 18px 40px rgba(14, 28, 51, 0.12);
+}
+.profile-menu small {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 15px;
+}
+.profile-menu a,
+.profile-menu .text-button {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--rule);
+  text-decoration: none;
+}
+.profile-menu a:hover {
+  text-decoration: underline;
+}
+
+/* Frame: main column and rail */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 428px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 56px;
+}
+.layout > main {
+  min-width: 0;
+  padding: 40px 28px 72px 0;
+}
+.layout.layout-full {
+  grid-template-columns: minmax(0, 1fr);
+}
+.layout.layout-full > main {
+  padding-right: 0;
+}
+.context-rail {
+  min-width: 0;
+  margin-block: 40px 72px;
+  padding: 0 0 0 28px;
+  border-left: 1px solid var(--rule);
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  margin-bottom: 8px;
+  color: var(--ink-2);
+  font-size: 17px;
+  text-decoration: none;
+  text-transform: none;
+}
+.back-link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+/* Page head: eyebrow and h1 (the h1's last two words carry the stitch), then its line and badge. */
+.hero {
+  margin: 0 0 28px;
+}
+.hero + .composer,
+.hero + .progress {
+  margin-top: 0;
+}
+.hero-copy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 20px;
+  row-gap: 12px;
+}
+.hero-copy > * {
+  grid-column: 1 / -1;
+}
+.hero-copy > h1:has(+ .badge) {
+  grid-column: 1;
+}
+.hero-copy > h1 + .badge {
+  grid-column: 2;
+  justify-self: end;
+}
+.hero-copy > .eyebrow {
+  margin-bottom: -6px;
+}
+.hero h1 {
+  overflow-wrap: anywhere;
+}
+.hero .lead {
+  max-width: 44em;
+}
+
+/* Section heads and lists */
+.history,
+.work-outcome,
+.work-controls,
+.decision-packet {
+  margin: 32px 0 0;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 16px;
+}
+.section-heading > h2,
+.section-heading > h3 {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.history > h2,
+.work-outcome > h2,
+.decision-packet h2 {
+  margin: 0 0 16px;
+}
+.event-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-well);
+  background: var(--tile);
+  color: var(--ink);
+}
+.event-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* One card of rows: icon well, title, date, badge, arrow. */
+.record-list {
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.record-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 216px 120px 24px;
+  align-items: center;
+  gap: 20px;
+  min-height: 80px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--rule);
+  color: var(--ink);
+  text-decoration: none;
+}
+.record-row:first-child {
+  border-top: 0;
+}
+a.record-row:hover {
+  background: rgba(233, 229, 222, 0.45);
+}
+.record-row > span:nth-child(2) {
+  display: contents;
+}
+.record-row strong {
+  min-width: 0;
+  font-size: 19px;
+  line-height: 26px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.record-row small {
+  color: var(--muted);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.record-row > .icon {
+  width: 22px;
+  height: 22px;
+}
+.record-row:not(:has(> .icon)) {
+  grid-template-columns: 40px minmax(0, 1fr) 216px 120px;
+}
+.record-row:not(:has(> .badge)) {
+  grid-template-columns: 40px minmax(0, 1fr) 216px 24px;
+}
+/* A responsibility needing an operator: its title links to the request; what happened sits below. */
+.record-row.attention-row {
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: start;
+}
+.attention-row > span:nth-child(2) {
+  display: grid;
+  gap: 4px;
+}
+.record-row.attention-row small {
+  white-space: normal;
+  color: var(--ink-2);
+}
+.attention-row strong a {
+  color: inherit;
+  text-decoration: none;
+}
+.attention-row strong a:hover {
+  text-decoration: underline;
+}
+/* A row without an icon well (coverage, cohorts): its text and badge share one line and wrap. */
+.record-row:not(:has(> .event-icon)) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.record-row:not(:has(> .event-icon)) > span:first-child {
+  display: grid;
+  flex: 1 1 240px;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Cards: records, connections, decisions, articles. */
+.connection-record,
+.decision,
+.hypothesis {
+  margin: 0 0 16px;
+  padding: 24px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.connection-record > p,
+.decision > p {
+  margin: 0 0 12px;
+  color: var(--ink-2);
+}
+.connection-record > .button-row {
+  margin: 16px 0 4px;
+}
+.connection-record .facts,
+.decision .facts {
+  margin: 4px 0 8px;
+}
+.connection-record .section-heading {
+  margin-bottom: 8px;
+}
+.fact-note {
+  color: var(--muted);
+  font-size: 15px;
+}
+.detail-prose {
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.resource-details {
+  margin: 16px 0;
+  padding: 8px 24px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+}
+.record-stack {
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.record-stack > .connection-record {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+}
+.record-stack > .connection-record:first-child {
+  border-top: 0;
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(300px, 5fr);
+  align-items: start;
+  gap: 24px;
+  margin-top: 32px;
+}
+.split > .action-disclosure {
+  margin: 0;
+  padding: 4px 24px 8px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.split .field-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.split > .action-disclosure > summary {
+  min-height: 64px;
+  font-size: 24px;
+  font-weight: 500;
+}
+.stack {
+  margin-top: 24px;
+}
+/* People & permissions: compact member rows, as the settings pick draws them. */
+.split .record-stack > .connection-record {
+  padding: 18px 20px;
+}
+.record-stack-title {
+  padding: 22px 20px 18px;
+  font-size: 24px;
+  line-height: 30px;
+}
+.record-stack-title + .connection-record:first-of-type {
+  border-top: 1px solid var(--rule);
+}
+.split .connection-record .section-heading {
+  margin-bottom: 4px;
+}
+.split .connection-record h2 {
+  font-size: 20px;
+  line-height: 28px;
+}
+.split .connection-record .facts {
+  margin: 0 0 0 56px;
+}
+.split .connection-record .facts > div {
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+  padding: 0;
+  border: 0;
+}
+.split .connection-record .facts dt,
+.split .connection-record .facts dd {
+  font-size: 15px;
+  line-height: 22px;
+}
+
+/* Setup: connection cards joined by a vertical madder stitch. */
+.history > .connection-record + .connection-record {
+  position: relative;
+  margin-top: 28px;
+}
+.history > .connection-record + .connection-record::before {
+  content: "";
+  position: absolute;
+  top: -29px;
+  left: 43px;
+  width: 4px;
+  height: 28px;
+  background: var(--stitch-v) repeat-y center top / 4px 12px;
+}
+.connection-record .section-heading > .event-icon {
+  width: 52px;
+  height: 52px;
+}
+
+/* Request detail: progress notices side by side, joined by the stitch. */
+.progress {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin: 24px 0 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.progress:empty {
+  display: none;
+}
+.progress > .notice {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  padding: 24px;
+}
+.progress > .notice + .notice {
+  background: var(--stitch-v) repeat-y left 0 top 24px / 4px 12px;
+}
+.progress > .notice > .icon {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 12px;
+  border-radius: 50%;
+  background: var(--tile);
+}
+.progress > .notice strong {
+  font-size: 19px;
+  line-height: 26px;
+}
+.progress > .notice p {
+  font-size: 16px;
+  line-height: 24px;
+}
+.obligation {
+  border: 1px solid var(--rule);
+  border-top-width: 0;
+  background: var(--card);
+}
+.work-outcome > h2 + .obligation {
+  border-top-width: 1px;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+.obligation:last-of-type {
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+}
+.work-outcome > h2 + .obligation:last-of-type {
+  border-radius: var(--radius-card);
+}
+.obligation > summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 10px 24px;
+  list-style: none;
+}
+.obligation > summary > span:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+}
+.obligation > summary small {
+  color: var(--muted);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.obligation > .facts {
+  padding: 0 24px 12px;
+}
+.work-outcome > .action-disclosure {
+  margin-top: 20px;
+}
+.conversation-layout .composer {
+  margin: 32px 0 0;
+}
+.events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.event {
+  display: flex;
+  gap: 16px;
+  padding: 18px 24px;
+  border-top: 1px solid var(--rule);
+}
+.event:first-child {
+  border-top: 0;
+}
+.event .event-icon {
+  border-radius: 50%;
+}
+.event-copy {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.message-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--muted);
+  font-size: 15px;
+}
+.message-body {
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.private-label {
+  color: var(--wait);
+}
+.private-message {
+  background: #f7f2ea;
+}
+.attachments {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+.attachments h3 {
+  font-size: 18px;
+}
+.attachments a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.work-controls > .button-row {
+  gap: 16px;
+}
+.more-actions {
+  flex-basis: 100%;
+  margin-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+.more-actions > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+}
+.more-actions .button-row {
+  padding: 4px 0 12px;
+}
+
+/* Every disclosure carries the same chevron, turned up when it is open. */
+details > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::after {
+  content: "";
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%230E1C33' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E") center / 16px no-repeat;
+}
+details[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+/* Dates stay whole and line up. */
+time,
+.record-row small,
+.obligation > summary small {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.section-intro {
+  margin: 0 0 16px;
+}
+
+/* Rail cards */
+.rail-section {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 24px;
+  padding: 24px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.rail-section > p {
+  color: var(--ink-2);
+}
+.rail-section > .action {
+  justify-self: start;
+  margin-top: 8px;
+}
+.rail-decision {
+  position: relative;
+  overflow: hidden;
+  padding-right: 76px;
+  background: var(--tile);
+}
+.rail-decision::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 56px;
+  background: url("/design/cloth-edge.webp") left center / cover no-repeat;
+  pointer-events: none;
+}
+.rail-decision > .eyebrow {
+  color: var(--ink-2);
+}
+.rail-decision > h2 {
+  font-size: 34px;
+  line-height: 40px;
+  letter-spacing: -0.01em;
+}
+.rail-decision > p {
+  font-size: 18px;
+  line-height: 28px;
+}
+.contextual-links {
+  gap: 0;
+  padding-bottom: 12px;
+}
+.contextual-links > h2,
+.contextual-links > .eyebrow {
+  margin-bottom: 12px;
+}
+.contextual-links > p {
+  margin-bottom: 8px;
+}
+.contextual-links > a,
+.rail-section > a:not(.action) {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 56px;
+  border-top: 1px solid var(--rule);
+  color: var(--ink);
+  font-size: 17px;
+  text-decoration: none;
+}
+.contextual-links > a:first-of-type {
+  border-top: 0;
+}
+.contextual-links > a:hover {
+  text-decoration: underline;
+}
+.contextual-links > a > .icon:last-child {
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+}
+.contextual-links .event-icon {
+  width: 36px;
+  height: 36px;
+}
+.context-rail > .evidence,
+.context-rail > .action-disclosure,
+.context-rail > a {
+  display: block;
+  margin: 0 0 16px;
+}
+/* The request rail: its heading card and facts read as one card. */
+.rail-section:has(+ .facts) {
+  margin-bottom: 0;
+  padding-bottom: 8px;
+  border-bottom: 0;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  box-shadow: none;
+}
+.rail-section + .facts {
+  margin: 0 0 24px;
+  padding: 0 24px 12px;
+  border: 1px solid var(--rule);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.context-rail > .evidence {
+  margin: 0 0 24px;
+}
+
+/* Knowledge and other context spaces */
+.knowledge-search {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 24px 0;
+}
+.knowledge-search label {
+  flex: 1;
+  margin: 0;
+}
+.knowledge-search .action {
+  min-height: 48px;
+}
+
+/* Sign in and first run: a frayed flax swatch beside a white form card. */
+.auth-page {
+  min-height: 100vh;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 56px 56px;
+}
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 580px);
+  align-items: center;
+  gap: 64px;
+  margin-top: 40px;
+}
+.auth-intro {
+  --cloth-image: url("/design/cloth-square.webp");
+  display: grid;
+  align-content: center;
+  gap: 24px;
+  min-height: 640px;
+  margin-left: -56px;
+  padding: 64px 72px 64px 96px;
+}
+.auth-intro h1 {
+  font-size: 72px;
+  line-height: 78px;
+  letter-spacing: -0.015em;
+}
+.auth-intro .eyebrow {
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 30px;
+}
+.auth-intro p {
+  max-width: 24em;
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 32px;
+}
+.auth-form {
+  padding: 48px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.auth-form h2 {
+  margin: 0 0 12px;
+  font-size: 44px;
+  line-height: 50px;
+  letter-spacing: -0.01em;
+}
+.auth-form > p {
+  margin: 0 0 24px;
+  color: var(--ink-2);
+  font-size: 19px;
+  line-height: 28px;
+}
+.auth-form form {
+  display: grid;
+  margin-top: 28px;
+}
+.auth-form form > small {
+  margin: -10px 0 18px;
+}
+.auth-form .action {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 8px;
+  font-size: 19px;
+}
+.auth-form > .auth-footnote {
+  display: flex;
+  gap: 10px;
+  margin: 32px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 24px;
+}
+.auth-footnote .icon {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+}
+
+.boot {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  min-height: 100vh;
+  color: var(--ink);
+}
+.boot > .notice {
+  max-width: 520px;
+}
+
+@media (max-width: 1200px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    padding: 0 32px;
+  }
+  .layout > main {
+    padding-right: 32px;
+  }
+  .context-rail {
+    padding-left: 28px;
+  }
+  .app-header {
+    padding: 0 32px;
+  }
+  .record-row {
+    grid-template-columns: 40px minmax(0, 1fr) 130px auto 24px;
+  }
+  .auth-intro h1 {
+    font-size: 60px;
+    line-height: 66px;
+  }
+}
+@media (max-width: 1023px) {
+  .layout {
+    display: block;
+  }
+  .context-rail {
+    margin: 0 0 48px;
+    padding: 0;
+    border-left: 0;
+  }
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .auth-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .auth-intro {
+    min-height: 0;
+    margin: 0 -24px;
+    padding: 64px 56px;
+  }
+}
+@media (max-width: 700px) {
+  .app-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "brand actions" "nav nav";
+    row-gap: 4px;
+    padding: 14px 20px 0;
+  }
+  .app-header .brand {
+    grid-area: brand;
+    font-size: 28px;
+  }
+  .header-actions {
+    grid-area: actions;
+    gap: 12px;
+  }
+  .app-header nav {
+    grid-area: nav;
+    margin: 0;
+    padding: 0;
+    border-right: 0;
+    gap: 28px;
+    min-height: 48px;
+  }
+  .app-header nav a.active::after {
+    bottom: 0;
+  }
+  .search-pill {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    justify-content: center;
+  }
+  .search-pill span {
+    display: none;
+  }
+  .profile-menu {
+    top: 64px;
+    right: 16px;
+  }
+  .layout {
+    padding: 0 20px;
+  }
+  .layout > main {
+    padding: 24px 0 40px;
+  }
+  h1 {
+    font-size: 36px;
+    line-height: 42px;
+  }
+  h2 {
+    font-size: 24px;
+    line-height: 30px;
+  }
+  .lead {
+    font-size: 17px;
+    line-height: 26px;
+  }
+  .hero-copy > h1:has(+ .badge) {
+    grid-column: 1 / -1;
+  }
+  .hero-copy > h1 + .badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .record-row {
+    grid-template-columns: 40px minmax(0, 1fr) auto 20px;
+    grid-template-areas: "icon title title arrow" "icon meta badge arrow";
+    gap: 8px 12px;
+    padding: 14px 16px;
+  }
+  .record-row > .event-icon {
+    grid-area: icon;
+    align-self: start;
+  }
+  .record-row strong {
+    grid-area: title;
+    font-size: 18px;
+    line-height: 24px;
+  }
+  .record-row small {
+    grid-area: meta;
+    align-self: center;
+  }
+  .record-row > .badge {
+    grid-area: badge;
+    justify-self: end;
+  }
+  .record-row > .icon {
+    grid-area: arrow;
+    width: 20px;
+    height: 20px;
+  }
+  .record-row:not(:has(> .icon)),
+  .record-row:not(:has(> .badge)) {
+    grid-template-columns: 40px minmax(0, 1fr) auto 20px;
+  }
+  .split .connection-record .facts {
+    margin-left: 0;
+  }
+  .record-row.attention-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-areas: "icon text" "icon badge";
+  }
+  .attention-row > span:nth-child(2) {
+    grid-area: text;
+  }
+  .attention-row strong,
+  .attention-row small {
+    grid-area: auto;
+  }
+  .attention-row > .badge {
+    grid-area: badge;
+    justify-self: start;
+  }
+  .decision > .section-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .connection-record,
+  .decision,
+  .hypothesis,
+  .rail-section {
+    padding: 18px;
+  }
+  .history > .connection-record + .connection-record::before {
+    left: 37px;
+  }
+  .history > .connection-record .section-heading {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+  .history > .connection-record .section-heading:has(> .event-icon) > :is(h2, h3) {
+    flex-basis: calc(100% - 58px);
+  }
+  .history > .connection-record .section-heading:has(> .event-icon) > .badge {
+    margin-left: 58px;
+  }
+  .connection-record .section-heading > .event-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .rail-decision {
+    padding-right: 72px;
+  }
+  .rail-decision > h2 {
+    font-size: 28px;
+    line-height: 34px;
+  }
+  .progress > .notice {
+    padding: 18px;
+  }
+  .progress > .notice + .notice {
+    background: var(--stitch) repeat-x left 18px top 0 / 12px 4px;
+  }
+  .event {
+    padding: 14px 16px;
+  }
+  .facts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+  .knowledge-search {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .auth-page {
+    padding: 20px 20px 40px;
+  }
+  .auth-page > .brand {
+    font-size: 28px;
+  }
+  .auth-layout {
+    margin-top: 16px;
+  }
+  .auth-intro {
+    --cloth-image: url("/design/cloth-card.webp");
+    margin: 0 -12px;
+    padding: 40px 32px;
+    gap: 14px;
+  }
+  .auth-intro h1 {
+    font-size: 40px;
+    line-height: 46px;
+  }
+  .auth-intro .eyebrow,
+  .auth-intro p {
+    font-size: 17px;
+    line-height: 26px;
+  }
+  .auth-form {
+    padding: 24px 20px;
+  }
+  .auth-form h2 {
+    font-size: 32px;
+    line-height: 38px;
+  }
+  .empty {
+    padding: 44px 28px;
+  }
+}
+@media (max-width: 360px) {
+  .app-header nav {
+    gap: 18px;
+  }
+  .app-header nav a {
+    font-size: 16px;
+  }
+}

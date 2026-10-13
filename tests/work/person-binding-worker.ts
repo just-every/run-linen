@@ -1,0 +1,12 @@
+import { Hono } from 'hono';
+import { platformApp } from '../../src/platform/routes';
+import { ApiError } from '../../src/platform/http';
+import type { AppEnv } from '../../src/platform/types';
+import { registerWorkRoutes } from '../../src/features/work';
+import { registerAdoptionRoutes } from '../../src/features/adoption';
+const app=new Hono<AppEnv>(),api=platformApp();
+app.onError((e,c)=>c.json({error:e instanceof ApiError?e.code:e.message},(e instanceof ApiError?e.status:500) as 400));
+registerWorkRoutes(api);
+registerAdoptionRoutes(api);
+app.route('/api/v1',api);
+export default app;

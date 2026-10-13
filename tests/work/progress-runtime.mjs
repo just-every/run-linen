@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict';
+import { harness } from './amend-harness.mjs';
+const h = await harness();
+try {
+ const work = await h.ok('/work',{title:'Synthetic request',body:'Help',deduplicationKey:'progress'},'employee');
+ const read = () => h.ok(`/work/${work.id}`,undefined,'employee');
+ let view = await read();
+ assert.equal(view.progress[0].state,'pending');
+ assert.equal(view.progress[0].ownerLabel,'Linen');
+ const setIntake = async (state,result=null) => h.db.prepare('UPDATE work_intake_events SET state=?,result_json=?,error=? WHERE work_id=?').bind(state,result&&JSON.stringify(result),'sensitive-provider-secret',work.id).run();
+ await setIntake('needs_configuration');
+ view=await read();assert.equal(view.progress[0].ownerLabel,'Workspace owner');assert.match(view.progress[0].next,/do not need to resend/);
+ assert.equal(JSON.stringify(view.progress).includes('sensitive-provider-secret'),false);
+ let list=await h.ok('/work');assert.equal(list.items.find(x=>x.id===work.id).attention.length,1);
+ assert.equal((await h.api(`/work/${work.id}`,undefined,'stranger')).status,404);
+ await setIntake('budget_held');assert.equal((await read()).progress[0].state,'budget_held');
+ await setIntake('interpreted',{model:{value:{kind:'necessary_question',question:'private model data'}}});
+ view=await read();assert.equal(view.progress[0].ownerId,'employee');assert.equal(JSON.stringify(view.progress).includes('private model data'),false);
+ await setIntake('failed');assert.match((await read()).progress[0].next,/before retrying/);
+ assert.equal((await h.ok('/work')).items.find(x=>x.id===work.id).attention[0].ownerLabel,'Service team — assignment needed');
+ await setIntake('interpreting');await h.db.prepare('UPDATE work_intake_events SET lease_until=? WHERE work_id=?').bind('2000-01-01',work.id).run();
+ assert.equal((await read()).progress[0].state,'failed');
+ await setIntake('interpreted',{});
+ const catalog=await h.ok('/catalog',{name:'Synthetic device',kind:'device',target:'synthetic-device',ownerId:'owner',capacity:0});
+ const request=await h.ok(`/work/${work.id}/fulfilment`,{catalogId:catalog.id,beneficiaryId:'employee',purpose:'Synthetic test'},'employee');
+ assert.equal(request.state,'blocked');view=await read();assert.equal(view.progress[0].ownerId,'owner');assert.match(view.progress[0].happened,/Stock or licence capacity/);
+ list=await h.ok('/work');assert.equal(list.items.find(x=>x.id===work.id).attention.length,1);
+ await h.db.prepare("UPDATE work_obligations SET state='failed',last_error='secret trace' WHERE work_id=?").bind(work.id).run();
+ assert.equal((await read()).progress[0].state,'failed');
+ await h.db.prepare("UPDATE work_obligations SET state='verified' WHERE work_id=?").bind(work.id).run();
+ view=await read();assert.match(view.progress[0].happened,/Independent evidence/);assert.equal((await h.ok('/work')).items.find(x=>x.id===work.id).attention.length,0);
+ await h.db.exec("INSERT INTO work_people(id,workspace_id,source,source_id,name,manager_id,active,merged_into,revision,observed_at,effective_at,member_id,binding_id) VALUES('employee','w','hr','employee','Employee','owner',1,NULL,1,'2026-01-01','2026-01-01','employee','reviewed-fixture-binding')");
+ const access=await h.ok('/catalog',{name:'Synthetic access',kind:'access',target:'synthetic-access',ownerId:'stranger',requiresManager:true});
+ await h.ok(`/work/${work.id}/fulfilment`,{catalogId:access.id,beneficiaryId:'employee',purpose:'Synthetic manager test'},'employee');
+ view=await read();const decision=view.progress.find(x=>x.next.includes('decision holder'));
+ assert.equal(decision.ownerId,'owner');assert.equal(decision.ownerLabel,'Owner');
+ assert.equal((await h.ok('/fulfilment-decisions')).items.length,1);
+ assert.equal((await h.ok('/work',undefined,'stranger')).items.length,0);
+ await h.db.prepare("UPDATE work_people SET manager_id=NULL WHERE id='employee'").run();
+ view=await read();assert.equal(view.progress.at(-1).ownerId,'stranger');
+ await h.db.prepare("INSERT INTO intelligence_pending_fulfilments VALUES(?,?,?,?,?,?,?,'blocked','pending_work_changed',NULL,?,?)")
+   .bind('synthetic-pending','w',work.id,access.id,'employee',1,'{}',new Date().toISOString(),new Date().toISOString()).run();
+ view=await read();assert.match(view.progress.at(-1).next,/changed request/);
+ await h.db.prepare("UPDATE intelligence_pending_fulfilments SET state='waiting',error_code='standing_authority_required' WHERE id='synthetic-pending'").run();
+ view=await read();assert.match(view.progress.at(-1).happened,/lacks current scoped authority/);
+ await h.restart();assert.deepEqual((await read()).progress,view.progress);
+ console.log('Request progress: pending, missing fact, configuration/budget hold, failure, expired assessment, catalogue refusal, obligation owner, verified result, privacy and restart persistence passed.');
+} finally { await h.close(); }

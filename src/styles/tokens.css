@@ -1,0 +1,34 @@
+/* Linen's design tokens, shared by the app and the run site (SPEC §2): indigo-black ink on warm
+   paper, flax cloth, one madder running stitch. public/rer-theme.css declares the face and
+   repeats these values as --rer-* tokens for Base's frames. */
+:root {
+  color-scheme: light;
+  --paper: #f3f0eb;
+  --paper-site: #ece6e0;
+  --flax: #e4dacf;
+  --card: #faf8f5;
+  --input: #f6f5f3;
+  --tile: #e9e5de;
+  --rule: #e3ded6;
+  --line: #cfc8bd;
+  --ink: #0e1c33;
+  --ink-2: #3a4250;
+  --muted: #696b71;
+  --madder: #be6631;
+  --ok: #3a6b48;
+  --ok-bg: #e6ede4;
+  --wait: #8a5520;
+  --wait-bg: #fcead2;
+  --done: #5e6168;
+  --done-bg: #e2e1df;
+  --alert: #a33a2c;
+  --alert-bg: #f7e3de;
+
+  --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --radius-card: 14px;
+  --radius-input: 10px;
+  --radius-well: 10px;
+  --shadow-card: 0 1px 2px rgba(14, 28, 51, 0.04), 0 8px 24px rgba(14, 28, 51, 0.05);
+  --stitch: url("/design/stitch.svg");
+  --stitch-v: url("/design/stitch-v.svg");
+}

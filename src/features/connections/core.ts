@@ -1,0 +1,12 @@
+import type {Env,Principal} from '../../platform/types'
+import {ApiError,id,now} from '../../platform/http'
+export interface ConnectionContext {env:Env;principal:Principal}
+export function check(value:unknown,code:string,status=409):asserts value {if(!value)throw new ApiError(status,code,code.replaceAll('_',' '))}
+export function revision(value:unknown):number {check(Number.isSafeInteger(value)&&Number(value)>0,'revision_required',400);return value as number}
+export async function current(ctx:ConnectionContext,write=true){const m=await ctx.env.DB.prepare('SELECT roles_json FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId,ctx.principal.userId).first<{roles_json:string}>();const roles=m?JSON.parse(m.roles_json):[];check(ctx.principal.roles.some(r=>roles.includes(r)&&(write?r==='owner':['owner','operator','auditor'].includes(r))),'forbidden',403);return ctx}
+export async function connection(ctx:ConnectionContext,key:string,rev?:number){await current(ctx);const row=await ctx.env.DB.prepare('SELECT * FROM connections WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,key).first<any>();check(row,'not_found',404);if(rev!==undefined)check(row.revision===revision(rev),'revision_conflict');return row}
+export function auditStatement(ctx:ConnectionContext,action:string,key:string){return ctx.env.DB.prepare('INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0').bind(id(),ctx.principal.workspaceId,ctx.principal.userId,action,key,'{}',now())}
+export async function safeJson(response:Response){check(response.ok,response.status===401?'provider_auth_denied':response.status===403?'provider_scope_denied':'provider_unavailable',503);check(Number(response.headers.get('content-length')||0)<=2_000_000,'provider_response_too_large',502);const text=await response.text();check(text.length<=2_000_000,'provider_response_too_large',502);try{return JSON.parse(text)}catch{throw new ApiError(502,'provider_schema_invalid','Provider response is invalid')}}
+// Workerd supports manual/follow only. Keep credentials at the validated URL;
+// callers reject non-2xx through safeJson, including OAuth token redirects.
+export async function request(url:string,init:RequestInit={}){try{return await fetch(url,{...init,redirect:'manual',signal:AbortSignal.timeout(20000)})}catch{throw new ApiError(503,'provider_unavailable','Provider unavailable')}}

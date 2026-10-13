@@ -1,0 +1,83 @@
+import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, writeFile, rm, realpath } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { runEngineeringJob } from '../../engineering-agent/runner.mjs';
+import { action, fields, local, later, apiFor, signIn } from './connected-helpers.mjs';
+import { nativeCreate } from './native-regressions.mjs';
+import { captureJourney } from './viewport-evidence.mjs';
+
+export async function connectedFrontier(env) {
+  const {browser,page,api,base,out,fixture,tick,until,employee,model,probe,deployment}=env;
+  const uid=(await api('/session')).principal.userId;
+  const serviceId=await nativeCreate(page,base,'services','Add service',{'Service name':'Orders workflow','Who may see this?':'workspace','What people use it for':'Submit a renewal order','What happens when it is unavailable?':'London and Sydney cannot submit renewals','Source of these facts':'Declared provider fixture','When was the source observed?':local(-60000),'Freshness window in milliseconds':600000});
+  const observations=[['a',uid],['b',employee.id]].map(([id,person])=>({id,description:id==='a'?'London new-session orders':'Sydney existing-session orders',step:{action:'deployment.rollout',actionVersion:1,connectionId:deployment.id,verifierConnectionId:probe.id,target:'orders',beneficiaryId:person,grantId:'observation-only',grantVersion:1,cohort:[person]}}));
+  const commitmentId=await nativeCreate(page,base,'commitments','Establish a service commitment',{'What should people always be able to do?':'London and Sydney can submit renewals','Actual beneficiary identities':uid+'\n'+employee.id,'Independent observation definitions':JSON.stringify(observations),'Evidence freshness in seconds':600,'Observation interval in seconds':3600,'Effective from':local(-60000),'Reasoning connection':model.id});
+  await fixture({repaired:false,engineering:true});
+  await action(page,'Observe this commitment now',{},'/observe','Run scoped observations');
+  assert.ok((await api('/commitments/'+commitmentId+'/coverage')).coverage.every(r=>r.state==='failed'));
+  const dir=await realpath(await mkdtemp(join(tmpdir(),'linen-native-engineering-'))),repo=join(dir,'repo');await mkdir(repo);
+  const git=(...args)=>execFileSync('git',args,{cwd:repo,encoding:'utf8'}).trim();
+  const ctx=await browser.newContext({timezoneId:'UTC'});
+  try{
+    git('init');git('config','user.name','Native fixture');git('config','user.email','fixture@example.test');
+    await writeFile(join(repo,'claims.mjs'),'export function groups(claims) { return claims.roles ?? [] }\n');
+    await writeFile(join(repo,'test.mjs'),"import {groups} from './claims.mjs';if(!groups({groups:['sales']}).includes('sales'))process.exit(1)\n");
+    await writeFile(join(repo,'independent.mjs'),"import {groups} from './claims.mjs';if(groups({roles:['staff']})[0]!=='staff'||groups({groups:['sales']})[0]!=='sales'||groups({}).length!==0)process.exit(1)\n");
+    git('add','.');git('commit','-m','Test source with unfamiliar claim regression');const pin=git('rev-parse','HEAD');
+    await page.goto(base+'/app#/engineering');
+    const command=[process.execPath,'independent.mjs'];
+    const config={repository:repo,baseCommit:pin,allowedPaths:['claims.mjs'],contextPaths:['claims.mjs','test.mjs','independent.mjs'],independentPaths:['test.mjs','independent.mjs'],commitmentIds:[commitmentId],modelConnectionId:model.id,commands:{reproducer:[process.execPath,'test.mjs'],test:[process.execPath,'test.mjs'],check:command,canary:command,release:command,adoption:command},releaseRef:'refs/heads/linen-repaired'};
+    const grant=await action(page,'Grant a bounded repository task',{config,expiresAt:local(3600000)},'/engineering/grants','Save',201);
+    await page.goto(base+'/app#/commitments/'+commitmentId);
+    const research=await action(page,'Investigate an unfamiliar failure',{connectionId:model.id,question:'New order sessions fail after identity rotation; distinguish claims from routing.'},'/research','Save',201);
+    await page.waitForURL(/#\/research\/.+/);
+    const advanced=await action(page,'Continue the research',{},'/advance','Run one bounded round');
+    assert.equal(advanced.state,'engineering_required');assert.equal(advanced.data.rounds[0].decision.hypotheses.length,2);assert.equal(advanced.data.rounds[0].probes.length,2);
+    await captureJourney(page,{path:out+'/J6-rival-research-engineering.png',fullPage:true});
+    const companion=async(path,body)=>{const r=await fetch(base+'/api/v1'+path,{method:'POST',headers:{Authorization:'Bearer '+grant.token,'Content-Type':'application/json'},body:JSON.stringify(body)});const value=await r.json();assert.ok(r.ok,JSON.stringify(value));return value};
+    const claimed=await companion('/engineering-agent/claim',{});assert.ok(claimed.job);
+    const receipt=await runEngineeringJob({job:claimed.job,grant:claimed.grant,receiptDirectory:join(out,'engineering-receipts'),authorize:async()=>{await companion('/engineering-agent/jobs/'+claimed.job.id+'/heartbeat',{claimToken:claimed.claimToken});return true},design:async files=>companion('/engineering-agent/jobs/'+claimed.job.id+'/design',{claimToken:claimed.claimToken,files})});
+    assert.equal(receipt.state,'adopted',JSON.stringify(receipt));assert.equal(git('rev-parse',config.releaseRef),receipt.commit);assert.equal(git('rev-parse','HEAD'),pin);
+    await companion('/engineering-agent/jobs/'+claimed.job.id+'/receipt',{claimToken:claimed.claimToken,receipt});
+    await page.goto(base+'/app#/engineering/'+claimed.job.id);await captureJourney(page,{path:out+'/J6-actual-source-adoption.png',fullPage:true});
+    // A distinct named issuer grants the service effect; engineering authority alone cannot do this.
+    await page.goto(base+'/app#/members');
+    const issuer=await action(page,'Add a workspace member',{name:'Rowan Independent Issuer',email:'rowan@example.test',password:'Connected-browser-2026',roles:['owner']},'/members','Save',201);
+    const ip=await ctx.newPage();await signIn(ip,base,'rowan@example.test');const issuerApi=apiFor(ip);
+    const payload={commit:receipt.commit};
+    const effect=await issuerApi('/grants',{principalId:uid,beneficiaryId:uid,action:'deployment.rollout',actionVersion:1,target:'orders',connectionId:deployment.id,validFrom:later(-60000),validUntil:later(3600000),maxUses:20,conditions:{payloadHash:createHash('sha256').update(JSON.stringify(payload)).digest('hex')},verifierConnectionId:probe.id});
+    const step={action:'deployment.rollout',actionVersion:1,connectionId:deployment.id,connectionRevision:deployment.revision,target:'orders',beneficiaryId:uid,grantId:effect.id,grantVersion:effect.version,verifierConnectionId:probe.id,verifierConnectionRevision:probe.revision,cohort:[uid],payload};
+    const c=await api('/commitments/'+commitmentId);
+    const plan=await api('/plans',{contextType:'commitment',workId:c.id,revision:c.revision,steps:[step],idempotencyKey:'native-frontier-repair'});
+    await page.goto(base+'/app#/plans');
+    const planCard=page.locator('.connection-record').filter({has:page.locator('pre').filter({hasText:plan.id})});
+    // Plans list uses actual native dispatch form, with operation evidence read independently.
+    await action(page,'Dispatch under current authority',{},'/plans/'+plan.id+'/dispatch','Dispatch plan');
+    await tick();
+    const ops=(await api('/operations')).filter(o=>o.plan_id===plan.id);assert.equal(ops.length,1);
+    await page.goto(base+'/app#/research/'+research.id);
+    const verified=await action(page,'Independently verify the repair',{operationId:ops[0].id},'/verify');assert.equal(verified.state,'verified');
+    await captureJourney(page,{path:out+'/J6-independent-repair.png',fullPage:true});
+    await tick();
+    const packages=await api('/capabilities');const pkg=packages.find(p=>p.research_id===research.id);assert.ok(pkg,'Scheduled verified-case compilation retains provenance');
+    const packageData=JSON.parse(pkg.data_json);
+    await fixture({repaired:false,engineering:false});
+    await page.goto(base+'/app#/commitments/'+commitmentId);await action(page,'Observe this commitment now',{},'/observe','Run scoped observations');
+    await page.goto(base+'/app#/capabilities/'+pkg.id);
+    const reuse=await action(page,'Apply this verified repair to a matching commitment',{commitmentId,plan:{steps:[step]},versions:packageData.versions},'/apply');assert.equal(reuse.state,'executing');
+    await captureJourney(page,{path:out+'/J6-matching-reuse.png',fullPage:true});
+    await fixture({repaired:false,healthyCohort:employee.id});
+    await page.goto(base+'/app#/commitments/'+commitmentId);await action(page,'Observe this commitment now',{},'/observe','Run scoped observations');
+    const beforeNear=(await api('/operations')).length;
+    await page.goto(base+'/app#/capabilities/'+pkg.id);
+    const near=await action(page,'Apply this verified repair to a matching commitment',{commitmentId,plan:{steps:[step]},versions:packageData.versions},'/apply');assert.equal(near.state,'fresh_research');assert.equal((await api('/operations')).length,beforeNear);
+    await api('/connections/'+model.id,{revision:model.revision,name:'Fixture reasoning revised',config:{...JSON.parse((await api('/connections')).find(x=>x.id===model.id).config_json),model:'fixture-model-revised'}},'PATCH');
+    await page.reload();
+    const drift=await action(page,'Apply this verified repair to a matching commitment',{commitmentId,plan:{steps:[step]},versions:packageData.versions},'/apply');assert.equal(drift.state,'fresh_research');assert.ok(drift.admission.reasons.includes('version_drift'));
+    await captureJourney(page,{path:out+'/J6-drift-fresh-investigation.png',fullPage:true});
+    return {commitmentId,serviceId,issuerApi,step,config,receipt,issuerContext:ctx};
+  }catch(error){await ctx.close();throw error}finally{await rm(dir,{recursive:true,force:true})}
+}
