@@ -212,6 +212,7 @@ export function FulfilmentDecisions({
               <div className="resource-details">
                 <Facts
                   entries={[
+                    ["Requested by", item.requesterName],
                     ["For", item.beneficiaryName],
                     ["Service", item.catalogName],
                     ["Purpose", item.purpose],
@@ -219,6 +220,17 @@ export function FulfilmentDecisions({
                   ]}
                 />
               </div>
+              {item.serviceForOtherPerson && (
+                <Notice tone="warning">
+                  <strong>This service is for someone else</strong>
+                  <p>
+                    The request is for {item.requestForName}, but this service is
+                    recorded for {item.beneficiaryName}. Your decision applies to{" "}
+                    {item.beneficiaryName} only. The request will not continue until
+                    the service owner confirms who it is for.
+                  </p>
+                </Notice>
+              )}
               {item.reason && (
                 <Notice tone="warning">
                   <strong>Why this needs your decision</strong>

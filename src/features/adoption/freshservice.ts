@@ -17,7 +17,7 @@ export class Freshservice {
         check(/^\/api\/v2\/[a-z0-9/?=&_.:%-]+$/i.test(path), 'provider_path_invalid');
         const response = await this.transport(`https://${this.domain}${path}`, { method, redirect: 'manual', signal: AbortSignal.timeout(10000), headers: { Authorization: `Basic ${btoa(this.apiKey + ':X')}`, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
         if (!response.ok)
-            throw new ApiError(response.status === 429 ? 503 : 502, response.status === 429 ? 'source_rate_limited' : 'source_request_failed', 'Freshservice request failed; source remains unavailable');
+            throw new ApiError(response.status === 429 ? 503 : 502, response.status === 429 ? 'source_rate_limited' : 'source_request_failed', 'Freshservice could not be reached; try again later');
         check(Number(response.headers.get('content-length') || 0) <= 8 * 1024 * 1024, 'provider_response_too_large');
         const text = await response.text();
         check(text.length <= 8 * 1024 * 1024, 'provider_response_too_large');
@@ -26,7 +26,7 @@ export class Freshservice {
             data = JSON.parse(text);
         }
         catch {
-            throw new ApiError(502, 'source_invalid_json', 'Freshservice returned invalid JSON');
+            throw new ApiError(502, 'source_invalid_json', 'Freshservice answered with something Linen could not read');
         }
         return data;
     }

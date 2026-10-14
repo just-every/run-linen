@@ -8,27 +8,27 @@ export function AdoptionChoices() {
   const retention = useRemote<RecordValue>('/adoption/retention');
   const [ownership, setOwnership] = useState<RecordValue | null>(null);
   return <section>
-    <h2>Choose custody and execution responsibility</h2>
-    <Notice>Directory discovery establishes source facts. Decide separately who may execute, how long private archives remain, and who holds the recovery files and encryption key.</Notice>
+    <h2>Choose who runs what, and where backups live</h2>
+    <Notice>Reading your existing desk tells Linen what is there. Decide separately who may act, how long private backups are kept, and who holds the recovery files and encryption key.</Notice>
     <ErrorNotice error={retention.error} />
     {retention.data && <ActionForm title="Choose private archive retention" path="/adoption/retention" method="PUT"
       defaults={{revision:retention.data.revision}}
       fields={[{name:'archiveDays',label:'Days to retain private export and import archives',type:'number',required:true,value:Number(retention.data.archive_days ?? retention.data.archiveDays ?? 30)}]}
       explanation="This policy governs private archive copies. It does not erase the service history or establish a provider’s retention policy."
       onSaved={retention.refresh} />}
-    <ActionForm title="Review one execution owner" path="/adoption/ownership"
+    <ActionForm title="Choose who runs one action" path="/adoption/ownership"
       fields={[
-        {name:'resource',label:'Exact effect resource',required:true,hint:'Use the connection, target and provider beneficiary of the intended effect.'},
-        {name:'action',label:'Exact permitted action',required:true},
-        {name:'sourceId',label:'Incumbent source identity, when coexisting'},
-        {name:'sourceTicketId',label:'Incumbent ticket number',type:'number'},
-        {name:'approvalId',label:'Incumbent approval group number',type:'number'},
-        {name:'incumbentDisabledEvidence',label:'Evidence that the incumbent executor is disabled',type:'textarea'},
-        {name:'expectedRevision',label:'Reviewed existing ownership revision',type:'number'},
+        {name:'resource',label:'What would change',required:true,hint:'Name the connection, the item and the person the change is for.'},
+        {name:'action',label:'Action Linen may take',required:true},
+        {name:'sourceId',label:'Existing desk, if it still does this',hint:'Leave empty when Linen is the only desk.'},
+        {name:'sourceTicketId',label:'Ticket number in the existing desk',type:'number'},
+        {name:'approvalId',label:'Approval group number in the existing desk',type:'number'},
+        {name:'incumbentDisabledEvidence',label:'Proof the existing desk no longer does this',type:'textarea'},
+        {name:'expectedRevision',label:'Version of the choice you are replacing',type:'number'},
       ]}
-      explanation="A greenfield resource has no incumbent source. For coexistence, Linen reads the current source and approval and requires actual disablement evidence. A competing claim must reconcile the current revision. Ownership supplies no execution grant."
+      explanation="A brand-new desk has nothing to switch off. When you run beside another desk, Linen reads that desk and its approval and asks for proof it has stopped doing this. A competing choice has to replace the current version. Choosing who runs an action does not give Linen permission to take it."
       onSaved={setOwnership} />
-    {ownership && <Evidence title="Recorded ownership fence" value={ownership} />}
-    <p>Create a portable snapshot below for the chosen recovery custodian. Its manifest and private chunks need the retained encryption key. Restoring history keeps execution held until current effects are reconciled.</p>
+    {ownership && <Evidence title="Recorded choice" value={ownership} />}
+    <p>Create a portable snapshot below for whoever keeps your recovery files. Its summary and private files need the encryption key you keep. Restoring history leaves in-progress work on hold until you confirm what really happened.</p>
   </section>;
 }

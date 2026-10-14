@@ -138,7 +138,7 @@ export async function writebackEvidence(ctx: AdoptionContext, input: {
     if (existing) {
         if (existing.state === 'sent')
             return existing;
-        throw new (await import('../../platform/http')).ApiError(409, 'writeback_reconciliation_required', 'Unknown writeback must be reconciled before repeat');
+        throw new (await import('../../platform/http')).ApiError(409, 'writeback_reconciliation_required', 'An earlier update to the existing desk is unconfirmed. Check what happened before trying again');
     }
     const wid = id(), marker = `linen:${wid}`;
     await ctx.env.DB.prepare("INSERT INTO adoption_writebacks VALUES(?,?,?,?,?,?, 'unknown',NULL,?)").bind(wid, ctx.principal.workspaceId, o.source_id, String(o.source_ticket_id || o.resource.slice(7)), input.operationId, marker, now()).run();

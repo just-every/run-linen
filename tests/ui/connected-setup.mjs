@@ -49,10 +49,10 @@ export async function connectedSetup({page,api,base,out,fixture}) {
   await action(page,'Choose private archive retention',{archiveDays:14},'/adoption/retention');
   assert.equal((await api('/adoption/retention')).archive_days,14);
   const ownedResource=graph.id+':reserved-test-target:provider-colleague';
-  const ownership=await action(page,'Review one execution owner',{resource:ownedResource,action:'group.add'},'/adoption/ownership');
-  const conflict=await action(page,'Review one execution owner',{resource:ownedResource,action:'group.add'},'/adoption/ownership','Save',409);
+  const ownership=await action(page,'Choose who runs one action',{resource:ownedResource,action:'group.add'},'/adoption/ownership');
+  const conflict=await action(page,'Choose who runs one action',{resource:ownedResource,action:'group.add'},'/adoption/ownership','Save',409);
   assert.equal(conflict.error.code,'ownership_revision_conflict');
-  const reconciled=await action(page,'Review one execution owner',{resource:ownedResource,action:'group.add',expectedRevision:ownership.revision},'/adoption/ownership');
+  const reconciled=await action(page,'Choose who runs one action',{resource:ownedResource,action:'group.add',expectedRevision:ownership.revision},'/adoption/ownership');
   assert.equal(reconciled.fence,ownership.fence+1);
   const snapshotArchive=await action(page,'Create a portable snapshot',{},'/exports','Start snapshot',201);
   for(let i=0;i<100;i++){
@@ -60,7 +60,7 @@ export async function connectedSetup({page,api,base,out,fixture}) {
     const advanced=page.waitForResponse(r=>r.url().endsWith('/exports/'+snapshotArchive.id+'/advance'));
     await page.getByRole('button',{name:'Continue snapshot',exact:true}).click();await advanced;
   }
-  await page.getByRole('button',{name:'Download manifest',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Download snapshot summary',exact:true}).waitFor();
   assert.equal((await api('/exports/'+snapshotArchive.id)).state,'ready');
   await captureJourney(page,{path:out+'/J1-executor-conflict-private-retention-recovery.png',fullPage:true});
   return {employee,graph,probe,deployment,notification,model,actor};

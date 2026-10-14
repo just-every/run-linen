@@ -53,8 +53,8 @@ installation, for example `'alex@example.com'`. Keep the quotes, not the angle b
 - **Re-enter connections.** Stored credentials are not part of a backup; open **Connections &
   setup** and enter each one again.
 - **Release held work.** Anything that was in flight when you exported is restored as held. In
-  **Existing desk & data custody**, under **Execution holds**, check each one against what really
-  happened (**Reconcile current evidence**), then **Release reconciled hold**. Linen never
+  **Existing desk & backups**, under **Work on hold**, check each one against what really
+  happened (**Confirm what really happened**), then **Release this work**. Linen never
   repeats an action on its own after a restore, and restored history never brings back
   permission to act: current grants are checked again at every action.
 

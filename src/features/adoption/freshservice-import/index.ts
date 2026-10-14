@@ -44,7 +44,7 @@ export function registerFreshserviceImportRoutes(parent:Hono<AppEnv>) {
     const context=await jobContext(c,c.req.param('id')),job=await readD1ImportJob(c.req.param('id'),context);
     const journal=(await c.env.DB.prepare('SELECT action,position,end_position,fence FROM ik_batches WHERE job_id=? ORDER BY fence,position').bind(job.id).all()).results;
     const current=await readD1ImportJob(job.id,context);
-    if(current.fence!==job.fence)throw new ApiError(409,'import_changed','Import progressed during read; refresh status');
+    if(current.fence!==job.fence)throw new ApiError(409,'import_changed','The import moved on while you were reading it. Reload and try again');
     return c.json({...job,journal});
   });
   for(const command of ['apply','resume','undo','rollback'] as const) app.post(`${base}/:id/${command}`,async c=>{
@@ -62,7 +62,7 @@ export function registerFreshserviceImportRoutes(parent:Hono<AppEnv>) {
     const originals=await readD1ImportOriginals(c.req.param('id'),await jobContext(c,c.req.param('id'))),ordinal=Number(c.req.param('ordinal'));
     const artifact=Number.isSafeInteger(ordinal)&&ordinal>=0?originals[ordinal]:undefined;
     if(!artifact)throw new ApiError(404,'not_found','Artifact not found');
-    if(artifact.original.status!=='retained')throw new ApiError(410,'artifact_unavailable','Source bytes were not supplied or were withdrawn after erasure');
+    if(artifact.original.status!=='retained')throw new ApiError(410,'artifact_unavailable','The original file was not supplied, or was removed when someone’s data was erased');
     return new Response(Buffer.from(artifact.original.base64,'base64'),{headers:{'Content-Type':'application/octet-stream','Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(artifact.name)}`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
   });
   parent.route('/',app);

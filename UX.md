@@ -1,7 +1,7 @@
 # Linen experience and journeys
 
-Proposed interaction design; no screens or prototype exist yet. The six journeys below are
-design targets, not observed performance. [CONTRACT.md](CONTRACT.md) retains the complete
+The interaction design Linen is built toward. The app has screens today, but the six journeys
+below are design targets, not observed performance. [CONTRACT.md](CONTRACT.md) retains the complete
 release floor and the flagship destination.
 
 ## The everyday experience
@@ -232,9 +232,9 @@ configuration, correction, failure, physical work, vendor/technician handoff, ta
 upkeep, alongside verified outcomes and unresolved work. Fewer notifications or tickets alone do
 not meet the budget if work was missed or shifted elsewhere.
 
-## Prototype review before inward build
+## Reviewing the app against the journeys
 
-The editable prototype should walk through all six journeys, including discovery gaps, refusal,
+The running app should be walked through all six journeys, including discovery gaps, refusal,
 denied authority, partial and ambiguous effects, changed facts, recovery, physical custody,
 business deferral, takeover and “still not working.” Show what is preauthorised, what asks for a
 human decision, and what continues in the background. Keep deep operational detail expandable
@@ -245,5 +245,5 @@ Have employees and operators explain what is happening, whether they need to act
 actually been verified. Include keyboard/mobile access, private and public separation,
 notification failure and outage recovery access. Count active minutes and interruptions by
 employee, operator, owner, vendor and technician, including setup, correction and failure paths.
-Prototype acceptance establishes only that the proposed experience is understandable; it does
-not establish a provider effect or pass a product release gate.
+Passing this review establishes only that the experience is understandable; it does not
+establish a provider effect or pass a product release gate.

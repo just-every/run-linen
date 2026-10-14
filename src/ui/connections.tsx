@@ -114,7 +114,7 @@ export function Connections() {
           <a href="#/grants">Review standing grants</a>
           <a href="#/members">People & permissions</a>
           <a href="#/services">Service ownership</a>
-          <a href="#/imports">Existing desk & data custody</a>
+          <a href="#/imports">Existing desk & backups</a>
         </section>
         <details className="evidence">
           <summary>What this setup establishes</summary>

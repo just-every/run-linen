@@ -7,7 +7,7 @@ try {
   await ok('/subject-mappings',{connectionId:'graph',localUserId:'employee',providerSubject:'provider-employee-distinct'});
   for(const manager of ['manager','new-manager'])await db.exec(`INSERT INTO users VALUES('${manager}','${manager}@test','Manager','unused','2026-01-01'); INSERT INTO memberships VALUES('w','${manager}','["owner"]',1);`);
   await db.exec(`INSERT INTO work_people(id,workspace_id,source,source_id,name,manager_id,active,merged_into,revision,observed_at,effective_at,member_id,binding_id) VALUES('employee','w','hr','employee','Employee','manager',1,NULL,1,'2026-01-01','2026-01-01','employee','reviewed-fixture-binding')`);
-  const work=await ok('/work',{title:'Manager access',body:'Request',deduplicationKey:'manager'},'employee');
+  const work=await ok('/work',{title:'Manager access',body:'Private conversation text',deduplicationKey:'manager'},'employee');
   const catalog=await ok('/catalog',{name:'Manager required',kind:'access',target:'managed',ownerId:'owner',requiresManager:true});
   const expiry=future(3600000),request={catalogId:catalog.id,beneficiaryId:'employee',purpose:'Project',expiresAt:expiry};
   assert.equal((await ok(`/work/${work.id}/fulfilment`,request,'employee')).state,'blocked','manager identity is not approval');
@@ -26,7 +26,7 @@ try {
   assert.equal((await api('/plans/granted',{workId:work.id,revision:1,steps:[step],idempotencyKey:'unapproved'},'employee')).value.code,'manager_approval_required','execution dispatch invokes current work manager policy');
   const queue=(await ok('/fulfilment-decisions',undefined,'manager')).items;
   assert.equal(queue.length,1);assert.equal(queue[0].workId,work.id);
-  assert.deepEqual(Object.keys(queue[0]).sort(),['workId','title','catalogId','catalogName','beneficiaryId','beneficiaryName','purpose','expiresAt','expectedWorkRevision','expectedFulfilmentRevision','expectedCatalogRevision','expectedPersonId','expectedPersonRevision','expectedBindingId','holderId','holderName','state','reason'].sort());
+  assert.equal(JSON.stringify(queue[0]).includes('Private conversation text'),false,'the queue carries no conversation text');
   assert.equal((await ok('/fulfilment-decisions',undefined,'owner')).items.length,0,'no global owner leak');
   assert.equal((await ok('/fulfilment-decisions',undefined,'employee')).items.length,0);
   const approvalInput={...queue[0],expectedHolderId:queue[0].holderId,idempotencyKey:'decision'};

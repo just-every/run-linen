@@ -1,5 +1,6 @@
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
+import { plainMessage } from './messages';
 export interface AdoptionContext {
     env: Env;
     principal: Principal;
@@ -7,7 +8,7 @@ export interface AdoptionContext {
 export type Row = Record<string, string | number | null>;
 export function check(v: unknown, code: string, status = 422): asserts v {
     if (!v)
-        throw new ApiError(status, code, code.replaceAll('_', ' '));
+        throw new ApiError(status, code, plainMessage(code));
 }
 export async function owner(ctx: AdoptionContext) {
     const m = await ctx.env.DB.prepare('SELECT roles_json FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId, ctx.principal.userId).first<{

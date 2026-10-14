@@ -28,6 +28,7 @@ const checks = [
   ['fulfilment correction and restart', process.execPath, ['tests/work/amend-runtime.mjs']],
   ['reviewed person member flow', process.execPath, ['tests/work/person-binding-runtime.mjs']],
   ['current manager decisions', process.execPath, ['tests/work/amend-manager-runtime.mjs']],
+  ['decision queue names the beneficiary', process.execPath, ['tests/work/decision-queue-beneficiary-runtime.mjs']],
   ['historical person erasure', process.execPath, ['tests/work/historical-runtime.mjs']],
   ['execution and reconciliation', process.execPath, ['tests/execution/runtime.mjs']],
   ['current effect authority', process.execPath, ['tests/execution/authority-runtime.mjs']],

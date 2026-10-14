@@ -11,18 +11,17 @@ time, into one review. Confirm or correct what it found before you apply it.
 
 ## 2. Bring the history across
 
-Open **Existing desk & data custody** from the setup rail.
+Open **Existing desk & backups** from the setup rail.
 
-1. Under **Incumbent sources**, use **Connect an incumbent source**: pick the **Validated
-   Freshservice connection**, its workspace number and, if you like, a date to read changes
-   since.
-2. **Read the next source page** until every page you want has been read.
-3. Open the import. **Map an imported principal to a reviewed current member** for each person
+1. Under **Existing desks**, use **Connect an existing desk**: pick the **Freshservice
+   connection**, its workspace number and, if you like, a date to read changes since.
+2. **Read the next batch from this desk** until every page you want has been read.
+3. Open the import. **Match an imported person to a current member** for each person
    who should see their old conversations; anyone you do not map stays an anonymous name in the
    history and gets no account.
-4. **Check this import** lists exactly what will come across, what will not, and why.
-5. When you accept that list, tick the box and choose **Apply reviewed import** under **Adopt
-   reviewed history**.
+4. **Check this import** (**Check what will come across**) lists exactly what will come across, what will not, and why.
+5. When you accept that list, tick the box and choose **Adopt this import** under **Adopt
+   the checked history**.
 
 Imported requests arrive paused and restricted, with their Freshservice status kept as history.
 Only the mapped requester and owners can see them, and private notes stay private.
@@ -30,14 +29,14 @@ Only the mapped requester and owners can see them, and private notes stay privat
 ## 3. Run both side by side
 
 While you decide, both desks can stay open. Linen never takes over work that Freshservice still
-does: under **Choose custody and execution responsibility**, **Review one execution owner**
-records, for one exact resource and action, that Linen now owns it, and asks for evidence that
+does: under **Choose who runs what, and where backups live**, **Choose who runs one action**
+records, for one exact item and action, that Linen now owns it, and asks for evidence that
 the Freshservice side is switched off before it does. Until then Linen does not act on that
 resource.
 
 Imported work never acts on its own. Anything that was in flight stays held until an owner
-checks the current evidence (**Reconcile current evidence**) and releases it (**Release
-reconciled hold**).
+checks what really happened (**Confirm what really happened**) and releases it (**Release
+this work**).
 
 ## Saved files instead of a connection
 

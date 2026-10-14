@@ -20,7 +20,7 @@ export function ImportFiles({
     try {
       const form = new FormData(event.currentTarget),
         file = form.get("chunk") as File,
-        ordinal = form.get("ordinal");
+        ordinal = Number(form.get("ordinal")) - 1;
       const response = await fetch(`/api/v1/imports/${id}/chunks/${ordinal}`, {
         method: "PUT",
         headers: {
@@ -33,7 +33,7 @@ export function ImportFiles({
         error?: { message?: string };
       };
       if (!response.ok)
-        throw Error(result.error?.message || "This chunk was not admitted.");
+        throw Error(result.error?.message || "This file was not accepted.");
       setSaved(true);
       onSaved();
     } catch (e) {
@@ -44,28 +44,27 @@ export function ImportFiles({
   }
   return (
     <form className="inline-form" onSubmit={upload}>
-      <h2>Add the original snapshot chunks</h2>
+      <h2>Add the snapshot files</h2>
       <p>
-        Each file is checked against the manifest’s length and hash before
-        import.
+        Add each file exactly as it was saved. Linen checks its size and fingerprint
+        against the snapshot summary before importing it.
       </p>
       <label>
-        Chunk ordinal
-        <input name="ordinal" type="number" min="0" step="1" required />
+        File number (1 for the first)
+        <input name="ordinal" type="number" min="1" step="1" required />
       </label>
       <label>
-        Original chunk file
+        Snapshot file
         <input name="chunk" type="file" required />
       </label>
       <ErrorNotice error={error} />
       {saved && (
         <Notice>
-          The chunk was admitted. Run the meaning and reference check when every
-          chunk is present.
+          The file was added. When every file is in, check what will come across.
         </Notice>
       )}
       <button className="action primary" disabled={busy}>
-        {busy ? "Checking bytes…" : "Upload and verify chunk"}
+        {busy ? "Checking the file…" : "Upload and check file"}
       </button>
     </form>
   );

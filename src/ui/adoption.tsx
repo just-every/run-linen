@@ -45,27 +45,29 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
         title="Bring the history. Keep your choices."
       >
         <p className="lead">
-          Review imported meaning before adopting it. Restored history never
-          silently restores permission to act.
+          Check what an import means before you adopt it. Restored history never
+          gives Linen permission to act on its own.
         </p>
       </Hero>
       <ErrorNotice error={action.error ?? record.error} />
       {selectedId ? (
         <>
-          <Evidence title="Import state and report" value={record.data} />
+          <Evidence title="Import progress and report" value={record.data} />
           <ImportFiles id={selectedId} onSaved={record.refresh} />
           <ActionForm
-            title="Map an imported principal to a reviewed current member"
+            title="Match an imported person to a current member"
             path={`/imports/${selectedId}/identities`}
             fields={[
               {
                 name: "sourceUserId",
-                label: "Source identity",
+                label: "Person in the old system",
+                hint: "Their ID in the desk the history came from, as shown in the import report.",
                 required: true,
               },
               {
                 name: "targetUserId",
-                label: "Reviewed current identity",
+                label: "Person in Linen",
+                hint: "The member who should see their old conversations.",
                 required: true,
               },
             ]}
@@ -75,25 +77,25 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
             title="Check this import"
             path={`/imports/${selectedId}/dry-run`}
             fields={[]}
-            submit="Check meaning and references"
+            submit="Check what will come across"
             onSaved={record.refresh}
           />
           <ActionForm
-            title="Adopt reviewed history"
+            title="Adopt the checked history"
             path={`/imports/${selectedId}/apply`}
             fields={[
               {
                 name: "acceptSemanticLoss",
-                label: "I reviewed and accept the losses listed in the dry run",
+                label: "I have read what will not come across and accept it",
                 type: "checkbox",
               },
             ]}
-            submit="Apply reviewed import"
+            submit="Adopt this import"
             onSaved={record.refresh}
           />
           <Notice>
-            Imported execution remains held until a current owner reconciles
-            evidence and explicitly releases the hold.
+            Imported work that was still in progress stays on hold until an owner
+            confirms what really happened and releases it.
           </Notice>
         </>
       ) : (
@@ -113,7 +115,7 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
           {exportId && (
             <section>
               <h2>Your snapshot</h2>
-              <p>Snapshot {exportId}</p>
+              <p>Your snapshot is being prepared.</p>
               <button
                 className="action"
                 disabled={action.pending}
@@ -124,7 +126,7 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
               {exportResult?.state === "ready" && (
                 <>
                   <button className="action" onClick={download}>
-                    Download manifest
+                    Download snapshot summary
                   </button>
                   {Array.isArray(exportResult.chunks) &&
                     exportResult.chunks.map((chunk: any) => (
@@ -133,7 +135,7 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
                           href={`/api/v1/exports/${exportId}/chunks/${chunk.ordinal}`}
                           download
                         >
-                          Download chunk {chunk.ordinal}
+                          Download file {chunk.ordinal + 1}
                         </a>
                       </p>
                     ))}
@@ -143,13 +145,14 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
             </section>
           )}
           <ActionForm
-            title="Import a native manifest"
+            title="Import a Linen snapshot"
             path="/imports"
             defaults={{ idempotencyKey: crypto.randomUUID() }}
             fields={[
               {
                 name: "manifest",
-                label: "Export manifest",
+                label: "Snapshot summary",
+                hint: "Paste the contents of the summary file you downloaded with the snapshot.",
                 type: "json",
                 required: true,
               },
@@ -183,13 +186,13 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
         </>
       )}
       <section className="history">
-        <h2>Incumbent sources</h2>
+        <h2>Existing desks</h2>
         {sources.data?.map((s) => (
           <section key={text(s.id)}>
             <p>Freshservice workspace {text(s.source_workspace)}</p>
             <Badge value={s.state} />
             <ActionForm
-              title="Read the next source page"
+              title="Read the next batch from this desk"
               path={`/adoption/sources/${s.id}/poll`}
               fields={[]}
               onSaved={sources.refresh}
@@ -199,12 +202,12 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
         <ErrorNotice error={connections.error} retry={connections.refresh} />
         {connections.data && (freshservice.length ? (
           <ActionForm
-            title="Connect an incumbent source"
+            title="Connect an existing desk"
             path="/adoption/sources"
             fields={[
               {
                 name: "connectionId",
-                label: "Validated Freshservice connection",
+                label: "Freshservice connection",
                 type: "select",
                 required: true,
                 options: freshservice.map((c) => ({ value: text(c.id), label: text(c.name) })),
@@ -212,7 +215,7 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
               },
               {
                 name: "sourceWorkspace",
-                label: "Source workspace number",
+                label: "Freshservice workspace number",
                 type: "number",
                 required: true,
               },
@@ -234,12 +237,12 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
         ))}
       </section>
       <section className="history">
-        <h2>Execution holds</h2>
+        <h2>Work on hold</h2>
         <ErrorNotice error={holds.error} />
         {holds.data && !holds.data.length && (
           <Empty title="Nothing is held.">
-            Imported work that was in flight waits here until you reconcile and
-            release it.
+            Imported work that was in progress waits here until you confirm
+            what really happened and release it.
           </Empty>
         )}
         {holds.data?.map((h) => (
@@ -247,13 +250,14 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
             <p>{text(h.reason ?? h.id)}</p>
             <Badge value={h.state} />
             <ActionForm
-              title="Reconcile current evidence"
+              title="Confirm what really happened"
               path={`/adoption/holds/${h.id}/reconcile`}
               fields={[
-                { name: "historyId", label: "History identity", required: true },
+                { name: "historyId", label: "Imported item", hint: "The item’s ID from the import report.", required: true },
                 {
                   name: "evidence",
-                  label: "Independent current evidence",
+                  label: "What you checked",
+                  hint: "Describe what you found in the live system, not in the import.",
                   type: "json",
                   required: true,
                 },
@@ -261,7 +265,7 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
               onSaved={holds.refresh}
             />
             <ActionForm
-              title="Release reconciled hold"
+              title="Release this work"
               path={`/adoption/holds/${h.id}/release`}
               defaults={{ revision: h.revision }}
               fields={[]}

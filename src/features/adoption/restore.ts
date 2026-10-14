@@ -43,7 +43,7 @@ export async function mapRow(ctx: AdoptionContext, source: string, row: Row) {
                     mapped[k] = JSON.stringify(replace(JSON.parse(v)));
                 }
                 catch {
-                    throw new ApiError(422, 'invalid_json_column', 'Invalid archived JSON');
+                    throw new ApiError(422, 'invalid_json_column', 'A stored record is damaged');
                 }
             }
             else
