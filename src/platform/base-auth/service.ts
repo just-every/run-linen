@@ -12,7 +12,7 @@ export function localEnabled(env:Env){
 }
 export function operatorAuth(env:Env){
  const store=nativeStore(env),local=localEnabled(env)
- const mailSender=!env.MAIL_PROVIDER||env.MAIL_PROVIDER==='development'&&!local?undefined:{async send(message: import('../../base/modules/operator-auth/index.mjs').MailMessage){
+ const mailSender=!env.MAIL_PROVIDER||env.MAIL_PROVIDER==='development'&&!local&&env.RER_DEMO!=='1'?undefined:{async send(message: import('../../base/modules/operator-auth/index.mjs').MailMessage){
   const sender=env.MAIL_PROVIDER==='development'?createMailSender({provider:'development',mode:'development'}):createMailSender({provider:env.MAIL_PROVIDER,mode:'production',apiKey:env.MAIL_API_KEY,...(env.MAIL_ACCOUNT_ID?{accountId:env.MAIL_ACCOUNT_ID}:{})})
   return sender.send(message)
  }}

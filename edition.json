@@ -18,7 +18,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "756bf5a8544d792a51bb76f6e90a8ee5908a32a5",
+          "revision": "1ce15dd8cbb7c8cf2d83ebfde2b4a8a130ff9d74",
           "path": ".",
           "paths": [
             "foundation/runtime/deployment-health.ts",
@@ -276,11 +276,12 @@
       "source": {
         "kind": "local",
         "paths": [
-          "src/import-kit"
+          "src/import-kit",
+          "src/d1-transport"
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "4c83ea57efc3a5b462426c6abc88826b72375112",
+          "revision": "1ce15dd8cbb7c8cf2d83ebfde2b4a8a130ff9d74",
           "path": ".",
           "paths": [
             "modules/import-kit/CONTRACT.md",
@@ -304,10 +305,15 @@
             "modules/import-kit/src/d1/erasure-fragments.ts",
             "modules/import-kit/src/d1/erasure-index.ts",
             "modules/import-kit/src/d1/erasure-pages.ts",
+            "modules/import-kit/src/d1/erasure-progress-schema.ts",
+            "modules/import-kit/src/d1/erasure-progress.ts",
             "modules/import-kit/src/d1/erasure-related.ts",
             "modules/import-kit/src/d1/erasure-report.ts",
             "modules/import-kit/src/d1/erasure-schema.ts",
+            "modules/import-kit/src/d1/erasure-selection.ts",
             "modules/import-kit/src/d1/erasure-snapshot.ts",
+            "modules/import-kit/src/d1/erasure-stage.ts",
+            "modules/import-kit/src/d1/erasure-step.ts",
             "modules/import-kit/src/d1/erasure-values.ts",
             "modules/import-kit/src/d1/erasure-writes.ts",
             "modules/import-kit/src/d1/erasure.ts",
@@ -323,6 +329,7 @@
             "modules/import-kit/src/d1/native-staging-admission.ts",
             "modules/import-kit/src/d1/native-staging-context.ts",
             "modules/import-kit/src/d1/native-staging-lifecycle.ts",
+            "modules/import-kit/src/d1/native-staging-offset.ts",
             "modules/import-kit/src/d1/native-staging-publication.ts",
             "modules/import-kit/src/d1/native-staging-rows.ts",
             "modules/import-kit/src/d1/native-staging-schema.ts",
@@ -338,6 +345,12 @@
             "modules/import-kit/src/d1/preparation-reader.ts",
             "modules/import-kit/src/d1/preparation-schema.ts",
             "modules/import-kit/src/d1/preparation-state.ts",
+            "modules/import-kit/src/d1/preparation-step-combine.ts",
+            "modules/import-kit/src/d1/preparation-step-control.ts",
+            "modules/import-kit/src/d1/preparation-step-hash.ts",
+            "modules/import-kit/src/d1/preparation-step-pages.ts",
+            "modules/import-kit/src/d1/preparation-steps-schema.ts",
+            "modules/import-kit/src/d1/preparation-steps.ts",
             "modules/import-kit/src/d1/preparations.ts",
             "modules/import-kit/src/d1/preserved-reverse.ts",
             "modules/import-kit/src/d1/provenance-set.ts",
@@ -347,9 +360,12 @@
             "modules/import-kit/src/d1/read-fence.ts",
             "modules/import-kit/src/d1/read-results.ts",
             "modules/import-kit/src/d1/redacted-custody.ts",
+            "modules/import-kit/src/d1/redaction-step.ts",
             "modules/import-kit/src/d1/retained-values.ts",
+            "modules/import-kit/src/d1/retirement-bounded.ts",
             "modules/import-kit/src/d1/retirement-schema.ts",
             "modules/import-kit/src/d1/retirement-scope.ts",
+            "modules/import-kit/src/d1/retirement-steps.ts",
             "modules/import-kit/src/d1/retirement-tally.ts",
             "modules/import-kit/src/d1/retirement.ts",
             "modules/import-kit/src/d1/reversal-fence-schema.ts",
@@ -402,6 +418,7 @@
             "modules/import-kit/src/provenance/identity.ts",
             "modules/import-kit/src/provenance/json-snapshot.ts",
             "modules/import-kit/src/provenance/numeric-credentials.ts",
+            "modules/import-kit/src/provenance/resumable-sha256.ts",
             "modules/import-kit/src/provenance/validate-json.ts",
             "modules/import-kit/src/readers/README.md",
             "modules/import-kit/src/readers/bytes.ts",
@@ -413,7 +430,9 @@
             "modules/import-kit/src/storage/originals.ts",
             "modules/import-kit/src/storage/provenance.ts",
             "modules/import-kit/src/storage/schema.ts",
-            "modules/import-kit/src/types.ts"
+            "modules/import-kit/src/types.ts",
+            "modules/d1-transport/index.mjs",
+            "modules/d1-transport/index.d.mts"
           ]
         },
         "mappings": [
