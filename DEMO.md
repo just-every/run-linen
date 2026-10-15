@@ -5,7 +5,9 @@ link. The visitor opens signed in as the saved owner. The fictional Northstar
 Studio workspace keeps its 12 requests and incidents, conversation history,
 eight people, four stock devices, six catalogue choices, four reviewed articles,
 three services and two decisions. These are editable domain records created
-idempotently by `src/demo.ts`, with dates relative to the start.
+idempotently by `src/demo.ts`, with dates relative to the start. Independent
+people and conversations are seeded concurrently; each conversation keeps its
+normal ordered domain transitions.
 
 The nav and document title read **Linen Demo**, or **Linen Dev** under `rer dev`.
 There is no injected bar, captured-mail inbox or blocked-sends view. Local sign-in
