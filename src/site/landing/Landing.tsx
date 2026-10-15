@@ -21,10 +21,11 @@ function HeroTitle({ parts }: { parts: readonly [string, string] }) {
   return <h1 id="hero-title"><span className="hero-line">{first}</span> <span className="hero-line">{rest} <span className="stitch">{parts[1]}</span></span></h1>
 }
 
-function Actions() {
+function Actions({ demo = false }: { demo?: boolean }) {
   return (
     <div className="site-actions">
       <a className="action primary site-run" href="/run">{hero.primary}<Icon name="arrow" size={20} /></a>
+      {demo && <a className="action primary site-run" href="https://demo.run-linen.com/">Try the demo</a>}
       <a className="site-docs-link" href={docsPath()}>{hero.secondary}</a>
     </div>
   )
@@ -41,7 +42,7 @@ export function Landing() {
             <HeroTitle parts={hero.title} />
             <p className="hero-sub">{hero.sub}</p>
             <p className="hero-alt">{hero.alternatives}</p>
-            <Actions />
+            <Actions demo />
             <p className="hero-note">{hero.note}</p>
           </div>
           <HeroDrawing />
