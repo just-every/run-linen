@@ -243,13 +243,12 @@ try {
   await page
     .getByLabel("New effective date and time")
     .fill(new Date(Date.now() + 172800000).toISOString().slice(0, 16));
-  await page
-    .locator("details")
-    .filter({
-      has: page.getByText("Change the effective date", { exact: true }),
-    })
-    .getByRole("button", { name: "Save", exact: true })
-    .click();
+  await Promise.all([
+    page.waitForResponse(r => r.url().endsWith('/amend') && r.request().method() === 'POST' && r.status() === 200),
+    page.waitForResponse(r => r.url().endsWith('/lifecycle/' + lifecycle.lifecycleId) && r.request().method() === 'GET' && r.status() === 200),
+    page.locator("details").filter({ has: page.getByText("Change the effective date", { exact: true }) })
+      .getByRole("button", { name: "Save", exact: true }).click(),
+  ]);
   await page.getByText("Change the effective date", { exact: true }).waitFor();
   await page.getByText("Cancel this lifecycle change", { exact: true }).click();
   await Promise.all([
@@ -257,6 +256,7 @@ try {
       (r) =>
         r.url().endsWith("/amend") &&
         r.request().method() === "POST" &&
+        r.request().postDataJSON().cancel === true &&
         r.status() === 200,
     ),
     page.getByRole("button", { name: "Record cancellation" }).click(),

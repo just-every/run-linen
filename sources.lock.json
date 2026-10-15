@@ -497,11 +497,11 @@
       "executable": false
     },
     "DEMO.md": {
-      "sha256": "e17433567ffe797f779c60b1c05a91c2f8e062c36b640e1a81604701a9e1f5bd",
+      "sha256": "b997f8cffd60e9bd93f44e5f0f0e081af2471744a7927f782977a85afd1b6100",
       "executable": false
     },
     "deploy-demo.json": {
-      "sha256": "a207c2ebe91126be79fc55b982925450ecfb530f3c23707656a9888ee857586c",
+      "sha256": "1ffa13d5c4f36e30f48dd956bfb0c1d94bc92e91704ef69cfb684784aa4d95f9",
       "executable": false
     },
     "deploy-site.json": {
@@ -3409,7 +3409,7 @@
       "executable": false
     },
     "tests/ui/browser.mjs": {
-      "sha256": "61b53382f85640ffc5124aa7c58e767668920e770e77f5a592588b3f29fe659e",
+      "sha256": "cfc2077c836f11bb023ad26c40fd6a33933787b122be084d9c28e502ff36acc6",
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {

@@ -34,5 +34,6 @@ No production provider credentials are deployed.
 environment in the RunEditRun account. `test_only` selects a separate host with
 Cloudflare's published Turnstile test keys; `remove_test` removes that host and
 reads back resource absence. Production uses the real environment widget keys.
-No repository variable enables deployment. `deploy-demo.json` starts at basic;
-startup timings determine whether a larger instance is required.
+No repository variable enables deployment. Startup timings select the
+`deploy-demo.json` instance type, beginning at basic and stepping up only when
+the 10-second p50 target is missed.
