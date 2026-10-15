@@ -28,7 +28,6 @@
     "export": "rer export",
     "import": "rer import",
     "reset": "rer reset",
-    "outbox": "rer outbox",
     "doctor": "rer doctor",
     "rer": "rer",
     "install:app": "rer install",
@@ -47,7 +46,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.54.5",
     "@cloudflare/workers-types": "5.20260908.1",
-    "@runeditrun/rer": "0.2.19",
+    "@runeditrun/rer": "0.2.20",
     "@types/node": "24.19.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",

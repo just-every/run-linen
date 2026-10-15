@@ -87,7 +87,7 @@ function Workspace() {
       <header className="app-header">
         <a className="brand" href="#/work">
           <Icon name="leaf" size={30} />
-          <span>Linen</span>
+          <span data-rer-name>Linen</span>
         </a>
         <nav aria-label="Main navigation">
           <a href="#/work" className={section === "work" ? "active" : ""} aria-current={section === "work" ? "page" : undefined}>

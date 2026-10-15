@@ -157,7 +157,7 @@
     },
     {
       "name": "RER_DEV_KEY",
-      "why": "Local-only native dev identity and outbox admission",
+      "why": "Local-only native dev identity and key admission",
       "secret": true,
       "required": false
     },

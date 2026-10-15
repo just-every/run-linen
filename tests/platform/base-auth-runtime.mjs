@@ -1,3 +1,4 @@
+import {mailEdge} from './mail-edge.mjs'
 import assert from 'node:assert/strict'
 import {spawn,spawnSync} from 'node:child_process'
 import {mkdtemp,writeFile,readFile,readdir,rm} from 'node:fs/promises'
@@ -8,8 +9,8 @@ const dir=await mkdtemp(join(tmpdir(),'linen-base-auth-'))
 const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r))
 const origin=`http://127.0.0.1:${port}`,config=join(dir,'wrangler.json'),entry=join(dir,'worker.ts')
 const key='test-only-dev-key-000000000000000000000000000000000000',secret='test-only-session-secret-0000000000000000000000000000'
-await writeFile(entry,`import {baseAuthResponse} from ${JSON.stringify(resolve('src/platform/base-auth/http.ts'))};import {createApplication} from ${JSON.stringify(resolve('src/application.ts'))};import {originBindings} from ${JSON.stringify(resolve('src/platform/base-auth/service.ts'))};import {withNativeDevIdentity} from ${JSON.stringify(resolve('src/platform/base-auth/dev.ts'))};const app=createApplication();const production={async fetch(r,e,c){e=originBindings(e);return await baseAuthResponse(r,e)??app.fetch(r,e,c)}};const development=withNativeDevIdentity(production);export default {fetch(r,e,c){return r.headers.get('x-test-production')==='yes'?production.fetch(r,{...e,AUTH_LOCAL:'false'},c):development.fetch(r,e,c)}}`)
-await writeFile(config,JSON.stringify({name:'linen-base-auth-test',main:entry,compatibility_date:'2026-09-08',compatibility_flags:['nodejs_compat'],d1_databases:[{binding:'DB',database_name:'linen',database_id:'local-linen'}],r2_buckets:[{binding:'ATTACHMENTS',bucket_name:'linen-base-auth-fixture'}],vars:{SESSION_SECRET:secret,SETUP_TOKEN:secret,ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64'),OWNER_EMAIL:'owner@example.test',AUTH_ORIGIN:origin,APP_ORIGIN:'http://localhost:1',AUTH_LOCAL:'true',MAIL_PROVIDER:'development',MAIL_FROM:'auth@localhost.test',RER_DEV_KEY:key}}))
+await writeFile(entry,`${mailEdge}import {baseAuthResponse} from ${JSON.stringify(resolve('src/platform/base-auth/http.ts'))};import {createApplication} from ${JSON.stringify(resolve('src/application.ts'))};import {originBindings} from ${JSON.stringify(resolve('src/platform/base-auth/service.ts'))};import {withNativeDevIdentity} from ${JSON.stringify(resolve('src/platform/base-auth/dev.ts'))};const app=createApplication();const production={async fetch(r,e,c){const fixture=mailFixture(r);if(fixture)return fixture;e=originBindings(e);return await baseAuthResponse(r,e)??app.fetch(r,e,c)}};const development=withNativeDevIdentity(production);export default {fetch(r,e,c){return r.headers.get('x-test-production')==='yes'?production.fetch(r,{...e,AUTH_LOCAL:'false'},c):development.fetch(r,e,c)}}`)
+await writeFile(config,JSON.stringify({name:'linen-base-auth-test',main:entry,compatibility_date:'2026-09-08',compatibility_flags:['nodejs_compat'],d1_databases:[{binding:'DB',database_name:'linen',database_id:'local-linen'}],r2_buckets:[{binding:'ATTACHMENTS',bucket_name:'linen-base-auth-fixture'}],vars:{SESSION_SECRET:secret,SETUP_TOKEN:secret,ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64'),OWNER_EMAIL:'owner@example.test',AUTH_ORIGIN:origin,APP_ORIGIN:'http://localhost:1',AUTH_LOCAL:'true',MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-provider-key',MAIL_FROM:'auth@localhost.test',RER_DEV_KEY:key}}))
 const file=join(dir,'schema.sql');await writeFile(file,(await Promise.all((await readdir('migrations')).filter(f=>f.endsWith('.sql')).sort().map(f=>readFile('migrations/'+f,'utf8')))).join('\n'))
 const migrate=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--config',config,'--local','--persist-to',dir,'--file',file],{encoding:'utf8'});assert.equal(migrate.status,0,migrate.stdout+migrate.stderr)
 let worker,output=''
@@ -33,10 +34,8 @@ try{
  assert.deepEqual(await read(await request('/setup/state')),{state:'claimed'});assert.match(await(await request('/')).text(),/>Sign in</)
  assert.equal((await request('/__dev/outbox')).status,404)
  assert.equal((await request('/auth/magic-link',{method:'POST',body:{email:'owner@example.test',returnTo:'/app'}})).status,202)
- const outbox=await(await request('/__dev/outbox',{headers:{'x-rer-dev-key':key}})).text()
- const messageId=/\?message=([^"&]+)/.exec(outbox)?.[1];assert.ok(messageId,'Outbox contains ordinary sign-in message')
- const message=await(await request('/__dev/outbox?message='+messageId,{headers:{'x-rer-dev-key':key}})).text()
- const proof=/[?&](?:amp;)?token=([^"&<>\s]+)/.exec(message)?.[1];assert.ok(proof,'Outbox supplies ordinary proof')
+ const message=await(await request('/fixtures/mail')).text()
+ const proof=/[?&](?:amp;)?token=([^"&<>\s]+)/.exec(message)?.[1];assert.ok(proof,'Provider boundary receives ordinary proof')
  assert.equal((await request('/auth/confirm?token='+proof)).status,200,'GET only previews')
  const confirms=await Promise.all([1,2].map(()=>request('/auth/confirm',{method:'POST',body:{token:decodeURIComponent(proof)}})))
  assert.equal(confirms.filter(r=>r.status===303).length,1,'One confirmation consumes proof atomically')
@@ -54,9 +53,7 @@ try{
  const password=await request('/api/v1/login',{method:'POST',body:{email:'employee@example.test',password:'native-password-for-test'}});assert.equal(password.status,200);const passwordCookie=cookieOf(password)
  assert.deepEqual((await read(await request('/api/v1/session',{cookie:passwordCookie}))).principal.roles,['employee'])
  assert.equal((await request('/auth/magic-link',{method:'POST',body:{email:'employee@example.test',returnTo:'/app'}})).status,202)
- const employeeOutbox=await(await request('/__dev/outbox',{headers:{'x-rer-dev-key':key}})).text()
- const employeeMessage=/\?message=([^"&]+)/.exec(employeeOutbox)?.[1]
- const employeeDetail=await(await request('/__dev/outbox?message='+employeeMessage,{headers:{'x-rer-dev-key':key}})).text()
+ const employeeDetail=await(await request('/fixtures/mail')).text()
  const employeeProof=/[?&](?:amp;)?token=([^"&<>\s]+)/.exec(employeeDetail)?.[1];assert.ok(employeeProof)
  assert.equal((await request('/api/v1/members/'+member.id,{method:'PATCH',cookie:ownerCookie,headers:{'X-Linen-CSRF':session.csrfToken},body:{roles:['operator'],active:true}})).status,200)
  assert.equal((await request('/api/v1/session',{cookie:passwordCookie})).status,401,'New password sessions are revoked when native membership version changes')
@@ -69,14 +66,12 @@ try{
  assert.equal((await request('/api/v1/members/'+member.id,{method:'PATCH',cookie:ownerCookie,headers:{'X-Linen-CSRF':session.csrfToken},body:{roles:['operator'],active:false}})).status,200)
  assert.equal((await request('/api/v1/session',{cookie:passwordCookie})).status,401,'Native deactivation revokes retained session authority')
  assert.equal((await request('/auth/step-up',{method:'POST',cookie:nativeCookie,body:{action:'export',returnTo:'/app'}})).status,202)
- const stepOutbox=await(await request('/__dev/outbox',{headers:{'x-rer-dev-key':key}})).text()
- const stepMessage=/\?message=([^"&]+)/.exec(stepOutbox)?.[1]
- const stepDetail=await(await request('/__dev/outbox?message='+stepMessage,{headers:{'x-rer-dev-key':key}})).text()
+ const stepDetail=await(await request('/fixtures/mail')).text()
  const stepProof=/[?&](?:amp;)?token=([^"&<>\s]+)/.exec(stepDetail)?.[1];assert.ok(stepProof)
  assert.equal((await request('/auth/confirm',{method:'POST',cookie:ownerCookie,body:{token:decodeURIComponent(stepProof)}})).status,400,'Step-up binds the asking session')
  const step=await request('/auth/confirm',{method:'POST',cookie:nativeCookie,body:{token:decodeURIComponent(stepProof)}});assert.equal(step.status,303);assert.equal(step.headers.get('set-cookie'),null,'Step-up upgrades existing session without new authority')
  assert.equal((await request('/auth/confirm',{method:'POST',cookie:nativeCookie,body:{token:decodeURIComponent(stepProof)}})).status,400)
- console.log('PASS Base native claim race, Lobby/setup, ordinary outbox/email-link replay, native membership/password/session retention and revocation, bound step-up proof, CSRF/origin, dev gate and production denial')
+ console.log('PASS Base native claim race, Lobby/setup, ordinary provider email-link replay, native membership/password/session retention and revocation, bound step-up proof, CSRF/origin, dev gate and production denial')
 }finally{
  if(worker){worker.kill('SIGTERM');await Promise.race([new Promise(r=>worker.once('exit',r)),new Promise(r=>setTimeout(r,5000))]);if(worker.exitCode===null)worker.kill('SIGKILL')}
  await rm(dir,{recursive:true,force:true})

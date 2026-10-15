@@ -11,7 +11,7 @@
     {
       "name": "OWNER_EMAIL",
       "label": "Owner email",
-      "help": "Sign-in links for this address appear in the local development outbox; no email is sent.",
+      "help": "Local development opens as this owner in one click; mail is suppressed.",
       "kind": "email",
       "required": true,
       "prefill": "account-email",

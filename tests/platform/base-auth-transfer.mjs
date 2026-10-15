@@ -1,3 +1,4 @@
+import {mailEdge} from './mail-edge.mjs'
 // Public rer archive/reset/import flow on disposable actual D1/R2 state.
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
@@ -68,16 +69,14 @@ try{
  assert.equal((await env.DB.prepare('SELECT state FROM platform_archive_recovery').first()).state,'complete')
  await close()
  const entry=join(dir,'worker.ts'),output=join(dir,'worker.mjs')
- await writeFile(entry,`import {createApplication} from ${JSON.stringify(join(root,'src/application.ts'))};import {baseAuthResponse} from ${JSON.stringify(join(root,'src/platform/base-auth/http.ts'))};const app=createApplication();export default {async fetch(r,e,c){return await baseAuthResponse(r,e)??app.fetch(r,e,c)}};`)
+ await writeFile(entry,`${mailEdge}import {createApplication} from ${JSON.stringify(join(root,'src/application.ts'))};import {baseAuthResponse} from ${JSON.stringify(join(root,'src/platform/base-auth/http.ts'))};const app=createApplication();export default {async fetch(r,e,c){return mailFixture(r)??await baseAuthResponse(r,e)??app.fetch(r,e,c)}};`)
  await build({entryPoints:[entry],bundle:true,format:'esm',platform:'browser',external:['node:*'],target:'es2022',outfile:output})
  const listener=createServer();await new Promise(r=>listener.listen(0,'127.0.0.1',r));const port=listener.address().port;await new Promise(r=>listener.close(r));const origin='http://127.0.0.1:'+port
- mf=new Miniflare({...convertV4MiniflareOptions({port,host:'127.0.0.1',modules:true,script:await readFile(output,'utf8'),compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'local-linen'},r2Buckets:{ATTACHMENTS:'linen-attachments'},bindings:{AUTH_ORIGIN:origin,AUTH_LOCAL:'true',MAIL_PROVIDER:'development',MAIL_FROM:'auth@localhost.test',OWNER_EMAIL:'owner@example.test',RER_DEV_KEY:'test-only-development-entry-key-long-enough',SESSION_SECRET:'test-only-session-secret-long-enough',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}),resourcePersistencePath:join(root,'.wrangler/state/v3'),isolatedResourcePersistencePath:join(dir,'isolated')})
+ mf=new Miniflare({...convertV4MiniflareOptions({port,host:'127.0.0.1',modules:true,script:await readFile(output,'utf8'),compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'local-linen'},r2Buckets:{ATTACHMENTS:'linen-attachments'},bindings:{AUTH_ORIGIN:origin,AUTH_LOCAL:'true',MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-provider-key',MAIL_FROM:'auth@localhost.test',OWNER_EMAIL:'owner@example.test',RER_DEV_KEY:'test-only-development-entry-key-long-enough',SESSION_SECRET:'test-only-session-secret-long-enough',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}),resourcePersistencePath:join(root,'.wrangler/state/v3'),isolatedResourcePersistencePath:join(dir,'isolated')})
  await mf.ready
  const request=(path,{body,cookie,headers={}}={})=>fetch(origin+path,{redirect:'manual',method:body?'POST':'GET',headers:{Host:new URL(origin).host,Origin:origin,...(body?{'content-type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...headers},...(body?{body:JSON.stringify(body)}:{})})
  assert.equal((await request('/auth/magic-link',{body:{email:'owner@example.test',returnTo:'/app'}})).status,202)
- const outbox=await(await request('/__dev/outbox',{headers:{'x-rer-dev-key':'test-only-development-entry-key-long-enough'}})).text()
- const messageId=/\?message=([^"&]+)/.exec(outbox)?.[1];assert.ok(messageId)
- const detail=await(await request('/__dev/outbox?message='+messageId,{headers:{'x-rer-dev-key':'test-only-development-entry-key-long-enough'}})).text()
+ const detail=await(await request('/fixtures/mail')).text()
  const proof=/[?&](?:amp;)?token=([^"&<>\s]+)/.exec(detail)?.[1];assert.ok(proof)
  const confirmation=await request('/auth/confirm',{body:{token:decodeURIComponent(proof)}});assert.equal(confirmation.status,303)
  const cookie=confirmation.headers.get('set-cookie').split(';')[0]
@@ -103,6 +102,8 @@ try{
  await run(['exec','rer','reset','--yes'])
  const checkpoint=await run(['exec','rer','import','--input',archive,'--journal','exports/after.rer','--yes'],1);assert.match(checkpoint,/erasure_epoch/)
  await run(['exec','rer','import','--input',later,'--yes'])
+ // Satisfy Base's production mail prerequisite so this dry run reaches the identity guard.
+ commandEnvironment.MAIL_API_KEY='test-only-dry-run-mail-key'
  const deploy=await run(['exec','rer','deploy','--dry-run'],4);assert.match(deploy,/must retain Worker linen/)
  console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; deploy refuses identity changes without provider access')
 }finally{await mf?.dispose();await close();await rm(dir,{recursive:true,force:true})}

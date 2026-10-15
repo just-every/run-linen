@@ -31,7 +31,7 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     <div className="auth-page">
       <a className="brand" href="/">
         <Icon name="leaf" size={30} />
-        <span>Linen</span>
+        <span data-rer-name>Linen</span>
       </a>
       <div className="auth-layout">
         <section className="auth-intro cloth">

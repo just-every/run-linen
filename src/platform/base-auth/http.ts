@@ -1,5 +1,4 @@
 import { createAuthHandler, devGate, devNotFound } from '../../base/modules/operator-auth/index.mjs'
-import { createDevelopmentOutboxHandler, createD1DevelopmentOutbox } from '../../base/modules/mail/src/development/index.mjs'
 import { lobbyResponse } from '../../base/lobby'
 import { setupStateResponse, claimedWhen, admitted } from '../../base/setup-state'
 import type { Env } from '../types'
@@ -14,12 +13,9 @@ const redirect=(location:string)=>new Response(null,{status:303,headers:{...head
 const escape=(v:string)=>v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!))
 export async function baseAuthResponse(request:Request,original:Env):Promise<Response|null>{
  const env=originBindings(original),url=new URL(request.url),path=url.pathname
- if(path==='/__dev/key'||path==='/__dev/outbox'){
-  if(!localEnabled(env))return devNotFound()
-  const gate=devGate({key:env.RER_DEV_KEY,origin:env.AUTH_ORIGIN,local:true});if(!gate)return devNotFound()
-  if(path==='/__dev/key')return gate.exchange(request)
-  if(!admitted(request,env.AUTH_ORIGIN)||request.headers.get('sec-fetch-site')==='cross-site'||request.headers.has('origin')&&request.headers.get('origin')!==env.AUTH_ORIGIN||!await gate.admits(request))return devNotFound()
-  return createDevelopmentOutboxHandler({local:true,origin:env.AUTH_ORIGIN,outbox:createD1DevelopmentOutbox({db:env.DB}),theme:theme.href})(request)
+ if(path==='/__dev/key'){
+  const gate=localEnabled(env)?devGate({key:env.RER_DEV_KEY,origin:env.AUTH_ORIGIN,local:true}):null
+  return gate?gate.exchange(request):devNotFound()
  }
  if(path.startsWith('/__dev/')||path==='/auth/dev/enter')return devNotFound()
  const state=await setupStateResponse(request,env,claimed);if(state)return state

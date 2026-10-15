@@ -57,10 +57,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          if ! pnpm exec rer deploy --demo --environment demo-test --remove --yes 2>&1 | tee "$RUNNER_TEMP/demo-remove.log"; then
-            grep -q 'malformed-response' "$RUNNER_TEMP/demo-remove.log"
-            pnpm exec rer deploy --demo --environment demo-test --remove --yes
-          fi
+          pnpm exec rer deploy --demo --environment demo-test --remove --yes
           pnpm exec rer deploy --demo --environment demo-test --remove --yes
       - name: Public readback
         if: ${{ !inputs.remove_test }}

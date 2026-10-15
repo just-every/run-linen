@@ -1,10 +1,11 @@
 // Local-only native identity layer. Imported only by src/server.dev.ts.
 import { devGate, devNotFound, safeReturnTo } from '../../base/modules/operator-auth/index.mjs'
 import { registerDevAdmission } from '../../base/modules/operator-auth/dev-admission.mjs'
-import { decorate } from '../../base/modules/operator-auth/dev/badge.mjs'
+import { decorateLabel } from '../../modules/demo/label.mjs'
+import { doorDocument } from './door-document'
 import { admitted } from '../../base/setup-state'
 import type { Env } from '../types'
-import { nativeStore, type Person } from './store'
+import { nativeStore } from './store'
 import { nativeAccounts } from './accounts'
 import { originBindings, localEnabled } from './service'
 export const DEV_LAYER_MARKER='rer-dev-layer:local-only-never-deploy'
@@ -31,8 +32,13 @@ export function withNativeDevIdentity(worker:ExportedHandler<Env>):ExportedHandl
   headers.append('set-cookie',issued.completed.cookie);headers.set('location',safeReturnTo(url.searchParams.get('returnTo'),'/app'))
   return new Response(null,{status:303,headers})
  }
+ if(path==='/signin'&&gate&&env.RER_DEV_IDENTITY!=='off'&&request.method==='GET'){
+  if(!await gate.admits(request))return new Response(null,{status:303,headers:{location:'/__dev/key','cache-control':'no-store'}})
+  const returnTo=safeReturnTo(new URL(request.url).searchParams.get('returnTo'),'/app')
+  const content=`<p>Open your local workspace.</p><a class="action" href="/auth/dev/enter?as=owner&amp;returnTo=${encodeURIComponent(returnTo)}">Continue as owner</a>`
+  return decorateLabel(new Response(doorDocument('Sign in','Welcome back.',content),{headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store','content-security-policy':"default-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; style-src 'self'; font-src 'self'; img-src 'self'"}}),env.RER_DEMO==='1'?'Demo':'Dev')
+ }
  const response=await worker.fetch!(request,original,execution)
  if(!gate||request.method!=='GET'||path.startsWith('/__dev/'))return response
- const isAdmitted=await gate.admits(request),session=isAdmitted?await store.getSession(request,{now:Date.now()}):null
- return decorate(response,{exchange:path==='/',badge:isAdmitted&&env.RER_DEV_IDENTITY!=='off'?{session,choices:choices.filter(p=>p.email)}:null})
+ return decorateLabel(response,env.RER_DEMO==='1'?'Demo':'Dev')
 }}}
