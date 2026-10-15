@@ -3,6 +3,8 @@ import { decryptSecret } from '../../platform/crypto';
 import { assert, audit, current, errorCode, num } from './access';
 import { getCommitment, observationFacts } from './commitments';
 import type { IntelligenceContext } from './types';
+import { modelEffect as demoEffect } from './model-effect';
+import { demoModelResponse } from './demo-assessment';
 // Retained MIT Ensemble implementation, provenance and licence alongside source.
 import { validateJsonResponseContent } from './vendor/json-schema.js';
 import { requiredTokenCount, optionalTokenCount, assertTokenTotal, assertTokenSubset } from './vendor/token-usage.js';
@@ -32,7 +34,7 @@ export async function modelConnection(ctx: IntelligenceContext, key: string) {
 export async function validateModel(ctx: IntelligenceContext, key: string) {
     ctx = await current(ctx, ['owner']);
     const { apiKey, config } = await modelConnection(ctx, key);
-    const r = await fetch('https://api.openai.com/v1/models/' + encodeURIComponent(config.model), { headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(20000), redirect: 'manual' });
+    const r = await demoEffect(() => fetch('https://api.openai.com/v1/models/' + encodeURIComponent(config.model), { headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(20000), redirect: 'manual' }), () => Response.json({ id: config.model }));
     assert(r.ok, 'model_unavailable', 503);
     const model: any = await r.json();
     assert(model.id === config.model, 'model_identity_mismatch', 503);
@@ -80,6 +82,7 @@ export async function callModel(ctx: IntelligenceContext, input: {
     prompt: string;
     schema: unknown;
     extra?: unknown;
+    demoValue?: () => unknown;
 }) {
     ctx = await current(ctx);
     const attempt = id(), start = Date.now(), db = ctx.env.DB;
@@ -106,7 +109,7 @@ export async function callModel(ctx: IntelligenceContext, input: {
         if (input.commitmentId)
             await getCommitment(ctx, input.commitmentId);
         dispatched = true;
-        const r = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { Authorization: `Bearer ${conn.apiKey}`, 'Content-Type': 'application/json' }, redirect: 'manual', signal: AbortSignal.timeout(90000), body: JSON.stringify({ model: conn.config.model, instructions, input: prompt, store: false, max_output_tokens: conn.config.maxOutputTokens, ...(conn.config.reasoningEffort ? { reasoning: { effort: conn.config.reasoningEffort } } : {}), text: { format: { type: 'json_schema', name: 'linen_decision', strict: true, schema: input.schema } } }) });
+        const r = await demoEffect(() => fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { Authorization: `Bearer ${conn.apiKey}`, 'Content-Type': 'application/json' }, redirect: 'manual', signal: AbortSignal.timeout(90000), body: JSON.stringify({ model: conn.config.model, instructions, input: prompt, store: false, max_output_tokens: conn.config.maxOutputTokens, ...(conn.config.reasoningEffort ? { reasoning: { effort: conn.config.reasoningEffort } } : {}), text: { format: { type: 'json_schema', name: 'linen_decision', strict: true, schema: input.schema } } }) }), () => demoModelResponse(input, packet));
         requestId = r.headers.get('x-request-id');
         const body: any = await r.json();
         usage = body.usage || null;

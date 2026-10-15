@@ -4,7 +4,10 @@ import { operatorAuth, originBindings } from './platform/base-auth/service'
 import { nativeAccounts } from './platform/base-auth/accounts'
 import { nativeStore } from './platform/base-auth/store'
 import type { Env } from './platform/types'
-import { createWork, appendMessage, transitionWork, type WorkContext } from './features/work/core'
+import type { WorkContext } from './features/work/core'
+import { seedDemoModel } from './demo/model'
+import { seedDemoWork } from './demo/work'
+import { seedDemoDecisionHolder } from './demo/people'
 import { upsertPerson, acquireAsset } from './features/work/resources'
 import { saveArticle } from './features/work/knowledge'
 import { createCatalogItem } from './features/work/requests'
@@ -47,9 +50,13 @@ export async function demoOwnerClaim(request: Request, input: Env): Promise<Resp
 
 /** A fictional service desk, created through Linen's normal domain operations. */
 export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: string; now: Date }) {
+ if (env.RER_DEMO !== '1') return
+ env = await demoBindings(env)
  const owner = await nativeStore(env).byEmail(ownerEmail)
  if (!owner) throw Error('Demo owner is missing')
  const ctx: WorkContext = { env, principal: { userId: owner.id, workspaceId: owner.workspaceId, roles: ['owner'] } }
+ await seedDemoModel(ctx, now)
+ await seedDemoDecisionHolder(ctx, ownerEmail, now)
  const db = env.DB, w = owner.workspaceId, day = (offset: number) => new Date(now.getTime() + offset * 86400000).toISOString()
  const exists = (table: string, field: string, value: string) => db.prepare(`SELECT 1 FROM ${table} WHERE workspace_id=? AND ${field}=?`).bind(w, value).first()
  const people = ['Priya Shah', 'Jordan Lee', 'Samira Khan', 'Theo Bennett', 'Maya Chen', 'Oliver Brooks', 'Amelia Wilson', 'Noah Patel']
@@ -71,16 +78,11 @@ export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: stri
   ['Renew the design team’s software seats', 'The design subscription renews next month. Confirm the current roster and unused seats before committing to another year.', 'request'],
   ['Archive the completed project workspace', 'The Harbour launch has finished. Confirm retention with the project lead before removing collaborator access.', 'request'],
  ]
- for (const [index, [title, body, kind]] of requests.entries()) {
-  const work = await createWork(ctx, { title, body, kind, deduplicationKey: `linen-demo-${index}`, context: { source: 'Demo sample', team: 'Northstar Studio', requestedFor: people[index % people.length], neededBy: day(1 + index % 5) } })
-  await appendMessage(ctx, { workId: work.id, body: index % 3 === 0 ? 'I have the details I need. I’ll keep the next step and any decision in this conversation.' : 'Thanks for the context. I’m checking the affected service and will post the next step here.', visibility: 'public', sourceMessageId: `linen-demo-reply-${index}` })
-  if (!work.assignee_id) await transitionWork(ctx, work.id, work.revision, 'assign', 'Service desk is coordinating the next step.', owner.id)
- }
  for (const [index, location] of ['Brisbane reception', 'Sydney equipment cupboard', 'Brisbane reception', 'Melbourne studio'].entries()) {
   const serial = `NST-LT-${2401 + index}`
   if (!await exists('work_assets', 'serial', serial)) await acquireAsset(ctx, { serial, source: 'Demo sample · stocktake', location })
  }
- for (const [name, kind, target, capacity] of [ ['Figma design seat', 'software', 'Design workspace', 3], ['Revenue dashboard', 'access', 'Read-only revenue reports', 20], ['Loan laptop', 'device', 'Northstar loan pool', 2], ['Shared mailbox', 'access', 'Workshop organisers', 5] ] as const) {
+ for (const [name, kind, target, capacity] of [ ['Figma design seat', 'software', 'Design workspace', 3], ['Revenue dashboard', 'access', 'Read-only revenue reports', 20], ['Loan laptop', 'device', 'Northstar loan pool', 2], ['Shared mailbox', 'access', 'Workshop organisers', 5], ['Replacement charger', 'device', 'Brisbane charger stock', 8], ['Project workspace archive', 'access', 'Project retention and access', 20] ] as const) {
   if (!await exists('work_catalog', 'name', name)) await createCatalogItem(ctx, { name, kind, target, capacity, ownerId: owner.id, requiresManager: true })
  }
  for (const [title, body] of [
@@ -98,6 +100,7 @@ export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: stri
   ['Business reporting', 'Revenue dashboards and finance exports.', 'Timely weekly reporting and month-end close.'],
  ]) if (!services.some(s => s.data.name === name)) await create(db, ctx.principal, 'service', { name, description, businessImpact, source: 'Demo sample · service review', observedAt: day(-1), freshnessMs: 604800000 }, { visibility: 'workspace' })
  services = await list(db, ctx.principal, 'service')
+ await seedDemoWork(ctx, requests, people, now)
  const decisions = await list(db, ctx.principal, 'decision')
  for (const [title, quote, impact] of [
   ['Choose the design renewal term', 'Twelve monthly seats cost $180 per month. An annual commitment saves $360, with no refund for unused seats.', 'The design roster may change after the launch.'],

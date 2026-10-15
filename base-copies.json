@@ -418,7 +418,7 @@
     {
       "path": "src/modules/demo",
       "originPath": "modules/demo",
-      "revision": "38aa7efdb3cceec585d2344ed54dd559295b9059",
+      "revision": "756bf5a8544d792a51bb76f6e90a8ee5908a32a5",
       "files": {
         "src/modules/demo/README.md": "b00a8aa86d6a0df3c7ce904c3fa3bbb18b0b25a5fac722b4d7beafad183ae74f",
         "src/modules/demo/effects.mjs": "1d3a16527a050172f07083805971254f89cd6e448d1de38794a03b8512e6e286",
@@ -444,8 +444,7 @@
         "src/modules/demo/vite.mjs": "100644"
       },
       "adaptations": {
-        "index.mjs": "Import existing Linen operator-auth/http and colocated matching-tag csp helper.",
-        "csp.mjs": "Unchanged modules/operator-auth/csp.mjs from the same tag."
+        "imports": "Use Linen\u2019s existing src/base/modules/operator-auth layout."
       }
     }
   ]

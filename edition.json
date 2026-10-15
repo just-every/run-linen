@@ -18,7 +18,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "38aa7efdb3cceec585d2344ed54dd559295b9059",
+          "revision": "756bf5a8544d792a51bb76f6e90a8ee5908a32a5",
           "path": ".",
           "paths": [
             "foundation/runtime/deployment-health.ts",

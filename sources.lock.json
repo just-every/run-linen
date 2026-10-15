@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "parent": null,
   "edition": "runeditrun/linen",
-  "manifest": "48ec579010e6d806718369d8899b00ca3da97a3a5648c65de8841428a4b015fc",
+  "manifest": "35c89e57ea5717093d529502a23431dfff9038a79f03bf74dc634242860baeb8",
   "toolchain": {
     "id": "runeditrun/edition-authoring",
     "version": "1.1.0",
@@ -19,7 +19,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "38aa7efdb3cceec585d2344ed54dd559295b9059",
+          "revision": "756bf5a8544d792a51bb76f6e90a8ee5908a32a5",
           "path": ".",
           "paths": [
             "foundation/runtime/deployment-health.ts",
@@ -246,9 +246,9 @@
         ]
       },
       "baseline": {
-        "key": "4d69af5bf00a6ec89ae90971196e37d6afd8663b2c6f49b94dc77b823a62bc00",
+        "key": "41d232e0a31a50828d2c9bf7e7b0ddbe393c6d180193353d27e1f3bf9b4016cd",
         "digest": "f5911db6aa536e3157c050728108299372560ef79cdba09fb6f07adca9fd9732",
-        "sha256": "44278bcf2ed2a16b76946fb9933e96116e71a5ead69e95614e905452163984f6"
+        "sha256": "815f79a5591890aa597bd64bdf5d3ecb4524cd322d5b3c8e7eade413ce2910a6"
       }
     },
     {
@@ -530,7 +530,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "7110b831194883930f13b8047fecb37859d07d0a7092c92d7216acc24061e127",
+      "sha256": "afd0a90724fab70df0ffadfdd7bc5fed4e693d1c5d164eb6238ef5b1ee5eb6d7",
       "executable": false
     },
     "CLAUDE.md": {
@@ -598,7 +598,7 @@
       "executable": false
     },
     "edition.json": {
-      "sha256": "48ec579010e6d806718369d8899b00ca3da97a3a5648c65de8841428a4b015fc",
+      "sha256": "35c89e57ea5717093d529502a23431dfff9038a79f03bf74dc634242860baeb8",
       "executable": false
     },
     "engineering-agent/cli.mjs": {
@@ -858,11 +858,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "5f32c53204a15dce3e78865103e43981ae1eab3fff85398a3ded6c032c5b267e",
+      "sha256": "eacae19042b70d42f7cb3d7245fd28b1ec64c02900ee9a56bbc2ec8762a80f1a",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "0de45d598d8587514d1c3cd457249693b44929d693fba255dfca5b8b47009246",
+      "sha256": "d371aaff2f9fd6940cb07824828c14af85f9cb525bca3f2ba6d19c0ca1d02ca6",
       "executable": false
     },
     "public/brand/band.webp": {
@@ -934,7 +934,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "54ed3ed2c57c6944030ab132b72e3265b02bb830daf8b99be2e7addb5fbd2b9b",
+      "sha256": "6a5bbd0c8cf7c293418fc3e9ab2d058e79ee6fb85b32fd15f9a35ea6f173574a",
       "executable": false
     },
     "RELEASE.json": {
@@ -1770,7 +1770,19 @@
       "executable": false
     },
     "src/demo.ts": {
-      "sha256": "c6b4b56ed9359485afa6a0b6fc2c70f3859741867db64daaeb32e34924421f0d",
+      "sha256": "ab30e3fc26271ec6c2abf49e1dd09f608956b1a024560b8acf22ebfe496a359e",
+      "executable": false
+    },
+    "src/demo/model.ts": {
+      "sha256": "ecea6a8802c3c979e24838a035f2c42b5fe976e6d51abc55e01c368d2c6e26cd",
+      "executable": false
+    },
+    "src/demo/people.ts": {
+      "sha256": "8fad478843dada8bd2e67458bc75a10077c15d76bb1b737ff5f038c5811275f9",
+      "executable": false
+    },
+    "src/demo/work.ts": {
+      "sha256": "8b63a25f16fb526e357a39cd450bd5f56f87a4049789f533942edea95c130b97",
       "executable": false
     },
     "src/family/linen-foundation/README.md": {
@@ -2045,8 +2057,12 @@
       "sha256": "9bc3b9469e819434ac00bc78c7f9a09e65f6fd88097d3c8f5b5d7fe60da143bc",
       "executable": false
     },
+    "src/features/intelligence/demo-assessment.ts": {
+      "sha256": "1789d2e7e0c1c677f052fa8e61712c529ca7f8bf0b5c31918f5860eb1bde6c8b",
+      "executable": false
+    },
     "src/features/intelligence/engineering.ts": {
-      "sha256": "9fc5b7e8e9197449d53c2dbf8241ea333578979148508edee64950dfdc27846c",
+      "sha256": "91ab62cf984de5e8d674bf17562138739d6d070615a6f9c648f800da7dfa61d8",
       "executable": false
     },
     "src/features/intelligence/erasure.ts": {
@@ -2078,7 +2094,7 @@
       "executable": false
     },
     "src/features/intelligence/intake.ts": {
-      "sha256": "85cce8d416b38eae271f4e93260b10511b54ad05812959c1ade370a44ff387b2",
+      "sha256": "ef68f953318da08fdf4b84dd0450eb96f560a00092895cdf0d01b39e0dfc5471",
       "executable": false
     },
     "src/features/intelligence/investigation-policy.ts": {
@@ -2097,8 +2113,12 @@
       "sha256": "eed7caf38534668f3f8948c9fda0e86f9dc6322f6e1cfd4bffc2e039e95a218d",
       "executable": false
     },
+    "src/features/intelligence/model-effect.ts": {
+      "sha256": "dec3a54546d953d318ef426d6c1cfb9b7ef38461f212bc73f1559d608df63d71",
+      "executable": false
+    },
     "src/features/intelligence/models.ts": {
-      "sha256": "d4fafb02202c3db7d846850adf8a805099c530999b6b353e8f6cf9c7a319cdc0",
+      "sha256": "48bcefea597eb10f47941a96ea1ddd6f954ca554df088cb5b3d93254cfb89719",
       "executable": false
     },
     "src/features/intelligence/pending-fulfilments.ts": {
@@ -3042,7 +3062,7 @@
       "executable": false
     },
     "src/server.ts": {
-      "sha256": "003bf5eec65122642fac4db18b4156f9bc59fc9937ea3bbb74b0ce4b90d08c6e",
+      "sha256": "ba939053c46fa052e3d39af018c5453b721d281b3ba89255960606e3b571edcf",
       "executable": false
     },
     "src/site/docs/build/manifest.ts": {

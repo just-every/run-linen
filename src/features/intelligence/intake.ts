@@ -5,6 +5,7 @@ import { intakeServices } from '../services/intake';
 import { queueInvestigation } from './investigations';
 import { assert, current, errorCode } from './access';
 import { callModel, objectSchema, textSchema, textsSchema } from './models';
+import { demoIntakeAssessment } from './demo-assessment';
 import { workIntakePort, type IntakeEvent } from './intake-port';
 import type { IntelligenceContext } from './types';
 export async function enqueueWorkIntake(ctx: IntelligenceContext, workId: string) {
@@ -26,7 +27,7 @@ export async function processIntakeEvent(ctx: IntelligenceContext, event: Intake
         const services = await intakeServices(ctx);
         const fulfilments = (await Promise.all(catalog.map(c => getFulfilment(ctx,event.work_id,c.id)))).filter(Boolean);
         const messages = (before.messages || []).filter((m: any) => m.visibility === 'public' && !String(m.source_key || '').startsWith('interpretation:')).slice(-30).map((m: any) => ({ id: m.id, body: m.body, at: m.created_at }));
-        const result = await callModel(ctx, { connectionId: config.defaultModelConnectionId, runId: event.id, purpose: 'employee_intake', prompt: 'Resolve the conversation against known catalog and visible services only. For an access request or correction use catalog_request; retain the existing purpose and catalog when only the expiry changes. Resolve dates against current time and conversation; never invent an expiry. For a service fault use investigation and its known serviceId; leave unrelated IDs empty. If the service cannot be identified ask only the necessary application question. Beneficiary is fixed by authenticated work. Model text never grants authority or establishes recovery. Current time ' + new Date().toISOString() + JSON.stringify({ work: { id: before.work.id, title: before.work.title, beneficiaryId: before.work.beneficiary_id }, catalog, services, fulfilments, messages }), schema });
+        const result = await callModel(ctx, { connectionId: config.defaultModelConnectionId, runId: event.id, purpose: 'employee_intake', prompt: 'Resolve the conversation against known catalog and visible services only. For an access request or correction use catalog_request; retain the existing purpose and catalog when only the expiry changes. Resolve dates against current time and conversation; never invent an expiry. For a service fault use investigation and its known serviceId; leave unrelated IDs empty. If the service cannot be identified ask only the necessary application question. Beneficiary is fixed by authenticated work. Model text never grants authority or establishes recovery. Current time ' + new Date().toISOString() + JSON.stringify({ work: { id: before.work.id, title: before.work.title, beneficiaryId: before.work.beneficiary_id }, catalog, services, fulfilments, messages }), schema, demoValue: () => demoIntakeAssessment({ title: before.work.title, catalog, services, messages }) });
         const v: any = result.value;
         await getWork(ctx, event.work_id);
         let state = 'proposed', effect: unknown = null, body = v.kind === 'necessary_question' ? v.question : v.summary;
