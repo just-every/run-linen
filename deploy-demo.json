@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "domain": "run-linen.com",
+  "name": "Linen",
+  "settings": {
+    "MAIL_PROVIDER": "development",
+    "MAIL_FROM": "Linen demo <demo@demo.invalid>"
+  },
+  "instanceType": "basic"
+}

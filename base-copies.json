@@ -354,6 +354,31 @@
         "src/base/modules/owner-claim/schema/owner-claim.sql": "100644",
         "src/base/modules/owner-claim/schema/idp.sql": "100644"
       }
+    },
+    {
+      "path": "src/modules/demo",
+      "originPath": "modules/demo",
+      "revision": "e17843562355e1b6e5068289c8e037951fbc8d3d",
+      "files": {
+        "src/modules/demo/csp.mjs": "9bf6c5c5b2adcfc6f6c82a657af38346b8ec4e2344aea20b4d972a2564cffaed",
+        "src/modules/demo/index.d.mts": "2fe3e8715a0b41cc931dbc31a0a73a01a8ddfd8363334f32ebc8978854016e22",
+        "src/modules/demo/index.mjs": "16c201c840ce10395ea409251a6f00c673edcd1854f23a873b49cdac76b860fd",
+        "src/modules/demo/sockets.mjs": "be9978b79f3aeef305c6e6fa36ce041b7bda559941c6c377bc4cc2b19506177b",
+        "src/modules/demo/vite.d.mts": "f43b152b4a993feaf96afdbc276922bfa20d64725ea0150a12ec6ec805a7c7b3",
+        "src/modules/demo/vite.mjs": "e38556e50c954814ee8e12278babd627d5cdd051a7ea2c242a61d6c5d84d12f8"
+      },
+      "modes": {
+        "src/modules/demo/csp.mjs": "100644",
+        "src/modules/demo/index.d.mts": "100644",
+        "src/modules/demo/index.mjs": "100644",
+        "src/modules/demo/sockets.mjs": "100644",
+        "src/modules/demo/vite.d.mts": "100644",
+        "src/modules/demo/vite.mjs": "100644"
+      },
+      "adaptations": {
+        "index.mjs": "Import existing Linen operator-auth/http and colocated matching-tag csp helper.",
+        "csp.mjs": "Unchanged modules/operator-auth/csp.mjs from the same tag."
+      }
     }
   ]
 }

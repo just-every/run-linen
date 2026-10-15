@@ -42,7 +42,8 @@
     "* * * * *"
   ],
   "platforms": [
-    "workers"
+    "workers",
+    "container"
   ],
   "r2": [
     {

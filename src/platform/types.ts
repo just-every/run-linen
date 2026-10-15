@@ -1,6 +1,10 @@
 export type Role = 'owner' | 'operator' | 'employee' | 'approver' | 'hr' | 'auditor' | 'integration'
 export interface Principal { userId: string; workspaceId: string; roles: Role[] }
 export interface Env {
+  RER_DEMO?: string
+  RER_OWNER_CLAIM_ISSUER?: string
+  RER_OWNER_CLAIM_INSTALLATION_ID?: string
+  RER_OWNER_CLAIM_PUBLIC_KEYS?: string
   DB: D1Database
   ATTACHMENTS: R2Bucket
   SESSION_SECRET: string

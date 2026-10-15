@@ -444,6 +444,10 @@
     }
   ],
   "files": {
+    ".github/workflows/run-demo.yml": {
+      "sha256": "00fe438eebcb1498e30fee98405c02d21372eddaea2585b05eef7711fd445ef3",
+      "executable": false
+    },
     ".github/workflows/run-site.yml": {
       "sha256": "1466e0cc78eeee30a85f1602c0b4bbb74f053fc9f1aa723635c5f0fc5a0f19b0",
       "executable": false
@@ -481,7 +485,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "1bcaec9f079d13bfe564014227ad1ef7063ec8c2222a61ee78ab516ab23ef64d",
+      "sha256": "884e249505d70695392f3c7948a134e9a332a110193053f5fe61c66ad1e82c36",
       "executable": false
     },
     "CLAUDE.md": {
@@ -492,12 +496,20 @@
       "sha256": "a139b2dfac15fcbf922d8a85ae6a18580f8f1ca0a5af2740770063e5aed94320",
       "executable": false
     },
+    "DEMO.md": {
+      "sha256": "e17433567ffe797f779c60b1c05a91c2f8e062c36b640e1a81604701a9e1f5bd",
+      "executable": false
+    },
+    "deploy-demo.json": {
+      "sha256": "a207c2ebe91126be79fc55b982925450ecfb530f3c23707656a9888ee857586c",
+      "executable": false
+    },
     "deploy-site.json": {
       "sha256": "9b1184f8e7e70a52fb8c312cf3aec587548efd872e853fb3772f9eb793499e17",
       "executable": false
     },
     "deploy.json": {
-      "sha256": "b033eca4b2695ad99c3d16edbe3aa01ef333dec05b39d6532a7583766d1d9815",
+      "sha256": "5e8e3d0e150d93b3adeb9e6babde51644ac85fd8d7374a8c3c3bfdac136f0a61",
       "executable": false
     },
     "docs/asking.md": {
@@ -801,11 +813,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "c2ebab1435497c53972aa138993c1e1adef2e5ffcbef2ce4f56304b2f93c6bdf",
+      "sha256": "8a498f77816909583e67a92350b5bf1c1a61b611fe53e5a97ac7803845d268b2",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "1867a67047da8ba9aeebdcd907d726adba8d4c1477030fa70c8bdd75e230238e",
+      "sha256": "5aaf696f58dcb464fcc6c5331b3d1d955c697ebaae2338f71ff2a2f801c49926",
       "executable": false
     },
     "public/brand/band.webp": {
@@ -877,7 +889,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "3c014c9f21c242fba3e54d2c344ca3b5fcdba0599e20f40c8b52df7ba506e497",
+      "sha256": "30b3082711cdb7a699d765db97bc240498bbdbad0bded6e4470c52f2d9fcf8fe",
       "executable": false
     },
     "RELEASE.json": {
@@ -929,11 +941,11 @@
       "executable": false
     },
     "scripts/installer/local.mjs": {
-      "sha256": "e0361c8f49ee5536aa42c4ec255cc57db25e1a0d516ba3f3308da0faa1a94feb",
+      "sha256": "bb6259f5cf5ea1b67a8fdf59bed42875af9490551a2267c4d86f413db6359c95",
       "executable": false
     },
     "scripts/installer/native-state.mjs": {
-      "sha256": "d52d75a1bd0004c93109fcc605bc062359136360c6549996810a2b00e94638e3",
+      "sha256": "62af72bb9718b3891629af25d8c0061f8caedcae2f0661f3fcbf908d0963f7a1",
       "executable": false
     },
     "scripts/installer/portability.mjs": {
@@ -1590,6 +1602,10 @@
     },
     "src/client.tsx": {
       "sha256": "4fee14f6b63bceec0df77131ffd959fc4d02e3c501982a1f4b5b30c96c1d936a",
+      "executable": false
+    },
+    "src/demo.ts": {
+      "sha256": "c6b4b56ed9359485afa6a0b6fc2c70f3859741867db64daaeb32e34924421f0d",
       "executable": false
     },
     "src/family/linen-foundation/README.md": {
@@ -2708,6 +2724,30 @@
       "sha256": "ece4ba2269831421ec40e2b36cca39ba729977bc8c21a62a50cd6e1dee6dddfd",
       "executable": false
     },
+    "src/modules/demo/csp.mjs": {
+      "sha256": "9bf6c5c5b2adcfc6f6c82a657af38346b8ec4e2344aea20b4d972a2564cffaed",
+      "executable": false
+    },
+    "src/modules/demo/index.d.mts": {
+      "sha256": "2fe3e8715a0b41cc931dbc31a0a73a01a8ddfd8363334f32ebc8978854016e22",
+      "executable": false
+    },
+    "src/modules/demo/index.mjs": {
+      "sha256": "16c201c840ce10395ea409251a6f00c673edcd1854f23a873b49cdac76b860fd",
+      "executable": false
+    },
+    "src/modules/demo/sockets.mjs": {
+      "sha256": "be9978b79f3aeef305c6e6fa36ce041b7bda559941c6c377bc4cc2b19506177b",
+      "executable": false
+    },
+    "src/modules/demo/vite.d.mts": {
+      "sha256": "f43b152b4a993feaf96afdbc276922bfa20d64725ea0150a12ec6ec805a7c7b3",
+      "executable": false
+    },
+    "src/modules/demo/vite.mjs": {
+      "sha256": "e38556e50c954814ee8e12278babd627d5cdd051a7ea2c242a61d6c5d84d12f8",
+      "executable": false
+    },
     "src/platform/attachments.ts": {
       "sha256": "ac1ee79f923cf0fd8a5ddcf8c593837359669dc7bf35c945a1ef93db714c218e",
       "executable": false
@@ -2793,7 +2833,7 @@
       "executable": false
     },
     "src/platform/types.ts": {
-      "sha256": "8f4773bf59667a5c07d0a091bbdf7962087b368002603dda75fd5ab7fa25b11d",
+      "sha256": "93fd0ca2665df469fd2b93e15aff9824aa2d5ef689cea42d9954f9b1e3f650da",
       "executable": false
     },
     "src/router.tsx": {
@@ -2821,7 +2861,7 @@
       "executable": false
     },
     "src/server.ts": {
-      "sha256": "0eee3256d313b1e00e924260a9a02536ba4bc640ff6cc151877a3b2c0bfe8aa1",
+      "sha256": "003bf5eec65122642fac4db18b4156f9bc59fc9937ea3bbb74b0ce4b90d08c6e",
       "executable": false
     },
     "src/site/docs/build/manifest.ts": {
@@ -3557,7 +3597,7 @@
       "executable": false
     },
     "vite.config.ts": {
-      "sha256": "e2a2071f0b6d8f8f0f64ecb99b75b821c66e61d7d242f621ac6b81b4c8e76634",
+      "sha256": "19d762a3bab3c876178e356c085105aa22c1a610b0dd6d44cfe61df6e24491a5",
       "executable": false
     },
     "vite.site.config.ts": {

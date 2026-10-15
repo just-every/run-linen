@@ -20,8 +20,10 @@ export async function inspectNative(root){
  return results
 }
 export async function localOwner(root){return (await inspectNative(root)).flatMap(r=>r.owners)}
-export async function localPrerequisites({root,vars,email}){
+export async function localPrerequisites({root,vars,email,demo}){
  if(vars.AUTH_LOCAL!=='true'||vars.MAIL_PROVIDER!=='development'||!vars.SESSION_SECRET||!vars.ENCRYPTION_KEY)return false
+ // Demo migrations and owner claiming happen in the new demo folder.
+ if(demo)return true
  const migrations=(await readdir(join(root,'migrations'))).filter(n=>n.endsWith('.sql'))
  return (await inspectNative(root)).some(r=>r.owners.some(e=>e.toLowerCase()===email.toLowerCase())&&migrations.every(n=>r.applied.includes(n)))
 }
