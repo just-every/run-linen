@@ -8,12 +8,12 @@ export async function seedDemoDecisionHolder(ctx: WorkContext, ownerEmail: strin
   await db.batch([
     db.prepare('INSERT OR IGNORE INTO users VALUES(?,?,?,?,?)').bind(manager, 'priya@northstar.example', 'Priya Shah', '!email-link', time),
     db.prepare('INSERT OR IGNORE INTO memberships VALUES(?,?,?,1)').bind(w, manager, '["approver"]'),
-    db.prepare('UPDATE users SET name=? WHERE id=?').bind('Alex Morgan', ctx.principal.userId),
     db.prepare('UPDATE workspaces SET name=? WHERE id=?').bind('Northstar Studio', w),
   ]);
   if (!await personForMember(ctx, ctx.principal.userId)) {
+    const owner = await db.prepare('SELECT name FROM users WHERE id=?').bind(ctx.principal.userId).first<{ name: string }>();
     const person = await upsertPerson(ctx, {
-      source: 'Demo sample · owner directory', sourceId: ownerEmail, name: 'Alex Morgan', managerId: manager,
+      source: 'Demo sample · owner directory', sourceId: ownerEmail, name: owner!.name, managerId: manager,
       observedAt: time, effectiveAt: new Date(now.getTime() - 30 * 86400000).toISOString(),
     }) as { id: string; revision: number };
     await reviewPersonBinding(ctx, person.id, { expectedRevision: person.revision, memberId: ctx.principal.userId, managerId: manager });
