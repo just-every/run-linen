@@ -55,15 +55,14 @@ export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: stri
  const owner = await nativeStore(env).byEmail(ownerEmail)
  if (!owner) throw Error('Demo owner is missing')
  const ctx: WorkContext = { env, principal: { userId: owner.id, workspaceId: owner.workspaceId, roles: ['owner'] } }
- await seedDemoModel(ctx, now)
- await seedDemoDecisionHolder(ctx, ownerEmail, now)
+ await Promise.all([seedDemoModel(ctx, now), seedDemoDecisionHolder(ctx, ownerEmail, now)])
  const db = env.DB, w = owner.workspaceId, day = (offset: number) => new Date(now.getTime() + offset * 86400000).toISOString()
  const exists = (table: string, field: string, value: string) => db.prepare(`SELECT 1 FROM ${table} WHERE workspace_id=? AND ${field}=?`).bind(w, value).first()
  const people = ['Priya Shah', 'Jordan Lee', 'Samira Khan', 'Theo Bennett', 'Maya Chen', 'Oliver Brooks', 'Amelia Wilson', 'Noah Patel']
- for (const [index, name] of people.entries()) {
+ await Promise.all(people.map(async (name, index) => {
   if (!await exists('work_people', 'source_id', `northstar-${index}`))
    await upsertPerson(ctx, { source: 'Northstar team directory · demo sample', sourceId: `northstar-${index}`, name, effectiveAt: day(-30 - index), observedAt: day(-1) })
- }
+ }))
  const requests = [
   ['Priya needs Figma for the brand refresh', 'Please arrange a Figma seat for Priya before the brand workshop tomorrow. The design team has confirmed the project budget.', 'request'],
   ['Jordan cannot connect to the office VPN', 'Jordan can sign in, but the VPN disconnects after a minute on the office Wi-Fi. Started this morning after the laptop update.', 'incident'],

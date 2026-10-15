@@ -561,7 +561,7 @@
       "executable": false
     },
     "DEMO.md": {
-      "sha256": "863c635beeb42370318c96540887a25caed19dfc223fb268137bfaa722fd324c",
+      "sha256": "b7d308ff5318e87fda3345ca28459b1bf020acda96f749f1dbf03f32c85fe5cf",
       "executable": false
     },
     "deploy-demo.json": {
@@ -1801,7 +1801,7 @@
       "executable": false
     },
     "src/demo.ts": {
-      "sha256": "ab30e3fc26271ec6c2abf49e1dd09f608956b1a024560b8acf22ebfe496a359e",
+      "sha256": "44c2f16b84bc87e724b400582dac53025573f4cadf25c3166ab93a357ddbc749",
       "executable": false
     },
     "src/demo/model.ts": {
@@ -1813,7 +1813,7 @@
       "executable": false
     },
     "src/demo/work.ts": {
-      "sha256": "8b63a25f16fb526e357a39cd450bd5f56f87a4049789f533942edea95c130b97",
+      "sha256": "bcc428e933d7303e08b1545130d76b6eec6e63f2fed13b6ebcb6947ae65848b5",
       "executable": false
     },
     "src/family/linen-foundation/README.md": {

@@ -22,7 +22,9 @@ export async function seedDemoWork(ctx: WorkContext, requests: string[][], peopl
     'The project lead confirmed retention. The Harbour workspace was archived and collaborator access removed in the sample history.',
   ];
   const resolved = new Set([5, 7, 9, 11]);
-  for (const [index, [title, body, kind]] of requests.entries()) {
+  // Conversations are independent; keep each domain transition ordered within
+  // its conversation without serializing twelve complete histories at startup.
+  await Promise.all(requests.map(async ([title, body, kind], index) => {
     const existing = await ctx.env.DB.prepare('SELECT id FROM work_records WHERE workspace_id=? AND requester_id=? AND dedup_key=?')
       .bind(ctx.principal.workspaceId, ctx.principal.userId, `linen-demo-${index}`).first<{ id: string }>();
     let work = existing ? await getWork(ctx, existing.id) : await createWork(ctx, { title, body, kind, deduplicationKey: `linen-demo-${index}`, context: {
@@ -54,5 +56,5 @@ export async function seedDemoWork(ctx: WorkContext, requests: string[][], peopl
       ctx.env.DB.prepare('UPDATE work_messages SET created_at=CASE WHEN source_key=\'initial\' THEN ? WHEN source_key=\'transition:2\' THEN ? WHEN source_key LIKE \'interpretation:%\' THEN ? ELSE ? END WHERE workspace_id=? AND work_id=?').bind(opened, assigned, assessed, updated, ctx.principal.workspaceId, work.id),
       ctx.env.DB.prepare('UPDATE work_intake_events SET created_at=? WHERE workspace_id=? AND work_id=?').bind(opened, ctx.principal.workspaceId, work.id),
     ]);
-  }
+  }));
 }
