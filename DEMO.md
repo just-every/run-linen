@@ -21,9 +21,9 @@ The guard covers fetch in routes and scheduled work. A POST public check can use
 production keeps real effects, and Base refuses production builds with RER_DEMO.
 No production provider credentials are deployed to the demo.
 
-The package pins `@runeditrun/rer` 0.2.22. `src/modules/demo` and its supporting
-Base modules come from tag `rer-v0.2.22` (commit
-`1ce15dd8cbb7c8cf2d83ebfde2b4a8a130ff9d74`). Only helper import paths change for
+The package pins `@runeditrun/rer` 0.2.24. `src/modules/demo` and its supporting
+Base modules come from tag `rer-v0.2.24` (commit
+`1ee378e41142c673a9098f60af21664c6d8477d1`). Only helper import paths change for
 Linen's module layout; `base-copies.json` records retained hashes. The existing
 three Vite adoption settings preserve isolated demo state, vars and sockets.
 The retained import-kit and its D1 transport also match this tag; migration
@@ -38,4 +38,4 @@ claim, then uses Linen's atomic native bootstrap and native session adapter.
 `.github/workflows/run-demo.yml` reads the `run-demo` environment in the
 RunEditRun account. `test_only` selects a separate host with Turnstile test keys;
 `remove_test` removes that host and reads back resource absence. Production uses
-the real widget. The current `standard-2` instance type is retained.
+the real widget. The demo uses `basic`, with Alex Morgan at `alex@northstar.example` as its Northstar Studio owner.

@@ -18,7 +18,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "1ce15dd8cbb7c8cf2d83ebfde2b4a8a130ff9d74",
+          "revision": "1ee378e41142c673a9098f60af21664c6d8477d1",
           "path": ".",
           "paths": [
             "foundation/runtime/deployment-health.ts",
@@ -255,7 +255,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "558f57d9003a637667a181d147958a7f38a4ccb6",
+          "revision": "1ee378e41142c673a9098f60af21664c6d8477d1",
           "path": ".",
           "paths": [
             "foundation/runtime",
@@ -281,7 +281,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "1ce15dd8cbb7c8cf2d83ebfde2b4a8a130ff9d74",
+          "revision": "1ee378e41142c673a9098f60af21664c6d8477d1",
           "path": ".",
           "paths": [
             "modules/import-kit/CONTRACT.md",

@@ -4,7 +4,8 @@
   "name": "Linen",
   "settings": {
     "MAIL_PROVIDER": "development",
-    "MAIL_FROM": "Linen demo <demo@demo.invalid>"
+    "MAIL_FROM": "Linen demo <linen@northstar.example>"
   },
-  "instanceType": "standard-2"
+  "instanceType": "basic",
+  "ownerEmail": "alex@northstar.example"
 }
