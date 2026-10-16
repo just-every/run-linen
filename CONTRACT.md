@@ -125,25 +125,58 @@ reason to narrow the product.
 
 - **CHANNEL-001 — Slack as a primary employee channel.** A Linen Slack app
   (distributed through the Slack Marketplace, installable on Enterprise Grid)
-  takes requests from a DM with the app, a message shortcut, an emoji reaction on
-  any message and monitored help channels. Each request becomes one ticket whose
-  public replies sync both ways in the Slack thread; private notes never post to
-  Slack. Employees browse the catalog, fill item forms in modals, see status in
-  the App Home, and approvers approve or reject with buttons that re-check
-  current authority. Unknown Slack users, deactivated accounts, edited and
-  deleted messages, files, and Slack outages are handled without duplicate
-  tickets. **Acceptance evidence:** in a test Slack workspace, request access by
-  DM, answer the follow-up in the thread, approve from a manager's DM, see the
-  operator's public reply arrive and a private note not arrive; edit the original
-  message and retry delivery after a simulated Slack 503 without a second ticket.
+  takes requests from a DM with the app, a message shortcut ("Create IT
+  request"), an emoji reaction (`:ticket:` by default, configurable per channel)
+  on any message, and monitored help channels such as `#it-help`, where each new
+  top-level post becomes a ticket. A ticket filed from a channel post, reaction or
+  shortcut is filed for the original poster as requester, with the person who
+  reacted or used the shortcut recorded as submitter, and Linen acknowledges in
+  that message's thread. Each request becomes one ticket whose public replies sync
+  both ways in its originating thread. Private notes, internal fields and internal
+  attachments never post to Slack, and a ticket in a sensitive workspace (HR,
+  security) is never discussed in a channel: Linen moves it to a DM with the
+  requester. Catalog modals list only items whose audience includes the
+  submitting employee and re-check audience on submit. The App Home shows "my
+  requests" with current status and "my approvals". Approvers approve or reject
+  with buttons that re-check current authority and request revision. Unknown
+  Slack users, deactivated accounts, Slack Connect external users (never trusted
+  as employees), edited and deleted messages, files, and Slack outages are
+  handled without duplicate tickets. **Acceptance evidence:** in a test Slack
+  workspace: (1) a post in monitored `#it-help` becomes a ticket for its poster
+  and the acknowledgement lands in its thread; (2) a teammate adds `:ticket:` to
+  another employee's message and the ticket's requester is the original poster,
+  with the teammate as submitter; (3) an operator's public reply arrives in that
+  thread while a private note and an internal attachment do not; (4) request
+  access by DM, answer the follow-up in the thread and approve from a manager's
+  DM; (5) a catalog modal opened by an employee outside an item's audience omits
+  the item, and a crafted submission for it is refused; (6) the App Home lists
+  the employee's open requests with current status; (7) edit the original message
+  and retry delivery after a simulated Slack 503 without a second ticket; (8) a
+  Slack Connect guest's post is quarantined, not filed as an employee request.
 
 - **CHANNEL-002 — Microsoft Teams as a primary employee channel.** A Linen Teams
-  app (Teams Store and admin-deployable package) gives the same behaviour as
-  CHANNEL-001 through personal chat, message extensions and Adaptive Card forms
-  and approvals, with Entra identity mapping and tenant consent. **Acceptance
-  evidence:** in a Microsoft 365 developer tenant, submit a catalog request from a
-  personal chat, approve it from an Adaptive Card, and see two-way thread sync and
-  private-note exclusion as in CHANNEL-001.
+  app (Teams Store and admin-deployable package, with Entra identity mapping and
+  tenant admin consent) gives employees personal chat with the app; monitored team
+  channels, where each new channel post becomes a ticket for its author with
+  replies in the post's reply chain; a message-extension action ("Create IT
+  request") on any message that files for the original author, with the invoking
+  user recorded as submitter; a search message extension to look up one's tickets
+  and articles; Adaptive Card catalog forms that list only items in the
+  employee's audience and re-check it on submit; Adaptive Card approvals that
+  re-check authority and request revision; and a personal tab with "my requests"
+  and "my approvals". Public replies sync both ways; private notes, internal
+  attachments and sensitive-workspace tickets never post to a channel; guest and
+  federated external users are never trusted as employees. **Acceptance
+  evidence:** in a Microsoft 365 developer tenant: (1) a post in a monitored "IT
+  Help" team channel becomes a ticket for its author with the acknowledgement in
+  its reply chain; (2) a colleague uses "Create IT request" on another employee's
+  message and the requester is the original author; (3) submit a catalog request
+  from personal chat through an Adaptive Card, while an employee outside the
+  item's audience neither sees it nor can submit it; (4) approve from an Adaptive
+  Card, and a stale card for an edited request is refused; (5) the personal tab
+  shows the employee's open requests; (6) an operator's public reply arrives in
+  the reply chain and a private note does not; (7) a guest user's message is
+  quarantined.
 
 - **CHANNEL-003 — Email mailboxes.** Support addresses on Google Workspace (Gmail)
   and Microsoft 365 (Exchange Online) are connected by OAuth or forwarding.
@@ -166,11 +199,15 @@ reason to narrow the product.
 - **CHANNEL-005 — Mobile for employees, approvers and technicians.** The portal
   and operator console work at phone width; native iOS and Android apps give
   technicians queues, ticket replies, approvals, asset scan by barcode/QR and push
-  notifications, and give employees requests and approvals. Push respects quiet
-  hours and the user's notification preferences. **Acceptance evidence:** at
-  390 px, submit and approve a request; on a TestFlight/Play internal build, take
-  a push notification to an approval, approve it, and scan a laptop's asset tag to
-  open its record.
+  notifications, and give employees requests and approvals. Push respects the
+  user's quiet hours and notification preferences (NOTIFY-002): subscribable
+  pushes are held until quiet hours end, while mandatory ones (an on-shift P1
+  assignment, an approval the user's SLA depends on) are delivered as the user's
+  preference states. **Acceptance evidence:** at 390 px, submit and approve a
+  request; on a TestFlight/Play internal build, take a push notification to an
+  approval, approve it, and scan a laptop's asset tag to open its record; with
+  quiet hours 9 pm–7 am set, a requester-reply push at 10 pm arrives at 7 am
+  while an on-shift P1 assignment push arrives immediately.
 
 - **CHANNEL-006 — Conversational help that acts.** In every channel Linen's
   assistant answers from permitted knowledge, asks for a genuinely missing fact,
@@ -196,6 +233,18 @@ reason to narrow the product.
   declare an incident affecting the Sales cohort, see a banner and Slack post
   only for that cohort, file a new matching ticket and be offered the notice,
   then see the all-clear.
+
+- **CHANNEL-009 — Request sharing and manager visibility.** A requester shares a
+  request with named colleagues, who can read and reply to its public thread but
+  never see private notes; a request filed on behalf of someone shows to both the
+  submitter and the beneficiary; managers see their direct and indirect reports'
+  requests in "My team's requests", following the HRIS reporting line (LIFE-001),
+  with sensitive categories (HR, security, health, leaver) excluded by policy.
+  Every share is audited and revocable. **Acceptance evidence:** an employee
+  shares a ticket with a colleague, who reads and replies but does not see the
+  private note; a manager sees two reports' requests but not a report's HR
+  workspace ticket; after the HRIS changes the report's manager, the old manager
+  loses visibility and the new one gains it.
 
 ## Service catalog and approvals
 
@@ -234,10 +283,13 @@ reason to narrow the product.
 ## Agent workspace and ticket operations
 
 - **DESK-001 — Queues, groups and views.** Agent groups, saved and shared views,
-  filters, sorting, bulk update and keyboard navigation; each ticket has one
-  accountable group and owner. **Acceptance evidence:** create two groups, save a
-  "Unassigned P1" view, bulk-assign five tickets, and see a group lead's view
-  exclude another group's restricted ticket.
+  filters, sorting, bulk update and keyboard navigation (next/previous ticket,
+  assign, reply, private note, status, run a scenario from DESK-015, with a
+  shortcut reference); each ticket has one accountable group and owner.
+  **Acceptance evidence:** create two groups, save a "Unassigned P1" view,
+  bulk-assign five tickets, and see a group lead's view exclude another group's
+  restricted ticket; triage that view keyboard-only (open next, assign to self,
+  send a reply, set status) with no pointer input.
 
 - **DESK-002 — Classification and priority.** Ticket types (incident, service
   request, question), categories and subcategories, and an impact × urgency
@@ -247,11 +299,14 @@ reason to narrow the product.
   override to P2 and see the override audited.
 
 - **DESK-003 — Routing and assignment.** Rules route by category, requester,
-  department, location and VIP status; assignment can be round-robin, by current
-  load, by skill, or by business-hours availability, and reassignment keeps
-  history. **Acceptance evidence:** with three agents (one off shift, one
+  department, location, VIP status and the impacted configuration item's or
+  business service's support group (ASSET-009); assignment can be round-robin, by
+  current load, by skill, or by business-hours availability, and reassignment
+  keeps history. **Acceptance evidence:** with three agents (one off shift, one
   overloaded), round-robin and load-based rules assign to the available agent; a
-  VIP request routes to the executive-support group.
+  VIP request routes to the executive-support group; a ticket raised against the
+  "Payroll" service routes to Payroll's support group, and against a laptop CI to
+  that CI's support group.
 
 - **DESK-004 — SLA policies.** Multiple SLA policies by priority, category and
   requester group with first-response, next-response and resolution targets on
@@ -326,6 +381,67 @@ reason to narrow the product.
   are attached. **Acceptance evidence:** launch a BeyondTrust sandbox session
   from a ticket and see consent, timestamps and the recording link on it.
 
+- **DESK-015 — Agent scenarios and record templates.** Admins and agents build
+  named scenarios: one-click actions that set several fields (type, category,
+  priority, status, custom fields), assign a group and agent, add a private note
+  or a public reply from a template, add watchers, and link or start a task plan.
+  Each scenario is scoped to its author, a group or the workspace. Running it
+  applies every step as one audited action recording each field's before and
+  after; each step is checked against the runner's permissions, and a step the
+  runner may not perform stops the scenario with nothing applied. Scenarios are
+  offered only within their scope and run from the ticket, a bulk selection
+  (DESK-001) and mobile. Record templates pre-fill new tickets, tasks and changes.
+  **Acceptance evidence:** a Service Desk agent runs "Escalate to Network L2" on a
+  ticket; category, priority, group and status change and a private note is
+  added in one audit entry listing each change, and the requester sees no note;
+  an agent outside the Service Desk group is not offered the group-scoped
+  scenario and a direct API call to run it is refused; a scenario with a step
+  outside the runner's role applies nothing; a "New laptop setup" template
+  pre-fills a new ticket's fields.
+
+- **DESK-016 — Global agent search.** One search across tickets (number, subject,
+  content, requester), people, assets (serial, asset tag), configuration items,
+  changes, problems, catalog items and articles, with type filters and typo
+  tolerance. Results and their counts honour the searcher's current scope (A1).
+  **Acceptance evidence:** search a laptop serial and find the asset, its tickets
+  and its assigned person; search a requester's name and see their tickets; an IT
+  agent's search for a term in an HR-workspace ticket returns no result and no
+  count for it.
+
+## Notifications
+
+- **NOTIFY-001 — Default notifications by role and event.** Out of the box:
+  agents are notified when a ticket or task is assigned to them or their group,
+  when a requester replies, when they are @mentioned, when an SLA is about to
+  breach or has breached, and when a ticket is reassigned away; approvers when an
+  approval is pending, reminded or delegated to them; requesters when a ticket is
+  received (with its reference), publicly updated, waiting on them, resolved
+  (with a reopen path) and closed; watchers on public updates; managers on their
+  reports' approvals and lifecycle tasks. Each notice goes to the person's
+  channel (Slack, Teams, email, mobile push, portal), rapid updates are grouped,
+  scope is re-checked at send (A1) and the real delivery state is kept.
+  **Acceptance evidence:** assign a ticket to a three-person group and see each
+  member notified in their own channel (one Slack, one Teams, one email); a
+  requester reply notifies the assignee; an SLA at 80% of its target notifies
+  the assignee and group lead; the requester receives received, waiting-on-you
+  and resolved notices; a bounced email shows as failed on the ticket.
+
+- **NOTIFY-002 — Admin-configured rules, templates and preferences.** Admins edit
+  and add notifications per workspace: when to send (event and conditions), who
+  receives (roles, groups, record fields, named people) and what it says
+  (templates with record placeholders such as `{{ticket.number}}`,
+  `{{requester.first_name}}` and `{{sla.due_at}}`, per language under L10N-001,
+  with the buyer's logo, colours and sender domain). Each notification is
+  mandatory or subscribable. Users manage subscribable notifications per event
+  and channel in their preferences; mandatory ones (approval requests,
+  waiting-on-you, security and leaver tasks) cannot be turned off. Rule and
+  template changes are versioned and audited, with preview and test send.
+  **Acceptance evidence:** edit the "resolved" template and see the new text and
+  placeholders filled on the next resolution; add a rule that notifies the
+  Facilities lead for P1 Facilities tickets and see it fire; a user who opts out
+  of "public update" stops receiving it but still receives a mandatory approval
+  request; the template change appears in the audit log with before and after.
+
 ## Identity and SaaS access
 
 - **ACCESS-001 — Microsoft Entra ID.** Create users, add/remove group
@@ -397,7 +513,9 @@ reason to narrow the product.
   E3 work; the HRIS stays authoritative and Linen never writes employment facts.
   **Acceptance evidence:** in a BambooHR sandbox, add a hire, move their start
   date and terminate another employee; Linen creates, re-dates and starts leave
-  plans; repeat one path for Rippling and Gusto.
+  plans; repeat the hire and termination paths for Rippling, Gusto, a Workday
+  implementation tenant (Workers and Staffing events) and a local Willow
+  instance, and see a manager change in each re-point the employee's approvals.
 
 - **LIFE-002 — Dated task plans across teams.** Templates by department,
   location, role and employment type (W-2 employee, 1099 contractor, intern)
@@ -448,9 +566,13 @@ reason to narrow the product.
 
 - **ASSET-001 — MDM sync.** Jamf Pro, Microsoft Intune and Kandji connectors sync
   devices (serial, model, OS, encryption, compliance, last check-in, assigned
-  user) on a schedule with freshness, matching to Linen assets by serial.
-  **Acceptance evidence:** sync a Jamf and an Intune sandbox; see devices matched
-  by serial, a stale device marked stale, and a serial conflict surfaced.
+  user) and each device's installed applications (title, version, bundle or
+  product ID, install source and last seen) on a schedule with freshness,
+  matching to Linen assets by serial. **Acceptance evidence:** sync a Jamf, an
+  Intune and a Kandji sandbox; see devices matched by serial, a stale device
+  marked stale, a serial conflict surfaced, and each device's installed
+  applications with versions; an app removed on the device disappears from its
+  list on the next sync.
 
 - **ASSET-002 — Device actions under grant.** Lock, wipe, restart, rename, push or
   remove an app, and retire through the MDM, each with a grant, a confirmation
@@ -478,13 +600,24 @@ reason to narrow the product.
   **Acceptance evidence:** allocate the last two spare monitors in Denver; the
   threshold raises a purchase request with quantity and USD estimate.
 
-- **ASSET-006 — Software licence management.** Licences, seats, contracts and
-  true-ups with renewal reminders at 90, 60 and 30 days in USD; usage from IdP
-  sign-in data and SaaS admin APIs; unused seats are proposed for reclamation and
-  reclaimed under the owner's grant with readback. **Acceptance evidence:** a Zoom
-  contract with 120 seats and 95 active users shows 25 reclaimable; reclaim 10
-  with the owner's approval and read back seat counts; the renewal reminder fires
-  at 90 days.
+- **ASSET-006 — Software licence management and compliance.** SaaS and desktop
+  licences, seats, contracts and true-ups with renewal reminders at 90, 60 and 30
+  days in USD. SaaS usage comes from IdP sign-in data and SaaS admin APIs.
+  Desktop installations come from ASSET-001's installed-application inventory,
+  normalised to a software title and publisher (e.g. Adobe Acrobat Pro,
+  Microsoft Visio, JetBrains IntelliJ IDEA) and compared with entitlements by
+  licence metric (per device, per user or concurrent), showing over- and
+  under-licensed counts. Admins mark titles managed, ignored or prohibited; a
+  prohibited or unlicensed installation opens work with the device's user and
+  the title's owner, and removal runs as an MDM app removal under grant
+  (ASSET-002) and is verified by the next inventory. Unused seats are proposed for
+  reclamation and reclaimed under the owner's grant with readback. **Acceptance
+  evidence:** a Zoom contract with 120 seats and 95 active users shows 25
+  reclaimable; reclaim 10 with the owner's approval and read back seat counts;
+  the renewal reminder fires at 90 days. Jamf and Intune report Acrobat Pro on 30
+  devices against 25 licences, and Linen shows 5 over-licensed; a prohibited
+  title on one Mac is flagged and its user notified; its removal through Jamf
+  under grant reads back as absent on the next inventory.
 
 - **ASSET-007 — Contracts, warranties and vendors.** Purchase records, leases,
   warranties (with manufacturer warranty lookup where available) and support
@@ -510,6 +643,35 @@ reason to narrow the product.
   up. **Acceptance evidence:** audit the Denver stock room; scan 18 of 20
   expected devices; two missing devices open follow-up tasks.
 
+- **ASSET-011 — Hardware requests and device swaps for existing employees.**
+  Replacement of a broken or ageing device, loaners, peripherals (monitor, dock,
+  headset) and refresh upgrades run one chain:
+  1. eligibility and approval (CATALOG-002, with the refresh-age policy);
+  2. allocation from stock (ASSET-005) or an order to the vendor;
+  3. zero-touch enrolment assigned to the employee (Apple Business Manager with
+     Jamf or Kandji; Windows Autopilot with Intune), read back from the MDM;
+  4. shipment to the employee's US address through the logistics partner
+     (Firstbase, GroWrk) with carrier tracking and delivered state, or desk
+     pick-up with an attributed receipt;
+  5. receipt confirmed by the employee or by their first sign-in on the new
+     device (AGENT-003);
+  6. a return kit for the old device;
+  7. wipe or retire of the old device under its own grant (ASSET-002) once
+     received, or remotely if it cannot be returned;
+  8. a custody swap that closes only when the new device is assigned and the old
+     one is received and wiped with readback, or written off by its owner with a
+     reason.
+
+  Loaners carry a due-back date with reminders; warranty coverage (ASSET-007)
+  routes repairs to Apple or Dell. **Acceptance evidence:** a remote employee
+  reports a broken MacBook in Slack; a replacement is allocated from Denver stock,
+  appears assigned to them in Jamf through ABM, ships with a tracking number and
+  reaches delivered; their first sign-in on the new Mac closes the replacement
+  duty; the old Mac's return stays an open custody duty after the new one
+  arrives, and the ticket cannot show complete until the old Mac is received and
+  the Jamf wipe reads back; a loaner past its due date reminds the borrower and
+  the IT owner.
+
 ## Incidents and problems
 
 - **INC-001 — Major incidents.** Declare a major incident, assign an incident
@@ -520,9 +682,13 @@ reason to narrow the product.
 
 - **INC-002 — Monitoring and alert intake.** Signed events from Uptime, Datadog,
   PagerDuty, Spool and a generic signed webhook open or update incidents with
-  deduplication and freshness; missing data stays unknown. **Acceptance
-  evidence:** send a Datadog alert twice and an Uptime recovery; see one incident,
-  the duplicate ignored, and recovery recorded without closing employee tickets.
+  deduplication and freshness, carrying the monitored CI or service so changes
+  and problems can link to them; a P1 event pages through Oncall, PagerDuty or
+  Opsgenie (INC-001); missing data stays unknown. **Acceptance evidence:** send a
+  Datadog alert twice and an Uptime recovery; see one incident, the duplicate
+  ignored, and recovery recorded without closing employee tickets; an Uptime
+  check failure on the SSO service opens an incident tagged with that service
+  and pages its Oncall rotation.
 
 - **INC-003 — Status communication.** Internal notices per CHANNEL-008 and public
   status through Lamp or Atlassian Statuspage via their APIs, with publication
@@ -575,17 +741,54 @@ reason to narrow the product.
   year-end freeze is refused without emergency authority; two changes on the
   same CI in overlapping windows conflict.
 
-- **CHANGE-005 — Rollback and post-implementation review.** Backout runs under
-  its own grant with readback; incidents within a window after a change are
-  linked automatically; Uptime and monitoring evidence confirm health; a
-  post-implementation review closes the change. **Acceptance evidence:** a
-  failed change triggers backout, an incident opened 30 minutes later is linked,
-  and the PIR records the cause.
+- **CHANGE-005 — Rollback, change-caused incidents and post-implementation
+  review.** Backout runs under its own grant with readback. Each change names the
+  CIs and services it touches and the health checks that watch them (Uptime
+  checks, Datadog monitors or other INC-002 sources). From implementation start
+  through a declared observation window (24 hours by default), an incident opened
+  or paged through Oncall, PagerDuty or Opsgenie on an impacted CI or service
+  links to the change automatically as a suspected cause, which a human confirms
+  or rejects ("caused by change"). A change cannot be recorded successful while
+  a watching check is failing or unknown or a suspected-cause incident is
+  unreviewed, and is recorded successful only after its checks stay healthy for
+  the window. A post-implementation review closes the change, citing the health
+  evidence, linked incidents and backout outcome. **Acceptance evidence:**
+  implement a change on the SSO service, which an Uptime HTTPS check watches; the
+  check fails and Uptime's signed event opens an incident and pages through
+  Oncall; the incident links to the change as suspected cause with no manual
+  entry; marking the change successful is refused while the check is red;
+  backout runs under its own grant and reads back; after the check recovers and
+  stays green for the window, the PIR cites the Uptime failure and recovery
+  events and the Oncall incident, and REPORT-005 counts the change as failed with
+  one change-caused incident.
 
 - **CHANGE-006 — Development-tool context.** Changes link to GitHub pull requests
   and deployments, GitHub Actions runs, and Jira or Vector issues; a deployment
   can raise a standard change automatically. **Acceptance evidence:** a GitHub
   deployment to production creates a standard change linked to its PR and run.
+
+- **CHANGE-007 — Release management.** Releases group related changes (e.g. "Okta
+  MFA rollout") with a plan, build/test/deploy phases, a release calendar shared
+  with CHANGE-004, a go/no-go decision by named approvers, linked tickets,
+  problems and CIs, and release notes to affected employees through CHANNEL-008's
+  notices. A release completes only when every change in it is successful or
+  explicitly backed out. **Acceptance evidence:** create a release with three
+  changes, record go/no-go approval, deploy canary then rollout, post release
+  notes to the affected cohort only, and see a failed change hold the release
+  open until it is backed out.
+
+## IT projects
+
+- **PROJECT-001 — IT team projects.** Projects such as an office move, a laptop
+  refresh or an SSO migration have tasks, milestones, owners, due dates,
+  dependencies and status, link to tickets, changes, assets and lifecycle plans,
+  and show as a board and a timeline; each agent's workload shows project tasks
+  beside ticket load. Software delivery projects stay in Vector or Jira, and
+  cross-functional business projects stay in the buyer's work-management tool.
+  **Acceptance evidence:** create "Denver office move" with 12 tasks across two
+  milestones, link 30 asset relocations and two changes, see a blocked dependency
+  flagged on the timeline, and see an agent's workload combine project tasks and
+  tickets.
 
 ## Knowledge
 
@@ -597,7 +800,9 @@ reason to narrow the product.
   answering over Confluence, Slate, Google Drive, SharePoint and Notion, without
   exposing content the employee cannot open in the source. **Acceptance
   evidence:** connect Confluence and Google Drive; an employee's answer cites a
-  page they can open and omits one they cannot.
+  page they can open and omits one they cannot; repeat with a SharePoint site, a
+  Notion workspace and a local Slate instance, each with one restricted page that
+  never appears.
 
 - **KB-003 — Deflection with verified outcome.** The portal, Slack and Teams
   suggest articles and actions before a ticket is filed; deflection is counted
@@ -610,6 +815,17 @@ reason to narrow the product.
   tickets and known errors with source links; a reviewer publishes or rejects.
   **Acceptance evidence:** resolve three similar tickets; a draft article appears
   with the three sources; publishing requires a reviewer.
+
+- **KB-005 — Article feedback, attachments and templates.** Employees rate
+  articles helpful or not helpful, with an optional comment, from the portal,
+  Slack and Teams; negative feedback opens a review task for the article's owner
+  and each article shows its helpfulness score. Articles carry attachments and
+  inline images scoped like the article. Article templates (how-to,
+  troubleshooting, known error) structure new articles. **Acceptance evidence:**
+  mark an article not helpful with a comment in Slack and see a review task for
+  its owner and the updated score; attach a PDF to a scoped article and see an
+  employee outside its audience denied the file; create an article from the
+  troubleshooting template with its sections pre-filled.
 
 ## Reporting
 
@@ -625,10 +841,13 @@ reason to narrow the product.
   and exportable as CSV and XLSX. **Acceptance evidence:** build "P1 by
   location", schedule it weekly to Slack, and export CSV that matches the view.
 
-- **REPORT-003 — Data access for BI.** A read API and scheduled exports for Power
-  BI, Looker Studio and warehouses, honouring the reader's scope. **Acceptance
-  evidence:** pull tickets through the read API as an auditor and see restricted
-  HR tickets excluded.
+- **REPORT-003 — Data access for BI.** A read API and scheduled exports (CSV or
+  Parquet to Amazon S3, Google Cloud Storage or Azure Blob, and direct loads to
+  Snowflake and BigQuery) for Power BI, Looker Studio and warehouses, honouring
+  the reader's scope. **Acceptance evidence:** pull tickets through the read API
+  as an auditor and see restricted HR tickets excluded; schedule a nightly
+  incremental export to an S3 bucket and see the next run deliver only changed
+  rows, under the export principal's scope, with a delivery receipt.
 
 - **REPORT-004 — Human work saved.** Per request type, touches and active minutes
   of employees, agents, approvers and vendors before and after automation, with
@@ -636,6 +855,17 @@ reason to narrow the product.
   unresolved and failed work rather than tickets closed. **Acceptance evidence:**
   automate a request type; the report shows prior and current touches/minutes,
   cost per verified outcome and the failures in the same period.
+
+- **REPORT-005 — IT operations and asset KPIs.** Incident MTTA and MTTR by
+  priority and service, major-incident count and duration, change success rate,
+  emergency-change share, change-caused incident rate, problem backlog and age,
+  known errors without a permanent fix, assets by state and age, devices out of
+  compliance, licence utilisation and spend in USD, and upcoming renewals and
+  refreshes, each with definition, range, time zone and drill-through to its
+  records. **Acceptance evidence:** for a month in `America/Denver` with 40
+  incidents, 25 changes (2 failed, 3 emergency) and 300 assets, the KPI page shows
+  MTTA and MTTR by priority, a 92% change success rate and a 12% emergency share,
+  and each tile drills through to the records it counts.
 
 ## Platform, administration and integration
 
@@ -647,9 +877,13 @@ reason to narrow the product.
 
 - **SSO-001 — Sign-in, SSO and SCIM.** Base email sign-in, SAML 2.0 and OIDC SSO
   with Okta, Entra, Google and Auth, SCIM provisioning of requesters and agents,
-  and MFA enforcement; SSO never grants roles by itself. **Acceptance evidence:**
-  sign in through Okta SAML; a SCIM-deprovisioned user loses access; an SSO user
-  without membership is refused.
+  and MFA enforcement (Linen's own second factor for email sign-in, and a
+  required MFA claim in SSO assertions for agent and admin roles); SSO never
+  grants roles by itself. **Acceptance evidence:** sign in through Okta SAML; a
+  SCIM-deprovisioned user loses access; an SSO user without membership is
+  refused; with MFA required for agents, an agent signing in by email is
+  challenged for a second factor, and an SSO assertion without an MFA
+  authentication-method claim is refused for the agent role.
 
 - **AUDIT-001 — Audit log.** Privileged reads, exports, configuration, grant,
   role and executor actions are recorded durably with actor and time, readable by
@@ -712,6 +946,33 @@ reason to narrow the product.
   **Acceptance evidence:** automated and manual audits of six core journeys at
   1440 and 390 px with keyboard only and VoiceOver; no AA failures.
 
+- **L10N-001 — US English and Spanish for employees.** The portal, Slack and Teams
+  messages, notifications, catalog labels, surveys and the assistant work in US
+  English and US Spanish, chosen from the IdP or HRIS locale or the employee's
+  preference. Admins provide Spanish catalog items, templates and articles, and
+  the assistant drafts translations for review. Agents see each employee message
+  with a translation, and replies to a Spanish-speaking employee are sent in
+  Spanish, marked as machine-translated where they are. **Acceptance evidence:**
+  an employee with locale `es-US` sees the portal and Slack messages in Spanish
+  and submits an item with Spanish labels; the agent sees the message and its
+  translation, replies in English, and the employee receives it in Spanish marked
+  as translated; an article with no Spanish version shows in English with a
+  notice.
+
+- **SANDBOX-001 — Sub-production workspace and configuration promotion.** Owners
+  create a sandbox workspace from production configuration, without production
+  personal data unless explicitly chosen and masked. Catalog items, forms,
+  workflows, SLAs, notification rules, scenarios, roles and connector
+  configuration (with sandbox credentials) are changed and tested there. A
+  promotion package lists every configuration difference, is reviewed and
+  approved, and applies to production as one versioned, audited change with
+  rollback to the prior version. Promotion never copies grants, secrets or
+  records. **Acceptance evidence:** create a sandbox, edit a catalog item and a
+  workflow there, review the diff, promote it with approval, and see production
+  updated with an audit entry while in-flight requests keep their versions; roll
+  back; production grants and secrets are unchanged, and sandbox connectors call
+  only sandbox credentials.
+
 ## Migration and coexistence
 
 - **MIGRATE-001 — Freshservice migration.** Through the Freshservice API, move
@@ -720,22 +981,100 @@ reason to narrow the product.
   departments, assets with relationships and software, catalog items with
   approval history (as history), knowledge solutions, SLA policies and business
   hours, canned responses, and workflows as reviewed drafts, with dry run, counts
-  and resumable apply at full account size. **Acceptance evidence:** migrate a
-  Freshservice trial with 5,000 tickets, 300 assets and 40 catalog items; the
-  dry run reports counts and gaps, apply resumes after interruption, and
-  attachments and private notes match by hash and visibility.
+  and resumable apply at full account size. Full account size means at least
+  50,000 tickets with attachments, completed within 24 hours while staying under
+  the plan's per-minute API limit (honouring 429 and `Retry-After`); the run
+  reports throughput and estimated time remaining. **Acceptance evidence:**
+  migrate a Freshservice trial with 5,000 tickets, 300 assets and 40 catalog
+  items; the dry run reports counts and gaps, apply resumes after interruption,
+  and attachments and private notes match by hash and visibility; a scale run on
+  an account seeded with 50,000 tickets with attachments completes within 24
+  hours with no request rejected for exceeding the rate limit.
 
-- **MIGRATE-002 — Jira Service Management migration.** Move issues by request
-  type, internal and public comments, attachments, customers and organisations,
-  request types and portal groups, SLA definitions, Assets object schemas and
-  linked Confluence knowledge spaces. **Acceptance evidence:** migrate a JSM
-  Cloud test site; internal comments stay private, request types become catalog
-  items, and an Assets schema becomes CI types with relationships.
+- **MIGRATE-002 — Jira Service Management migration.** Through the Jira Cloud
+  REST API, the JSM Service Desk API, the Assets REST API and the Confluence REST
+  API, move:
+  - issues of every request type (incidents, service requests, problems,
+    changes, post-incident reviews) with keys, status and resolution history,
+    priority, components, labels, custom fields, linked issues and sub-tasks;
+  - comments, internal ones (`jsdPublic: false`) as private notes and public ones
+    as replies, each with its original author and created timestamp;
+  - attachments, matched by name, size and SHA-256;
+  - customers, organisations, agents and teams;
+  - request types with their fields and portal groups as draft catalog items,
+    and each issue's request-type field values;
+  - approval history, as history only (A6);
+  - SLA definitions with their calendars as draft SLA policies, and each issue's
+    SLA cycles with met or breached state;
+  - queues as saved views;
+  - Assets object schemas, object types, attributes and objects with references
+    as CI types, CIs and relationships, keeping each issue's object links;
+  - linked Confluence knowledge-base spaces as articles with attachments and with
+    space restrictions mapped to audiences, or as a federated source (KB-002)
+    when the buyer keeps Confluence;
+  - automation rules, listed as drafts for review and never executed.
 
-- **MIGRATE-003 — ServiceNow migration.** Move incident, sc_req_item, problem,
-  change_request, cmdb_ci (with relationships), kb_knowledge and sys_user
-  records via the Table API. **Acceptance evidence:** migrate a ServiceNow
-  personal developer instance; counts match and work notes stay private.
+  A dry run reports counts per record class, unmappable fields, missing
+  references and estimated duration. Apply resumes from a checkpoint after
+  interruption without duplicates and honours Atlassian rate limits
+  (`Retry-After`); a site of at least 50,000 issues with attachments completes
+  within 48 hours. **Acceptance evidence:** migrate a JSM Cloud test site: the
+  dry run lists counts and gaps; an interrupted apply resumes without duplicates
+  and per-class counts match the dry run; every attachment matches by SHA-256;
+  internal comments are private and public comments public, each with its
+  original author and timestamp; a request type with four fields becomes a draft
+  catalog item and each imported issue shows its field values; an Assets schema
+  becomes CI types with relationships and issue links kept; a breached SLA cycle
+  shows as breached; a linked Confluence KB space's articles arrive with
+  attachments and a group-restricted article stays restricted; a scale run on a
+  site seeded with 50,000 issues with attachments completes within 48 hours.
+
+- **MIGRATE-003 — ServiceNow migration.** Through the Table API and Attachment API
+  with a read-only integration account, move:
+  - task records: `incident`, `sc_request`, `sc_req_item`, `sc_task`, `problem`,
+    `problem_task`, `change_request` and `change_task`, keeping numbers, states,
+    priority, assignment group, assignee, CI, dates and parent links;
+  - journal history from `sys_journal_field`, joined by `element_id`, with
+    `comments` becoming public replies and `work_notes` private notes, each with
+    its original author and `sys_created_on` timestamp;
+  - attachments from `sys_attachment`, downloaded one file at a time through the
+    Attachment API and matched by name, content type, size and SHA-256;
+  - people and structure: `sys_user`, `sys_user_group`, `sys_user_grmember`,
+    `cmn_department`, `cmn_location` and vendors from `core_company`;
+  - the catalog: `sc_cat_item` and `sc_category` with variables and variable sets
+    (`item_option_new`, `io_set_item` and their choices) as draft catalog items
+    with fields and the conditions Linen can express, and each requested item's
+    variable values (`sc_item_option_mtom`);
+  - approvals from `sysapproval_approver`, as history only (A6);
+  - SLAs: `contract_sla` definitions with `cmn_schedule` business schedules and
+    holidays as draft SLA policies, and `task_sla` history with met or breached
+    state;
+  - assets and the CMDB: `alm_asset`/`alm_hardware` with cost, state and
+    substate, stockroom (`alm_stockroom`), assigned user and warranty; software
+    entitlements; and `cmdb_ci` with its subclasses and `cmdb_rel_ci`, keeping
+    each asset's link to its CI;
+  - knowledge: `kb_knowledge` with knowledge bases, categories, versions where
+    present and article attachments;
+  - workflows, flows and business rules, listed as drafts for review and never
+    executed.
+
+  A dry run reports counts per table, unmappable fields, missing references and
+  estimated duration. Apply resumes from a checkpoint after interruption without
+  duplicates and stays within the instance's rate-limit rules (honouring 429 and
+  `Retry-After`); an instance of at least 50,000 tickets with attachments and
+  journals completes within 48 hours. **Acceptance evidence:** migrate a
+  ServiceNow personal developer instance seeded with incidents, requested items
+  with variables, catalog tasks, changes with change tasks, problems, groups,
+  `alm_hardware` assets linked to CIs, a contract SLA and KB articles: the dry run
+  lists counts per table and gaps; an interrupted apply resumes without
+  duplicates and per-table counts match the dry run; every attachment matches by
+  SHA-256; work notes are private and comments public, each with its original
+  author and timestamp; an `sc_cat_item` with three variables becomes a draft
+  catalog item with three fields and each imported request shows its values;
+  `sysapproval_approver` rows appear as history and confer no approval; a
+  hardware asset keeps its cost, stockroom, assigned user and CI link; a scale run
+  on an instance seeded with 50,000 tickets with attachments completes within 48
+  hours within the instance's rate limits.
 
 - **MIGRATE-004 — Spreadsheet and lightweight-tool move-in.** CSV imports for
   tickets, people and assets, and importers for Zendesk (when used for IT) and
@@ -855,15 +1194,18 @@ records every attempt and charge (A7), and claims success only from independent
 evidence (A4). Humans can see, take over, correct or stop any run.
 
 - **AGENT-001 — Resolve routine requests end to end.** For access, software,
-  licence and account requests, the agent resolves the right entitlement from
-  the plain-language need, checks policy and standing authority, performs the
-  effect through connectors, and confirms the employee can use it; it involves a
-  human only for a genuinely missing fact or decision. *Data:* catalog, app
-  registry, IdP/SaaS state, grants. *Human control:* standing grants define what
-  runs unattended; anything outside them becomes an approval with the exact
-  effect shown. **Acceptance evidence:** 20 mixed routine requests in sandboxes;
-  report verified outcomes, touches and false completions; one out-of-policy
-  request becomes an approval.
+  licence, account and hardware requests (replacements, loaners and peripherals
+  under ASSET-011), the agent resolves the right entitlement or device from the
+  plain-language need, checks policy and standing authority, performs the effect
+  through connectors and logistics partners, and confirms the employee can use it;
+  it involves a human only for a genuinely missing fact or decision. *Data:*
+  catalog, app registry, IdP/SaaS state, stock, MDM and shipment state, grants.
+  *Human control:* standing grants define what runs unattended; anything outside
+  them becomes an approval with the exact effect shown. **Acceptance evidence:**
+  20 mixed routine requests in sandboxes, including a broken-laptop replacement
+  run end to end under ASSET-011; report verified outcomes, touches and false
+  completions; one out-of-policy request becomes an approval; the replaced
+  laptop's return and wipe stay open after delivery until their readback.
 
 - **AGENT-002 — Revoke the leaver everywhere.** The agent enumerates every place a
   leaver has access (IdP, SaaS apps including unmanaged ones seen in sign-in logs
@@ -975,6 +1317,9 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 - **Not remote control or a password vault.** Remote sessions run in
   BeyondTrust, TeamViewer or Splashtop; shared credentials live in 1Password,
   Bitwarden or Keeper, which Linen links but does not replace.
+- **Not general project management.** Linen runs IT team projects (PROJECT-001);
+  software delivery projects stay in Vector or Jira, and cross-functional
+  business projects stay in the buyer's Asana, monday.com or ClickUp.
 - **Not procurement, accounting, the team wiki or chat.** Purchases go to Purse
   or the buyer's vendor; asset depreciation exports to Pantry, QuickBooks Online
   or NetSuite; Linen's IT knowledge base is native, while wider team knowledge
@@ -983,7 +1328,8 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 - **Not customer support.** Linen serves the buyer's own employees. External
   customer support is HappyToHelp's product.
 - **US first.** USD, US time zones and federal holidays, US sales tax and US
-  employment types first. No FedRAMP, HIPAA BAA or other regulated certification
+  employment types first; employee-facing language is US English and US Spanish
+  (L10N-001). No FedRAMP, HIPAA BAA or other regulated certification
   is claimed without its own agreement and evidence; Section 508 support rests on
   A11Y-001.
 
@@ -997,7 +1343,7 @@ public door using local runtime and test-only provider fixtures; it is not live
 provider, hosted or owner acceptance. `partial` cites what exists and names what
 is missing. `missing` has no implementation.
 
-**123 clauses (116 here plus F1–F7 in FRONTIER-EXTENSION.md): 11 done, 83 partial, 29 missing.**
+**135 clauses (128 here plus F1–F7 in FRONTIER-EXTENSION.md): 11 done, 88 partial, 36 missing.**
 
 | Clause | Status | Evidence path and remaining scope |
 |---|---|---|
@@ -1008,21 +1354,22 @@ is missing. `missing` has no implementation.
 | E5 | partial | `src/features/services/incidents.ts`; `tests/ui/connected-change.mjs`; `tests/services/run.mjs`. |
 | E6 | partial | `src/features/services/changes.ts`; `tests/services/integration.mjs`; `tests/ui/connected-change.mjs`. |
 | E7 | partial | `src/features/work/knowledge.ts`; `tests/work/runtime.mjs`; `tests/adoption/prior-data-upgrade.mjs`. |
-| CHANNEL-001 | missing | No Slack app or connector. |
-| CHANNEL-002 | missing | No Teams app or connector. |
+| CHANNEL-001 | missing | No Slack app or connector: no DM, help-channel, reaction, shortcut, modal or App Home intake. |
+| CHANNEL-002 | missing | No Teams app or connector: no personal chat, channel, message-extension, Adaptive Card or tab intake. |
 | CHANNEL-003 | partial | `src/features/work/intake.ts` (authenticated mail envelope, sender quarantine); `src/features/execution/mail/sender.ts`; `tests/connections/sendgrid-runtime.mjs`. No Gmail/Exchange mailbox connector or threading by headers. |
 | CHANNEL-004 | partial | `src/ui/work.tsx`; `src/ui/knowledge.tsx`; `tests/ui/browser.mjs`; `tests/ui/connected-request.mjs`. No "my devices", notices or branding. |
-| CHANNEL-005 | partial | `tests/ui/viewport-evidence.mjs` (390 px). No native iOS/Android apps or push. |
+| CHANNEL-005 | partial | `tests/ui/viewport-evidence.mjs` (390 px). No native iOS/Android apps, push or quiet hours. |
 | CHANNEL-006 | partial | `src/features/intelligence/intake.ts`; `src/features/intelligence/intake-execution.ts`; `tests/ui/connected-request.mjs`. Portal only; no Slack/Teams. |
 | CHANNEL-007 | missing | No phone-system or walk-up intake. |
 | CHANNEL-008 | partial | `src/features/services/incidents.ts` (audience-bound updates); `tests/services/run.mjs`. No portal banner or chat posting. |
+| CHANNEL-009 | missing | No request sharing or manager team view. |
 | CATALOG-001 | partial | `src/features/work/requests.ts` (`createCatalogItem`: kind, target, owner, capacity); `tests/ui/connected-request.mjs`. No form builder, conditional fields, audience or cost. |
 | CATALOG-002 | partial | `src/features/work/fulfilment-decisions.ts`; `src/features/work/delegation.ts`; `tests/ui/fulfilment-decision-journey.mjs`; `tests/execution/authority-manager-cases.mjs`. Single manager approval; no multi-level, finance threshold or approval SLA. |
 | CATALOG-003 | partial | `src/features/work/requests.ts` (obligations); `src/features/execution/plans.ts`; `tests/ui/connected-request.mjs`. No team task templates. |
 | CATALOG-004 | missing | No bundles. |
-| DESK-001 | partial | `src/features/work/core.ts` (`listWork`); `src/ui/work.tsx`. No groups, saved views or bulk actions. |
+| DESK-001 | partial | `src/features/work/core.ts` (`listWork`); `src/ui/work.tsx`. No groups, saved views, bulk actions or triage shortcuts. |
 | DESK-002 | partial | `src/features/work/intake-classification.ts`; `tests/work/runtime.mjs`. No categories or priority matrix. |
-| DESK-003 | partial | `src/features/work/core.ts` (assign); `src/features/intelligence/intake-execution.ts`. No rules, round-robin, load or skills. |
+| DESK-003 | partial | `src/features/work/core.ts` (assign); `src/features/intelligence/intake-execution.ts`. No rules, round-robin, load, skills or CI/service support-group routing. |
 | DESK-004 | partial | `src/features/work/calendar.ts`; `tests/work/runtime.mjs`. One commitment per ticket; no policy sets or holiday catalogues. |
 | DESK-005 | partial | `src/features/services/integrations.ts`; `src/features/intelligence/followup.ts`. No multi-level escalation or supervisor rules. |
 | DESK-006 | partial | `src/features/services/incidents.ts` (link/correct). No merge, split or parent/child tickets. |
@@ -1034,6 +1381,10 @@ is missing. `missing` has no implementation.
 | DESK-012 | missing | No time entries. |
 | DESK-013 | missing | No recurring tickets. |
 | DESK-014 | missing | No remote-support integration. |
+| DESK-015 | missing | No agent scenarios or record templates. |
+| DESK-016 | partial | `src/features/work/knowledge.ts` (`searchKnowledge`, scoped article search); `tests/work/runtime.mjs`. Articles only; no search across tickets, people, assets, CIs, changes or problems. |
+| NOTIFY-001 | partial | `src/features/execution/notifications.ts` (scoped delivery of a public message to a permitted recipient through SendGrid, with outbox, idempotency and delivery webhook); `tests/execution/runtime.mjs`. Explicit per-message only; no event-driven default set, chat or push delivery. |
+| NOTIFY-002 | missing | No notification rules, templates, branding or preferences. |
 | ACCESS-001 | done | `src/features/execution/connectors.ts`; `src/features/execution/identity.ts`; `tests/execution/runtime.mjs`; `tests/ui/connected-lifecycle.mjs`. Fixture provider; live tenant acceptance remains. |
 | ACCESS-002 | missing | No Okta connector. |
 | ACCESS-003 | missing | No Google Workspace connector. |
@@ -1050,18 +1401,19 @@ is missing. `missing` has no implementation.
 | LIFE-005 | partial | `src/features/execution/identity.ts` (disable, session check); `src/features/work/lifecycle.ts`; `tests/ui/connected-lifecycle.mjs`. Entra only; no SaaS, data transfer or device actions. |
 | LIFE-006 | partial | `src/features/work/lifecycle.ts` (contractor expiry duties); `tests/work/runtime.mjs`. No sponsor re-attestation. |
 | LIFE-007 | partial | `src/features/work/requests.ts` (`listObligations`); `src/features/execution/verification.ts`. No exportable pack. |
-| ASSET-001 | missing | No Jamf, Intune or Kandji connector. |
+| ASSET-001 | missing | No Jamf, Intune or Kandji connector and no installed-application inventory. |
 | ASSET-002 | missing | No device actions. |
 | ASSET-003 | partial | `src/features/connections/providers.ts` (Graph devices discovery); `tests/connections/runtime.mjs`. No MDM/EDR/cloud/network discovery. |
 | ASSET-004 | partial | `src/features/work/resources.ts`; `tests/ui/custody-journey.mjs`; `tests/work/runtime.mjs`. No ITAD certificate requirement. |
 | ASSET-005 | partial | `src/features/work/requests.ts` (catalog capacity admission). No stock locations or reorder. |
-| ASSET-006 | partial | `src/features/services/economics.ts` (software assets, usage, renewal, reclamation); `tests/services/run.mjs`. No IdP usage feed or reclamation through connectors. |
+| ASSET-006 | partial | `src/features/services/economics.ts` (software assets, usage, renewal, reclamation); `tests/services/run.mjs`. No IdP usage feed, reclamation through connectors, desktop installation compliance or prohibited titles. |
 | ASSET-007 | partial | `src/features/services/economics.ts` (suppliers, renewal); `tests/services/run.mjs`. No warranties. |
 | ASSET-008 | missing | No depreciation or accounting export. |
 | ASSET-009 | partial | `src/features/services/graph.ts`; `tests/services/run.mjs`. No CI type model or impact view. |
 | ASSET-010 | missing | No physical audits. |
+| ASSET-011 | partial | `src/features/work/resources.ts` (stock, assign, receive, return, repair and dispose with evidence); `tests/ui/custody-journey.mjs`. No replacement/loaner chain, MDM enrolment, shipping, return kit or swap gate. |
 | INC-001 | partial | `src/features/services/incidents.ts` (on-call rotation, updates); `tests/services/run.mjs`. No war room or Oncall/PagerDuty connector. |
-| INC-002 | partial | `src/features/services/integrations.ts` (signed monitoring webhook, dedupe, staleness); `tests/services/run.mjs`. No named Uptime/Datadog/PagerDuty/Spool connectors. |
+| INC-002 | partial | `src/features/services/integrations.ts` (signed monitoring webhook, dedupe, staleness); `tests/services/run.mjs`. No named Uptime/Datadog/PagerDuty/Spool connectors or paging on intake. |
 | INC-003 | partial | `src/features/services/integrations.ts` (notification webhook, delivery reconcile); `tests/services/run.mjs`. No Lamp or Statuspage connector. |
 | INC-004 | missing | No Jira/GitHub/Linear/Vector escalation. |
 | PROB-001 | partial | `src/features/services/problems.ts`. No public-door test; no KB publishing of workarounds. |
@@ -1070,18 +1422,22 @@ is missing. `missing` has no implementation.
 | CHANGE-002 | partial | `src/features/services/changes.ts` (declared risk). No scoring. |
 | CHANGE-003 | partial | `src/features/services/changes.ts` (versioned authorisation); `tests/services/integration.mjs`. No CAB, meetings or votes. |
 | CHANGE-004 | partial | `src/features/services/changes.ts` (window conflicts); `tests/ui/connected-change.mjs`. No calendar, freeze windows or ICS. |
-| CHANGE-005 | partial | `src/features/services/changes.ts` (compensation); `tests/services/integration.mjs`. No automatic incident linking or PIR. |
+| CHANGE-005 | partial | `src/features/services/changes.ts` (compensation); `tests/services/integration.mjs`. No automatic incident linking, health-check gate on success or PIR. |
 | CHANGE-006 | partial | `src/features/intelligence/engineering.ts`. No GitHub/Jira/Vector links or deployment-raised changes. |
+| CHANGE-007 | partial | `src/features/services/changes.ts` (canary and rollout phases); `src/features/execution/deployment.ts` (controlled-deployment connector); `tests/ui/connected-change.mjs`. No release records, go/no-go or release notes. |
+| PROJECT-001 | missing | No IT projects. |
 | KB-001 | done | `src/features/work/knowledge.ts`; `tests/work/runtime.mjs`; `tests/adoption/prior-data-upgrade.mjs`. |
-| KB-002 | missing | No federated sources. |
+| KB-002 | missing | No federated sources (Confluence, Slate, Google Drive, SharePoint, Notion). |
 | KB-003 | partial | `src/features/work/knowledge.ts` (search and escalation); `tests/work/runtime.mjs`. No suggestion before filing or deflection count. |
 | KB-004 | missing | No article drafting from tickets. |
+| KB-005 | missing | No article feedback, attachments or templates. |
 | REPORT-001 | partial | `src/features/work/knowledge.ts` (`workReport`); `src/features/services/economics.ts`; `tests/adoption/prior-data-upgrade.mjs`; `tests/services/run.mjs`. No dashboards, CSAT or per-agent views. |
 | REPORT-002 | missing | No report builder or scheduling. |
-| REPORT-003 | partial | REST `/api/v1` (`src/features/work/index.ts`); `tests/work/runtime.mjs`. No BI export. |
+| REPORT-003 | partial | REST `/api/v1` (`src/features/work/index.ts`); `tests/work/runtime.mjs`. No scheduled BI or warehouse export. |
 | REPORT-004 | partial | `src/features/intelligence/measurement.ts`; `tests/intelligence/runtime.mjs`. No per-request-type touch reporting. |
+| REPORT-005 | partial | `src/features/services/economics.ts` (`serviceReport`: verified incident outcome rate, recurrence, observed asset cost, with definitions); `tests/services/run.mjs`. No MTTA/MTTR, change success, emergency share or compliance/licence KPIs. |
 | ROLE-001 | partial | `src/platform/auth.ts`; `tests/ui/browser.mjs`; `tests/platform/runtime.mjs`. Fixed roles; no custom roles. |
-| SSO-001 | partial | `src/platform/sso.ts` (Cloudflare Access); `src/platform/base-auth`; `tests/platform/runtime.mjs`; `tests/platform/base-auth-runtime.mjs`. No SAML/OIDC with named IdPs or SCIM. |
+| SSO-001 | partial | `src/platform/sso.ts` (Cloudflare Access); `src/platform/base-auth`; `tests/platform/runtime.mjs`; `tests/platform/base-auth-runtime.mjs`. No SAML/OIDC with named IdPs, SCIM or MFA enforcement. |
 | AUDIT-001 | done | `src/platform/privacy.ts`; `tests/platform/privacy-runtime.mjs`; `tests/platform/config-runtime.mjs`. |
 | API-001 | partial | `src/features/work/index.ts`; `src/features/execution/index.ts`; `tests/work/runtime.mjs`. No outbound event webhooks. |
 | API-002 | partial | `src/features/execution/automation.ts`; `src/features/execution/plans.ts`; `tests/ui/connected-request.mjs`. No no-code builder. |
@@ -1092,9 +1448,11 @@ is missing. `missing` has no implementation.
 | BASE-001 | done | `src/platform/base-auth`; `src/base`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/mail-edge.mjs`. |
 | COST-001 | partial | `src/features/intelligence` budget (`/intelligence/budget`); `tests/intelligence/runtime.mjs`. No seat pricing or sales-tax invoices. |
 | A11Y-001 | partial | `tests/ui/viewport-evidence.mjs`; `tests/ui/browser.mjs` (keyboard/overflow checks). No WCAG audit. |
-| MIGRATE-001 | partial | `src/features/adoption/freshservice-import`; `src/features/adoption/freshservice.ts`; `tests/adoption/freshservice-import.mjs`; `tests/adoption/runtime.mjs`. Tickets and conversations only, 100 per job; no assets, catalog, KB, SLA or attachment bytes. |
-| MIGRATE-002 | missing | No JSM importer. |
-| MIGRATE-003 | missing | No ServiceNow importer. |
+| L10N-001 | missing | English only. |
+| SANDBOX-001 | missing | No sandbox workspace or configuration promotion. |
+| MIGRATE-001 | partial | `src/features/adoption/freshservice-import`; `src/features/adoption/freshservice.ts`; `tests/adoption/freshservice-import.mjs`; `tests/adoption/runtime.mjs`. Tickets and conversations only, 100 per job; no assets, catalog, KB, SLA, attachment bytes or 50,000-ticket scale run. |
+| MIGRATE-002 | missing | No JSM, Assets or Confluence importer. |
+| MIGRATE-003 | missing | No ServiceNow Table/Attachment API importer. |
 | MIGRATE-004 | missing | No CSV, Zendesk or Snipe-IT importer. |
 | MIGRATE-005 | partial | `src/features/adoption/coexistence.ts`; `tests/adoption/runtime.mjs`. Freshservice only. |
 | A1 | done | `src/platform/auth.ts`; `src/features/work/privacy.ts`; `tests/ui/browser.mjs`; `tests/platform/privacy-runtime.mjs`; `tests/work/person-binding-runtime.mjs`. |
@@ -1107,7 +1465,7 @@ is missing. `missing` has no implementation.
 | O1 | partial | `src/features/services/graph.ts`; `tests/services/run.mjs`; `tests/services/integration.mjs`. No real monitoring/on-call. |
 | O2 | partial | `src/features/services/changes.ts`; `tests/services/integration.mjs`; `tests/ui/connected-frontier.mjs`. No live provider or sustained prevention. |
 | O3 | partial | `src/features/services/economics.ts`; `tests/services/run.mjs`. No real supplier or reclamation. |
-| AGENT-001 | partial | `src/features/intelligence/intake-execution.ts`; `tests/ui/connected-request.mjs`. Graph-only effects. |
+| AGENT-001 | partial | `src/features/intelligence/intake-execution.ts`; `tests/ui/connected-request.mjs`. Graph-only effects; no hardware chain. |
 | AGENT-002 | partial | `src/features/work/lifecycle.ts`; `tests/ui/connected-lifecycle.mjs`. No SaaS/OAuth enumeration. |
 | AGENT-003 | partial | `src/features/execution/verification.ts` (independent verifier); `tests/ui/connected-request.mjs`. No sign-in or compliance signals. |
 | AGENT-004 | partial | `src/features/intelligence/research.ts`; `tests/intelligence/frontier.mjs`. |
