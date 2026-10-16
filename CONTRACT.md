@@ -33,6 +33,32 @@ category job those clauses summarise. Difficulty (provider applications, native
 apps, connector breadth) is recorded as engineering work in a clause, never as a
 reason to narrow the product.
 
+## Product target
+
+Linen is the IT service desk a US company of 50 to 500 people buys instead of
+Freshservice, Jira Service Management or ServiceNow ITSM, with the chat-first,
+act-for-you automation of Serval, Console and Atomicwork. This contract describes
+that product and marks how close the current code is (see [Status](#status)).
+
+| | |
+| --- | --- |
+| Category | IT service management (ITSM) / employee service desk |
+| Incumbents a buyer switches from | ServiceNow ITSM, Freshservice, Jira Service Management |
+| Up-and-comers it must also beat | Serval, Console, Atomicwork |
+| First buyer | A US company of 50 to 500 people whose IT team runs employee help, access, onboarding and offboarding, devices and changes in Freshservice, Jira Service Management or ServiceNow ITSM; prices, budgets and asset values in USD, US time zones and federal holidays, W-2 employees and 1099 contractors |
+
+### Scope mapping
+
+| Required scope | Clauses |
+| --- | --- |
+| Identity and SaaS provisioning (Okta, Microsoft Entra, Google Workspace, Auth, GitHub, Slack, Salesforce) that grants, revokes and reads back | ACCESS-001, ACCESS-002, ACCESS-003, ACCESS-004, ACCESS-005, ACCESS-006, ACCESS-010, LIFE-003, LIFE-005 |
+| HRIS-triggered onboarding and offboarding (Rippling, Gusto, BambooHR, Workday) with dated task plans across IT, HR and managers | LIFE-001, LIFE-002, LIFE-004, LIFE-005, LIFE-006, LIFE-007 |
+| MDM and asset management: Jamf, Intune and Kandji sync, discovery, serial-level custody, software licences and renewals | ASSET-001, ASSET-002, ASSET-003, ASSET-004, ASSET-005, ASSET-006, ASSET-007, ASSET-011, CATALOG-005 |
+| Slack and Teams as the primary employee channel, with a self-service catalog, approval chains and SLA timers | CHANNEL-001, CHANNEL-002, CATALOG-001, CATALOG-002, CATALOG-003, DESK-004, DESK-005 |
+| Change management with CAB, risk scoring, change calendar and rollback, linked to Oncall incidents and Uptime evidence | CHANGE-001, CHANGE-002, CHANGE-003, CHANGE-004, CHANGE-005, INC-001, INC-002 |
+| Freshservice and Jira Service Management migration preserving tickets, attachments, assets, catalog items and knowledge | MIGRATE-001, MIGRATE-002, MIGRATE-003, MIGRATE-005 |
+| Push further: agents resolve routine requests end to end under standing authority, verify the employee can work again, investigate multi-system failures, build missing connectors and measure human work saved | AGENT-001, AGENT-002, AGENT-003, AGENT-004, AGENT-005, AGENT-006, REPORT-004 |
+
 ## Retained employee service floor
 
 - **E1 — Help and incidents.** Authenticated portal, email, Slack and Teams intake
@@ -900,8 +926,8 @@ reason to narrow the product.
   year-end freeze is refused without emergency authority; two changes on the
   same CI in overlapping windows conflict.
 
-- **CHANGE-005 — Rollback, change-caused incidents and post-implementation
-  review.** Backout runs under its own grant with readback. Each change names the
+- **CHANGE-005 — Rollback, change-caused incidents and post-implementation review.**
+  Backout runs under its own grant with readback. Each change names the
   CIs and services it touches and the health checks that watch them (Uptime
   checks, Datadog monitors or other INC-002 sources). From implementation start
   through a declared observation window (24 hours by default), an incident opened
@@ -1503,7 +1529,7 @@ evidence (A4). Humans can see, take over, correct or stop any run.
   with recurrence observed over a declared window, and one simplification
   compared with continued repair on total work.
 
-### Frontier extensions (retained)
+## Frontier extensions (retained)
 
 [F1–F7](FRONTIER-EXTENSION.md#seven-extensions-that-change-the-product) extend
 the destination with persistent service commitments (F1), semantic observation
@@ -1512,6 +1538,14 @@ and help (F2), unfamiliar causal research (F3), autonomous service engineering
 solved cases (F6) and continuous service simplification (F7). They inherit A1–A7
 and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 [frontier evidence](ACCEPTANCE.md#frontier-extension-evidence) table.
+
+- **F1 — Persistent service commitments.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f1-persistent-service-commitments).
+- **F2 — Semantic observation and help.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f2-semantic-observation-and-immediately-useful-help).
+- **F3 — Unfamiliar causal research.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f3-unfamiliar-causal-research).
+- **F4 — Autonomous service engineering.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f4-autonomous-service-engineering).
+- **F5 — Executable service models and experiments.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f5-executable-service-models-and-experiments).
+- **F6 — Reusable capabilities from solved cases.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f6-turn-solved-cases-into-reusable-capability).
+- **F7 — Continuous service simplification.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f7-continuously-simplify-the-service-estate).
 
 ## Honest boundaries
 
@@ -1556,7 +1590,9 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 
 ## Status
 
-Judged from the code and tests at commit `9af1441` (16 October 2026), the code this branch carries unchanged; the code audit at `7ce9dae` was the starting point. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
+Judged from the code and tests at commit `9af14410a127c58bffe7935207f6524c6620157d` (16 October 2026).
+
+The commit is the code this branch carries unchanged; the code audit at `7ce9dae` was the starting point. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
