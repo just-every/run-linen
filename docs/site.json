@@ -3,7 +3,7 @@
     {
       "title": "Start here",
       "pages": [
-        { "slug": "getting-started", "title": "Get started", "file": "getting-started.md", "summary": "Install rer, start Linen on your own computer, confirm the owner and sign in." },
+        { "slug": "getting-started", "title": "Get started", "file": "getting-started.md", "summary": "Start Linen on your own computer with one line, confirm the owner and sign in." },
         { "slug": "connections", "title": "Connections and setup", "file": "connections.md", "summary": "Connect your identity provider, existing desk and reasoning model, and review what Linen finds." },
         { "slug": "people", "title": "People and permissions", "file": "people.md", "summary": "Add the people who use Linen and give each the roles they need." }
       ]

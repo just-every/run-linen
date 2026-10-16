@@ -1,18 +1,12 @@
 # Run it locally
 
-Install the RER CLI using either method:
+One line installs the RER CLI, clones Linen and starts it:
 
 ```sh
-npx -y @runeditrun/rer cli install
+npx -y @runeditrun/rer dev just-every/run-linen
 ```
 
-or:
-
-```sh
-curl -fsSL https://runeditrun.com/install.sh | sh
-```
-
-From the Linen edition directory, run:
+To start it again later, run `cd run-linen && rer dev`. To prepare it yourself, from the Linen edition directory, run:
 
 ```sh
 rer install

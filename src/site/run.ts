@@ -5,8 +5,8 @@ import { repository } from './shell/links'
 export const run: RunData = {
   name: 'Linen',
   repository,
-  clone: `git clone ${repository}.git linen`,
-  folder: 'linen',
+  clone: 'npx -y @runeditrun/rer dev just-every/run-linen',
+  folder: 'run-linen',
   requirements: 'Needs Node 22 or later and pnpm 10.12.4, on macOS, Linux or Windows with WSL2.',
   licence: 'MIT',
   docs: true,
