@@ -250,7 +250,7 @@
 }
 .record-row {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) 216px 120px 24px;
+  grid-template-columns: 40px minmax(0, 1fr) 216px 150px 24px;
   align-items: center;
   gap: 20px;
   min-height: 80px;
@@ -285,7 +285,7 @@ a.record-row:hover {
   height: 22px;
 }
 .record-row:not(:has(> .icon)) {
-  grid-template-columns: 40px minmax(0, 1fr) 216px 120px;
+  grid-template-columns: 40px minmax(0, 1fr) 216px 150px;
 }
 .record-row:not(:has(> .badge)) {
   grid-template-columns: 40px minmax(0, 1fr) 216px 24px;
@@ -1005,9 +1005,11 @@ time,
     font-size: 18px;
     line-height: 24px;
   }
+  /* Beside a long badge a date may take two lines rather than run under it. */
   .record-row small {
     grid-area: meta;
     align-self: center;
+    white-space: normal;
   }
   .record-row > .badge {
     grid-area: badge;

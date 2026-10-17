@@ -599,7 +599,7 @@
       "executable": false
     },
     "DEMO.md": {
-      "sha256": "0c843ac868f78b56e7ad507da8265687390fe276fc895ef195b2551821f36894",
+      "sha256": "4480868a3646e77d02f3fd3cd31d701d748adc22bbcc4effaf2f0836aee8ed1b",
       "executable": false
     },
     "deploy-demo.json": {
@@ -995,7 +995,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "72942c382567ea13e0359618344e68014d128570d661db6bde5a5d3fab1ec3f5",
+      "sha256": "d5e1d24a9272022ff5ceca0d01598702d6bd666425c581816c6a928cf8cf68b6",
       "executable": false
     },
     "RELEASE.json": {
@@ -3379,7 +3379,7 @@
       "executable": false
     },
     "src/styles/app.css": {
-      "sha256": "55a3df15f896b248111c0e172afa19e4b66dc3ea5bffa9ae886a8eee4f338605",
+      "sha256": "4676d3e6f653391e8ba6a9b0070a56b5e5a0eda51248759e28acc6f649527ff0",
       "executable": false
     },
     "src/styles/base.css": {
