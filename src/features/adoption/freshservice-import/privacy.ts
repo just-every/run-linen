@@ -1,8 +1,8 @@
-import { retireD1ImportCustody, upgradeD1ImportErasureIndex, sha256, type D1Sql } from '../../../import-kit/src/d1/index';
+import { retireD1ImportCustody, upgradeD1ImportErasureIndex, sha256, type D1Sql } from '../../../modules/import-kit/src/d1/index';
 import type { ErasurePort } from '../retention';
 import { importContext } from './context';
 import { ApiError } from '../../../platform/http';
-import { loadPlans } from '../../../import-kit/src/d1/plans';
+import { loadPlans } from '../../../modules/import-kit/src/d1/plans';
 
 /** Owner erasure withdraws whole artifacts linked to affected source records, not forged rewritten originals. */
 export const freshserviceErasurePort: ErasurePort = {name:'freshservice-import',async erase(ctx,identity) {

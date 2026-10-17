@@ -14,6 +14,8 @@ export interface EditionIdentity {
   tagline: string
   /** The seed's sign-in route on an installed instance. */
   signInPath: string
+  /** Show setup-token guidance while unclaimed only when the owner must claim manually; RER claims it automatically. */
+  manualSetupTokenClaim?: boolean
   /** The run site's https origin, the domain its site deploy declaration names. */
   runSite: string
   /**
@@ -30,6 +32,8 @@ export interface EditionIdentity {
   fonts?: string
   /** #rrggbb for buttons when the theme declares no --rer-accent (as the frames use it). */
   accentColor?: string
+  /** The business's IANA time zone ("Australia/Sydney"): times people read render in it, with its abbreviation (actor.ts). */
+  timeZone?: string
 }
 
 const servedPath = /^\/(?!\/)[A-Za-z0-9._~/-]{1,200}$/
@@ -38,9 +42,11 @@ export function checkIdentity(identity: EditionIdentity): EditionIdentity {
   for (const key of ['product', 'deployment', 'purpose', 'tagline'] as const) if (typeof identity[key] !== 'string' || !identity[key].trim()) throw new Error(`Edition identity needs ${key}.`)
   if (!identity.purpose.includes('{deployment}')) throw new Error('Edition identity purpose names the deployment as {deployment}.')
   if (!['lobby', 'page'].includes(identity.installedHome)) throw new Error('Edition identity installedHome is lobby or page.')
+  if (identity.manualSetupTokenClaim !== undefined && typeof identity.manualSetupTokenClaim !== 'boolean') throw new Error('Edition identity manualSetupTokenClaim is a boolean.')
   for (const path of [identity.signInPath, identity.theme, identity.mark, ...(identity.band ? [identity.band] : []), ...(identity.fonts ? [identity.fonts] : [])]) if (!servedPath.test(path) || path.includes('/.')) throw new Error('Edition identity paths are same-origin paths.')
   if (!/^https:\/\/[a-z0-9.-]+$/.test(identity.runSite)) throw new Error('Edition identity runSite is an https origin.')
   if (identity.accentColor !== undefined && !/^#[0-9a-f]{6}$/i.test(identity.accentColor)) throw new Error('An accent colour is #rrggbb.')
+  if (identity.timeZone !== undefined) try { new Intl.DateTimeFormat('en', { timeZone: identity.timeZone }) } catch { throw new Error('Edition identity timeZone is an IANA time zone such as Australia/Sydney.') }
   return identity
 }
 

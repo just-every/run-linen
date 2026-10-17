@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
-import { canonicalJson, sha256, type SourceBundle, type Json } from '../../../import-kit/src/d1/index';
-import { parseJson } from '../../../import-kit/src/readers/json';
+import { canonicalJson, sha256, type SourceBundle, type Json } from '../../../modules/import-kit/src/d1/index';
+import { parseJson } from '../../../modules/import-kit/src/readers/json';
 import { ApiError } from '../../../platform/http';
 
 export const requireInput: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new ApiError(422, 'freshservice_input', message); };

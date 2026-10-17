@@ -21,21 +21,24 @@ The guard covers fetch in routes and scheduled work. A POST public check can use
 production keeps real effects, and Base refuses production builds with RER_DEMO.
 No production provider credentials are deployed to the demo.
 
-The package pins `@runeditrun/rer` 0.2.24. `src/modules/demo` and its supporting
-Base modules come from tag `rer-v0.2.24` (commit
-`1ee378e41142c673a9098f60af21664c6d8477d1`). Only helper import paths change for
-Linen's module layout; `base-copies.json` records retained hashes. The existing
-three Vite adoption settings preserve isolated demo state, vars and sockets.
-The retained import-kit and its D1 transport also match this tag; migration
-0730 adds their preparation and erasure control tables without changing applied
-history.
+The package pins `@runeditrun/rer` 0.2.38. Every Base copy (`src/base`, the
+modules under `src/modules`, the vendored edition-authoring tool, the Vite
+local-settings helper and `.github/workflows/run-demo.yml`) comes from tag
+`rer-v0.2.38` (commit `670337b90174dd708aba9c9ec235e3be2e816d39`) byte for byte,
+as `base-copies.json` records. The three Vite adoption settings preserve isolated
+demo state, vars and sockets. Migration 0730 adds import-kit's preparation and
+erasure control tables without changing applied history.
 
 Stop with `rer demo --stop`. Its `.rer/demo/<start>` data is deleted; the owner's
 `.wrangler/state` is retained. Each demo derives its connection-encryption key
 from its private session secret. Hosted sign-in verifies Base's signed owner
 claim, then uses Linen's atomic native bootstrap and native session adapter.
 
-`.github/workflows/run-demo.yml` reads the `run-demo` environment in the
-RunEditRun account. `test_only` selects a separate host with Turnstile test keys;
-`remove_test` removes that host and reads back resource absence. Production uses
-the real widget. The demo uses `basic`, with Alex Morgan at `alex@northstar.example` as its Northstar Studio owner.
+`.github/workflows/run-demo.yml` is Base's template and reads the `run-demo`
+environment in the RunEditRun account. It deploys the hosted demo on Base's
+native Worker host: each visitor gets their own isolate with `DB` as a SQLite
+facet, `ATTACHMENTS` (R2) in their own storage and the every-minute cron by alarm;
+the copy is erased after 60 minutes or 15 idle minutes. `test_only` selects the
+separate `demo.test.run-linen.com` host with Turnstile test keys; `remove` removes
+the selected host and reads back that it is gone. Production uses the real widget.
+Alex Morgan at `alex@northstar.example` is the Northstar Studio owner.

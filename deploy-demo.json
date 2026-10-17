@@ -6,6 +6,5 @@
     "MAIL_PROVIDER": "development",
     "MAIL_FROM": "Linen demo <linen@northstar.example>"
   },
-  "instanceType": "basic",
   "ownerEmail": "alex@northstar.example"
 }

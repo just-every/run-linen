@@ -1,5 +1,5 @@
-import type { D1TargetAdapter, D1Sql, D1Database, TargetRow } from '../../../import-kit/src/d1/index';
-import { canonicalJson } from '../../../import-kit/src/d1/index';
+import type { D1TargetAdapter, D1Sql, D1Database, TargetRow } from '../../../modules/import-kit/src/d1/index';
+import { canonicalJson } from '../../../modules/import-kit/src/d1/index';
 
 export const workColumns = ['id','workspace_id','requester_id','beneficiary_id','kind','title','state','sensitivity','assignee_id','impact','revision','created_at','updated_at','closed_at','paused_at','paused_ms','response_at','resolution_at','context_json','dedup_key','request_hash'];
 const messageColumns = ['id','workspace_id','work_id','author_id','visibility','body','source_key','created_at'];

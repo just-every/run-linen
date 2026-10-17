@@ -1,4 +1,4 @@
-import { devAdmitted } from '../base/modules/operator-auth/dev-admission.mjs'
+import { devAdmitted } from '../modules/operator-auth/dev-admission.mjs'
 import type { Context, MiddlewareHandler } from 'hono'
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie'
 import type { AppEnv, Role } from './types'

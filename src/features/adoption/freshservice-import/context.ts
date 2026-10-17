@@ -5,7 +5,7 @@ import { ApiError } from '../../../platform/http';
 import { hashToken } from '../../../platform/crypto';
 import { platformAdmissionGuard } from '../../../platform/privacy';
 import type { AdoptionContext } from '../core';
-import type { D1ImportContext } from '../../../import-kit/src/d1/index';
+import type { D1ImportContext } from '../../../modules/import-kit/src/d1/index';
 import { freshserviceTargets } from './targets';
 import { MAPPING_VERSION } from './mapping';
 

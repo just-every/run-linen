@@ -1,5 +1,5 @@
-import { devAdmitted } from '../../base/modules/operator-auth/dev-admission.mjs'
-import type { NativePerson, Session, CompletedSession, SessionKind } from '../../base/modules/operator-auth/index.mjs'
+import { devAdmitted } from '../../modules/operator-auth/dev-admission.mjs'
+import type { NativePerson, Session, CompletedSession, SessionKind } from '../../modules/operator-auth/index.mjs'
 import type { Env, Role } from '../types'
 import { hashToken, token } from '../crypto'
 import { platformAdmissionGuard, assertPlatformAdmission } from '../privacy'

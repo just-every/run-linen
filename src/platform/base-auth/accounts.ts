@@ -1,4 +1,4 @@
-import type { NativeAccountsAdapter } from '../../base/modules/operator-auth/index.mjs'
+import type { NativeAccountsAdapter } from '../../modules/operator-auth/index.mjs'
 import type { Role } from '../types'
 import { hashToken } from '../crypto'
 import { cookie, rawCookie, personSelect, project, type PersonRow, type Person, type Store } from './store'

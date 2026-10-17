@@ -1,4 +1,4 @@
-import type { NativeProofPersistence, StepUpAction } from '../../base/modules/operator-auth/index.mjs'
+import type { NativeProofPersistence, StepUpAction } from '../../modules/operator-auth/index.mjs'
 import type { Role } from '../types'
 import type { Person, Store } from './store'
 export function nativeProofs(store:Store):NativeProofPersistence<Role>{

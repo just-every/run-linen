@@ -3,7 +3,7 @@ import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../../../platform/types';
 import { ApiError, requiredString } from '../../../platform/http';
 import { importBody } from '../body';
-import { planD1Import, createD1ImportJob, readD1ImportJob, readD1ImportOriginals, resumeD1Import, undoD1Import, rollbackD1Import, sha256 } from '../../../import-kit/src/d1/index';
+import { planD1Import, createD1ImportJob, readD1ImportJob, readD1ImportOriginals, resumeD1Import, undoD1Import, rollbackD1Import, sha256 } from '../../../modules/import-kit/src/d1/index';
 import { parseExport, requireInput, type ImportInput } from './format';
 import { mapping } from './mapping';
 import { requestContext, jobContext } from './context';

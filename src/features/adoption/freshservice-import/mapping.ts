@@ -1,4 +1,4 @@
-import { canonicalJson, sha256, type ImportMapping } from '../../../import-kit/src/d1/index';
+import { canonicalJson, sha256, type ImportMapping } from '../../../modules/import-kit/src/d1/index';
 import { stableId, type ParsedExport } from './format';
 import { emptyRelated } from './targets';
 

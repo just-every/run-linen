@@ -1,6 +1,6 @@
 // Local-only native identity layer. Imported only by src/server.dev.ts.
-import { devGate, devNotFound, safeReturnTo } from '../../base/modules/operator-auth/index.mjs'
-import { registerDevAdmission } from '../../base/modules/operator-auth/dev-admission.mjs'
+import { devGate, devNotFound, safeReturnTo } from '../../modules/operator-auth/index.mjs'
+import { registerDevAdmission } from '../../modules/operator-auth/dev-admission.mjs'
 import { decorateLabel } from '../../modules/demo/label.mjs'
 import { doorDocument } from './door-document'
 import { admitted } from '../../base/setup-state'

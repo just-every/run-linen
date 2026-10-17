@@ -1,4 +1,4 @@
-import { isLoopbackHost } from '../../base/modules/operator-auth/http.mjs';
+import { isLoopbackHost } from '../operator-auth/http.mjs';
 import { effectSuccess } from './responses.mjs';
 
 const readRequests = new WeakSet();

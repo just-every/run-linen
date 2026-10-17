@@ -1,6 +1,6 @@
 // /signin through Linen's door. Base's sign-in handler still decides everything a person can do here
 // (notices, providers, the email link, extra links); Linen only re-frames its card in the auth split.
-import { createSignInHandler, type OperatorAuth } from '../../base/modules/operator-auth/index.mjs'
+import { createSignInHandler, type OperatorAuth } from '../../modules/operator-auth/index.mjs'
 import { doorDocument } from './door-document'
 
 export async function signInDoor(auth: OperatorAuth<string>, request: Request): Promise<Response | null> {

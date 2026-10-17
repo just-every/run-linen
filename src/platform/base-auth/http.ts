@@ -1,4 +1,4 @@
-import { createAuthHandler, devGate, devNotFound } from '../../base/modules/operator-auth/index.mjs'
+import { createAuthHandler, devGate, devNotFound } from '../../modules/operator-auth/index.mjs'
 import { lobbyResponse } from '../../base/lobby'
 import { setupStateResponse, claimedWhen, admitted } from '../../base/setup-state'
 import type { Env } from '../types'

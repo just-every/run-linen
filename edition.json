@@ -14,11 +14,15 @@
         "kind": "local",
         "paths": [
           "src/base",
+          "src/modules/operator-auth",
+          "src/modules/dependencies",
+          "src/modules/mail",
+          "src/modules/owner-claim",
           "src/modules/demo"
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "1ee378e41142c673a9098f60af21664c6d8477d1",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": ".",
           "paths": [
             "foundation/runtime/deployment-health.ts",
@@ -82,6 +86,7 @@
             "modules/mail/src/adapters/messaging/serialize.mjs",
             "modules/mail/src/adapters/rer/contract.mjs",
             "modules/mail/src/adapters/rer/index.mjs",
+            "modules/mail/src/adapters/rer/list-headers.mjs",
             "modules/mail/src/adapters/resend/README.md",
             "modules/mail/src/adapters/resend/index.mjs",
             "modules/mail/src/adapters/resend/response.mjs",
@@ -135,6 +140,7 @@
             "modules/operator-auth/accounts/native.d.mts",
             "modules/operator-auth/accounts/native.mjs",
             "modules/operator-auth/accounts/oa.mjs",
+            "modules/operator-auth/accounts/one-click.mjs",
             "modules/operator-auth/accounts/owner-signin.mjs",
             "modules/operator-auth/accounts/provider-control.mjs",
             "modules/operator-auth/accounts/provider-pin.mjs",
@@ -175,6 +181,7 @@
             "modules/operator-auth/identity/admission.mjs",
             "modules/operator-auth/identity/after-confirm.mjs",
             "modules/operator-auth/identity/email-link/confirmation.mjs",
+            "modules/operator-auth/identity/email-link/expiry.mjs",
             "modules/operator-auth/identity/email-link/index.d.mts",
             "modules/operator-auth/identity/email-link/index.mjs",
             "modules/operator-auth/identity/email-link/message.mjs",
@@ -200,12 +207,14 @@
             "modules/operator-auth/loopback.mjs",
             "modules/operator-auth/owner-signin-grant.mjs",
             "modules/operator-auth/page.mjs",
+            "modules/operator-auth/policy.d.mts",
             "modules/operator-auth/policy.mjs",
             "modules/operator-auth/rejected-response.mjs",
             "modules/operator-auth/routes.mjs",
             "modules/operator-auth/service.mjs",
             "modules/operator-auth/signin/index.d.mts",
             "modules/operator-auth/signin/index.mjs",
+            "modules/operator-auth/signin/one-click.mjs",
             "modules/owner-claim/README.md",
             "modules/owner-claim/idp.mjs",
             "modules/owner-claim/index.d.mts",
@@ -214,6 +223,7 @@
             "modules/owner-claim/schema/idp.sql",
             "modules/owner-claim/schema/owner-claim.sql",
             "modules/owner-claim/transaction.mjs",
+            "modules/owner-claim/verify.d.mts",
             "modules/owner-claim/verify.mjs"
           ]
         },
@@ -223,19 +233,19 @@
             "originPath": "foundation/runtime"
           },
           {
-            "path": "src/base/modules/operator-auth",
+            "path": "src/modules/operator-auth",
             "originPath": "modules/operator-auth"
           },
           {
-            "path": "src/base/modules/dependencies",
+            "path": "src/modules/dependencies",
             "originPath": "modules/dependencies"
           },
           {
-            "path": "src/base/modules/mail",
+            "path": "src/modules/mail",
             "originPath": "modules/mail"
           },
           {
-            "path": "src/base/modules/owner-claim",
+            "path": "src/modules/owner-claim",
             "originPath": "modules/owner-claim"
           },
           {
@@ -255,11 +265,24 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "1ee378e41142c673a9098f60af21664c6d8477d1",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": ".",
           "paths": [
-            "foundation/runtime",
-            "edition-authoring"
+            "edition-authoring/base-copies.mjs",
+            "edition-authoring/base-copies.test.mjs",
+            "edition-authoring/cli.mjs",
+            "edition-authoring/compare-mappings.test.mjs",
+            "edition-authoring/files.mjs",
+            "edition-authoring/lifecycle.test.mjs",
+            "edition-authoring/manifest.mjs",
+            "edition-authoring/parent-comparison.mjs",
+            "edition-authoring/projection-lock.mjs",
+            "edition-authoring/projections.test.mjs",
+            "edition-authoring/release.mjs",
+            "edition-authoring/snapshot-integrity.test.mjs",
+            "edition-authoring/sources.mjs",
+            "edition-authoring/updates.mjs",
+            "edition-authoring/updates.test.mjs"
           ]
         },
         "mappings": [
@@ -276,14 +299,16 @@
       "source": {
         "kind": "local",
         "paths": [
-          "src/import-kit",
-          "src/d1-transport"
+          "src/modules/import-kit",
+          "src/modules/d1-transport"
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base",
-          "revision": "1ee378e41142c673a9098f60af21664c6d8477d1",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": ".",
           "paths": [
+            "modules/d1-transport/index.d.mts",
+            "modules/d1-transport/index.mjs",
             "modules/import-kit/CONTRACT.md",
             "modules/import-kit/FIXTURES.md",
             "modules/import-kit/README.md",
@@ -408,6 +433,17 @@
             "modules/import-kit/src/d1/undo-snapshot.ts",
             "modules/import-kit/src/d1/undo-state.ts",
             "modules/import-kit/src/d1/undo-types.ts",
+            "modules/import-kit/src/door/README.md",
+            "modules/import-kit/src/door/authority.ts",
+            "modules/import-kit/src/door/grants.ts",
+            "modules/import-kit/src/door/index.ts",
+            "modules/import-kit/src/door/inventory.ts",
+            "modules/import-kit/src/door/jobs.ts",
+            "modules/import-kit/src/door/planning.ts",
+            "modules/import-kit/src/door/schema.ts",
+            "modules/import-kit/src/door/store.ts",
+            "modules/import-kit/src/door/types.ts",
+            "modules/import-kit/src/door/uploads.ts",
             "modules/import-kit/src/journal/authority.ts",
             "modules/import-kit/src/plan/budget.ts",
             "modules/import-kit/src/plan/index.ts",
@@ -430,15 +466,17 @@
             "modules/import-kit/src/storage/originals.ts",
             "modules/import-kit/src/storage/provenance.ts",
             "modules/import-kit/src/storage/schema.ts",
-            "modules/import-kit/src/types.ts",
-            "modules/d1-transport/index.mjs",
-            "modules/d1-transport/index.d.mts"
+            "modules/import-kit/src/types.ts"
           ]
         },
         "mappings": [
           {
-            "path": "src/import-kit",
+            "path": "src/modules/import-kit",
             "originPath": "modules/import-kit"
+          },
+          {
+            "path": "src/modules/d1-transport",
+            "originPath": "modules/d1-transport"
           }
         ]
       }

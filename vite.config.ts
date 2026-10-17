@@ -4,7 +4,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { archiveOutputGuard } from '@runeditrun/rer/archive-output'
-import { excludeLocalVariables } from './vite/exclude-local-variables'
+import { excludeLocalVariables } from './vite/local-variables-output.mjs'
 const local=(name:string)=>process.env[name]?{[name]:process.env[name]}:{}
 export default defineConfig(({command,isPreview})=>({
  preview:{host:'127.0.0.1'},

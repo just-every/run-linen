@@ -1,5 +1,5 @@
-import { verifyOwnerClaim, OwnerClaimError } from './base/modules/owner-claim/index.mjs'
-import { readInput } from './base/modules/operator-auth/input.mjs'
+import { verifyOwnerClaim, OwnerClaimError } from './modules/owner-claim/index.mjs'
+import { readInput } from './modules/operator-auth/input.mjs'
 import { operatorAuth, originBindings } from './platform/base-auth/service'
 import { nativeAccounts } from './platform/base-auth/accounts'
 import { nativeStore } from './platform/base-auth/store'
