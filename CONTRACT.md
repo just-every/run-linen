@@ -150,7 +150,9 @@ that product and marks how close the current code is (see [Status](#status)).
   carrying the article revision, then read a management report for a date range in
   `America/Chicago` that separates closed from verified-fulfilled work.
 
-## Employee channels
+## Target clauses
+
+### Employee channels
 
 - **CHANNEL-001 — Slack as a primary employee channel.** A Linen Slack app
   (distributed through the Slack Marketplace, installable on Enterprise Grid)
@@ -288,7 +290,7 @@ that product and marks how close the current code is (see [Status](#status)).
   workspace ticket; after the HRIS changes the report's manager, the old manager
   loses visibility and the new one gains it.
 
-## Service catalog and approvals
+### Service catalog and approvals
 
 - **CATALOG-001 — Catalog items with forms.** Admins build catalog items (access,
   software, hardware, accounts, general services) with field types, conditional
@@ -370,7 +372,7 @@ that product and marks how close the current code is (see [Status](#status)).
   without installing; (5) a request for Visio on a Mac is refused at request
   time with the reason.
 
-## Agent workspace and ticket operations
+### Agent workspace and ticket operations
 
 - **DESK-001 — Queues, groups and views.** Agent groups, saved and shared views,
   filters, sorting, bulk update and keyboard navigation (next/previous ticket,
@@ -526,7 +528,7 @@ that product and marks how close the current code is (see [Status](#status)).
   the public status change; an imported ServiceNow incident shows its audited
   priority change with the original actor and time.
 
-## Notifications
+### Notifications
 
 - **NOTIFY-001 — Default notifications by role and event.** Out of the box:
   agents are notified when a ticket or task is assigned to them or their group,
@@ -567,7 +569,7 @@ that product and marks how close the current code is (see [Status](#status)).
   of "public update" stops receiving it but still receives a mandatory approval
   request; the template change appears in the audit log with before and after.
 
-## Identity and SaaS access
+### Identity and SaaS access
 
 - **ACCESS-001 — Microsoft Entra ID.** Create users, add/remove group
   memberships and licences, disable accounts and revoke sign-in sessions under
@@ -675,7 +677,7 @@ that product and marks how close the current code is (see [Status](#status)).
   once the relay returns; (6) a replayed relay operation is rejected and leaves
   one audit entry.
 
-## Joiners, movers and leavers
+### Joiners, movers and leavers
 
 - **LIFE-001 — HRIS-triggered lifecycle.** Rippling, Gusto, BambooHR, Workday and
   Willow connectors read new hires, start-date changes, department/title/manager
@@ -740,7 +742,7 @@ that product and marks how close the current code is (see [Status](#status)).
   evidence:** export a leaver pack and see every effect with timestamp, grant and
   verification, and outstanding duties.
 
-## Assets, devices and licences
+### Assets, devices and licences
 
 - **ASSET-001 — MDM sync.** Jamf Pro, Microsoft Intune and Kandji connectors sync
   devices (serial, model, OS, encryption, compliance, last check-in, assigned
@@ -857,7 +859,7 @@ that product and marks how close the current code is (see [Status](#status)).
   the Jamf wipe reads back; a loaner past its due date reminds the borrower and
   the IT owner.
 
-## Incidents and problems
+### Incidents and problems
 
 - **INC-001 — Major incidents.** Declare a major incident, assign an incident
   commander, open a Slack or Teams war room, page responders through Oncall,
@@ -900,7 +902,7 @@ that product and marks how close the current code is (see [Status](#status)).
   Wi-Fi tickets from one floor; a proposed problem lists them; rejection is kept
   and does not re-propose the same cluster.
 
-## Change management
+### Change management
 
 - **CHANGE-001 — Change types and templates.** Standard (pre-approved, catalog-
   driven), normal and emergency changes, with templates carrying implementation,
@@ -962,7 +964,7 @@ that product and marks how close the current code is (see [Status](#status)).
   notes to the affected cohort only, and see a failed change hold the release
   open until it is backed out.
 
-## IT projects
+### IT projects
 
 - **PROJECT-001 — IT team projects.** Projects such as an office move, a laptop
   refresh or an SSO migration have tasks, milestones, owners, due dates,
@@ -975,7 +977,7 @@ that product and marks how close the current code is (see [Status](#status)).
   flagged on the timeline, and see an agent's workload combine project tasks and
   tickets.
 
-## Knowledge
+### Knowledge
 
 - **KB-001 — Knowledge base.** Articles with authoring, review, versions,
   audience scoping, expiry and escalation to a request (E7). **Acceptance
@@ -1012,7 +1014,7 @@ that product and marks how close the current code is (see [Status](#status)).
   employee outside its audience denied the file; create an article from the
   troubleshooting template with its sections pre-filled.
 
-## Reporting
+### Reporting
 
 - **REPORT-001 — Service desk dashboards.** Volume, backlog, SLA attainment,
   first-response and resolution time, reopen rate, first-contact resolution,
@@ -1057,7 +1059,7 @@ that product and marks how close the current code is (see [Status](#status)).
   MTTA and MTTR by priority, a 92% change success rate and a 12% emergency share,
   and each tile drills through to the records it counts.
 
-## Platform, administration and integration
+### Platform, administration and integration
 
 - **ROLE-001 — Roles and permissions.** Requester, agent, group lead, approver,
   workspace admin, HR, owner, auditor and integration roles, with custom roles
@@ -1163,7 +1165,7 @@ that product and marks how close the current code is (see [Status](#status)).
   back; production grants and secrets are unchanged, and sandbox connectors call
   only sandbox credentials.
 
-## Migration and coexistence
+### Migration and coexistence
 
 - **MIGRATE-001 — Freshservice migration.** Through the Freshservice API, move
   tickets of every type (incidents, service requests, problems, changes),
