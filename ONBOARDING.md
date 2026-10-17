@@ -1,21 +1,14 @@
 # Onboarding Linen
 
-Install the published RER CLI with one of these methods:
+Start Linen from nothing with one line:
 
 ```sh
-npx -y @runeditrun/rer cli install
+npx -y @runeditrun/rer dev just-every/run-linen
 ```
 
-or:
+Without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-linen` does the same. To prepare it yourself, run `npx -y @runeditrun/rer install just-every/run-linen`, then from the Linen edition directory use the installed RER commands:
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | sh
-```
-
-From the Linen edition directory, use the installed RER commands:
-
-```sh
-rer install
 rer setup
 rer dev
 ```

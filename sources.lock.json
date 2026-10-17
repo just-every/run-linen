@@ -597,7 +597,7 @@
       "executable": false
     },
     "docs/getting-started.md": {
-      "sha256": "9b6574f42730445e2ffe8e940e3e6c11c3e2809d201a02936877bf5c9e1fbd75",
+      "sha256": "0b40c71e9357c32347fdab87eb74b02c8d95a4fb173a51c700065f30df3afb27",
       "executable": false
     },
     "docs/joining-moving-leaving.md": {
@@ -869,7 +869,7 @@
       "executable": false
     },
     "ONBOARDING.md": {
-      "sha256": "3dbaafcd2f92c47d481b49c5ff1bcad6ed2f1d7a03ad615465a78c8e2e0f2c89",
+      "sha256": "bb2638772c83081938fe706542d4c7a884e8b928717abf3a371c52208e80d82c",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -877,7 +877,7 @@
       "executable": false
     },
     "OPERATIONS.md": {
-      "sha256": "13c340b61cc1895f3b478b17ca989fcb3248e1e4990c843db169f183a18c6bfc",
+      "sha256": "511a20b65091146a3b6277af5040ed0746d2924ca027766428a1e56c2af23450",
       "executable": false
     },
     "package.json": {
@@ -957,7 +957,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "63c859e4971c803d9e5b486c8326af7027370579e64157b618c9a94736c51678",
+      "sha256": "72942c382567ea13e0359618344e68014d128570d661db6bde5a5d3fab1ec3f5",
       "executable": false
     },
     "RELEASE.json": {
