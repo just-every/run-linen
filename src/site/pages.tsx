@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { contractPageHtml } from '../base/contract-page'
 import { runPageHtml, siteNotFoundHtml, type SiteBuild, type SiteContext } from '../base/run-site'
 import { identity } from '../identity'
 import { DocsArticle } from './docs/DocsArticle'
@@ -9,8 +10,8 @@ import { page } from './landing/copy'
 import { Landing } from './landing/Landing'
 import { run } from './run'
 
-/** The run site (run-linen.com), built by `rer build --site`: the homepage, the Run page, the docs and a 404. */
-export function sitePages({ styles }: SiteContext): SiteBuild {
+/** The run site (run-linen.com), built by `rer build --site`: the homepage, the Run page, the docs, /contract from CONTRACT.md and a 404. */
+export function sitePages({ styles, contract }: SiteContext): SiteBuild {
   const document = (title: string, description: string | undefined, body: ReactElement) => '<!doctype html>' + renderToStaticMarkup(
     <html lang="en">
       <head>
@@ -32,10 +33,11 @@ export function sitePages({ styles }: SiteContext): SiteBuild {
   return {
     pages: [
       { path: '/', html: document(page.title, page.description, <Landing />) },
-      { path: '/run', html: runPageHtml(identity, run) },
+      { path: '/run', html: runPageHtml(identity, run, contract) },
+      ...(contract ? [{ path: '/contract', html: contractPageHtml(identity, run, contract) }] : []),
       { path: '/docs', html: document(...head(), <DocsIndex />) },
       ...docsPages.map(entry => ({ path: `/docs/${entry.slug}`, html: document(...head(entry.slug), <DocsArticle slug={entry.slug} />) })),
-      { path: '/404', html: siteNotFoundHtml(identity, run) },
+      { path: '/404', html: siteNotFoundHtml(identity, run, contract) },
     ],
     assets: ['rer-theme.css', 'fonts', 'brand', 'design'],
   }
