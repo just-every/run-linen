@@ -6,10 +6,9 @@ One line installs the RER CLI, clones Linen and starts it:
 npx -y @runeditrun/rer dev just-every/run-linen
 ```
 
-To start it again later, run `cd run-linen && rer dev`. To prepare it yourself, from the Linen edition directory, run:
+Without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-linen` does the same. To start it again later, run `cd run-linen && rer dev`. To prepare it yourself, run `npx -y @runeditrun/rer install just-every/run-linen`, then from the Linen edition directory:
 
 ```sh
-rer install
 rer setup
 rer dev
 ```

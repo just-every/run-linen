@@ -1,8 +1,7 @@
 Linen runs on your own computer with one command, `rer`, the Run Edit Run tool. Everything it
 keeps (requests, people, connections, attachments) stays in the folder you run it from.
 
-Linen needs Node 22 and pnpm 10.12.4, on macOS, Linux or Windows with WSL2. `rer doctor` tells
-you if anything is missing and where to get it.
+Linen runs on macOS, Linux or Windows with WSL2, and `rer` brings the Node and pnpm it needs. `rer doctor` tells you if anything is missing and where to get it.
 
 ## Get Linen and start it
 
@@ -10,7 +9,7 @@ you if anything is missing and where to get it.
 npx -y @runeditrun/rer dev just-every/run-linen
 ```
 
-That one line installs `rer`, the Run Edit Run command, and clones Linen; to start it again later, run `cd run-linen && rer dev`. The first `rer dev` installs everything, asks for your email, makes you the owner and builds the
+That one line installs `rer`, the Run Edit Run command, and clones Linen. Without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-linen` does the same. To start it again later, run `cd run-linen && rer dev`. The first `rer dev` installs everything, asks for your email, makes you the owner and builds the
 app. When it is ready it prints a line starting `RER_OPEN`. Open that link: Linen opens in your
 browser, signed in as you. The link carries a private key for this computer only, so do not
 share it.

@@ -5,11 +5,9 @@ The full [contract](CONTRACT.md) and [acceptance gates](ACCEPTANCE.md) remain in
 
 ## Local startup and identity
 
-Install the published RER CLI using one of the commands in
-[Run it locally](README.md#run-it-locally), then from the Linen edition directory:
+Start Linen with the one line in [Run it locally](README.md#run-it-locally), or get the checkout with `npx -y @runeditrun/rer install just-every/run-linen` and, from the Linen edition directory:
 
 ```sh
-rer install
 rer setup
 rer dev
 ```
