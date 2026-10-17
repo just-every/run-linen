@@ -6,7 +6,7 @@ import {nativeCreate} from './native-regressions.mjs';
 import {captureJourney} from './viewport-evidence.mjs';
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 const before=JSON.parse(await readFile(out+'/persistence.json','utf8'));
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]});
 try{
  const page=await browser.newPage({timezoneId:'UTC',viewport:{width:1440,height:1000}});await signIn(page,base,'connected-owner@example.test');const api=apiFor(page);
  assert.deepEqual(await api('/grants'),before.grants,'Actual worker restart retains exact authority');
