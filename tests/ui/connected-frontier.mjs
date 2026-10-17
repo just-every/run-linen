@@ -45,7 +45,7 @@ export async function connectedFrontier(env) {
     await page.goto(base+'/app#/engineering/'+claimed.job.id);await captureJourney(page,{path:out+'/J6-actual-source-adoption.png',fullPage:true});
     // A distinct named issuer grants the service effect; engineering authority alone cannot do this.
     await page.goto(base+'/app#/members');
-    const issuer=await action(page,'Add a workspace member',{name:'Rowan Independent Issuer',email:'rowan@example.test',password:'Connected-browser-2026',roles:['owner']},'/members','Save',201);
+    const issuer=await action(page,'Add a workspace member',{name:'Rowan Independent Issuer',email:'rowan@example.test',password:'synthetic-Connected-browser-2026',roles:['owner']},'/members','Save',201);
     const ip=await ctx.newPage();await signIn(ip,base,'rowan@example.test');const issuerApi=apiFor(ip);
     const payload={commit:receipt.commit};
     const effect=await issuerApi('/grants',{principalId:uid,beneficiaryId:uid,action:'deployment.rollout',actionVersion:1,target:'orders',connectionId:deployment.id,validFrom:later(-60000),validUntil:later(3600000),maxUses:20,conditions:{payloadHash:createHash('sha256').update(JSON.stringify(payload)).digest('hex')},verifierConnectionId:probe.id});

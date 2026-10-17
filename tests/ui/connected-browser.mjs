@@ -16,7 +16,7 @@ const fixture=async data=>{const r=await fetch(base+'/__fixture/state',{method:'
 const tick=async()=>{const r=await fetch(base+'/__fixture/tick',{method:'POST'});assert.ok(r.ok,await r.clone().text())};
 const until=async(check,label)=>{for(let i=0;i<50;i++){await tick();if(await check())return;await new Promise(r=>setTimeout(r,300))}throw Error('Timed out: '+label)};
 try{
- await page.goto(base + '/app');await page.getByLabel('Your name').fill('Fixture Owner');await page.getByLabel('Workspace name').fill('Native connected fixture');await page.getByLabel('Work email').fill('connected-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('Connected-browser-2026');await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Make room for good work.'}).waitFor();
+ await page.goto(base + '/app');await page.getByLabel('Your name').fill('Fixture Owner');await page.getByLabel('Workspace name').fill('Native connected fixture');await page.getByLabel('Work email').fill('connected-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic-Connected-browser-2026');await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Make room for good work.'}).waitFor();
  await finishFirstRun(page,base);
  const api=apiFor(page),env={browser,context,page,api,base,out,fixture,tick,until};
  Object.assign(env,await connectedSetup(env));checks.push('J1 native connection validation, complete discovery, source review, mapping and unavailable provider recovery');

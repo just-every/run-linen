@@ -32,7 +32,7 @@ export const apiFor = page => async (path, body, method = body ? 'POST' : 'GET')
   const r = await fetch('/api/v1'+path,{method,headers:{'Content-Type':'application/json','X-Linen-CSRF':s.csrfToken},body:body?JSON.stringify(body):undefined});
   const data=await r.json();if(!r.ok)throw Error(path+' '+JSON.stringify(data));return data;
 },{path,body,method});
-export async function signIn(page, base, email, password='Connected-browser-2026') {
+export async function signIn(page, base, email, password='synthetic-Connected-browser-2026') {
   await page.goto(base + '/app');await page.getByLabel('Work email').fill(email);await page.getByLabel('Password',{exact:true}).fill(password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await page.getByRole('heading',{name:'Make room for good work.'}).waitFor();
 }
 export async function requestWork(page, base, message) {

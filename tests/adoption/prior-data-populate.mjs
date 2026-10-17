@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-const password = 'Prior-data-proof-2026';
+const password = 'synthetic-Prior-data-proof-2026';
 const at = offset => new Date(Date.now() + offset).toISOString();
 
 export async function populatePriorData(h) {

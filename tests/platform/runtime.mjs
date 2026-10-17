@@ -8,7 +8,7 @@ import { pbkdf2Sync, createHash } from 'node:crypto'
 const dir=await mkdtemp(join(tmpdir(),'linen-platform-'))
 const socket=createServer();await new Promise(r=>socket.listen(Number(process.env.LINEN_TEST_PORT || 0),'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r))
 const origin=`http://127.0.0.1:${port}`
-const config=join(dir,'wrangler.json');await writeFile(config,JSON.stringify({name:'linen-platform-test',main:resolve('tests/platform/worker.ts'),compatibility_date:'2026-09-08',compatibility_flags:['nodejs_compat'],d1_databases:[{binding:'DB',database_name:'linen',database_id:'local-linen'}],r2_buckets:[{binding:'ATTACHMENTS',bucket_name:'linen-test-attachments'}],vars:{SESSION_SECRET:'fixture-only-session-key',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}))
+const config=join(dir,'wrangler.json');await writeFile(config,JSON.stringify({name:'linen-platform-test',main:resolve('tests/platform/worker.ts'),compatibility_date:'2026-09-08',compatibility_flags:['nodejs_compat'],d1_databases:[{binding:'DB',database_name:'linen',database_id:'local-linen'}],r2_buckets:[{binding:'ATTACHMENTS',bucket_name:'linen-test-attachments'}],vars:{SESSION_SECRET:'synthetic-fixture-only-session-key',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}))
 const migrationFiles=(await readdir('migrations')).filter(file=>file.endsWith('.sql')).sort()
 const migrationSql=join(dir,'migrations.sql')
 await writeFile(migrationSql,(await Promise.all(migrationFiles.map(file=>readFile('migrations/'+file,'utf8')))).join('\n'))

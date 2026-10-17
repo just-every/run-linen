@@ -28,7 +28,7 @@ print(json.dumps(out))`],{input:JSON.stringify(sources),encoding:'utf8'});
  assert.equal(parsed.status,0,parsed.stderr);
  let mf,initialized=false;
  async function start(){
-  mf=new Miniflare({...convertV4MiniflareOptions({ port: Number(process.env.LINEN_TEST_WORKER_PORT || 0), modules:true,script,compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['ATTACHMENTS'],bindings:{SESSION_SECRET:'fixture-only-session',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}),resourcePersistencePath:dir,isolatedResourcePersistencePath:join(dir,'isolated')});
+  mf=new Miniflare({...convertV4MiniflareOptions({ port: Number(process.env.LINEN_TEST_WORKER_PORT || 0), modules:true,script,compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['ATTACHMENTS'],bindings:{SESSION_SECRET:'synthetic-fixture-only-session',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}),resourcePersistencePath:dir,isolatedResourcePersistencePath:join(dir,'isolated')});
   await mf.ready;
   if(!initialized){const db=await mf.getD1Database('DB');for(const sql of JSON.parse(parsed.stdout))await db.prepare(sql).run();initialized=true}
  }

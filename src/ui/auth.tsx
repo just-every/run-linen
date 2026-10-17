@@ -98,7 +98,7 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
                   name="password"
                   type="password"
                   autoComplete={
-                    setup.data?.required ? "new-password" : "current-password"
+                    !setup.data?.required ? "current-password" : "new-password"
                   }
                   minLength={setup.data?.required ? 12 : undefined}
                   required

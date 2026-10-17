@@ -3,7 +3,7 @@ import { action, fields, createConnection, local } from './connected-helpers.mjs
 import { captureJourney } from './viewport-evidence.mjs';
 export async function connectedSetup({page,api,base,out,fixture}) {
   await page.goto(base+'/app#/members');
-  const employee=await action(page,'Add a workspace member',{name:'Avery Colleague',email:'avery@example.test',password:'Connected-browser-2026',roles:['employee']},'/members','Save',201);
+  const employee=await action(page,'Add a workspace member',{name:'Avery Colleague',email:'avery@example.test',password:'synthetic-Connected-browser-2026',roles:['employee']},'/members','Save',201);
   const graph=await createConnection(page,api,base,'microsoft-graph','Selected fixture directory',{tenantId:'11111111-1111-1111-1111-111111111111',clientId:'fixture-app',clientSecret:'fixture-secret'});
   const card=page.locator('.connection-record').filter({has:page.getByRole('heading',{name:'Selected fixture directory',exact:true})});
   await fixture({directoryUnavailable:true});
