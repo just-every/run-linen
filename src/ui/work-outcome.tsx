@@ -5,22 +5,15 @@ import { kindLabel } from "./labels";
 import { useRemote, useSession } from "./state";
 import { Badge, ErrorNotice, Facts, Loading, Notice } from "./primitives";
 import { ActionForm } from "./forms";
-import { requestContext } from "./request-facts";
+import { namedOther } from "./request-facts";
 import type { WorkRecord } from "./work";
-
-/** The account a chosen service is recorded for: the account the request is for, never the person choosing it.
-    A request recorded for its requester that names someone else has no account of theirs to record it for. */
-function serviceAccount(work: WorkRecord, personName: (id: unknown) => string) {
-  const named = requestContext(work).requestedFor;
-  if (work.beneficiary_id === work.requester_id && typeof named === "string" && named.trim() && named.trim() !== personName(work.requester_id))
-    return { account: null, named: named.trim() };
-  return { account: work.beneficiary_id, named: null };
-}
 
 export function WorkOutcome({ work, onChanged }: { work: WorkRecord; onChanged?: () => void }) {
   const personName = usePeopleLabels(),
     workId = work.id,
-    { account, named } = serviceAccount(work, personName);
+    // A service is recorded only for the account the request is for, and only while the request is open.
+    named = namedOther(work, personName),
+    closed = ["closed", "cancelled"].includes(work.state);
   const [saved, setSaved] = useState<RecordValue | null>(null);
   const obligations = useRemote<{ items: RecordValue[] }>(
       `/work/${workId}/obligations`,
@@ -66,17 +59,17 @@ export function WorkOutcome({ work, onChanged }: { work: WorkRecord; onChanged?:
       {saved && <Notice tone="warning"><strong>{saved.state === 'blocked' ? 'At submission, your catalog request was blocked.' : 'At submission, your catalog request was pending.'}</strong><p>No fulfillment was confirmed by that response. Current progress and next owners are shown above.</p></Notice>}
       <ErrorNotice error={obligations.backgroundError} />
       <ErrorNotice error={catalog.error} retry={catalog.refresh} />
-      {Boolean(catalog.data?.items.length) && !account && (
+      {Boolean(catalog.data?.items.length) && !closed && named && (
         <Notice>
           <strong>A known service can’t be chosen here.</strong>
-          <p>This request names {named} but is recorded for {personName(work.requester_id)}. Linen records a service only for the account a request is for, so {named} can ask from their own account.</p>
+          <p>This request names {named}, but it is recorded for {personName(work.beneficiary_id)}. Linen records a service only for the account a request is for, so no service was recorded. Start a request for {named}’s own account, or {named} can ask from it; a person without an account can’t have a service recorded yet.</p>
         </Notice>
       )}
-      {Boolean(catalog.data?.items.length) && account && (
+      {Boolean(catalog.data?.items.length) && !closed && !named && (
         <ActionForm
           title="Or choose a known service"
           path={`/work/${workId}/fulfilment`}
-          defaults={{ beneficiaryId: account }}
+          defaults={{ beneficiaryId: work.beneficiary_id }}
           fields={[
             {
               name: "catalogId",

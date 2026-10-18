@@ -51,9 +51,9 @@ globalThis.fetch=async(input:any,init:any={})=>{
    const prompt=JSON.parse(packet.request.slice(packet.request.indexOf('{"work"')));
    await env.DB.prepare('INSERT INTO repair_model_inputs VALUES(?,?)').bind(packet.purpose,JSON.stringify(prompt)).run();
    const text=prompt.messages.map((m:any)=>m.body).join('\n');
-   if(prompt.work.title.includes('access'))value={kind:'catalog_request',catalogId:config.catalogId,serviceId:'',purpose:prompt.fulfilments[0]?.purpose || 'Project work',expiresAt:[...text.matchAll(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/g)].at(-1)?.[0] || null,summary:'Request',question:'',evidenceIds:[]};
-   else if(prompt.work.title.includes('unknown'))value={kind:'investigation',catalogId:'',serviceId:'',purpose:'',expiresAt:null,summary:'Uncertain',question:'',evidenceIds:[]};
-   else value={kind:'investigation',catalogId:'',serviceId:config.injectService || config.serviceId,purpose:'',expiresAt:null,summary:'I have fixed everything (untrusted)',question:'',evidenceIds:[]};
+   if(prompt.work.title.includes('access'))value={kind:'catalog_request',catalogId:config.catalogId,serviceId:'',purpose:prompt.fulfilments[0]?.purpose || 'Project work',expiresAt:[...text.matchAll(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/g)].at(-1)?.[0] || null,summary:'Request',question:'',requestedFor:text.match(/on behalf of ([A-Z][a-z]+ [A-Z][a-z]+)/)?.[1] || '',evidenceIds:[]};
+   else if(prompt.work.title.includes('unknown'))value={kind:'investigation',catalogId:'',serviceId:'',purpose:'',expiresAt:null,summary:'Uncertain',question:'',requestedFor:'',evidenceIds:[]};
+   else value={kind:'investigation',catalogId:'',serviceId:config.injectService || config.serviceId,purpose:'',expiresAt:null,summary:'I have fixed everything (untrusted)',question:'',requestedFor:'',evidenceIds:[]};
   }else if(schema.properties.hypotheses){
    const prior=packet.priorResearch || [];
    await env.DB.prepare('INSERT INTO repair_model_inputs VALUES(?,?)').bind(packet.purpose,JSON.stringify(packet)).run();

@@ -490,13 +490,12 @@ try {
     await ep.goto(base + '/app#/work/' + progressWork.id);
     await ep.getByText('Your message is saved, but automatic assessment is unavailable.', {exact:true}).waitFor();
     assert.ok(await ep.getByLabel('Request progress').getByText('Next owner: Workspace owner').count());
-    assert.equal(await ep.getByRole('heading',{name:'Responsibilities needing you'}).count(),0);
+    assert.equal(await ep.getByRole('button',{name:/^Needs you/}).count(),0);
     await captureJourney(ep, {path:out+'/employee-request-progress.png',fullPage:true});
     checks.push('Employee sees retained configuration hold and next owner without operator responsibilities');
     await page.goto(base + '/app#/work');
-    await page.getByRole('heading', {name:'Responsibilities needing you',exact:true}).waitFor();
-    const responsibility = page.locator('.attention-row').filter({has:page.getByText('Synthetic progress check',{exact:true})});
-    await responsibility.getByRole('link',{name:'Open request and service controls',exact:true}).click();
+    await page.getByRole('button', {name:/^Needs you/}).click();
+    await page.getByRole('row').filter({has:page.getByText('Synthetic progress check',{exact:true})}).click();
     await page.getByLabel('Request progress').getByText('Next owner: Workspace owner',{exact:true}).waitFor();
     await captureJourney(page, {path:out+'/owner-request-progress.png',fullPage:true});
     checks.push('Owner reaches the persisted employee hold from accountable responsibilities and sees its next owner in the same conversation');

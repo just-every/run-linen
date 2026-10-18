@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ApiFailure, type RecordValue } from "./api";
-import { useMutation, useSession } from "./state";
+import { ApiFailure, text, type RecordValue } from "./api";
+import { useMutation, useRemote, useSession } from "./state";
 import { Icon } from "./icons";
 import { ErrorNotice, Notice } from "./primitives";
 import { draftKey, readDraft, writeDraft } from "./drafts";
@@ -24,6 +24,10 @@ export function Composer({
   const privateAllowed = session.principal.roles.some((r) =>
     ["owner", "operator", "hr"].includes(r),
   );
+  // The service team can start a request for another person's account; a service chosen for it is theirs.
+  const members = useRemote<RecordValue[]>(privateAllowed && !workId ? "/members" : null),
+    others = (members.data ?? []).filter((m) => m.active && m.id !== session.user.id).sort((a, b) => text(a.name).localeCompare(text(b.name))),
+    [forId, setForId] = useState("");
   const [savedDraftKey, setSavedDraftKey] = useState<string | null>(null);
   const [draftError, setDraftError] = useState(false);
   useEffect(() => {
@@ -68,6 +72,7 @@ export function Composer({
             title: body.trim().split("\n")[0].slice(0, 150),
             body,
             deduplicationKey: key.current,
+            ...(forId ? { beneficiaryId: forId } : {}),
           },
     );
     if (!result) return;
@@ -105,6 +110,7 @@ export function Composer({
       }
     }
     updateDraft("", visibility, "");
+    setForId("");
     key.current = crypto.randomUUID();
     onSent();
     if (!workId) location.hash = `/work/${target}`;
@@ -164,6 +170,19 @@ export function Composer({
           >
             Remove file
           </button>
+        )}
+        {!workId && Boolean(others.length) && (
+          <label className="visibility-picker">
+            <Icon name="user" />
+            <select aria-label="Request for" value={forId} onChange={(event) => setForId(event.target.value)}>
+              <option value="">For me</option>
+              {others.map((m) => (
+                <option key={text(m.id)} value={text(m.id)}>
+                  For {text(m.name)}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
         {workId && privateAllowed && (
           <label className="visibility-picker">

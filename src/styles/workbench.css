@@ -217,53 +217,6 @@ a.queue-row.selected {
   color: var(--denim);
 }
 
-/* The queue's exception: responsibilities waiting on this person. */
-.attention {
-  margin: 0 0 12px;
-  padding: 10px 14px 2px;
-  border: 1px solid var(--red-line);
-  border-radius: var(--radius-panel);
-  background: var(--red-tint);
-}
-.attention h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 6px;
-  color: var(--red-ink);
-  font-size: 14px;
-}
-.attention-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 6px 0 8px;
-  border-top: 1px solid var(--red-line);
-}
-.attention-row:first-of-type {
-  border-top: 0;
-}
-.attention-row > span:first-child {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-.attention-row strong {
-  font-size: 14px;
-  font-weight: 650;
-  overflow-wrap: anywhere;
-}
-.attention-row small {
-  color: var(--red-soft-ink);
-  font-size: 12px;
-  line-height: 1.45;
-}
-.attention-row a {
-  color: var(--red-ink);
-  font-weight: 600;
-}
-
 /* The right side with no request open: a new request, and the decisions card. */
 .new-request {
   display: grid;

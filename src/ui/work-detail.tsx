@@ -169,10 +169,13 @@ function Progress({ items, exception, operator }: { items: RequestProgress[]; ex
 
 /** Where the exception is resolved: the real screens its next step names, as cards. */
 function Resolutions({ item, operator }: { item: RequestProgress; operator: boolean }) {
-  const cards: [string, string, string, string][] = [];
-  if (item.next.includes("decision holder")) cards.push(["#/decisions", "approve", "Review catalog approvals", "The decision holder approves or declines in Decisions."]);
+  const { session } = useSession(),
+    cards: [string, string, string, string][] = [];
+  // Decisions lists a catalog approval only for its holder, so only the holder is sent there.
+  if (item.next.includes("decision holder") && item.ownerId === session.user.id) cards.push(["#/decisions", "approve", "Review catalog approvals", "Approve or decline it in Decisions."]);
+  if (operator && item.next.includes("manager in People")) cards.push(["#/lifecycle", "users", "Record the manager", "Set who this person reports to in People."]);
   if (operator && item.next.includes("physical handoff")) cards.push(["#/assets", "laptop", "Devices & custody", "Record the physical handoff and its evidence."]);
-  if (operator && item.ownerLabel === "Workspace owner") cards.push(["#/connections", "gear", "Connections & setup", "Review the model connection or budget."]);
+  if (operator && /Connections & setup|budget/.test(item.next)) cards.push(["#/connections", "gear", "Connections & setup", "Review the model connection or budget."]);
   if (operator && item.next.includes("Operations & recovery")) cards.push(["#/operations", "shield", "Operations & recovery", "Check current authority and uncertain effects."]);
   if (!cards.length) return null;
   return (

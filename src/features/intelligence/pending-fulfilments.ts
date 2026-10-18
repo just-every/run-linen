@@ -39,7 +39,8 @@ async function resumeFulfilment(ctx: IntelligenceContext,row:any) {
     const readiness=await getFulfilmentReadiness(ctx,work.id,row.catalog_id);
     if(!readiness.ready){
       await ctx.env.DB.prepare("UPDATE intelligence_pending_fulfilments SET state='waiting',error_code=?,updated_at=? WHERE id=? AND lease_until=?").bind(readiness.reason,now(),row.id,lease).run();
-      return {state:'blocked',message:readiness.reason || 'Your request awaits its fulfillment owner’s decision.',ownerId:readiness.ownerId};
+      // The conversation says it in words; Progress names the step and its next owner.
+      return {state:'blocked',message:'Your request is recorded and waits on its next step, shown in Progress. No fulfillment is confirmed.',reason:readiness.reason,ownerId:readiness.ownerId};
     }
     const catalog=(await workIntakePort().catalog(ctx)).find(c=>c.id===row.catalog_id);
     assert(catalog,'pending_catalog_missing',409);

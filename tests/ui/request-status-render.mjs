@@ -21,10 +21,10 @@ try {
  assert.match(html,/You do not need to resend/);
  assert.match(html,/aria-live="polite"/);
  assert.doesNotMatch(html,/Service controls|Effects, takeover|model configuration trace/);
- assert.doesNotMatch(work(),/Responsibilities needing you/);
+ assert.doesNotMatch(work(),/>Needs you<span/);
  if(output) await writeFile(join(output,'employee-status.html'),html);
  session.principal.roles=['owner'];session.principal.userId='owner';session.user.id='owner';session.user.name='Owner';
- html=work();assert.match(html,/Responsibilities needing you/);assert.match(html,/Open request and service controls/);assert.match(html,/href="#\/work\/one"/);assert.match(html,/Operations &amp; recovery/);
+ html=work();assert.match(html,/Needs you<span class="chip-count">1<\/span>/);assert.match(html,/href="#\/work\/one"/);
  if(output) await writeFile(join(output,'operator-responsibilities.html'),html);
  html=work('one');assert.match(html,/Service controls/);assert.match(html,/Connections &amp; setup/);
  globalThis.__linenStatus.reads['/work/one'].progress=[{...progress,ownerLabel:'Casey',state:'verified',happened:'Independent evidence verifies this responsibility.',next:'No acknowledgement is needed.'}];
@@ -33,5 +33,5 @@ try {
  assert.match(work('one'),/&lt;script&gt;synthetic untrusted text&lt;\/script&gt;/);
  html=decisions();assert.match(html,/Checking catalog approvals/);assert.match(html,/No business choices are recorded/);
  if(output)await writeFile(join(output,'decisions-loading.html'),html);
- console.log('PASS browser-free React static renders: employee next owner and safe action, operator-owned task links and controls, independent verified copy, escaped text and mounted existing catalogue decision component. API hook reads are synthetic fixtures; no browser/visual/interactive acceptance claimed.');
+ console.log('PASS browser-free React static renders: employee next owner and safe action, operator-owned task count and controls, independent verified copy, escaped text and mounted existing catalogue decision component. API hook reads are synthetic fixtures; no browser/visual/interactive acceptance claimed.');
 } finally {delete globalThis.__linenStatus;await rm(scratch,{recursive:true,force:true});}

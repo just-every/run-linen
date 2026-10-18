@@ -3,12 +3,12 @@ import { fulfilmentManagerApproval } from './fulfilment-authority';
 import { now } from '../../platform/http';
 /** Read-only business gate for durable intake resumption. Execution independently checks grants at effects. */
 export async function getFulfilmentReadiness(ctx: WorkContext, workId: string, catalogId: string): Promise<{
-  ready:boolean;reason:string|null;ownerId:string;
+  ready:boolean;reason:string|null;ownerId:string|null;
 }> {
   const work=await getWork(ctx,workId),db=ctx.env.DB,w=ctx.principal.workspaceId;
   const catalog=await db.prepare('SELECT * FROM work_catalog WHERE workspace_id=? AND id=?').bind(w,catalogId).first<any>();
   const ownerId=catalog?.owner_id||work.assignee_id||work.requester_id;
-  const blocked=(reason:string,holder=ownerId)=>({ready:false,reason,ownerId:holder});
+  const blocked=(reason:string,holder:string|null=ownerId)=>({ready:false,reason,ownerId:holder});
   if(!catalog)return blocked('Catalogue item is unavailable; fulfilment owner must review');
   if(['closed','cancelled'].includes(work.state))return blocked('Work is closed or cancelled');
   const f=await db.prepare('SELECT * FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?').bind(w,workId,catalogId).first<any>();
@@ -20,7 +20,10 @@ export async function getFulfilmentReadiness(ctx: WorkContext, workId: string, c
   if(erased || (person && (!person.active || person.merged_into)) || !member)
     return blocked('Current active beneficiary identity required');
   const manager=await fulfilmentManagerApproval(ctx,work,catalog,f);
-  if(!manager.allowed)return blocked('Current scoped manager approval is required',manager.holderId||ownerId);
+  // Only a recorded manager other than the person can decide; without one, the step is recording a manager, not a fallback holder.
+  if(!manager.allowed && (!manager.holderId || manager.holderId===f.beneficiary_id))
+    return blocked('Missing authoritative manager; owner must resolve authority',null);
+  if(!manager.allowed)return blocked('Current scoped manager approval is required',manager.holderId);
   if(catalog.capacity!==null) {
     const reservation=await db.prepare(`SELECT 1 FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=?
       AND work_id=? AND beneficiary_id=? AND released_at IS NULL`).bind(w,catalogId,workId,f.beneficiary_id).first();

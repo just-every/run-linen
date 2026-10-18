@@ -19,7 +19,7 @@ export function queueTime(value: string) {
 
 type Filter = [key: string, label: string, test: (item: WorkRecord) => boolean];
 
-/** The queue of the Requests workbench: chips over a dense table of conversations, the open one highlighted. */
+/** The queue of the Requests workbench: counted filter chips over a dense table of conversations, the open one highlighted. */
 export function Queue({ selectedId }: { selectedId?: string }) {
   const queue = useQueue(),
     personName = usePeopleLabels(),
@@ -32,6 +32,9 @@ export function Queue({ selectedId }: { selectedId?: string }) {
         ["all", "All", () => true],
         ["mine", "Mine", (item) => item.assignee_id === me && isOpen(item)],
         ["unassigned", "Unassigned", (item) => !item.assignee_id && isOpen(item)],
+        // The responsibilities waiting on this person, and every request with an exception: counted and
+        // filtered here, so the queue itself stays on the first screen.
+        ["you", "Needs you", (item) => Boolean(item.attention?.length)],
         ["attention", "Needs attention", (item) => Boolean(progressException(item.progress))],
       ]
     : [
@@ -114,40 +117,6 @@ export function Queue({ selectedId }: { selectedId?: string }) {
       ) : (
         <Empty title="A fresh start.">Your first request will appear here. Nothing is running or verified yet.</Empty>
       )}
-    </section>
-  );
-}
-
-/** Operator responsibilities that wait on this person: the queue's exception, above the table. The open
-    request's own responsibility is left out here; its banner on the right already says it. */
-export function AttentionList({ selectedId }: { selectedId?: string }) {
-  const queue = useQueue(),
-    { session } = useSession(),
-    operator = session.principal.roles.some((r) => ["owner", "operator", "hr"].includes(r));
-  const items = (queue.data?.items ?? []).filter((item) => item.attention?.length && item.id !== selectedId);
-  if (!operator || !items.length) return null;
-  return (
-    <section className="attention" aria-labelledby="attention-title">
-      <h2 id="attention-title">
-        <Icon name="alert" size={18} />
-        Responsibilities needing you
-      </h2>
-      {items.map((item) => (
-        <div key={item.id} className="attention-row">
-          <span>
-            <strong>{item.title}</strong>
-            {item.attention!.map((action, index) => (
-              <small key={index}>
-                {action.happened} {action.next}
-              </small>
-            ))}
-            <small>
-              <a href={`#/work/${item.id}`}>Open request and service controls</a> · <a href="#/operations">Operations &amp; recovery</a>
-            </small>
-          </span>
-          <Badge value={item.attention![0].state} />
-        </div>
-      ))}
     </section>
   );
 }

@@ -64,6 +64,8 @@ export async function requestFulfilment(
     return amendFulfilment(ctx,workId,{...input,expectedWorkRevision:input.expectedWorkRevision,
       expectedFulfilmentRevision:input.expectedFulfilmentRevision,idempotencyKey:input.idempotencyKey});
   const work = await getWork(ctx, workId);
+  if (["closed", "cancelled"].includes(work.state))
+    throw new ApiError(409, "work_closed", "Reopen the request before choosing a service for it");
   if (input.beneficiaryId !== ctx.principal.userId)
     permit(ctx, ["owner", "operator", "hr"]);
   if (

@@ -37,7 +37,8 @@ try {
  assert.equal((await h.ok('/fulfilment-decisions')).items.length,1);
  assert.equal((await h.ok('/work',undefined,'stranger')).items.length,0);
  await h.db.prepare("UPDATE work_people SET manager_id=NULL WHERE id='employee'").run();
- view=await read();assert.equal(view.progress.at(-1).ownerId,'stranger');
+ view=await read();assert.equal(view.progress.at(-1).ownerId,null);assert.equal(view.progress.at(-1).ownerLabel,'Workspace owner');
+ assert.match(view.progress.at(-1).happened,/No manager is recorded for Employee/);assert.match(view.progress.at(-1).next,/manager in People/);
  await h.db.prepare("INSERT INTO intelligence_pending_fulfilments VALUES(?,?,?,?,?,?,?,'blocked','pending_work_changed',NULL,?,?)")
    .bind('synthetic-pending','w',work.id,access.id,'employee',1,'{}',new Date().toISOString(),new Date().toISOString()).run();
  view=await read();assert.match(view.progress.at(-1).next,/changed request/);

@@ -26,10 +26,20 @@ export function requestContext(work: WorkRecord): Record<string, unknown> {
 }
 const named = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : null);
 
-/** The person a request is for: another account it was recorded for, else the person its context names, else the requester. */
+/** "Priya" and "Priya Shah" name the same person, as the assessment reads them. */
+const sameName = (name: string, full: string) => {
+  const a = name.toLowerCase().split(/\s+/), b = full.trim().toLowerCase().split(/\s+/);
+  return a.length <= b.length && a.every((word, index) => word === b[index]);
+};
+/** The person the request's recorded context names when that is not the account it is recorded for, else null. */
+export function namedOther(work: WorkRecord, personName: (id: unknown) => string) {
+  const person = named(requestContext(work).requestedFor);
+  return person && !sameName(person, personName(work.beneficiary_id)) ? person : null;
+}
+
+/** The person a request is for: the person its context names, else the account it is recorded for. */
 export function requestFor(work: WorkRecord, personName: (id: unknown) => string) {
-  if (work.beneficiary_id !== work.requester_id) return personName(work.beneficiary_id);
-  return named(requestContext(work).requestedFor) ?? personName(work.beneficiary_id);
+  return namedOther(work, personName) ?? personName(work.beneficiary_id);
 }
 
 /** The person's recorded facts, each only when recorded. */

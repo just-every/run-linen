@@ -9,7 +9,7 @@ export async function requestProgress(ctx: WorkContext, workId: string): Promise
   return progressFor(ctx, await getWork(ctx, workId));
 }
 /** The same projection for a conversation the caller has already read (the list's rows). */
-export async function progressFor(ctx: WorkContext, work: Pick<WorkRecord, 'id' | 'requester_id' | 'assignee_id'>): Promise<RequestProgress[]> {
+export async function progressFor(ctx: WorkContext, work: Pick<WorkRecord, 'id' | 'requester_id' | 'beneficiary_id' | 'assignee_id'>): Promise<RequestProgress[]> {
   const workId = work.id, db = ctx.env.DB, w = ctx.principal.workspaceId;
   async function ownerLabel(ownerId: string | null, fallback: string) {
     if (!ownerId) return fallback;
@@ -40,7 +40,7 @@ export async function progressFor(ctx: WorkContext, work: Pick<WorkRecord, 'id' 
   }
   const duties = (await db.prepare('SELECT kind,state,owner_id,target,due_at FROM work_obligations WHERE workspace_id=? AND work_id=? ORDER BY due_at,id').bind(w,workId).all<any>()).results;
   for (const duty of duties) {
-    let ownerId = duty.owner_id, state = duty.state;
+    let ownerId = duty.owner_id, state = duty.state, unowned = 'Service team — assignment needed';
     let happened = state === 'verified' ? 'Independent evidence verifies this responsibility.' : state === 'blocked' ? 'This responsibility is blocked.' : state === 'failed' ? 'This responsibility failed.' : state === 'cancelled' ? 'This responsibility is cancelled; existing effects remain recorded.' : 'This responsibility remains open.';
     let next = state === 'verified' ? 'No acknowledgement is needed. Other responsibilities remain separate.' : state === 'cancelled' ? 'The service team must retain and reconcile any existing or uncertain effects.' : duty.kind === 'access.revoke' && duty.due_at > new Date().toISOString() ? 'Removal is scheduled for the recorded expiry and must be verified separately.' : duty.kind.startsWith('device.') ? 'The named owner must arrange the physical handoff and record custody evidence.' : 'The named owner must review current authority and any uncertain effects in Operations & recovery before continuing.';
     if (['access.grant','device.deliver'].includes(duty.kind) && !['verified','cancelled','failed'].includes(state)) {
@@ -50,8 +50,12 @@ export async function progressFor(ctx: WorkContext, work: Pick<WorkRecord, 'id' 
         if (!gate.ready) {
           ownerId = gate.ownerId;
           state = 'blocked';
+          const person = gate.reason === 'Missing authoritative manager; owner must resolve authority'
+            ? (await db.prepare('SELECT name FROM users WHERE id=?').bind(work.beneficiary_id).first<{name:string}>())?.name || 'this person' : '';
+          if (person) unowned = 'Workspace owner';
           const reasons: Record<string,string> = {
-            'Current scoped manager approval is required': 'This request is waiting for its current manager’s decision.',
+            'Current scoped manager approval is required': 'This request is waiting for its manager’s decision.',
+            'Missing authoritative manager; owner must resolve authority': `No manager is recorded for ${person}.`,
             'Current catalogue capacity and an owned reservation are required': 'Stock or license capacity is not reserved for this request.',
             'Current active beneficiary identity required': 'The beneficiary’s current identity needs review.',
             'Current exact fulfilment beneficiary required': 'The selected service is recorded for a different person than this request.',
@@ -62,7 +66,8 @@ export async function progressFor(ctx: WorkContext, work: Pick<WorkRecord, 'id' 
             'Work is closed or cancelled': 'The request is closed or cancelled. This responsibility remains recorded.',
           };
           happened = reasons[gate.reason || ''] || 'This responsibility is waiting for a current prerequisite.';
-          next = gate.reason === 'Current scoped manager approval is required' ? 'The named decision holder must review this request in Needs your decision. Provider authority is checked separately.' : gate.reason === 'Current exact fulfilment beneficiary required' ? 'The fulfillment owner must confirm who the service is for before this request can continue.' : 'The fulfillment owner must resolve the catalog, identity or capacity prerequisite before this request can continue.';
+          next = gate.reason === 'Current scoped manager approval is required' ? 'The named decision holder must review this request in Needs your decision. Provider authority is checked separately.'
+            : person ? `A workspace owner or HR records ${person}’s manager in People; that manager then decides in Needs your decision.` : gate.reason === 'Current exact fulfilment beneficiary required' ? 'The fulfillment owner must confirm who the service is for before this request can continue.' : 'The fulfillment owner must resolve the catalog, identity or capacity prerequisite before this request can continue.';
         }
       }
     }
@@ -87,7 +92,7 @@ export async function progressFor(ctx: WorkContext, work: Pick<WorkRecord, 'id' 
       }
     }
     const needsAction = !['verified','cancelled'].includes(state) && !(duty.kind === 'access.revoke' && duty.due_at > new Date().toISOString() && state === 'pending');
-    items.push({needsAction,title:titles[duty.kind] || 'Service responsibility',dueAt:duty.due_at,state,happened,next,ownerId,ownerLabel:await ownerLabel(ownerId,'Service team — assignment needed')});
+    items.push({needsAction,title:titles[duty.kind] || 'Service responsibility',dueAt:duty.due_at,state,happened,next,ownerId,ownerLabel:await ownerLabel(ownerId,unowned)});
   }
   return items;
 }

@@ -5,9 +5,18 @@ interface IntakeContext {
   services: { id: string; name: string; description: string }[];
 }
 
+const calendarWord = /^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|January|February|March|April|May|June|July|August|September|October|November|December|Today|Tomorrow)$/;
+/** The person the request's words are about: a name that opens it ("Wes Calloway in Sales starts…", "Priya needs…")
+    or follows "for" ("a seat for Priya"). Empty when the words name no one, as a request for oneself reads. */
+function requestedPerson(words: string) {
+  const subject = words.match(/^([A-Z][a-z]+(?: [A-Z][a-z]+)?)\s+(?:in|from|at|on|needs|starts|joins|wants|requires|is|has|will|would)\b/)?.[1];
+  const beneficiary = words.match(/\bfor ([A-Z][a-z]+(?: [A-Z][a-z]+)?)\b(?!['’])/)?.[1];
+  return [subject, beneficiary].find(name => name && !calendarWord.test(name.split(' ')[0])) ?? '';
+}
+
 /** Provider output for the explicitly isolated demo, using only its supplied context. */
 export function demoIntakeAssessment(input: IntakeContext) {
-  const text = (input.title + ' ' + input.messages.map(m => m.body).join(' ')).toLowerCase();
+  const words = input.title + ' ' + input.messages.map(m => m.body).join(' '), text = words.toLowerCase();
   const catalog = input.catalog.find(c => text.includes(c.name.toLowerCase()))
     ?? input.catalog.find(c => c.name.includes('Figma') && /figma|design.*seat/.test(text))
     ?? input.catalog.find(c => c.name.includes('dashboard') && /dashboard|revenue report/.test(text))
@@ -15,7 +24,7 @@ export function demoIntakeAssessment(input: IntakeContext) {
     ?? input.catalog.find(c => c.name.includes('archive') && /archive/.test(text))
     ?? input.catalog.find(c => c.name === 'Loan laptop' && /laptop/.test(text))
     ?? input.catalog.find(c => c.name.includes('mailbox') && /mailbox/.test(text));
-  const common = { summary: '', catalogId: '', serviceId: '', purpose: input.title, expiresAt: null, question: '', evidenceIds: [] };
+  const common = { summary: '', catalogId: '', serviceId: '', purpose: input.title, expiresAt: null, question: '', requestedFor: requestedPerson(words), evidenceIds: [] };
   if (catalog && !/cannot|can't|disconnect|intermittent|timing out|slow|not working/.test(text))
     return { ...common, kind: 'catalog_request', catalogId: catalog.id, summary: `I’ve assessed this as a request for ${catalog.name}. Its fulfillment owner will coordinate the next step and any required decision.` };
   const service = input.services.find(s => s.name === 'Office connectivity' && /vpn|wi-fi|wifi|network/.test(text))

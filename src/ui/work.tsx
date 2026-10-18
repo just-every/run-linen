@@ -4,7 +4,7 @@ import type { RecordValue } from "./api";
 import { Icon } from "./icons";
 import { Composer } from "./work-composer";
 import { useQueue } from "./queue";
-import { AttentionList, Queue } from "./work-queue";
+import { Queue } from "./work-queue";
 import { RequestDetail } from "./work-detail";
 import { progressException } from "./request-facts";
 export interface WorkRecord {
@@ -70,7 +70,6 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
         )}
       </div>
       <div className="workbench-queue">
-        <AttentionList selectedId={selectedId} />
         <Queue selectedId={selectedId} />
       </div>
       <div className="workbench-detail">

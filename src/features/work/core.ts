@@ -229,6 +229,14 @@ export async function createWork(
     .first<{ id: string }>();
   return getWork(ctx, row!.id);
 }
+/** The person a request's own words name, recorded once as a fact of the request. It is never an identity or authority. */
+export async function recordRequestedFor(ctx: WorkContext, workId: string, name: string) {
+  await getWork(ctx, workId);
+  const context = "CASE WHEN json_valid(context_json) AND json_type(context_json)='object' THEN context_json ELSE '{}' END";
+  await ctx.env.DB.prepare(`UPDATE work_records SET context_json=json_set(${context},'$.requestedFor',?),updated_at=?
+    WHERE workspace_id=? AND id=? AND json_extract(${context},'$.requestedFor') IS NULL`)
+    .bind(name, now(), ctx.principal.workspaceId, workId).run();
+}
 export async function appendMessage(
   ctx: WorkContext,
   input: {

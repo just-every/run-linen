@@ -95,10 +95,10 @@ globalThis.fetch = async (input, init = {}) => {
       const raw = packet.request, intake = JSON.parse(raw.slice(raw.indexOf('{"work"')));
       const text = intake.messages.map(m => m.body).join('\n');
       value = config.serviceId && intake.work.title.includes('renewal orders fail')
-        ? {kind:'investigation',summary:'Investigate the known renewal service',catalogId:'',serviceId:config.serviceId,purpose:'',expiresAt:null,question:'',evidenceIds:[]}
+        ? {kind:'investigation',summary:'Investigate the known renewal service',catalogId:'',serviceId:config.serviceId,purpose:'',expiresAt:null,question:'',requestedFor:'',evidenceIds:[]}
         : config.catalogId && intake.work.title.includes('temporary access')
-        ? { kind: 'catalog_request', summary: 'Temporary project access', catalogId: config.catalogId, serviceId: '', purpose: intake.fulfilments[0]?.purpose || 'Project review', expiresAt: [...text.matchAll(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/g)].at(-1)?.[0] || null, question: '', evidenceIds: [] }
-        : { kind: 'necessary_question', summary: 'A material fact is missing', catalogId: '', serviceId: '', purpose: '', expiresAt: null, question: 'Which application do you need?', evidenceIds: [] };
+        ? { kind: 'catalog_request', summary: 'Temporary project access', catalogId: config.catalogId, serviceId: '', purpose: intake.fulfilments[0]?.purpose || 'Project review', expiresAt: [...text.matchAll(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/g)].at(-1)?.[0] || null, question: '', requestedFor: '', evidenceIds: [] }
+        : { kind: 'necessary_question', summary: 'A material fact is missing', catalogId: '', serviceId: '', purpose: '', expiresAt: null, question: 'Which application do you need?', requestedFor: '', evidenceIds: [] };
     } else throw Error('Unrecognised test model contract');
     return Response.json({ status: 'completed', model: body.model, usage: { input_tokens: 100, output_tokens: 30, total_tokens: 130, input_tokens_details: { cached_tokens: 0 } }, output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(value) }] }] });
   }
