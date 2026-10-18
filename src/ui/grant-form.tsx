@@ -76,15 +76,15 @@ export function GrantForm({ onSaved }: { onSaved: () => void }) {
   if (!owner) return <Notice>An owner must issue standing permissions. Delegated authority retains its separate server checks.</Notice>;
   return <section className="connection-record">
     <h2>Review a standing permission</h2>
-    <p>Let a named service identity provide one colleague’s catalogue access and remove it at expiry. These are two separate permissions; no provider action runs during setup.</p>
+    <p>Let a named service identity provide one colleague’s catalog access and remove it at expiry. These are two separate permissions; no provider action runs during setup.</p>
     <ErrorNotice error={error ?? mappings.error ?? actors.error ?? catalog.error ?? connections.error} />
     {!review ? <form className="inline-form" onSubmit={prepare}>
       <label>Service identity<select aria-label="Service identity" name="actor" required><option value="">Choose who may act…</option>{machines.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
       <label>Colleague and reviewed account<select aria-label="Colleague and reviewed account" name="mapping" required><option value="">Choose a reviewed colleague…</option>{eligible.map(m => <option key={m.id} value={m.id}>{m.localName}{m.localEmail ? ` · ${m.localEmail}` : ""} · {m.connectionName}</option>)}</select></label>
-      <label>Catalogue service<select aria-label="Catalogue service" name="catalog" required><option value="">Choose a service…</option>{services.map(c => <option key={c.id} value={c.id}>{c.name} · {c.kind === "software" ? "Software licence" : "Application access"}</option>)}</select></label>
+      <label>Catalog service<select aria-label="Catalog service" name="catalog" required><option value="">Choose a service…</option>{services.map(c => <option key={c.id} value={c.id}>{c.name} · {c.kind === "software" ? "Software license" : "Application access"}</option>)}</select></label>
       <label>Independent verifier<select aria-label="Independent verifier" name="verifier" required><option value="">Choose a checked verifier…</option>{verifiers.map(c => <option key={text(c.id)} value={text(c.id)}>{text(c.name)}</option>)}</select></label>
       <div className="field-grid"><label>Authority begins<input name="start" type="datetime-local" required /></label><label>Requested access expiry<input name="expiry" type="datetime-local" required /></label><label>Authority ends, after removal<input name="end" type="datetime-local" required /></label><label>Maximum uses per permission<input name="uses" type="number" min="1" max="100000" step="1" defaultValue="1" required /></label></div>
-      {(!eligible.length || !machines.length || !services.length || !verifiers.length) && <Notice>Complete the current identity relationship, service identity, catalogue and checked verifier first. <a href="#/connections">Review connections and identities</a>. Names never create authority.</Notice>}
+      {(!eligible.length || !machines.length || !services.length || !verifiers.length) && <Notice>Complete the current identity relationship, service identity, catalog and checked verifier first. <a href="#/connections">Review connections and identities</a>. Names never create authority.</Notice>}
       <button className="action primary" disabled={!eligible.length || !machines.length || !services.length || !verifiers.length}>Review these permissions</button>
     </form> : <div className="inline-form">
       <h3>Review before issuing</h3>

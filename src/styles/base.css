@@ -91,14 +91,6 @@ svg {
   stroke-linejoin: round;
   flex-shrink: 0;
 }
-.icon .leaf-body {
-  fill: currentColor;
-  stroke: none;
-}
-.icon .leaf-rib {
-  stroke: var(--paper);
-  stroke-width: 1.15;
-}
 .eyebrow {
   display: block;
   color: var(--muted);

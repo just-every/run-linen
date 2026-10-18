@@ -4,7 +4,7 @@ import { useMutation } from "./state";
 import { ErrorNotice, Notice } from "./primitives";
 import { Fields, readFields, type Field } from "./forms";
 export const providers = [
-  { value: "microsoft-graph", label: "Microsoft identity & licences" },
+  { value: "microsoft-graph", label: "Microsoft identity & licenses" },
   { value: "freshservice", label: "Freshservice existing desk" },
   { value: "workflow-probe", label: "Independent workflow verifier" },
   { value: "openai", label: "OpenAI reasoning" },

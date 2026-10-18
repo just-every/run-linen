@@ -13,7 +13,7 @@ Attach a file with **Attach a file** if it helps, then choose **Send**. Linen sa
 first, so nothing is lost if your connection drops, and opens the conversation.
 
 If you would rather pick from a list, **Or choose a known service** under the conversation
-offers your service catalogue. It keeps the same request; it does not start a second one.
+offers your service catalog. It keeps the same request; it does not start a second one.
 
 ## Follow it
 

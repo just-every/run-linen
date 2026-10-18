@@ -12,6 +12,7 @@ const checks = [
   ['Legacy session retirement', process.execPath, ['tests/platform/legacy-session-runtime.mjs']],
   ['Native archive transfer', process.execPath, ['tests/platform/base-auth-transfer.mjs']],
   ['TypeScript', 'pnpm', ['typecheck']],
+  ['run site', process.execPath, ['--test', 'tests/site/site.test.mjs']],
   ['emitted Worker', process.execPath, ['tests/runtime.mjs']],
   ['platform', process.execPath, ['tests/platform/runtime.mjs']],
   ['configuration', process.execPath, ['tests/platform/config-runtime.mjs']],

@@ -93,7 +93,7 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
                     <section className="progress" aria-label="Request progress" aria-live="polite">
                       {detail.data?.progress?.map((item, index) => <Notice key={index} tone={item.state === "verified" ? undefined : "warning"}>
                         <strong>{item.title ? `${item.title}: ` : ""}{item.happened}</strong><p>{item.next}</p>{item.dueAt && <p>Due: {date(item.dueAt)}</p>}<p>Next owner: {item.ownerLabel}</p>
-                        {item.next.includes("decision holder") && <a href="#/decisions">Review catalogue approvals</a>}
+                        {item.next.includes("decision holder") && <a href="#/decisions">Review catalog approvals</a>}
                         {operator && item.next.includes("physical handoff") && <a href="#/assets">Devices &amp; custody</a>}
                         {operator && item.ownerLabel === "Workspace owner" && <a href="#/connections">Connections &amp; setup</a>}
                       </Notice>)}

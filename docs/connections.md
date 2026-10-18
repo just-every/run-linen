@@ -1,4 +1,4 @@
-**Connections & setup** is where Linen learns about your organisation. Open it from your
+**Connections & setup** is where Linen learns about your organization. Open it from your
 profile menu. Connecting a service lets Linen read facts; it never grants permission to act.
 
 ## Connect a service
@@ -8,7 +8,7 @@ its details. Credentials are encrypted and never shown again.
 
 | Connection | What you enter |
 |---|---|
-| Microsoft identity & licences | Your tenant ID and an approved application's client ID and secret |
+| Microsoft identity & licenses | Your tenant ID and an approved application's client ID and secret |
 | Freshservice existing desk | Your exact `tenant.freshservice.com` domain and an API key |
 | OpenAI reasoning | An API key, the model to use, price estimates and spending limits |
 | SendGrid email delivery | The verified sender address, an API key and the signed-event key |
@@ -21,7 +21,7 @@ source** removes the stored credential.
 
 ## Review what Linen found
 
-For Microsoft and Freshservice, **Discover available facts** reads people, groups, licences,
+For Microsoft and Freshservice, **Discover available facts** reads people, groups, licenses,
 devices and applications in bounded pages. Linen brings the meaningful gaps and choices into one
 review: confirm or correct each fact, then apply what you accept. Discovery cannot invent who
 approves what, grant write access or verify an outcome.

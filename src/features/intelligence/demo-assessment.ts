@@ -17,7 +17,7 @@ export function demoIntakeAssessment(input: IntakeContext) {
     ?? input.catalog.find(c => c.name.includes('mailbox') && /mailbox/.test(text));
   const common = { summary: '', catalogId: '', serviceId: '', purpose: input.title, expiresAt: null, question: '', evidenceIds: [] };
   if (catalog && !/cannot|can't|disconnect|intermittent|timing out|slow|not working/.test(text))
-    return { ...common, kind: 'catalog_request', catalogId: catalog.id, summary: `I’ve assessed this as a request for ${catalog.name}. Its fulfilment owner will coordinate the next step and any required decision.` };
+    return { ...common, kind: 'catalog_request', catalogId: catalog.id, summary: `I’ve assessed this as a request for ${catalog.name}. Its fulfillment owner will coordinate the next step and any required decision.` };
   const service = input.services.find(s => s.name === 'Office connectivity' && /vpn|wi-fi|wifi|network/.test(text))
     ?? input.services.find(s => s.name === 'Business reporting' && /export|invoice|report|dashboard/.test(text))
     ?? input.services.find(s => s.name === 'Team collaboration' && /camera|meeting|mail|workspace/.test(text));

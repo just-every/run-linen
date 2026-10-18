@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { request, errorText } from "./api";
 import { useRemote } from "./state";
 import { Icon } from "./icons";
+import { Mark } from "./Mark";
 import { ErrorNotice, Loading, Notice } from "./primitives";
 export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   const setup = useRemote<{
@@ -30,7 +31,7 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   return (
     <div className="auth-page">
       <a className="brand" href="/">
-        <Icon name="leaf" size={30} />
+        <Mark size={40} />
         <span data-rer-name>Linen</span>
       </a>
       <div className="auth-layout">

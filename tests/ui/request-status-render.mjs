@@ -31,7 +31,7 @@ try {
  assert.match(work('one'),/Independent evidence verifies/);
  globalThis.__linenStatus.reads['/work/one'].progress=[{...progress,happened:'<script>synthetic untrusted text</script>'}];
  assert.match(work('one'),/&lt;script&gt;synthetic untrusted text&lt;\/script&gt;/);
- html=decisions();assert.match(html,/Checking catalogue approvals/);assert.match(html,/No business choices are recorded/);
+ html=decisions();assert.match(html,/Checking catalog approvals/);assert.match(html,/No business choices are recorded/);
  if(output)await writeFile(join(output,'decisions-loading.html'),html);
  console.log('PASS browser-free React static renders: employee next owner and safe action, operator-owned task links and controls, independent verified copy, escaped text and mounted existing catalogue decision component. API hook reads are synthetic fixtures; no browser/visual/interactive acceptance claimed.');
 } finally {delete globalThis.__linenStatus;await rm(scratch,{recursive:true,force:true});}

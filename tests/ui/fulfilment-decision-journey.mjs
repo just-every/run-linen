@@ -24,7 +24,7 @@ export async function fulfilmentDecisionJourney(page, api, base, managerId) {
     person = bound;
   }
   await page.goto(base+'/app#/decisions');
-  await page.getByRole('heading',{name:'Catalogue approvals',exact:true}).waitFor();
+  await page.getByRole('heading',{name:'Catalog approvals',exact:true}).waitFor();
   const card = page.locator('article.decision').filter({has:page.getByRole('heading',{name:'Synthetic catalogue decision',exact:true})});
   const approve = card.getByRole('button',{name:'Approve this request',exact:true});
   async function submit() {

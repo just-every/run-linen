@@ -95,7 +95,7 @@ const messages: Record<string, string> = {
   source_records_require_reconciliation: 'Some records from the existing desk need confirming first.',
   source_revision_conflict: 'The existing desk changed. Read it again and retry.',
   source_revision_invalid: 'The version of the existing desk is not valid.',
-  source_schema_invalid: 'Freshservice answered in a shape Linen does not recognise.',
+  source_schema_invalid: 'Freshservice answered in a shape Linen does not recognize.',
   source_scope_invalid: 'That item is not part of the Freshservice workspace you connected.',
   source_ticket_required: 'Give the ticket number in the existing desk.',
   source_unavailable: 'The existing desk cannot be reached right now.',

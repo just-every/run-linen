@@ -46,7 +46,7 @@ export async function processIntakeEvent(ctx: IntelligenceContext, event: Intake
                 state = amended.state;
                 body = amended.state === 'amended'
                     ? 'Your access expiry is now '+amended.expiresAt+'. The existing access remains linked to its independent verification and scheduled removal.'
-                    : 'Your correction needs a decision from its fulfilment owner. '+amended.reason;
+                    : 'Your correction needs a decision from its fulfillment owner. '+amended.reason;
             } else {
                 const queued = await queueFulfilment(ctx,event.id,work.id,{catalogId:v.catalogId,beneficiaryId:work.beneficiary_id,purpose:v.purpose,expiresAt:v.expiresAt||undefined});
                 effect=queued;state=queued.state;body=queued.message;

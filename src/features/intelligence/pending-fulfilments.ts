@@ -25,7 +25,7 @@ async function resumeFulfilment(ctx: IntelligenceContext,row:any) {
   const lease=new Date(Date.now()+240000).toISOString();
   const claim=await ctx.env.DB.prepare("UPDATE intelligence_pending_fulfilments SET lease_until=? WHERE id=? AND state IN ('waiting','blocked') AND (lease_until IS NULL OR lease_until<?)")
     .bind(lease,row.id,now()).run();
-  if(!claim.meta.changes)return {state:row.state,message:'Your existing fulfilment remains recorded with its owner.'};
+  if(!claim.meta.changes)return {state:row.state,message:'Your existing fulfillment remains recorded with its owner.'};
   try {
     const settings:any=await ctx.env.DB.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id=?').bind(ctx.principal.workspaceId).first();
     assert(!JSON.parse(settings?.settings_json||'{}').executionHeld,'execution_held',409);
@@ -39,7 +39,7 @@ async function resumeFulfilment(ctx: IntelligenceContext,row:any) {
     const readiness=await getFulfilmentReadiness(ctx,work.id,row.catalog_id);
     if(!readiness.ready){
       await ctx.env.DB.prepare("UPDATE intelligence_pending_fulfilments SET state='waiting',error_code=?,updated_at=? WHERE id=? AND lease_until=?").bind(readiness.reason,now(),row.id,lease).run();
-      return {state:'blocked',message:readiness.reason || 'Your request awaits its fulfilment owner’s decision.',ownerId:readiness.ownerId};
+      return {state:'blocked',message:readiness.reason || 'Your request awaits its fulfillment owner’s decision.',ownerId:readiness.ownerId};
     }
     const catalog=(await workIntakePort().catalog(ctx)).find(c=>c.id===row.catalog_id);
     assert(catalog,'pending_catalog_missing',409);
@@ -52,7 +52,7 @@ async function resumeFulfilment(ctx: IntelligenceContext,row:any) {
     const code=errorCode(e);
     await ctx.env.DB.prepare("UPDATE intelligence_pending_fulfilments SET state='blocked',error_code=?,updated_at=? WHERE id=? AND lease_until=?")
       .bind(code,now(),row.id,lease).run();
-    return {state:'blocked',message:'Your recorded fulfilment remains with its owner ('+code+'). No completion is claimed.'};
+    return {state:'blocked',message:'Your recorded fulfillment remains with its owner ('+code+'). No completion is claimed.'};
   }finally{await ctx.env.DB.prepare('UPDATE intelligence_pending_fulfilments SET lease_until=NULL WHERE id=? AND lease_until=?').bind(row.id,lease).run()}
 }
 export async function followPendingFulfilments(ctx:IntelligenceContext){

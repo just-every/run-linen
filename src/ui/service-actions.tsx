@@ -89,7 +89,7 @@ export function ServiceActions({
             title="Use the on-call escalation"
             path={`${base}/oncall`}
             fields={[]}
-            explanation="Only a configured rotation and authorised notification channel can deliver this escalation."
+            explanation="Only a configured rotation and authorized notification channel can deliver this escalation."
             onSaved={refresh}
           />
         </>

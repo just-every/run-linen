@@ -1,5 +1,5 @@
 export function Icon({
-  name = "leaf",
+  name = "file",
   className = "",
   size = 22,
 }: {
@@ -8,13 +8,6 @@ export function Icon({
   size?: number;
 }) {
   const paths: Record<string, React.ReactNode> = {
-    leaf: (
-      <>
-        <path className="leaf-body" d="M6.4 25.6C5 15 12.2 6.4 27.4 3.8c.6 14.4-7.6 21.9-21 21.8Z" />
-        <path className="leaf-rib" d="M8.3 23.6c4.6-5.6 9.4-10.6 15.4-15.6" />
-        <path d="M3.4 29.2l4.3-4.6" strokeWidth="1.8" />
-      </>
-    ),
     check: <path d="m5 12 5 5L20 6" />,
     arrow: <path d="M5 12h14m-6-7 6 7-6 7" />,
     back: <path d="M19 12H5m6-7-6 7 6 7" />,
@@ -110,7 +103,7 @@ export function Icon({
       className={`icon ${className}`}
       width={size}
       height={size}
-      viewBox={name === "leaf" ? "0 0 32 32" : "0 0 24 24"}
+      viewBox="0 0 24 24"
     >
       {paths[name] ?? paths.file}
     </svg>

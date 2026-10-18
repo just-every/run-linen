@@ -70,7 +70,7 @@ export async function nativeGrantPair({page,api,base,employee,actor,probe,catalo
   await page.getByLabel('Service identity',{exact:true}).selectOption(actor.id);
   const mapping=(await api('/subject-mappings')).find(m=>m.localUserId===employee.id);
   await page.getByLabel('Colleague and reviewed account').selectOption(mapping.id);
-  await page.getByLabel('Catalogue service').selectOption(catalog.id);
+  await page.getByLabel('Catalog service').selectOption(catalog.id);
   await page.getByLabel('Independent verifier',{exact:true}).selectOption(probe.id);
   await page.getByLabel('Authority begins',{exact:true}).first().fill(local(-60000));
   await page.getByLabel('Requested access expiry').fill(local(3600000));

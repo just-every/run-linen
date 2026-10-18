@@ -5,14 +5,29 @@ Linen runs on macOS, Linux or Windows with WSL2, and `rer` brings the Node and p
 
 ## Get Linen and start it
 
-```sh
-npx -y @runeditrun/rer dev just-every/run-linen
-```
+These are the same two lines as the [Run page](https://run-linen.com/run).
 
-That one line installs `rer`, the Run Edit Run command, and clones Linen. Without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-linen` does the same. To start it again later, run `cd run-linen && rer dev`. The first `rer dev` installs everything, asks for your email, makes you the owner and builds the
-app. When it is ready it prints a line starting `RER_OPEN`. Open that link: Linen opens in your
-browser, signed in as you. The link carries a private key for this computer only, so do not
-share it.
+1. Install `rer`, the Run Edit Run command:
+
+   ```sh
+   curl -fsSL https://runeditrun.com/install.sh | sh
+   ```
+
+   It installs `rer` for you alone, with its own Node if you have no Node 22 or later. It changes no shell
+   settings: if its last line puts `rer` on your PATH, run that line before step 2.
+
+2. Start Linen:
+
+   ```sh
+   rer dev just-every/run-linen
+   ```
+
+Already have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-linen` does both steps in one line.
+
+`rer` gets Linen into a folder named `run-linen`, installs everything, asks for your email, makes you the owner
+and builds the app. When it is ready it prints a line starting `RER_OPEN`. Open that link: Linen opens in your
+browser, signed in as you. The link carries a private key for this computer only, so do not share it. To start
+it again later, run `cd run-linen && rer dev`.
 
 Linen answers on three addresses:
 

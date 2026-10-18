@@ -98,7 +98,7 @@ export async function requestFulfilment(
     blocked =
       catalog.kind === "device"
         ? "No stock; acquisition owner required"
-        : "No licence capacity; licence owner required";
+        : "No license capacity; license owner required";
   const previous = await ctx.env.DB.prepare(
     "SELECT id,revision,beneficiary_id,purpose,expires_at FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?",
   )
@@ -153,7 +153,7 @@ export async function requestFulfilment(
       blocked =
         catalog.kind === "device"
           ? "No stock; acquisition owner required"
-          : "No licence capacity; licence owner required";
+          : "No license capacity; license owner required";
   }
   const fid = id();
   const kind = catalog.kind === "device" ? "device.deliver" : "access.grant";

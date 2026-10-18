@@ -31,7 +31,7 @@ export function AdvancedGrantForm({ onSaved }: { onSaved: () => void }) {
     <section className="connection-record">
       <details className="action-disclosure">
         <summary>Advanced: issue an exact standing grant</summary>
-        <p>For unusual actions with independently established exact identifiers. Use the guided review for catalogue access and software. Self-approval is denied by the server.</p>
+        <p>For unusual actions with independently established exact identifiers. Use the guided review for catalog access and software. Self-approval is denied by the server.</p>
         {!review ? <form className="inline-form" onSubmit={prepare}>
           <Fields fields={exactFields} />
           <ErrorNotice error={error} />

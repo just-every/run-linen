@@ -18,7 +18,7 @@ They then sign in at `/app` with that email and password.
 | `owner` | Runs the installation: connections, people, grants, backups. |
 | `operator` | The service team: works requests, private notes, service controls. |
 | `employee` | Asks for help and follows their own conversations. |
-| `approver` | Decides catalogue requests and choices that name them. |
+| `approver` | Decides catalog requests and choices that name them. |
 | `hr` | Records joining, moving and leaving, and sees restricted HR conversations. |
 | `auditor` | Reads records and history without changing them. |
 | `integration` | A non-interactive identity for connected systems. |

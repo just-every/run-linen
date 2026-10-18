@@ -49,7 +49,7 @@ export function WorkOutcome({ workId }: { workId: string }) {
           </>
         )
       )}
-      {saved && <Notice tone="warning"><strong>{saved.state === 'blocked' ? 'At submission, your catalogue request was blocked.' : 'At submission, your catalogue request was pending.'}</strong><p>No fulfilment was confirmed by that response. Current progress and next owners are shown above.</p></Notice>}
+      {saved && <Notice tone="warning"><strong>{saved.state === 'blocked' ? 'At submission, your catalog request was blocked.' : 'At submission, your catalog request was pending.'}</strong><p>No fulfillment was confirmed by that response. Current progress and next owners are shown above.</p></Notice>}
       <ErrorNotice error={obligations.backgroundError} />
       <ErrorNotice error={catalog.error} retry={catalog.refresh} />
       {Boolean(catalog.data?.items.length) && (

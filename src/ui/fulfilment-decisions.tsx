@@ -160,7 +160,7 @@ export function FulfilmentDecisions({
     }
   }
 
-  if (loading && !queue) return <Loading label="Checking catalogue approvals…" />;
+  if (loading && !queue) return <Loading label="Checking catalog approvals…" />;
   if (loadError && !queue)
     return <ErrorNotice error={loadError} retry={() => void refreshQueue()} />;
   if (!queue?.items.length) {
@@ -179,7 +179,7 @@ export function FulfilmentDecisions({
   return (
     <section aria-labelledby="catalogue-approval-heading">
       <div className="section-heading">
-        <h2 id="catalogue-approval-heading">Catalogue approvals</h2>
+        <h2 id="catalogue-approval-heading">Catalog approvals</h2>
       </div>
       <p className="detail-prose section-intro">
         These requests need a business decision. Work already covered by standing
@@ -240,7 +240,7 @@ export function FulfilmentDecisions({
               <Notice>
                 <strong>What approval allows</strong>
                 <p>
-                  Linen can continue this catalogue request if a separate current
+                  Linen can continue this catalog request if a separate current
                   provider permission allows it. Approval does not grant that
                   permission or confirm that access is in place.
                 </p>

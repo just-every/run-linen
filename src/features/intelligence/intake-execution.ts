@@ -35,7 +35,7 @@ export async function fulfilKnownRequest(ctx: IntelligenceContext, b: {
 }) {
     const work = await getWork(ctx, b.workId), bound = await standing.resolve(ctx, { workId: work.id, target: b.catalog.target, beneficiaryId: work.beneficiary_id, kind: b.catalog.kind, expiresAt: b.expiresAt });
     if (!bound)
-        return { state: 'authority_required', message: 'Your request is assigned to its fulfilment owner. Linen needs current scoped authority, a reviewed identity mapping or an unambiguous verifier before fulfilment.' };
+        return { state: 'authority_required', message: 'Your request is assigned to its fulfillment owner. Linen needs current scoped authority, a reviewed identity mapping or an unambiguous verifier before fulfillment.' };
     assert(bound.step.target === b.catalog.target && bound.step.localBeneficiaryId === work.beneficiary_id && bound.step.expiresAt === b.expiresAt, 'standing_scope_mismatch', 403);
     const dispatched = await dispatchGrantedPlan(ctx, { workId: work.id, revision: work.revision, steps: [bound.step], idempotencyKey: 'intake:' + work.id + ':' + work.revision + ':' + b.catalog.id });
     await recordFulfilmentExecution(ctx,{workId:work.id,planId:dispatched.planId,operationIds:dispatched.operations.map((o:any)=>o.id)});

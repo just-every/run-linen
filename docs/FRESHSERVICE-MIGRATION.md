@@ -6,7 +6,7 @@ coexistence keep their separate routes. No provider URL is fetched by this kit.
 
 ## Supported files and truthful omissions
 
-Supply exact UTF-8 file bytes, base64 encoded, labelled as:
+Supply exact UTF-8 file bytes, base64 encoded, labeled as:
 
 - `tickets-csv`: RFC4180 CSV with unique headers `Ticket Id`, `Subject`,
   `Description`, `Status`, `Requester Email`, `Created Time`, `Last Updated Time`.
@@ -73,7 +73,7 @@ right. Unmapped historical identities are opaque and have no account.
    `GET .../:id/artifacts/:ordinal` downloads the exact available original.
 5. `POST .../:id/undo` reverses a completed job; `/rollback` reverses a partial
    job. Resume continues the recorded reversal. Strict conflict checking keeps
-   later native edits, messages, files and execution/fulfilment relationships.
+   later native edits, messages, files and execution/fulfillment relationships.
    A conflict remains held; there is no force-delete option. Prior reverse-order
    batches may already have completed when a later conflict is reported.
 

@@ -1,12 +1,28 @@
-# Run it locally
+<p><img src="public/brand/mark.svg" width="76" height="50" alt=""></p>
 
-One line installs the RER CLI, clones Linen and starts it:
+# Linen
+
+Everyone set up. Everything working. Linen is a free, open source IT service desk for US companies:
+requests, access, onboarding and offboarding, and every laptop accounted for. See
+[run-linen.com](https://run-linen.com).
+
+## Run it locally
+
+Two lines, the same as the [Run page](https://run-linen.com/run). Install `rer`, the Run Edit Run command
+(it brings its own Node if you have no Node 22 or later):
 
 ```sh
-npx -y @runeditrun/rer dev just-every/run-linen
+curl -fsSL https://runeditrun.com/install.sh | sh
 ```
 
-Without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-linen` does the same. To start it again later, run `cd run-linen && rer dev`. To prepare it yourself, run `npx -y @runeditrun/rer install just-every/run-linen`, then from the Linen edition directory:
+Then start Linen:
+
+```sh
+rer dev just-every/run-linen
+```
+
+Already have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-linen` does both steps in one line.
+To start it again later, run `cd run-linen && rer dev`. To prepare it yourself, run `rer install just-every/run-linen`, then from the Linen edition directory:
 
 ```sh
 rer setup
@@ -49,7 +65,7 @@ A development companion is not endpoint management.
 
 Linen's source is developed in the public repository
 [just-every/run-linen](https://github.com/just-every/run-linen). The RER package is
-`@runeditrun/rer` version `0.2.38`. Publishing source does not deploy Linen,
+`@runeditrun/rer` version `0.2.45`. Publishing source does not deploy Linen,
 configure a provider, or satisfy an acceptance gate.
 
 ## Preserved product requirements

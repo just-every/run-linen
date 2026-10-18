@@ -6,8 +6,8 @@ import type { DocsPage, DocsPageMeta, DocsSection } from './types';
 export const docsSections: DocsSection[] = sections;
 export const docsPages: DocsPageMeta[] = sections.flatMap(section => section.pages);
 
-/** Whether `slug` is a published page; the docs route answers 404 for anything else. */
-export function hasDocsPage(slug: string): boolean {
+/** Whether `slug` is a published page. */
+function hasDocsPage(slug: string): boolean {
   return Object.hasOwn(bodies, slug);
 }
 
@@ -23,15 +23,11 @@ export function docsNeighbours(slug: string): { previous?: DocsPageMeta; next?: 
   return index === -1 ? {} : { previous: docsPages[index - 1], next: docsPages[index + 1] };
 }
 
-/** Document title and description for a docs route's head(): the docs home without a slug, a page with one. */
-export function docsHead(slug?: string) {
+/** Document title and description: the docs home without a slug, a page with one. */
+export function docsHead(slug?: string): { title: string; description: string } {
   const page = slug === undefined ? undefined : docsPages.find(entry => entry.slug === slug);
-  if (slug !== undefined && !page) return {};
-  return {
-    meta: page
-      ? [{ title: `${page.title} · Linen docs` }, { name: 'description', content: page.summary }]
-      : [{ title: 'Docs · Linen' }, { name: 'description', content: docsLead }],
-  };
+  if (slug !== undefined && !page) throw new Error(`docs/site.json has no page "${slug}"`);
+  return page ? { title: `${page.title} · Linen docs`, description: page.summary } : { title: 'Docs · Linen', description: docsLead };
 }
 
 export const docsLead = 'Run Linen on your own computer, move your desk in, and keep every record: guides for the owner and the service team.';

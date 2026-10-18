@@ -3,8 +3,8 @@ import type { DocsTocEntry } from '../types.ts';
 import { createSlugger } from './slug.ts';
 
 // One Markdown page to static HTML, at build time. Raw HTML in the Markdown is shown as text, never passed through.
-// Headings get GitHub-style ids, and the page's h2s and h3s become its contents list. Code blocks become the ink code
-// card, labelled with their language; the site carries no script, so code is selected to copy. Tables scroll inside a focusable region when they cannot fit.
+// Headings get GitHub-style ids, and the page's h2s and h3s become its contents list. Code blocks become the navy code
+// card, labelled with their language, with a Copy button that the page's script reveals (without script, select to copy). Tables scroll inside a focusable region when they cannot fit.
 
 export type RenderedPage = { html: string; toc: DocsTocEntry[]; ids: string[]; links: string[]; problems: string[] };
 
@@ -40,9 +40,11 @@ export function renderMarkdown(markdown: string): RenderedPage {
         const language = (lang ?? '').trim().split(/\s+/)[0].toLowerCase();
         if (!language) problems.push('has a code block without a language');
         const name = languageNames[language] ?? language.toUpperCase();
-        const head = `<div class="docs-code-head"><span class="docs-code-lang">${escapeHtml(name || 'Code')}</span></div>`;
+        const head = `<div class="docs-code-head"><span class="docs-code-lang">${escapeHtml(name || 'Code')}</span><button class="docs-copy" type="button" hidden>Copy</button></div>`;
         const className = language ? ` class="language-${escapeHtml(language)}"` : '';
-        return `<div class="docs-code">${head}<pre><code${className}>${escapeHtml(text.replace(/\n$/, ''))}</code></pre></div>\n`;
+        // The space before a pipe is no break: a wrapped command never starts a line with "|". The copied text is unchanged.
+        const body = escapeHtml(text.replace(/\n$/, '')).replaceAll(' | ', '<span class="docs-glue"> |</span> ');
+        return `<div class="docs-code">${head}<pre><code${className}>${body}</code></pre></div>\n`;
       },
       html({ text }) {
         return escapeHtml(text);

@@ -3,6 +3,7 @@ import { request, type Session } from "./api";
 import { SessionProvider, useRemote, useSession } from "./state";
 import { SignIn } from "./auth";
 import { Icon } from "./icons";
+import { Mark } from "./Mark";
 import { ErrorNotice, Loading, Notice } from "./primitives";
 import { WorkSpace } from "./work";
 import { Connections } from "./connections";
@@ -20,7 +21,7 @@ export function LinenApp() {
   if (auth.loading)
     return (
       <HydrationUnit><div className="boot">
-        <Icon name="leaf" size={40} />
+        <Mark size={56} />
         <Loading label="Making room for your work…" />
       </div></HydrationUnit>
     );
@@ -86,7 +87,7 @@ function Workspace() {
       </a>
       <header className="app-header">
         <a className="brand" href="#/work">
-          <Icon name="leaf" size={30} />
+          <Mark size={40} />
           <span data-rer-name>Linen</span>
         </a>
         <nav aria-label="Main navigation">

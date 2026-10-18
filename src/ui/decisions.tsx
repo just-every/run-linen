@@ -168,7 +168,7 @@ export function DecisionSpace({ selectedId }: { selectedId?: string }) {
             >
               <p className="lead">
                 A clear recommendation, its consequences, and the facts that
-                matter. Routine authorised work carries on.
+                matter. Routine authorized work carries on.
               </p>
             </Hero>
             <FulfilmentDecisions onQueueStatus={setFulfilmentStatus} />
@@ -198,7 +198,7 @@ export function DecisionSpace({ selectedId }: { selectedId?: string }) {
               </div>
             ) : (
               <Empty title={fulfilmentStatus === "items" ? "No additional business choices." : "A little breathing room."}>
-                No business choices are recorded for you. Catalogue requests are shown separately above. This does not establish that
+                No business choices are recorded for you. Catalog requests are shown separately above. This does not establish that
                 connected services are healthy.
               </Empty>
             )}

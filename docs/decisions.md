@@ -1,9 +1,9 @@
 **Needs your decision** holds only the choices that need a person. Routine work that is
-already authorised carries on without it, and silence never counts as approval.
+already authorized carries on without it, and silence never counts as approval.
 
 ## What lands here
 
-- **Catalogue approvals**: requests for a catalogue service that names you as the person who
+- **Catalog approvals**: requests for a catalog service that names you as the person who
   approves it.
 - **Business choices**: a decision packet prepared for you, with a clear recommendation.
 
@@ -23,8 +23,8 @@ should record, and save. The
 decision and its reason stay in **Decision history**. Deferring keeps the exposure and the next
 date visible; it never quietly approves.
 
-## Catalogue requests
+## Catalog requests
 
-For a catalogue approval, **Approve this request** lets the fulfilment go ahead under the
+For a catalog approval, **Approve this request** lets the fulfillment go ahead under the
 permissions you have already granted. Linen checks those permissions again at the moment it
 acts, so an approval never widens what it may do.

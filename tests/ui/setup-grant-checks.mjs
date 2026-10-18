@@ -12,7 +12,7 @@ export async function runGrantChecks({ page, api, base, out, checks, payloads, o
   async function prepare(service = 'Orders access') {
     await page.getByLabel('Service identity', { exact: true }).selectOption({ label: 'Linen service actor' });
     await page.getByLabel('Colleague and reviewed account').selectOption('setup-employee-mapping');
-    await page.getByLabel('Catalogue service').selectOption({ label: service + (service === 'Orders access' ? ' · Application access' : ' · Software licence') });
+    await page.getByLabel('Catalog service').selectOption({ label: service + (service === 'Orders access' ? ' · Application access' : ' · Software license') });
     await page.getByLabel('Independent verifier', { exact: true }).selectOption({ label: 'Independent work check' });
     await page.getByLabel('Authority begins', { exact: true }).first().fill(new Date(Date.now() - 60000).toISOString().slice(0,16));
     await page.getByLabel('Requested access expiry', { exact: true }).fill(new Date(Date.now() + 3600000).toISOString().slice(0,16));

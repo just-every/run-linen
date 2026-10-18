@@ -97,16 +97,16 @@ export function humanize(value: unknown) {
   const words = text(value).replace(/[._-]/g, " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
-/** A short local date and time ("13 Oct, 09:12"); the year only when it is not this year. */
+/** A short local date and time in US form ("Oct 13, 9:12 AM"); the year only when it is not this year. */
 export function date(value: unknown) {
   if (!value) return "Not scheduled";
   const parsed = new Date(String(value));
   if (Number.isNaN(parsed.getTime())) return String(value);
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "short",
     ...(parsed.getFullYear() === new Date().getFullYear() ? {} : { year: "numeric" }),
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
   }).format(parsed);
 }

@@ -184,7 +184,7 @@ export function OperationsSpace({ section }: { section: string }) {
                   defaults={{ version: r.version }}
                   fields={[]}
                   submit="Revoke authority"
-                  explanation="Revocation stops future authorised admission; it is not proof that a provider effect has stopped."
+                  explanation="Revocation stops future authorized admission; it is not proof that a provider effect has stopped."
                   onSaved={list.refresh}
                 />
               )}
