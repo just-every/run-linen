@@ -53,7 +53,7 @@ export async function connectedFrontier(env) {
     const c=await api('/commitments/'+commitmentId);
     const plan=await api('/plans',{contextType:'commitment',workId:c.id,revision:c.revision,steps:[step],idempotencyKey:'native-frontier-repair'});
     await page.goto(base+'/app#/plans');
-    const planCard=page.locator('.connection-record').filter({has:page.locator('pre').filter({hasText:plan.id})});
+    const planCard=page.locator('.connection-record').filter({has:page.locator('.evidence').filter({hasText:plan.id})});
     // Plans list uses actual native dispatch form, with operation evidence read independently.
     await action(page,'Dispatch under current authority',{},'/plans/'+plan.id+'/dispatch','Dispatch plan');
     await tick();

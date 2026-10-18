@@ -32,7 +32,7 @@ export async function connectedChanges(env) {
   const incidentId=await nativeCreate(page,base,'incidents','Add incident',{'What is happening?':'Renewal orders interrupted in two cohorts','Who may see this?':'workspace','Affected service':serviceId,'Impact on people’s work':'London new sessions and Sydney existing sessions need separate checks','Affected groups':uid+'\n'+employee.id});
   for(const hypothesis of ['Rotated claim regression','Independent route degradation']){await action(page,'Assign a scoped diagnostic',{assignee:uid,scope:'Read declared independent fixture probes only',hypothesis,budget:2},'/diagnostics');await page.reload()}
   await page.getByText('Operator research & scoped diagnostics',{exact:true}).click();
-  await page.getByText('Rotated claim regression',{exact:true}).waitFor();
+  await page.locator('details').filter({has:page.getByText('Operator research & scoped diagnostics',{exact:true})}).getByText('Rotated claim regression',{exact:true}).waitFor();
   await captureJourney(page,{path:out+'/J4-rival-native-diagnostics.png',fullPage:true});
   await page.goto(base+'/app#/connections');
   const reasoning=page.locator('.connection-record').filter({has:page.getByRole('heading',{name:'Fixture reasoning revised',exact:true})});
@@ -87,7 +87,7 @@ export async function connectedChanges(env) {
   const rollback=await phase(env,problematic.id,'compensate');assert.equal(rollback.data.state,'compensation-incomplete');
   const operationId=rollback.data.invocations.at(-1).executionId;
   await page.goto(base+'/app#/operations');
-  const opCard=page.locator('.connection-record').filter({has:page.locator('pre').filter({hasText:operationId})});
+  const opCard=page.locator('.connection-record').filter({has:page.locator('.evidence').filter({hasText:operationId})});
   // Locate the operation by the durable evidence identity, then use its actual takeover button.
   const takeover=opCard.locator('details').filter({has:page.locator('summary').getByText('Take over this operation',{exact:true})});
   await takeover.locator('summary').click();await takeover.getByLabel('Reason and accountable next step').fill('Rollback incomplete; named operator retains reconciliation duty.');
@@ -99,7 +99,7 @@ export async function connectedChanges(env) {
   await action(page,'Share an audience-scoped update',{message:'Both cohorts verified; the separate rollback obligation remains owned.',recipientIds:uid},'/updates');
   await tick();const notice=(await api('/service-notifications')).items.find(n=>n.record_id===incidentId&&n.state==='submitted');assert.ok(notice);
   await page.goto(base+'/app#/notifications');
-  const card=page.locator('.connection-record').filter({has:page.locator('pre').filter({hasText:notice.id})});
+  const card=page.locator('.connection-record').filter({has:page.locator('.evidence').filter({hasText:notice.id})});
   const reconcile=card.locator('details').filter({has:page.locator('summary').getByText('Reconcile delivery failure',{exact:true})});await reconcile.locator('summary').click();
   const response=page.waitForResponse(r=>r.url().endsWith('/service-notifications/'+notice.id+'/reconcile'));await reconcile.getByRole('button',{name:'Check actual delivery'}).click();assert.equal((await response).status(),200);
   assert.equal((await api('/service-notifications')).items.find(n=>n.id===notice.id).state,'delivered');

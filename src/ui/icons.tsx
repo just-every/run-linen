@@ -13,6 +13,18 @@ export function Icon({
     back: <path d="M19 12H5m6-7-6 7 6 7" />,
     chevron: <path d="m6 9 6 6 6-6" />,
     "chevron-right": <path d="m9 6 6 6-6 6" />,
+    building: (
+      <>
+        <rect x="5" y="3" width="14" height="18" rx="1.5" />
+        <path d="M9 7h2m2 0h2M9 11h2m2 0h2M9 15h2m2 0h2M10.5 21v-3h3v3" />
+      </>
+    ),
+    calendar: (
+      <>
+        <rect x="4" y="5" width="16" height="15" rx="2" />
+        <path d="M4 10h16M8 3v4m8-4v4" />
+      </>
+    ),
     inbox: (
       <>
         <rect x="5" y="4" width="14" height="17" rx="2" />

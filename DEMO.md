@@ -9,6 +9,24 @@ idempotently by `src/demo.ts`, with dates relative to the start. Independent
 people and conversations are seeded concurrently; each conversation keeps its
 normal ordered domain transitions.
 
+**What the owner sees first.** The demo opens on the Requests workbench with
+Priya's request "Priya needs Figma for the brand refresh" selected: the queue on
+the left (each row led by the person the request is for, with their team and
+place), and on the right the request's facts (Priya Shah, Design; Denver, CO;
+the day it is needed by; the Figma design seat), its Progress readback ("0 of 1
+verified"), the red exception "This request is waiting for its current
+manager's decision" with Alex Morgan, the owner, as next owner and Review
+catalog approvals as the place it is resolved, then Linen's strip. The seed
+records that state through the domain, as "Or choose a known service" does:
+Priya's directory record is reviewed as her account reporting to the owner, her
+request is recorded for her, and the Figma seat is chosen for it, which needs her
+manager's decision. Approving it in Decisions records the business approval;
+the seat itself still needs provider authority, so the request then reads
+"This responsibility is blocked" with Operations & recovery as its next place,
+because the demo connects no provider. On any wide
+screen the workbench opens the newest request with an exception when the app
+itself is opened; phones open on the list.
+
 The nav and document title read **Linen Demo**, or **Linen Dev** under `rer dev`.
 There is no injected bar, captured-mail inbox or blocked-sends view. Local sign-in
 is one click; development mail is validated and silently suppressed.

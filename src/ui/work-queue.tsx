@@ -5,6 +5,7 @@ import { Badge, Empty, ErrorNotice, Loading } from "./primitives";
 import { usePeopleLabels } from "./people-labels";
 import { isOpen, useQueue } from "./queue";
 import type { WorkRecord } from "./work";
+import { progressException, requestFacts, requestFor, requestStatus } from "./request-facts";
 
 /** A short, stable reference for a request: the start of its real id. */
 export const shortRef = (id: string) => id.replace(/-/g, "").slice(0, 6).toUpperCase();
@@ -14,16 +15,6 @@ export function queueTime(value: string) {
   if (Number.isNaN(at.getTime())) return value;
   const sameDay = at.toDateString() === now.toDateString();
   return new Intl.DateTimeFormat("en-US", sameDay ? { hour: "numeric", minute: "2-digit" } : { month: "short", day: "numeric", ...(at.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }) }).format(at);
-}
-
-/** The person a request was recorded for, when its context names one ("requestedFor"). */
-function requestedFor(item: WorkRecord) {
-  try {
-    const value = JSON.parse(item.context_json ?? "{}").requestedFor;
-    return typeof value === "string" && value.trim() ? value.trim() : null;
-  } catch {
-    return null;
-  }
 }
 
 type Filter = [key: string, label: string, test: (item: WorkRecord) => boolean];
@@ -41,7 +32,7 @@ export function Queue({ selectedId }: { selectedId?: string }) {
         ["all", "All", () => true],
         ["mine", "Mine", (item) => item.assignee_id === me && isOpen(item)],
         ["unassigned", "Unassigned", (item) => !item.assignee_id && isOpen(item)],
-        ["attention", "Needs attention", (item) => Boolean(item.attention?.length)],
+        ["attention", "Needs attention", (item) => Boolean(progressException(item.progress))],
       ]
     : [
         ["all", "All", () => true],
@@ -79,13 +70,14 @@ export function Queue({ selectedId }: { selectedId?: string }) {
           <div className="queue-row queue-header" role="row">
             <span role="columnheader" className="q-kind"><span className="visually-hidden">Kind</span></span>
             <span role="columnheader">ID</span>
-            <span role="columnheader">Requester</span>
+            <span role="columnheader">For</span>
             <span role="columnheader">Subject</span>
             <span role="columnheader">Updated</span>
             <span role="columnheader">Status</span>
           </div>
           {shown.map((item) => {
-            const attention = Boolean(item.attention?.length);
+            const attention = Boolean(progressException(item.progress)),
+              { team, place } = requestFacts(item);
             return (
               <a
                 className={`queue-row ${item.id === selectedId ? "selected" : ""}`}
@@ -99,19 +91,18 @@ export function Queue({ selectedId }: { selectedId?: string }) {
                 </span>
                 <span role="cell" className="q-ref">{shortRef(item.id)}</span>
                 <span role="cell" className="q-person">
-                  <strong>{personName(item.requester_id)}</strong>
-                  <small>{item.beneficiary_id !== item.requester_id ? `For ${personName(item.beneficiary_id)}` : requestedFor(item) ? `For ${requestedFor(item)}` : item.kind === "incident" ? "Incident" : "Request"}</small>
+                  <strong>{requestFor(item, personName)}</strong>
+                  <small>{[team, place].filter(Boolean).join(" · ") || (item.kind === "incident" ? "Incident" : "Request")}</small>
                 </span>
-                <span role="cell" className="q-subject">
+                <span role="cell" className="q-subject" title={item.title}>
                   <strong>{item.title}</strong>
-                  <small>Recorded {queueTime(item.created_at)}</small>
                 </span>
                 <span role="cell" className={`q-time ${attention ? "late" : ""}`}>
-                  <Icon name="clock" size={16} />
+                  <Icon name="clock" size={15} />
                   <time dateTime={item.updated_at ?? item.created_at}>{queueTime(item.updated_at ?? item.created_at)}</time>
                 </span>
                 <span role="cell" className="q-status">
-                  {attention ? <span className="badge tone-alert"><span className="badge-text">needs attention</span></span> : <Badge value={item.state} />}
+                  <Badge value={requestStatus(item)} />
                 </span>
                 <Icon name="chevron-right" size={18} className="q-go" />
               </a>
@@ -127,12 +118,13 @@ export function Queue({ selectedId }: { selectedId?: string }) {
   );
 }
 
-/** Operator responsibilities that wait on this person: the queue's exception, above the table. */
-export function AttentionList() {
+/** Operator responsibilities that wait on this person: the queue's exception, above the table. The open
+    request's own responsibility is left out here; its banner on the right already says it. */
+export function AttentionList({ selectedId }: { selectedId?: string }) {
   const queue = useQueue(),
     { session } = useSession(),
     operator = session.principal.roles.some((r) => ["owner", "operator", "hr"].includes(r));
-  const items = (queue.data?.items ?? []).filter((item) => item.attention?.length);
+  const items = (queue.data?.items ?? []).filter((item) => item.attention?.length && item.id !== selectedId);
   if (!operator || !items.length) return null;
   return (
     <section className="attention" aria-labelledby="attention-title">

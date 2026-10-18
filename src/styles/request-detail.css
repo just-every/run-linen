@@ -44,14 +44,16 @@
 }
 .meta-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   margin: 0;
   padding: 4px 8px 2px;
 }
 .meta-strip > div {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
+  align-content: center;
   column-gap: 10px;
   align-items: center;
   padding: 0 10px;
@@ -62,8 +64,13 @@
   border-left: 0;
 }
 .meta-strip .icon {
-  grid-row: 1 / 3;
+  grid-row: 1 / 4;
   color: var(--denim);
+}
+.meta-strip dd.meta-sub {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
 }
 .meta-strip dt {
   grid-column: 2;
@@ -76,6 +83,35 @@
   margin: 0;
   font-size: 14px;
   line-height: 19px;
+  overflow-wrap: anywhere;
+}
+
+/* Who asked, who holds the conversation and when it last changed: one quiet line under the facts. */
+.meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: -8px 0 0;
+  padding: 8px 8px 0;
+  border-top: 1px solid var(--app-row-line);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.meta-line > div {
+  display: flex;
+  gap: 5px;
+  min-width: 0;
+}
+.meta-line dt {
+  flex: none;
+  white-space: nowrap;
+}
+.meta-line dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-weight: 500;
   overflow-wrap: anywhere;
 }
 
@@ -125,6 +161,10 @@
 }
 .readback-row:first-child {
   border-top: 0;
+}
+.readback ul + .readback-apart {
+  margin-top: 2px;
+  border-top: 1px dashed var(--line-strong);
 }
 .readback-what {
   display: grid;
@@ -435,6 +475,7 @@
     flex-wrap: wrap;
   }
   .meta-strip {
+    grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px 0;
   }

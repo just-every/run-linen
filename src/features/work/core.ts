@@ -1,4 +1,4 @@
-import { requestProgress } from "./progress";
+import { progressFor, requestProgress } from "./progress";
 import { hashToken } from "../../platform/crypto";
 import { cancelWorkExecution } from "./execution";
 import { shiftCommitmentForPause } from "./calendar";
@@ -93,32 +93,31 @@ export async function listWork(ctx: WorkContext) {
       )
       .all()
   ).results;
-  // Ordinary conversation listings do not expose the operator attention packet.
-  if (!operator(p) && !p.roles.includes('hr')) return rows;
-  const due = now();
-  const owned = await ctx.env.DB.prepare(`SELECT DISTINCT o.work_id FROM work_obligations o
-    LEFT JOIN memberships m ON m.workspace_id=o.workspace_id AND m.user_id=o.owner_id AND m.active=1
-    WHERE o.workspace_id=? AND (o.owner_id=? OR m.user_id IS NULL)
-    AND o.state NOT IN ('verified','cancelled')
-    AND (o.kind<>'access.revoke' OR o.due_at<=? OR o.state<>'pending')`)
-    .bind(p.workspaceId,p.userId,due).all<{work_id:string}>();
-  const intake = await ctx.env.DB.prepare(`SELECT DISTINCT i.work_id FROM work_intake_events i
-    JOIN work_records r ON r.workspace_id=i.workspace_id AND r.id=i.work_id
-    WHERE i.workspace_id=? AND i.connection_id='' AND
-      ((i.state IN ('needs_configuration','budget_held') AND ?=1) OR
-       ((i.state='failed' OR (i.state='interpreting' AND i.lease_until<?)) AND (r.assignee_id=? OR r.assignee_id IS NULL)))`)
-    .bind(p.workspaceId,Number(p.roles.includes('owner')),due,p.userId).all<{work_id:string}>();
-  const candidates = new Set([...owned.results,...intake.results].map(row=>row.work_id));
-  return Promise.all(rows.map(async (row: any) => ({
-    ...row,
-    attention: (candidates.has(row.id) ? await requestProgress(ctx, row.id) : []).filter(item =>
-      item.needsAction &&
-      (item.ownerId === p.userId || (item.ownerLabel === 'Service team (recorded owner unavailable)' && operator(p)) || (!item.ownerId && (
-        (item.ownerLabel === 'Workspace owner' && p.roles.includes('owner')) ||
-        (item.ownerLabel === 'Service team — assignment needed' && operator(p))
-      )))),
-  })));
-
+  // Each row carries the same progress projection its conversation shows, so the queue and the open
+  // request read one state. Only rows with a responsibility or an unfinished assessment need reading.
+  const db = ctx.env.DB, ids = JSON.stringify(rows.map((row: any) => row.id));
+  const flagged = new Set((await db.prepare(`SELECT r.id FROM work_records r WHERE r.workspace_id=? AND r.id IN (SELECT value FROM json_each(?))
+    AND (EXISTS(SELECT 1 FROM work_obligations o WHERE o.workspace_id=r.workspace_id AND o.work_id=r.id)
+      OR COALESCE((SELECT i.state<>'interpreted' OR COALESCE(i.result_json,'') LIKE '%necessary_question%' FROM work_intake_events i
+        WHERE i.workspace_id=r.workspace_id AND i.work_id=r.id AND i.connection_id='' ORDER BY i.created_at DESC,i.rowid DESC LIMIT 1),0))`)
+    .bind(p.workspaceId, ids).all<{ id: string }>()).results.map(row => row.id));
+  // The catalogue services recorded on each request (name and kind), for the spaces that list them.
+  const services = (await db.prepare(`SELECT f.work_id,c.name,c.kind FROM work_fulfilments f JOIN work_catalog c ON c.workspace_id=f.workspace_id AND c.id=f.catalog_id
+    WHERE f.workspace_id=? AND f.work_id IN (SELECT value FROM json_each(?)) ORDER BY c.name`)
+    .bind(p.workspaceId, ids).all<{ work_id: string; name: string; kind: string }>()).results;
+  const seesAttention = operator(p) || p.roles.includes('hr');
+  return Promise.all(rows.map(async (row: any) => {
+    const progress = flagged.has(row.id) ? await progressFor(ctx, row) : [];
+    const item = { ...row, progress, services: services.filter(s => s.work_id === row.id).map(({ name, kind }) => ({ name, kind })) };
+    // Ordinary conversation listings do not expose the operator attention packet.
+    if (!seesAttention) return item;
+    return { ...item, attention: progress.filter(entry =>
+      entry.needsAction &&
+      (entry.ownerId === p.userId || (entry.ownerLabel === 'Service team (recorded owner unavailable)' && operator(p)) || (!entry.ownerId && (
+        (entry.ownerLabel === 'Workspace owner' && p.roles.includes('owner')) ||
+        (entry.ownerLabel === 'Service team — assignment needed' && operator(p))
+      )))) };
+  }));
 }
 export async function createWork(
   ctx: WorkContext,

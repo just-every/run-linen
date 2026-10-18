@@ -2,13 +2,17 @@ import { upsertPerson } from '../features/work/resources';
 import { reviewPersonBinding, personForMember } from '../features/work/person-binding';
 import type { WorkContext } from '../features/work/core';
 
+export const demoManager = 'linen-demo-manager';
+
 /** Fictional account references, with the same reviewed person links used by fulfilment. */
 export async function seedDemoDecisionHolder(ctx: WorkContext, ownerEmail: string, now: Date) {
-  const db = ctx.env.DB, w = ctx.principal.workspaceId, manager = 'linen-demo-manager', time = now.toISOString();
+  const db = ctx.env.DB, w = ctx.principal.workspaceId, manager = demoManager, time = now.toISOString();
   await db.batch([
     db.prepare('INSERT OR IGNORE INTO users VALUES(?,?,?,?,?)').bind(manager, 'priya@northstar.example', 'Priya Shah', '!email-link', time),
     db.prepare('INSERT OR IGNORE INTO memberships VALUES(?,?,?,1)').bind(w, manager, '["approver"]'),
     db.prepare('UPDATE workspaces SET name=? WHERE id=?').bind('Northstar Studio', w),
+    // The local demo claims its owner with the default name; the Northstar owner is Alex Morgan (DEMO.md).
+    db.prepare("UPDATE users SET name='Alex Morgan' WHERE id=? AND name='Owner'").bind(ctx.principal.userId),
   ]);
   if (!await personForMember(ctx, ctx.principal.userId)) {
     const owner = await db.prepare('SELECT name FROM users WHERE id=?').bind(ctx.principal.userId).first<{ name: string }>();
@@ -18,4 +22,12 @@ export async function seedDemoDecisionHolder(ctx: WorkContext, ownerEmail: strin
     }) as { id: string; revision: number };
     await reviewPersonBinding(ctx, person.id, { expectedRevision: person.revision, memberId: ctx.principal.userId, managerId: manager });
   }
+}
+
+/** Priya's directory record is reviewed as her account, reporting to the owner, so her requests route to the owner's decision. */
+export async function seedDemoBeneficiary(ctx: WorkContext, sourceId: string) {
+  if (await personForMember(ctx, demoManager)) return;
+  const person = await ctx.env.DB.prepare('SELECT id,revision FROM work_people WHERE workspace_id=? AND source_id=? AND member_id IS NULL')
+    .bind(ctx.principal.workspaceId, sourceId).first<{ id: string; revision: number }>();
+  if (person) await reviewPersonBinding(ctx, person.id, { expectedRevision: person.revision, memberId: demoManager, managerId: ctx.principal.userId });
 }

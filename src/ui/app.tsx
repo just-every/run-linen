@@ -108,7 +108,6 @@ function Workspace() {
         {/* After the screen in reading and focus order; the grid draws it as the left rail. */}
         <RailNav section={section} />
       </div>
-      <div className="foliage foliage-left" aria-hidden="true" />
       <div className="foliage foliage-right" aria-hidden="true" />
     </QueueProvider>
   );

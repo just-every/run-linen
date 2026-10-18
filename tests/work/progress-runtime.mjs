@@ -23,7 +23,7 @@ try {
  await setIntake('interpreted',{});
  const catalog=await h.ok('/catalog',{name:'Synthetic device',kind:'device',target:'synthetic-device',ownerId:'owner',capacity:0});
  const request=await h.ok(`/work/${work.id}/fulfilment`,{catalogId:catalog.id,beneficiaryId:'employee',purpose:'Synthetic test'},'employee');
- assert.equal(request.state,'blocked');view=await read();assert.equal(view.progress[0].ownerId,'owner');assert.match(view.progress[0].happened,/Stock or licence capacity/);
+ assert.equal(request.state,'blocked');view=await read();assert.equal(view.progress[0].ownerId,'owner');assert.match(view.progress[0].happened,/Stock or license capacity/);
  list=await h.ok('/work');assert.equal(list.items.find(x=>x.id===work.id).attention.length,1);
  await h.db.prepare("UPDATE work_obligations SET state='failed',last_error='secret trace' WHERE work_id=?").bind(work.id).run();
  assert.equal((await read()).progress[0].state,'failed');

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Icon } from "./icons";
 import { useRemote, useSession } from "./state";
 import { isOpen, useQueue } from "./queue";
@@ -36,7 +37,16 @@ export function RailNav({ section }: { section: string }) {
     ["reports", "Reports", "chart", undefined, operator],
     ["connections", "Settings", "gear", undefined, operator],
   ];
-  const current = settingsSections.some(([key]) => key === section) ? "connections" : section;
+  const current = settingsSections.some(([key]) => key === section) ? "connections" : section,
+    rail = useRef<HTMLElement>(null);
+  // The rail scrolls on its own when the open More list is taller than the screen: keep the current item in view.
+  useEffect(() => {
+    const nav = rail.current, active = nav?.querySelector<HTMLElement>('a[aria-current="page"]');
+    if (!nav || !active || nav.scrollHeight <= nav.clientHeight) return;
+    const top = active.getBoundingClientRect().top - nav.getBoundingClientRect().top + nav.scrollTop, bottom = top + active.offsetHeight;
+    if (bottom > nav.scrollTop + nav.clientHeight) nav.scrollTop = bottom - nav.clientHeight + 16;
+    else if (top < nav.scrollTop) nav.scrollTop = top - 16;
+  }, [section]);
   const more: [string, string, boolean][] = [
     ["services", "Service ownership", true],
     ["commitments", "Continuing commitments", true],
@@ -48,7 +58,7 @@ export function RailNav({ section }: { section: string }) {
     ["simplifications", "Service simplification", operator],
   ];
   return (
-    <nav className="rail" aria-label="Main navigation">
+    <nav className="rail" aria-label="Main navigation" ref={rail}>
       <ul>
         {items.filter(([, , , , shown]) => shown).map(([key, label, icon, count], index) => (
           <li key={key}>
@@ -70,6 +80,10 @@ export function RailNav({ section }: { section: string }) {
           ))}
         </ul>
       </details>
+      {/* The pick's lower-left papercut, in flow under the last item: it fills only the rail's free corner. */}
+      <div className="rail-foliage" aria-hidden="true">
+        <div className="rail-foliage-art" />
+      </div>
     </nav>
   );
 }

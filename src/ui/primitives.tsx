@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ApiFailure, errorText, humanize, text } from "./api";
 import { Icon } from "./icons";
+import { recordFacts } from "./record-facts";
 export function Notice({
   children,
   tone = "info",
@@ -130,7 +131,7 @@ export function Evidence({
         <Icon name="file" />
         {title}
       </summary>
-      <pre>{JSON.stringify(value, null, 2)}</pre>
+      <Facts entries={recordFacts(value)} />
     </details>
   );
 }

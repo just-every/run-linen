@@ -8,7 +8,15 @@ import { objectFacts, roleList } from "./labels";
 import { WorkOutcome } from "./work-outcome";
 import { usePeopleLabels } from "./people-labels";
 import { shortRef } from "./work-queue";
+import { useQueue } from "./queue";
+import { progressException, requestFacts, requestFor, requestStatus } from "./request-facts";
 import type { Conversation, RequestProgress, WorkRecord } from "./work";
+
+/** A date people plan around, as the pick's facts read it: "Mon, Oct 19". */
+const day = (value: string) => {
+  const at = new Date(value);
+  return Number.isNaN(at.getTime()) ? value : new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(at);
+};
 
 const stateLead: Record<string, string> = {
   closed: "This conversation is closed. Closure alone does not verify that your work is restored.",
@@ -18,7 +26,8 @@ const stateLead: Record<string, string> = {
 
 /** The open request on the workbench's right: head, facts, progress readback, the exception, Linen's strip, history. */
 export function RequestDetail({ selectedId, onChanged }: { selectedId: string; onChanged: () => void }) {
-  const personName = usePeopleLabels();
+  const personName = usePeopleLabels(),
+    queue = useQueue();
   const detail = useRemote<Conversation>(`/work/${encodeURIComponent(selectedId)}`, 10000);
   const { session } = useSession(),
     operator = session.principal.roles.some((r) => ["owner", "operator", "hr"].includes(r));
@@ -31,7 +40,9 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
   if (detail.error) return <ErrorNotice error={detail.error} retry={detail.refresh} />;
   if (!work) return null;
   const progress = detail.data?.progress ?? [];
-  const exception = progress.find((item) => ["blocked", "failed", "needs_configuration", "budget_held", "necessary_question"].includes(item.state)) ?? progress.find((item) => item.state !== "verified" && item.ownerLabel !== "Linen" && item.state !== "pending");
+  const exception = progressException(progress),
+    { team, place, neededBy } = requestFacts(work),
+    service = queue.data?.items.find((item) => item.id === work.id)?.services?.[0];
   return (
     <article className="request-detail">
       <a className="back-link" href="#/work">
@@ -45,33 +56,53 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       </div>
       <div className="detail-title">
         <h2>{work.title}</h2>
-        <Badge value={exception?.state ?? work.state} />
+        <Badge value={requestStatus(work, progress)} />
       </div>
       {stateLead[work.state] && <p className="lead">{stateLead[work.state]}</p>}
       <dl className="meta-strip">
         <div>
           <Icon name="user" size={24} />
+          <dt>For</dt>
+          <dd>{requestFor(work, personName)}</dd>
+          {team && <dd className="meta-sub">{team}</dd>}
+        </div>
+        {place && (
+          <div>
+            <Icon name="building" size={24} />
+            <dt>Place</dt>
+            <dd>{place}</dd>
+          </div>
+        )}
+        {neededBy && (
+          <div>
+            <Icon name="calendar" size={24} />
+            <dt>Needed by</dt>
+            <dd><time dateTime={neededBy}>{day(neededBy)}</time></dd>
+          </div>
+        )}
+        {service && (
+          <div>
+            <Icon name={service.kind === "device" ? "laptop" : service.kind === "software" ? "cube" : "lock"} size={24} />
+            <dt>{service.kind === "device" ? "Device" : "Service"}</dt>
+            <dd>{service.name}</dd>
+          </div>
+        )}
+      </dl>
+      <dl className="meta-line">
+        <div>
           <dt>Requested by</dt>
           <dd>{personName(work.requester_id)}</dd>
         </div>
         <div>
-          <Icon name="users" size={24} />
-          <dt>For</dt>
-          <dd>{personName(work.beneficiary_id)}</dd>
-        </div>
-        <div>
-          <Icon name="inbox" size={24} />
           <dt>Conversation assignee</dt>
           <dd>{personName(work.assignee_id)}</dd>
         </div>
         <div>
-          <Icon name="clock" size={24} />
           <dt>Last changed</dt>
           <dd><time dateTime={work.updated_at ?? work.created_at}>{date(work.updated_at ?? work.created_at)}</time></dd>
         </div>
       </dl>
       <Progress items={progress} exception={exception} operator={operator} />
-      <WorkOutcome key={work.id} workId={work.id} />
       <ErrorNotice error={detail.backgroundError} />
       <section className="agent-strip" aria-label="Linen">
         <h3>
@@ -82,10 +113,11 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <Composer workId={work.id} onSent={changed} />
         <ConversationHistory conversation={detail.data!} />
       </section>
+      <WorkOutcome key={work.id} workId={work.id} onChanged={changed} />
       <WorkCommands work={work} onChanged={changed} operator={operator} />
       <details className="evidence">
         <summary>Request identity & context</summary>
-        <Facts entries={[["Visibility", work.sensitivity === "hr" ? "Restricted HR conversation" : "Request participants and permitted service team"], ["Requested by", personName(work.requester_id)], ["For", personName(work.beneficiary_id)], ...objectFacts(work.context_json)]} />
+        <Facts entries={[["Visibility", work.sensitivity === "hr" ? "Restricted HR conversation" : "Request participants and permitted service team"], ["Requested by", personName(work.requester_id)], ["For", requestFor(work, personName)], ...objectFacts(work.context_json)]} />
       </details>
     </article>
   );
@@ -93,10 +125,22 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
 
 /** Each responsibility read back with its state; the first one that waits on a person opens the red exception. */
 function Progress({ items, exception, operator }: { items: RequestProgress[]; exception?: RequestProgress; operator: boolean }) {
-  const duties = items.filter((item) => item.title),
-    verified = duties.filter((item) => item.state === "verified").length;
   if (!items.length) return null;
+  // The count covers the responsibilities listed under it; the assessment is a step of its own, set apart below them.
+  const duties = items.filter((item) => item.title),
+    assessment = items.filter((item) => !item.title),
+    verified = duties.filter((item) => item.state === "verified").length;
   const tone = (state: string) => (state === "verified" ? "ok" : ["blocked", "failed", "needs_configuration", "budget_held"].includes(state) ? "alert" : "wait");
+  const row = (item: RequestProgress, index: number) => (
+    <li key={index} className="readback-row">
+      <span className={`dot tone-${tone(item.state)}`} />
+      <span className="readback-what">
+        <strong>{item.title ?? "Assessment"}</strong>
+        <small>{item === exception ? "Needs attention: the next step is below." : item.happened}</small>
+      </span>
+      <span className="readback-when">{item.dueAt ? <>Due <time dateTime={item.dueAt}>{date(item.dueAt)}</time></> : item.ownerLabel}</span>
+    </li>
+  );
   return (
     <section className="progress" aria-label="Request progress" aria-live="polite">
       <div className="panel readback">
@@ -104,18 +148,8 @@ function Progress({ items, exception, operator }: { items: RequestProgress[]; ex
           Progress
           {Boolean(duties.length) && <span className={verified === duties.length ? "count-ok" : "count-alert"}>{verified} of {duties.length} verified</span>}
         </h3>
-        <ul>
-          {items.map((item, index) => (
-            <li key={index} className="readback-row">
-              <span className={`dot tone-${tone(item.state)}`} />
-              <span className="readback-what">
-                <strong>{item.title ?? "Assessment"}</strong>
-                <small>{item === exception ? "Needs attention: the next step is below." : item.happened}</small>
-              </span>
-              <span className="readback-when">{item.dueAt ? <>Due <time dateTime={item.dueAt}>{date(item.dueAt)}</time></> : item.ownerLabel}</span>
-            </li>
-          ))}
-        </ul>
+        {Boolean(duties.length) && <ul>{duties.map(row)}</ul>}
+        {Boolean(assessment.length) && <ul className="readback-apart">{assessment.map(row)}</ul>}
       </div>
       {exception && (
         <div className="exception" role="status">

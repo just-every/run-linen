@@ -7,7 +7,7 @@ import type { Env } from './platform/types'
 import type { WorkContext } from './features/work/core'
 import { seedDemoModel } from './demo/model'
 import { seedDemoWork } from './demo/work'
-import { seedDemoDecisionHolder } from './demo/people'
+import { seedDemoDecisionHolder, seedDemoBeneficiary } from './demo/people'
 import { upsertPerson, acquireAsset } from './features/work/resources'
 import { saveArticle } from './features/work/knowledge'
 import { createCatalogItem } from './features/work/requests'
@@ -58,24 +58,27 @@ export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: stri
  await Promise.all([seedDemoModel(ctx, now), seedDemoDecisionHolder(ctx, ownerEmail, now)])
  const db = env.DB, w = owner.workspaceId, day = (offset: number) => new Date(now.getTime() + offset * 86400000).toISOString()
  const exists = (table: string, field: string, value: string) => db.prepare(`SELECT 1 FROM ${table} WHERE workspace_id=? AND ${field}=?`).bind(w, value).first()
- const people = ['Priya Shah', 'Jordan Lee', 'Samira Khan', 'Theo Bennett', 'Maya Chen', 'Oliver Brooks', 'Amelia Wilson', 'Noah Patel']
- await Promise.all(people.map(async (name, index) => {
+ // Each person's team, as each request records it in its context.
+ const people: [string, string][] = [['Priya Shah', 'Design'], ['Jordan Lee', 'Sales'], ['Samira Khan', 'Customer Success'], ['Theo Bennett', 'Operations'], ['Maya Chen', 'Marketing'], ['Oliver Brooks', 'Engineering'], ['Amelia Wilson', 'Finance'], ['Noah Patel', 'Product']]
+ await Promise.all(people.map(async ([name], index) => {
   if (!await exists('work_people', 'source_id', `northstar-${index}`))
    await upsertPerson(ctx, { source: 'Northstar team directory · demo sample', sourceId: `northstar-${index}`, name, effectiveAt: day(-30 - index), observedAt: day(-1) })
  }))
+ await seedDemoBeneficiary(ctx, 'northstar-0')
+ // Title, message, kind and the place the request is about.
  const requests = [
-  ['Priya needs Figma for the brand refresh', 'Please arrange a Figma seat for Priya before the brand workshop tomorrow. The design team has confirmed the project budget.', 'request'],
-  ['Jordan cannot connect to the office VPN', 'Jordan can sign in, but the VPN disconnects after a minute on the office Wi-Fi. Started this morning after the laptop update.', 'incident'],
-  ['Prepare Samira’s first day', `Samira joins the customer team on ${day(4).slice(0, 10)}. Please prepare a laptop, email and the shared support workspace.`, 'request'],
-  ['Theo needs access to the revenue dashboard', 'Theo is covering the weekly operations report. Read-only dashboard access is enough until the end of this month.', 'request'],
-  ['Maya’s meeting room camera is intermittent', 'The camera in the Aspen room cuts out during video calls. Maya has tried a second cable; audio still works.', 'incident'],
-  ['Replace Oliver’s damaged laptop charger', 'Oliver’s USB-C charger has a damaged cable. A replacement can be collected from the Denver front desk tomorrow.', 'request'],
-  ['Amelia’s invoice export is timing out', 'The finance export completes for small date ranges but times out for the full quarter. Amelia needs it for Friday’s close.', 'incident'],
-  ['Return Noah’s loan laptop', 'Noah’s repaired laptop is ready. Arrange the handover and collect the loan device so custody stays accurate.', 'request'],
-  ['Add a shared mailbox for the workshop', 'The customer workshop needs a shared mailbox for three organizers. Keep access limited to the workshop team.', 'request'],
-  ['Guest Wi-Fi is slow in Denver', 'Guests on level two report slow browsing. Staff Wi-Fi is unaffected. Please compare the access points before changing settings.', 'incident'],
-  ['Renew the design team’s software seats', 'The design subscription renews next month. Confirm the current roster and unused seats before committing to another year.', 'request'],
-  ['Archive the completed project workspace', 'The Harbor launch has finished. Confirm retention with the project lead before removing collaborator access.', 'request'],
+  ['Priya needs Figma for the brand refresh', 'Please arrange a Figma seat for Priya before the brand workshop tomorrow. The design team has confirmed the project budget.', 'request', 'Denver, CO'],
+  ['Jordan cannot connect to the office VPN', 'Jordan can sign in, but the VPN disconnects after a minute on the office Wi-Fi. Started this morning after the laptop update.', 'incident', 'Austin, TX'],
+  ['Prepare Samira’s first day', `Samira joins the customer team on ${day(4).slice(0, 10)}. Please prepare a laptop, email and the shared support workspace.`, 'request', 'Portland, OR'],
+  ['Theo needs access to the revenue dashboard', 'Theo is covering the weekly operations report. Read-only dashboard access is enough until the end of this month.', 'request', 'Denver, CO'],
+  ['Maya’s meeting room camera is intermittent', 'The camera in the Aspen room cuts out during video calls. Maya has tried a second cable; audio still works.', 'incident', 'Denver, CO'],
+  ['Replace Oliver’s damaged laptop charger', 'Oliver’s USB-C charger has a damaged cable. A replacement can be collected from the Denver front desk tomorrow.', 'request', 'Denver, CO'],
+  ['Amelia’s invoice export is timing out', 'The finance export completes for small date ranges but times out for the full quarter. Amelia needs it for Friday’s close.', 'incident', 'Austin, TX'],
+  ['Return Noah’s loan laptop', 'Noah’s repaired laptop is ready. Arrange the handover and collect the loan device so custody stays accurate.', 'request', 'Portland, OR'],
+  ['Add a shared mailbox for the workshop', 'The customer workshop needs a shared mailbox for three organizers. Keep access limited to the workshop team.', 'request', 'Denver, CO'],
+  ['Guest Wi-Fi is slow in Denver', 'Guests on level two report slow browsing. Staff Wi-Fi is unaffected. Please compare the access points before changing settings.', 'incident', 'Denver, CO'],
+  ['Renew the design team’s software seats', 'The design subscription renews next month. Confirm the current roster and unused seats before committing to another year.', 'request', 'Denver, CO'],
+  ['Archive the completed project workspace', 'The Harbor launch has finished. Confirm retention with the project lead before removing collaborator access.', 'request', 'Portland, OR'],
  ]
  for (const [index, location] of ['Denver front desk', 'Austin supply room', 'Denver front desk', 'Portland studio'].entries()) {
   const serial = `NST-LT-${2401 + index}`

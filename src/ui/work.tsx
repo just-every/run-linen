@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useSession } from "./state";
 import type { RecordValue } from "./api";
 import { Icon } from "./icons";
@@ -5,6 +6,7 @@ import { Composer } from "./work-composer";
 import { useQueue } from "./queue";
 import { AttentionList, Queue } from "./work-queue";
 import { RequestDetail } from "./work-detail";
+import { progressException } from "./request-facts";
 export interface WorkRecord {
   id: string;
   title: string;
@@ -18,9 +20,13 @@ export interface WorkRecord {
   created_at: string;
   updated_at?: string;
   context_json?: string;
+  /** The same progress the open request reads; empty when nothing is outstanding. */
+  progress?: RequestProgress[];
+  /** Catalog services recorded on the request. */
+  services?: { name: string; kind: string }[];
   attention?: RequestProgress[];
 }
-export interface RequestProgress { title?: string; dueAt?: string; state: string; happened: string; next: string; ownerId: string | null; ownerLabel: string; }
+export interface RequestProgress { needsAction?: boolean; title?: string; dueAt?: string; state: string; happened: string; next: string; ownerId: string | null; ownerLabel: string; }
 export interface Conversation {
   progress?: RequestProgress[];
   work: WorkRecord;
@@ -44,14 +50,27 @@ function today() {
 export function WorkSpace({ selectedId }: { selectedId?: string }) {
   const queue = useQueue(),
     { session } = useSession();
+  // Arriving at the app itself (no address within it) on a screen wide enough for both columns, the
+  // workbench opens the newest request with an exception, as the queue's first row needing attention.
+  useEffect(() => {
+    if (selectedId || location.hash || !matchMedia("(min-width: 1241px)").matches) return;
+    const first = queue.data?.items.find((item) => progressException(item.progress));
+    if (first) location.replace(`#/work/${first.id}`);
+  }, [queue.data, selectedId]);
   return (
     <div className={`workbench ${selectedId ? "has-selection" : ""}`}>
       <div className="workbench-head">
         <h1>Requests</h1>
         <time dateTime={new Date().toISOString().slice(0, 10)}>{today()}</time>
+        {selectedId && (
+          <a className="action primary small new-request-link" href="#/work">
+            <Icon name="plus" size={16} />
+            New request
+          </a>
+        )}
       </div>
       <div className="workbench-queue">
-        <AttentionList />
+        <AttentionList selectedId={selectedId} />
         <Queue selectedId={selectedId} />
       </div>
       <div className="workbench-detail">

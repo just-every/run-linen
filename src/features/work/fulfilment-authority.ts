@@ -106,6 +106,7 @@ export async function approveFulfilment(ctx: WorkContext, workId: string, input:
       JSON.stringify({workId,fulfilmentId:f.id,catalogId:catalog.id,workRevision:work.revision,fulfilmentRevision:f.revision,
         catalogRevision:catalog.revision,personRevision:person.revision,managerId:person.manager_id,holderId:holder,
         beneficiaryId:f.beneficiary_id,expiresAt:f.expires_at}),now()),
+    db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(now(),w,workId),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)]);
   return {id:approvalId,state:'approved' as const};
 }

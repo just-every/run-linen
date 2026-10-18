@@ -1,6 +1,7 @@
 import { NewChange } from "./setup-change";
 import { usePeopleLabels } from "./people-labels";
 import { date, text, humanize } from "./api";
+import { visibilityLabel } from "./labels";
 import { useRemote, useSession } from "./state";
 import { ActionForm, type Field } from "./forms";
 import {
@@ -16,6 +17,8 @@ import {
 import { Icon } from "./icons";
 import type { DomainRecord } from "./decisions";
 import { ServiceActions, NewDecision } from "./service-actions";
+import { RelatedRequests, hasRelatedRequests } from "./related-requests";
+import { useQueue } from "./queue";
 const labels: Record<string, [string, string]> = {
   services: ["Service ownership", "Keep the work behind the service in view."],
   incidents: ["Incidents", "Shared interruptions: recovery, person by person."],
@@ -31,7 +34,8 @@ export function ServiceSpace({
   section: string;
   selectedId?: string;
 }) {
-  const personName = usePeopleLabels();
+  const personName = usePeopleLabels(),
+    queue = useQueue();
   const list = useRemote<{ items: DomainRecord[] }>(`/${section}`),
     detail = useRemote<DomainRecord>(
       selectedId ? `/${section}/${selectedId}` : null,
@@ -196,7 +200,7 @@ export function ServiceSpace({
                 <Facts
                   entries={[
                     ["Accountable owner", personName(record.ownerId)],
-                    ["Visibility", record.visibility],
+                    ["Visibility", visibilityLabel(record.visibility)],
                     ["Recorded", date(record.createdAt)],
                     ["Last changed", date(record.updatedAt)],
                     ...(d.serviceId
@@ -321,6 +325,7 @@ export function ServiceSpace({
         <ErrorNotice error={list.error} retry={list.refresh} />
       ) : (
         <>
+          <RelatedRequests section={section} />
           {list.data?.items.length ? (
             <div className="record-list">
               {list.data.items.map((r) => (
@@ -349,10 +354,17 @@ export function ServiceSpace({
               ))}
             </div>
           ) : (
-            <Empty title="No records yet.">
-              Nothing is inferred from the absence of data. Add the actual
-              service context when it is available.
-            </Empty>
+            hasRelatedRequests(section, queue.data?.items) ? (
+              <p className="related-note">
+                No shared {section === "incidents" ? "incident" : "software"} record is kept yet. The requests above stay
+                individual conversations; record shared context below when it is known.
+              </p>
+            ) : (
+              <Empty title="No records yet.">
+                Nothing is inferred from the absence of data. Add the actual
+                service context when it is available.
+              </Empty>
+            )
           )}
           {canEdit && section === "changes" && <NewChange onSaved={result => { list.refresh(); location.hash = `/changes/${result.id}`; }} />}
           {canEdit && fields[section] && (

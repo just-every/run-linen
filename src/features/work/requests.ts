@@ -183,6 +183,8 @@ export async function requestFulfilment(
       catalog.owner_id,
       blocked,
     ),
+    // A newly recorded responsibility is a change to the request: its queue row and "Last changed" move.
+    ...(previous ? [] : [ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(now(), ctx.principal.workspaceId, work.id)]),
   ]);
   if (input.expiresAt && catalog.kind !== "device")
     await ctx.env.DB.prepare(
@@ -289,6 +291,8 @@ export async function recordPhysicalHandoff(
     .run();
   if (!result.meta.changes)
     throw new ApiError(409, "revision_conflict", "Obligation, person or reviewed binding changed");
+  await ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?")
+    .bind(now(), ctx.principal.workspaceId, obligation.work_id).run();
   return {
     id: obligationId,
     state: "verified",

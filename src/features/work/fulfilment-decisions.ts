@@ -39,7 +39,7 @@ export async function listFulfilmentDecisions(ctx: WorkContext): Promise<{items:
       expectedFulfilmentRevision:f.revision,expectedCatalogRevision:f.catalog_revision,
       expectedPersonId:f.person_id,expectedPersonRevision:f.person_revision,expectedBindingId:f.person_binding_id,
       holderId:ctx.principal.userId,holderName:holder?.name||'Current manager',
-      state:'needs_approval',reason:'Current scoped manager approval is required before independently granted fulfilment can proceed.'});
+      state:'needs_approval',reason:'Current scoped manager approval is required before independently granted fulfillment can proceed.'});
   }
   return {items};
 }

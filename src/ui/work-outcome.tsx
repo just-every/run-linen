@@ -5,7 +5,7 @@ import { kindLabel } from "./labels";
 import { useRemote, useSession } from "./state";
 import { Badge, ErrorNotice, Facts, Loading, Notice } from "./primitives";
 import { ActionForm } from "./forms";
-export function WorkOutcome({ workId }: { workId: string }) {
+export function WorkOutcome({ workId, onChanged }: { workId: string; onChanged?: () => void }) {
   const personName = usePeopleLabels();
   const [saved, setSaved] = useState<RecordValue | null>(null);
   const obligations = useRemote<{ items: RecordValue[] }>(
@@ -82,7 +82,7 @@ export function WorkOutcome({ workId }: { workId: string }) {
             },
           ]}
           explanation="You can also ask in the conversation. This optional selection preserves the same request."
-          onSaved={(result) => { setSaved(result); obligations.refresh(); }}
+          onSaved={(result) => { setSaved(result); obligations.refresh(); onChanged?.(); }}
         />
       )}
     </section>

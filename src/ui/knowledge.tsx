@@ -2,6 +2,7 @@ import { useState } from "react";
 import { date, text, type RecordValue } from "./api";
 import { useRemote, useSession } from "./state";
 import { ActionForm } from "./forms";
+import { audienceLabel } from "./labels";
 import { Empty, ErrorNotice, Facts, Hero, Loading } from "./primitives";
 export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
   const [query, setQuery] = useState(initial),
@@ -48,7 +49,7 @@ export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
               entries={[
                 ["Reviewed", date(article.reviewed_at)],
                 ["Review expires", date(article.expires_at)],
-                ["Audience", article.scope],
+                ["Audience", audienceLabel(article.scope)],
               ]}
             />
             <ActionForm

@@ -441,3 +441,42 @@ a.record-row:hover {
     align-items: stretch;
   }
 }
+
+/* Requests that belong to a space (incident requests in Incidents, software requests in Software). */
+.related-requests {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 22px;
+}
+.related-requests h2 {
+  font: 800 20px/1.25 var(--font-head);
+}
+.related-note {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+/* A request row: its title over who it is for, the status beside them (the phone layout already stacks this way). */
+@media (min-width: 701px) {
+  .related-requests .record-row {
+    grid-template-columns: 32px minmax(0, 1fr) 140px 18px;
+    grid-template-areas: "icon title badge arrow" "icon meta badge arrow";
+    row-gap: 2px;
+  }
+  .related-requests .record-row > .event-icon {
+    grid-area: icon;
+  }
+  .related-requests .record-row strong {
+    grid-area: title;
+  }
+  .related-requests .record-row small {
+    grid-area: meta;
+    white-space: normal;
+  }
+  .related-requests .record-row > .badge {
+    grid-area: badge;
+  }
+  .related-requests .record-row > .icon {
+    grid-area: arrow;
+  }
+}
