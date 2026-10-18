@@ -213,7 +213,7 @@
       "/signin",
       "/app"
     ],
-    "notes": "Lobby and native setup/sign-in are public; Linen application data requires a native scoped session. Deployment is blocked until the shared owner deploy contract can preserve existing Worker and storage identities."
+    "notes": "Lobby and native setup/sign-in are public; Linen application data requires a native scoped session. Fresh installations explicitly select LINEN_DEPLOYMENT=new and use rer-derived resource names. Existing Worker and storage identities remain protected; see README.md."
   },
   "extensionPoints": {
     "contributions": [],

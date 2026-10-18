@@ -35,16 +35,18 @@ SSO (`ACCESS_ISSUER`, `ACCESS_AUDIENCE`) admits existing active members after
 assertion validation; it cannot create authority. See [platform routes](src/platform/routes.ts)
 and [authentication](src/platform/auth.ts).
 
-For public installation, provision actual Cloudflare D1 and private R2, set the
-real database ID/bucket in `wrangler.jsonc`, and configure exact HTTPS `APP_ORIGIN`.
-Set `SESSION_SECRET`, base64 32-byte `ENCRYPTION_KEY` and `BOOTSTRAP_TOKEN` through
-Wrangler secrets. Public bootstrap is refused without its installation token;
-enter it privately in setup and remove it after initial owner creation. Never
-paste secrets into documentation, logs or source. `rer deploy` currently refuses
-because the Base owner-deployment path would rename Linen's retained Worker, D1
-and R2 identities. Deployment remains outside this task; the default next step is
-to fix Base deployment to preserve those identities. No hosted Linen deployment
-is recorded.
+For a separate fresh hosted installation, follow [Deploy a fresh
+installation](README.md#deploy-a-fresh-installation). Explicitly select
+`LINEN_DEPLOYMENT=new`; RER provisions D1 and private R2 using derived names,
+configures `AUTH_ORIGIN`, generates secrets, claims the setup owner and retires
+the setup token. Keep `.rer/deploy/` and the environment name for upgrades and
+removal. Never paste secrets into documentation, logs or source.
+
+Existing pre-rer hosted installations keep Worker `linen`, D1 `linen` and R2
+`linen-attachments` with their actual resource identities and data. They remain
+blocked from this deployment path until the shared kit supports existing-resource
+identity; selecting a fresh deployment is not an upgrade. Local Wrangler names
+and migration history remain unchanged.
 
 ## Connect and review once
 

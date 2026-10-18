@@ -10,7 +10,7 @@ const base = process.env.LINEN_TEST_URL;
 if (!base) throw Error("Use node tests/ui/run.mjs to start an isolated worker");
 const out = process.env.LINEN_TEST_OUTPUT || "test-results/ui";
 await mkdir(out, { recursive: true });
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 const context = await browser.newContext({
   timezoneId: "UTC",
   viewport: { width: 1440, height: 1000 },

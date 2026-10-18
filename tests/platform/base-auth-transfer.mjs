@@ -102,8 +102,16 @@ try{
  await run(['exec','rer','reset','--yes'])
  const checkpoint=await run(['exec','rer','import','--input',archive,'--journal','exports/after.rer','--yes'],1);assert.match(checkpoint,/erasure_epoch/)
  await run(['exec','rer','import','--input',later,'--yes'])
+ // An existing installation remains protected until a separate fresh deploy is explicitly selected.
+ delete commandEnvironment.LINEN_DEPLOYMENT
  // Satisfy Base's production mail prerequisite so this dry run reaches the identity guard.
  commandEnvironment.MAIL_API_KEY='test-only-dry-run-mail-key'
  const deploy=await run(['exec','rer','deploy','--dry-run'],4);assert.match(deploy,/must retain Worker linen/)
- console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; deploy refuses identity changes without provider access')
+ commandEnvironment.LINEN_DEPLOYMENT='new'
+ await run(['exec','rer','deploy','--dry-run'])
+ const configPath=join(root,'wrangler.jsonc'),config=JSON.parse(await readFile(configPath,'utf8'))
+ config.d1_databases[0].database_id='retained-remote-database'
+ await writeFile(configPath,JSON.stringify(config))
+ assert.match(await run(['exec','rer','deploy','--dry-run'],4),/must retain Worker linen/)
+ console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; fresh deploy succeeds without provider access while retained deployment identity changes remain refused')
 }finally{await mf?.dispose();await close();await rm(dir,{recursive:true,force:true})}

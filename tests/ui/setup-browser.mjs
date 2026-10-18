@@ -8,7 +8,7 @@ const base = process.env.LINEN_TEST_URL;
 if (!base) throw Error('Use setup-run.mjs with an isolated D1 worker');
 const out = process.env.LINEN_TEST_OUTPUT;
 await mkdir(out, { recursive: true });
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
 const context = await browser.newContext({ timezoneId: 'UTC', viewport: { width: 1440, height: 1000 } });
 const page = await context.newPage();
 page.setDefaultTimeout(45000);

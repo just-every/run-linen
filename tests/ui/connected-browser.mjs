@@ -10,7 +10,7 @@ import { connectedChanges } from './connected-change.mjs';
 import { connectedRequest } from './connected-request.mjs';
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 await mkdir(out,{recursive:true});
-const browser=await chromium.launch({headless:true});const context=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}});const page=await context.newPage();
+const browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]});const context=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}});const page=await context.newPage();
 const errors=[],checks=[];page.on('pageerror',e=>errors.push(String(e)));page.setDefaultTimeout(15000);
 const fixture=async data=>{const r=await fetch(base+'/__fixture/state',{method:'POST',body:JSON.stringify(data)});assert.ok(r.ok);return r.json()};
 const tick=async()=>{const r=await fetch(base+'/__fixture/tick',{method:'POST'});assert.ok(r.ok,await r.clone().text())};

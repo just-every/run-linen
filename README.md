@@ -42,8 +42,9 @@ effects.
 
 `rer verify` runs Linen's browser, connected-journey, setup, HTTP and
 intelligence checks, and CI runs it on every change. An archived native-data
-upgrade was checked to retain prior rows and migration history. No real-provider action, hosted deployment or owner
-acceptance is claimed; those full-release dimensions remain unproven. The native
+upgrade was checked to retain prior rows and migration history. These checks do
+not establish real-provider action, hosted deployment or owner acceptance for
+the full release; those dimensions remain unproven. The native
 Base authentication bridge and Linen account/data continuity are retained, as
 are the existing product, package, edition, Worker and D1 identities. See
 [ACCEPTANCE.md](ACCEPTANCE.md) for the full gates.
@@ -57,6 +58,50 @@ site's `/docs`, beside its homepage and the Run page (`src/site/`, declared in
 
 ## Operate and extend
 
+### Deploy a fresh installation
+
+From a new checkout, run `rer install` and `rer setup` with your owner email.
+Create a Cloudflare API token for your account with Workers Scripts, D1 and R2
+edit permissions. Configure a real mail provider and a sender verified with it:
+
+```sh
+export CLOUDFLARE_ACCOUNT_ID=your-account-id
+export CLOUDFLARE_API_TOKEN=your-api-token
+export MAIL_PROVIDER=sendgrid
+export MAIL_FROM=your-verified-sender
+export MAIL_API_KEY=your-mail-provider-api-key
+export LINEN_DEPLOYMENT=new
+rer deploy --environment production
+```
+
+`MAIL_PROVIDER` also accepts `resend`. RER generates the session, setup and
+encryption secrets, claims the owner selected in setup, removes the one-time
+setup token and prints the hosted address. Open it and sign in by real email.
+Use the same environment for every subsequent deployment. RER records and checks
+the created resource identities in `.rer/deploy/`; keep this private directory.
+
+`LINEN_DEPLOYMENT=new` explicitly selects a separate fresh installation. Its
+Worker is `linen-<environment>`, D1 is `linen-<environment>-db`, and private R2 is
+`linen-<environment>-attachments`. The runtime uses bindings `DB` and
+`ATTACHMENTS`; their physical names need not be fixed. Local resource names and
+applied migrations stay unchanged.
+
+For an existing pre-rer hosted installation, do not select `new` or deploy from a
+fresh clone as an upgrade. Keep Worker `linen`, D1 `linen` and R2
+`linen-attachments`, their actual IDs, data and configuration. The hook continues
+to refuse that upgrade until the shared deploy kit supports existing-resource
+identity. A configured remote D1 ID also refuses fresh deployment.
+
+To permanently delete an environment and its data, using its retained deployment
+record and the same Cloudflare credentials:
+
+```sh
+rer deploy --environment production --remove --yes
+```
+
+RER reads back that its recorded resources are gone. This does not remove an
+existing pre-rer installation.
+
 [OPERATIONS.md](OPERATIONS.md) documents the RER operating commands, provider
 boundaries, recovery and engineering responsibilities. [ONBOARDING.md](ONBOARDING.md)
 covers first-run setup. Source is edition-owned; extend it through tested changes
@@ -65,7 +110,7 @@ A development companion is not endpoint management.
 
 Linen's source is developed in the public repository
 [just-every/run-linen](https://github.com/just-every/run-linen). The RER package is
-`@runeditrun/rer` version `0.2.45`. Publishing source does not deploy Linen,
+`@runeditrun/rer` version `0.2.51`. Publishing source does not deploy Linen,
 configure a provider, or satisfy an acceptance gate.
 
 ## Preserved product requirements

@@ -12,9 +12,7 @@
   ],
   "originVar": "AUTH_ORIGIN",
   "vars": {
-    "AUTH_LOCAL": "false",
-    "MAIL_PROVIDER": "resend",
-    "MAIL_FROM": "auth@example.invalid"
+    "AUTH_LOCAL": "false"
   },
   "secrets": [
     {
@@ -36,6 +34,16 @@
     {
       "binding": "ENCRYPTION_KEY",
       "environment": "ENCRYPTION_KEY"
+    },
+    {
+      "binding": "MAIL_PROVIDER",
+      "environment": "MAIL_PROVIDER",
+      "verifyStandIn": "resend"
+    },
+    {
+      "binding": "MAIL_FROM",
+      "environment": "MAIL_FROM",
+      "verifyStandIn": "auth@example.test"
     }
   ],
   "crons": [

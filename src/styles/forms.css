@@ -38,12 +38,25 @@ select:focus-visible {
 textarea {
   resize: vertical;
 }
-select {
+/* Single-choice chevron (Base #247); native lists retain their own appearance. */
+select:not([multiple],[size]:not([size="1"])) {
+  --rer-select-ink: var(--rer-muted);
+  -webkit-appearance: none;
   appearance: none;
-  padding-right: 40px;
-  background: var(--input)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%230E1C33' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E")
-    right 14px center / 16px 16px no-repeat;
+  padding-inline-end: 40px;
+  text-overflow: ellipsis;
+  background-image:
+    linear-gradient(to top right, transparent calc(50% - 1.1px), var(--rer-select-ink) calc(50% - .55px), var(--rer-select-ink) calc(50% + .55px), transparent calc(50% + 1.1px)),
+    linear-gradient(to top left, transparent calc(50% - 1.1px), var(--rer-select-ink) calc(50% - .55px), var(--rer-select-ink) calc(50% + .55px), transparent calc(50% + 1.1px));
+  background-repeat: no-repeat;
+  background-position: right 20px center, right 14px center;
+  background-size: 6px 6px;
+}
+select:not([multiple],[size]:not([size="1"])):focus-visible {
+  --rer-select-ink: var(--rer-text);
+}
+select:not([multiple],[size]:not([size="1"])):disabled {
+  --rer-select-ink: color-mix(in srgb, var(--rer-muted) 55%, transparent);
 }
 input[type="checkbox"],
 input[type="radio"] {
@@ -219,6 +232,10 @@ legend {
   outline: 2px solid var(--ink);
   outline-offset: 3px;
 }
+/* Borrow the select's extra 14 px from the pill's end space, keeping its outer size. */
+.visibility-picker {
+  padding-inline-end: 6px;
+}
 .file-picker .icon,
 .visibility-picker .icon {
   width: 18px;
@@ -226,10 +243,10 @@ legend {
 }
 .visibility-picker select {
   min-height: 0;
-  padding: 8px 26px 8px 0;
+  padding: 8px 40px 8px 0;
   border: 0;
   background-color: transparent;
-  background-position: right 0 center;
+  background-position: right 20px center, right 14px center;
   font-size: 16px;
 }
 .visibility-picker select:focus-visible {
