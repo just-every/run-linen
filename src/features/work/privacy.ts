@@ -93,6 +93,8 @@ async function eraseSinglePerson(
       .bind(ctx.principal.workspaceId, input.personId, input.personId)
       .all<{ blob_key: string }>()
   ).results;
+  const pendingIdentity=await ctx.env.DB.prepare('SELECT email FROM work_pending_people WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,input.personId).first<{email:string}>();
+  const pendingEmailHash=pendingIdentity?await hashToken(pendingIdentity.email):null;
   const w = ctx.principal.workspaceId,
     p = input.personId,
     t = now();
@@ -113,6 +115,11 @@ async function eraseSinglePerson(
     ctx.env.DB.prepare(
       "INSERT INTO work_erasure_guards VALUES(?,changes())",
     ).bind(guard),
+    ...(pendingIdentity?[
+      ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w,pendingEmailHash,t),
+      ctx.env.DB.prepare("UPDATE work_pending_people SET email=?,start_date='',team='[erased]',state='withdrawn',withdrawn_at=? WHERE workspace_id=? AND id=?").bind(`erased-${p}@invalid.local`,t,w,p),
+      ctx.env.DB.prepare("UPDATE work_pending_services SET purpose='[erased]',reason='Identity erased',state=CASE WHEN state='held' THEN 'cancelled' ELSE state END WHERE workspace_id=? AND person_id=?").bind(w,p),
+    ]:[]),
     // Tombstone every current identity in this same transaction. A reviewer may
     // unbind an erased record, but cannot rebind either side during cleanup.
     ...[...new Set([p,...aliases,...people.map(p=>`${p.source}:${p.source_id}`)])].map(value =>

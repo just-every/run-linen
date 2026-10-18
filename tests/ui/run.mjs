@@ -97,7 +97,7 @@ try {
     if (!ready) throw Error("Isolated worker did not become ready");
   }
   await new Promise((yes, no) => {
-    const child = spawn(process.execPath, ["tests/ui/browser.mjs"], {
+    const child = spawn(process.execPath, [process.argv[2] || "tests/ui/browser.mjs"], {
       cwd: root,
       stdio: "inherit",
       env: { ...process.env, LINEN_TEST_URL: url, LINEN_TEST_OUTPUT: out },

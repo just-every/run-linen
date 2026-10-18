@@ -7,6 +7,7 @@ import { useQueue } from "./queue";
 import { Queue } from "./work-queue";
 import { RequestDetail } from "./work-detail";
 import { progressException } from "./request-facts";
+import type { HeldService, PendingPerson } from "./pending-people";
 export interface WorkRecord {
   id: string;
   title: string;
@@ -17,9 +18,13 @@ export interface WorkRecord {
   assignee_id?: string;
   beneficiary_id: string;
   requester_id: string;
+  requester_name?: string;
+  assignee_name?: string;
   created_at: string;
   updated_at?: string;
   context_json?: string;
+  pending_person_id?: string | null;
+  beneficiary_name?: string;
   /** The same progress the open request reads; empty when nothing is outstanding. */
   progress?: RequestProgress[];
   /** Catalog services recorded on the request. */
@@ -28,6 +33,8 @@ export interface WorkRecord {
 }
 export interface RequestProgress { needsAction?: boolean; title?: string; dueAt?: string; state: string; happened: string; next: string; ownerId: string | null; ownerLabel: string; }
 export interface Conversation {
+  pendingPerson?: PendingPerson | null;
+  heldServices?: HeldService[];
   progress?: RequestProgress[];
   work: WorkRecord;
   messages: {

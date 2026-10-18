@@ -28,7 +28,8 @@ export const workIntakePort: WorkIntakePort = {
     const visible = [];
     for (const row of rows) {
       try {
-        await getWork(ctx, row.work_id);
+        const work=await getWork(ctx, row.work_id);
+        if(work.pending_person_id && !await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state='bound'").bind(ctx.principal.workspaceId,work.pending_person_id).first())continue;
         visible.push(row);
       } catch (error) {
         if (!(error instanceof ApiError && error.status === 404)) throw error;
@@ -44,7 +45,8 @@ export const workIntakePort: WorkIntakePort = {
       .bind(ctx.principal.workspaceId, eventId, ctx.principal.userId)
       .first<IntakeEvent>();
     if (!event) return null;
-    await getWork(ctx, event.work_id);
+    const work=await getWork(ctx, event.work_id);
+    if(work.pending_person_id && !await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state='bound'").bind(ctx.principal.workspaceId,work.pending_person_id).first())return null;
     const token = id();
     const result = await ctx.env.DB.prepare(
       "UPDATE work_intake_events SET state='interpreting',lease_token=?,lease_until=? WHERE workspace_id=? AND id=? AND sender=? AND state IN ('pending','needs_configuration','budget_held')",

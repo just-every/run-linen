@@ -28,6 +28,7 @@ const checks = [
   ['work integration regressions', process.execPath, ['tests/work/integration-regressions-runtime.mjs']],
   ['fulfilment correction and restart', process.execPath, ['tests/work/amend-runtime.mjs']],
   ['reviewed person member flow', process.execPath, ['tests/work/person-binding-runtime.mjs']],
+  ['pending person services', process.execPath, ['tests/work/pending-person-runtime.mjs']],
   ['current manager decisions', process.execPath, ['tests/work/amend-manager-runtime.mjs']],
   ['decision queue names the beneficiary', process.execPath, ['tests/work/decision-queue-beneficiary-runtime.mjs']],
   ['historical person erasure', process.execPath, ['tests/work/historical-runtime.mjs']],
@@ -48,6 +49,7 @@ const checks = [
   ['adoption and recovery', process.execPath, ['tests/adoption/runtime.mjs']],
   ['coexistence and imported erasure', process.execPath, ['tests/adoption/runtime.mjs'], { LINEN_ADOPTION_HISTORIC: '1' }],
   ['browser journeys', process.execPath, ['tests/ui/run.mjs']],
+  ['pending person browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/pending-person-browser.mjs']],
   ['native connected provider journeys', process.execPath, ['tests/ui/connected-run.mjs']],
   ['connection and authority setup', process.execPath, ['tests/ui/setup-run.mjs']],
 ]

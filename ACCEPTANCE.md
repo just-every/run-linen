@@ -4,7 +4,7 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 138 clauses (131 in the contract plus F1–F7), 11 done, 90
+Current count: 139 clauses (132 in the contract plus F1–F7), 12 done, 90
 partial and 37 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
@@ -92,6 +92,7 @@ test, or the gap.
 | **CATALOG-003 Fulfilment task plans** | A software request creates an approval, an automated licence assignment and a manual configuration task; the automated step fails and the request stays open with the failure owned. | `src/features/work/requests.ts` (obligations); `src/features/execution/plans.ts`; `tests/ui/connected-request.mjs`. No team task templates. | partial |
 | **CATALOG-004 Bundles and kits** | Request the bundle; see one approval, five child fulfilments, and the bundle complete only when all children verify. | No bundles. | missing |
 | **CATALOG-005 Software requests installed through MDM** | (1) an employee requests Visio in Slack, the manager approves and Intune installs it through the install group; the request stays "effect submitted" until the laptop's inventory shows Visio, then completes; (2) a Jamf install that fails on one Mac leaves the request open with the failure task owned by the fulfilment group; (3) a 30-day Tableau lease ends with the app uninstalled, absent on the next inventory and the seat returned to ASSET-006's pool; (4) a request with no free seat waits without installing; (5) a request for Visio on a Mac is refused at request time with the reason. | `src/features/work/requests.ts`; `src/features/execution/verification.ts`. Software is a catalog kind fulfilled as an access grant; no MDM app binding, install-group assignment, installed-inventory verification, deployment failure task or lease uninstall. | partial |
+| **CATALOG-006 Requests for pending people** | Review name, email, start date and team without creating an account; hold laptop and Figma services with a reason and no fulfilment duties/reservations; bind by authenticated email, release through normal fulfilment and show the person their request; edit or withdraw an unbound person, cancelling their request; retain attributed audits. | `tests/work/pending-person-runtime.mjs`: real D1/workerd and native email-link proof, mail delivery fixture only. `tests/ui/pending-person-browser.mjs`: create/edit, held services, password sign-in, release, employee readback and withdrawal at 1440/390. No live provider delivery or SSO claim. | done |
 
 ### Agent workspace and ticket operations
 

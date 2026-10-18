@@ -33,12 +33,14 @@ const sameName = (name: string, full: string) => {
 };
 /** The person the request's recorded context names when that is not the account it is recorded for, else null. */
 export function namedOther(work: WorkRecord, personName: (id: unknown) => string) {
+  if (work.pending_person_id) return null;
   const person = named(requestContext(work).requestedFor);
   return person && !sameName(person, personName(work.beneficiary_id)) ? person : null;
 }
 
 /** The person a request is for: the person its context names, else the account it is recorded for. */
 export function requestFor(work: WorkRecord, personName: (id: unknown) => string) {
+  if (work.pending_person_id) return named(requestContext(work).requestedFor) ?? work.beneficiary_name ?? "Person waiting for an account";
   return namedOther(work, personName) ?? personName(work.beneficiary_id);
 }
 

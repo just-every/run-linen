@@ -31,6 +31,7 @@ export async function upsertPerson(
       "person_input",
       "Stable source identity, name and valid source timestamps required",
     );
+  if(input.source==='pending-reviewed')throw new ApiError(422,'reserved_person_source','Use the reviewed pending-person route');
   const reviewsManager = Object.hasOwn(input, 'managerId');
   if (reviewsManager) permit(ctx, ['owner','hr']);
   if (input.managerId && !(await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId,input.managerId).first()))
@@ -220,6 +221,8 @@ export async function moveAsset(
       "custody_person_conflict",
       "Receipt/return must match assigned person",
     );
+  if(['reserve','assign'].includes(input.command) && await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state<>'bound'").bind(ctx.principal.workspaceId,input.personId).first())
+    throw new ApiError(409,'pending_person_unbound','Stock is held until this pending person authenticates their account');
   const state = {
     reserve: "reserved",
     assign: "assigned",

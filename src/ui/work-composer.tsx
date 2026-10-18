@@ -4,6 +4,7 @@ import { useMutation, useRemote, useSession } from "./state";
 import { Icon } from "./icons";
 import { ErrorNotice, Notice } from "./primitives";
 import { draftKey, readDraft, writeDraft } from "./drafts";
+import type { PendingPerson } from "./pending-people";
 export function Composer({
   workId,
   onSent,
@@ -27,7 +28,14 @@ export function Composer({
   // The service team can start a request for another person's account; a service chosen for it is theirs.
   const members = useRemote<RecordValue[]>(privateAllowed && !workId ? "/members" : null),
     others = (members.data ?? []).filter((m) => m.active && m.id !== session.user.id).sort((a, b) => text(a.name).localeCompare(text(b.name))),
-    [forId, setForId] = useState("");
+    pendingPeople = useRemote<{items: PendingPerson[]}>(privateAllowed && !workId ? "/pending-people" : null),
+    [forId, setForId] = useState(() => {
+      const pending = new URLSearchParams(typeof location === "undefined" ? "" : location.hash.split("?")[1]).get("pending");
+      return pending ? `pending:${pending}` : "";
+    }),
+    [catalogIds, setCatalogIds] = useState<string[]>([]),
+    pendingId = forId.startsWith("pending:") ? forId.slice(8) : null,
+    catalog = useRemote<{items: RecordValue[]}>(pendingId ? "/catalog" : null);
   const [savedDraftKey, setSavedDraftKey] = useState<string | null>(null);
   const [draftError, setDraftError] = useState(false);
   useEffect(() => {
@@ -72,7 +80,7 @@ export function Composer({
             title: body.trim().split("\n")[0].slice(0, 150),
             body,
             deduplicationKey: key.current,
-            ...(forId ? { beneficiaryId: forId } : {}),
+            ...(pendingId ? { pendingPersonId: pendingId, catalogIds } : forId ? { beneficiaryId: forId } : {}),
           },
     );
     if (!result) return;
@@ -111,6 +119,7 @@ export function Composer({
     }
     updateDraft("", visibility, "");
     setForId("");
+    setCatalogIds([]);
     key.current = crypto.randomUUID();
     onSent();
     if (!workId) location.hash = `/work/${target}`;
@@ -171,15 +180,18 @@ export function Composer({
             Remove file
           </button>
         )}
-        {!workId && Boolean(others.length) && (
+        {!workId && privateAllowed && (
           <label className="visibility-picker">
             <Icon name="user" />
-            <select aria-label="Request for" value={forId} onChange={(event) => setForId(event.target.value)}>
+            <select aria-label="Request for" value={forId} onChange={(event) => {setForId(event.target.value); setCatalogIds([]);}}>
               <option value="">For me</option>
               {others.map((m) => (
                 <option key={text(m.id)} value={text(m.id)}>
                   For {text(m.name)}
                 </option>
+              ))}
+              {pendingPeople.data?.items.filter(p => p.state === "pending").map(p => (
+                <option key={p.id} value={`pending:${p.id}`}>For {p.name} · waiting for account</option>
               ))}
             </select>
           </label>
@@ -207,6 +219,21 @@ export function Composer({
           <Icon name="arrow" />
         </button>
       </div>
+      {!workId && privateAllowed && <p><a href="#/lifecycle">Add a person without an account</a></p>}
+      {pendingId && <>
+        <Notice>These services will wait until this person signs in with their reviewed work email.</Notice>
+        <fieldset className="checkbox-group">
+          <legend>Services to prepare</legend>
+          {catalog.data?.items.map(service => <label className="checkbox-field" key={text(service.id)}>
+            <input type="checkbox" value={text(service.id)} checked={catalogIds.includes(text(service.id))}
+              onChange={event => setCatalogIds(ids => event.target.checked ? [...ids, text(service.id)] : ids.filter(id => id !== service.id))} />
+            <span>{text(service.name)}</span>
+          </label>)}
+          {catalog.data && !catalog.data.items.length && <p>No catalog services are available yet. Add them in Connections &amp; setup before sending this request.</p>}
+        </fieldset>
+        <ErrorNotice error={catalog.error} retry={catalog.refresh} />
+      </>}
+      <ErrorNotice error={pendingPeople.error} retry={pendingPeople.refresh} />
       {visibility === "private" && (
         <small>
           This note is hidden from employees without service-team access.
