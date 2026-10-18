@@ -139,6 +139,10 @@ async function reasonFor(ctx: AdoptionContext, r: NativeRecord) {
         if (!['public', 'private'].includes(String(r.row.visibility)))
             return 'unknown_privacy';
     }
+    if (r.table === 'work_pending_people' && !['pending', 'bound', 'withdrawn'].includes(String(r.row.state)))
+        return 'unknown_state';
+    if (r.table === 'work_pending_services' && !['held', 'released', 'cancelled'].includes(String(r.row.state)))
+        return 'unknown_state';
     if (r.table === 'work_records' && !['open', 'paused', 'closed', 'cancelled'].includes(String(r.row.state)))
         return 'unknown_state';
     return null;
@@ -262,7 +266,7 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
     const privacy=await reconcileImportedTombstones(ctx,runId);if(privacy.pending.length){await ctx.env.DB.prepare("UPDATE adoption_imports SET state='erasure_pending' WHERE workspace_id=? AND id=?").bind(w,runId).run();return {id:runId,state:'erasure_pending',pendingErasures:privacy.pending}}
     // Each supported domain port owns its own authority and invariants; grants are permanently excluded.
     const pending = (await ctx.env.DB.prepare("SELECT * FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state='history_only' ORDER BY created_at,id").bind(w, runId).all<any>()).results;
-    const priority = ['work_people', 'work_records', 'work_calendars', 'work_catalog', 'work_assets', 'work_knowledge', 'work_messages', 'work_attachments', 'work_custody', 'work_lifecycle', 'work_fulfilments', 'work_commitments', 'work_obligations', 'work_article_versions', 'svc_records', 'svc_events', 'execution_plans', 'execution_operations', 'execution_attempts', 'execution_receipts', 'execution_verifications', 'execution_decisions', 'intelligence_commitments', 'intelligence_versions', 'intelligence_observations', 'intelligence_events', 'intelligence_research', 'intelligence_attempts', 'intelligence_engineering_jobs', 'intelligence_capabilities', 'intelligence_reuse', 'intelligence_simplifications'];
+    const priority = ['work_people', 'work_pending_people', 'work_records', 'work_calendars', 'work_catalog', 'work_assets', 'work_knowledge', 'work_messages', 'work_attachments', 'work_custody', 'work_lifecycle', 'work_fulfilments', 'work_commitments', 'work_obligations', 'work_pending_services', 'work_article_versions', 'svc_records', 'svc_events', 'execution_plans', 'execution_operations', 'execution_attempts', 'execution_receipts', 'execution_verifications', 'execution_decisions', 'intelligence_commitments', 'intelligence_versions', 'intelligence_observations', 'intelligence_events', 'intelligence_research', 'intelligence_attempts', 'intelligence_engineering_jobs', 'intelligence_capabilities', 'intelligence_reuse', 'intelligence_simplifications'];
     pending.sort((a, b) => (priority.indexOf(a.table_name) < 0 ? 999 : priority.indexOf(a.table_name)) - (priority.indexOf(b.table_name) < 0 ? 999 : priority.indexOf(b.table_name)));
     for (const h of pending) {
         // Prior import blobs are opaque nested archives. They cannot be certified
@@ -303,6 +307,14 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
         ;
         await ctx.env.DB.prepare('UPDATE adoption_history SET state=?,reason=? WHERE workspace_id=? AND id=?').bind(result.state, result.reason || null, w, h.id).run();
     }
+    // Account bindings never survive workspace import. Keep source 'bound' only
+    // while historical fulfilments materialize under the hold triggers, then show
+    // these people as pending until a fresh authenticated account proves its email.
+    await ctx.env.DB.prepare(`UPDATE work_pending_people SET state='pending',bound_at=NULL WHERE workspace_id=? AND state='bound'
+      AND EXISTS(SELECT 1 FROM work_restore_records restored WHERE restored.workspace_id=work_pending_people.workspace_id
+        AND restored.table_name='work_pending_people' AND restored.record_id=work_pending_people.id)
+      AND EXISTS(SELECT 1 FROM work_people p WHERE p.workspace_id=work_pending_people.workspace_id AND p.id=work_pending_people.id AND p.member_id IS NULL)`)
+      .bind(w).run();
     const permittedHistory = [...historyOnly, 'identities', 'workspace'];
     const remaining = await ctx.env.DB.prepare(`SELECT COUNT(*) n FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state NOT IN ('restored','erased') AND table_name NOT IN (${permittedHistory.map(()=>'?').join(',')})`).bind(w, runId,...permittedHistory).first<{n:number}>();
     const state = remaining?.n ? 'history_only' : 'restored';

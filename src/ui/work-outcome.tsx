@@ -7,8 +7,9 @@ import { Badge, ErrorNotice, Facts, Loading, Notice } from "./primitives";
 import { ActionForm } from "./forms";
 import { namedOther } from "./request-facts";
 import type { WorkRecord } from "./work";
+import type { PendingPerson } from "./pending-people";
 
-export function WorkOutcome({ work, onChanged }: { work: WorkRecord; onChanged?: () => void }) {
+export function WorkOutcome({ work, onChanged, pendingPerson }: { work: WorkRecord; onChanged?: () => void; pendingPerson?: PendingPerson | null }) {
   const personName = usePeopleLabels(),
     workId = work.id,
     // A service is recorded only for the account the request is for, and only while the request is open.
@@ -62,10 +63,10 @@ export function WorkOutcome({ work, onChanged }: { work: WorkRecord; onChanged?:
       {Boolean(catalog.data?.items.length) && !closed && named && (
         <Notice>
           <strong>A known service can’t be chosen here.</strong>
-          <p>This request names {named}, but it is recorded for {personName(work.beneficiary_id)}. Linen records a service only for the account a request is for, so no service was recorded. Start a request for {named}’s own account, or {named} can ask from it; a person without an account can’t have a service recorded yet.</p>
+          <p>This request names {named}, but it is recorded for {personName(work.beneficiary_id)}. Start a request for their account, or add them in <a href="#/lifecycle">People</a> if they are waiting for an account, then request their services there.</p>
         </Notice>
       )}
-      {Boolean(catalog.data?.items.length) && !closed && !named && (
+      {Boolean(catalog.data?.items.length) && !closed && !named && pendingPerson?.state !== "pending" && (
         <ActionForm
           title="Or choose a known service"
           path={`/work/${workId}/fulfilment`}

@@ -14,6 +14,12 @@ export function references(record: NativeRecord): Reference[] {
         if (typeof key === 'string' && key && !key.startsWith('erased') && key !== '[erased]')
             out.push({ fromTable: record.table, fromKey: record.key, field, targets, key });
     }
+    if (record.table === 'work_pending_people' && typeof record.row.id === 'string')
+        out.push({fromTable:record.table,fromKey:record.key,field:'id',targets:['work_people'],key:record.row.id});
+    const pendingId = record.table === 'work_pending_services' ? record.row.person_id : record.row.pending_person_id;
+    if (typeof pendingId === 'string' && pendingId)
+        out.push({fromTable:record.table,fromKey:record.key,field:record.table==='work_pending_services'?'person_id':'pending_person_id',
+            targets:['work_pending_people'],key:JSON.stringify([record.row.workspace_id,pendingId])});
     if (record.table === 'svc_events' && record.row.record_id)
         out.push({ fromTable: record.table, fromKey: record.key, field: 'record_id', targets: ['svc_records'], key: String(record.row.record_id) });
     return out;
