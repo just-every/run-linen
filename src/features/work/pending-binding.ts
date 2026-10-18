@@ -10,6 +10,10 @@ import { pendingPerson } from './pending-people';
  * member creation nor a reviewed name/email alone admits an account link. */
 export async function authenticatePendingPerson(env:Env,input:{workspaceId:string;userId:string;sessionId:string}) {
  const db=env.DB,w=input.workspaceId,uid=input.userId,t=now();
+ // Retained installations can prove their existing sessions while the additive
+ // feature migration is still being applied. Pending-person routes require it;
+ // ordinary authentication must not depend on tables that do not exist yet.
+ if(!await db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='work_pending_people'").first())return;
  const account=await db.prepare(`SELECT u.email,m.roles_json FROM users u JOIN memberships m ON m.user_id=u.id
  JOIN platform_auth_versions v ON v.user_id=u.id JOIN sessions s ON s.user_id=u.id AND s.workspace_id=m.workspace_id
  JOIN platform_auth_session_proofs proof ON proof.session_id=s.id AND proof.version=v.version
