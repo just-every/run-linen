@@ -372,6 +372,17 @@ that product and marks how close the current code is (see [Status](#status)).
   without installing; (5) a request for Visio on a Mac is refused at request
   time with the reason.
 
+- **CATALOG-006 — Requests for pending people.** A request may name a pending
+  person (a reviewed person record without an account, e.g. a new hire) as its
+  beneficiary; requested catalog services are held, with the reason shown,
+  until that person's account is bound, then released into normal fulfillment;
+  an unbound pending person can be edited or withdrawn, cancelling the request.
+  A person without review cannot be named as a beneficiary. **Acceptance
+  evidence:** submit a request naming a pending new hire; see the service held
+  with its reason; bind the account and see it released into fulfillment; edit
+  an unbound pending person; withdraw one and see its request cancelled; a
+  person without review cannot be named.
+
 ### Agent workspace and ticket operations
 
 - **DESK-001 — Queues, groups and views.** Agent groups, saved and shared views,
@@ -1599,8 +1610,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 7 | 70 | 37 | 114 |
-| All | 11 | 90 | 37 | 138 |
+| Target and push further | 7 | 70 | 38 | 115 |
+| All | 11 | 90 | 38 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1625,6 +1636,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CATALOG-003` | Fulfilment task plans | target | partial | `src/features/work/requests.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No team task templates. |
 | `CATALOG-004` | Bundles and kits | target | missing |  | No bundles. |
 | `CATALOG-005` | Software requests installed through MDM | target | partial | `src/features/work/requests.ts`, `src/features/execution/verification.ts` | Software is a catalog kind fulfilled as an access grant; no MDM app binding, install-group assignment, installed-inventory verification, deployment failure task or lease uninstall. |
+| `CATALOG-006` | Requests for pending people | target | missing |  | built by sd-linen-pending |
 | `DESK-001` | Queues, groups and views | target | partial | `src/features/work/core.ts`, `src/ui/work.tsx` | No groups, saved views, bulk actions or triage shortcuts. |
 | `DESK-002` | Classification and priority | target | partial | `src/features/work/intake-classification.ts`, `tests/work/runtime.mjs` | No categories or priority matrix. |
 | `DESK-003` | Routing and assignment | target | partial | `src/features/work/core.ts`, `src/features/intelligence/intake-execution.ts` | No rules, round-robin, load, skills or CI/service support-group routing. |

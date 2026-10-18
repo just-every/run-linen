@@ -4,8 +4,8 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 138 clauses (131 in the contract plus F1–F7), 11 done, 90
-partial and 37 missing.
+Current count: 139 clauses (132 in the contract plus F1–F7), 11 done, 90
+partial and 38 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
 checks, connected journeys, setup checks, emitted HTTP checks and intelligence
@@ -92,6 +92,7 @@ test, or the gap.
 | **CATALOG-003 Fulfilment task plans** | A software request creates an approval, an automated licence assignment and a manual configuration task; the automated step fails and the request stays open with the failure owned. | `src/features/work/requests.ts` (obligations); `src/features/execution/plans.ts`; `tests/ui/connected-request.mjs`. No team task templates. | partial |
 | **CATALOG-004 Bundles and kits** | Request the bundle; see one approval, five child fulfilments, and the bundle complete only when all children verify. | No bundles. | missing |
 | **CATALOG-005 Software requests installed through MDM** | (1) an employee requests Visio in Slack, the manager approves and Intune installs it through the install group; the request stays "effect submitted" until the laptop's inventory shows Visio, then completes; (2) a Jamf install that fails on one Mac leaves the request open with the failure task owned by the fulfilment group; (3) a 30-day Tableau lease ends with the app uninstalled, absent on the next inventory and the seat returned to ASSET-006's pool; (4) a request with no free seat waits without installing; (5) a request for Visio on a Mac is refused at request time with the reason. | `src/features/work/requests.ts`; `src/features/execution/verification.ts`. Software is a catalog kind fulfilled as an access grant; no MDM app binding, install-group assignment, installed-inventory verification, deployment failure task or lease uninstall. | partial |
+| **CATALOG-006 Requests for pending people** | Submit a request naming a pending new hire; see the service held with its reason; bind the account and see it released into fulfillment; edit an unbound pending person; withdraw one and see its request cancelled; a person without review cannot be named. | built by sd-linen-pending | missing |
 
 ### Agent workspace and ticket operations
 
