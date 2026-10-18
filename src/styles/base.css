@@ -1,5 +1,6 @@
-/* Linen's shared elements (SPEC §2): type, controls, badges, notices, facts and the cloth.
-   Every value comes from tokens.css; the screens' layout lives in app.css. */
+/* Linen's shared app elements (app pick, 17 Oct 2026): type, buttons, badges, notices, facts and empty states.
+   Every colour, face and radius is a token from /rer-theme.css; the shell and screens live in shell.css,
+   workbench.css and app.css. Noto Sans carries the app; Source Serif 4 at 800 is for page titles and the wordmark. */
 *,
 *::before,
 *::after {
@@ -7,13 +8,15 @@
 }
 html {
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--sky);
 }
 body {
   margin: 0;
-  background: var(--paper);
+  min-height: 100vh;
+  background: var(--app-ground);
   color: var(--ink);
-  font: 400 17px/26px var(--serif);
-  font-optical-sizing: auto;
+  font: 400 14px/1.45 var(--font-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -22,21 +25,18 @@ h2,
 h3 {
   margin: 0;
   color: var(--ink);
-  font-weight: 500;
   text-wrap: balance;
 }
 h1 {
-  font-size: 56px;
-  line-height: 62px;
-  letter-spacing: -0.01em;
+  font: 800 48px/1.05 var(--font-head);
+  letter-spacing: -0.03em;
 }
 h2 {
-  font-size: 28px;
-  line-height: 34px;
+  font: 700 18px/1.3 var(--font-body);
+  letter-spacing: -0.005em;
 }
 h3 {
-  font-size: 20px;
-  line-height: 28px;
+  font: 650 15px/1.35 var(--font-body);
 }
 p {
   margin: 0;
@@ -71,8 +71,9 @@ button:disabled {
   opacity: 0.55;
 }
 :focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 3px;
+  outline: 2px solid var(--rer-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 time,
 .tabular {
@@ -80,197 +81,218 @@ time,
 }
 code,
 pre {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
 }
 svg {
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.6;
+  stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
   flex-shrink: 0;
 }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .eyebrow {
   display: block;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 20px;
+  color: var(--denim);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 .lead {
-  color: var(--ink-2);
-  font-size: 20px;
-  line-height: 30px;
+  color: var(--body);
+  font-size: 15px;
+  line-height: 1.55;
 }
 
-/* The madder running stitch: a 2 px dashed thread under one phrase, drawn per line box. */
-.stitch {
-  background: var(--stitch) repeat-x left 0 bottom 0.02em / 12px 4px;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-
-/* The flax cloth: a frayed swatch behind content (hero, closing band, auth, empty states). */
-.cloth {
-  position: relative;
-  isolation: isolate;
-}
-.cloth::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  /* The cloth image is transparent around its fringe; the flax inset under it is the fallback. */
-  background:
-    var(--cloth-image, url("/design/cloth-card.webp")) center / 100% 100% no-repeat,
-    linear-gradient(var(--flax), var(--flax)) center / calc(100% - 36px) calc(100% - 36px) no-repeat;
-  filter: drop-shadow(0 10px 16px rgba(14, 28, 51, 0.07));
-}
-
-/* Buttons: ink pill, outline pill and text button. */
+/* Buttons: marigold is the one action colour; secondary is a white button with a quiet hairline. */
 .action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0 22px;
-  border: 1px solid var(--ink);
-  border-radius: 999px;
-  background: transparent;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-field);
+  background: var(--surface);
   color: var(--ink);
-  font-size: 17px;
+  font-size: 14px;
+  font-weight: 600;
   line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
 }
 .action.primary {
-  background: var(--ink);
-  color: var(--card);
+  border-color: var(--marigold-bright);
+  background: var(--marigold-bright);
+  color: var(--ink);
 }
 .action.primary:hover:not(:disabled) {
-  background: #1c2c47;
+  border-color: var(--marigold-hover);
+  background: var(--marigold-hover);
 }
 .action.secondary:hover:not(:disabled) {
-  background: rgba(14, 28, 51, 0.05);
+  border-color: var(--denim);
+  background: var(--sky);
 }
 .action.small {
-  min-height: 36px;
-  padding: 0 18px;
-  font-size: 16px;
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
 }
 .action .icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 .text-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-height: 32px;
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ink);
+  color: var(--denim-ink);
+  font-weight: 600;
   text-decoration: none;
 }
 .text-button:hover:not(:disabled) {
   text-decoration: underline;
 }
 .text-button .icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 .button-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 16px;
+  gap: 10px 12px;
 }
 
-/* Badges and chips: pill 28 px, 16 px icon, label serif 15. */
+/* Status pills: blue while work moves, green when verified, grey when finished, red only for the exception. */
 .badge,
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 28px;
-  padding: 0 12px;
-  border-radius: 999px;
-  font-size: 15px;
-  line-height: 20px;
+  min-height: 26px;
+  padding: 0 11px;
+  border-radius: var(--radius-chip);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
   white-space: nowrap;
   width: max-content;
   max-width: 100%;
 }
 .badge .icon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   stroke-width: 2;
 }
+.badge-text {
+  display: inline-block;
+}
+.badge-text::first-letter {
+  text-transform: uppercase;
+}
 .tone-ok {
-  background: var(--ok-bg);
-  color: var(--ok);
+  background: var(--green-tint);
+  color: var(--green-ink);
 }
 .tone-wait {
-  background: var(--wait-bg);
-  color: var(--wait);
+  background: var(--app-select);
+  color: var(--denim-ink);
 }
 .tone-done {
-  background: var(--done-bg);
-  color: var(--done);
+  background: var(--app-done);
+  color: var(--muted);
 }
 .tone-alert {
-  background: var(--alert-bg);
-  color: var(--alert);
+  background: var(--red-tint);
+  color: var(--red-ink);
 }
 .chip {
-  background: var(--tile);
-  color: var(--ink-2);
+  background: var(--chip);
+  color: var(--body);
+}
+.dot {
+  display: inline-block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--marigold);
+}
+.dot.tone-ok {
+  background: var(--green);
+}
+.dot.tone-alert {
+  background: var(--red);
+}
+.dot.tone-wait {
+  background: var(--marigold);
 }
 
-/* Notices: a card with a 2 px madder thread on its left edge. */
+/* Notices: a white panel with a denim edge; errors take the red tint. */
 .notice {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: flex-start;
-  margin: 16px 0;
-  padding: 18px 20px 18px 22px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-card);
-  background: var(--card) var(--stitch-v) repeat-y 8px 12px / 4px 12px;
-  box-shadow: var(--shadow-card);
-  color: var(--ink-2);
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--denim);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  color: var(--body);
 }
 .notice > .icon {
-  width: 22px;
-  height: 22px;
-  margin-top: 2px;
-  color: var(--ink);
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: var(--denim);
 }
 .notice > div {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 .notice strong {
   color: var(--ink);
-  font-weight: 500;
+  font-weight: 650;
 }
 .notice a {
-  color: var(--ink);
+  color: var(--denim-ink);
+  font-weight: 600;
+}
+.notice.warning {
+  border-left-color: var(--marigold);
 }
 .notice.error {
-  border-color: #ebc9c1;
-  background: var(--alert-bg);
-  color: var(--alert);
+  border-color: var(--red-line);
+  border-left-color: var(--red);
+  background: var(--red-tint);
+  color: var(--red-ink);
 }
 .notice.error > .icon,
 .notice.error strong {
-  color: var(--alert);
+  color: var(--red-ink);
 }
 
-/* Facts: a two-column definition list. */
+/* Facts: a two-column definition list with hairlines. */
 .facts {
   display: grid;
   gap: 0;
@@ -280,84 +302,111 @@ svg {
   display: grid;
   grid-template-columns: minmax(120px, 34%) minmax(0, 1fr);
   gap: 16px;
-  padding: 10px 0;
-  border-top: 1px solid var(--rule);
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
 }
 .facts > div:first-child {
   border-top: 0;
 }
 .facts dt {
   color: var(--muted);
-  font-size: 15px;
-  line-height: 22px;
+  font-size: 13px;
+  line-height: 20px;
 }
 .facts dd {
   margin: 0;
   color: var(--ink);
-  font-size: 17px;
-  line-height: 24px;
+  font-size: 14px;
+  line-height: 20px;
   overflow-wrap: anywhere;
 }
 
-/* Empty: a small piece of frayed flax holding a title and one line. */
+/* Empty: a quiet white panel with a title and one line. */
 .empty {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 6px;
   margin: 8px 0;
-  padding: 56px 48px;
+  padding: 40px 28px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-panel);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
   text-align: center;
 }
 .empty h2 {
-  font-size: 24px;
-  line-height: 30px;
+  font: 800 22px/1.2 var(--font-head);
+  letter-spacing: -0.015em;
 }
 .empty p {
   max-width: 46ch;
-  color: var(--ink-2);
+  color: var(--body);
 }
 
 /* Disclosed evidence and recorded details. */
 .evidence {
   margin: 12px 0 0;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--line);
 }
 .evidence > summary {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  color: var(--ink-2);
-  font-size: 16px;
+  gap: 8px;
+  min-height: 40px;
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 600;
 }
 .evidence > summary .icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 .evidence pre {
   max-height: 320px;
   margin: 0 0 12px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   overflow: auto;
-  border-radius: var(--radius-input);
-  background: var(--input);
-  color: var(--ink-2);
+  border-radius: var(--radius-field);
+  background: var(--sky);
+  color: var(--body);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* Every disclosure carries the same chevron (a same-origin file), turned up when open. */
+details > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::after {
+  content: "";
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  background: url("/design/chevron-down.svg") center / 16px no-repeat;
+  transition: transform 0.15s;
+}
+details[open] > summary::after {
+  transform: rotate(180deg);
 }
 
 .loading {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 20px 0;
+  gap: 10px;
+  padding: 16px 0;
   color: var(--muted);
 }
 .loading-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--madder);
+  background: var(--marigold);
   animation: breathe 1.4s ease-in-out infinite;
 }
 @keyframes breathe {
@@ -380,10 +429,10 @@ svg {
   top: 10px;
   left: 16px;
   z-index: 100;
-  padding: 10px 20px;
-  border-radius: 999px;
+  padding: 8px 16px;
+  border-radius: var(--radius-field);
   background: var(--ink);
-  color: var(--card);
+  color: var(--surface);
 }
 .skip-link:not(:focus) {
   clip-path: inset(50%);
@@ -392,7 +441,18 @@ svg {
   overflow: hidden;
   padding: 0;
 }
-/* Focus moved to a region for screen readers after navigation shows no ring; its controls still do. */
+/* Focus moved to a region after navigation shows no ring; its controls still do. */
 [tabindex="-1"]:focus {
   outline: none;
+}
+.boot {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  min-height: 100vh;
+  color: var(--ink);
+}
+.boot > .notice {
+  max-width: 520px;
 }

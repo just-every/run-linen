@@ -67,37 +67,25 @@ export function Badge({ value }: { value: unknown }) {
   return (
     <span className={`badge tone-${tone} status-${key}`}>
       <Icon name={icon} size={16} />
-      {humanize(value).toLowerCase()}
+      <span className="badge-text">{humanize(value).toLowerCase()}</span>
     </span>
   );
 }
-/** A heading whose last two words carry the madder running stitch. */
-export function Stitched({ children }: { children: string }) {
-  const words = children.trim().split(/\s+/);
-  if (words.length < 2) return <span className="stitch">{children}</span>;
-  return (
-    <>
-      {words.slice(0, -2).join(" ")}{words.length > 2 ? " " : ""}
-      <span className="stitch">{words.slice(-2).join(" ")}</span>
-    </>
-  );
-}
+/** A page head: an optional eyebrow, the page name in the heavy serif, then its lead and badge. */
 export function Hero({
   eyebrow,
   title,
   children,
-  stitch = true,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   children?: ReactNode;
-  stitch?: boolean;
 }) {
   return (
     <section className="hero">
       <div className="hero-copy">
-        <span className="eyebrow">{eyebrow}</span>
-        <h1>{stitch ? <Stitched>{title}</Stitched> : title}</h1>
+        {eyebrow && <span className="eyebrow">{eyebrow}</span>}
+        <h1>{title}</h1>
         {children}
       </div>
     </section>
@@ -111,7 +99,7 @@ export function Empty({
   children: ReactNode;
 }) {
   return (
-    <div className="empty cloth">
+    <div className="empty">
       <h2>{title}</h2>
       <p>{children}</p>
     </div>

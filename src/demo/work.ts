@@ -13,13 +13,13 @@ export async function seedDemoWork(ctx: WorkContext, requests: string[][], peopl
     'The starter checklist is ready. Laptop collection and the customer workspace are coordinated for the recorded first day.',
     'Read-only revenue access is assessed. The reporting owner is checking the limited access period before it is granted.',
     'The meeting room camera fault is assessed. The repair-window choice is ready in Needs your decision.',
-    'Oliver collected the replacement charger from Brisbane reception. The damaged charger was returned for disposal.',
+    'Oliver collected the replacement charger from the Denver front desk. The damaged charger was returned for disposal.',
     'The finance export incident is routed to Business reporting. The owner is comparing quarter-sized and smaller exports.',
     'Noah collected the repaired laptop and returned the loan device. Reception recorded both handovers.',
     'The shared mailbox request is assessed. The collaboration owner has the three-person access scope and will coordinate the next step.',
     'The guest network is back to normal. Follow-up checks on level two confirmed browsing and the workshop connection are working.',
     'The roster and unused seats are checked. The renewal term is ready for a business decision before any commitment.',
-    'The project lead confirmed retention. The Harbour workspace was archived and collaborator access removed in the sample history.',
+    'The project lead confirmed retention. The Harbor workspace was archived and collaborator access removed in the sample history.',
   ];
   const resolved = new Set([5, 7, 9, 11]);
   // Conversations are independent; keep each domain transition ordered within

@@ -58,11 +58,7 @@ export function DecisionSpace({ selectedId }: { selectedId?: string }) {
             record &&
             packet && (
               <>
-                <Hero
-                  eyebrow="A choice that needs you"
-                  title={text(packet.title)}
-                  stitch={false}
-                >
+                <Hero eyebrow="A choice that needs you" title={text(packet.title)}>
                   <Badge value={packet.state} />
                   <p className="lead">{text(packet.impact)}</p>
                 </Hero>
@@ -162,12 +158,9 @@ export function DecisionSpace({ selectedId }: { selectedId?: string }) {
           )
         ) : (
           <>
-            <Hero
-              eyebrow="Needs your decision"
-              title="Just the choices that need you."
-            >
+            <Hero eyebrow="Needs your decision" title="Decisions">
               <p className="lead">
-                A clear recommendation, its consequences, and the facts that
+                Just the choices that need you. A clear recommendation, its consequences, and the facts that
                 matter. Routine authorized work carries on.
               </p>
             </Hero>

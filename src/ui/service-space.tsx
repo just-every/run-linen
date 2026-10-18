@@ -18,14 +18,11 @@ import type { DomainRecord } from "./decisions";
 import { ServiceActions, NewDecision } from "./service-actions";
 const labels: Record<string, [string, string]> = {
   services: ["Service ownership", "Keep the work behind the service in view."],
-  incidents: ["Shared interruptions", "Recovery, person by person."],
-  changes: ["Changes & releases", "Make change with care."],
+  incidents: ["Incidents", "Shared interruptions: recovery, person by person."],
+  changes: ["Changes", "Changes and releases, made with care."],
   suppliers: ["Suppliers & commitments", "Keep the handoff accountable."],
   problems: ["Causes & prevention", "Learn what keeps coming back."],
-  "software-assets": [
-    "Software & entitlements",
-    "Useful access. Accountable cost.",
-  ],
+  "software-assets": ["Software", "Software and entitlements: useful access, accountable cost."],
 };
 export function ServiceSpace({
   section,
@@ -173,14 +170,14 @@ export function ServiceSpace({
           {label[0]}
         </a>
       )}
-      <Hero eyebrow={label[0]} title={d ? text(d.title ?? d.name) : label[1]} stitch={!d}>
+      <Hero eyebrow={d ? label[0] : undefined} title={d ? text(d.title ?? d.name) : label[0]}>
         <p className="lead">
           {d
             ? text(
                 d.impact ?? d.description ?? d.symptoms,
                 "Details and observations are recorded below.",
               )
-            : "Facts, authority and independent outcomes stay connected. Missing evidence remains unknown."}
+            : label[1] + " Facts, authority and independent outcomes stay connected. Missing evidence remains unknown."}
         </p>
         {d && (
           <Badge value={d.state ?? d.status ?? d.lifecycle ?? "recorded"} />

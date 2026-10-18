@@ -3,18 +3,18 @@ import { date, text, type RecordValue } from "./api";
 import { useRemote, useSession } from "./state";
 import { ActionForm } from "./forms";
 import { Empty, ErrorNotice, Facts, Hero, Loading } from "./primitives";
-export function KnowledgeSpace() {
-  const [query, setQuery] = useState(""),
-    [search, setSearch] = useState(""),
+export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
+  const [query, setQuery] = useState(initial),
+    [search, setSearch] = useState(initial),
     list = useRemote<{ items: RecordValue[] }>(
       `/knowledge?q=${encodeURIComponent(search)}`,
     ),
     { session } = useSession();
   return (
     <>
-      <Hero eyebrow="Useful knowledge" title="An answer with a source.">
+      <Hero title="Knowledge">
         <p className="lead">
-          Only reviewed, current articles within your permissions appear here.
+          An answer with a source. Only reviewed, current articles within your permissions appear here.
           If the answer does not fit, keep its context in a request.
         </p>
       </Hero>

@@ -97,7 +97,7 @@ export async function namedApproverJourney(browser, page, api, base, serviceId, 
     await approver.getByLabel('Work email').fill('morgan-approver@example.test');
     await approver.getByLabel('Password', { exact: true }).fill('Browser-proof-approver-2026');
     await approver.getByRole('button', { name: 'Sign in', exact: true }).click();
-    await approver.getByRole('heading', { name: 'Make room for good work.' }).waitFor();
+    await approver.getByRole('heading', { name: 'Requests', exact: true }).waitFor();
     await approver.goto(base + '/app#/decisions/' + decision.id);
     await approver.getByRole('radio').first().check();
     await approver.getByLabel('Reason for your decision').fill('Keep the current coverage while demand is unknown.');

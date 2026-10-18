@@ -40,12 +40,9 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
   }
   return (
     <>
-      <Hero
-        eyebrow="Ownership & portability"
-        title="Bring the history. Keep your choices."
-      >
+      <Hero eyebrow="Ownership & portability" title="Existing desk & backups">
         <p className="lead">
-          Check what an import means before you adopt it. Restored history never
+          Bring the history. Keep your choices. Check what an import means before you adopt it. Restored history never
           gives Linen permission to act on its own.
         </p>
       </Hero>

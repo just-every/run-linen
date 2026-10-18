@@ -102,16 +102,9 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
   ];
   return (
     <>
-      <Hero
-        eyebrow="People, with care"
-        title={
-          selectedId
-            ? "Every obligation stays in view."
-            : "A good start. A careful handover."
-        }
-      >
+      <Hero eyebrow={selectedId ? "People" : "Joining, moving and leaving"} title={selectedId ? "Every obligation stays in view." : "People"}>
         <p className="lead">
-          Joining, moving and leaving have different responsibilities. Access
+          {!selectedId && "A good start. A careful handover. "}Joining, moving and leaving have different responsibilities. Access
           and physical custody remain separate.
         </p>
       </Hero>
@@ -315,9 +308,9 @@ export function AssetsSpace() {
     people = useRemote<{ items: RecordValue[] }>("/people");
   return (
     <>
-      <Hero eyebrow="Devices & custody" title="Know where things stand.">
+      <Hero eyebrow="Devices & custody" title="Devices">
         <p className="lead">
-          A device record is not a handoff. Keep source identity, actual receipt
+          Know where things stand. A device record is not a handoff. Keep source identity, actual receipt
           and remaining responsibility distinct.
         </p>
       </Hero>

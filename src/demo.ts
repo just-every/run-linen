@@ -68,20 +68,20 @@ export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: stri
   ['Jordan cannot connect to the office VPN', 'Jordan can sign in, but the VPN disconnects after a minute on the office Wi-Fi. Started this morning after the laptop update.', 'incident'],
   ['Prepare Samira’s first day', `Samira joins the customer team on ${day(4).slice(0, 10)}. Please prepare a laptop, email and the shared support workspace.`, 'request'],
   ['Theo needs access to the revenue dashboard', 'Theo is covering the weekly operations report. Read-only dashboard access is enough until the end of this month.', 'request'],
-  ['Maya’s meeting room camera is intermittent', 'The camera in Banksia cuts out during video calls. Maya has tried a second cable; audio still works.', 'incident'],
-  ['Replace Oliver’s damaged laptop charger', 'Oliver’s USB-C charger has a damaged cable. A replacement can be collected from Brisbane reception tomorrow.', 'request'],
+  ['Maya’s meeting room camera is intermittent', 'The camera in the Aspen room cuts out during video calls. Maya has tried a second cable; audio still works.', 'incident'],
+  ['Replace Oliver’s damaged laptop charger', 'Oliver’s USB-C charger has a damaged cable. A replacement can be collected from the Denver front desk tomorrow.', 'request'],
   ['Amelia’s invoice export is timing out', 'The finance export completes for small date ranges but times out for the full quarter. Amelia needs it for Friday’s close.', 'incident'],
   ['Return Noah’s loan laptop', 'Noah’s repaired laptop is ready. Arrange the handover and collect the loan device so custody stays accurate.', 'request'],
-  ['Add a shared mailbox for the workshop', 'The customer workshop needs a shared mailbox for three organisers. Keep access limited to the workshop team.', 'request'],
-  ['Guest Wi-Fi is slow in Brisbane', 'Guests on level two report slow browsing. Staff Wi-Fi is unaffected. Please compare the access points before changing settings.', 'incident'],
+  ['Add a shared mailbox for the workshop', 'The customer workshop needs a shared mailbox for three organizers. Keep access limited to the workshop team.', 'request'],
+  ['Guest Wi-Fi is slow in Denver', 'Guests on level two report slow browsing. Staff Wi-Fi is unaffected. Please compare the access points before changing settings.', 'incident'],
   ['Renew the design team’s software seats', 'The design subscription renews next month. Confirm the current roster and unused seats before committing to another year.', 'request'],
-  ['Archive the completed project workspace', 'The Harbour launch has finished. Confirm retention with the project lead before removing collaborator access.', 'request'],
+  ['Archive the completed project workspace', 'The Harbor launch has finished. Confirm retention with the project lead before removing collaborator access.', 'request'],
  ]
- for (const [index, location] of ['Brisbane reception', 'Sydney equipment cupboard', 'Brisbane reception', 'Melbourne studio'].entries()) {
+ for (const [index, location] of ['Denver front desk', 'Austin supply room', 'Denver front desk', 'Portland studio'].entries()) {
   const serial = `NST-LT-${2401 + index}`
   if (!await exists('work_assets', 'serial', serial)) await acquireAsset(ctx, { serial, source: 'Demo sample · stocktake', location })
  }
- for (const [name, kind, target, capacity] of [ ['Figma design seat', 'software', 'Design workspace', 3], ['Revenue dashboard', 'access', 'Read-only revenue reports', 20], ['Loan laptop', 'device', 'Northstar loan pool', 2], ['Shared mailbox', 'access', 'Workshop organisers', 5], ['Replacement charger', 'device', 'Brisbane charger stock', 8], ['Project workspace archive', 'access', 'Project retention and access', 20] ] as const) {
+ for (const [name, kind, target, capacity] of [ ['Figma design seat', 'software', 'Design workspace', 3], ['Revenue dashboard', 'access', 'Read-only revenue reports', 20], ['Loan laptop', 'device', 'Northstar loan pool', 2], ['Shared mailbox', 'access', 'Workshop organisers', 5], ['Replacement charger', 'device', 'Denver charger stock', 8], ['Project workspace archive', 'access', 'Project retention and access', 20] ] as const) {
   if (!await exists('work_catalog', 'name', name)) await createCatalogItem(ctx, { name, kind, target, capacity, ownerId: owner.id, requiresManager: true })
  }
  for (const [title, body] of [
@@ -95,7 +95,7 @@ export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: stri
  let services = await list(db, ctx.principal, 'service')
  for (const [name, description, businessImpact] of [
   ['Team collaboration', 'Shared workspaces, email and video meetings.', 'Keeps customer and delivery teams working together.'],
-  ['Office connectivity', 'Office Wi-Fi and secure remote access.', 'Reliable access for Brisbane, Sydney and Melbourne.'],
+  ['Office connectivity', 'Office Wi-Fi and secure remote access.', 'Reliable access for Denver, Austin and Portland.'],
   ['Business reporting', 'Revenue dashboards and finance exports.', 'Timely weekly reporting and month-end close.'],
  ]) if (!services.some(s => s.data.name === name)) await create(db, ctx.principal, 'service', { name, description, businessImpact, source: 'Demo sample · service review', observedAt: day(-1), freshnessMs: 604800000 }, { visibility: 'workspace' })
  services = await list(db, ctx.principal, 'service')
@@ -103,7 +103,7 @@ export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: stri
  const decisions = await list(db, ctx.principal, 'decision')
  for (const [title, quote, impact] of [
   ['Choose the design renewal term', 'Twelve monthly seats cost $180 per month. An annual commitment saves $360, with no refund for unused seats.', 'The design roster may change after the launch.'],
-  ['Choose the Brisbane meeting room repair window', 'The replacement camera is available tomorrow. Installation needs a 45-minute room closure.', 'A morning repair would move the customer workshop to another room.'],
- ]) if (!decisions.some(d => d.data.title === title)) await newDecision(db, ctx.principal, { title, contextId: services[0].id, holderId: owner.id, holderRoles: ['owner'], quote, quoteSource: 'Demo sample · supplier planning note', terms: 'Planning only; no supplier order has been placed.', cohorts: ['Northstar team'], impact, reversibility: 'The choice can be revised before any order or change is authorised.', deadline: day(2), uncertainty: 'Supplier availability must be checked before execution.', options: [{ id: 'flexible', label: 'Keep flexibility', consequences: 'Retain the current arrangement while the team confirms its needs.' }, { id: 'commit', label: 'Commit to the proposed plan', consequences: 'Proceed with planning; any external effect still needs its own current authority.' }], recommendation: 'flexible' })
+  ['Choose the Denver meeting room repair window', 'The replacement camera is available tomorrow. Installation needs a 45-minute room closure.', 'A morning repair would move the customer workshop to another room.'],
+ ]) if (!decisions.some(d => d.data.title === title)) await newDecision(db, ctx.principal, { title, contextId: services[0].id, holderId: owner.id, holderRoles: ['owner'], quote, quoteSource: 'Demo sample · supplier planning note', terms: 'Planning only; no supplier order has been placed.', cohorts: ['Northstar team'], impact, reversibility: 'The choice can be revised before any order or change is authorized.', deadline: day(2), uncertainty: 'Supplier availability must be checked before execution.', options: [{ id: 'flexible', label: 'Keep flexibility', consequences: 'Retain the current arrangement while the team confirms its needs.' }, { id: 'commit', label: 'Commit to the proposed plan', consequences: 'Proceed with planning; any external effect still needs its own current authority.' }], recommendation: 'flexible' })
  await db.prepare('INSERT INTO platform_first_run VALUES(1,?,?) ON CONFLICT(singleton) DO NOTHING').bind(owner.id, now.getTime()).run()
 }

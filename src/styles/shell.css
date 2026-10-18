@@ -1,0 +1,409 @@
+/* The app shell (app pick, 17 Oct 2026): a 68 px white top bar (lockup, search, connection dots, account),
+   a 183 px labelled rail on the faint sky ground, the screen beside it, and flat papercut foliage in the two
+   lower corners, behind every panel and outside any scroll area. */
+
+/* Top bar */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  min-height: 68px;
+  padding: 0 28px 0 42px;
+  border-bottom: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+.brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  min-width: 172px;
+  color: var(--ink);
+  font: 800 33px/1 var(--font-head);
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+.brand .mark {
+  flex: none;
+}
+.top-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 520px;
+  min-width: 0;
+}
+.top-search .icon {
+  position: absolute;
+  left: 12px;
+  color: var(--denim);
+  pointer-events: none;
+}
+.top-search input {
+  min-height: 40px;
+  padding-left: 42px;
+  border-color: var(--line-strong);
+  border-radius: var(--radius-field);
+  background: var(--app-field);
+}
+.sync {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-left: auto;
+  color: var(--ink);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sync-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.sync-when {
+  color: var(--muted);
+}
+.sync:hover .sync-when {
+  text-decoration: underline;
+}
+.account {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 24px;
+  border-left: 1px solid var(--line-strong);
+}
+.sync + .account {
+  margin-left: 0;
+}
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 6px 4px 4px;
+  border: 0;
+  border-radius: var(--radius-field);
+  background: none;
+  text-align: left;
+}
+.profile:hover {
+  background: var(--sky);
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--denim);
+  color: var(--surface);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.who {
+  display: grid;
+  min-width: 0;
+}
+.who strong {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 650;
+}
+.who small {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
+}
+.profile .icon {
+  margin-left: 12px;
+  color: var(--denim);
+}
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  gap: 2px;
+  min-width: 250px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+.profile-menu small {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.profile-menu a,
+.profile-menu .text-button {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: none;
+}
+.profile-menu a:hover {
+  color: var(--denim-ink);
+}
+
+/* Frame: the rail and the screen */
+.frame {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 183px minmax(0, 1fr);
+  grid-template-areas: "rail main";
+  min-height: calc(100vh - 68px);
+}
+#main-content {
+  grid-area: main;
+  min-width: 0;
+  padding: 16px 16px 24px 10px;
+}
+.rail {
+  grid-area: rail;
+  position: sticky;
+  top: 68px;
+  align-self: start;
+  max-height: calc(100vh - 68px);
+  overflow-y: auto;
+  padding: 40px 10px 24px;
+  border-right: 1px solid var(--line-strong);
+  min-height: calc(100vh - 68px);
+}
+.rail ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rail a {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 48px;
+  padding: 0 12px 0 14px;
+  border-radius: var(--radius-panel);
+  color: var(--ink);
+  font-size: 15px;
+  text-decoration: none;
+}
+.rail a.active .icon {
+  color: var(--ink);
+}
+.rail a .icon {
+  color: var(--denim);
+}
+.rail a:hover {
+  background: color-mix(in srgb, var(--sky-strong) 55%, transparent);
+}
+.rail a.active {
+  background: var(--sky-strong);
+  font-weight: 650;
+}
+.rail-count {
+  margin-left: auto;
+  min-width: 26px;
+  padding: 2px 8px;
+  border-radius: var(--radius-chip);
+  background: var(--marigold-tint);
+  color: var(--ink);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.rail-count.strong {
+  background: var(--marigold-bright);
+  font-weight: 650;
+}
+.rail-more {
+  margin: 16px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.rail-more > summary {
+  min-height: 40px;
+  padding: 0 12px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.rail-more a {
+  min-height: 36px;
+  font-size: 13px;
+}
+
+/* Settings pages share a row of tabs over their heading. */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin: 0 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-strong);
+}
+.tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-field);
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.tabs a:hover {
+  background: var(--sky);
+  color: var(--ink);
+}
+.tabs a.active {
+  background: var(--sky-strong);
+  color: var(--ink);
+}
+
+/* Papercut foliage: flat vector layers, fixed to the two lower corners, under every panel. */
+.foliage {
+  position: fixed;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.foliage-left {
+  left: 0;
+  width: 186px;
+  height: 418px;
+  background-image: url("/design/foliage-left.svg");
+  background-position: left bottom;
+}
+.foliage-right {
+  right: 0;
+  width: 150px;
+  height: 182px;
+  background-image: url("/design/foliage-right.svg");
+  background-position: right bottom;
+}
+@media (max-height: 820px) {
+  .foliage-left {
+    height: 300px;
+    width: 144px;
+  }
+}
+
+/* Narrower desktops: the account keeps its avatar, the search shrinks. */
+@media (max-width: 1240px) {
+  .topbar {
+    gap: 18px;
+    padding: 0 20px;
+  }
+  .sync-when,
+  .who {
+    display: none;
+  }
+  .profile .icon {
+    margin-left: 4px;
+  }
+}
+
+/* Tablet and phone: the rail becomes a scrolling row of tabs under the bar; the foliage rests (no corner is free of text). */
+@media (max-width: 900px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    min-height: 0;
+    padding: 12px 16px;
+  }
+  .brand {
+    min-width: 0;
+    font-size: 28px;
+  }
+  .brand .mark {
+    width: 40px;
+    height: 26px;
+  }
+  .top-search {
+    order: 3;
+    flex: 1 1 100%;
+  }
+  .sync {
+    display: none;
+  }
+  .account {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .frame {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "rail" "main";
+    grid-template-rows: auto 1fr;
+  }
+  .rail {
+    position: static;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    padding: 8px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .rail > ul {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  .rail a {
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 12px;
+    white-space: nowrap;
+  }
+  .rail-more {
+    margin: 4px 0 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .rail-more > summary {
+    min-height: 32px;
+    padding: 0 12px;
+  }
+  .rail-more[open] > ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 4px;
+    padding-bottom: 6px;
+  }
+  .rail-more a {
+    min-height: 34px;
+  }
+  #main-content {
+    padding: 18px 16px 48px;
+  }
+  .foliage {
+    display: none;
+  }
+}

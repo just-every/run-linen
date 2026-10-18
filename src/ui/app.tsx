@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { request, type Session } from "./api";
 import { SessionProvider, useRemote, useSession } from "./state";
 import { SignIn } from "./auth";
-import { Icon } from "./icons";
 import { Mark } from "./Mark";
 import { ErrorNotice, Loading, Notice } from "./primitives";
 import { WorkSpace } from "./work";
-import { Connections } from "./connections";
 import { DecisionSpace } from "./decisions";
 import { ContextSpace } from "./context";
 import { HydrationUnit } from "../base/hydration/unit";
 import { clearDrafts } from "./drafts";
+import { QueueProvider } from "./queue";
+import { RailNav } from "./shell-rail";
+import { TopBar } from "./shell-top";
 export function LinenApp() {
   const auth = useRemote<{ authenticated: false } | { authenticated: true; session: Session }>("/session-status");
   useEffect(() => {
@@ -22,7 +23,7 @@ export function LinenApp() {
     return (
       <HydrationUnit><div className="boot">
         <Mark size={56} />
-        <Loading label="Making room for your work…" />
+        <Loading label="Opening your workspace…" />
       </div></HydrationUnit>
     );
   if (auth.error)
@@ -41,7 +42,6 @@ export function LinenApp() {
 function Workspace() {
   const { session, refreshSession } = useSession();
   const [route, setRoute] = useState("/work"),
-    [profile, setProfile] = useState(false),
     [offline, setOffline] = useState(false),
     [error, setError] = useState<unknown>(null);
   useEffect(() => {
@@ -72,9 +72,11 @@ function Workspace() {
       setError(error);
     }
   }
-  const [section, id] = route.replace(/^\//, "").split("/");
+  const [path, search = ""] = route.split("?"),
+    [section, id] = path.replace(/^\//, "").split("/"),
+    query = new URLSearchParams(search).get("q") ?? "";
   return (
-    <>
+    <QueueProvider>
       <a
         className="skip-link"
         href="#main-content"
@@ -85,85 +87,29 @@ function Workspace() {
       >
         Skip to content
       </a>
-      <header className="app-header">
-        <a className="brand" href="#/work">
-          <Mark size={40} />
-          <span data-rer-name>Linen</span>
-        </a>
-        <nav aria-label="Main navigation">
-          <a href="#/work" className={section === "work" ? "active" : ""} aria-current={section === "work" ? "page" : undefined}>
-            Your work
-          </a>
-          <a
-            href="#/decisions"
-            className={section === "decisions" ? "active" : ""}
-            aria-current={section === "decisions" ? "page" : undefined}
-          >
-            Needs your decision
-          </a>
-        </nav>
-        <div className="header-actions">
-          <a className="search-pill" href="#/knowledge" aria-label="Search knowledge">
-            <Icon name="search" size={20} />
-            <span>Search knowledge</span>
-          </a>
-          <button
-            className="profile"
-            aria-label="Your workspace and account"
-            aria-expanded={profile}
-            onClick={() => setProfile(!profile)}
-          >
-            {initials(session.user.name)}
-          </button>
+      <TopBar onSignOut={signOut} query={query} />
+      <div className="frame">
+        <div id="main-content" role="region" aria-label="Workspace content" tabIndex={-1}>
+          {offline && (
+            <Notice tone="error">
+              You’re offline. Unsent changes remain in this screen. Reconnect before
+              sending. This screen does not send queued changes automatically.
+            </Notice>
+          )}
+          <ErrorNotice error={error} />
+          {section === "work" ? (
+            <WorkSpace selectedId={id} />
+          ) : section === "decisions" ? (
+            <DecisionSpace selectedId={id} />
+          ) : (
+            <ContextSpace section={section} selectedId={id} query={query} />
+          )}
         </div>
-        {profile && (
-          <div className="profile-menu">
-            <strong>{session.user.name}</strong>
-            <small>{session.workspace.name}</small>
-            {session.principal.roles.some((r) =>
-              ["owner", "operator", "hr"].includes(r),
-            ) && (
-              <>
-                <a href="#/connections" onClick={() => setProfile(false)}>
-                  Connections & setup
-                </a>
-                <a href="#/members" onClick={() => setProfile(false)}>
-                  People & permissions
-                </a>
-                <a href="#/operations" onClick={() => setProfile(false)}>
-                  Operations & recovery
-                </a>
-              </>
-            )}
-            <button className="text-button" onClick={signOut}>
-              Sign out
-            </button>
-          </div>
-        )}
-      </header>
-      {offline && (
-        <Notice tone="error">
-          You’re offline. Unsent changes remain in this screen. Reconnect before
-          sending. This screen does not send queued changes automatically.
-        </Notice>
-      )}
-      <ErrorNotice error={error} />
-      <div id="main-content" role="region" aria-label="Workspace content" tabIndex={-1}>
-        {section === "work" ? (
-          <WorkSpace key={route} selectedId={id} />
-        ) : section === "connections" ? (
-          <Connections />
-        ) : section === "decisions" ? (
-          <DecisionSpace selectedId={id} />
-        ) : (
-          <ContextSpace section={section} selectedId={id} />
-        )}
+        {/* After the screen in reading and focus order; the grid draws it as the left rail. */}
+        <RailNav section={section} />
       </div>
-    </>
+      <div className="foliage foliage-left" aria-hidden="true" />
+      <div className="foliage foliage-right" aria-hidden="true" />
+    </QueueProvider>
   );
-}
-// The profile button shows the person's initials, as the top bar pick draws it.
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "·";
 }

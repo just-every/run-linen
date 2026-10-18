@@ -30,7 +30,7 @@ try {
   await page.getByLabel('Work email').fill('setup-owner@example.test');
   await page.getByLabel('Password', { exact: true }).fill('Setup-browser-proof-2026');
   await page.getByRole('button', { name: 'Create workspace' }).click();
-  await page.getByRole('heading', { name: 'Make room for good work.' }).waitFor();
+  await page.getByRole('heading', { name: 'Requests', exact: true }).waitFor();
   await finishFirstRun(page, base);
   await page.goto(base + '/app#/connections');
   await page.getByRole('button', { name: 'Connect a service' }).click();
@@ -104,13 +104,13 @@ try {
   await page.getByLabel('Work email').fill('setup-operator@example.test');
   await page.getByLabel('Password', { exact: true }).fill('Setup-operator-proof-2026');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.getByRole('heading', { name: 'Make room for good work.' }).waitFor();
+  await page.getByRole('heading', { name: 'Requests', exact: true }).waitFor();
   await page.goto(base + '/app#/grants');
-  await page.getByRole('heading', { name: 'Authority, with clear edges.' }).waitFor();
+  await page.getByRole('heading', { name: 'Standing authority', exact: true }).waitFor();
   assert.equal(await page.getByText('Advanced: issue an exact standing grant', { exact: true }).count(), 0);
   assert.equal((await api('/grants', {})).status, 403);
   await page.goto(base + '/app#/connections');
-  await page.getByRole('heading', { name: 'Let’s make it your workspace.' }).waitFor();
+  await page.getByRole('heading', { name: 'Connections & setup', exact: true }).waitFor();
   assert.equal(await page.getByText('Review people and service authority', { exact: true }).count(), 0);
   checks.push('Operator cannot see issuing or identity-mapping UI; server still rejects grant issuance');
   assert.deepEqual(errors, []);

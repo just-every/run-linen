@@ -36,16 +36,9 @@ export function Connections() {
   return (
     <div className="layout">
       <main>
-        <a className="back-link" href="#/work">
-          <Icon name="back" size={18} />
-          Your work
-        </a>
-        <Hero
-          eyebrow="A thoughtful beginning"
-          title="Let’s make it your workspace."
-        >
+        <Hero title="Connections & setup">
           <p className="lead">
-            Connect the systems you use. Linen gathers the available facts, then
+            Let’s make it your workspace. Connect the systems you use. Linen gathers the available facts, then
             brings the meaningful gaps and choices into one review.
           </p>
         </Hero>

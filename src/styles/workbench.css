@@ -1,0 +1,380 @@
+/* The Requests workbench (app pick, 17 Oct 2026): "Requests" in the heavy serif with today's date, the chips
+   and the dense queue on the left, and the open request on the right with its facts strip, progress readback,
+   the red exception and Linen's quiet strip. Phones stack the head, the new request, then the queue; an
+   open request takes the whole screen with a way back. */
+.workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+  grid-template-areas: "head detail" "queue detail";
+  grid-template-rows: auto 1fr;
+  gap: 0 8px;
+  align-items: start;
+}
+.workbench-head {
+  grid-area: head;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 24px 20px 14px;
+}
+.workbench-head time {
+  padding-bottom: 8px;
+  color: var(--ink);
+  font-size: 15px;
+  white-space: nowrap;
+}
+.workbench-queue {
+  grid-area: queue;
+  min-width: 0;
+}
+.workbench-detail {
+  grid-area: detail;
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+/* Chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 0 14px;
+}
+.chip-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 8px 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-chip);
+  background: var(--app-field);
+  color: var(--denim-ink);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.chip-filter:hover {
+  border-color: var(--app-line-hover);
+}
+.chip-filter[aria-pressed="true"] {
+  border-color: var(--app-pressed-line);
+  background: var(--app-pressed);
+  color: var(--ink);
+  font-weight: 600;
+}
+.chip-count {
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: var(--radius-chip);
+  background: var(--chip);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.chip-filter.danger {
+  border-color: var(--red-line);
+  background: var(--red-tint);
+  color: var(--red-ink);
+}
+.chip-filter.danger .chip-count {
+  background: var(--red-line);
+}
+.chip-filter.danger[aria-pressed="true"] {
+  border-color: var(--red);
+}
+.chip-refresh {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: none;
+  color: var(--denim);
+}
+.chip-refresh:hover {
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+
+/* The queue table */
+.queue-table {
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(135deg, var(--surface), var(--app-field));
+  min-height: calc(100vh - 216px);
+  box-shadow: 0 1px 2px rgba(12, 26, 58, .03);
+}
+.queue-row {
+  display: grid;
+  grid-template-columns: 24px 52px minmax(0, 1fr) minmax(0, 1.2fr) 74px 94px 12px;
+  align-items: center;
+  gap: 0 6px;
+  min-height: 64px;
+  padding: 10px;
+  border-top: 1px solid var(--app-row-line);
+  color: var(--ink);
+  text-decoration: none;
+}
+.queue-header {
+  min-height: 44px;
+  border-top: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+a.queue-row:hover {
+  background: var(--app-field);
+}
+a.queue-row.selected {
+  background: linear-gradient(100deg, var(--app-select), var(--app-select-soft));
+  border-radius: 9px;
+  box-shadow: inset 0 0 0 1px var(--app-pressed);
+}
+.q-kind {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  color: var(--denim);
+}
+.q-kind.kind-incident {
+  color: var(--marigold-ink);
+}
+.q-ref {
+  color: var(--muted);
+  font: 400 12px/1.3 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.q-person,
+.q-subject {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.q-person strong,
+.q-subject strong {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.q-person small,
+.q-subject small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.q-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.q-time .icon {
+  color: var(--soft);
+}
+.q-time.late,
+.q-time.late .icon {
+  color: var(--red-ink);
+  font-weight: 650;
+}
+.q-status .badge .icon {
+  display: none;
+}
+.q-go {
+  color: var(--denim);
+}
+
+/* The queue's exception: responsibilities waiting on this person. */
+.attention {
+  margin: 0 0 14px;
+  padding: 12px 14px 4px;
+  border: 1px solid var(--red-line);
+  border-radius: var(--radius-panel);
+  background: var(--red-tint);
+}
+.attention h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  color: var(--red-ink);
+  font-size: 14px;
+}
+.attention-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--red-line);
+}
+.attention-row:first-of-type {
+  border-top: 0;
+}
+.attention-row > span:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.attention-row strong {
+  font-size: 14px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.attention-row small {
+  color: var(--red-soft-ink);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.attention-row a {
+  color: var(--red-ink);
+  font-weight: 600;
+}
+
+/* The right side with no request open: a new request, and the decisions card. */
+.new-request {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--app-panel-line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-panel);
+}
+.new-request .composer {
+  padding: 0;
+  border: 0;
+}
+.new-request .composer-label {
+  font: 800 28px/1.15 var(--font-head);
+  letter-spacing: -0.02em;
+}
+.decision-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--marigold-line);
+  border-radius: var(--radius-panel);
+  background: var(--marigold-tint);
+}
+.decision-card > .icon {
+  color: var(--marigold-ink);
+}
+.decision-card > div {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.decision-card h2 {
+  font-size: 15px;
+}
+.decision-card p {
+  color: var(--body);
+  font-size: 13px;
+}
+
+@media (max-width: 1240px) {
+  .workbench {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "detail" "queue";
+    gap: 16px;
+  }
+  .queue-table {
+    min-height: 0;
+  }
+  .workbench-head {
+    padding: 4px 0 0;
+  }
+  .workbench.has-selection .workbench-head,
+  .workbench.has-selection .workbench-queue {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .workbench-head {
+    flex-wrap: wrap;
+    align-items: baseline;
+  }
+  .workbench-head h1 {
+    font-size: 38px;
+  }
+  .workbench-head time {
+    padding: 0;
+    font-size: 13px;
+  }
+  .chips {
+    padding: 0;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .chip-filter {
+    min-height: 38px;
+  }
+  .queue-header {
+    display: none;
+  }
+  .queue-row {
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    grid-template-areas: "kind subject go" "kind person go" "kind meta go";
+    gap: 4px 10px;
+    padding: 12px;
+  }
+  .queue-row > .q-kind {
+    grid-area: kind;
+    align-self: start;
+  }
+  .queue-row > .q-subject {
+    grid-area: subject;
+  }
+  .queue-row > .q-person {
+    grid-area: person;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 8px;
+  }
+  .queue-row > .q-person strong {
+    font-size: 13px;
+  }
+  .queue-row > .q-ref {
+    display: none;
+  }
+  .queue-row > .q-time {
+    grid-area: meta;
+    justify-self: start;
+  }
+  .queue-row > .q-status {
+    grid-area: meta;
+    justify-self: end;
+  }
+  .queue-row > .q-go {
+    grid-area: go;
+  }
+  .new-request {
+    padding: 16px 14px;
+  }
+  .new-request .composer-label {
+    font-size: 24px;
+  }
+  .decision-card {
+    flex-wrap: wrap;
+  }
+  .decision-card > div {
+    flex: 1 1 220px;
+  }
+}

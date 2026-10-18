@@ -6,7 +6,7 @@ export async function finishFirstRun(page, base) {
   await page.getByRole('heading', {name:'Finish setup',exact:true}).waitFor();
   await page.getByLabel('I confirm this owner account is ready to use.').check();
   await page.getByRole('button', {name:'Finish setup',exact:true}).click();
-  await page.getByRole('heading', {name:'Make room for good work.'}).waitFor();
+  await page.getByRole('heading', {name:'Requests', exact: true}).waitFor();
 }
 export async function fields(form, values) {
   for (const [name, value] of Object.entries(values)) {
@@ -33,7 +33,7 @@ export const apiFor = page => async (path, body, method = body ? 'POST' : 'GET')
   const data=await r.json();if(!r.ok)throw Error(path+' '+JSON.stringify(data));return data;
 },{path,body,method});
 export async function signIn(page, base, email, password='synthetic-Connected-browser-2026') {
-  await page.goto(base + '/app');await page.getByLabel('Work email').fill(email);await page.getByLabel('Password',{exact:true}).fill(password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await page.getByRole('heading',{name:'Make room for good work.'}).waitFor();
+  await page.goto(base + '/app');await page.getByLabel('Work email').fill(email);await page.getByLabel('Password',{exact:true}).fill(password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await page.getByRole('heading',{name:'Requests', exact: true}).waitFor();
 }
 export async function requestWork(page, base, message) {
   await page.goto(base+'/app#/work');await page.getByLabel('What would make work easier?').fill(message);await page.getByRole('button',{name:'Send message',exact:true}).click();await page.waitForURL(/#\/work\/.+/);return page.url().split('/').at(-1);

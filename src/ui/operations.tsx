@@ -1,4 +1,5 @@
 import type { ReviewedMapping, CatalogChoice } from "./setup-permissions";
+import { settingsSections } from "./shell-rail";
 import { useState, type FormEvent } from "react";
 import { date, text, humanize, type RecordValue } from "./api";
 import { useRemote, useSession } from "./state";
@@ -17,6 +18,7 @@ import { GrantForm } from "./grant-form";
 import { Icon } from "./icons";
 import { collection } from "./intelligence";
 import { roleLabels, roleList } from "./labels";
+const settingsTitle = (section: string) => settingsSections.find(([key]) => key === section)?.[1] ?? "Effects & takeover";
 export function OperationsSpace({ section }: { section: string }) {
   const endpoint =
       section === "operations"
@@ -37,19 +39,15 @@ export function OperationsSpace({ section }: { section: string }) {
   const catalog = useRemote<{ items: CatalogChoice[] }>(section === "grants" ? "/catalog" : null);
   return (
     <>
-      <Hero
-        eyebrow={section === "members" ? "Accountable operation · People & permissions" : "Accountable operation"}
-        title={
-          section === "grants"
-            ? "Authority, with clear edges."
-            : section === "members"
-              ? "The right people. The right scope."
-              : section === "notifications"
-                ? "An update is only useful if it arrives."
-                : "Know what happened. Keep what remains."
-        }
-      >
+      <Hero eyebrow="Accountable operation" title={settingsTitle(section)}>
         <p className="lead">
+          {section === "grants"
+            ? "Authority, with clear edges. "
+            : section === "members"
+              ? "The right people. The right scope. "
+              : section === "notifications"
+                ? "An update is only useful if it arrives. "
+                : "Know what happened. Keep what remains. "}
           Recorded intent, external effects and independently verified outcomes
           are different states. Keep each visible.
         </p>
@@ -271,9 +269,9 @@ export function ReportSpace() {
   }
   return (
     <>
-      <Hero eyebrow="Service review" title="Measure the work, not the noise.">
+      <Hero eyebrow="Service review" title="Reports">
         <p className="lead">
-          Keep the cohort, period, timezone, unresolved work and verification
+          Measure the work, not the noise. Keep the cohort, period, timezone, unresolved work and verification
           coverage alongside every count.
         </p>
       </Hero>

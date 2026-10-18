@@ -1,0 +1,161 @@
+import { useState } from "react";
+import { useSession } from "./state";
+import { Icon } from "./icons";
+import { Badge, Empty, ErrorNotice, Loading } from "./primitives";
+import { usePeopleLabels } from "./people-labels";
+import { isOpen, useQueue } from "./queue";
+import type { WorkRecord } from "./work";
+
+/** A short, stable reference for a request: the start of its real id. */
+export const shortRef = (id: string) => id.replace(/-/g, "").slice(0, 6).toUpperCase();
+/** "9:14 AM" today, "Oct 17" earlier this year, as the queue's time column reads. */
+export function queueTime(value: string) {
+  const at = new Date(value), now = new Date();
+  if (Number.isNaN(at.getTime())) return value;
+  const sameDay = at.toDateString() === now.toDateString();
+  return new Intl.DateTimeFormat("en-US", sameDay ? { hour: "numeric", minute: "2-digit" } : { month: "short", day: "numeric", ...(at.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }) }).format(at);
+}
+
+/** The person a request was recorded for, when its context names one ("requestedFor"). */
+function requestedFor(item: WorkRecord) {
+  try {
+    const value = JSON.parse(item.context_json ?? "{}").requestedFor;
+    return typeof value === "string" && value.trim() ? value.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+type Filter = [key: string, label: string, test: (item: WorkRecord) => boolean];
+
+/** The queue of the Requests workbench: chips over a dense table of conversations, the open one highlighted. */
+export function Queue({ selectedId }: { selectedId?: string }) {
+  const queue = useQueue(),
+    personName = usePeopleLabels(),
+    { session } = useSession(),
+    operator = session.principal.roles.some((r) => ["owner", "operator", "hr"].includes(r)),
+    [filter, setFilter] = useState("all");
+  const me = session.user.id;
+  const filters: Filter[] = operator
+    ? [
+        ["all", "All", () => true],
+        ["mine", "Mine", (item) => item.assignee_id === me && isOpen(item)],
+        ["unassigned", "Unassigned", (item) => !item.assignee_id && isOpen(item)],
+        ["attention", "Needs attention", (item) => Boolean(item.attention?.length)],
+      ]
+    : [
+        ["all", "All", () => true],
+        ["open", "Open", isOpen],
+        ["closed", "Closed", (item) => !isOpen(item)],
+      ];
+  const items = queue.data?.items ?? [],
+    active = filters.find(([key]) => key === filter) ?? filters[0],
+    shown = items.filter(active[2]);
+  return (
+    <section className="queue" aria-label="Request queue">
+      <div className="chips" role="group" aria-label="Show requests">
+        {filters.map(([key, label, test]) => (
+          <button
+            key={key}
+            type="button"
+            className={`chip-filter ${key === "attention" ? "danger" : ""}`}
+            aria-pressed={active[0] === key}
+            onClick={() => setFilter(key)}
+          >
+            {label}
+            <span className="chip-count">{items.filter(test).length}</span>
+          </button>
+        ))}
+        <button className="chip-refresh" type="button" onClick={queue.refresh} aria-label="Refresh conversations">
+          <Icon name="refresh" size={18} />
+        </button>
+      </div>
+      {queue.loading ? (
+        <Loading />
+      ) : queue.error ? (
+        <ErrorNotice error={queue.error} retry={queue.refresh} />
+      ) : shown.length ? (
+        <div className="queue-table" role="table" aria-label="Your conversations">
+          <div className="queue-row queue-header" role="row">
+            <span role="columnheader" className="q-kind"><span className="visually-hidden">Kind</span></span>
+            <span role="columnheader">ID</span>
+            <span role="columnheader">Requester</span>
+            <span role="columnheader">Subject</span>
+            <span role="columnheader">Updated</span>
+            <span role="columnheader">Status</span>
+          </div>
+          {shown.map((item) => {
+            const attention = Boolean(item.attention?.length);
+            return (
+              <a
+                className={`queue-row ${item.id === selectedId ? "selected" : ""}`}
+                href={`#/work/${item.id}`}
+                key={item.id}
+                role="row"
+                aria-current={item.id === selectedId ? "true" : undefined}
+              >
+                <span role="cell" className={`q-kind kind-${item.kind}`}>
+                  <Icon name={item.kind === "incident" ? "alert" : "file"} size={20} />
+                </span>
+                <span role="cell" className="q-ref">{shortRef(item.id)}</span>
+                <span role="cell" className="q-person">
+                  <strong>{personName(item.requester_id)}</strong>
+                  <small>{item.beneficiary_id !== item.requester_id ? `For ${personName(item.beneficiary_id)}` : requestedFor(item) ? `For ${requestedFor(item)}` : item.kind === "incident" ? "Incident" : "Request"}</small>
+                </span>
+                <span role="cell" className="q-subject">
+                  <strong>{item.title}</strong>
+                  <small>Recorded {queueTime(item.created_at)}</small>
+                </span>
+                <span role="cell" className={`q-time ${attention ? "late" : ""}`}>
+                  <Icon name="clock" size={16} />
+                  <time dateTime={item.updated_at ?? item.created_at}>{queueTime(item.updated_at ?? item.created_at)}</time>
+                </span>
+                <span role="cell" className="q-status">
+                  {attention ? <span className="badge tone-alert"><span className="badge-text">needs attention</span></span> : <Badge value={item.state} />}
+                </span>
+                <Icon name="chevron-right" size={18} className="q-go" />
+              </a>
+            );
+          })}
+        </div>
+      ) : items.length ? (
+        <Empty title="Nothing in this view.">No conversation matches {active[1].toLowerCase()}. Choose another view above.</Empty>
+      ) : (
+        <Empty title="A fresh start.">Your first request will appear here. Nothing is running or verified yet.</Empty>
+      )}
+    </section>
+  );
+}
+
+/** Operator responsibilities that wait on this person: the queue's exception, above the table. */
+export function AttentionList() {
+  const queue = useQueue(),
+    { session } = useSession(),
+    operator = session.principal.roles.some((r) => ["owner", "operator", "hr"].includes(r));
+  const items = (queue.data?.items ?? []).filter((item) => item.attention?.length);
+  if (!operator || !items.length) return null;
+  return (
+    <section className="attention" aria-labelledby="attention-title">
+      <h2 id="attention-title">
+        <Icon name="alert" size={18} />
+        Responsibilities needing you
+      </h2>
+      {items.map((item) => (
+        <div key={item.id} className="attention-row">
+          <span>
+            <strong>{item.title}</strong>
+            {item.attention!.map((action, index) => (
+              <small key={index}>
+                {action.happened} {action.next}
+              </small>
+            ))}
+            <small>
+              <a href={`#/work/${item.id}`}>Open request and service controls</a> · <a href="#/operations">Operations &amp; recovery</a>
+            </small>
+          </span>
+          <Badge value={item.attention![0].state} />
+        </div>
+      ))}
+    </section>
+  );
+}

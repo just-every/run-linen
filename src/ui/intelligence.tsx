@@ -26,6 +26,13 @@ const destinations: Record<string, string> = {
   simplifications: "/simplifications",
 };
 const titles: Record<string, string> = {
+  commitments: "Continuing commitments",
+  research: "Research & evidence",
+  engineering: "Engineering & adoption",
+  capabilities: "Verified reusable repairs",
+  simplifications: "Service simplification",
+};
+const taglines: Record<string, string> = {
   commitments: "Keep the promise, beyond the request.",
   research: "Follow the evidence, even somewhere new.",
   engineering: "Make the missing capability real.",
@@ -165,8 +172,7 @@ export function IntelligenceSpace({
         </a>
       )}
       <Hero
-        stitch={!(selectedId && d)}
-        eyebrow={section === "commitments" ? "Continuing service" : section}
+        eyebrow={selectedId && d ? titles[section] : undefined}
         title={
           selectedId && d
             ? text(
@@ -177,6 +183,7 @@ export function IntelligenceSpace({
         }
       >
         <p className="lead">
+          {!(selectedId && d) && `${taglines[section]} `}
           {section === "commitments"
             ? "A useful outcome, real observations and an accountable owner. Missing or stale coverage never becomes a quiet success."
             : "Rival explanations, scoped authority and independent verification remain visible through every attempt."}

@@ -1,46 +1,53 @@
-/* Linen's forms (SPEC §2.4): visible labels, --input fields with a 1 px rule, the composer,
-   disclosed action forms and choice lists. */
+/* Linen's forms (app pick): visible labels, light-filled fields with one quiet 1 px hairline and a clear denim
+   focus ring, the composer, disclosed action forms and choice lists. */
 label {
   display: grid;
-  gap: 8px;
-  margin: 0 0 18px;
+  gap: 6px;
+  margin: 0 0 14px;
   color: var(--ink);
-  font-size: 16px;
-  line-height: 22px;
-  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
 }
 input,
 textarea,
 select {
   width: 100%;
   min-width: 0;
-  min-height: 48px;
-  padding: 11px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-input);
-  background: var(--input);
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-field);
+  background: var(--app-field);
   color: var(--ink);
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 400;
-  line-height: 24px;
+  line-height: 20px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--app-line-hover);
 }
 input::placeholder,
 textarea::placeholder {
-  color: #85878c;
+  color: var(--soft);
 }
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  border-color: var(--ink);
-  outline: 2px solid var(--ink);
-  outline-offset: 1px;
+  border-color: var(--denim);
+  outline: 0;
+  box-shadow: var(--ring);
+  background: var(--surface);
 }
 textarea {
   resize: vertical;
 }
-/* Single-choice chevron (Base #247); native lists retain their own appearance. */
+/* Single-choice chevron (Base #247): two gradient strokes 14 px inside the end, 40 px end padding. */
 select:not([multiple],[size]:not([size="1"])) {
-  --rer-select-ink: var(--rer-muted);
+  --rer-select-ink: var(--denim);
   -webkit-appearance: none;
   appearance: none;
   padding-inline-end: 40px;
@@ -53,47 +60,55 @@ select:not([multiple],[size]:not([size="1"])) {
   background-size: 6px 6px;
 }
 select:not([multiple],[size]:not([size="1"])):focus-visible {
-  --rer-select-ink: var(--rer-text);
+  --rer-select-ink: var(--ink);
 }
 select:not([multiple],[size]:not([size="1"])):disabled {
   --rer-select-ink: color-mix(in srgb, var(--rer-muted) 55%, transparent);
 }
 input[type="checkbox"],
 input[type="radio"] {
-  width: 20px;
+  width: 18px;
   min-height: 0;
-  height: 20px;
+  height: 18px;
   padding: 0;
-  accent-color: var(--ink);
+  accent-color: var(--denim);
+}
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid var(--rer-focus);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 label small,
 form > small {
   color: var(--muted);
-  font-size: 15px;
-  line-height: 22px;
+  font-size: 12px;
+  line-height: 17px;
   font-weight: 400;
 }
 .checkbox-field {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  font-weight: 500;
 }
 fieldset {
   min-width: 0;
-  margin: 0 0 18px;
-  padding: 16px 18px 4px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-input);
+  margin: 0 0 14px;
+  padding: 12px 14px 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
 }
 legend {
   padding: 0 6px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
 }
 .checkbox-group {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 16px;
-  padding: 14px 16px 16px;
+  gap: 10px 16px;
+  padding: 12px 14px 14px;
 }
 .checkbox-group > label {
   margin: 0;
@@ -102,24 +117,24 @@ legend {
 .checkbox-group > small {
   grid-column: 1 / -1;
   color: var(--muted);
-  font-size: 15px;
+  font-size: 12px;
 }
 
 .inline-form {
-  margin: 16px 0;
-  padding: 24px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-card);
-  background: var(--card);
+  margin: 12px 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
   box-shadow: var(--shadow-card);
 }
 .inline-form > p {
-  margin: 0 0 18px;
-  color: var(--ink-2);
+  margin: 0 0 14px;
+  color: var(--body);
 }
 .inline-form h2,
 .inline-form h3 {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
 }
 .inline-form .notice {
   box-shadow: none;
@@ -127,7 +142,7 @@ legend {
 .field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 20px;
+  gap: 0 16px;
 }
 .field-grid label:has(textarea),
 .field-grid fieldset {
@@ -136,81 +151,81 @@ legend {
 
 /* A disclosed action: its summary reads as a quiet row; opened, the form follows inline. */
 .action-disclosure {
-  margin: 12px 0 0;
-  border-top: 1px solid var(--rule);
+  margin: 10px 0 0;
+  border-top: 1px solid var(--line);
 }
 .action-disclosure > summary {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 48px;
+  gap: 8px;
+  min-height: 44px;
   color: var(--ink);
-  font-size: 18px;
-  line-height: 26px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
   list-style: none;
 }
 .action-disclosure > .inline-form {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   padding: 4px 0 8px;
   border: 0;
   background: none;
   box-shadow: none;
 }
 
-/* The composer: a card with a serif question, a 96 px textarea and its two pills. */
+/* The composer: label, a light-filled textarea, then attach, visibility and the marigold Send. */
 .composer {
   display: grid;
-  gap: 16px;
-  margin: 32px 0;
-  padding: 24px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-card);
-  background: var(--card);
-  box-shadow: var(--shadow-card);
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
 }
 .composer-label {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
   color: var(--ink);
-  font-size: 22px;
-  line-height: 30px;
-  font-weight: 500;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 650;
 }
 .composer-label .icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 .composer textarea {
-  min-height: 96px;
+  min-height: 84px;
 }
 .composer > small {
-  margin-top: -6px;
+  margin-top: -4px;
 }
 .composer > .notice {
   margin: 0;
-  box-shadow: none;
 }
 .composer-tools {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 .file-picker,
 .visibility-picker {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
+  gap: 8px;
+  min-height: 36px;
   margin: 0;
-  padding: 0 20px;
-  border: 1px solid var(--ink);
-  border-radius: 999px;
-  font-size: 16px;
-  font-weight: 400;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-field);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   max-width: 100%;
 }
@@ -229,98 +244,104 @@ legend {
 }
 .file-picker:focus-within,
 .visibility-picker:focus-within {
-  outline: 2px solid var(--ink);
-  outline-offset: 3px;
+  border-color: var(--denim);
+  box-shadow: var(--ring);
 }
-/* Borrow the select's extra 14 px from the pill's end space, keeping its outer size. */
+/* The select's chevron keeps its 14 px inset inside the pill; the pill gives back its own end padding. */
 .visibility-picker {
-  padding-inline-end: 6px;
+  padding-inline-end: 0;
 }
 .file-picker .icon,
 .visibility-picker .icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+  color: var(--denim);
 }
 .visibility-picker select {
   min-height: 0;
-  padding: 8px 40px 8px 0;
+  padding: 7px 40px 7px 0;
   border: 0;
   background-color: transparent;
-  background-position: right 20px center, right 14px center;
-  font-size: 16px;
+  font-size: 13px;
+  font-weight: 600;
 }
 .visibility-picker select:focus-visible {
-  outline: 0;
+  box-shadow: none;
 }
 .composer-tools .send {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-left: auto;
-  min-height: 44px;
-  padding: 0 24px;
+  min-height: 38px;
+  padding: 0 20px;
   border: 0;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--card);
-  font-size: 18px;
+  border-radius: var(--radius-chip);
+  background: var(--marigold);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.composer-tools .send:hover:not(:disabled) {
+  background: var(--marigold-hover);
 }
 .composer-tools .send .icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 .composer-private {
-  border-color: #d9cdbd;
-  background: #f7f2ea;
+  border-color: var(--marigold-line);
+  background: var(--marigold-tint);
 }
 
 /* Choices: options for a decision and items in a discovery review. */
 .option-list {
   display: grid;
-  gap: 12px;
-  margin: 0 0 18px;
+  gap: 8px;
+  margin: 0 0 14px;
 }
 .option {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 12px;
   margin: 0;
-  padding: 16px 18px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-input);
-  background: var(--card);
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-field);
+  background: var(--surface);
   font-weight: 400;
   cursor: pointer;
 }
 .option:has(input:checked) {
-  border-color: var(--ink);
+  border-color: var(--marigold);
+  background: var(--marigold-tint);
 }
 .option input {
-  margin-top: 3px;
+  margin-top: 2px;
 }
 .option strong {
   display: block;
-  margin-bottom: 4px;
-  font-size: 19px;
-  line-height: 26px;
-  font-weight: 500;
+  margin-bottom: 2px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 650;
 }
 .option span {
-  color: var(--ink-2);
-  font-size: 16px;
+  color: var(--body);
+  font-size: 13px;
 }
 .review-item {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 12px;
   margin: 0;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--rule);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
   font-weight: 400;
 }
 .review-item input {
-  flex: 0 0 20px;
-  margin-top: 3px;
+  flex: 0 0 18px;
+  margin-top: 2px;
 }
 .review-item span {
   display: grid;
@@ -328,7 +349,7 @@ legend {
 }
 .review-item small {
   color: var(--muted);
-  font-size: 15px;
+  font-size: 12px;
 }
 
 @media (max-width: 600px) {
@@ -337,10 +358,9 @@ legend {
   }
   .composer,
   .inline-form {
-    padding: 18px;
+    padding: 14px;
   }
-  .composer-label {
-    font-size: 20px;
-    line-height: 28px;
+  .checkbox-group {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

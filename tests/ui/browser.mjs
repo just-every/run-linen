@@ -30,7 +30,7 @@ try {
       .getByLabel("Password", { exact: true })
       .fill("Browser-proof-2026");
     await page.getByRole("button", { name: "Create workspace" }).click();
-    await page.getByRole('heading', {name:'Make room for good work.'}).waitFor();
+    await page.getByRole('heading', {name:'Requests', exact: true}).waitFor();
     await finishFirstRun(page, base);
   } else {
     await page.getByLabel("Work email").fill("ui-owner@example.test");
@@ -40,7 +40,7 @@ try {
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
   }
   await page
-    .getByRole("heading", { name: "Make room for good work." })
+    .getByRole("heading", { name: "Requests", exact: true })
     .waitFor();
   const api = async (path, body, method = body ? "POST" : "GET") =>
     page.evaluate(
@@ -134,7 +134,7 @@ try {
   );
   await page.goto(base + "/app#/connections");
   await page
-    .getByRole("heading", { name: "Let’s make it your workspace." })
+    .getByRole("heading", { name: "Connections & setup", exact: true })
     .waitFor();
   await captureJourney(page, { path: out + "/03-setup.png", fullPage: true });
   const service = await api("/services", {
@@ -479,7 +479,7 @@ try {
     await ep.getByLabel("Password", { exact: true }).fill("Browser-proof-2026");
     await ep.getByRole("button", { name: "Sign in", exact: true }).click();
     await ep
-      .getByRole("heading", { name: "Make room for good work." })
+      .getByRole("heading", { name: "Requests", exact: true })
       .waitFor();
     const progressWork = await ep.evaluate(async () => {
       const session = await (await fetch('/api/v1/session')).json();
@@ -507,7 +507,7 @@ try {
       try { await route.fulfill({response}); } catch { /* Aborted old request. */ }
     });
     await ep.goto(base + '/app#/work');
-    await ep.getByRole('heading',{name:'Make room for good work.'}).waitFor();
+    await ep.getByRole('heading',{name:'Requests', exact: true}).waitFor();
     await ep.goto(base + '/app#/work/' + progressWork.id);
     await ep.waitForTimeout(100);
     await ep.goto(base + "/app#/work/" + employeeWork.id);

@@ -76,6 +76,24 @@
 
   --radius-card: 16px;
   --radius-row: 10px;
+  /* The app's panels and fields (app pick, 17 Oct): 10 px panels, 8 px fields and buttons. */
+  --radius-panel: 10px;
+  --radius-field: 8px;
+  --app-ground: radial-gradient(ellipse at 38% 18%, #fbfdff 0%, transparent 60%), linear-gradient(180deg, #f6fafe 0%, #eff6fd 100%);
+  --app-field: #f7fbff;
+  --app-row-line: #edf2f8;
+  --app-panel-line: #deebfa;
+  --app-line-hover: #b9c8db;
+  --app-select: #e3f1ff;
+  --app-select-soft: #eef6ff;
+  --app-pressed: #cee7ff;
+  --app-pressed-line: #a9cbef;
+  --app-done: #eef1f5;
+  --red-line: #f8cdd4;
+  --red-ground: #fff0f2;
+  --red-soft-ink: #8d2a33;
+  --marigold-line: #f3dca8;
+  --shadow-panel: 0 2px 20px rgba(84, 135, 175, .08);
   --radius-chip: 999px;
   --shadow-card: 0 1px 2px rgba(12, 26, 58, .04), 0 16px 36px -22px rgba(12, 26, 58, .22);
   --shadow-float: 0 2px 6px rgba(12, 26, 58, .06), 0 22px 44px -18px rgba(12, 26, 58, .30);
@@ -88,6 +106,282 @@ html[data-state] .door-card .btn {
   background: var(--rer-accent);
   color: var(--rer-accent-text);
   box-shadow: none;
+}
+/* Linen's doors, one look for all three: the server sign-in (/signin), the app's own sign-in (/app signed out) and
+   Base's Finish setup frame (/setup, html.rer-themed). The Lobby's family: the sky ground with the dusk-street
+   band at the foot, one white card holding the serif lockup, the heading and the form, 1 px fields with a
+   denim focus ring, and the marigold button. */
+.signin,
+html.rer-themed body {
+  box-sizing: border-box;
+  min-height: 100vh;
+  margin: 0;
+  padding: clamp(32px, 9vh, 96px) 16px calc(max(26.2vw, 200px) + 24px);
+  background: url('/brand/band.webp') center bottom / max(100%, 764px) auto no-repeat, radial-gradient(120% 80% at 18% -12%, rgba(255, 255, 255, .75), transparent 58%), var(--rer-page);
+  color: var(--rer-text);
+  font: 400 16px/1.5 var(--rer-font-body);
+  -webkit-font-smoothing: antialiased;
+}
+.signin-card,
+html.rer-themed main {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 32px 36px 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--rer-surface);
+  box-shadow: var(--shadow-card);
+  overflow-wrap: anywhere;
+}
+.signin-brand,
+html.rer-themed .rer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 0 0 26px;
+  color: var(--rer-text);
+  font: var(--rer-wordmark-weight) 38px/1 var(--rer-font-heading);
+  letter-spacing: var(--rer-wordmark-tracking);
+  text-decoration: none;
+}
+.signin-brand .mark,
+.signin-brand img {
+  flex: none;
+  width: 56px;
+  height: 37px;
+}
+html.rer-themed .rer-brand::before {
+  width: 56px;
+  height: 37px;
+}
+.signin-card h1,
+html.rer-themed h1 {
+  margin: 0 0 8px;
+  color: var(--rer-text);
+  font: 800 28px/1.15 var(--rer-font-heading);
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-wrap: balance;
+}
+.signin-card > p,
+html.rer-themed main > p {
+  margin: 0 0 20px;
+  color: var(--rer-muted);
+  font-size: 15px;
+  text-align: center;
+  text-wrap: pretty;
+}
+.signin-card dl,
+html.rer-themed dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 16px;
+  margin: 0 0 18px;
+  border-top: 1px solid var(--line);
+}
+.signin-card dt,
+.signin-card dd,
+html.rer-themed dt,
+html.rer-themed dd {
+  margin: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.signin-card dt,
+html.rer-themed dt {
+  color: var(--rer-muted);
+}
+.signin-card form,
+html.rer-themed form {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+.signin-card form p,
+html.rer-themed form p {
+  margin: 0;
+}
+.signin-card label,
+html.rer-themed label {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: var(--rer-text);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.signin-card label:has(input[type=checkbox]),
+html.rer-themed label:has(input[type=checkbox]) {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 400;
+  font-size: 15px;
+}
+.signin-card label[for] + input {
+  margin-top: -8px;
+}
+.signin-card input:not([type=checkbox]):not([type=hidden]),
+html.rer-themed input:not([type=checkbox]):not([type=hidden]) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-field);
+  background: #fbfdff;
+  color: var(--rer-text);
+  font: 400 15px/22px var(--rer-font-body);
+}
+.signin-card input:not([type=checkbox]):not([type=hidden]):focus-visible,
+html.rer-themed input:not([type=checkbox]):not([type=hidden]):focus-visible {
+  border-color: var(--denim);
+  outline: 0;
+  box-shadow: var(--ring);
+  background: var(--rer-surface);
+}
+.signin-card input[type=checkbox],
+html.rer-themed input[type=checkbox] {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--denim);
+}
+.signin-card button,
+html.rer-themed button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--rer-accent);
+  color: var(--rer-accent-text);
+  font: 650 16px/1 var(--rer-font-body);
+  cursor: pointer;
+}
+.signin-card a.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 10px;
+  background: var(--rer-accent);
+  color: var(--rer-accent-text);
+  font: 650 16px/1 var(--rer-font-body);
+  text-decoration: none;
+}
+.signin-card a.action:hover,
+.signin-card button:hover,
+html.rer-themed button:hover {
+  background: var(--marigold-hover);
+}
+.signin-card button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.signin-card button.secondary {
+  border: 1px solid var(--line-strong);
+  background: var(--rer-surface);
+  color: var(--rer-text);
+}
+.signin-card a,
+html.rer-themed main a {
+  color: var(--denim-ink);
+  text-underline-offset: 3px;
+}
+.signin-card a.signin-brand {
+  color: var(--rer-text);
+}
+.signin-card .notice {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--denim);
+  border-radius: var(--radius-field);
+  background: var(--sky);
+  color: var(--rer-text);
+  font-size: 14px;
+}
+.signin-card .stack {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.signin-card .divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--rer-muted);
+  font-size: 13px;
+}
+.signin-card .divider::before,
+.signin-card .divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--line);
+}
+.signin-card .secondary-link {
+  margin: 16px 0 0;
+  font-size: 14px;
+  text-align: center;
+}
+.signin-card small {
+  color: var(--rer-muted);
+  font-size: 13px;
+}
+.signin-card > .signin-foot {
+  text-align: left;
+}
+.signin-foot {
+  display: flex;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--rer-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.signin-foot svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+.signin :focus-visible,
+html.rer-themed :focus-visible {
+  outline: 2px solid var(--rer-focus);
+  outline-offset: 2px;
+}
+@media (max-width: 480px) {
+  .signin,
+  html.rer-themed body {
+    padding-top: 24px;
+  }
+  .signin-card,
+  html.rer-themed main {
+    padding: 24px 20px 22px;
+  }
+  .signin-brand,
+  html.rer-themed .rer-brand {
+    font-size: 32px;
+  }
 }
 /* Base's Run page code cards: from 900 px down the Copy button sits above the command, which wraps inside the card
    (Base moves it only below 760 px, so 760-900 px scrolled the command under the button). */
