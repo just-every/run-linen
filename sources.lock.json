@@ -1467,7 +1467,7 @@
       "executable": false
     },
     "src/features/adoption/freshservice-import/mapping.ts": {
-      "sha256": "c712d35c1f963f5f7e8500c49605744f0d7a3e2d727e1a18b8127dc0a74f664c",
+      "sha256": "1fab795aeefc2f03576713348830272d82fc68bb35bbb736ea0a969943fc7652",
       "executable": false
     },
     "src/features/adoption/freshservice-import/privacy.ts": {
@@ -1475,7 +1475,7 @@
       "executable": false
     },
     "src/features/adoption/freshservice-import/targets.ts": {
-      "sha256": "4325d40a4886b9db0e21a86fa10d0424cc215c4791072c578d5438dacc931a06",
+      "sha256": "68b426a8b57a8e0dc3c7a23931916e720dd9e84522273c481dc6c4b5e527909b",
       "executable": false
     },
     "src/features/adoption/freshservice.ts": {
