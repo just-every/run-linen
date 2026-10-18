@@ -16,6 +16,8 @@ export interface Session {
   csrfToken: string;
 }
 export type RecordValue = Record<string, unknown>;
+/** Fired on the window after any write the service accepted, so counts elsewhere on screen can read again. */
+export const recordedEvent = "linen:recorded";
 export async function request<T>(
   path: string,
   options: {
@@ -68,6 +70,7 @@ export async function request<T>(
       data?.error?.message ??
         `The service could not complete this request (${response.status}).`,
     );
+  if ((options.method ?? "GET") !== "GET") window.dispatchEvent(new Event(recordedEvent));
   if (response.status === 204) return undefined as T;
   if (data === null)
     throw new ApiFailure(

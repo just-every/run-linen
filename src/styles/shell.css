@@ -289,20 +289,27 @@
 }
 
 /* Papercut foliage: flat vector layers. The left one takes the rail's free height under its last item and
-   shows only when at least 150 px are free, so it never sits behind a rail item or the open More list. */
+   shows only when at least 150 px are free, so it never sits behind a rail item or the open More list. It is
+   sized by the rail's width: where the free corner is shorter than the art, the screen's edge crops its foot;
+   where it is taller, the art rests on the bottom. */
 .rail-foliage {
   position: relative;
   flex: 1 0 0;
   min-height: 0;
   margin: 12px -10px 0;
+  overflow: hidden;
   container-type: size;
   pointer-events: none;
 }
 .rail-foliage-art {
+  --art-height: calc(100cqw * 334 / 184);
   display: none;
   position: absolute;
-  inset: 0;
-  background: url("/design/foliage-left.svg") left bottom / contain no-repeat;
+  left: 0;
+  top: max(0px, calc(100cqh - var(--art-height)));
+  width: 100cqw;
+  height: var(--art-height);
+  background: url("/design/foliage-left.svg") left top / 100% 100% no-repeat;
 }
 @container (min-height: 150px) {
   .rail-foliage-art {

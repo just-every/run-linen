@@ -17,10 +17,13 @@ the day it is needed by; the Figma design seat), its Progress readback ("0 of 1
 verified"), the red exception "This request is waiting for its current
 manager's decision" with Alex Morgan, the owner, as next owner and Review
 catalog approvals as the place it is resolved, then Linen's strip. The seed
-records that state through the domain, as "Or choose a known service" does:
-Priya's directory record is reviewed as her account reporting to the owner, her
-request is recorded for her, and the Figma seat is chosen for it, which needs her
-manager's decision. Approving it in Decisions records the business approval;
+records that state through the domain, as "Or choose a known service" does.
+Each of the eight people has a directory record reviewed as their own account,
+reporting to the owner, who reports to no one in the demo. Every request is
+recorded for its person's account, so the Figma seat is chosen for Priya and
+needs her manager's decision. "Or choose a known service" on any other request
+records the service for that request's person in the same way, and its catalog
+approval waits on the owner. Approving it in Decisions records the business approval;
 the seat itself still needs provider authority, so the request then reads
 "This responsibility is blocked" with Operations & recovery as its next place,
 because the demo connects no provider. On any wide

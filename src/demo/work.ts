@@ -1,13 +1,13 @@
 import { createWork, getWork, appendMessage, transitionWork, type WorkContext } from '../features/work/core';
 import { requestFulfilment } from '../features/work/requests';
-import { demoManager } from './people';
+import { demoAccount, demoPeople } from './people';
 import { workIntakePort } from '../features/intelligence/intake-port';
 import { demoIntakeAssessment } from '../features/intelligence/demo-assessment';
 import { intakeServices } from '../features/services/intake';
 import { classifyEmployeeIncident } from '../features/work/intake-classification';
 
 /** Historical sample work uses Work's claim, assessment, assignment and closure operations. */
-export async function seedDemoWork(ctx: WorkContext, requests: string[][], people: [string, string][], now: Date) {
+export async function seedDemoWork(ctx: WorkContext, requests: string[][], now: Date) {
   const port = workIntakePort(), catalog = await port.catalog(ctx), services = await intakeServices(ctx);
   const replies = [
     'The Figma seat request is assessed. I’ve confirmed the available seat and the service desk is coordinating the next step.',
@@ -29,11 +29,11 @@ export async function seedDemoWork(ctx: WorkContext, requests: string[][], peopl
   await Promise.all(requests.map(async ([title, body, kind, location], index) => {
     const existing = await ctx.env.DB.prepare('SELECT id FROM work_records WHERE workspace_id=? AND requester_id=? AND dedup_key=?')
       .bind(ctx.principal.workspaceId, ctx.principal.userId, `linen-demo-${index}`).first<{ id: string }>();
-    const [requestedFor, team] = people[index % people.length];
-    // Priya has a reviewed account, so her Figma request is recorded for her; the others name their person in context.
+    // Each request is recorded for its person's own account, so its "For" and any service chosen for it are theirs.
+    const [person, team] = demoPeople[index % demoPeople.length];
     let work = existing ? await getWork(ctx, existing.id) : await createWork(ctx, { title, body, kind, deduplicationKey: `linen-demo-${index}`,
-      ...(index === 0 ? { beneficiaryId: demoManager } : {}), context: {
-      source: 'Demo sample', requestedFor, team, location,
+      beneficiaryId: demoAccount(person), context: {
+      source: 'Demo sample', team, location,
       neededBy: new Date(now.getTime() + (resolved.has(index) ? -2 : 1 + index % 5) * 86400000).toISOString(),
     } });
     if (!work.assignee_id) work = await transitionWork(ctx, work.id, work.revision, 'assign', 'Service desk is coordinating this assessed request.', ctx.principal.userId);
@@ -61,11 +61,11 @@ export async function seedDemoWork(ctx: WorkContext, requests: string[][], peopl
       ctx.env.DB.prepare('UPDATE work_messages SET created_at=CASE WHEN source_key=\'initial\' THEN ? WHEN source_key=\'transition:2\' THEN ? WHEN source_key LIKE \'interpretation:%\' THEN ? ELSE ? END WHERE workspace_id=? AND work_id=?').bind(opened, assigned, assessed, updated, ctx.principal.workspaceId, work.id),
       ctx.env.DB.prepare('UPDATE work_intake_events SET created_at=? WHERE workspace_id=? AND work_id=?').bind(opened, ctx.principal.workspaceId, work.id),
     ]);
-    // Priya's Figma seat is chosen from the catalog, as "Or choose a known service" records it. The seat
-    // needs her manager's decision, so the request opens blocked on the owner, its next owner.
+    // Priya's Figma seat is chosen from the catalog, as "Or choose a known service" records it for her. The seat
+    // needs her manager's decision, so the request opens blocked on the owner, her manager and its next owner.
     if (index === 0 && !await ctx.env.DB.prepare('SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND work_id=?').bind(ctx.principal.workspaceId, work.id).first()) {
       const figma = await ctx.env.DB.prepare('SELECT id FROM work_catalog WHERE workspace_id=? AND name=?').bind(ctx.principal.workspaceId, 'Figma design seat').first<{ id: string }>();
-      if (figma) await requestFulfilment(ctx, work.id, { catalogId: figma.id, beneficiaryId: demoManager, purpose: 'Brand refresh design work with the studio team before the workshop.' });
+      if (figma) await requestFulfilment(ctx, work.id, { catalogId: figma.id, beneficiaryId: demoAccount('Priya Shah'), purpose: 'Brand refresh design work with the studio team before the workshop.' });
     }
   }));
 }

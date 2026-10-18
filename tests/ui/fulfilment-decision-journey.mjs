@@ -12,7 +12,16 @@ export async function fulfilmentDecisionJourney(page, api, base, managerId) {
   });
   const catalog = await api('/catalog', {name:'Synthetic managed service',kind:'access',target:'synthetic-managed-service',ownerId:managerId,requiresManager:true});
   const work = await api('/work', {title:'Synthetic catalogue decision',body:'Synthetic request',beneficiaryId:member.id,deduplicationKey:crypto.randomUUID()});
-  await api(`/work/${work.id}/fulfilment`, {catalogId:catalog.id,beneficiaryId:member.id,purpose:'Synthetic approval check'});
+  // The owner chooses the service on the request's own form: it is recorded for the request's person, not the owner.
+  await page.goto(`${base}/app#/work/${work.id}`);
+  const chooser = page.locator('details').filter({has:page.getByText('Or choose a known service',{exact:true})});
+  await chooser.getByText('Or choose a known service',{exact:true}).click();
+  await chooser.getByLabel(/^Service/).selectOption(catalog.id);
+  await chooser.getByLabel(/What do you need it for/).fill('Synthetic approval check');
+  await chooser.getByRole('button',{name:'Save',exact:true}).click();
+  await page.getByText('What’s ready, and what remains',{exact:true}).waitFor();
+  assert.equal((await api(`/work/${work.id}/fulfilments/${catalog.id}`)).beneficiaryId, member.id,
+    'a service chosen for a request is recorded for the person the request is for');
   const grantsBefore = (await api('/grants')).length;
   const currentDecision = async () => (await api('/fulfilment-decisions')).items.find(item => item.workId === work.id);
   async function replacePerson() {

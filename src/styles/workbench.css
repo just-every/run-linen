@@ -107,8 +107,13 @@
   background: var(--surface);
 }
 
-/* The queue table */
+/* The queue table. Its rows share one set of columns (subgrid): Updated and Status are as wide as their widest
+   value, so every time and every pill keeps one line and its own room; the person and subject take the rest. */
 .queue-table {
+  display: grid;
+  grid-template-columns: 36px 46px minmax(0, 1.15fr) minmax(0, 1.2fr) max-content max-content 28px;
+  column-gap: 6px;
+  align-content: start;
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-panel);
@@ -119,9 +124,9 @@
 /* Two-line rows, as the pick: the person and their team and place, then a subject clamped to two lines. */
 .queue-row {
   display: grid;
-  grid-template-columns: 24px 46px minmax(0, 1.15fr) minmax(0, 1.2fr) 62px 84px 12px;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 0 6px;
   min-height: 58px;
   padding: 8px 10px;
   border-top: 1px solid var(--app-row-line);
@@ -207,10 +212,6 @@ a.queue-row.selected {
 }
 .q-status .badge .icon {
   display: none;
-}
-.q-status .badge {
-  white-space: normal;
-  text-align: center;
 }
 .q-go {
   color: var(--denim);
@@ -307,6 +308,13 @@ a.queue-row.selected {
   font-size: 13px;
 }
 
+/* Narrower desktops: the queue takes an even share, so its person and subject keep room beside a long state. */
+@media (min-width: 1241px) and (max-width: 1400px) {
+  .workbench {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 1240px) {
   .workbench {
     grid-template-columns: minmax(0, 1fr);
@@ -347,6 +355,9 @@ a.queue-row.selected {
   }
   .queue-header {
     display: none;
+  }
+  .queue-table {
+    display: block;
   }
   .queue-row {
     grid-template-columns: 26px minmax(0, 1fr) auto;

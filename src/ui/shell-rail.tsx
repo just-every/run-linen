@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { recordedEvent, request } from "./api";
 import { Icon } from "./icons";
-import { useRemote, useSession } from "./state";
+import { useSession } from "./state";
 import { isOpen, useQueue } from "./queue";
 import type { DomainRecord } from "./decisions";
+import type { FulfilmentDecision } from "./fulfilment-decisions";
 
 /** Sections the Settings item stands for; Settings opens on Connections & setup. */
 export const settingsSections = [
@@ -22,12 +24,30 @@ export function RailNav({ section }: { section: string }) {
   const { session } = useSession(),
     operator = session.principal.roles.some((r) => operatorRoles.includes(r)),
     queue = useQueue(),
-    decisions = useRemote<{ items: DomainRecord[] }>("/decisions", 60000);
-  const open = queue.data?.items.filter(isOpen).length,
-    choices = decisions.data?.items.filter((d) => d.data.state === "needs-decision").length;
+    [waiting, setWaiting] = useState<number>(),
+    [recorded, setRecorded] = useState(0);
+  const open = queue.data?.items.filter(isOpen).length;
+  // What waits on this person in Decisions: the business choices, and the catalog approvals they hold. Read again
+  // on each screen change, queue refresh and accepted write, so a recorded choice, approval or request moves the count.
+  useEffect(() => {
+    const bump = () => setRecorded((n) => n + 1);
+    window.addEventListener(recordedEvent, bump);
+    return () => window.removeEventListener(recordedEvent, bump);
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController(), signal = controller.signal;
+    Promise.all([
+      request<{ items: DomainRecord[] }>("/decisions", { signal }),
+      request<{ items: FulfilmentDecision[] }>("/fulfilment-decisions", { signal }),
+    ]).then(
+      ([choices, approvals]) => setWaiting(choices.items.filter((d) => d.data.state === "needs-decision").length + approvals.items.length),
+      () => signal.aborted || setWaiting(undefined),
+    );
+    return () => controller.abort();
+  }, [section, queue.data, recorded]);
   const items: [string, string, string, number | undefined, boolean][] = [
     ["work", "Requests", "inbox", open, true],
-    ["decisions", "Decisions", "approve", choices, true],
+    ["decisions", "Decisions", "approve", waiting, true],
     ["lifecycle", "People", "user", undefined, operator],
     ["assets", "Devices", "laptop", undefined, operator],
     ["software-assets", "Software", "cube", undefined, operator],

@@ -7,8 +7,8 @@ import type { Env } from './platform/types'
 import type { WorkContext } from './features/work/core'
 import { seedDemoModel } from './demo/model'
 import { seedDemoWork } from './demo/work'
-import { seedDemoDecisionHolder, seedDemoBeneficiary } from './demo/people'
-import { upsertPerson, acquireAsset } from './features/work/resources'
+import { seedDemoOwner, seedDemoPeople } from './demo/people'
+import { acquireAsset } from './features/work/resources'
 import { saveArticle } from './features/work/knowledge'
 import { createCatalogItem } from './features/work/requests'
 import { create, list } from './features/services/store'
@@ -55,16 +55,10 @@ export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: stri
  const owner = await nativeStore(env).byEmail(ownerEmail)
  if (!owner) throw Error('Demo owner is missing')
  const ctx: WorkContext = { env, principal: { userId: owner.id, workspaceId: owner.workspaceId, roles: ['owner'] } }
- await Promise.all([seedDemoModel(ctx, now), seedDemoDecisionHolder(ctx, ownerEmail, now)])
+ await Promise.all([seedDemoModel(ctx, now), seedDemoOwner(ctx, ownerEmail, now)])
  const db = env.DB, w = owner.workspaceId, day = (offset: number) => new Date(now.getTime() + offset * 86400000).toISOString()
  const exists = (table: string, field: string, value: string) => db.prepare(`SELECT 1 FROM ${table} WHERE workspace_id=? AND ${field}=?`).bind(w, value).first()
- // Each person's team, as each request records it in its context.
- const people: [string, string][] = [['Priya Shah', 'Design'], ['Jordan Lee', 'Sales'], ['Samira Khan', 'Customer Success'], ['Theo Bennett', 'Operations'], ['Maya Chen', 'Marketing'], ['Oliver Brooks', 'Engineering'], ['Amelia Wilson', 'Finance'], ['Noah Patel', 'Product']]
- await Promise.all(people.map(async ([name], index) => {
-  if (!await exists('work_people', 'source_id', `northstar-${index}`))
-   await upsertPerson(ctx, { source: 'Northstar team directory · demo sample', sourceId: `northstar-${index}`, name, effectiveAt: day(-30 - index), observedAt: day(-1) })
- }))
- await seedDemoBeneficiary(ctx, 'northstar-0')
+ await seedDemoPeople(ctx, now)
  // Title, message, kind and the place the request is about.
  const requests = [
   ['Priya needs Figma for the brand refresh', 'Please arrange a Figma seat for Priya before the brand workshop tomorrow. The design team has confirmed the project budget.', 'request', 'Denver, CO'],
@@ -102,7 +96,7 @@ export async function seedDemo(env: Env, { ownerEmail, now }: { ownerEmail: stri
   ['Business reporting', 'Revenue dashboards and finance exports.', 'Timely weekly reporting and month-end close.'],
  ]) if (!services.some(s => s.data.name === name)) await create(db, ctx.principal, 'service', { name, description, businessImpact, source: 'Demo sample · service review', observedAt: day(-1), freshnessMs: 604800000 }, { visibility: 'workspace' })
  services = await list(db, ctx.principal, 'service')
- await seedDemoWork(ctx, requests, people, now)
+ await seedDemoWork(ctx, requests, now)
  const decisions = await list(db, ctx.principal, 'decision')
  for (const [title, quote, impact] of [
   ['Choose the design renewal term', 'Twelve monthly seats cost $180 per month. An annual commitment saves $360, with no refund for unused seats.', 'The design roster may change after the launch.'],

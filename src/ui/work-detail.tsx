@@ -113,7 +113,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <Composer workId={work.id} onSent={changed} />
         <ConversationHistory conversation={detail.data!} />
       </section>
-      <WorkOutcome key={work.id} workId={work.id} onChanged={changed} />
+      <WorkOutcome key={work.id} work={work} onChanged={changed} />
       <WorkCommands work={work} onChanged={changed} operator={operator} />
       <details className="evidence">
         <summary>Request identity & context</summary>
