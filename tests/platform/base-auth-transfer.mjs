@@ -103,11 +103,18 @@ try{
  await run(['exec','rer','reset','--yes'])
  const checkpoint=await run(['exec','rer','import','--input',archive,'--journal','exports/after.rer','--yes'],1);assert.match(checkpoint,/erasure_epoch/)
  await run(['exec','rer','import','--input',later,'--yes'])
- // A stranger's plain deploy works; configured legacy resources stay protected.
- for (const key of Object.keys(commandEnvironment)) if (key.startsWith('LINEN_')) delete commandEnvironment[key]
- // Satisfy Base's production mail prerequisite for the provider-free dry run.
+ // Build the deploy artifact without provider credentials; retained resources stay protected.
+ for (const key of Object.keys(commandEnvironment)) if (key.startsWith('LINEN_') || key.startsWith('CLOUDFLARE_')) delete commandEnvironment[key]
+ await run(['exec','rer','build'])
+ const artifact=JSON.parse(await readFile(join(root,'dist/server/wrangler.json'),'utf8'))
+ assert.ok((await readFile(resolve(root,'dist/server',artifact.main))).length,'The deploy artifact contains its Worker entry')
+ assert.ok(artifact.d1_databases.some(binding=>binding.binding==='DB'))
+ assert.ok(artifact.r2_buckets.some(binding=>binding.binding==='ATTACHMENTS'))
+ // Base #275 requires target reads even for a dry run; building needs no credentials.
  commandEnvironment.MAIL_API_KEY='test-only-dry-run-mail-key'
- await run(['exec','rer','deploy','--dry-run'])
+ const missingCredentials=await run(['exec','rer','deploy','--dry-run'],3)
+ for (const name of ['CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_API_TOKEN']) assert.ok(missingCredentials.includes(name),missingCredentials)
+ await assert.rejects(readFile(join(root,'.rer/deploy/production.json')),{code:'ENOENT'})
  const configPath=join(root,'wrangler.jsonc'),config=JSON.parse(await readFile(configPath,'utf8'))
  config.d1_databases[0].database_id='retained-remote-database'
  await writeFile(configPath,JSON.stringify(config))
@@ -125,5 +132,5 @@ try{
  // verified live legacy bindings before any build, upload or provider mutation.
  commandEnvironment.NODE_OPTIONS=`${commandEnvironment.NODE_OPTIONS??''} --import ${pathToFileURL(join(root,'tests/platform/deploy-edge.mjs'))}`.trim()
  assert.match(await run(['exec','rer','deploy','--non-interactive'],4),/must retain Worker linen/)
- console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; fresh deploy succeeds without provider access while retained deployment identity changes remain refused')
+ console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; deploy artifact builds without provider access, credential-free deploy dry run refuses with named credentials, and retained deployment identity changes remain refused')
 }finally{await mf?.dispose();await close();await rm(dir,{recursive:true,force:true})}
