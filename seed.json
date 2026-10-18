@@ -213,7 +213,7 @@
       "/signin",
       "/app"
     ],
-    "notes": "Lobby and native setup/sign-in are public; Linen application data requires a native scoped session. Fresh installations explicitly select LINEN_DEPLOYMENT=new and use rer-derived resource names. Existing Worker and storage identities remain protected; see README.md."
+    "notes": "Lobby and native setup/sign-in are public; Linen application data requires a native scoped session. Plain rer deploy creates fresh installations with rer-derived resource names. Configured, recorded or live legacy identities remain protected; see README.md."
   },
   "extensionPoints": {
     "contributions": [],
