@@ -212,6 +212,12 @@ try {
   }
   assert.ok(manifest,'Native pending-person archive is ready');
   assert.ok(manifest.tables.work_pending_people>0 && manifest.tables.work_pending_services>0);
+  const archiveChunks=new Map();
+  for(const chunk of manifest.chunks)
+    archiveChunks.set(chunk.ordinal,await (await request(`/api/v1/exports/${exported.id}/chunks/${chunk.ordinal}`,undefined,owner)).arrayBuffer());
+  // CI deliberately uses one worker port. Finish the source installation before
+  // starting the independent restored installation on that same port.
+  await h.close();
   destination=await runtimeHarness('tests/work/pending-person-worker.ts');
   async function target(path,body,auth={},method=body===undefined?'GET':'POST',raw=false) {
     const response=await fetch(destination.origin+'/api/v1'+path,{method,redirect:'manual',
@@ -227,8 +233,7 @@ try {
   targetOwner.csrf=(await target('/session',undefined,targetOwner)).value.csrfToken;
   const imported=(await target('/imports',{manifest,idempotencyKey:'pending-restore'},targetOwner)).value;
   for(const chunk of manifest.chunks) {
-    const bytes=await (await request(`/api/v1/exports/${exported.id}/chunks/${chunk.ordinal}`,undefined,owner)).arrayBuffer();
-    await target(`/imports/${imported.id}/chunks/${chunk.ordinal}`,bytes,targetOwner,'PUT',true);
+    await target(`/imports/${imported.id}/chunks/${chunk.ordinal}`,archiveChunks.get(chunk.ordinal),targetOwner,'PUT',true);
   }
   const report=(await target(`/imports/${imported.id}/dry-run`,{},targetOwner)).value;
   assert.equal(report.unknownMappings,0);
