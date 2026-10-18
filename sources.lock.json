@@ -611,7 +611,7 @@
       "executable": false
     },
     "deploy.json": {
-      "sha256": "5e8e3d0e150d93b3adeb9e6babde51644ac85fd8d7374a8c3c3bfdac136f0a61",
+      "sha256": "db787e17c5d5d456cef47d88982e2c7ac69a94b5a92e0217322b7c6075a09637",
       "executable": false
     },
     "docs/asking.md": {
@@ -915,15 +915,15 @@
       "executable": false
     },
     "OPERATIONS.md": {
-      "sha256": "511a20b65091146a3b6277af5040ed0746d2924ca027766428a1e56c2af23450",
+      "sha256": "f10cee7d52e06e86812a9c5af385375e740293243c657fbb67f53a08d0f51f59",
       "executable": false
     },
     "package.json": {
-      "sha256": "0694918d28c48c7cd2e6162215c7ccb88d3f6880f78b01c5b8b10f0411f34f9c",
+      "sha256": "15ef04772621265e159148dc56f3c46e02ac6a990a7d1c34264e6ff4c5c40ec6",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "50741bc2e75b8ac460dc041e36bfc401e08c20495133171ac7d410d05d37fac9",
+      "sha256": "73d3df2b1dd1ceb5a456294cac116d6b596f77442f6974be52e264a8ba2e1671",
       "executable": false
     },
     "public/brand/band.webp": {
@@ -995,7 +995,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "d5e1d24a9272022ff5ceca0d01598702d6bd666425c581816c6a928cf8cf68b6",
+      "sha256": "6ffded02b3f22168533f73be6eb4bbffdccb24fce22fb98c515cd3f45b7150ad",
       "executable": false
     },
     "RELEASE.json": {
@@ -1070,8 +1070,16 @@
       "sha256": "8268753899b486d8e6e940366b5b15b8e3ba9777155c1eda07909aa52150c1d8",
       "executable": false
     },
+    "scripts/installer/deploy-migrations.mjs": {
+      "sha256": "3eaa470ae4f91bc9d1db740effbee5ee0a9077c18ae304c457798187f81b538a",
+      "executable": false
+    },
+    "scripts/installer/deploy.mjs": {
+      "sha256": "c58342a1f5a8415a506558620e94321be846e0670aba15352884fd9876767e00",
+      "executable": false
+    },
     "scripts/installer/local.mjs": {
-      "sha256": "bb6259f5cf5ea1b67a8fdf59bed42875af9490551a2267c4d86f413db6359c95",
+      "sha256": "1de6b6652d4558084108ed8ed062e8004bd437bf3ffc858d1e8a04468e92c078",
       "executable": false
     },
     "scripts/installer/native-state.mjs": {
@@ -1103,7 +1111,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "26720609024ed6634cbf470f873742564dac8fdd9e931c34fb23fb58b893cf04",
+      "sha256": "1b11bb1826077c0221336d409a502229cb2a728f58855f287203b4521b18b1bb",
       "executable": false
     },
     "src/application.ts": {
@@ -3411,7 +3419,7 @@
       "executable": false
     },
     "src/styles/forms.css": {
-      "sha256": "cc7834aab27520d7250e5bb2055a3845a0789de517d436b929283de4dd98639d",
+      "sha256": "307b99b188c7dab4978c50bd0524474f83699c0d4a82c56fe5d760fd50c091dc",
       "executable": false
     },
     "src/styles/tokens.css": {
@@ -3763,7 +3771,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "365706a54cba2ffa2eb4bdaf197bfe7c2794c1cbb449425dc0b373e3eeb2645f",
+      "sha256": "cdc64d959e03575d66826d3368cc2901f6d98a92fcd3a7068b1cd7f2b191ca8e",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
@@ -3855,11 +3863,11 @@
       "executable": false
     },
     "tests/ui/browser.mjs": {
-      "sha256": "cfc2077c836f11bb023ad26c40fd6a33933787b122be084d9c28e502ff36acc6",
+      "sha256": "7b2e4372f555c94d47b55af9702c91198e822671641d526a287dc93730880921",
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {
-      "sha256": "323e3d5a468902be70f69ba490e707c14f06d312150d95cb4c1b3d95dd0ee73a",
+      "sha256": "1bcca839931e277d5e4b8dd64c3a3ff6d57af6e4df8df730182ece87e54f1946",
       "executable": false
     },
     "tests/ui/connected-cancellation.mjs": {
@@ -3887,7 +3895,7 @@
       "executable": false
     },
     "tests/ui/connected-restart.mjs": {
-      "sha256": "bb157abbb229060dd6b8bb4f4cdfaeb93e57a9962ad74dc1c368562dbf66a400",
+      "sha256": "56b6f854039fe8bd3529a07280ad684c736897a27b21426ac8c66a6bc0dfd931",
       "executable": false
     },
     "tests/ui/connected-run.mjs": {
@@ -3935,7 +3943,7 @@
       "executable": false
     },
     "tests/ui/setup-browser.mjs": {
-      "sha256": "2af4c49ebdc3a7c1515b1f188863a9ee7746b5770dcd55a4de021bf82a95eeae",
+      "sha256": "f8d68b270d9d5848b2ecc65666f0a7185ce9af9790a931c61d8c996cadc3af28",
       "executable": false
     },
     "tests/ui/setup-change-checks.mjs": {
