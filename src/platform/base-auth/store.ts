@@ -1,3 +1,4 @@
+import { authenticatePendingPerson } from '../../features/work/pending-binding';
 import { devAdmitted } from '../../modules/operator-auth/dev-admission.mjs'
 import type { NativePerson, Session, CompletedSession, SessionKind } from '../../modules/operator-auth/index.mjs'
 import type { Env, Role } from '../types'
@@ -32,6 +33,7 @@ export function nativeStore(env: Env) {
   if(!s||s.kind==='dev'&&(env.AUTH_LOCAL!=='true'||!await devAdmitted(request)))return null
   const p=await byId(s.user_id,s.workspace_id);if(!p||p.workspaceId!==s.workspace_id||p.status!=='active'||s.version!==p.version)return null
   try{await assertPlatformAdmission(db,p.workspaceId,p.id,p.email)}catch{return null}
+  await authenticatePendingPerson(env,{workspaceId:p.workspaceId,userId:p.id,sessionId:s.id})
   return {id:s.id,operatorId:p.id,operator:p,kind:s.kind,createdAt:Date.parse(s.created_at),expiresAt:Date.parse(s.expires_at)}
  }
  async function actorFence(actor:Session<Role>,now:number){const p=await byId(actor.operator.id,(actor.operator as Person).workspaceId);if(!p||p.version!==actor.operator.version)return {sql:'0',args:[]};const f=await fence(p);return {sql:`${f.sql} AND EXISTS(SELECT 1 FROM sessions s JOIN platform_auth_session_proofs p ON p.session_id=s.id WHERE s.id=? AND s.user_id=? AND s.workspace_id=? AND s.expires_at>? AND p.version=?)`,args:[...f.args,actor.id,p.id,p.workspaceId,new Date(now).toISOString(),p.version]}}

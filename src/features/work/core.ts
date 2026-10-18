@@ -1,3 +1,4 @@
+import { preparePendingRequest, pendingRequestSnapshot } from './pending-services';
 import { progressFor, requestProgress } from "./progress";
 import { hashToken } from "../../platform/crypto";
 import { cancelWorkExecution } from "./execution";
@@ -24,6 +25,9 @@ export interface WorkRecord {
   created_at: string;
   paused_ms: number;
   paused_at: string | null;
+  pending_person_id?: string | null;
+  requester_name?: string | null;
+  assignee_name?: string | null;
 }
 export function operator(p: Principal) {
   return p.roles.some((r) => ["owner", "operator"].includes(r));
@@ -41,7 +45,9 @@ export async function getWork(ctx: WorkContext, id: string) {
 
   const p = ctx.principal;
   const row = await ctx.env.DB.prepare(
-    "SELECT * FROM work_records WHERE workspace_id=? AND id=?",
+    `SELECT w.*,(SELECT u.name FROM users u WHERE u.id=w.requester_id) requester_name,
+      (SELECT u.name FROM users u WHERE u.id=w.assignee_id) assignee_name
+      FROM work_records w WHERE w.workspace_id=? AND w.id=?`,
   )
     .bind(p.workspaceId, id)
     .first<WorkRecord>();
@@ -81,7 +87,7 @@ export async function listWork(ctx: WorkContext) {
   const p = ctx.principal;
   const rows = (
     await ctx.env.DB.prepare(
-      `SELECT * FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=?))) ORDER BY updated_at DESC LIMIT 200`,
+      `SELECT work_records.*,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=?))) ORDER BY updated_at DESC LIMIT 200`,
     )
       .bind(
         p.workspaceId,
@@ -103,8 +109,9 @@ export async function listWork(ctx: WorkContext) {
     .bind(p.workspaceId, ids).all<{ id: string }>()).results.map(row => row.id));
   // The catalogue services recorded on each request (name and kind), for the spaces that list them.
   const services = (await db.prepare(`SELECT f.work_id,c.name,c.kind FROM work_fulfilments f JOIN work_catalog c ON c.workspace_id=f.workspace_id AND c.id=f.catalog_id
-    WHERE f.workspace_id=? AND f.work_id IN (SELECT value FROM json_each(?)) ORDER BY c.name`)
-    .bind(p.workspaceId, ids).all<{ work_id: string; name: string; kind: string }>()).results;
+    WHERE f.workspace_id=? AND f.work_id IN (SELECT value FROM json_each(?))
+    UNION ALL SELECT h.work_id,c.name,c.kind FROM work_pending_services h JOIN work_catalog c ON c.workspace_id=h.workspace_id AND c.id=h.catalog_id WHERE h.workspace_id=? AND h.work_id IN (SELECT value FROM json_each(?)) AND h.state='held' ORDER BY c.name`)
+    .bind(p.workspaceId, ids,p.workspaceId,ids).all<{ work_id: string; name: string; kind: string }>()).results;
   const seesAttention = operator(p) || p.roles.includes('hr');
   return Promise.all(rows.map(async (row: any) => {
     const progress = flagged.has(row.id) ? await progressFor(ctx, row) : [];
@@ -127,6 +134,8 @@ export async function createWork(
     deduplicationKey: string;
     kind?: string;
     beneficiaryId?: string;
+    pendingPersonId?: string;
+    catalogIds?: string[];
     sensitivity?: string;
     context?: unknown;
   },
@@ -135,6 +144,11 @@ export async function createWork(
   await currentWorkPrincipal(ctx);
 
   const p = ctx.principal;
+  if(input.beneficiaryId && await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=?").bind(p.workspaceId,input.beneficiaryId).first())
+    throw new ApiError(422,'pending_person_required','Use pendingPersonId and selected services for a pending person');
+  const pending=await preparePendingRequest(ctx,input);
+  const beneficiaryId=pending?.person.id || input.beneficiaryId || p.userId;
+  const context=pending?{...(input.context && typeof input.context==='object' && !Array.isArray(input.context)?input.context:{}),requestedFor:pending.person.name,team:pending.person.team,neededBy:pending.person.start_date}:input.context || {};
   if (
     await ctx.env.DB.prepare(
       "SELECT 1 FROM work_erasure WHERE workspace_id=? AND person_id IN (?,?)",
@@ -172,29 +186,30 @@ export async function createWork(
       : value;
   const requestHash = await hashToken(JSON.stringify(canonical({
     workspaceId: p.workspaceId, requesterId: p.userId,
-    beneficiaryId: input.beneficiaryId || p.userId, kind: input.kind || "request",
+    beneficiaryId, ...(pending?{pendingPersonId:input.pendingPersonId,catalogIds:input.catalogIds}:{}), kind: input.kind || "request",
     title: input.title, body: input.body, sensitivity: input.sensitivity || "normal",
-    context: input.context || {},
+    context:pending?input.context||{}:context,
   })));
   const workId = id(),
     t = now();
   const guard = id();
   try { await ctx.env.DB.batch([
     ctx.env.DB.prepare(
-      "INSERT OR IGNORE INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,sensitivity,created_at,updated_at,context_json,dedup_key,request_hash) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+      "INSERT OR IGNORE INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,sensitivity,created_at,updated_at,context_json,dedup_key,request_hash,pending_person_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
     ).bind(
       workId,
       p.workspaceId,
       p.userId,
-      input.beneficiaryId || p.userId,
+      beneficiaryId,
       input.kind || "request",
       input.title,
       input.sensitivity || "normal",
       t,
       t,
-      JSON.stringify(input.context || {}),
+      JSON.stringify(context),
       input.deduplicationKey,
       requestHash,
+      input.pendingPersonId || null,
     ),
     // The conflict check is in the same transaction as every intake side effect.
     ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
@@ -213,9 +228,10 @@ export async function createWork(
       input.deduplicationKey,
     ),
     ctx.env.DB.prepare(
-      `INSERT OR IGNORE INTO work_intake_events(id,workspace_id,work_id,connection_id,source_message_id,sender,state,created_at) SELECT ?,workspace_id,id,'','initial:'||id,?,'pending',? FROM work_records WHERE workspace_id=? AND requester_id=? AND dedup_key=?`,
+      `INSERT OR IGNORE INTO work_intake_events(id,workspace_id,work_id,connection_id,source_message_id,sender,state,created_at) SELECT ?,workspace_id,id,'','initial:'||id,?,'pending',? FROM work_records WHERE workspace_id=? AND requester_id=? AND dedup_key=? AND pending_person_id IS NULL`,
     ).bind(id(), p.userId, t, p.workspaceId, p.userId, input.deduplicationKey),
     ...(internal?.statements(workId) ?? []),
+    ...(pending?.statements(workId) ?? []),
     ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id=?").bind(guard),
   ]); } catch (error) {
     if (String(error).includes("CHECK constraint failed"))
@@ -344,7 +360,7 @@ export async function conversation(ctx: WorkContext, workId: string) {
   )
     .bind(ctx.principal.workspaceId, workId, Number(privateAllowed))
     .all();
-  return { work, messages: messages.results, attachments: attachments.results, progress: await requestProgress(ctx, workId) };
+  return { work, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, progress: await requestProgress(ctx, workId) };
 }
 // The public line each conversation command records, in words people read.
 const transitionLabels: Record<string, string> = { reopen: "Reopened", cancel: "Cancelled", close: "Closed", pause: "Paused", resume: "Resumed", assign: "Assigned" };
@@ -388,6 +404,8 @@ export async function transitionWork(
         "Assignee must be an active service operator",
       );
   }
+  if(work.pending_person_id && ['reopen','resume'].includes(command) && await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state='withdrawn'").bind(ctx.principal.workspaceId,work.pending_person_id).first())
+    throw new ApiError(409,'pending_person_withdrawn','Withdrawn pending people cannot resume requests');
   const t = now();
   const result = await ctx.env.DB.prepare(
     `UPDATE work_records SET state=?,revision=revision+1,updated_at=?,closed_at=?,paused_at=?,paused_ms=paused_ms+?,assignee_id=COALESCE(?,assignee_id) WHERE workspace_id=? AND id=? AND revision=?`,
@@ -417,6 +435,8 @@ export async function transitionWork(
   let pendingCancellation = 0;
   if (command === "cancel") {
     await ctx.env.DB.batch([
+      ctx.env.DB.prepare(`INSERT INTO audit_events SELECT ?||':'||catalog_id,workspace_id,?,'work.pending_service_cancelled',work_id,json_object('catalogId',catalog_id,'personId',person_id),? FROM work_pending_services WHERE workspace_id=? AND work_id=? AND state='held'`).bind(id(),ctx.principal.userId,now(),ctx.principal.workspaceId,workId),
+      ctx.env.DB.prepare("UPDATE work_pending_services SET state='cancelled',reason='Request cancelled' WHERE workspace_id=? AND work_id=? AND state='held'").bind(ctx.principal.workspaceId,workId),
       ctx.env.DB.prepare(
         "UPDATE work_obligations SET state=CASE WHEN operation_id IS NULL THEN 'cancelled' ELSE 'unknown' END,last_error='Cancellation requested; reconcile every applied or uncertain effect',revision=revision+1 WHERE workspace_id=? AND work_id=? AND kind IN ('access.grant','device.deliver','identity.create') AND state<>'verified'",
       ).bind(ctx.principal.workspaceId, workId),

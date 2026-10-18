@@ -6,6 +6,7 @@ import { Badge, ErrorNotice, Facts, Loading, Notice } from "./primitives";
 import { Composer } from "./work-composer";
 import { objectFacts, roleList } from "./labels";
 import { WorkOutcome } from "./work-outcome";
+import { HeldServices } from "./pending-people";
 import { usePeopleLabels } from "./people-labels";
 import { shortRef } from "./work-queue";
 import { useQueue } from "./queue";
@@ -91,11 +92,11 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       <dl className="meta-line">
         <div>
           <dt>Requested by</dt>
-          <dd>{personName(work.requester_id)}</dd>
+          <dd>{work.requester_name ?? personName(work.requester_id)}</dd>
         </div>
         <div>
           <dt>Conversation assignee</dt>
-          <dd>{personName(work.assignee_id)}</dd>
+          <dd>{work.assignee_name ?? personName(work.assignee_id)}</dd>
         </div>
         <div>
           <dt>Last changed</dt>
@@ -103,6 +104,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         </div>
       </dl>
       <Progress items={progress} exception={exception} operator={operator} />
+      <HeldServices person={detail.data?.pendingPerson} services={detail.data?.heldServices} />
       <ErrorNotice error={detail.backgroundError} />
       <section className="agent-strip" aria-label="Linen">
         <h3>
@@ -113,11 +115,11 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <Composer workId={work.id} onSent={changed} />
         <ConversationHistory conversation={detail.data!} />
       </section>
-      <WorkOutcome key={work.id} work={work} onChanged={changed} />
+      <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />
       <WorkCommands work={work} onChanged={changed} operator={operator} />
       <details className="evidence">
         <summary>Request identity & context</summary>
-        <Facts entries={[["Visibility", work.sensitivity === "hr" ? "Restricted HR conversation" : "Request participants and permitted service team"], ["Requested by", personName(work.requester_id)], ["For", requestFor(work, personName)], ...objectFacts(work.context_json)]} />
+        <Facts entries={[["Visibility", work.sensitivity === "hr" ? "Restricted HR conversation" : "Request participants and permitted service team"], ["Requested by", work.requester_name ?? personName(work.requester_id)], ["For", requestFor(work, personName)], ...objectFacts(work.context_json)]} />
       </details>
     </article>
   );

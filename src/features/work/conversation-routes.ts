@@ -1,3 +1,4 @@
+import { listPendingPeople, savePendingPerson, withdrawPendingPerson } from './pending-people';
 import { listFulfilmentDecisions } from "./fulfilment-decisions";
 import { approveFulfilment } from "./fulfilment-authority";
 import { getFulfilment, amendFulfilment } from "./fulfilment-amend";
@@ -37,6 +38,11 @@ import {
 import { saveCalendar, setCommitment } from "./calendar";
 import { executionPort, bindObligationExecution } from "./execution";
 export function registerConversationRoutes(app: Hono<AppEnv>) {
+  app.get('/pending-people',async c=>c.json({items:await listPendingPeople({env:c.env,principal:c.get('principal')})}));
+  app.post('/pending-people',async c=>c.json(await savePendingPerson({env:c.env,principal:c.get('principal')},await jsonBody(c) as never),201));
+  app.post('/pending-people/:id/edit',async c=>c.json(await savePendingPerson({env:c.env,principal:c.get('principal')},await jsonBody(c) as never,c.req.param('id'))));
+  app.post('/pending-people/:id/withdraw',async c=>c.json(await withdrawPendingPerson({env:c.env,principal:c.get('principal')},c.req.param('id'),await jsonBody(c) as never)));
+  app.get('/work/:id/conversation',async c=>c.json(await conversation({env:c.env,principal:c.get('principal')},c.req.param('id'))));
   app.get("/fulfilment-decisions",async c=>c.json(await listFulfilmentDecisions({env:c.env,principal:c.get("principal")})));
   app.get("/work/:id/fulfilments/:catalogId", async c => c.json(await getFulfilment(
     {env:c.env,principal:c.get("principal")},c.req.param("id"),c.req.param("catalogId"))));
@@ -108,6 +114,8 @@ export function registerConversationRoutes(app: Hono<AppEnv>) {
             sensitivity:
               typeof b.sensitivity === "string" ? b.sensitivity : undefined,
             context: b.context,
+            pendingPersonId:typeof b.pendingPersonId==='string'?b.pendingPersonId:undefined,
+            catalogIds:b.catalogIds as string[]|undefined,
           },
         ),
         201,

@@ -155,6 +155,8 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
     .first();
   if (!person)
     throw new ApiError(422, "person_required", "Known stable person required");
+  if(await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state<>'bound'").bind(ctx.principal.workspaceId,input.personId).first())
+    throw new ApiError(409,'pending_person_unbound','Pending person services are held until normal account authentication');
   // Source identity is workspace-wide, independent of which admitted HR actor
   // delivered it. Every effect-bearing input belongs to its immutable revision.
   const material = {

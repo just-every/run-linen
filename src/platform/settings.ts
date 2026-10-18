@@ -47,14 +47,15 @@ export function registerSettingsRoutes(app:Hono<AppEnv>){
   const p=requireRole(c,'owner'),b=await jsonBody(c)
   const email=requiredString(b.email,'email',320).toLowerCase(),name=requiredString(b.name,'name',120),selected=b.roles
   if(!Array.isArray(selected)||!selected.length||selected.some(r=>!roles.includes(r)))throw new ApiError(400,'invalid_roles','Known roles required')
-  const personId=id(),bindingId=id(),uid=id(),guard=await platformAdmissionGuard(c.env.DB,p.workspaceId,uid,b.email as string),ownerGuard=await memberOwnerGuard(c)
+  const pending=await c.env.DB.prepare("SELECT id FROM work_pending_people WHERE workspace_id=? AND email=? AND state='pending'").bind(p.workspaceId,email.trim().toLowerCase()).first<{id:string}>()
+  const personId=pending?.id||id(),bindingId=id(),uid=id(),guard=await platformAdmissionGuard(c.env.DB,p.workspaceId,uid,b.email as string),ownerGuard=await memberOwnerGuard(c)
   if(b.isPerson!==undefined && typeof b.isPerson!=='boolean')throw new ApiError(422,'person_input','isPerson must be a boolean')
   // D1 batches are transactions. A denial inserts neither an orphan user nor an audit.
   const [result]=await c.env.DB.batch([
    c.env.DB.prepare('INSERT INTO users SELECT ?,?,?,?,? WHERE '+guard.sql+' AND '+ownerGuard.sql).bind(uid,email,name,await passwordHash(b.password as string),now(),...guard.bindings,...ownerGuard.bindings),
    c.env.DB.prepare('INSERT INTO memberships SELECT ?,?,?,1 WHERE changes()>0').bind(p.workspaceId,uid,JSON.stringify(selected)),
    auditStatement(c,'member.created',uid,{roles:selected},true),
-   ...(b.isPerson===true?[
+   ...(b.isPerson===true && !pending?[
     c.env.DB.prepare(`INSERT INTO work_people(id,workspace_id,source,source_id,name,observed_at,effective_at,member_id,binding_id)
       SELECT ?,?,'owner-members',?,?, ?,?,?,? WHERE EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1)`)
       .bind(personId,p.workspaceId,email,name,now(),now(),uid,bindingId,p.workspaceId,uid),

@@ -37,6 +37,7 @@ export async function reviewPersonBinding(ctx: WorkContext, personId: string, in
     !(input.memberId===null || (typeof input.memberId==='string' && input.memberId.length>0)) ||
     !(input.managerId===undefined || input.managerId===null || (typeof input.managerId==='string' && input.managerId.length>0)))
     throw new ApiError(422,'person_binding_input','Current revision and explicit memberId (or null to unbind) required');
+  if(await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people h JOIN work_people p ON p.workspace_id=h.workspace_id AND p.id=h.id WHERE h.workspace_id=? AND h.id=? AND (h.state<>'bound' OR p.member_id IS NULL)").bind(ctx.principal.workspaceId,personId).first())throw new ApiError(409,'pending_person_authentication_required','Pending people bind only after normal account authentication');
   const db=ctx.env.DB,w=ctx.principal.workspaceId,bindingId=id(),guard=id();
   const person=await db.prepare('SELECT * FROM work_people WHERE workspace_id=? AND id=?').bind(w,personId).first<any>();
   if(!person || person.revision!==input.expectedRevision || (input.memberId!==null && (!person.active || person.merged_into)))

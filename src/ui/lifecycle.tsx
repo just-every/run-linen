@@ -14,6 +14,7 @@ import {
   Notice,
 } from "./primitives";
 import { Icon } from "./icons";
+import { PendingPeople } from "./pending-people";
 export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
   const [reviewPersonId, setReviewPersonId] = useState('');
   const personName = usePeopleLabels();
@@ -204,6 +205,7 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
         )
       ) : (
         <>
+          <PendingPeople />
           {list.loading ? (
             <Loading />
           ) : list.error ? (

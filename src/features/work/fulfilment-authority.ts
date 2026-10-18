@@ -41,6 +41,13 @@ export async function assertWorkFulfilmentAuthority(ctx: WorkContext, step: Step
   if(!['group.add','license.add'].includes(step.action))return;
   const db=ctx.env.DB,w=ctx.principal.workspaceId;
   const kind=step.action==='group.add'?'access':'software';
+  const beneficiary=step.localBeneficiaryId||step.beneficiaryId;
+  if(await db.prepare(`SELECT 1 FROM work_pending_people h WHERE h.workspace_id=? AND (h.id=? OR (h.state<>'bound' AND h.email=(SELECT lower(trim(email)) FROM users WHERE id=?)))`).bind(w,beneficiary,beneficiary).first())
+    throw new ApiError(409,'pending_person_unbound','A pending person cannot receive provider access before normal account authentication');
+  const pendingWork=planId.startsWith('work:')?{work_id:planId.slice(5),context_type:'work'}:
+    await db.prepare('SELECT work_id,context_type FROM execution_plans WHERE workspace_id=? AND id=?').bind(w,planId).first<any>();
+  if(pendingWork?.context_type==='work' && await db.prepare(`SELECT 1 FROM work_records r JOIN work_pending_people h ON h.workspace_id=r.workspace_id AND h.id=r.pending_person_id JOIN work_people p ON p.workspace_id=h.workspace_id AND p.id=h.id WHERE r.workspace_id=? AND r.id=? AND (h.state<>'bound' OR p.member_id IS NULL OR p.member_id<>r.beneficiary_id OR p.binding_id IS NULL)`).bind(w,pendingWork.work_id).first())
+    throw new ApiError(409,'pending_person_unbound','Pending person services cannot execute before verified account binding');
   const requiresManager=await db.prepare('SELECT 1 FROM work_catalog WHERE workspace_id=? AND target=? AND kind=? AND requires_manager=1 LIMIT 1')
     .bind(w,step.target,kind).first();
   if(!requiresManager)return;

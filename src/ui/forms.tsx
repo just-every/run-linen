@@ -10,6 +10,7 @@ export interface Field {
     | "text"
     | "email"
     | "password"
+    | "date"
     | "number"
     | "textarea"
     | "datetime-local"
@@ -55,6 +56,7 @@ export function Fields({ fields }: { fields: Field[] }) {
                 name={field.name}
                 type="checkbox"
                 defaultChecked={Boolean(field.value)}
+                required={field.required}
               />
               <span>{field.label}</span>
             </>

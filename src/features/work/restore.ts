@@ -6,6 +6,8 @@ const tables = new Set([
   "work_messages",
   "work_attachments",
   "work_people",
+  "work_pending_people",
+  "work_pending_services",
   "work_assets",
   "work_custody",
   "work_lifecycle",
@@ -127,7 +129,32 @@ export async function restoreAdoptionRecord(
         "Restore cannot resurrect erased identity",
       );
   }
-  const subjects = [row.requester_id, row.beneficiary_id, row.author_id].filter(
+  if (input.table === 'work_pending_people') {
+    if (!['pending','bound','withdrawn'].includes(String(row.state)))
+      throw new ApiError(422,'restore_scope','Known pending-person state required');
+    if (!await ctx.env.DB.prepare('SELECT 1 FROM work_people WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,String(row.id)).first())
+      throw new ApiError(422,'restore_parent','Restore the pending person domain record first');
+    // Retain source state as history. work_people has no restored account link;
+    // fresh authentication must prove its email before any current binding.
+  }
+  if (row.pending_person_id && !await ctx.env.DB.prepare('SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,String(row.pending_person_id)).first())
+    throw new ApiError(422,'restore_parent','Restore the pending-person record before its work');
+  if (input.table === 'work_pending_services') {
+    if (!['held','released','cancelled'].includes(String(row.state)))
+      throw new ApiError(422,'restore_scope','Known pending-service state required');
+    if (!await ctx.env.DB.prepare(`SELECT 1 FROM work_records w JOIN work_pending_people p ON p.workspace_id=w.workspace_id AND p.id=w.pending_person_id
+      JOIN work_catalog c ON c.workspace_id=w.workspace_id AND c.id=?
+      WHERE w.workspace_id=? AND w.id=? AND p.id=?`).bind(String(row.catalog_id),ctx.principal.workspaceId,String(row.work_id),String(row.person_id)).first())
+      throw new ApiError(422,'restore_parent','Restore matching work, pending person and catalogue service first');
+    // An imported selection is content, not a new instruction. Historical released
+    // selections never become queued work, and held selections remain inert.
+    if(row.state==='held') {
+      row.reason='Restored held service; reconcile source effects and review current fulfilment authority';
+      row.released_at=null;
+    }
+  }
+  const subjects = [row.requester_id, row.beneficiary_id, row.author_id, row.person_id, row.pending_person_id,
+    ...(input.table==='work_pending_people'?[row.id]:[])].filter(
     (v): v is string => typeof v === "string",
   );
   if (
@@ -157,7 +184,7 @@ export async function restoreAdoptionRecord(
       );
   }
   const keys = Object.keys(row),
-    recordId = String(row.id || row.article_id || input.sourceKey);
+    recordId = String(row.id || row.article_id || (input.table==='work_pending_services'?`${row.work_id}:${row.catalog_id}`:input.sourceKey));
   await ctx.env.DB.batch([
     ctx.env.DB.prepare(
       `INSERT INTO ${input.table}(${keys.join(",")}) VALUES(${keys.map(() => "?").join(",")})`,

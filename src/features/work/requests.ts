@@ -64,6 +64,10 @@ export async function requestFulfilment(
     return amendFulfilment(ctx,workId,{...input,expectedWorkRevision:input.expectedWorkRevision,
       expectedFulfilmentRevision:input.expectedFulfilmentRevision,idempotencyKey:input.idempotencyKey});
   const work = await getWork(ctx, workId);
+  if(await ctx.env.DB.prepare(`SELECT 1 FROM work_pending_people h WHERE h.workspace_id=? AND (h.id=? OR (h.state<>'bound' AND h.email=(SELECT lower(trim(email)) FROM users WHERE id=?)))`).bind(ctx.principal.workspaceId,input.beneficiaryId,input.beneficiaryId).first())
+    throw new ApiError(409,'pending_person_unbound','Use the held pending-person request until normal account authentication binds this person');
+  if(work.pending_person_id && !await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state='bound'").bind(ctx.principal.workspaceId,work.pending_person_id).first())
+    throw new ApiError(409,'pending_person_unbound','Services are held until this person signs in with their verified email account');
   if (["closed", "cancelled"].includes(work.state))
     throw new ApiError(409, "work_closed", "Reopen the request before choosing a service for it");
   if (input.beneficiaryId !== ctx.principal.userId)
