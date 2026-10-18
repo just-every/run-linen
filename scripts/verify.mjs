@@ -53,10 +53,27 @@ const checks = [
   ['native connected provider journeys', process.execPath, ['tests/ui/connected-run.mjs']],
   ['connection and authority setup', process.execPath, ['tests/ui/setup-run.mjs']],
 ]
+const shardValue = process.env.LINEN_VERIFY_SHARD
+let shard
+if (shardValue !== undefined) {
+  if (!/^[1-9]\d*\/[1-9]\d*$/.test(shardValue)) {
+    throw new Error('LINEN_VERIFY_SHARD must be a positive shard number/count, such as 1/4')
+  }
+  const [number, count] = shardValue.split('/').map(Number)
+  if (!Number.isSafeInteger(number) || !Number.isSafeInteger(count) || number > count) {
+    throw new Error('LINEN_VERIFY_SHARD must have safe integer values with number <= count')
+  }
+  shard = { number, count }
+}
+// Every shard builds its own emitted Worker before its assigned checks.
+const selectedChecks = shard
+  ? [checks[0], ...checks.slice(1).filter((_, index) => index % shard.count === shard.number - 1)]
+  : checks
+const shardLabel = shard ? ` (shard ${shard.number}/${shard.count})` : ''
 await mkdir(output, { recursive: true })
 const results = []
-for (const [name, executable, argv, checkEnvironment = {}] of checks) {
-  console.log(`\nChecking ${name}`)
+for (const [name, executable, argv, checkEnvironment = {}] of selectedChecks) {
+  console.log(`\nChecking ${name}${shardLabel}`)
   const started = Date.now()
   const code = await new Promise((done, reject) => {
     const child = spawn(executable, argv, {
@@ -73,9 +90,10 @@ for (const [name, executable, argv, checkEnvironment = {}] of checks) {
   await writeFile(resolve(output, 'results.json'), JSON.stringify({
     completedAt: new Date().toISOString(),
     label: 'Local checks; test provider responses are fixtures, not live provider acceptance.',
-    complete: results.length === checks.length && results.every(r => r.exitCode === 0),
+    ...(shard ? { shard } : {}),
+    complete: results.length === selectedChecks.length && results.every(r => r.exitCode === 0),
     results,
   }, null, 2) + '\n')
   if (code !== 0) process.exit(code)
 }
-console.log(`\nPASS ${results.length} local checks. Evidence: ${output}`)
+console.log(`\nPASS ${results.length} local checks${shardLabel}. Evidence: ${output}`)

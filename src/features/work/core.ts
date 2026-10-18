@@ -26,8 +26,6 @@ export interface WorkRecord {
   paused_ms: number;
   paused_at: string | null;
   pending_person_id?: string | null;
-  requester_name?: string | null;
-  assignee_name?: string | null;
 }
 export function operator(p: Principal) {
   return p.roles.some((r) => ["owner", "operator"].includes(r));
@@ -45,9 +43,7 @@ export async function getWork(ctx: WorkContext, id: string) {
 
   const p = ctx.principal;
   const row = await ctx.env.DB.prepare(
-    `SELECT w.*,(SELECT u.name FROM users u WHERE u.id=w.requester_id) requester_name,
-      (SELECT u.name FROM users u WHERE u.id=w.assignee_id) assignee_name
-      FROM work_records w WHERE w.workspace_id=? AND w.id=?`,
+    "SELECT * FROM work_records WHERE workspace_id=? AND id=?",
   )
     .bind(p.workspaceId, id)
     .first<WorkRecord>();
@@ -360,7 +356,11 @@ export async function conversation(ctx: WorkContext, workId: string) {
   )
     .bind(ctx.principal.workspaceId, workId, Number(privateAllowed))
     .all();
-  return { work, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, progress: await requestProgress(ctx, workId) };
+  const names = await ctx.env.DB.prepare(`SELECT
+    (SELECT name FROM users WHERE id=?) requester_name,
+    (SELECT name FROM users WHERE id=?) assignee_name`)
+    .bind(work.requester_id, work.assignee_id).first();
+  return { work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, progress: await requestProgress(ctx, workId) };
 }
 // The public line each conversation command records, in words people read.
 const transitionLabels: Record<string, string> = { reopen: "Reopened", cancel: "Cancelled", close: "Closed", pause: "Paused", resume: "Resumed", assign: "Assigned" };
