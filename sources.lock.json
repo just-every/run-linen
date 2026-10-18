@@ -599,7 +599,7 @@
       "executable": false
     },
     "DEMO.md": {
-      "sha256": "139f0554113fd22e793a46fbb47861b95e0edcae65ed650199a97bb6767ec8cb",
+      "sha256": "390130c43ffc5ca8e2bd74bc64cc60437e921ad47bf2c69cfcde4c093fbfcffd",
       "executable": false
     },
     "deploy-demo.json": {
@@ -975,7 +975,7 @@
       "executable": false
     },
     "public/design/foliage-left.svg": {
-      "sha256": "a7e090d2a7e143894107abe07e650189edb7e4c4e1e1eeaee47ed1b5aace490b",
+      "sha256": "cf0dcb471f1830167d170127ad2ce4d660031249a8e0f48aa4c62760f176bc22",
       "executable": false
     },
     "public/design/foliage-right.svg": {
@@ -1395,7 +1395,7 @@
       "executable": false
     },
     "src/demo.ts": {
-      "sha256": "a892a52190ce83cdbbda7d97a6cfa19fef9f67c1de1c838de74923dee808b6f8",
+      "sha256": "baf6ef42d7d38afc3bd7f461bee7d5055292ac44a3e07651179dccb2cf057c40",
       "executable": false
     },
     "src/demo/model.ts": {
@@ -1403,11 +1403,11 @@
       "executable": false
     },
     "src/demo/people.ts": {
-      "sha256": "7fea0d386a3896f2530741dc24405f6297b3fa66285ed2f5ea3e1614ace1d8ca",
+      "sha256": "9bac97925f0cd5cf1f5a0be5bf25622d4ad0b2d131dc25739f6ba251db3fe450",
       "executable": false
     },
     "src/demo/work.ts": {
-      "sha256": "52d1417dcb305756ea394f9fa8a14c78068148062ba80030d426ef690c6d0d53",
+      "sha256": "ff281c2a0684d54f41cdacbe09ff8e6fa09d9ef867c583f82585f9d2b25bba4a",
       "executable": false
     },
     "src/family/linen-foundation/README.md": {
@@ -3675,11 +3675,11 @@
       "executable": false
     },
     "src/styles/shell.css": {
-      "sha256": "8368e44ddf2b8023ad4dc6f7deb0a4f8fc6d443d009911800b513b2325b562a6",
+      "sha256": "b3bb39f0cf1facda05b55735dfc799c80e444a3feb9987d016a808a2e66a7e2a",
       "executable": false
     },
     "src/styles/workbench.css": {
-      "sha256": "2ac8a04f0d70ccb51bcd5e76aadb6d83844ff4d62329c069e3827eed4780584a",
+      "sha256": "0011577a81055be437e95f38080aaed45e748dc83caeb859646763c865a360cc",
       "executable": false
     },
     "src/ui/adoption-choices.tsx": {
@@ -3691,7 +3691,7 @@
       "executable": false
     },
     "src/ui/api.ts": {
-      "sha256": "b6a6866cd4aec5c4bb37bd96c276e3880be23e16d1a3627f509c58f3974ee935",
+      "sha256": "270744241a8e40c37ff7053a487f5cfb51c8cf27c400621d14186be72ab9facd",
       "executable": false
     },
     "src/ui/app.tsx": {
@@ -3795,7 +3795,7 @@
       "executable": false
     },
     "src/ui/record-facts.ts": {
-      "sha256": "946617a254af7ce13b3a8c157ec6c6f2d1c496d7554f177eb07dc4eaa745861c",
+      "sha256": "e9cd41c58bdb6b88ef90bb925594afc8b7b6ddd69484f848f5858457587283f4",
       "executable": false
     },
     "src/ui/related-requests.tsx": {
@@ -3827,7 +3827,7 @@
       "executable": false
     },
     "src/ui/shell-rail.tsx": {
-      "sha256": "810e1253492bd2a99c61b9bef50edb6442044352dbaec88d5231eca0406fbc3a",
+      "sha256": "261ac76a4e19edafa4ce6989ef9398ad5acf1382bc94a27838df0112f4d75c33",
       "executable": false
     },
     "src/ui/shell-top.tsx": {
@@ -3843,11 +3843,11 @@
       "executable": false
     },
     "src/ui/work-detail.tsx": {
-      "sha256": "2a1ace2136ebc0e37358c7a72f44fdfffbcc0464298859867b951f12e5afecaf",
+      "sha256": "582bd35156906cd248ac00775b56e1369ad849dcb765846e680ede51fb2dd377",
       "executable": false
     },
     "src/ui/work-outcome.tsx": {
-      "sha256": "6151499b53a178d35804fc13e922c9ae8db02e758040d92bf511efa8ab69ed78",
+      "sha256": "3f00ac50f9928f248fbf7f1c6a3a392f8b7316b4f5e83cdefb7c660aa1a111f1",
       "executable": false
     },
     "src/ui/work-queue.tsx": {
@@ -4215,7 +4215,7 @@
       "executable": false
     },
     "tests/ui/fulfilment-decision-journey.mjs": {
-      "sha256": "af297ce0b252d75612ca8c8011ec1976bc3e541cd0ca87e5360633aecf6fc641",
+      "sha256": "f3703c313a467404178c3749f8b6f26f2bf7893e0b9a14f5e0ac4a9a21278f1c",
       "executable": false
     },
     "tests/ui/native-regressions.mjs": {
