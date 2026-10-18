@@ -46,6 +46,10 @@ export function renderMarkdown(markdown: string): RenderedPage {
         const body = escapeHtml(text.replace(/\n$/, '')).replaceAll(' | ', '<span class="docs-glue"> |</span> ');
         return `<div class="docs-code">${head}<pre><code${className}>${body}</code></pre></div>\n`;
       },
+      // An inline code chip wraps only between its words: a route, name or command word never breaks inside itself.
+      codespan({ text }) {
+        return `<code>${escapeHtml(text).split(' ').map(word => `<span class="docs-glue">${word}</span>`).join(' ')}</code>`;
+      },
       html({ text }) {
         return escapeHtml(text);
       },
