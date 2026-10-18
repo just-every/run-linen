@@ -70,7 +70,6 @@ export CLOUDFLARE_API_TOKEN=your-api-token
 export MAIL_PROVIDER=sendgrid
 export MAIL_FROM=your-verified-sender
 export MAIL_API_KEY=your-mail-provider-api-key
-export LINEN_DEPLOYMENT=new
 rer deploy --environment production
 ```
 
@@ -80,17 +79,21 @@ setup token and prints the hosted address. Open it and sign in by real email.
 Use the same environment for every subsequent deployment. RER records and checks
 the created resource identities in `.rer/deploy/`; keep this private directory.
 
-`LINEN_DEPLOYMENT=new` explicitly selects a separate fresh installation. Its
-Worker is `linen-<environment>`, D1 is `linen-<environment>-db`, and private R2 is
+Plain `rer deploy` creates a fresh installation in the `production` environment.
+Its Worker is `linen-<environment>`, D1 is `linen-<environment>-db`, and private R2 is
 `linen-<environment>-attachments`. The runtime uses bindings `DB` and
 `ATTACHMENTS`; their physical names need not be fixed. Local resource names and
 applied migrations stay unchanged.
 
-For an existing pre-rer hosted installation, do not select `new` or deploy from a
-fresh clone as an upgrade. Keep Worker `linen`, D1 `linen` and R2
-`linen-attachments`, their actual IDs, data and configuration. The hook continues
-to refuse that upgrade until the shared deploy kit supports existing-resource
-identity. A configured remote D1 ID also refuses fresh deployment.
+The hook recognises a legacy installation from a configured remote D1 ID, a
+matching retained deployment record, or the target account's Worker `linen`
+bound to D1 `linen`. It stops before changing those resources: keep Worker
+`linen`, D1 `linen` and R2 `linen-attachments`, their actual IDs, data and original
+`wrangler.jsonc`, and continue using the existing deployment workflow. The pinned
+deploy kit cannot adopt those fixed names. When identity cannot be confirmed,
+the hook chooses fresh names and prints this legacy guidance. A retained RER
+environment continues using its recorded resources, even if a separate legacy
+installation exists in that account.
 
 To permanently delete an environment and its data, using its retained deployment
 record and the same Cloudflare credentials:

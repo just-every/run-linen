@@ -36,16 +36,19 @@ assertion validation; it cannot create authority. See [platform routes](src/plat
 and [authentication](src/platform/auth.ts).
 
 For a separate fresh hosted installation, follow [Deploy a fresh
-installation](README.md#deploy-a-fresh-installation). Explicitly select
-`LINEN_DEPLOYMENT=new`; RER provisions D1 and private R2 using derived names,
+installation](README.md#deploy-a-fresh-installation). Plain `rer deploy`
+provisions D1 and private R2 using derived names,
 configures `AUTH_ORIGIN`, generates secrets, claims the setup owner and retires
 the setup token. Keep `.rer/deploy/` and the environment name for upgrades and
 removal. Never paste secrets into documentation, logs or source.
 
 Existing pre-rer hosted installations keep Worker `linen`, D1 `linen` and R2
 `linen-attachments` with their actual resource identities and data. They remain
-blocked from this deployment path until the shared kit supports existing-resource
-identity; selecting a fresh deployment is not an upgrade. Local Wrangler names
+recognised from a configured remote D1 ID, a matching retained record, or live
+Worker/D1 bindings, and stop before changes because the pinned kit cannot adopt
+fixed names. Keep their original `wrangler.jsonc` and existing deployment workflow.
+Unconfirmed identity defaults to a fresh deployment with one line of legacy
+guidance. Retained RER environments use their own records. Local Wrangler names
 and migration history remain unchanged.
 
 ## Connect and review once

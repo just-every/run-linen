@@ -2,12 +2,13 @@ import {mailEdge} from './mail-edge.mjs'
 // Public rer archive/reset/import flow on disposable actual D1/R2 state.
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
-import {cp,mkdtemp,symlink,rm,writeFile,readFile} from 'node:fs/promises'
+import {cp,mkdtemp,symlink,rm,writeFile,readFile,mkdir} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join,resolve} from 'node:path'
 import {createHash} from 'node:crypto'
 import {createServer} from 'node:net'
 import {createRequire} from 'node:module'
+import {pathToFileURL} from 'node:url'
 import {getPlatformProxy} from 'wrangler'
 const require=createRequire(await import.meta.resolve('wrangler/package.json'))
 const {build}=require('esbuild'),{Miniflare,convertV4MiniflareOptions}=require('miniflare')
@@ -102,16 +103,27 @@ try{
  await run(['exec','rer','reset','--yes'])
  const checkpoint=await run(['exec','rer','import','--input',archive,'--journal','exports/after.rer','--yes'],1);assert.match(checkpoint,/erasure_epoch/)
  await run(['exec','rer','import','--input',later,'--yes'])
- // An existing installation remains protected until a separate fresh deploy is explicitly selected.
- delete commandEnvironment.LINEN_DEPLOYMENT
- // Satisfy Base's production mail prerequisite so this dry run reaches the identity guard.
+ // A stranger's plain deploy works; configured legacy resources stay protected.
+ for (const key of Object.keys(commandEnvironment)) if (key.startsWith('LINEN_')) delete commandEnvironment[key]
+ // Satisfy Base's production mail prerequisite for the provider-free dry run.
  commandEnvironment.MAIL_API_KEY='test-only-dry-run-mail-key'
- const deploy=await run(['exec','rer','deploy','--dry-run'],4);assert.match(deploy,/must retain Worker linen/)
- commandEnvironment.LINEN_DEPLOYMENT='new'
  await run(['exec','rer','deploy','--dry-run'])
  const configPath=join(root,'wrangler.jsonc'),config=JSON.parse(await readFile(configPath,'utf8'))
  config.d1_databases[0].database_id='retained-remote-database'
  await writeFile(configPath,JSON.stringify(config))
  assert.match(await run(['exec','rer','deploy','--dry-run'],4),/must retain Worker linen/)
+ config.d1_databases[0].database_id='local-linen'
+ await writeFile(configPath,JSON.stringify(config))
+ commandEnvironment.CLOUDFLARE_ACCOUNT_ID='a'.repeat(32)
+ commandEnvironment.CLOUDFLARE_API_TOKEN='test-only-cloudflare-token'
+ const statePath=join(root,'.rer','deploy','production.json')
+ await mkdir(join(root,'.rer','deploy'),{recursive:true})
+ await writeFile(statePath,JSON.stringify({kind:'rer-deploy-owner-state',project:'runeditrun/linen',environment:'production',accountId:commandEnvironment.CLOUDFLARE_ACCOUNT_ID,worker:'linen'}))
+ assert.match(await run(['exec','rer','deploy','--dry-run'],4),/must retain Worker linen/)
+ await rm(statePath)
+ // Only the paid/network edge is faked. The actual rer command must stop on
+ // verified live legacy bindings before any build, upload or provider mutation.
+ commandEnvironment.NODE_OPTIONS=`${commandEnvironment.NODE_OPTIONS??''} --import ${pathToFileURL(join(root,'tests/platform/deploy-edge.mjs'))}`.trim()
+ assert.match(await run(['exec','rer','deploy','--non-interactive'],4),/must retain Worker linen/)
  console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; fresh deploy succeeds without provider access while retained deployment identity changes remain refused')
 }finally{await mf?.dispose();await close();await rm(dir,{recursive:true,force:true})}
