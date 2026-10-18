@@ -1,3 +1,4 @@
+import { assetHistory } from "./assets";
 import { lifecycleEvidencePack } from "./lifecycle-evidence";
 import { reviewPersonBinding } from './person-binding';
 import { delegateManager } from "./delegation";
@@ -62,6 +63,9 @@ export function registerLifecycleRoutes(app: Hono<AppEnv>) {
       ).results,
     });
   });
+  app.get("/assets/:id/history", async (c) => c.json(await assetHistory(
+    { env:c.env, principal:c.get("principal") }, c.req.param("id"),
+  )));
   app.get("/people", async (c) => {
     const ctx = { env: c.env, principal: c.get("principal") };
     permit(ctx, ["owner", "hr", "operator"]);

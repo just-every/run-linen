@@ -1,3 +1,4 @@
+import { assetLifecycleJourney } from "./asset-custody-journey.mjs";
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { captureJourney } from './viewport-evidence.mjs'
@@ -50,6 +51,7 @@ export async function custodyJourney(page, api, personId, ownerId, out) {
   assert.ok(after.obligations.some(o => o.kind !== 'device.return' && o.state !== 'verified'), 'Physical custody must not certify security duties')
   await captureJourney(page, { path: `${out}/custody-separate-security.png`, fullPage: true })
   await lifecycleEvidenceJourney(page, lifecycle.lifecycleId, out)
+  await assetLifecycleJourney(page, personId, out)
 
 }
 

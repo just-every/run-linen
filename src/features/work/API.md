@@ -24,8 +24,8 @@ Request creation and public replies atomically enqueue `work_intake_events` with
 - GET/POST `/people`: create/update `{source,sourceId,name,managerId?,effectiveAt,observedAt}`. Manager ID means the platform member user ID, never a person ID; it must be a current member of this workspace and only current owner/HR may review it. Integration may update source facts but cannot set manager or member authority. Source identities are stable; older effective data cannot overwrite newer facts. Operators receive only `id,name,active,merged_into,revision`; owner/HR receive employment-source context.
 - POST `/people/delegations` `{managerId,delegateId,expiresAt}` requires actual current manager/owner and active decision holder; delegation routes the decision and does not mint execution grants.
 - POST `/people/:id/commands` `{revision,command:merge|deactivate,target?}`. POST `/people/:id/erase` `{revision,reason}` invokes full domain erasure .
-- GET/POST `/assets`: create `{serial,source,location?}`. Unique serial conflicts are explicit. Catalog reservations use atomic capacity admission.
-- POST `/assets/:id/commands` `{revision,command:reserve|assign|receive|return|repair|dispose|missing,personId?,evidence,location?}`. Assigned devices cannot be disposed. Import observation never creates a receipt.
+- GET/POST `/assets`: create `{serial,source,location?,procured?}`. Unique serial conflicts are explicit. Catalog reservations use atomic capacity admission.
+- POST `/assets/:id/commands` `{revision,command:reserve|assign|loan|receive|return|repair|retire|dispose|missing,personId?,evidence,location?,certificatePartner?,certificateStandard?,certificateReference?}`. Assigned devices cannot be disposed. Import observation never creates a receipt.
 - GET/POST `/lifecycle`: create `{personId,kind:join|move|leave,effectiveAt,timezone,source,sourceRevision,retained:string[],added:string[],removed:string[],deviceIds:string[],ownerId,urgent?,identityTarget?,expiresAt?}`. Rights arrays must be disjoint. `identityTarget` must be the real immutable provider ID or UPN when configuring identity execution; absent provider mapping remains blocked. Join dependencies wait for identity verification. Contractor expiry creates separate due disable/session-revocation duties. Leave has separate disable/session/access and physical-return duties.
 - GET `/lifecycle/:id` → `{lifecycle,obligations}`. POST `/lifecycle/:id/amend` `{revision,effectiveAt?,cancel?}` invalidates work revision, preserves uncertain effects and creates compensation duties for applied/uncertain cancelled-hire actions.
 - POST `/obligations/:id/physical` `{revision,custodyEventId}` accepts only matching receipt/return history. Employee catalogue obligations resolve the beneficiary member through its current reviewed person binding; HR lifecycle obligations name their domain person directly. Unbound, foreign or wrong-person receipts are rejected, and a changed person/binding requires a fresh attempt. Physical fulfilment is not a provider result.
@@ -90,3 +90,19 @@ an auditor or a legal-hold/SOC 2 archive; downloading never certifies an
 unverified effect or creates retention authority. Store the download under your
 organization's retention and access policy. The lifecycle detail page offers the
 same download.
+
+### Physical asset lifecycle (ASSET-004)
+
+Set `procured:true` when recording a serial against a purchase record. The asset
+stays procured until an attributed `receive` puts it in stock. Observed stock
+keeps its source as observation, without claiming physical receipt. Assignments,
+loans, repair, return, retirement and disposal remain in the serial's history at
+GET `/assets/:id/history`, visible to current owners and operators. A repair does
+not clear assignment; only a return does. Retirement and disposal refuse an
+assigned device. Receiving a repaired unassigned device makes it available again.
+
+Disposal requires the actual ITAD partner, `certificateStandard` (`R2v3` or
+`e-Stewards`) and an HTTPS `certificateReference` to its document. This reference
+is retained with the receipt, actor and timestamp. Linen records the operator's
+attribution; it does not independently certify the partner or retain the remote
+certificate's bytes. The Devices page exposes these fields and custody history.

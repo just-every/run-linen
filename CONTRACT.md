@@ -1610,8 +1610,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 9 | 69 | 37 | 115 |
-| All | 13 | 89 | 37 | 139 |
+| Target and push further | 10 | 68 | 37 | 115 |
+| All | 14 | 88 | 37 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1676,7 +1676,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `ASSET-001` | MDM sync | target | missing |  | No Jamf, Intune or Kandji connector and no installed-application inventory. |
 | `ASSET-002` | Device actions under grant | target | missing |  | No device actions or inventory-verified app push and removal. |
 | `ASSET-003` | Discovery and reconciliation | target | partial | `src/features/connections/providers.ts`, `tests/connections/runtime.mjs` | Graph device list only; no MDM, EDR, cloud-account or network discovery. |
-| `ASSET-004` | Hardware lifecycle and custody | target | partial | `src/features/work/resources.ts`, `tests/ui/custody-journey.mjs`, `tests/work/runtime.mjs` | No ITAD certificate requirement. |
+| `ASSET-004` | Hardware lifecycle and custody | target | done | `src/features/work/assets.ts`, `tests/work/asset-custody-cases.mjs`, `tests/ui/asset-custody-journey.mjs` | Public-door procurement/receipt, assignment, loan, repair, return, retirement and disposal with serial history and attributed receipts. Disposal requires an ITAD partner, R2v3/e-Stewards standard and HTTPS certificate document reference, and refuses assigned devices even in repair. Browser journey at 1440/390. Partner certification is operator-attributed; remote certificate bytes are not retained. |
 | `ASSET-005` | Stock rooms and reorder | target | partial | `src/features/work/requests.ts` | No stock locations or reorder. |
 | `ASSET-006` | Software license management and compliance | target | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No IdP usage feed, reclamation through connectors, desktop installation compliance or prohibited titles. |
 | `ASSET-007` | Contracts, warranties and vendors | target | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No warranties. |
