@@ -128,6 +128,9 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
             <a href={`#/work/${text(detail.data.lifecycle.work_id)}`}>
               Open the same conversation →
             </a>
+            <p><a href={`/api/v1/lifecycle/${encodeURIComponent(selectedId)}/evidence`} download>
+              Download lifecycle evidence (JSON)
+            </a></p>
             <h2>Outstanding and completed responsibilities</h2>
             {detail.data.obligations.map((o) => (
               <section className="connection-record" key={text(o.id)}>

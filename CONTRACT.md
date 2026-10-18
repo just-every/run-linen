@@ -1610,8 +1610,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 8 | 70 | 37 | 115 |
-| All | 12 | 90 | 37 | 139 |
+| Target and push further | 9 | 69 | 37 | 115 |
+| All | 13 | 89 | 37 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1672,7 +1672,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `LIFE-004` | Joiner device readiness | target | partial | `src/features/work/resources.ts`, `tests/ui/custody-journey.mjs` | No zero-touch enrollment or shipping. |
 | `LIFE-005` | Leaver revocation everywhere | target | partial | `src/features/execution/identity.ts`, `src/features/work/lifecycle.ts`, `tests/ui/connected-lifecycle.mjs` | Entra only; no Okta, Google, SaaS or on-premises AD revocation, data transfer or device actions. |
 | `LIFE-006` | Contractors and temporary staff | target | partial | `src/features/work/lifecycle.ts`, `tests/work/runtime.mjs` | No sponsor re-attestation. |
-| `LIFE-007` | Lifecycle evidence pack | target | partial | `src/features/work/requests.ts`, `src/features/execution/verification.ts` | No exportable pack. |
+| `LIFE-007` | Lifecycle evidence pack | target | done | `src/features/work/lifecycle-evidence.ts`, `tests/work/lifecycle-evidence-cases.mjs`, `tests/ui/custody-journey.mjs` | Local public-door join/move/leave export with exact historical grants, decisions, attempts, readback, independent verification and outstanding security/custody duties; owner/HR isolation and erasure protection. JSON download exercised at 1440/390. Provider evidence remains test-only; no compliance certification or legal-hold storage claim. |
 | `ASSET-001` | MDM sync | target | missing |  | No Jamf, Intune or Kandji connector and no installed-application inventory. |
 | `ASSET-002` | Device actions under grant | target | missing |  | No device actions or inventory-verified app push and removal. |
 | `ASSET-003` | Discovery and reconciliation | target | partial | `src/features/connections/providers.ts`, `tests/connections/runtime.mjs` | Graph device list only; no MDM, EDR, cloud-account or network discovery. |

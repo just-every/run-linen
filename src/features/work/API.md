@@ -78,3 +78,15 @@ Owner/HR use `POST /people/:personId/binding {expectedRevision,memberId,managerI
 Upgrade migration 0710 uses the actual old schema: there is no person email column. Only normalized exact email in `source_id`, or the historical explicit person `id == member user_id` convention, can match an active member in that workspace. Both directions must have exactly one candidate; conflicting sources, duplicate people, cross-workspace-only, unavailable and opaque source identities remain unbound. Names and opaque source IDs never choose a winner. Workspaces with hashed adoption erasure tombstones require explicit review instead of SQL backfill, because SQL cannot resolve those aliases safely. Erased, inactive and merged records remain inactive/unbound. The migration records its constrained policy in audit and invalidates prior approvals; records and IDs are retained. Review unresolved records through the binding API/form.
 
 Privacy resolves the current reviewed person/member relationship in both directions within this workspace, including deactivated bound records. Former bindings remain audit history and never connect different current people for erasure. Current ambiguous identities or concurrent binding changes stop erasure for owner review. Native restore clears imported member/binding/manager authority and requires new review; imported approvals remain inert.
+
+### Lifecycle evidence export (LIFE-007)
+
+GET `/lifecycle/:id/evidence` downloads the selected join, move or leave as JSON.
+A current owner or HR member may export a visible record in their workspace. The
+pack retains the HR source, effective time, every duty and linked operation,
+versioned grant decisions, execution attempts and independent verification.
+Unfinished and unknown duties remain explicit. This is an evidence snapshot for
+an auditor or a legal-hold/SOC 2 archive; downloading never certifies an
+unverified effect or creates retention authority. Store the download under your
+organization's retention and access policy. The lifecycle detail page offers the
+same download.

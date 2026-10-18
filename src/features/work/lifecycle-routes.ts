@@ -1,3 +1,4 @@
+import { lifecycleEvidencePack } from "./lifecycle-evidence";
 import { reviewPersonBinding } from './person-binding';
 import { delegateManager } from "./delegation";
 import type { Hono } from "hono";
@@ -89,6 +90,14 @@ export function registerLifecycleRoutes(app: Hono<AppEnv>) {
           .all()
       ).results,
     });
+  });
+  app.get("/lifecycle/:id/evidence", async (c) => {
+    const pack = await lifecycleEvidencePack(
+      { env: c.env, principal: c.get("principal") }, c.req.param("id"),
+    );
+    c.header("Content-Disposition", `attachment; filename="lifecycle-${c.req.param("id").replace(/[^a-zA-Z0-9-]/g, "_")}.json"`);
+    c.header("Cache-Control", "private, no-store");
+    return c.json(pack);
   });
   app.get("/lifecycle/:id", async (c) => {
     const ctx = { env: c.env, principal: c.get("principal") };

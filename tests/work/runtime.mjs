@@ -1,3 +1,4 @@
+import { lifecycleEvidenceChecks } from "./lifecycle-evidence-cases.mjs";
 import { lifecycleReplayChecks, lifecycleIntegrationChecks } from "./lifecycle-regressions.mjs";
 import assert from "node:assert/strict";
 import { readFile, readdir, mkdtemp, rm } from "node:fs/promises";
@@ -391,6 +392,7 @@ try {
   );
   await lifecycleReplayChecks(api, lifecycle, life.value.lifecycleId);
   await lifecycleIntegrationChecks(api, db, lifecycle);
+  await lifecycleEvidenceChecks(api, db);
   const catalog = await api("/catalog", {
     name: "Editor licence",
     kind: "software",
