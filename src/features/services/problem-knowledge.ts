@@ -2,6 +2,7 @@ import { ApiError, id, now, requiredString } from '../../platform/http';
 import type { Env, Principal } from '../../platform/types';
 import { validateArticle, newArticleWrites, type ArticleInput } from '../work/article-write';
 import { getService, strings, writable, type ServiceRecord } from './store';
+import { assertKnowledgeArticleSources } from '../work/knowledge-draft-sources';
 
 /** The article is the sole content source; the problem keeps its reviewed matching contract. */
 export async function publishWorkaround(env: Env, p: Principal, r: ServiceRecord, b: Record<string, any>) {
@@ -34,20 +35,26 @@ export async function publishWorkaround(env: Env, p: Principal, r: ServiceRecord
   return getService(env.DB, ctx.principal, r.id, 'problem');
 }
 
-export async function problemWorkarounds(db: D1Database, p: Principal, r: ServiceRecord) {
+export async function problemWorkarounds(env: Env, p: Principal, r: ServiceRecord) {
+  const db = env.DB;
   const out = [];
   for (const link of r.data.workarounds || []) {
     if (!link.articleId) { out.push({ ...link, usable: false, stale: true }); continue; }
     const article = await db.prepare(`SELECT id,title,body,revision,scope,reviewed_at,expires_at FROM work_knowledge
       WHERE workspace_id=? AND id=? AND (scope='employees' OR (scope='operators' AND ?=1))`)
       .bind(p.workspaceId, link.articleId, Number(p.roles.some(role => ['owner','operator','auditor'].includes(role)))).first<any>();
-    const usable = link.causeRevision === r.data.causeRevision && !!article && !!article.reviewed_at && article.revision === link.articleRevision && Date.parse(article.expires_at) > Date.now();
+    let usable = link.causeRevision === r.data.causeRevision && !!article && !!article.reviewed_at && article.revision === link.articleRevision && Date.parse(article.expires_at) > Date.now();
+    if (usable) {
+      try { await assertKnowledgeArticleSources({ env, principal: p }, String(article.id)); }
+      catch (error) { if (!(error instanceof ApiError) || error.status !== 404) throw error; usable = false; }
+    }
     out.push({ ...link, article: usable ? article : undefined, usable, stale: !usable });
   }
   return out;
 }
 
-export async function presentProblem(db: D1Database, p: Principal, r: ServiceRecord) {
+export async function presentProblem(env: Env, p: Principal, r: ServiceRecord) {
+  const db = env.DB;
   let preventionChange: {id:string;title:string;state:string} | null = null;
   if (r.data.preventionChangeId) {
     try {
@@ -57,7 +64,7 @@ export async function presentProblem(db: D1Database, p: Principal, r: ServiceRec
       if (!(error instanceof ApiError) || error.status !== 404) throw error;
     }
   }
-  return {...r,data:{...r.data,workarounds:await problemWorkarounds(db,p,r),preventionChange,
+  return {...r,data:{...r.data,workarounds:await problemWorkarounds(env,p,r),preventionChange,
     preventionState:r.data.preventionChangeId ? !preventionChange ? 'not-accessible'
       : preventionChange.state === 'verified' ? 'implemented-effectiveness-pending' : preventionChange.state : 'unverified'}};
 }

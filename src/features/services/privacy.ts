@@ -1,4 +1,5 @@
 import { eraseProblemArticles } from './problem-privacy';
+import { eraseKnowledgeDraftPerson } from '../work/knowledge-draft-privacy';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
 import { hashToken } from '../../platform/crypto';
@@ -25,6 +26,7 @@ export async function eraseServicePerson(ctx: {
     if(!person&&!await env.DB.prepare('SELECT 1 FROM adoption_tombstones WHERE workspace_id=? AND identity_hash=?').bind(p.workspaceId,await hashToken(input.userId)).first())throw new ApiError(404,'person_not_found','Workspace person or scoped erasure tombstone required');
     const pseudonym = 'erased-' + (await hashToken(p.workspaceId + ':' + input.userId)).slice(0, 24);
     const tokens = [input.userId, person?.email, person?.name].filter((x): x is string => !!x && x.length > 2);
+    await eraseKnowledgeDraftPerson(ctx, input.userId, tokens);
     const redact = (value: any): any => {
         if (typeof value === 'string') {
             // A historical nonmember has no dependable current name/email profile.

@@ -19,7 +19,7 @@ export async function suggestWorkarounds(ctx: WorkContext, workId: string) {
     .bind(ctx.principal.workspaceId, context.serviceId).all<RecordRow>();
   const suggestions = [];
   for (const row of rows.results) {
-    for (const link of await problemWorkarounds(ctx.env.DB, ctx.principal, dto(row))) {
+    for (const link of await problemWorkarounds(ctx.env, ctx.principal, dto(row))) {
       if (!link.usable || !link.symptomTerms?.length || !link.symptomTerms.every((term: string) => words(term).trim() && report.includes(words(term)))) continue;
       if (link.cohorts.length && !link.cohorts.some((c: string) => cohorts.includes(c))) continue;
       suggestions.push({ ...link.article, matchedTerms: link.symptomTerms });

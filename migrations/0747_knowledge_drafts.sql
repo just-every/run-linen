@@ -1,0 +1,25 @@
+CREATE TABLE work_knowledge_drafts (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  semantic_key TEXT NOT NULL,
+  group_json TEXT NOT NULL,
+  state TEXT NOT NULL CHECK(state IN ('candidate','generating','draft','published','rejected','erased')),
+  sources_json TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL DEFAULT '',
+  citations_json TEXT NOT NULL DEFAULT '[]',
+  revision INTEGER NOT NULL DEFAULT 1,
+  creator_id TEXT NOT NULL,
+  generated_by TEXT,
+  generated_at TEXT,
+  model_attempt_id TEXT,
+  model_name TEXT,
+  reviewer_id TEXT,
+  reviewed_at TEXT,
+  rejection_reason TEXT,
+  article_id TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(workspace_id,semantic_key)
+);
+CREATE INDEX work_knowledge_draft_article ON work_knowledge_drafts(workspace_id,article_id);

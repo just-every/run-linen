@@ -3,10 +3,12 @@ import type { BusinessCalendar } from './calendar';
 import { calendarDate } from './depreciation';
 import { currentWorkPrincipal } from "./identity";
 import { validateCannedBody } from './canned-responses';
+import { prepareKnowledgeDraftRestore } from './knowledge-draft-restore';
 import { ApiError, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
 const tables = new Set([
   'work_canned_responses',
+  'work_knowledge_drafts',
   "work_records",
   "work_time_entries",
   "work_messages",
@@ -244,6 +246,7 @@ export async function restoreAdoptionRecord(
         "Restore parent work in this workspace first",
       );
   }
+  if (input.table === 'work_knowledge_drafts') await prepareKnowledgeDraftRestore(ctx, row);
   const keys = Object.keys(row),
     recordId = String(row.id || row.article_id || (input.table==='work_pending_services'?`${row.work_id}:${row.catalog_id}`:input.sourceKey));
   await ctx.env.DB.batch([

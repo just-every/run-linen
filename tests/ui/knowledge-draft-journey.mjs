@@ -1,0 +1,46 @@
+import assert from 'node:assert/strict';
+import {action,local,later} from './connected-helpers.mjs';
+import {captureJourney} from './viewport-evidence.mjs';
+/** Full native screen journey; caller supplies the configured paid-edge fixture model. */
+export async function knowledgeDraftJourney({page,api,base,out,model}) {
+  const tickets=[];
+  for(let i=0;i<3;i++) {
+    const work=await api('/work',{title:'Knowledge journey network access',body:'The network session expired. A fresh network session restored access.',kind:'incident',context:{app:'Knowledge journey network'},deduplicationKey:crypto.randomUUID()});
+    tickets.push(await api(`/work/${work.id}/commands`,{revision:work.revision,command:'close',reason:'Employee reports usable network access after a fresh session'}));
+  }
+  const discovered=page.waitForResponse(r=>r.url().endsWith('/knowledge-drafts/detect')&&r.request().method()==='POST');
+  await page.goto(base+'/app#/knowledge');
+  assert.equal((await discovered).status(),200,'KB-004 opening Knowledge discovers candidates without model dispatch');
+  let candidate=(await api('/knowledge-drafts')).items.find(d=>d.group.value==='knowledge journey network');
+  assert.ok(candidate);assert.equal(candidate.sources.length,3);assert.equal(candidate.state,'candidate');
+  const region=page.getByRole('region',{name:'Knowledge drafts'});
+  await region.getByRole('heading',{name:candidate.title,exact:true}).waitFor();
+  await captureJourney(page,{path:out+'/KB-004-candidate.png',fullPage:true});
+  await action(page,'Generate '+candidate.title,{connectionId:model.id},'/knowledge-drafts/'+candidate.id+'/generate','Generate draft');
+  let draft=await api('/knowledge-drafts/'+candidate.id);assert.equal(draft.state,'draft');assert.equal(draft.citations.length,3);
+  await region.getByRole('heading',{name:draft.title,exact:true}).waitFor();
+  const draftCard=region.getByRole('article',{name:draft.title+' knowledge draft'});
+  await draftCard.getByText('Review source evidence',{exact:true}).click();
+  assert.equal(await draftCard.getByRole('link').count(),3);
+  await captureJourney(page,{path:out+'/KB-004-review.png',fullPage:true});
+  draft=await action(page,'Review and publish '+draft.title,{scope:'operators',expiresAt:local(86400000),review:true},'/knowledge-drafts/'+draft.id+'/publish','Publish reviewed article');
+  assert.equal(draft.state,'published');assert.ok(draft.reviewerId);
+  const articles=(await api('/knowledge?q='+encodeURIComponent(draft.title))).items;
+  assert.ok(articles.some(a=>a.id===draft.articleId));assert.equal(articles.find(a=>a.id===draft.articleId).sources.length,3);
+  await page.goto(base+'/app#/knowledge?q='+encodeURIComponent(draft.title));
+  await page.getByRole('heading',{name:draft.title,exact:true}).first().waitFor();
+  await captureJourney(page,{path:out+'/KB-004-published.png',fullPage:true});
+  await api(`/work/${tickets[0].id}/commands`,{revision:tickets[0].revision,command:'reopen',reason:'The issue returned'});
+  assert.ok(!(await api('/knowledge?q='+encodeURIComponent(draft.title))).items.some(a=>a.id===draft.articleId));
+  const service=await api('/services',{name:'Knowledge journey known error',description:'Session support',businessImpact:'Sign in unavailable',source:'Reviewed browser evidence register',observedAt:later(0),visibility:'workspace'});
+  const incident=await api('/incidents',{title:'Knowledge journey sign-in failure',serviceId:service.id,impact:'Sign-in unavailable',cohorts:['Denver'],visibility:'workspace'});
+  let problem=await api('/problems',{title:'Knowledge journey reviewed known error',serviceId:service.id,incidentIds:[incident.id],symptoms:'A sign-in loop',visibility:'operators'});
+  problem=await api(`/problems/${problem.id}/known-error`,{revision:problem.revision,cause:'A stale session claim repeats redirects',evidenceIds:['browser-session-observation']});
+  await page.goto(base+'/app#/knowledge');
+  await action(page,'Find knowledge candidates',{},'/knowledge-drafts/detect','Find candidates');
+  candidate=(await api('/knowledge-drafts')).items.find(d=>d.group.type==='known-error'&&d.group.value===problem.id);assert.ok(candidate);
+  await action(page,'Reject '+candidate.title,{reason:'This incident is still too specific for reusable guidance'},'/knowledge-drafts/'+candidate.id+'/reject','Keep rejection');
+  await page.reload();await region.getByText('This incident is still too specific for reusable guidance',{exact:true}).waitFor();
+  await captureJourney(page,{path:out+'/KB-004-known-error-rejected.png',fullPage:true});
+  return {draftId:draft.id,articleId:draft.articleId,problemId:problem.id,rejectedId:candidate.id};
+}

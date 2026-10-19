@@ -21,6 +21,7 @@ const checks = [
   ['migration order and retained history', process.execPath, ['tests/platform/migration-order.mjs']],
   ['identity erasure', process.execPath, ['tests/platform/privacy-runtime.mjs']],
   ['work and lifecycle', process.execPath, ['tests/work/runtime.mjs']],
+  ['knowledge drafts', process.execPath, ['tests/work/knowledge-draft-runtime.mjs']],
   ['request status static UI', process.execPath, ['tests/ui/request-status-render.mjs']],
   ['stale remote response ordering', process.execPath, ['tests/ui/remote-response-runtime.mjs']],
   ['request progress and accountable owner', process.execPath, ['tests/work/progress-runtime.mjs']],

@@ -86,7 +86,9 @@ globalThis.fetch = async (input, init = {}) => {
     const body = JSON.parse(init.body), packet = JSON.parse(body.input), schema = body.text.format.schema;
     await event('model', { purpose: packet.purpose, schema: Object.keys(schema.properties) });
     let value;
-    if (['ticket_reply','ticket_summary'].includes(packet.purpose)) {
+    if (packet.purpose === 'knowledge_article_draft') {
+      value={title:'Recover network access',body:'Open a fresh network session. Use this guidance for the recorded symptoms and check the result; closure alone does not verify recovery.',citations:schema.properties.citations.items.enum};
+    } else if (['ticket_reply','ticket_summary'].includes(packet.purpose)) {
       const sources=JSON.parse(packet.request.slice(packet.request.indexOf('\n')+1));
       await event('response-sources',{purpose:packet.purpose,sources});
       value={text:packet.purpose==='ticket_summary'?'Twenty VPN reports describe repeated disconnections. Reviewed knowledge recommends restarting the VPN client; recovery remains unverified.':'Please restart the VPN client using the reviewed guidance and reply here if it still disconnects.',citations:sources.map(source=>source.id)};

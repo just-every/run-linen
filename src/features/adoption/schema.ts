@@ -1,6 +1,7 @@
 // Explicit native mapping. Never accept table or column names from an archive as SQL.
 export const nativeTables = [
     'work_canned_responses',
+    'work_knowledge_drafts',
     'work_time_entries', 'work_records', 'work_messages', 'work_attachments', 'work_people', 'work_pending_people', 'work_pending_services', 'work_assets', 'work_recurring_plans', 'work_recurring_occurrences', 'work_recurring_tasks', 'work_asset_financials', 'work_custody', 'work_asset_contracts', 'work_asset_repairs', 'work_classifications', 'work_lifecycle', 'work_obligations', 'work_knowledge', 'work_erasure', 'work_calendars', 'work_catalog', 'work_fulfilments', 'work_delegations', 'work_commitments', 'work_article_versions', 'work_intake_events', 'work_sender_identities',
     'execution_grants', 'execution_grant_revocations', 'execution_plans', 'execution_decisions', 'execution_operations', 'execution_fences', 'execution_attempts', 'execution_receipts', 'execution_verifications', 'execution_outbox', 'execution_delivery_events',
     'svc_records', 'svc_events', 'svc_receipts', 'svc_outbox', 'svc_commands',

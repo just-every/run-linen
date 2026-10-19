@@ -1080,6 +1080,23 @@ that product and marks how close the current code is (see [Status](#status)).
   tickets and known errors with source links; a reviewer publishes or rejects.
   **Acceptance evidence:** resolve three similar tickets; a draft article appears
   with the three sources; publishing requires a reviewer.
+  Opening Knowledge discovers local candidates without a model call. Ticket
+  candidates require at least three resolved, normal-sensitivity tickets with
+  matching recorded context and cohort: use the first present app, service ID,
+  device model, then ticket title; normalize app/model/title and cohort words;
+  a candidate retains up to 30 complete public-message sources. Reviewed,
+  nonrestricted known errors can also supply a candidate. Private notes and
+  attachments never enter generation. A current owner or service operator
+  explicitly generates through a configured model and budget, then reviews and
+  publishes or rejects; the reviewer may be the initiator. Every source must be
+  cited. Repeated discovery preserves the group's rejection or publication.
+  Draft reads, generation, publication and published-article reads recheck every
+  source and its current audience; reopened, changed, erased or inaccessible
+  sources withdraw the affected guidance. Source links remain structured through
+  native restore, which never resumes an old model call. Erasure removes derived
+  text and source snapshots, including article versions, while retaining an
+  opaque suppression key. These audience and reviewer rules were approved by ct
+  on 19 October.
 
 - **KB-005 — Article feedback, attachments and templates.** Employees rate
   articles helpful or not helpful, with an optional comment, from the portal,
@@ -1677,8 +1694,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 18 | 63 | 34 | 115 |
-| All | 22 | 83 | 34 | 139 |
+| Target and push further | 19 | 63 | 33 | 115 |
+| All | 23 | 83 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1768,7 +1785,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `KB-001` | Knowledge base | target | done | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs` |  |
 | `KB-002` | Federated knowledge sources | target | missing |  | No federated sources (Confluence, Slate, Google Drive, SharePoint, Notion). |
 | `KB-003` | Deflection with verified outcome | target | partial | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs` | No suggestion before filing or deflection count. |
-| `KB-004` | Articles from resolved work | target | missing |  | No article drafting from tickets. |
+| `KB-004` | Articles from resolved work | target | done | `src/features/work/knowledge-drafts.ts`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/knowledge-draft-journey.mjs`, `tests/adoption/knowledge-draft-cases.mjs` | Local public-route and paid-model-edge fixtures prove three-source and known-error drafts, all-source citations, explicit generation/budget, reviewer publication/rejection and durable suppression; current scope/source/reopen/erasure gates, native restore and inspected 1440/390 journeys. No live-model quality claim. |
 | `KB-005` | Article feedback, attachments and templates | target | missing |  | No article feedback, attachments or templates. |
 | `REPORT-001` | Service desk dashboards | target | partial | `src/features/work/knowledge.ts`, `src/features/services/economics.ts`, `tests/adoption/prior-data-upgrade.mjs`, `tests/services/run.mjs` | No dashboards, CSAT, per-agent views or reporting on imported history. |
 | `REPORT-002` | Custom and scheduled reports | target | missing |  | No report builder or scheduling. |

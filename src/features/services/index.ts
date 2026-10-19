@@ -32,7 +32,7 @@ export interface ServiceWorkPort {
 let workPort: ServiceWorkPort | undefined;
 export function setServiceWorkPort(port: ServiceWorkPort) { workPort = port; }
 async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
-    if(r.kind==='problem') { const shown=await presentProblem(env.DB,p,r); return r.data.sourceProposalId ? {...shown,data:{...shown.data,recurrenceSources:await problemEvidence({env,principal:p},r.data.evidence)}} : shown; }
+    if(r.kind==='problem') { const shown=await presentProblem(env,p,r); return r.data.sourceProposalId ? {...shown,data:{...shown.data,recurrenceSources:await problemEvidence({env,principal:p},r.data.evidence)}} : shown; }
     if(r.kind==='supplier')return {...r,data:{...r.data,breaches:supplierBreaches(r)}};
     if (r.kind !== 'incident' || staff(p) || p.roles.includes('auditor'))
         return r;

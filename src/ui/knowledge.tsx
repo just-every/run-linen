@@ -4,6 +4,7 @@ import { useRemote, useSession } from "./state";
 import { ActionForm } from "./forms";
 import { audienceLabel } from "./labels";
 import { Empty, ErrorNotice, Facts, Hero, Loading } from "./primitives";
+import { KnowledgeDrafts } from './knowledge-drafts';
 export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
   const [query, setQuery] = useState(initial),
     [search, setSearch] = useState(initial),
@@ -45,6 +46,7 @@ export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
           <article className="connection-record" key={text(article.id)}>
             <h2>{text(article.title)}</h2>
             <p className="detail-prose">{text(article.body)}</p>
+            {Array.isArray(article.sources) && article.sources.length > 0 && <ul aria-label="Article sources">{(article.sources as {id:string;title:string;href:string}[]).map(source=><li key={source.id}><a href={source.href}>{source.title}</a></li>)}</ul>}
             <Facts
               entries={[
                 ["Reviewed", date(article.reviewed_at)],
@@ -121,6 +123,7 @@ export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
           onSaved={list.refresh}
         />
       )}
+      <KnowledgeDrafts onPublished={list.refresh}/>
     </>
   );
 }

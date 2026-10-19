@@ -1,12 +1,17 @@
 import { effortReport } from "./effort-report";
 import { validateArticle, newArticleWrites, type ArticleInput } from './article-write';
 import { currentWorkPrincipal } from "./identity";
+import { assertKnowledgeArticleSources } from './knowledge-draft-sources';
 import { ApiError, id, now } from "../../platform/http";
 import { createWork, operator, permit, type WorkContext } from "./core";
+interface KnowledgeArticle {
+  id: string; title: string; body: string; revision: number;
+  scope: 'employees' | 'operators' | 'hr'; reviewed_at: string; expires_at: string;
+}
 export async function searchKnowledge(ctx: WorkContext, query: string) {
   await currentWorkPrincipal(ctx);
   const p = ctx.principal;
-  return (
+  const candidates = (
     await ctx.env.DB.prepare(
       `SELECT id,title,body,revision,scope,reviewed_at,expires_at FROM work_knowledge WHERE workspace_id=? AND reviewed_at IS NOT NULL AND expires_at>? AND (scope='employees' OR (scope='operators' AND ?=1) OR (scope='hr' AND ?=1)) AND (title LIKE ? ESCAPE '\\' OR body LIKE ? ESCAPE '\\') ORDER BY updated_at DESC LIMIT 50`,
     )
@@ -18,8 +23,14 @@ export async function searchKnowledge(ctx: WorkContext, query: string) {
         `%${query.replace(/[\\%_]/g, "\\$&")}%`,
         `%${query.replace(/[\\%_]/g, "\\$&")}%`,
       )
-      .all()
+      .all<KnowledgeArticle>()
   ).results;
+  const visible = [];
+  for (const article of candidates) {
+    try { visible.push({ ...article, sources: await assertKnowledgeArticleSources(ctx, String(article.id)) }); }
+    catch (error) { if (!(error instanceof ApiError) || error.status !== 404) throw error; }
+  }
+  return visible;
 }
 export async function saveArticle(
   ctx: WorkContext,
@@ -29,6 +40,7 @@ export async function saveArticle(
   const articleId = input.id || id(),
     t = now();
   if (input.id) {
+    await assertKnowledgeArticleSources(ctx, input.id);
     const result = await ctx.env.DB.prepare(
       "UPDATE work_knowledge SET title=?,body=?,scope=?,expires_at=?,revision=revision+1,reviewer_id=?,reviewed_at=?,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND (scope<>? OR ?=1)",
     )
