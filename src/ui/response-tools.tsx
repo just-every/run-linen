@@ -35,7 +35,7 @@ export function ResponseTools({ workId, onInsert }: { workId: string; onInsert: 
   }
   return <details className="work-controls" aria-label="Responses and summaries">
     <summary>Responses and summaries</summary>
-    <label>Canned response<select value={selected} onChange={e => {
+    <label>Canned response<select aria-label="Canned response" value={selected} onChange={e => {
       const next = templates.data?.items.find(t => t.id === e.target.value);
       setSelected(e.target.value); setTitle(next?.title ?? ''); setBody(next?.body ?? '');
     }}><option value="">New response…</option>{templates.data?.items.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select></label>
@@ -47,7 +47,7 @@ export function ResponseTools({ workId, onInsert }: { workId: string; onInsert: 
       <div className="button-row"><button type="button" className="action secondary" disabled={mutation.pending || !title.trim() || !body.trim()} onClick={save}>Save canned response</button>
       {template && <button type="button" className="action secondary" disabled={mutation.pending} onClick={remove}>Delete canned response</button>}</div>
     </details>
-    <label>Knowledge to cite<select value={articleId} onChange={e => { setArticleId(e.target.value); setAssistance(null); }}>
+    <label>Knowledge to cite<select aria-label="Knowledge to cite" value={articleId} onChange={e => { setArticleId(e.target.value); setAssistance(null); }}>
       <option value="">Ticket history only</option>{knowledge.data?.items.filter(a => a.scope === 'employees').map(a => <option key={String(a.id)} value={String(a.id)}>{String(a.title)}</option>)}
     </select></label>
     <div className="button-row"><button type="button" className="action secondary" disabled={pending} onClick={() => generate('reply')}>Draft shared reply</button>
