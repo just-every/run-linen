@@ -11,7 +11,9 @@ globalThis.fetch=(async (input:RequestInfo|URL,init?:RequestInit)=>{
   if(mode==='delay'){waiting=true;await new Promise<void>(resolve=>{release=resolve;});waiting=false;}
   if(mode==='transport')throw new Error('Paid-edge fixture transport loss');
   const citations=request.text.format.schema.properties.citations.items.enum;
-  let value:unknown={title:'Recover network access',body:'Open a fresh network session. Use this guidance only for the recorded access symptoms; confirm the result before assuming recovery.',citations};
+  let value:unknown=['ticket_reply','ticket_summary'].includes(packet.purpose)
+    ? {text:'Use the reviewed network guidance and keep the ticket open if the issue remains.',citations}
+    : {title:'Recover network access',body:'Open a fresh network session. Use this guidance only for the recorded access symptoms; confirm the result before assuming recovery.',citations};
   if(mode==='unknown-citation')value={title:'Invalid citation',body:'Untrusted citation',citations:['ticket:invented']};
   if(mode==='missing-citation')value={title:'Missing citation',body:'One source omitted',citations:citations.slice(0,-1)};
   if(mode==='schema')value={authorized:true};

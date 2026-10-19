@@ -1,6 +1,7 @@
 import { ApiError } from '../../platform/http';
 import { conversation, permit, type WorkContext } from './core';
 import { searchKnowledge } from './knowledge';
+import { assertReplyKnowledgeAudience } from './response-knowledge-audience';
 
 export async function responseContext(ctx: WorkContext, workId: string, kind: 'reply' | 'summary', articleIds: unknown) {
   const detail = await conversation(ctx, workId);
@@ -13,6 +14,7 @@ export async function responseContext(ctx: WorkContext, workId: string, kind: 'r
     if (!article) throw new ApiError(404, 'response_article', 'Selected reviewed article is unavailable, expired or outside this reply audience');
     return article;
   });
+  if (kind === 'reply') await assertReplyKnowledgeAudience(ctx, detail.work, articles);
   const messages = detail.messages.filter(m => kind === 'summary' || m.visibility === 'public');
   const sources = [
     ...messages.map(m => ({ id: `message:${m.id}`, type: 'message', title: `Ticket message · ${String(m.body).slice(0, 80)}`, body: m.body, visibility: m.visibility, author: m.author_id, at: m.created_at })),

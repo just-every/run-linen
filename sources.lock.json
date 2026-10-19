@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "815d4dfe256742e976d51e2af2c16922dc56b8547251906ab30ee002a31aba82",
+      "sha256": "39750088ab8c94d7ff66bec4da00cb874e309ec445b599222a60286d29941adc",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9500578d5810774d6a7b828dbe06965c7315e0245d796e266afd18f12183dfba",
+      "sha256": "99f4db49de46f4e208f7a3c54d1ad64f7ee3280272a80f89d6dbef399a4b645f",
       "executable": false
     },
     "DEMO.md": {
@@ -2175,7 +2175,11 @@
       "executable": false
     },
     "src/features/work/response-context.ts": {
-      "sha256": "877911a28b07548153a4ba03f97d594415be207abcd5c22dcb52c0e68e076c2c",
+      "sha256": "21d6332e016b27e8404c6af2dc7071bd257975d0d754f8372aa033de99425a39",
+      "executable": false
+    },
+    "src/features/work/response-knowledge-audience.ts": {
+      "sha256": "648cbba023debe694ab49a7236211d6750a809ffa2ecdabc542dd62df27d35c1",
       "executable": false
     },
     "src/features/work/response-routes.ts": {
@@ -4587,7 +4591,7 @@
       "executable": false
     },
     "tests/ui/knowledge-draft-journey.mjs": {
-      "sha256": "ae9d19ea45359227bbf3a103fade68f7d384f172966cd5a624704bec1f91d7a0",
+      "sha256": "6acc1d9f3080ac79dc2fd9a57e5a3942df5649cc1ba1808e5e4d924e60280662",
       "executable": false
     },
     "tests/ui/native-regressions.mjs": {
@@ -4735,7 +4739,7 @@
       "executable": false
     },
     "tests/work/knowledge-draft-cases.mjs": {
-      "sha256": "1903266f651f1acf03cbe2d1eba7e239467276a2328a9f896c27207b02d7bbbe",
+      "sha256": "55117436d2759032b31ce3508adf5891bbda8000bca29c58b61df765f5b37f9c",
       "executable": false
     },
     "tests/work/knowledge-draft-runtime.mjs": {
@@ -4743,7 +4747,7 @@
       "executable": false
     },
     "tests/work/knowledge-draft-worker.ts": {
-      "sha256": "d12a09893628681c451505e6b848b621cd251b2fcd84a8ba5914b2081d8bd1fb",
+      "sha256": "22ee81b40985afa32f302f8d4db743fb612849ada7581f7deed18b42cfcf70ef",
       "executable": false
     },
     "tests/work/lifecycle-evidence-cases.mjs": {
