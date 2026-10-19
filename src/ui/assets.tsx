@@ -1,3 +1,4 @@
+import { LinkedTickets } from './work-relationships';
 import { AssetFinancials } from './asset-financials';
 import { AssetContracts } from "./asset-contracts";
 import { usePeopleLabels } from "./people-labels";
@@ -99,6 +100,7 @@ export function AssetsSpace({selectedId}:{selectedId?:string}) {
             />
             <AssetContracts assetId={text(asset.id)} />
             <AssetFinancials assetId={text(asset.id)} />
+            <LinkedTickets kind="asset" targetId={text(asset.id)} />
             <AssetHistory key={`${asset.id}:${asset.revision}`} assetId={text(asset.id)} />
             <Evidence value={asset} />
           </section>

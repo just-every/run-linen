@@ -5,6 +5,7 @@ import { hashToken } from "../../platform/crypto";
 import { cancelWorkExecution } from "./execution";
 import { shiftCommitmentForPause } from "./calendar";
 import { slaPauseStatements, validWaitingOn } from "./sla-policies";
+import { participantView } from "./relationships";
 import { currentWorkPrincipal } from "./identity";
 import type { Env, Principal } from "../../platform/types";
 import { ApiError, id, now } from "../../platform/http";
@@ -77,13 +78,14 @@ export async function listWork(ctx: WorkContext) {
   const p = ctx.principal;
   const rows = (
     await ctx.env.DB.prepare(
-      `SELECT work_records.*,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=?))) ORDER BY updated_at DESC LIMIT 200`,
+      `SELECT work_records.*,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=? OR (sensitivity='normal' AND EXISTS(SELECT 1 FROM work_participants wp WHERE wp.workspace_id=work_records.workspace_id AND wp.work_id=work_records.id AND wp.user_id=?))))) ORDER BY updated_at DESC LIMIT 200`,
     )
       .bind(
         p.workspaceId,
         Number(p.roles.includes("hr") || p.roles.includes("owner")),
         Number(p.roles.includes("owner")),
         Number(operator(p)),
+        p.userId,
         p.userId,
         p.userId,
       )
@@ -336,7 +338,13 @@ export async function appendMessage(
 export async function conversation(ctx: WorkContext, workId: string) {
   await currentWorkPrincipal(ctx);
 
-  const work = await getWork(ctx, workId);
+  // DESK-006: a merged duplicate's requester follows the surviving ticket's public conversation only.
+  let work: WorkRecord;
+  try { work = await getWork(ctx, workId); } catch (error) {
+    const shared = await participantView(ctx, workId);
+    if (!shared) throw error;
+    return shared;
+  }
   const privateAllowed =
     operator(ctx.principal) ||
     (work.sensitivity === "hr" && ctx.principal.roles.includes("hr"));
