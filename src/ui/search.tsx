@@ -2,7 +2,7 @@ import { useRemote } from './state';
 import { Empty, ErrorNotice, Hero, Loading } from './primitives';
 import type { SearchType } from '../features/work/search-sources';
 const labels:Record<SearchType,string>={ticket:'Tickets',person:'People',asset:'Assets',ci:'Configuration items',change:'Changes',problem:'Problems',catalog:'Catalog items',article:'Articles'};
-interface SearchResult {id:string;type:SearchType;title:string;summary:string;href:string|null}
+interface SearchResult {id:string;type:SearchType;title:string;summary:string;href:string|null;identityKind?:string}
 export function SearchSpace({query,parameters}:{query:string;parameters:string}) {
   const params=new URLSearchParams(parameters), type=params.get('type')||'',offset=Number(params.get('offset')||0);
   const result=useRemote<{items:SearchResult[];counts:Record<SearchType,number>;total:number;pageSize:number}>(`/search?q=${encodeURIComponent(query)}&type=${encodeURIComponent(type)}&offset=${offset}`);
@@ -20,7 +20,7 @@ export function SearchSpace({query,parameters}:{query:string;parameters:string})
     {result.loading?<Loading/>:result.error?<ErrorNotice error={result.error} retry={result.refresh}/>:result.data&&<>
       <p role="status">{result.data.total} visible {result.data.total===1?'result':'results'}{query?` for “${query}”`:''}.</p>
       {result.data.total>0&&<p>{Object.entries(labels).filter(([t])=>result.data!.counts[t as SearchType]>0).map(([t,label])=>`${label}: ${result.data!.counts[t as SearchType]}`).join(' · ')}</p>}
-      {result.data.items.map(item=><article className="connection-record" key={`${item.type}:${item.id}`} aria-label={`${item.title} search result`}>
+      {result.data.items.map(item=><article className="connection-record" key={`${item.type}:${item.identityKind||''}:${item.id}`} aria-label={`${item.title} search result`}>
         <p className="eyebrow">{labels[item.type]}</p>
         <h2>{item.href?<a href={item.href}>{item.title}</a>:item.title}</h2><p>{item.summary}</p>
       </article>)}

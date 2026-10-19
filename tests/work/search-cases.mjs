@@ -20,6 +20,11 @@ export async function searchChecks(api, db) {
   const change=await make('/changes',{title:'Denver network adapter update',services:[service.id],risk:'low',impact:'A single office',cohorts:['Denver'],canaryCohorts:['Denver'],window:{start:'2030-01-01T01:00:00Z',end:'2030-01-01T02:00:00Z'},implementation:{action:'review-driver'},compensation:{action:'restore-driver'}});
   const catalog=await make('/catalog',{name:'Denver network access',kind:'access',target:'denver-network',ownerId:'owner'});
   const article=await make('/knowledge',{title:'Denver network guidance',body:'Reconnect the adapter after checking active work.',scope:'employees',expiresAt:'2030-01-01T00:00:00Z',review:true});
+  assert.ok((await search('Network Agent','person')).items.some(r=>r.id==='search-agent'&&r.identityKind==='member'),'DESK-016 active member names are searchable without email or roles');
+  await make('/people/'+person.id+'/binding',{expectedRevision:person.revision,memberId:'employee'});
+  assert.equal((await search('Employee','person')).items.filter(r=>r.id==='employee'&&r.identityKind==='member').length,0,'DESK-016 only a current explicit reviewed binding deduplicates member and person results');
+  assert.ok((await search('Employee','person')).items.some(r=>r.id===person.id&&r.identityKind==='person'),'DESK-016 deduplication retains the current member name as a search term');
+  assert.equal(JSON.stringify(await search('Network Agent','person')).includes('search-agent@test'),false,'DESK-016 directory projection contains no email');
   const bySerial=await search('DEN-C02XL93');
   for (const [type,id] of [['asset',device.id],['ticket',ticket.id],['person',person.id]])
     assert.ok(bySerial.items.some(r=>r.type===type&&r.id===id),'DESK-016 serial finds asset, explicitly linked ticket and assigned person');

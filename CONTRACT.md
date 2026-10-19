@@ -553,7 +553,9 @@ that product and marks how close the current code is (see [Status](#status)).
   external flow is created. Privileged searches are audited without storing query
   content. Owners, operators and HR agents use the search;
   employees retain their reviewed-knowledge search. People expose recorded names
-  and IDs only, with the existing operator projection. Tickets match their native
+  and IDs only, with the existing operator projection. Active member IDs/names
+  also appear under existing member-directory access; a current reviewed binding
+  deduplicates a member and recorded person without name/email inference. Tickets match their native
   ID (the current ticket number), title, readable conversation text and requester
   name. Assets match serial and recorded asset tag. Explicit repair, device-duty
   or recorded asset-ID links let a serial find its tickets; its assigned person

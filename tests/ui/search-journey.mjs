@@ -28,6 +28,9 @@ export async function searchJourney({page,api,base,out}) {
     assert.ok(page.url().endsWith('/work/'+request.id),'DESK-016 result opens native conversation');
     await page.goto(base+'/app#/search?q='+encodeURIComponent(session.user.name)+'&type=ticket');
     await page.getByRole('link',{name:request.title,exact:true}).waitFor();
+    await page.goto(base+'/app#/search?q='+encodeURIComponent(session.user.name)+'&type=person');
+    await page.getByRole('article',{name:session.user.name+' search result',exact:true}).waitFor();
+    await captureJourney(page,{path:`${out}/DESK-016-people-${width}.png`,fullPage:true});
     await page.goto(base+'/app#/search?q=netwrok&type=ticket');
     await page.getByRole('link',{name:request.title,exact:true}).waitFor();
     assert.equal(await page.getByRole('article',{name:'DEN-C02XL93 search result',exact:true}).count(),0,'DESK-016 ticket filter excludes assets');
