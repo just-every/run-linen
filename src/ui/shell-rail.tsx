@@ -72,6 +72,7 @@ export function RailNav({ section }: { section: string }) {
     ["commitments", "Continuing commitments", true],
     ["suppliers", "Suppliers & handoffs", operator],
     ["problems", "Causes & prevention", operator],
+    ["projects", "IT projects", operator],
     ["research", "Research & evidence", operator],
     ["engineering", "Engineering & adoption", operator],
     ["capabilities", "Verified reusable repairs", operator],

@@ -193,7 +193,7 @@ test, or the gap.
 
 | Clause | Acceptance evidence | Current evidence path | Status |
 |---|---|---|---|
-| **PROJECT-001 IT team projects** | Create "Denver office move" with 12 tasks across two milestones, link 30 asset relocations and two changes, see a blocked dependency flagged on the timeline, and see an agent's workload combine project tasks and tickets. | No IT projects. | missing |
+| **PROJECT-001 IT team projects** | Create "Denver office move" with 12 tasks across two milestones, link 30 asset relocations and two changes, see a blocked dependency flagged on the timeline, and see an agent's workload combine project tasks and tickets. | PROJECT-001: `tests/work/project-cases.mjs` via `tests/work/runtime.mjs` (public routes); board, timeline and workload screens in `src/ui/projects.tsx`. Local runtime only; no hosted or owner acceptance claimed. | done |
 
 ### Knowledge
 
