@@ -1,7 +1,7 @@
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
 import { type Kind } from './store';
-const kinds: Kind[] = ['service', 'edge', 'incident', 'problem', 'change', 'supplier', 'asset', 'monitor', 'oncall', 'decision', 'person'];
+const kinds: Kind[] = ['problem-proposal', 'service', 'edge', 'incident', 'problem', 'change', 'supplier', 'asset', 'monitor', 'oncall', 'decision', 'person'];
 export async function restoreAdoptionRecord(ctx: {
     env: Env;
     principal: Principal;

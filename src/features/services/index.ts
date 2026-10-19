@@ -1,3 +1,4 @@
+import { recurrenceContext } from './recurrence-context';
 import { publishWorkaround, presentProblem } from './problem-knowledge';
 import type { Hono } from 'hono';
 import type { AppEnv, Env, Principal } from '../../platform/types';
@@ -8,6 +9,8 @@ import { advanceDecision, newDecision, decide, amendDecision } from './decisions
 import { changeExecutionPort } from '../execution/change-port';
 import { setChangeExecutionPort } from './changes';
 import { addEdge, serviceGraph } from './graph';
+import { detectProblemProposals } from './problem-detection';
+import { listProblemProposals, getProblemProposal, decideProblemProposal, problemEvidence } from './problem-proposals';
 import { newConfigurationItem } from './configuration';
 import { dependencyImpact } from './dependency-impact';
 import { diagnosticFinding, incidentFollowup, newIncident, linkIncident, updateIncident, assignDiagnostic, incidentCandidates, recordVerifiedRecovery, type RecoveryEvidence } from './incidents';
@@ -29,7 +32,7 @@ export interface ServiceWorkPort {
 let workPort: ServiceWorkPort | undefined;
 export function setServiceWorkPort(port: ServiceWorkPort) { workPort = port; }
 async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
-    if(r.kind==='problem')return presentProblem(env.DB,p,r);
+    if(r.kind==='problem') { const shown=await presentProblem(env.DB,p,r); return r.data.sourceProposalId ? {...shown,data:{...shown.data,recurrenceSources:await problemEvidence({env,principal:p},r.data.evidence)}} : shown; }
     if(r.kind==='supplier')return {...r,data:{...r.data,breaches:supplierBreaches(r)}};
     if (r.kind !== 'incident' || staff(p) || p.roles.includes('auditor'))
         return r;
@@ -42,6 +45,10 @@ async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
 export function registerServiceRoutes(app: Hono<AppEnv>) {
     setChangeExecutionPort(changeExecutionPort);
     setServiceWorkPort(serviceWorkPort);
+    app.get('/problem-proposals', async c => c.json(await listProblemProposals(c.env,c.get('principal'))));
+    app.get('/problem-proposals/:id', async c => c.json(await getProblemProposal(c.env,c.get('principal'),c.req.param('id'))));
+    app.post('/problem-proposals/detect', async c => c.json(await detectProblemProposals(c.env,c.get('principal'),await jsonBody(c))));
+    for (const decision of ['accept','reject'] as const) app.post(`/problem-proposals/:id/${decision}`, async c => c.json(await decideProblemProposal(c.env,c.get('principal'),c.req.param('id'),await jsonBody(c) as any,decision)));
     const paths: Record<string, Kind> = { 'service-people': 'person', decisions: 'decision', services: 'service', incidents: 'incident', problems: 'problem', changes: 'change', suppliers: 'supplier', 'software-assets': 'asset', monitors: 'monitor', 'oncall-rotations': 'oncall' };
     for (const [path, kind] of Object.entries(paths)) {
         app.get(`/${path}`, async (c) => { const items = await Promise.all((await list(c.env.DB, c.get('principal'), kind)).map(r => presentRecord(c.env, c.get('principal'), r))); return c.json({ items: items.map(r => kind === 'supplier' ? { ...r, breaches: supplierBreaches(r) } : r) }); });
@@ -100,7 +107,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     app.post('/software-assets', async (c) => c.json(await newAsset(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     for (const [path, fn] of [['assign', assignAsset], ['return', returnAsset], ['charges', recordCharge], ['transition', assetTransition], ['usage', assetUsage], ['reclamation', reclamationDecision]] as const)
         app.post(`/software-assets/:id/${path}`, async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await fn(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'asset'), await jsonBody(c))); });
-    app.post('/monitors', async (c) => { const p = requireRole(c, 'owner', 'operator'), b = await jsonBody(c), service = await getService(c.env.DB, p, requiredString(b.serviceId, 'serviceId'), 'service'); return c.json(await create(c.env.DB, p, 'monitor', { name: requiredString(b.name, 'name'), serviceId: service.id, connectionId: requiredString(b.connectionId, 'connectionId'), freshnessMs: number(b.freshnessMs, 'freshnessMs', 1000), cohorts: strings(b.cohorts, 'cohorts'), status: 'unknown', observations: [] }, { visibility: 'operators', participants: b.participants as string[] }), 201); });
+    app.post('/monitors', async (c) => { const p = requireRole(c, 'owner', 'operator'), b = await jsonBody(c), service = await getService(c.env.DB, p, requiredString(b.serviceId, 'serviceId'), 'service'); return c.json(await create(c.env.DB, p, 'monitor', { name: requiredString(b.name, 'name'), serviceId: service.id, connectionId: requiredString(b.connectionId, 'connectionId'), freshnessMs: number(b.freshnessMs, 'freshnessMs', 1000), cohorts: strings(b.cohorts, 'cohorts'), context: recurrenceContext(b.context), status: 'unknown', observations: [] }, { visibility: 'operators', participants: b.participants as string[] }), 201); });
     app.post('/monitors/:id/events', async (c) => c.json(await ingestMonitoring(c.env, c.get('principal'), c.req.param('id'), await c.req.text(), c.req.header('X-Linen-Timestamp') || '', c.req.header('X-Linen-Signature') || '')));
     app.post('/oncall-rotations', async (c) => {
         const p = requireRole(c, 'owner', 'operator'), b = await jsonBody(c);

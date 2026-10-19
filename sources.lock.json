@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "5f40defbffb0554cc4cd586db4f72d135bc0fcd2fbcbda024b7a42e72b171d0b",
+      "sha256": "a920f6714c6b77ea855f6bebb0d51e46ccf9d183c1c257b8b5cfd5775dcf08f3",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "6ff3396d4ac0d4efaf8728ae676636e94f5b723592c7999de77e118a243bd100",
+      "sha256": "e18f7a93ac28d95b72a6281380561757509fe328c15918cfa18343cc556fff86",
       "executable": false
     },
     "DEMO.md": {
@@ -1539,7 +1539,7 @@
       "executable": false
     },
     "src/features/adoption/references.ts": {
-      "sha256": "febad758184b2dab4ee0d210f5ce8159c2feb97af22ce99558b0a26bb2846272",
+      "sha256": "ae4dc1885639b50fab81cc2f501ebf70bbdad783ecd2dcc193ddf9b0f693723a",
       "executable": false
     },
     "src/features/adoption/restore.ts": {
@@ -1839,11 +1839,11 @@
       "executable": false
     },
     "src/features/services/adoption.ts": {
-      "sha256": "34679b2870dbdbcbfd35a5e40d0cbb24663dd9c4412c6012f7cb013979440fd4",
+      "sha256": "a7f7bb8bd266e1b1da0b230d802d7406ba2efceafa5992895aa4872f3120ae7a",
       "executable": false
     },
     "src/features/services/API.md": {
-      "sha256": "e9bfb437bac9f70cb1dd6b117867e9a22025db5f0fcdad1dfcd5357c9536219d",
+      "sha256": "3af79acbde8054ebc31cd09ec262263e79ac7e24e20548b8d1287acb36b9a28b",
       "executable": false
     },
     "src/features/services/changes.ts": {
@@ -1871,11 +1871,11 @@
       "executable": false
     },
     "src/features/services/incidents.ts": {
-      "sha256": "e49081dde24b251de9067ed2b20365f8b637237fd931de4cba19b12c7c0a4bf7",
+      "sha256": "d7ee797427c9f637a379a7764e777b59bb1417fd506aebdc2e85a58884a7aca5",
       "executable": false
     },
     "src/features/services/index.ts": {
-      "sha256": "b5a8783268e54838275274afe93902e87f8efd1bb2794cec591a018973ef1950",
+      "sha256": "e0b9a59957b0a2f7862ea97fb4f70876b791d012d72ffd583fbc61ec194833ca",
       "executable": false
     },
     "src/features/services/intake.ts": {
@@ -1883,11 +1883,15 @@
       "executable": false
     },
     "src/features/services/integrations.ts": {
-      "sha256": "3dafd7d2e35b0a6ed4fe3e0826258c5e782f8ba90f7fa4997d4db1861769c15b",
+      "sha256": "69357e81253a2aac74ac501225b67f0a385bfa6d2be23677620f03b95cd9668d",
       "executable": false
     },
     "src/features/services/privacy.ts": {
       "sha256": "1dcea93625a70ab7db77e55f2992551f6ff857039f220b16b730695a27fec7a7",
+      "executable": false
+    },
+    "src/features/services/problem-detection.ts": {
+      "sha256": "3283fb9a918a981e7b4edf02a70aef0c91945f0ce7e56c8ad77a51c9884d45ad",
       "executable": false
     },
     "src/features/services/problem-knowledge.ts": {
@@ -1898,6 +1902,14 @@
       "sha256": "50ed774c0e7f8846fb996f29f681c12059c92824ca1050bbb9aad9528e44f245",
       "executable": false
     },
+    "src/features/services/problem-proposals.ts": {
+      "sha256": "d8022488223b1511d3bba4d427c7b5b7e6aaf285c1c5d0777492a911914585b9",
+      "executable": false
+    },
+    "src/features/services/problem-source-access.ts": {
+      "sha256": "326f95fee7a467ef7ce222a7b41688e15ea6f3f1f6977bedb10a2b4367d41dce",
+      "executable": false
+    },
     "src/features/services/problems.ts": {
       "sha256": "485bbed08043600a8f5c5f2a582922244763a437b31d6ad05710490004c237a9",
       "executable": false
@@ -1906,8 +1918,12 @@
       "sha256": "48d8814e5b6abf8cd01d933468eaeba22fd0a5e5bd567fe5491652ebeb56198a",
       "executable": false
     },
+    "src/features/services/recurrence-context.ts": {
+      "sha256": "5a22ecc50a2c8723d42087a2d5f2762bbe4c4327a489c3af2fd067406a57c9aa",
+      "executable": false
+    },
     "src/features/services/store.ts": {
-      "sha256": "b20b878b79e24f77e67ff56dced13ac17c93e519d7f10984b968d58fc8b1c9c4",
+      "sha256": "54323ac95a5e198d78019c69581323526800ee61cb792d64b776b36a311933a2",
       "executable": false
     },
     "src/features/services/webhooks.ts": {
@@ -1963,7 +1979,7 @@
       "executable": false
     },
     "src/features/work/core.ts": {
-      "sha256": "4643489790de2f2e7ae0a7cf2d716312fd60d11db793658d620fef6927dee543",
+      "sha256": "c7833a43b7bb68cecd8aa727094b1524580a301c1f5fa7000af68d55ee29b4ec",
       "executable": false
     },
     "src/features/work/delegation.ts": {
@@ -2007,7 +2023,7 @@
       "executable": false
     },
     "src/features/work/identity.ts": {
-      "sha256": "b6c3fcee4d0543784336ecd09f4a4370d63db8968044bb53d63a3286d048c724",
+      "sha256": "d19cb349ffbc21f36399ebf6bf967e1870d1815efd5d1beea428e910053fab9b",
       "executable": false
     },
     "src/features/work/index.ts": {
@@ -2116,6 +2132,10 @@
     },
     "src/features/work/restore.ts": {
       "sha256": "6f50b0eea3facb7c05e99bb06487b789d88bbdf865c77b4e6c668e1e4764731f",
+      "executable": false
+    },
+    "src/features/work/scope.ts": {
+      "sha256": "eb7dc7a93fde1893c3536008aa06ac0c9606f8285c58b60d25e06099c893dfaf",
       "executable": false
     },
     "src/features/work/time-routes.ts": {
@@ -4007,7 +4027,11 @@
       "executable": false
     },
     "src/ui/problem-actions.tsx": {
-      "sha256": "2270f95ead00466367f8ee622c60ae68e09db8c13444761229eac6de481b6897",
+      "sha256": "efa91b774e26e2bda029241c50349f0d5a9159f6e60e397b47f2f7e4fd8e9003",
+      "executable": false
+    },
+    "src/ui/problem-proposals.tsx": {
+      "sha256": "bfedac2da99d950b2fb9a6e12d79cfd5aae9f9f837e92bc7b312680fd18640a1",
       "executable": false
     },
     "src/ui/queue.tsx": {
@@ -4035,7 +4059,7 @@
       "executable": false
     },
     "src/ui/service-space.tsx": {
-      "sha256": "91062cf720c8147c6e47a404897409cef23b487bb2ddf6f01be142c922d7bed7",
+      "sha256": "656f31e45c0b89158a25ea6c3094acc3f1e1b8ef6a567bd7c33213c316605728",
       "executable": false
     },
     "src/ui/setup-advanced-grant.tsx": {
@@ -4163,7 +4187,7 @@
       "executable": false
     },
     "tests/adoption/problem-cases.mjs": {
-      "sha256": "0fff65fcfb6e945de884b7d227bf6a9f104780163d5785c9ee13a66cdc3795b4",
+      "sha256": "a1f91d3b72e27cab404dbcc3a00b4a0ac44e5e8d779c3d357a54f1e5032ed245",
       "executable": false
     },
     "tests/adoption/recurrence-cases.mjs": {
@@ -4399,7 +4423,7 @@
       "executable": false
     },
     "tests/services/run.mjs": {
-      "sha256": "f7ee785c6f1e664978c7b0ae6c9e394ffd9999cc78a4bebd672ce3ae12b5b833",
+      "sha256": "63505f210953900a434a8e60a65b1a7d3eab8d0a5027c0e56d7fec82eb58f114",
       "executable": false
     },
     "tests/services/worker.ts": {
@@ -4435,7 +4459,7 @@
       "executable": false
     },
     "tests/ui/browser.mjs": {
-      "sha256": "46b220ec00e72a5cf3c587f9099c910da514e880497c137d170372d3a71d44f6",
+      "sha256": "e866f480e6e9ad910147420bee2a936586f3bf3b99b4ce5ec5b2ae09df51c069",
       "executable": false
     },
     "tests/ui/classification-journey.mjs": {
@@ -4508,6 +4532,10 @@
     },
     "tests/ui/pending-person-journey.mjs": {
       "sha256": "d5f8c426755d043614f170f0902bc916940340167ff4a4d183ff34df2cd8fec7",
+      "executable": false
+    },
+    "tests/ui/problem-detection-journey.mjs": {
+      "sha256": "579dfb07a86f13e6bc5e359d28e0721a1139146b9e2a119a26af212863f9e166",
       "executable": false
     },
     "tests/ui/problem-journey.mjs": {
@@ -4662,6 +4690,10 @@
       "sha256": "b957926357ef856649bb059c1154410ce9dea8320827d9c6de4cfd854f73f225",
       "executable": false
     },
+    "tests/work/problem-detection-cases.mjs": {
+      "sha256": "e359a2c9cf1a5c60ce97544b3b5b28c796ac2f8f717ae089721e5599b0104a4b",
+      "executable": false
+    },
     "tests/work/progress-runtime.mjs": {
       "sha256": "faed1a3dabae8cfec96916131ea235c819c657a505c2b6410240d02c4e138805",
       "executable": false
@@ -4671,7 +4703,7 @@
       "executable": false
     },
     "tests/work/runtime.mjs": {
-      "sha256": "c7425ffab91ef082e2494dcb78ca27948ab73282a32c874d0739f9e81e778354",
+      "sha256": "c3cb72df3b1704a63dec2e27741f26e00adef0800925658deca02c7ceaba09b9",
       "executable": false
     },
     "tests/work/time-cases.mjs": {

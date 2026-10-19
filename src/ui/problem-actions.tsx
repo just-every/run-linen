@@ -32,6 +32,7 @@ export function ProblemDetails({record,incidents=[]}:{record:DomainRecord;incide
   return <section aria-label="Problem analysis and prevention">
     <h2>Root cause & prevention</h2>
     <Facts entries={[["Known error",d.causeState],["Root cause analysis",d.cause],["Evidence",d.causeEvidence?.join(', ')],["Related incidents",d.incidentIds?.length],["Prevention",d.preventionState]]} />
+    {d.sourceProposalId && <section><h3>Accepted recurrence evidence</h3><p>A shared cause is unconfirmed until reviewed. Source records keep their own status.</p><ul>{(d.recurrenceSources || []).map((ref:any)=><li key={ref.type+ref.id}><a href={`#/${ref.type==='ticket'?'work':'incidents'}/${ref.id}`}>{ref.title}</a> · {date(ref.observedAt)}</li>)}</ul></section>}
     <div className="button-row">{d.incidentIds?.map((id:string)=><a key={id} href={`#/incidents/${id}`}>{text(incidents.find(r=>r.id===id)?.data.title,`Incident ${id.slice(0,8)}`)}</a>)}
       {d.preventionChange && <a href={`#/changes/${d.preventionChange.id}`}>{text(d.preventionChange.title)}</a>}</div>
     {(d.workarounds || []).map((w:any)=><article className="connection-record" key={w.id}>

@@ -1,3 +1,4 @@
+import { recurrenceContext } from './recurrence-context';
 import type { Principal } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { create, getService, list, mutate, number, strings, type ServiceRecord } from './store';
@@ -15,7 +16,7 @@ export interface RecoveryEvidence {
     executionId: string;
     source: string;
 }
-export async function newIncident(db: D1Database, p: Principal, b: Record<string, any>) { const service = await getService(db, p, requiredString(b.serviceId, 'serviceId'), 'service'); return create(db, p, 'incident', { title: requiredString(b.title, 'title'), serviceId: service.id, impact: requiredString(b.impact, 'impact'), cohorts: strings(b.cohorts, 'cohorts'), status: 'investigating', followupWindowMs: number(b.followupWindowMs ?? 604800000, 'followupWindowMs', 60000), monitorEventKey: b.monitorEventKey || null, commander: p.userId, cadenceMs: number(b.cadenceMs ?? 1800000, 'cadenceMs', 60000), nextUpdateAt: now(), links: [], diagnostics: [], recoveries: [], updates: [] }, { visibility: b.visibility || service.visibility, participants: b.participants }); }
+export async function newIncident(db: D1Database, p: Principal, b: Record<string, any>) { const service = await getService(db, p, requiredString(b.serviceId, 'serviceId'), 'service'); return create(db, p, 'incident', { title: requiredString(b.title, 'title'), serviceId: service.id, impact: requiredString(b.impact, 'impact'), cohorts: strings(b.cohorts, 'cohorts'), status: 'investigating', followupWindowMs: number(b.followupWindowMs ?? 604800000, 'followupWindowMs', 60000), monitorEventKey: b.monitorEventKey || null, context: recurrenceContext(b.context), commander: p.userId, cadenceMs: number(b.cadenceMs ?? 1800000, 'cadenceMs', 60000), nextUpdateAt: now(), links: [], diagnostics: [], recoveries: [], updates: [] }, { visibility: b.visibility || service.visibility, participants: b.participants }); }
 export async function linkIncident(db: D1Database, p: Principal, incidentId: string, revision: number, employeeIncidentId: string, correction = false) {
     const r = await getService(db, p, incidentId, 'incident');
     const work = await db.prepare('SELECT requester_id,beneficiary_id,sensitivity,kind FROM work_records WHERE workspace_id=? AND id=?').bind(p.workspaceId, employeeIncidentId).first<any>();

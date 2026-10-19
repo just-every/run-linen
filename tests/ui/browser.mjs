@@ -1,3 +1,4 @@
+import { problemDetectionJourney } from './problem-detection-journey.mjs';
 import { dependencyJourney } from './dependency-journey.mjs';
 import { recurrenceJourney } from './recurrence-journey.mjs';
 import { assetFinancialJourney } from './asset-financial-journey.mjs';
@@ -556,6 +557,7 @@ try {
     await other.close();
   }
   await dependencyJourney({page,api,base,out});
+  await problemDetectionJourney({page,api,base,out});
   await recurrenceJourney({page,api,base,out});
   await assetFinancialJourney({page,api,base,out});
   await timeJourney({page,base,api,workId,out});

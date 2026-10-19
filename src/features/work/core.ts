@@ -1,3 +1,4 @@
+import { workReadable } from './scope';
 import { preparePendingRequest, pendingRequestSnapshot } from './pending-services';
 import { progressFor, requestProgress } from "./progress";
 import { hashToken } from "../../platform/crypto";
@@ -47,17 +48,7 @@ export async function getWork(ctx: WorkContext, id: string) {
   )
     .bind(p.workspaceId, id)
     .first<WorkRecord>();
-  if (
-    !row ||
-    !(row.sensitivity === "hr"
-      ? p.roles.includes("hr") ||
-        p.roles.includes("owner") ||
-        (p.roles.includes("integration") && row.requester_id === p.userId)
-      : (row.sensitivity === "normal" && operator(p)) ||
-        p.roles.includes("owner") ||
-        row.requester_id === p.userId ||
-        row.beneficiary_id === p.userId)
-  )
+  if (!row || !workReadable(p,row))
     throw new ApiError(404, "not_found", "Work not found");
   if (
     operator(p) &&

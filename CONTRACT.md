@@ -945,6 +945,28 @@ that product and marks how close the current code is (see [Status](#status)).
   the evidence; a human accepts or rejects. **Acceptance evidence:** seed eight
   Wi-Fi tickets from one floor; a proposed problem lists them; rejection is kept
   and does not re-propose the same cluster.
+  Detection runs with scheduled service work and on demand, using explicit
+  recorded service IDs, device-model and app labels from tickets and monitoring
+  context. It does not infer a common cause from a matching label. Each facet
+  and cohort or location is a separate cluster; untagged sources have their own
+  bucket. Labels use Unicode NFKC, collapsed whitespace and case-insensitive
+  comparison; service IDs remain exact opaque identities. The default is three
+  distinct sources recorded within the trailing 30 elapsed days, inclusive of
+  both bounds; canceled tickets are excluded. The detection API may choose
+  2–1,000 sources and a positive window of at most 365 days. A monitoring event's
+  derived incident counts once, rather than also counting its observation log.
+  Decisions retain the actor, reason and timestamp. Accepting creates one native
+  problem with links to all evidence, leaves the cause unknown and does not
+  resolve any source ticket. Rejected and accepted semantic clusters stay
+  decided across later sources, rolling windows, restart and native restore.
+  Under the ct-approved aggregation rule (19 October 2026), normal-source
+  proposals use existing operator visibility. Restricted sources are clustered
+  separately by their source audience; their proposal and accepted problem are
+  visible only to the detecting owner, with no inferred participants. Every
+  read rechecks every underlying ticket, alert and service; an inaccessible
+  source hides the whole cluster and its count. Accepted problems inherit the
+  proposal's owner and visibility. Source evidence stores references rather
+  than copied conversations.
 
 ### Change management
 
@@ -1643,8 +1665,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 16 | 65 | 34 | 115 |
-| All | 20 | 85 | 34 | 139 |
+| Target and push further | 17 | 64 | 34 | 115 |
+| All | 21 | 84 | 34 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1722,7 +1744,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `INC-003` | Status communication | target | partial | `src/features/services/integrations.ts`, `tests/services/run.mjs` | No Lamp or Statuspage connector. |
 | `INC-004` | Engineering escalation | target | missing |  | No Jira/GitHub/Linear/Vector escalation. |
 | `PROB-001` | Problem management | target | done | `src/features/services/problems.ts`, `src/features/services/problem-knowledge.ts`, `tests/work/problem-cases.mjs`, `tests/ui/problem-journey.mjs`, `tests/adoption/problem-cases.mjs` | Local public-route and 1440/390 browser proof: three incident links, reviewed root cause/known error, versioned expiring Knowledge publication and preventive change; a later request is offered guidance matched by reviewer phrases and service/cohort context. Scoped, reviewed, current and unexpired content only; request stays open. Native archive links and authorized erasure are proved. |
-| `PROB-002` | Proactive problem detection | target | partial | `src/features/intelligence/investigations.ts`, `src/features/intelligence/capabilities.ts` | No ticket clustering into problems. |
+| `PROB-002` | Proactive problem detection | target | done | `tests/work/problem-detection-cases.mjs`, `tests/ui/problem-detection-journey.mjs`, `tests/adoption/problem-cases.mjs` | Public routes and 1440/390 journey prove eight floor Wi-Fi incidents, retained rejection without re-proposal after ninth/restart/restore, native acceptance and source links, service/app/model ticket and alert grouping, deduplication, concurrent decisions and current source/tenant/role boundaries. ct-approved restricted detector-only aggregation, including after acceptance. Local evidence only. |
 | `CHANGE-001` | Change types and templates | target | partial | `src/features/services/changes.ts`, `tests/services/run.mjs` | No templates or standard-change catalog. |
 | `CHANGE-002` | Risk scoring | target | partial | `src/features/services/changes.ts` | No scoring. |
 | `CHANGE-003` | Change advisory board | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No CAB, meetings or votes. |

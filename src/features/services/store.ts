@@ -1,6 +1,7 @@
+import { assertProblemSources } from './problem-source-access';
 import type { Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
-export type Kind = 'service' | 'edge' | 'incident' | 'problem' | 'change' | 'supplier' | 'asset' | 'monitor' | 'oncall' | 'decision' | 'person';
+export type Kind = 'problem-proposal' | 'service' | 'edge' | 'incident' | 'problem' | 'change' | 'supplier' | 'asset' | 'monitor' | 'oncall' | 'decision' | 'person';
 export interface RecordRow {
     id: string;
     workspace_id: string;
@@ -26,7 +27,7 @@ export interface ServiceRecord {
 }
 export const dto = (r: RecordRow): ServiceRecord => ({ id: r.id, kind: r.kind, ownerId: r.owner_id, visibility: r.visibility, participants: JSON.parse(r.participants_json), data: JSON.parse(r.data_json), revision: r.revision, createdAt: r.created_at, updatedAt: r.updated_at });
 export const staff = (p: Principal) => p.roles.some(r => ['owner', 'operator'].includes(r));
-export function readable(p: Principal, r: ServiceRecord) { return p.roles.includes('owner') || r.ownerId === p.userId || r.participants.includes(p.userId) || (r.visibility === 'workspace') || (r.visibility === 'operators' && p.roles.some(x => ['operator', 'auditor'].includes(x))); }
+export function readable(p: Principal, r: ServiceRecord) { if (r.visibility==='restricted' && (r.kind==='problem-proposal' || (r.kind==='problem' && r.data.sourceProposalId))) return r.ownerId===p.userId; return p.roles.includes('owner') || r.ownerId === p.userId || r.participants.includes(p.userId) || (r.visibility === 'workspace') || (r.visibility === 'operators' && p.roles.some(x => ['operator', 'auditor'].includes(x))); }
 export function writable(p: Principal, r: ServiceRecord) { return p.roles.includes('owner') || ((staff(p) || p.roles.includes('approver')) && readable(p, r)) || (r.kind === 'decision' && r.data.holderId === p.userId) || r.ownerId === p.userId; }
 export async function getService(db: D1Database, p: Principal, id: string, kind?: Kind) {
     const raw = await db.prepare('SELECT * FROM svc_records WHERE workspace_id=? AND id=?').bind(p.workspaceId, id).first<RecordRow>();
@@ -35,9 +36,19 @@ export async function getService(db: D1Database, p: Principal, id: string, kind?
     const r = dto(raw);
     if (!readable(p, r) || kind && r.kind !== kind)
         throw new ApiError(404, 'not_found', 'Record not found');
+    if (r.kind === 'problem' && r.data.sourceProposalId) await assertProblemSources(db,p,r);
     return r;
 }
-export async function list(db: D1Database, p: Principal, kind: Kind) { const rows = await db.prepare('SELECT * FROM svc_records WHERE workspace_id=? AND kind=? ORDER BY updated_at DESC LIMIT 1000').bind(p.workspaceId, kind).all<RecordRow>(); return rows.results.map(dto).filter(r => readable(p, r)); }
+export async function list(db: D1Database, p: Principal, kind: Kind) {
+    const rows = await db.prepare('SELECT * FROM svc_records WHERE workspace_id=? AND kind=? ORDER BY updated_at DESC LIMIT 1000').bind(p.workspaceId, kind).all<RecordRow>();
+    const visible = [];
+    for (const record of rows.results.map(dto).filter(r=>readable(p,r))) {
+        try { if (record.kind==='problem' && record.data.sourceProposalId) await assertProblemSources(db,p,record); visible.push(record); }
+        catch (error) { if (!(error instanceof ApiError) || ![403,404].includes(error.status)) throw error; }
+    }
+    return visible;
+}
+
 export async function create(db: D1Database, p: Principal, kind: Kind, data: Record<string, any>, scope: {
     visibility?: string;
     participants?: string[];

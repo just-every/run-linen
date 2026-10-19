@@ -47,3 +47,9 @@ GET/POST `/oncall-rotations`: `{serviceId,startsAt,endsAt,recipientIds}`. Worksp
 Validation: `node tests/services/run.mjs` runs bundled Worker code in workerd against actual local D1. Tests cover privacy/tenant isolation, graph staleness/conflicts, private audience rejection, untrusted/partial recovery, mistaken links, changed approval, conflicting windows, canary and incomplete compensation, supplier breaches, scoped decisions, signed monitoring/replay/staleness and real report denominators. Execution/provider calls in that suite are explicitly test fixtures; hosted/provider acceptance remains separate.
 
 `node tests/services/integration.mjs` separately exercises the actual service/execution integration against D1 and explicit test HTTP providers: immutable payload grants, canary intent/readback, rejected partial-cohort verification, full rollout, business-choice-to-release progression, revoked grant refusal, inert native restore and domain erasure. No actual provider, production or customer messages were sent.
+
+## Recurring incidents (PROB-002)
+
+`GET /problem-proposals`, `GET /problem-proposals/:id` and owner/operator `POST /problem-proposals/detect {threshold?,windowDays?}` use current source access. Scheduled service processing also detects recurrence. Recorded ticket context accepts `serviceId`, `deviceModel`, `app`, `cohort`/`cohorts` and `location`; monitor/incident `context` accepts `deviceModel`, `app` and `location`, alongside its existing service/cohorts. Matching labels are evidence of recurrence, never a verified common cause.
+
+`POST /problem-proposals/:id/accept` or `/reject` takes `{revision,reason}`. Source revisions and current membership are fenced with the decision. Acceptance creates exactly one native problem with source references; rejection retains the semantic cluster through later incidents and native restore. Proposed records store source IDs, revisions and recorded timestamps, not copied conversations.

@@ -26,12 +26,17 @@ export function references(record: NativeRecord): Reference[] {
     if (typeof pendingId === 'string' && pendingId)
         out.push({fromTable:record.table,fromKey:record.key,field:record.table==='work_pending_services'?'person_id':'pending_person_id',
             targets:['work_pending_people'],key:JSON.stringify([record.row.workspace_id,pendingId])});
-    if (record.table === 'svc_records' && record.row.kind === 'problem') {
+    if (record.table === 'svc_records' && ['problem','problem-proposal'].includes(String(record.row.kind))) {
         let data;
         try { data = JSON.parse(String(record.row.data_json)); }
         catch { throw new ApiError(422,'restore_json','Problem data must be valid JSON'); }
         if (!data || typeof data !== 'object' || Array.isArray(data) || (data.workarounds && !Array.isArray(data.workarounds)))
             throw new ApiError(422,'restore_shape','Problem workarounds must be a list');
+        for (const ref of data.evidence || []) {
+            if (typeof ref.id === 'string') out.push({fromTable:record.table,fromKey:record.key,field:'data.evidence.id',targets:[ref.type==='ticket'?'work_records':'svc_records'],key:ref.id});
+            if (typeof ref.serviceId === 'string') out.push({fromTable:record.table,fromKey:record.key,field:'data.evidence.serviceId',targets:['svc_records'],key:ref.serviceId});
+        }
+        if (data.cluster?.facet==='service') out.push({fromTable:record.table,fromKey:record.key,field:'data.cluster.value',targets:['svc_records'],key:data.cluster.value});
         for (const link of data.workarounds || []) if (link && typeof link.articleId === 'string')
             out.push({fromTable:record.table,fromKey:record.key,field:'data.workarounds.articleId',targets:['work_knowledge'],key:link.articleId});
     }

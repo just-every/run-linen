@@ -1,3 +1,4 @@
+import { problemDetectionChecks } from './problem-detection-cases.mjs';
 import { recurrenceChecks } from './recurrence-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
 import { timeChecks } from "./time-cases.mjs";
@@ -78,6 +79,7 @@ try {
   await db.exec(
     `INSERT INTO workspaces VALUES('a','A','2026-01-01'); INSERT INTO users VALUES('owner','owner@test','Owner','unused','2026-01-01'); INSERT INTO users VALUES('employee','employee@test','Employee','unused','2026-01-01'); INSERT INTO users VALUES('stranger','stranger@test','Stranger','unused','2026-01-01'); INSERT INTO memberships VALUES('a','owner','["owner"]',1); INSERT INTO memberships VALUES('a','employee','["employee"]',1); INSERT INTO memberships VALUES('a','stranger','["employee"]',1);`,
   );
+  const proposalProof=await problemDetectionChecks(api,db);
   await recurrenceChecks(api,db);
   const cal = {
     timezone: "America/New_York",
@@ -678,6 +680,10 @@ try {
     resourcePersistencePath: dir,
   });
   assert.equal((await api(`/work/${w}`, undefined, employee)).value.work.id, w);
+  const restartedProposals=(await api('/problem-proposals/detect',{})).value.items;
+  assert.equal(restartedProposals.filter(p=>p.id===proposalProof.rejectedId).length,1,'PROB-002 rejected semantic cluster survives Worker restart');
+  assert.equal(restartedProposals.find(p=>p.id===proposalProof.rejectedId).data.state,'rejected');
+  assert.equal((await api(`/problems/${proposalProof.problemId}`)).value.data.sourceProposalId,proposalProof.acceptedId);
   const erased = await api("/people/employee/erase", {
     revision: 1,
     reason: "Fixture member erasure without HR record",

@@ -1,3 +1,4 @@
+import { ProblemProposals } from './problem-proposals';
 import { DependencyDetails } from "./dependency-details";
 import { ProblemDetails } from "./problem-actions";
 import { NewChange } from "./setup-change";
@@ -335,6 +336,7 @@ export function ServiceSpace({
         <ErrorNotice error={list.error} retry={list.refresh} />
       ) : (
         <>
+          {section === "problems" && canEdit && <ProblemProposals onAccepted={list.refresh} />}
           <RelatedRequests section={section} />
           {list.data?.items.length ? (
             <div className="record-list">

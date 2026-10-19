@@ -1,3 +1,4 @@
+import { detectProblemProposals } from './problem-detection';
 import { observeIncidentRecovery } from "./recovery";
 import { assertAdoptionEffectAllowed } from '../adoption/authority';
 import type { Env, Principal } from '../../platform/types';
@@ -170,7 +171,7 @@ export async function processDueServices(env: Env, p: Principal) {
                         id: string;
                     }>();
                     if (!existing) {
-                        const incident = await newIncident(env.DB, p, { title: `${r.data.name}: ${r.data.status}`, serviceId: r.data.serviceId, impact: 'Observed service interruption; affected coverage requires confirmation', cohorts: r.data.cohorts || ['unassessed'], visibility: 'operators', monitorEventKey: eventKey });
+                        const incident = await newIncident(env.DB, p, { title: `${r.data.name}: ${r.data.status}`, serviceId: r.data.serviceId, impact: 'Observed service interruption; affected coverage requires confirmation', cohorts: r.data.cohorts || ['unassessed'], visibility: 'operators', monitorEventKey: eventKey, context:r.data.context });
                         await routeOnCall(env, p, incident.id);
                     }
                 }
@@ -204,7 +205,7 @@ export async function processDueServices(env: Env, p: Principal) {
             failures.push({ id: r.id, error: error instanceof ApiError ? error.code : 'due_obligation_failed' });
         }
     }
-    return { notifications: await deliverNotifications(env, p), failures };
+    return { notifications: await deliverNotifications(env, p), failures, problemProposals: await detectProblemProposals(env, p) };
 }
 export async function reconcileNotification(env: Env, p: Principal, notificationId: string) { const job = await env.DB.prepare('SELECT * FROM svc_outbox WHERE workspace_id=? AND id=?').bind(p.workspaceId, notificationId).first<any>(); if (!job)
     throw new ApiError(404, 'not_found', 'Notification not found'); await getService(env.DB, p, job.record_id); if (!['sending', 'submitted', 'unknown'].includes(job.state))
