@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+/** Run against an isolated real Worker signed in as its owner, with no model configured. */
+export async function classificationJourney({ page, api, base, out, width }) {
+  await page.setViewportSize({ width, height: 1000 });
+  const work = await api('/work', { title: 'VPN down for whole Denver office', body: 'VPN is down for our whole Denver office and everyone is blocked now.', deduplicationKey: `desk-002-browser-${width}` });
+  await page.goto(`${base}/app#/work/${work.id}`);
+  const section = page.getByRole('region', { name: 'Classification and priority', exact: true });
+  await section.getByRole('heading', { name: 'Classification and priority' }).waitFor();
+  const failed = page.waitForResponse(response => response.url().endsWith(`/work/${work.id}/classification/propose`) && response.request().method() === 'POST');
+  await section.getByRole('button', { name: 'Propose classification', exact: true }).click();
+  assert.equal((await failed).status(), 503);
+  await section.getByText(/Proposal unavailable:/).waitFor();
+  await section.getByRole('button', { name: 'Override classification', exact: true }).click();
+  let form = section.getByRole('form', { name: 'Override classification' });
+  await form.getByLabel('Ticket type', { exact: true }).selectOption('incident');
+  await form.getByLabel('Category', { exact: true }).selectOption('network');
+  await form.getByLabel('Subcategory', { exact: true }).selectOption('vpn');
+  await form.getByLabel('Impact', { exact: true }).selectOption('high');
+  await form.getByLabel('Urgency', { exact: true }).selectOption('high');
+  assert.equal(await form.getByLabel('Priority', { exact: true }).inputValue(), 'P1');
+  await form.getByLabel('Override reason').fill('Agent confirmed reported office scope and blocked work.');
+  let saved = page.waitForResponse(response => response.url().endsWith(`/work/${work.id}/classification/override`) && response.request().method() === 'POST');
+  await form.getByRole('button', { name: 'Save classification override' }).click();
+  assert.equal((await saved).status(), 200);
+  await section.getByText('Agent confirmed reported office scope and blocked work.', { exact: false }).first().waitFor();
+  await section.getByRole('button', { name: 'Override classification', exact: true }).click();
+  form = section.getByRole('form', { name: 'Override classification' });
+  await form.getByLabel('Priority', { exact: true }).selectOption('P2');
+  await form.getByLabel('Override reason').fill('Backup VPN restores critical work while the primary is repaired.');
+  saved = page.waitForResponse(response => response.url().endsWith(`/work/${work.id}/classification/override`) && response.request().method() === 'POST');
+  await form.getByRole('button', { name: 'Save classification override' }).click();
+  assert.equal((await saved).status(), 200);
+  await section.getByText(/Backup VPN restores critical work/).first().waitFor();
+  await section.locator('summary').filter({ hasText: 'Classification history' }).click();
+  await section.locator('summary').filter({ hasText: 'Impact × urgency matrix' }).click();
+  const state = await api(`/work/${work.id}/classification`);
+  assert.equal(state.current.priority, 'P2');
+  assert.ok(state.history.some(event => event.before?.priority === 'P1' && event.after.priority === 'P2'));
+  await section.scrollIntoViewIfNeeded();
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `DESK-002 no horizontal overflow at ${width}`);
+  await page.screenshot({ path: `${out}/desk-002-classification-${width}.png`, fullPage: true });
+  await page.reload();
+  await page.getByRole('region', { name: 'Classification and priority', exact: true }).locator('dl.facts').getByText('P2', { exact: true }).waitFor();
+  console.log(`PASS DESK-002 real Worker browser ${width}: unavailable provider visible, type/category/subcategory/impact/urgency matrix, P1 -> P2 override and persisted audited before/after.`);
+}

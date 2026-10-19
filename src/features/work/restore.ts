@@ -11,6 +11,7 @@ const tables = new Set([
   "work_assets",
   "work_asset_contracts",
   "work_asset_repairs",
+  "work_classifications",
   "work_custody",
   "work_lifecycle",
   "work_obligations",
@@ -160,6 +161,11 @@ export async function restoreAdoptionRecord(
       throw new ApiError(422,'restore_parent','Restore the matching asset first');
     if (input.table==='work_asset_contracts' && !await ctx.env.DB.prepare("SELECT 1 FROM svc_records WHERE workspace_id=? AND id=? AND kind='supplier'").bind(ctx.principal.workspaceId,String(row.vendor_id)).first())
       throw new ApiError(422,'restore_parent','Restore the matching vendor first');
+  }
+  if (input.table==='work_classifications') {
+    row.proposal_token=null;
+    row.proposal_until=null;
+    if(row.state==='proposing')row.state='restored';
   }
   const subjects = [row.requester_id, row.beneficiary_id, row.author_id, row.person_id, row.pending_person_id,
     ...(input.table==='work_pending_people'?[row.id]:[])].filter(

@@ -1,0 +1,1 @@
+CREATE TABLE work_classifications(workspace_id TEXT NOT NULL,work_id TEXT NOT NULL,revision INTEGER NOT NULL DEFAULT 0,state TEXT NOT NULL DEFAULT 'unclassified',current_json TEXT,proposal_json TEXT,reason TEXT,error TEXT,proposal_token TEXT,proposal_until TEXT,updated_at TEXT NOT NULL,PRIMARY KEY(workspace_id,work_id));

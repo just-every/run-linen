@@ -1,5 +1,6 @@
 import { assetCustodyChecks } from "./asset-custody-cases.mjs";
 import { assetContractChecks } from "./asset-contract-cases.mjs";
+import { classificationChecks, classificationEncryptionKey } from "./classification-cases.mjs";
 import { lifecycleEvidenceChecks } from "./lifecycle-evidence-cases.mjs";
 import { lifecycleReplayChecks, lifecycleIntegrationChecks } from "./lifecycle-regressions.mjs";
 import assert from "node:assert/strict";
@@ -28,7 +29,7 @@ const { Miniflare, convertV4MiniflareOptions } = require(
 );
 const dir = await mkdtemp(join(tmpdir(), "linen-work-"));
 const built = await build({
-  entryPoints: [join(root, "tests/work/worker.ts")],
+  entryPoints: [join(root, "tests/work/classification-worker.ts")],
   bundle: true,
   format: "esm",
   platform: "browser",
@@ -43,6 +44,7 @@ const options = {
       compatibilityDate: "2026-09-01",
       d1Databases: { DB: "work-test" },
       r2Buckets: ["ATTACHMENTS"],
+      bindings: { ENCRYPTION_KEY: classificationEncryptionKey },
     },
   ],
   d1Persist: join(dir, "d1"),
@@ -100,6 +102,7 @@ try {
     "2026-11-03T15:00:00.000Z",
   );
   const employee = { "x-user": "employee", "x-roles": '["employee"]' };
+  const classifiedId=await classificationChecks({ api, db });
   const created = await api(
     "/work",
     { title: "Access", body: "Need access", deduplicationKey: "r1" },
@@ -673,6 +676,9 @@ try {
   });
   assert.equal(erased.status, 200, JSON.stringify(erased));
   assert.equal(erased.value.state, "erased");
+  const erasedClassification=(await api(`/work/${classifiedId}/classification`)).value;
+  assert.equal(erasedClassification.current,null,"DESK-002 authorized erasure clears classification content");
+  assert.deepEqual(erasedClassification.history,[],"DESK-002 redacted audit details cannot disclose content or break history rendering");
   assert.equal((await api(`/work/${w}`)).value.work.title, "[erased]");
   assert.equal(
     (await mf.dispatchFetch(`http://localhost/attachments/${attachment.id}`))

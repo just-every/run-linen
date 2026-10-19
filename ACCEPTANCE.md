@@ -4,7 +4,7 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 139 clauses (132 in the contract plus F1–F7), 14 done, 88
+Current count: 139 clauses (132 in the contract plus F1–F7), 15 done, 87
 partial and 37 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
@@ -99,7 +99,7 @@ test, or the gap.
 | Clause | Acceptance evidence | Current evidence path | Status |
 |---|---|---|---|
 | **DESK-001 Queues, groups and views** | Create two groups, save a "Unassigned P1" view, bulk-assign five tickets, and see a group lead's view exclude another group's restricted ticket; triage that view keyboard-only (open next, assign to self, send a reply, set status) with no pointer input. | `src/features/work/core.ts` (`listWork`); `src/ui/work.tsx`. No groups, saved views, bulk actions or triage shortcuts. | partial |
-| **DESK-002 Classification and priority** | Submit "VPN down for whole Denver office"; see type incident, high impact, proposed P1 with the reason; override to P2 and see the override audited. | `src/features/work/intake-classification.ts`; `tests/work/runtime.mjs`. No categories or priority matrix. | partial |
+| **DESK-002 Classification and priority** | Submit "VPN down for whole Denver office"; see type incident, high impact, proposed P1 with the reason; override to P2 and see the override audited. | `tests/work/classification-cases.mjs`: real public routes and model-edge fixtures prove the reasoned office VPN P1 proposal, three types, categories/subcategories and matrix, authorized P2 override with actor/time/before/after, current role/scope/CAS and delayed-proposal fencing. `tests/ui/classification-journey.mjs`: native controls, unavailable-provider disclosure and persisted override/history at 1440/390. `tests/adoption/classification-cases.mjs`: held native restore. Local evidence only; no live-model quality claim. | done |
 | **DESK-003 Routing and assignment** | With three agents (one off shift, one overloaded), round-robin and load-based rules assign to the available agent; a VIP request routes to the executive-support group; a ticket raised against the "Payroll" service routes to Payroll's support group, and against a laptop CI to that CI's support group. | `src/features/work/core.ts` (assign); `src/features/intelligence/intake-execution.ts`. No rules, round-robin, load, skills or CI/service support-group routing. | partial |
 | **DESK-004 SLA policies** | A P2 opened at 4:30 pm Friday in `America/New_York` before a federal holiday Monday gets a due time on Tuesday; pausing for the requester extends it; a breach shows on the ticket and the report. | `src/features/work/calendar.ts`; `tests/work/runtime.mjs`. One commitment per ticket; no policy sets or holiday catalogs. | partial |
 | **DESK-005 Escalation and supervisor rules** | Let a P1 near its response target and see level-1 then level-2 escalation; leave a ticket awaiting the requester and see the reminder, then the disclosed resolution; a reply before the due time stops both. | `src/features/services/integrations.ts`; `src/features/intelligence/followup.ts`. No multi-level escalation or supervisor rules. | partial |

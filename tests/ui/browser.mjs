@@ -1,3 +1,4 @@
+import { classificationJourney } from "./classification-journey.mjs";
 import { nativeCreate, dstJourney, incidentNativeDetails, namedApproverJourney } from "./native-regressions.mjs";
 import { custodyJourney } from "./custody-journey.mjs";
 import { fulfilmentDecisionJourney } from "./fulfilment-decision-journey.mjs";
@@ -270,6 +271,7 @@ try {
   await lifecycleVariants(page, api, person.id, uid, out);
   checks.push("Distinct move and urgent-leave forms persist obligations through reload at desktop and mobile widths");
   await custodyJourney(page, api, person.id, uid, out);
+  for (const width of [1440,390]) await classificationJourney({page,api,base,out,width});
   checks.push("Native device creation, assignment, receipt and return verify physical duty without certifying pending security work");
   const incidentId = await nativeCreate(page, base, 'incidents', 'Add incident', {
     'What is happening?': 'Shared workspace access interruption', 'Affected service': service.id,

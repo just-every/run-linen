@@ -8,6 +8,7 @@ import { Composer } from "./work-composer";
 import { objectFacts, roleList } from "./labels";
 import { WorkOutcome } from "./work-outcome";
 import { HeldServices } from "./pending-people";
+import { WorkClassification } from "./work-classification";
 import { usePeopleLabels } from "./people-labels";
 import { shortRef } from "./work-queue";
 import { useQueue } from "./queue";
@@ -104,6 +105,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
           <dd><time dateTime={work.updated_at ?? work.created_at}>{date(work.updated_at ?? work.created_at)}</time></dd>
         </div>
       </dl>
+      {operator && <WorkClassification workId={work.id} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner","operator"].includes(r)) && <RepairCoverage workId={work.id} />}
       <Progress items={progress} exception={exception} operator={operator} />
       <HeldServices person={detail.data?.pendingPerson} services={detail.data?.heldServices} />

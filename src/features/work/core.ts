@@ -172,8 +172,8 @@ export async function createWork(
       "invalid_input",
       "Title, body and stable deduplication key required",
     );
-  if (!["request", "incident"].includes(input.kind || "request"))
-    throw new ApiError(422, "invalid_kind", "Request or incident required");
+  if (!["request", "service_request", "incident", "question"].includes(input.kind || "request"))
+    throw new ApiError(422, "invalid_kind", "Service request, incident or question required");
   // Canonicalize nested context so JSON object ordering is not material; array order is.
   const canonical = (value: any): any => Array.isArray(value)
     ? value.map(canonical)
