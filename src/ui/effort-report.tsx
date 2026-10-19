@@ -11,6 +11,9 @@ export function EffortReport({value}:{value:EffortReportData}) {
     {!value.groups.length&&<p>No human effort entries in this period.</p>}
     {value.groups.map(row=><article className="connection-record" key={`${row.requestType}:${row.role}:${row.actorRole}:${row.source}`}><h3>{row.requestType} · {humanize(row.role)}</h3><p>{['vendor','technician'].includes(row.role)&&<>Recorded by {humanize(row.actorRole)} · </>}{humanize(row.source)} · {Number(row.activeMinutes).toFixed(2)} active minutes · {row.touches} touches · {row.entries} entries</p>{Boolean(row.unfinishedTimers)&&<p>{row.unfinishedTimers} unfinished timers. Only accepted activity is included.</p>}</article>)}
     {value.byRequestType.map(row=>{const cost=costLine(row);return <p key={row.requestType}><strong>{row.requestType}</strong>: {row.incoming} requests · {row.verified} verified · {row.failed} failed · {row.pending} unresolved · cost per verified outcome {cost.perOutcome}{cost.unknown&&<> ({cost.unknown})</>}.</p>;})}
+    {value.byRequestType.some(row=>Object.keys(row.byTouchKind).length>0)&&<div style={{overflowX:'auto'}}><table><caption>Human touches by what they were for, beside unresolved and failed requests</caption>
+      <thead><tr><th scope="col">Request type</th><th scope="col">Touch kind</th><th scope="col">Touches</th><th scope="col">Active minutes</th><th scope="col">Unresolved</th><th scope="col">Failed</th></tr></thead>
+      <tbody>{value.byRequestType.flatMap(row=>Object.entries(row.byTouchKind).map(([kind,v])=><tr key={`${row.requestType}:${kind}`}><th scope="row">{row.requestType}</th><td>{humanize(kind)}</td><td>{v.touches}</td><td>{v.activeMinutes.toFixed(2)}</td><td>{row.pending}</td><td>{row.failed}</td></tr>))}</tbody></table></div>}
     <p>{value.costDefinition}</p>
   </section>;
 }
