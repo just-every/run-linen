@@ -1,3 +1,4 @@
+import { ChangeTemplates } from './change-templates';
 import { ChangeCalendar } from './change-calendar';
 import { ProblemProposals } from './problem-proposals';
 import { DependencyDetails } from "./dependency-details";
@@ -197,7 +198,7 @@ export function ServiceSpace({
           <Badge value={d.state ?? d.status ?? d.lifecycle ?? "recorded"} />
         )}
       </Hero>
-      {section === "changes" && !selectedId && <ChangeCalendar/>}
+      {section === "changes" && !selectedId && <><ChangeCalendar/><ChangeTemplates/></>}
       {selectedId ? (
         detail.loading ? (
           <Loading />
@@ -286,6 +287,8 @@ export function ServiceSpace({
                 <>
                   <Facts
                     entries={[
+                      ["Change type", d.changeType || (d.emergency ? "emergency" : "normal")],
+                      ["Approval path", d.approvalPath === "catalog" ? "Standard catalog · CAB skipped" : d.emergency ? "ECAB · explicit emergency decision required" : "CAB · recorded change decision"],
                       ["Risk", d.risk],
                       ["Window starts", date(d.window?.start)],
                       ["Window ends", date(d.window?.end)],
@@ -293,6 +296,7 @@ export function ServiceSpace({
                       ["Canary cohorts", d.canaryCohorts?.join(", ")],
                     ]}
                   />
+                  {['implementationPlan','testPlan','backoutPlan'].filter(name=>d[name]).map((name,i)=><section key={name}><h3>{({implementationPlan:'Implementation plan',testPlan:'Test plan',backoutPlan:'Backout plan'} as Record<string,string>)[name]}</h3><p>{text(d[name])}</p></section>)}
                   <Notice>
                     Source edits invalidate affected decisions. A submission,
                     canary or rollback is not complete until its independent

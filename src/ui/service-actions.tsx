@@ -1,3 +1,4 @@
+import { ChangeAuthority } from './change-authority';
 import { ProblemActions } from "./problem-actions";
 import { Notice } from "./primitives";
 import { useRemote, useSession } from "./state";
@@ -20,7 +21,7 @@ export function ServiceActions({
     operator = session.principal.roles.some((r) =>
       ["owner", "operator"].includes(r),
     );
-  if (!operator) return null;
+  if (!operator) return section === "changes" ? <ChangeAuthority record={record} refresh={refresh}/> : null;
   return (
     <>
       {section === "incidents" && (
@@ -98,27 +99,7 @@ export function ServiceActions({
       {section === "changes" && (
         <>
           {![d.implementation, d.compensation].every(i => Number.isInteger(i?.connectionRevision) && i.connectionRevision > 0 && Number.isInteger(i?.verifierConnectionRevision) && i.verifierConnectionRevision > 0) && <Notice>This legacy change has no complete connection version review. Execution remains held. Amend the implementation and compensation with reviewed current versions before seeking a fresh decision.</Notice>}
-          <ActionForm
-            title="Record current change authority"
-            path={`${base}/authorize`}
-            defaults={defaults}
-            fields={[
-              {
-                name: "reason",
-                label: "Decision and scope",
-                type: "textarea",
-                required: true,
-              },
-              {
-                name: "grantReferences",
-                label: "Exact grant versions",
-                type: "json",
-                required: true,
-                hint: 'Array of {"id":"…","version":1}. Existing grants are rechecked at each effect.',
-              },
-            ]}
-            onSaved={refresh}
-          />
+          <ChangeAuthority record={record} refresh={refresh}/>
           <ActionForm
             title="Run a controlled change phase"
             path={`${base}/dispatch`}

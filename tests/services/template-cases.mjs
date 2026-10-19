@@ -1,0 +1,65 @@
+import assert from 'node:assert/strict';
+/** CHANGE-001 approval/catalog proof only; this harness has a fixture execution port. */
+export async function templateChecks(request,db) {
+  const operator={'x-user':'operator','x-roles':'["operator"]'},employee={'x-user':'employee','x-roles':'["employee"]'},approver={'x-user':'approver','x-roles':'["approver"]'};
+  const ok=async(method,path,body,headers)=>{const r=await request(method,path,body,headers);assert.ok(r.status<300,JSON.stringify(r));return r.json;};
+  const service=await ok('POST','/services',{name:'Catalog Orders',description:'Order workflow',businessImpact:'Sales',source:'Reviewed register',observedAt:new Date().toISOString()});
+  const body={title:'Reviewed standard Orders release',risk:'Bounded',impact:'Sales',services:[service.id],cohorts:['a'],canaryCohorts:['a'],
+    implementation:{target:'orders',payload:{release:'r2'}},compensation:{target:'orders',payload:{release:'r1'}},
+    implementationPlan:'Deploy the reviewed release to the sales canary, then rollout.',testPlan:'Verify sign-in and order entry independently.',backoutPlan:'Restore the previous release and verify order entry.',active:true};
+  assert.equal((await request('POST','/change-templates',body,operator)).status,403,'CHANGE-001 owners alone manage templates');
+  let template=await ok('POST','/change-templates',body);
+  const window={start:new Date(Date.now()-60000).toISOString(),end:new Date(Date.now()+3600000).toISOString()},standard={changeType:'standard',templateId:template.id,templateVersion:template.data.version,window};
+  assert.equal((await request('POST','/changes',standard)).status,409,'CHANGE-001 unapproved catalog versions cannot bypass CAB');
+  assert.equal((await request('POST',`/change-templates/${template.id}/approve`,{revision:template.revision,version:1,reason:'Operator self approval'},operator)).status,403);
+  assert.equal((await request('GET',`/change-templates/${template.id}`,undefined,employee)).status,404,'CHANGE-001 operator template privacy is inherited');
+  assert.equal((await request('GET',`/change-templates/${template.id}`,undefined,{'x-workspace':'w2'})).status,404,'CHANGE-001 catalog is tenant scoped');
+  assert.equal((await request('POST',`/change-templates/${template.id}/approve`,{revision:template.revision,version:99,reason:'Stale version'})).status,409);
+  template=await ok('POST',`/change-templates/${template.id}/approve`,{revision:template.revision,version:template.data.version,reason:'Owner approves this exact repeatable plan to skip CAB'});
+  assert.equal(template.data.approval.actor,'owner','CHANGE-001 exact-version preapproval records its current owner');
+  assert.equal(template.data.approval.reason,'Owner approves this exact repeatable plan to skip CAB','CHANGE-001 preapproval reason persists');
+  for(const name of ['implementationPlan','testPlan','backoutPlan'])assert.equal(template.data[name],body[name],`CHANGE-001 template retains ${name}`);
+  let change=await ok('POST','/changes',{...standard,implementation:{target:'attacker'},services:['missing'],testPlan:'Forged test'},operator);
+  assert.equal(change.data.approvalPath,'catalog');assert.equal(change.data.state,'preapproved');assert.equal(change.data.authorizations.length,0,'CHANGE-001 CAB bypass creates no execution grant or per-change decision');
+  assert.deepEqual(change.data.implementation,body.implementation);assert.deepEqual(change.data.services,body.services);assert.equal(change.data.testPlan,body.testPlan,'CHANGE-001 catalog scope and plans cannot be overridden');
+  for(const name of ['implementationPlan','testPlan','backoutPlan'])assert.equal(change.data[name],body[name],`CHANGE-001 standard change copies ${name}`);
+  assert.equal(change.data.cabBypass.version,template.data.version);
+  assert.equal((await request('POST',`/changes/${change.id}/authorize`,{revision:change.revision,reason:'Unneeded CAB',grantReferences:[{id:'g',version:1}]})).status,409);
+  change=await ok('POST',`/changes/${change.id}/grants`,{revision:change.revision,grantReferences:[{id:'existing',version:1,phase:'canary'}]},operator);
+  assert.equal(change.data.authorizations[0].kind,'grant-binding','CHANGE-001 existing grant binding does not add a CAB decision');
+  const approvalId=template.data.approval.id;
+  assert.deepEqual(change.data.cabBypass.snapshot,template.data.approval.snapshot,'CHANGE-001 change retains the exact approved content snapshot');
+  let edited=await ok('PATCH',`/change-templates/${template.id}`,{revision:template.revision,...body,testPlan:'Verify the new order workflow',active:false});
+  assert.equal(edited.data.approval,null,'CHANGE-001 edits stop the prior version for new catalog requests');
+  assert.equal(edited.data.priorApprovals[0].id,approvalId,'CHANGE-001 exact historical approval survives template edit/deactivation');
+  assert.equal((await request('POST','/changes',standard)).status,409);
+  change=await ok('POST',`/changes/${change.id}/grants`,{revision:change.revision,grantReferences:[{id:'existing',version:1,phase:'canary'}]},operator);
+  assert.equal(change.data.cabBypass.approvalId,approvalId,'CHANGE-001 existing unchanged snapshot keeps CAB bypass after template edit/deactivation');
+  edited=await ok('POST',`/change-templates/${template.id}/approve`,{revision:edited.revision,version:edited.data.version,reason:'Review inactive version without enabling new use'});
+  assert.equal((await request('POST','/changes',{...standard,templateVersion:edited.data.version})).status,409,'CHANGE-001 even an approved inactive current version cannot create a new standard change');
+  const withdrawal={revision:edited.revision,approvalId,reason:'Owner explicitly withdraws the old implementation approval'};
+  assert.equal((await request('POST',`/change-templates/${template.id}/withdraw`,withdrawal,operator)).status,403,'CHANGE-001 only owner explicitly withdraws a recorded approval');
+  assert.equal((await request('POST',`/change-templates/${template.id}/withdraw`,withdrawal,approver)).status,403);
+  assert.equal((await request('POST',`/change-templates/${template.id}/withdraw`,{...withdrawal,approvalId:'unrecorded'})).status,404,'CHANGE-001 withdrawal names an exact recorded approval');
+  assert.equal((await request('POST',`/change-templates/${template.id}/withdraw`,{...withdrawal,reason:''})).status,400);
+  assert.equal((await request('POST',`/change-templates/${template.id}/withdraw`,withdrawal,{'x-workspace':'w2'})).status,404);
+  const withdrawn=await ok('POST',`/change-templates/${template.id}/withdraw`,withdrawal);
+  assert.equal(withdrawn.data.withdrawals[0].approvalId,approvalId);
+  assert.equal(withdrawn.data.withdrawals[0].reason,withdrawal.reason,'CHANGE-001 explicit withdrawal reason persists');
+  assert.equal(withdrawn.data.withdrawals[0].actor,'owner','CHANGE-001 withdrawal records its owner');
+  const refused=await request('POST',`/changes/${change.id}/dispatch`,{revision:change.revision,phase:'canary',idempotencyKey:'withdrawn-template'},operator);
+  assert.equal(refused.json.error.code,'template_approval','CHANGE-001 explicit withdrawal fences existing snapshot before dispatch');
+  change=await ok('PATCH',`/changes/${change.id}`,{revision:change.revision,implementation:{target:'orders',payload:{release:'r3'}}},operator);
+  assert.equal(change.data.cabBypass,null);assert.equal(change.data.changeType,'normal');assert.equal(change.data.authorizations.length,0,'CHANGE-001 implementation amendment requires a fresh normal decision');
+  change=await ok('POST',`/changes/${change.id}/authorize`,{revision:change.revision,reason:'Normal amended-plan decision',grantReferences:[{id:'g',version:1}]});assert.equal(change.data.authorizations[0].approvalPath,'cab');
+  const emergency=await ok('POST','/changes',{...body,window,emergency:true,emergencyReason:'Restore failed order entry',participants:['approver']},operator);
+  assert.equal(emergency.data.changeType,'emergency');assert.equal(emergency.data.approvalPath,'ecab');
+  assert.equal((await request('POST',`/changes/${emergency.id}/authorize`,{revision:emergency.revision,reason:'Self approval',grantReferences:[{id:'g',version:1}]},operator)).status,403);
+  const decided=await ok('POST',`/changes/${emergency.id}/authorize`,{revision:emergency.revision,reason:'Explicit independent emergency repair decision',grantReferences:[{id:'g',version:1}]},approver);
+  assert.equal(decided.data.authorizations[0].approvalPath,'ecab');assert.equal(decided.data.authorizations[0].actor,'approver');
+  await db.prepare("UPDATE memberships SET roles_json='[\"operator\"]' WHERE workspace_id='w1' AND user_id='owner'").run();
+  assert.equal((await request('POST',`/change-templates/${edited.id}/approve`,{revision:edited.revision,version:edited.data.version,reason:'Stale claimed owner'})).status,403,'CHANGE-001 current membership controls preapproval');
+  assert.equal((await request('POST',`/change-templates/${template.id}/withdraw`,{...withdrawal,revision:withdrawn.revision})).status,403,'CHANGE-001 current membership controls withdrawal');
+  await db.prepare("UPDATE memberships SET roles_json='[\"owner\"]' WHERE workspace_id='w1' AND user_id='owner'").run();
+  console.log('PASS CHANGE-001 public catalog/normal/ECAB paths: exact-version owner approval, copied plans/scope, no per-change CAB, distinct grant binding, retained exact snapshots across template edits, explicit withdrawal, implementation amendment, current roles and tenant/privacy fences (no execution claim).');
+}

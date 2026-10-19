@@ -68,8 +68,10 @@ export function references(record: NativeRecord): Reference[] {
         for (const link of data.workarounds || []) if (link && typeof link.articleId === 'string')
             out.push({fromTable:record.table,fromKey:record.key,field:'data.workarounds.articleId',targets:['work_knowledge'],key:link.articleId});
     }
-    if(record.table==='svc_records'&&record.row.kind==='calendar-window') {
+    if(record.table==='svc_records'&&['calendar-window','change-template','change'].includes(String(record.row.kind))) {
         const data=JSON.parse(String(record.row.data_json));
+        if(data.cabBypass?.templateId)out.push({fromTable:record.table,fromKey:record.key,field:'data.cabBypass.templateId',targets:['svc_records'],key:data.cabBypass.templateId});
+        for(const dependency of data.dependencies||[])out.push({fromTable:record.table,fromKey:record.key,field:'data.dependencies',targets:['svc_records'],key:dependency});
         for(const service of data.services||[])out.push({fromTable:record.table,fromKey:record.key,field:'data.services',targets:['svc_records'],key:service});
     }
     if (record.table === 'svc_events' && record.row.record_id)

@@ -1028,6 +1028,23 @@ that product and marks how close the current code is (see [Status](#status)).
   test and backout plans. **Acceptance evidence:** raise a standard change from
   the catalog and see it skip CAB; raise an emergency change and see the ECAB
   path.
+  The current owner manages versioned templates and explicitly preapproves an
+  exact version with a reason. Standard catalog creation copies that version's
+  implementation, test, backout and affected-scope snapshot and records CAB
+  bypass; it creates no provider grant. Existing execution grants are bound
+  separately and checked at each effect. Normal changes need a recorded decision;
+  emergency changes use an explicit ECAB decision by a current owner or approver.
+  No meeting, vote or quorum is claimed: CHANGE-003 carries the complete board,
+  quorum and channel requirements before those capabilities ship. Template edits
+  and deactivation prevent new catalog use until the current version is approved
+  and active; exact in-flight snapshots keep their recorded bypass. The owner may
+  explicitly withdraw a recorded approval ID with a reason, which fences affected
+  in-flight changes at effects. Amending a change's implementation clears bypass
+  and authorization and returns it to normal review. Restore makes templates
+  inactive with no live approval and clears imported change bypass/authority;
+  affected personal-data erasure also withdraws live template approval. Freeze
+  bypass remains the separate owner-only authority in CHANGE-004. These semantics
+  were approved by ct on 19 October, including retained snapshots at 11:47Z.
 
 - **CHANGE-002 — Risk scoring.** Risk is scored from a questionnaire, impacted
   CIs, schedule and the history of failed changes on those CIs; the score selects
@@ -1763,8 +1780,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 22 | 60 | 33 | 115 |
-| All | 26 | 80 | 33 | 139 |
+| Target and push further | 23 | 59 | 33 | 115 |
+| All | 27 | 79 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1843,7 +1860,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `INC-004` | Engineering escalation | target | missing |  | No Jira/GitHub/Linear/Vector escalation. |
 | `PROB-001` | Problem management | target | done | `src/features/services/problems.ts`, `src/features/services/problem-knowledge.ts`, `tests/work/problem-cases.mjs`, `tests/ui/problem-journey.mjs`, `tests/adoption/problem-cases.mjs` | Local public-route and 1440/390 browser proof: three incident links, reviewed root cause/known error, versioned expiring Knowledge publication and preventive change; a later request is offered guidance matched by reviewer phrases and service/cohort context. Scoped, reviewed, current and unexpired content only; request stays open. Native archive links and authorized erasure are proved. |
 | `PROB-002` | Proactive problem detection | target | done | `tests/work/problem-detection-cases.mjs`, `tests/ui/problem-detection-journey.mjs`, `tests/adoption/problem-cases.mjs` | Public routes and 1440/390 journey prove eight floor Wi-Fi incidents, retained rejection without re-proposal after ninth/restart/restore, native acceptance and source links, service/app/model ticket and alert grouping, deduplication, concurrent decisions and current source/tenant/role boundaries. ct-approved restricted detector-only aggregation, including after acceptance. Local evidence only. |
-| `CHANGE-001` | Change types and templates | target | partial | `src/features/services/changes.ts`, `tests/services/run.mjs` | No templates or standard-change catalog. |
+| `CHANGE-001` | Change types and templates | target | done | `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs` | Local public-route and native 1440/390 evidence: exact-version owner preapproval, standard catalog CAB bypass with separate grant checks, normal/ECAB decisions, retained snapshots and explicit withdrawal, amendment invalidation and inactive restored templates. No CAB meeting, vote, live provider or owner acceptance claimed. |
 | `CHANGE-002` | Risk scoring | target | partial | `src/features/services/changes.ts` | No scoring. |
 | `CHANGE-003` | Change advisory board | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No CAB, meetings or votes. |
 | `CHANGE-004` | Change calendar and freeze windows | target | done | `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs` | Public routes and connected execution prove scoped calendar/maintenance/freeze/ICS, half-open CI/workspace bounds, schedule/edit/later-dispatch refusal, owner emergency scheduling with separate effect grants, current role and generic hidden conflicts. Native archive preserves links with windows inactive until owner review; native 1440/390 calendar, editor, emergency and inactive states are inspected. Local evidence only. |

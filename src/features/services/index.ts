@@ -1,3 +1,4 @@
+import { registerTemplateRoutes, bindChangeGrants, assertCatalogApproval } from './change-templates';
 import { registerCalendarRoutes } from './calendar-routes';
 import { recurrenceContext } from './recurrence-context';
 import { publishWorkaround, presentProblem } from './problem-knowledge';
@@ -33,6 +34,10 @@ export interface ServiceWorkPort {
 let workPort: ServiceWorkPort | undefined;
 export function setServiceWorkPort(port: ServiceWorkPort) { workPort = port; }
 async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
+    if(r.kind==='change'&&r.data.changeType==='standard') {
+        try {await assertCatalogApproval(env.DB,p,r);return {...r,data:{...r.data,catalogApprovalStatus:'retained'}};}
+        catch(error) {if(!(error instanceof ApiError)||![403,404,409].includes(error.status))throw error;return {...r,data:{...r.data,catalogApprovalStatus:'unavailable'}};}
+    }
     if(r.kind==='problem') { const shown=await presentProblem(env,p,r); return r.data.sourceProposalId ? {...shown,data:{...shown.data,recurrenceSources:await problemEvidence({env,principal:p},r.data.evidence)}} : shown; }
     if(r.kind==='supplier')return {...r,data:{...r.data,breaches:supplierBreaches(r)}};
     if (r.kind !== 'incident' || staff(p) || p.roles.includes('auditor'))
@@ -45,6 +50,7 @@ async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
 }
 export function registerServiceRoutes(app: Hono<AppEnv>) {
     registerCalendarRoutes(app);
+    registerTemplateRoutes(app);
     setChangeExecutionPort(changeExecutionPort);
     setServiceWorkPort(serviceWorkPort);
     app.get('/problem-proposals', async c => c.json(await listProblemProposals(c.env,c.get('principal'))));
@@ -100,6 +106,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
         app.post(`/problems/:id/${path}`, async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await fn(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'problem'), await jsonBody(c))); });
     app.post('/changes', async (c) => c.json(await newChange(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     app.patch('/changes/:id', async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await editChange(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'change'), await jsonBody(c))); });
+    app.post('/changes/:id/grants', async c => { const p=requireRole(c,'owner','operator'); return c.json(await bindChangeGrants(c.env.DB,p,await getService(c.env.DB,p,c.req.param('id'),'change'),await jsonBody(c))); });
     app.post('/changes/:id/authorize', async (c) => { const p = requireRole(c, 'owner', 'approver'); return c.json(await authorizeChange(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'change'), await jsonBody(c))); });
     app.post('/changes/:id/dispatch', async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await dispatchChange(c.env, p, await getService(c.env.DB, p, c.req.param('id'), 'change'), await jsonBody(c))); });
     app.post('/changes/:id/verify', async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await verifyChange(c.env, p, await getService(c.env.DB, p, c.req.param('id'), 'change'), await jsonBody(c))); });

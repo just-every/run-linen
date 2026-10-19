@@ -1,3 +1,4 @@
+import { catalogSnapshot, approvedTemplate, assertCatalogApproval, grantReferences } from './change-templates';
 import { currentPrincipal } from '../work/identity';
 import { assertCalendarSchedule, emergencySchedulingActor } from './calendar';
 import type { Env, Principal } from '../../platform/types';
@@ -53,11 +54,21 @@ export async function validateChange(db: D1Database, p: Principal, b: Record<str
     const dependencies = Array.isArray(b.dependencies) ? b.dependencies : [];
     for (const d of dependencies)
         await getService(db, p, d, 'change');
-    return { title: requiredString(b.title, 'title'), risk: requiredString(b.risk, 'risk'), impact: requiredString(b.impact, 'impact'), services, window, cohorts, canaryCohorts: canary, dependencies, implementation: b.implementation, compensation: b.compensation, emergency: b.emergency === true, emergencyReason: b.emergency ? requiredString(b.emergencyReason, 'emergencyReason') : null, emergencySchedulingActor: emergencySchedulingActor(p,b) };
+    const changeType=b.changeType ?? (b.emergency ? 'emergency' : 'normal');
+    if (!['standard','normal','emergency'].includes(changeType)) throw new ApiError(400,'change_type','Choose standard, normal or emergency');
+    const emergency=changeType==='emergency';
+    return { changeType, approvalPath:changeType==='standard'?'catalog':emergency?'ecab':'cab', implementationPlan:b.implementationPlan||null,testPlan:b.testPlan||null,backoutPlan:b.backoutPlan||null, title: requiredString(b.title, 'title'), risk: requiredString(b.risk, 'risk'), impact: requiredString(b.impact, 'impact'), services, window, cohorts, canaryCohorts: canary, dependencies, implementation: b.implementation, compensation: b.compensation, emergency, emergencyReason: emergency ? requiredString(b.emergencyReason, 'emergencyReason') : null, emergencySchedulingActor: emergencySchedulingActor(p,{...b,emergency}) };
 }
 export async function newChange(db: D1Database, p: Principal, b: Record<string, any>) {
     p=await currentPrincipal(db,p);
-    const data={...await validateChange(db,p,b),implementationRevision:1,state:'draft',authorizations:[],invocations:[]};
+    let cabBypass=null;
+    if (b.changeType==='standard') {
+        const template=await approvedTemplate(db,p,requiredString(b.templateId,'templateId'),b.templateVersion);
+        // The catalog is authoritative: callers cannot replace its plans or scope.
+        b={...template.data,window:b.window,changeType:'standard',visibility:b.visibility,participants:b.participants};
+        cabBypass={templateId:template.id,version:template.data.version,approvalId:template.data.approval.id,implementationRevision:1,snapshot:catalogSnapshot(template.data)};
+    }
+    const data={...await validateChange(db,p,b),cabBypass,implementationRevision:1,state:cabBypass?'preapproved':'draft',authorizations:[],invocations:[]};
     await assertCalendarSchedule(db,p,data);
     try { return await create(db,p,'change',data,{visibility:b.visibility,participants:b.participants}); }
     catch(error) { throw calendarError(error); }
@@ -71,27 +82,29 @@ export async function editChange(db: D1Database, p: Principal, r: ServiceRecord,
     p=await currentPrincipal(db,p);
     if ((r.data.invocations || []).some((i: any) => !['verified', 'failed', 'cancelled'].includes(i.state)))
         throw new ApiError(409, 'in_flight', 'Reconcile active effects before changing implementation');
-    const data={...r.data,...await validateChange(db,p,{...r.data,...b}),emergencySchedulingActor:emergencySchedulingActor(p,b),implementationRevision:r.data.implementationRevision+1,state:'draft',authorizations:[],priorAuthorizations:[...(r.data.priorAuthorizations||[]),...(r.data.authorizations||[])]};
+    const amended={...r.data,...b,changeType:b.emergency===true?'emergency':b.changeType==='emergency'?'emergency':r.data.changeType==='standard'?'normal':b.emergency===false?'normal':b.changeType||r.data.changeType};
+    const data={...r.data,...await validateChange(db,p,amended),cabBypass:null,emergencySchedulingActor:emergencySchedulingActor(p,{...b,emergency:b.emergency===true||b.changeType==='emergency'}),implementationRevision:r.data.implementationRevision+1,state:'draft',authorizations:[],priorAuthorizations:[...(r.data.priorAuthorizations||[]),...(r.data.authorizations||[])]};
     await assertCalendarSchedule(db,p,data);
     try { return await mutate(db,p,r,b.revision,data,'implementation-amended'); }
     catch(error) { throw calendarError(error); }
 }
 export async function authorizeChange(db: D1Database, p: Principal, r: ServiceRecord, b: Record<string, any>) {
+    p=await currentPrincipal(db,p);
+    if (r.data.changeType==='standard') throw new ApiError(409,'catalog_approval','Standard changes use catalog preapproval and separate grant binding');
     if (!p.roles.some(x => ['owner', 'approver'].includes(x)))
         throw new ApiError(403, 'authority', 'Approver required');
     if (r.ownerId === p.userId && !p.roles.includes('owner'))
         throw new ApiError(403, 'separation', 'Independent approver required');
-    const refs = b.grantReferences;
-    if (!Array.isArray(refs) || !refs.length || refs.some((x: any) => !x.id || !Number.isInteger(x.version)))
-        throw new ApiError(400, 'grants', 'Versioned grant references required');
-    const decision = { id: id(), actor: p.userId, implementationRevision: r.data.implementationRevision, grantReferences: refs, emergency: r.data.emergency, reason: requiredString(b.reason, 'reason'), at: now() };
+    const refs = grantReferences(b.grantReferences);
+    const decision = { id: id(), approvalPath:r.data.emergency?'ecab':'cab', actor: p.userId, implementationRevision: r.data.implementationRevision, grantReferences: refs, emergency: r.data.emergency, reason: requiredString(b.reason, 'reason'), at: now() };
     return mutate(db, p, r, b.revision, { ...r.data, state: 'authorized', authorizations: [...(r.data.authorizations || []), decision] }, 'change-decision');
 }
 export async function changeGate(db: D1Database, p: Principal, r: ServiceRecord, phase: string, at = Date.now()) {
     const d = r.data;
+    if(d.changeType==='standard')await assertCatalogApproval(db,p,r);
     if(phase!=='compensate')await assertCalendarSchedule(db,p,d);
     if (!d.authorizations?.some((a: any) => a.implementationRevision === d.implementationRevision))
-        throw new ApiError(409, 'authorization', 'Current implementation requires a decision');
+        throw new ApiError(409, 'authorization', 'Current implementation requires a decision and versioned execution grants');
     if (phase !== 'compensate' && (at < Date.parse(d.window.start) || at >= Date.parse(d.window.end)))
         throw new ApiError(409, 'window', 'Outside authorized change window');
     for (const dependency of d.dependencies) {

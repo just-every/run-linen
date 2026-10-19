@@ -1,3 +1,4 @@
+import { templateJourney } from './template-journey.mjs';
 import { seedSetupFixtures } from './setup-fixtures.mjs';
 import { finishFirstRun } from './connected-helpers.mjs';
 import { chromium } from 'playwright';
@@ -97,6 +98,7 @@ try {
   await runGrantChecks({ page, api, base, out, checks, payloads, ownerId });
   const { runChangeChecks } = await import('./setup-change-checks.mjs');
   await runChangeChecks({ page, api, base, checks });
+  await templateJourney({page,base,out,api:async(path,body)=>{const r=await api(path,body);assert.ok(r.status<300,JSON.stringify(r));return r.body;}});
   const member = await api('/members', { name: 'Service Operator', email: 'setup-operator@example.test', password: 'Setup-operator-proof-2026', roles: ['operator'] });
   assert.equal(member.status, 201);
   await context.clearCookies();

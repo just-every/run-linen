@@ -1,3 +1,4 @@
+import { templateChecks } from './template-cases.mjs';
 import { calendarChecks } from './calendar-cases.mjs';
 import { dependencyChecks } from './dependency-cases.mjs';
 import { sqlStatements } from '../sql-migrations.mjs';
@@ -87,5 +88,6 @@ try{
  const submitted=(await ok('GET','/service-notifications')).items.find(n=>n.state==='submitted');assert.ok(submitted);const reconciled=await ok('POST',`/service-notifications/${submitted.id}/reconcile`,{});assert.equal(reconciled.state,'delivered','Fresh provider readback establishes delivery');
  await dependencyChecks(request);
  await calendarChecks(request,db);
+ await templateChecks(request,db);
  console.log('SERVICES: real D1 privacy/tenant isolation, graph stale conflicts, private audience denial, independent partial cohort recovery, wrong-link correction, amended approval invalidation, conflicting windows, canary dispatch, incomplete compensation, supplier breaches, scoped business decisions and signed monitoring/replay rejection/staleness/automatic incident and on-call routing and actual notification adapter submission/readback and honest report denominators passed')
 }finally{await mf.dispose();await rm(dir,{recursive:true,force:true})}

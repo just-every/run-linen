@@ -1,3 +1,4 @@
+import { templateIntegration, templateErasureCheck } from './template-integration.mjs';
 import { applyMigrations } from '../sql-migrations.mjs';
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
@@ -52,11 +53,13 @@ await ok('POST','/services/process-due',{});decision=await ok('GET',`/decisions/
 await ok('POST',`/grants/${references[0].id}/revoke`,{version:references[0].version});
 let blocked=await ok('POST','/changes',{title:'Missing authority release',risk:'Bounded',impact:'Sales',services:[service.id],window:{start:new Date(Date.now()-60000).toISOString(),end:new Date(Date.now()+3600000).toISOString()},cohorts:['a','b'],canaryCohorts:['a','b'],implementation,compensation:{...implementation,payload:{release:'r1'}}});blocked=await ok('POST',`/changes/${blocked.id}/authorize`,{revision:blocked.revision,reason:'Decision is not a grant',grantReferences:references});
 let blockedDecision=await ok('POST','/decisions',{...packet,contextId:blocked.id,options:[{...packet.options[0],effect:{...packet.options[0].effect,changeId:blocked.id}},packet.options[1]]});blockedDecision=await ok('POST',`/decisions/${blockedDecision.id}/choose`,{revision:blockedDecision.revision,optionId:'release',reason:'Still requires grant'});assert.equal(blockedDecision.data.fulfilment.state,'needs-authority-or-evidence');assert.equal(blockedDecision.data.fulfilment.error,'grant_revoked');assert.equal((await ok('POST','/fixture/state',{})).writes,4);
+const {personalTemplateId}=await templateIntegration({ok,call,db,implementation});
 await db.prepare("UPDATE workspace_settings SET settings_json='{\"executionHeld\":true}' WHERE workspace_id='w'").run();
 const exported=await db.prepare('SELECT * FROM svc_records WHERE id=?').bind(change.id).first();
 const restored=await ok('POST','/fixture/restore',{table:'svc_records',row:{...exported,id:'restored-change'},sourceId:'archive',sourceKey:change.id});assert.equal(restored.inert,true);
 const imported=await ok('GET','/changes/restored-change');assert.equal(imported.data.state,'imported-review');assert.equal(imported.data.authorizations.length,0);assert.ok(imported.data.priorAuthorizations.length);
 const erased=await ok('POST','/fixture/erase',{userId:'operator',reason:'Authorised fixture erasure'});assert.ok(erased.erasedRecords>0);
 const afterErasure=await ok('GET',`/decisions/${decision.id}`);assert.equal(afterErasure.data.executorId,erased.subject);assert.equal(afterErasure.participants.includes('operator'),false);
+await templateErasureCheck(ok,personalTemplateId);
 console.log('SERVICES integration: actual execution port + D1 grant binding, persisted canary/deployment intent, controlled HTTP adapter fixture, independent full-cohort verification, partial-cohort rejection, rollout, service-fence release, decision-to-granted-release scheduling and revoked-grant refusal, inert native restore and domain erasure passed (four fixture writes; no external provider writes).')
 }finally{await mf?.dispose();await rm(dir,{recursive:true,force:true})}

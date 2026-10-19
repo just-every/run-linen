@@ -19,7 +19,7 @@ async function authorize(env,change) {
     const payload={...impl.payload,phase,cohorts:change.data.cohorts,implementationRevision:change.data.implementationRevision};
     const g=await issuerApi('/grants',{principalId:uid,beneficiaryId:impl.beneficiaryId,action:'deployment.'+phase,actionVersion:1,target:'orders',connectionId:deployment.id,validFrom:later(-60000),validUntil:later(3600000),maxUses:10,conditions:{payloadHash:createHash('sha256').update(JSON.stringify(payload)).digest('hex')},verifierConnectionId:probe.id});refs.push({...g,phase});
   }
-  await page.goto(base+'/app#/changes/'+change.id);return action(page,'Record current change authority',{reason:'Scoped exact fixture release and separate compensation authority',grantReferences:refs},'/authorize');
+  await page.goto(base+'/app#/changes/'+change.id);return action(page,'Record current change authority',{reason:'Scoped exact fixture release and separate compensation authority',...Object.fromEntries(refs.map(ref=>[ref.phase,ref.id]))},'/authorize');
 }
 async function phase(env,changeId,name) {
   const {page,base}=env;await page.goto(base+'/app#/changes/'+changeId);
