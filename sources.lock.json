@@ -4587,7 +4587,7 @@
       "executable": false
     },
     "tests/ui/response-journey.mjs": {
-      "sha256": "27f7b27436627a7f23b7dff639b3cdd3df5e949ec374b3691461e331a0b0b201",
+      "sha256": "71b9ac2ec16943a3194b5d2101119f6459e8b22d3a1d61f299a2b2efcb0e21c4",
       "executable": false
     },
     "tests/ui/run.mjs": {
@@ -4615,7 +4615,7 @@
       "executable": false
     },
     "tests/ui/time-journey.mjs": {
-      "sha256": "808be6ef10ee73f4b2306965078e10b8785a990eb8198189d283de9ca312446c",
+      "sha256": "6a0f96bc3354656732bb2225aa0ea92e6cddda2ecf71081262686528c0342678",
       "executable": false
     },
     "tests/ui/viewport-evidence.mjs": {

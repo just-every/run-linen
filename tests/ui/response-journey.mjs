@@ -67,7 +67,7 @@ export async function responseJourney({ page, api, base, out, width }) {
   const summary = tools.getByRole('region', { name: 'Ticket summary', exact: true });
   await summary.getByText(/Twenty VPN reports/).waitFor();
   assert.equal(await summary.getByRole('link').count(), 22);
-  await summary.getByRole('link', { name: article.title, exact: true }).waitFor();
+  await summary.getByRole('link', { name: `VPN client restart ${width}`, exact: true }).waitFor();
   assert.equal((await api(`/work/${work.id}`)).messages.length, 21, 'DESK-008 summary never posts');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await page.screenshot({ path: `${out}/desk-008-summary-${width}.png`, fullPage: true });
