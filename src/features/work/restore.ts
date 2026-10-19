@@ -2,9 +2,11 @@ import { validateRecurrence, type RecurrenceRule } from './recurrence-calendar';
 import type { BusinessCalendar } from './calendar';
 import { calendarDate } from './depreciation';
 import { currentWorkPrincipal } from "./identity";
+import { validateCannedBody } from './canned-responses';
 import { ApiError, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
 const tables = new Set([
+  'work_canned_responses',
   "work_records",
   "work_time_entries",
   "work_messages",
@@ -109,6 +111,11 @@ export async function restoreAdoptionRecord(
     !["employees", "operators", "hr"].includes(String(row.scope))
   )
     throw new ApiError(422, "restore_scope", "Known article scope required");
+  if (input.table === 'work_canned_responses') {
+    validateCannedBody(row.body);
+    if (typeof row.title !== 'string' || !row.title.trim() || row.title.length > 200 || !Number.isInteger(row.revision) || Number(row.revision) < 1)
+      throw new ApiError(422, 'restore_response', 'Valid response title and revision required');
+  }
   if (input.table === 'work_time_entries') {
     if (!['manual','measured'].includes(String(row.source)) || !['employee','agent','approver','owner','vendor','technician'].includes(String(row.effort_role)) ||
         !Number.isInteger(row.active_ms) || Number(row.active_ms)<0 || !Number.isInteger(row.touches) || Number(row.touches)<0)

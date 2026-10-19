@@ -2,7 +2,7 @@ import { restoreAdoptionRecord as restoreWork } from '../work/restore';
 import { ApiError, now } from '../../platform/http';
 import { check, sha, encode, type AdoptionContext, type Row } from './core';
 import type { NativeRecord } from './import';
-export const workRestoreTables = new Set(['work_time_entries', 'work_records', 'work_messages', 'work_attachments', 'work_people', 'work_pending_people', 'work_pending_services', 'work_assets', 'work_recurring_plans', 'work_recurring_occurrences', 'work_recurring_tasks', 'work_asset_financials', 'work_custody', 'work_asset_contracts', 'work_asset_repairs', 'work_classifications', 'work_lifecycle', 'work_obligations', 'work_knowledge', 'work_article_versions', 'work_catalog', 'work_fulfilments', 'work_calendars', 'work_commitments']);
+export const workRestoreTables = new Set(['work_canned_responses', 'work_time_entries', 'work_records', 'work_messages', 'work_attachments', 'work_people', 'work_pending_people', 'work_pending_services', 'work_assets', 'work_recurring_plans', 'work_recurring_occurrences', 'work_recurring_tasks', 'work_asset_financials', 'work_custody', 'work_asset_contracts', 'work_asset_repairs', 'work_classifications', 'work_lifecycle', 'work_obligations', 'work_knowledge', 'work_article_versions', 'work_catalog', 'work_fulfilments', 'work_calendars', 'work_commitments']);
 export async function mapId(ctx: AdoptionContext, source: string, old: string, kind = 'record') {
     const prior = await ctx.env.DB.prepare('SELECT target_id FROM adoption_identity_map WHERE workspace_id=? AND source_id=? AND source_key=?').bind(ctx.principal.workspaceId, source, old).first<{
         target_id: string;

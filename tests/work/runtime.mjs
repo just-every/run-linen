@@ -1,4 +1,5 @@
 import { problemDetectionChecks } from './problem-detection-cases.mjs';
+import { responseChecks } from './response-cases.mjs';
 import { recurrenceChecks } from './recurrence-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
 import { timeChecks } from "./time-cases.mjs";
@@ -110,6 +111,7 @@ try {
   );
   const employee = { "x-user": "employee", "x-roles": '["employee"]' };
   const classifiedId=await classificationChecks({ api, db });
+  await responseChecks({ api, db });
   const created = await api(
     "/work",
     { title: "Access", body: "Need access", deduplicationKey: "r1" },

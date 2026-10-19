@@ -1,4 +1,5 @@
 import { registerRecurrenceRoutes } from './recurrence-routes';
+import { registerResponseRoutes } from './response-routes';
 import { setWorkIntakePort } from "../intelligence/intake-port";
 import { workIntakePort } from "./intelligence-port";
 import type { Hono } from "hono";
@@ -27,6 +28,7 @@ export function registerWorkRoutes(app: Hono<AppEnv>) {
   registerClassificationRoutes(app);
   registerTimeRoutes(app);
   registerRecurrenceRoutes(app);
+  registerResponseRoutes(app);
 }
 
 export * from "./delegation";

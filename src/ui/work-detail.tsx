@@ -2,7 +2,7 @@ import { RecurringTasks } from './recurring-work';
 import { WorkaroundSuggestions } from "./workaround-suggestions";
 import { RepairCoverage } from "./asset-contracts";
 import { WorkTime } from "./work-time";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { date, humanize, text, type RecordValue } from "./api";
 import { useMutation, useRemote, useSession } from "./state";
 import { Icon } from "./icons";
@@ -38,6 +38,15 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
   const { session } = useSession(),
     operator = session.principal.roles.some((r) => ["owner", "operator", "hr"].includes(r));
   const work = detail.data?.work;
+  useEffect(() => {
+    const revealCitation = () => {
+      const messageId = new URLSearchParams(location.hash.split('?')[1]).get('message');
+      if (messageId) document.querySelector(`[data-message-id="${CSS.escape(messageId)}"]`)?.scrollIntoView({ block: 'center' });
+    };
+    revealCitation();
+    window.addEventListener('hashchange', revealCitation);
+    return () => window.removeEventListener('hashchange', revealCitation);
+  }, [detail.data]);
   function changed() {
     detail.refresh();
     onChanged();
@@ -211,7 +220,7 @@ function ConversationHistory({ conversation }: { conversation: Conversation }) {
       <h3>What happened</h3>
       <ol className="events conversation">
         {conversation.messages.map((message) => (
-          <li className={`event ${message.visibility === "private" ? "private-message" : ""}`} key={message.id}>
+          <li data-message-id={message.id} className={`event ${message.visibility === "private" ? "private-message" : ""}`} key={message.id}>
             <span className="event-icon">
               <Icon name={message.visibility === "private" ? "lock" : "user"} size={18} />
             </span>

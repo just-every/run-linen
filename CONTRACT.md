@@ -450,6 +450,18 @@ that product and marks how close the current code is (see [Status](#status)).
   the reply. **Acceptance evidence:** insert a canned response with the
   requester's name; generate a summary of a 20-message ticket with citations; a
   drafted reply is not sent until the agent sends it.
+  Workspace canned responses are managed and inserted by current owners and
+  service operators. Their plain-text placeholders are `requester.name`,
+  `ticket.title` and `ticket.id`; unknown or malformed placeholders are refused.
+  Shared-reply generation receives only the ticket's public messages and selected
+  current, reviewed employee-audience knowledge. A working summary may use the
+  requesting agent's permitted messages and reviewed knowledge; it is returned
+  only to that agent. Generated text is not stored as a server-side conversation
+  message. The complete message set, ticket access, current role and selected
+  article revision, audience, review and expiry are rechecked before returning
+  a result; changed context or unknown citations refuse the result. Inserting a
+  template or using a reply draft preserves the composer's selected visibility
+  and leaves it unsent. This implements the policy approved by ct on 19 October.
 
 - **DESK-009 — Satisfaction surveys.** A one-question CSAT survey after
   resolution in the channel the employee used, with optional comment, response
@@ -1665,8 +1677,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 17 | 64 | 34 | 115 |
-| All | 21 | 84 | 34 | 139 |
+| Target and push further | 18 | 63 | 34 | 115 |
+| All | 22 | 83 | 34 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1699,7 +1711,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-005` | Escalation and supervisor rules | target | partial | `src/features/services/integrations.ts`, `src/features/intelligence/followup.ts` | No multi-level escalation or supervisor rules. |
 | `DESK-006` | Ticket relationships | target | partial | `src/features/services/incidents.ts` | No merge, split or parent/child tickets. |
 | `DESK-007` | Collaboration | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs`, `tests/ui/browser.mjs` | No mentions, watchers or side conversations. |
-| `DESK-008` | Responses and summaries | target | partial | `src/ui/work-composer.tsx`, `src/ui/drafts.ts`, `tests/ui/response-journey.mjs` | Public browser proof at 1440/390 shows unsent reply persistence, no send on edit/reload, one explicit agent Send and clearing after send. Canned responses, assistant reply generation and cited 20-message summaries remain. |
+| `DESK-008` | Responses and summaries | target | done | `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/ui/response-journey.mjs` | Local public-route and paid-model-edge fixture proof of safe canned placeholders, generated knowledge/history citations, a complete 20-message summary, native 1440/390 unsent-draft persistence and explicit agent Send; current role/scope, provider/citation failures and changed-message/article/expiry fences. Native template restore remains inert. No live-model quality claim. |
 | `DESK-009` | Satisfaction surveys | target | missing |  | No CSAT. |
 | `DESK-010` | Custom fields, forms and statuses | target | missing |  | No custom fields, forms, statuses or required-on-status resolution code and close notes. |
 | `DESK-011` | Department workspaces | target | partial | `src/platform/auth.ts`, `src/features/work/core.ts`, `tests/platform/runtime.mjs` | No department workspaces under one portal. |

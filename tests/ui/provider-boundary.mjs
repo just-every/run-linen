@@ -86,7 +86,11 @@ globalThis.fetch = async (input, init = {}) => {
     const body = JSON.parse(init.body), packet = JSON.parse(body.input), schema = body.text.format.schema;
     await event('model', { purpose: packet.purpose, schema: Object.keys(schema.properties) });
     let value;
-    if (schema.properties.edits) {
+    if (['ticket_reply','ticket_summary'].includes(packet.purpose)) {
+      const sources=JSON.parse(packet.request.slice(packet.request.indexOf('\n')+1));
+      await event('response-sources',{purpose:packet.purpose,sources});
+      value={text:packet.purpose==='ticket_summary'?'Twenty VPN reports describe repeated disconnections. Reviewed knowledge recommends restarting the VPN client; recovery remains unverified.':'Please restart the VPN client using the reviewed guidance and reply here if it still disconnects.',citations:sources.map(source=>source.id)};
+    } else if (schema.properties.edits) {
       const raw = packet.request, data = JSON.parse(raw.slice(raw.indexOf('{"need"'))), file = data.files.find(f => f.path === 'claims.mjs');
       value = { edits: [{ path: 'claims.mjs', beforeSha256: file.sha256, content: 'export function groups(claims) { return claims.groups ?? claims.roles ?? [] }\n' }], explanation: 'Support rotated group claims and preserve legacy staff roles' };
     } else if (schema.properties.hypotheses) {

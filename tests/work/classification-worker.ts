@@ -1,4 +1,6 @@
 import app from './worker';
+import { responseProvider, registerResponseProvider } from './response-provider';
+registerResponseProvider(app);
 // Paid provider interception is confined to this test Worker. Product classification uses callModel.
 const providerFetch = globalThis.fetch;
 let release: (() => void) | null = null;
@@ -7,6 +9,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = new URL(String(input));
   if (url.hostname !== 'api.openai.com') return providerFetch(input, init);
   const request = JSON.parse(String(init?.body)), packet = JSON.parse(request.input);
+  if (['ticket_reply','ticket_summary'].includes(packet.purpose)) return responseProvider(packet);
   if (packet.purpose !== 'ticket_classification') throw new Error('Unexpected model request in classification test');
   if (packet.request.includes('Delay provider')) {
     waiting = true;

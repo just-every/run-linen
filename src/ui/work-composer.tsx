@@ -5,6 +5,7 @@ import { Icon } from "./icons";
 import { ErrorNotice, Notice } from "./primitives";
 import { draftKey, readDraft, writeDraft } from "./drafts";
 import type { PendingPerson } from "./pending-people";
+import { ResponseTools } from './response-tools';
 export function Composer({
   workId,
   onSent,
@@ -129,6 +130,7 @@ export function Composer({
       className={`composer ${visibility === "private" ? "composer-private" : ""}`}
       onSubmit={submit}
     >
+      {workId && session.principal.roles.some(r => ['owner','operator'].includes(r)) && <ResponseTools key={workId} workId={workId} onInsert={value => updateDraft(body ? `${body}\n\n${value}` : value, visibility)} />}
       <label className="composer-label" htmlFor="conversation-message">
         {visibility === "private" && <Icon name="lock" />}
         {visibility === "private"

@@ -89,8 +89,8 @@ export default {...product, async fetch(request, env, ctx) { bind(env); if (new 
     if (!(await r.json()).required) throw Error("Isolated database is not empty");
   }
   await fetch(url + "/__fixture/init", { method: "POST" });
-  await browserCheck("tests/ui/connected-browser.mjs",url);
-  if(workerOptions) {
+  await browserCheck(process.argv[2] || "tests/ui/connected-browser.mjs",url);
+  if(workerOptions && !process.argv[2]) {
     await stopWorker();
     worker=await startWorker(workerOptions);
     const r=await fetch(url+'/api/v1/setup');

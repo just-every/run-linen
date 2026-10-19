@@ -8,6 +8,7 @@ import { connectedCancellation } from './connected-cancellation.mjs';
 import { connectedLifecycle } from './connected-lifecycle.mjs';
 import { connectedChanges } from './connected-change.mjs';
 import { connectedRequest } from './connected-request.mjs';
+import { responseJourney } from './response-journey.mjs';
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]});const context=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}});const page=await context.newPage();
@@ -25,6 +26,8 @@ try{
  await connectedCancellation(env);checks.push('J2 native cancellation of reversible and unknown effects: separate removal authority, provider reconciliation, no duplicate grant, independently verified denial');
  await connectedChanges(env);checks.push('J4 native controlled changes, conflicting windows, invalidated authority, distinct automatic cohort recovery, unknown effect, failed rollback, takeover, employee correction and actual delivery; J6 measured simplification with explicit total-work limits');
  await connectedLifecycle(env);checks.push('J3 native leave independently verifies partial security, preserves retained rights and distinguishes cancelled unstarted duty from irreversible revoked sessions');
+ for (const width of [1440,390]) await responseJourney({...env,width});
+ checks.push('DESK-008 canned response with requester name, cited full-history model summary and knowledge, and agent-only sending at 1440/390');
  await writeFile(out+'/persistence.json',JSON.stringify({commitmentId:env.commitmentId,workId:env.workId,grants:await api('/grants'),operations:await api('/operations'),fixture:await (await fetch(base+'/__fixture/evidence')).json()}));
  await env.issuerContext.close();
  assert.deepEqual(errors,[]);
