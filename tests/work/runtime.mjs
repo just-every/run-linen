@@ -1,4 +1,5 @@
 import { assetCustodyChecks } from "./asset-custody-cases.mjs";
+import { assetContractChecks } from "./asset-contract-cases.mjs";
 import { lifecycleEvidenceChecks } from "./lifecycle-evidence-cases.mjs";
 import { lifecycleReplayChecks, lifecycleIntegrationChecks } from "./lifecycle-regressions.mjs";
 import assert from "node:assert/strict";
@@ -255,6 +256,7 @@ try {
     422,
   );
   await assetCustodyChecks(api, person.value.id);
+  await assetContractChecks(api);
   const lifecycle = {
     personId: person.value.id,
     kind: "join",

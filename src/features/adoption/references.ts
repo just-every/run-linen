@@ -6,7 +6,7 @@ export interface Reference {
     targets: string[];
     key: string;
 }
-const fields: Record<string, string[]> = { work_id: ['work_records'], plan_id: ['execution_plans'], operation_id: ['execution_operations'], attempt_id: ['execution_attempts'], asset_id: ['work_assets'], lifecycle_id: ['work_lifecycle'], calendar_id: ['work_calendars'], catalog_id: ['work_catalog'], article_id: ['work_knowledge'], commitment_id: ['intelligence_commitments'], research_id: ['intelligence_research'], capability_id: ['intelligence_capabilities'], person_id: ['work_people', 'identities'], requester_id: ['identities', 'work_people'], beneficiary_id: ['identities', 'work_people'], manager_id: ['work_people', 'identities'] };
+const fields: Record<string, string[]> = { work_id: ['work_records'], plan_id: ['execution_plans'], operation_id: ['execution_operations'], attempt_id: ['execution_attempts'], asset_id: ['work_assets'], vendor_id: ['svc_records'], lifecycle_id: ['work_lifecycle'], calendar_id: ['work_calendars'], catalog_id: ['work_catalog'], article_id: ['work_knowledge'], commitment_id: ['intelligence_commitments'], research_id: ['intelligence_research'], capability_id: ['intelligence_capabilities'], person_id: ['work_people', 'identities'], requester_id: ['identities', 'work_people'], beneficiary_id: ['identities', 'work_people'], manager_id: ['work_people', 'identities'] };
 export function references(record: NativeRecord): Reference[] {
     const out: Reference[] = [];
     for (const [field, targets] of Object.entries(fields)) {

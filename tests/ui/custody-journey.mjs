@@ -1,3 +1,4 @@
+import { assetContractJourney } from "./asset-contract-journey.mjs";
 import { assetLifecycleJourney } from "./asset-custody-journey.mjs";
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
@@ -52,6 +53,7 @@ export async function custodyJourney(page, api, personId, ownerId, out) {
   await captureJourney(page, { path: `${out}/custody-separate-security.png`, fullPage: true })
   await lifecycleEvidenceJourney(page, lifecycle.lifecycleId, out)
   await assetLifecycleJourney(page, personId, out)
+  await assetContractJourney(page, out)
 
 }
 

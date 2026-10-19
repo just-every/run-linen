@@ -1,3 +1,4 @@
+import { AssetContracts } from "./asset-contracts";
 import { usePeopleLabels } from "./people-labels";
 import { useState } from "react";
 import { date, text, humanize, type RecordValue } from "./api";
@@ -94,6 +95,7 @@ export function AssetsSpace() {
                 list.refresh();
               }}
             />
+            <AssetContracts assetId={text(asset.id)} />
             <AssetHistory key={`${asset.id}:${asset.revision}`} assetId={text(asset.id)} />
             <Evidence value={asset} />
           </section>

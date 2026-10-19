@@ -1,3 +1,4 @@
+import { registerAssetContractRoutes } from "./asset-contracts";
 import { assetHistory } from "./assets";
 import { lifecycleEvidencePack } from "./lifecycle-evidence";
 import { reviewPersonBinding } from './person-binding';
@@ -38,6 +39,7 @@ import {
 import { saveCalendar, setCommitment } from "./calendar";
 import { executionPort, bindObligationExecution } from "./execution";
 export function registerLifecycleRoutes(app: Hono<AppEnv>) {
+  registerAssetContractRoutes(app);
   app.post('/people/:id/binding', async c => c.json(await reviewPersonBinding(
     {env:c.env,principal:c.get('principal')},c.req.param('id'),await jsonBody(c) as never)));
 

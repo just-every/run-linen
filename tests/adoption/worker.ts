@@ -1,3 +1,5 @@
+import { registerWorkRoutes } from "../../src/features/work";
+import { registerServiceRoutes } from "../../src/features/services";
 import {registerPrivacyFixture} from './privacy-worker';
 import {nativeTables,excludedTables,historyOnly} from '../../src/features/adoption/schema';
 import {registerCoexistenceFixture} from './coexistence-worker';
@@ -21,6 +23,8 @@ app.onError((e, c) => e instanceof ApiError ? c.json({ error: { code: e.code, me
 app.get('/health', c => c.text('ok'));
 const api = platformApp();
 registerAdoptionRoutes(api);
+registerWorkRoutes(api);
+registerServiceRoutes(api);
 registerCoexistenceFixture(api);
 registerPrivacyFixture(api);
 api.get('/fixtures/restored-history',async c=>{const w=c.get('principal').workspaceId;return c.json({fulfilmentRuns:(await c.env.DB.prepare('SELECT * FROM intelligence_fulfilment_runs WHERE workspace_id=?').bind(w).all()).results,amendments:(await c.env.DB.prepare("SELECT state,row_json FROM adoption_history WHERE workspace_id=? AND table_name='work_fulfilment_amendments'").bind(w).all()).results,activeAmendments:(await c.env.DB.prepare('SELECT COUNT(*) n FROM work_fulfilment_amendments WHERE workspace_id=?').bind(w).first<any>()).n,sessions:(await c.env.DB.prepare('SELECT COUNT(*) n FROM sessions WHERE workspace_id=?').bind(w).first<any>()).n})});

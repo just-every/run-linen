@@ -1,3 +1,4 @@
+import { registerServiceRoutes } from "../../src/features/services";
 import { createGrant } from "../../src/features/execution/grants";
 import { Hono } from "hono";
 import {
@@ -21,6 +22,7 @@ app.onError((e, c) =>
   c.json({ error: e.message }, e instanceof ApiError ? (e.status as 400) : 500),
 );
 registerWorkRoutes(app);
+registerServiceRoutes(app);
 app.post("/test/grant", async (c) =>
   c.json(
     await createGrant(

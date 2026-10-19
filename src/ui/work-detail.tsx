@@ -1,3 +1,4 @@
+import { RepairCoverage } from "./asset-contracts";
 import { useState, type FormEvent } from "react";
 import { date, humanize, text, type RecordValue } from "./api";
 import { useMutation, useRemote, useSession } from "./state";
@@ -103,6 +104,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
           <dd><time dateTime={work.updated_at ?? work.created_at}>{date(work.updated_at ?? work.created_at)}</time></dd>
         </div>
       </dl>
+      {session.principal.roles.some(r => ["owner","operator"].includes(r)) && <RepairCoverage workId={work.id} />}
       <Progress items={progress} exception={exception} operator={operator} />
       <HeldServices person={detail.data?.pendingPerson} services={detail.data?.heldServices} />
       <ErrorNotice error={detail.backgroundError} />

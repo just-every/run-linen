@@ -9,6 +9,8 @@ const tables = new Set([
   "work_pending_people",
   "work_pending_services",
   "work_assets",
+  "work_asset_contracts",
+  "work_asset_repairs",
   "work_custody",
   "work_lifecycle",
   "work_obligations",
@@ -152,6 +154,12 @@ export async function restoreAdoptionRecord(
       row.reason='Restored held service; reconcile source effects and review current fulfilment authority';
       row.released_at=null;
     }
+  }
+  if (['work_asset_contracts','work_asset_repairs'].includes(input.table)) {
+    if (!await ctx.env.DB.prepare('SELECT 1 FROM work_assets WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,String(row.asset_id)).first())
+      throw new ApiError(422,'restore_parent','Restore the matching asset first');
+    if (input.table==='work_asset_contracts' && !await ctx.env.DB.prepare("SELECT 1 FROM svc_records WHERE workspace_id=? AND id=? AND kind='supplier'").bind(ctx.principal.workspaceId,String(row.vendor_id)).first())
+      throw new ApiError(422,'restore_parent','Restore the matching vendor first');
   }
   const subjects = [row.requester_id, row.beneficiary_id, row.author_id, row.person_id, row.pending_person_id,
     ...(input.table==='work_pending_people'?[row.id]:[])].filter(

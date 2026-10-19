@@ -819,7 +819,11 @@ that product and marks how close the current code is (see [Status](#status)).
 
 - **ASSET-007 — Contracts, warranties and vendors.** Purchase records, leases,
   warranties (with manufacturer warranty lookup where available) and support
-  contracts link to assets and vendors with expiry alerts. **Acceptance
+  contracts link to assets and vendors with expiry alerts. Where a manufacturer
+  offers an API the customer can authorize (for example Dell or Lenovo partner
+  access), coverage is fetched and labelled verified by the manufacturer; otherwise
+  Linen offers the official manufacturer serial-check link with the recorded
+  serial and user-recorded coverage/source, never labelled manufacturer-verified. **Acceptance
   evidence:** attach an AppleCare warranty to a MacBook and see a repair ticket
   show coverage and the expiry alert.
 
@@ -1679,7 +1683,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `ASSET-004` | Hardware lifecycle and custody | target | done | `src/features/work/assets.ts`, `tests/work/asset-custody-cases.mjs`, `tests/ui/asset-custody-journey.mjs` | Public-door procurement/receipt, assignment, loan, repair, return, retirement and disposal with serial history and attributed receipts. Disposal requires an ITAD partner, R2v3/e-Stewards standard and HTTPS certificate document reference, and refuses assigned devices even in repair. Browser journey at 1440/390. Partner certification is operator-attributed; remote certificate bytes are not retained. |
 | `ASSET-005` | Stock rooms and reorder | target | partial | `src/features/work/requests.ts` | No stock locations or reorder. |
 | `ASSET-006` | Software license management and compliance | target | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No IdP usage feed, reclamation through connectors, desktop installation compliance or prohibited titles. |
-| `ASSET-007` | Contracts, warranties and vendors | target | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No warranties. |
+| `ASSET-007` | Contracts, warranties and vendors | target | partial | `src/features/work/asset-contracts.ts`, `tests/work/asset-contract-cases.mjs`, `tests/ui/asset-contract-journey.mjs`, `tests/adoption/asset-contract-cases.mjs` | Local public-route and 1440/390 browser proof: purchase, lease, warranty and support records link assets/vendors; repair tickets show recorded coverage and current expiry alerts; official manufacturer lookup doors remain separate from recorded terms. Native archives retain vendor/asset/repair links through two generations. Authorized partner-API retrieval remains unimplemented and needs customer partner access; no automated manufacturer readback or provider acceptance claimed. |
 | `ASSET-008` | Asset financials | target | missing |  | No depreciation or accounting export. |
 | `ASSET-009` | CMDB and service dependencies | target | partial | `src/features/services/graph.ts`, `tests/services/run.mjs` | No CI type model or impact view. |
 | `ASSET-010` | Physical audits | target | missing |  | No physical audits. |
