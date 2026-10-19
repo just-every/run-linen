@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+const hash=v=>createHash('sha256').update(v).digest('hex');
+/** RETENTION-001: owner-set closed-ticket retention, previewed and confirmed, deletes a ticket closed 400 days ago and its attachment with a receipt. */
+export async function retentionChecks(ok,request,raw,auth,source){
+  const unset=await ok('/work/retention','GET',undefined,source);
+  assert.deepEqual([unset.state,unset.closedTicketDays,unset.attachmentDays],['unconfigured',null,null],'RETENTION-001 no hidden default: unset keeps everything');
+  const ticket=async(title,closedDaysAgo)=>{const w=await ok('/work','POST',{title,body:`${title} details`,deduplicationKey:crypto.randomUUID()},source,201);
+    if(closedDaysAgo!==undefined){await ok(`/work/${w.id}/commands`,'POST',{revision:w.revision,command:'close',reason:'Resolved'},source);await ok(`/fixtures/backdate-closed/${w.id}`,'POST',{days:closedDaysAgo},source)}return w};
+  const old=await ticket('Retention printer jam',400),recent=await ticket('Retention badge reader',300),open=await ticket('Retention open laptop');
+  const upload=await raw(`/work/${old.id}/attachments`,{method:'POST',headers:{'Content-Type':'text/plain','X-Filename':'jam.txt','X-Linen-CSRF':source.csrf,Cookie:source.cookie},body:'paper jam photo'});
+  assert.equal(upload.status,201);const attachment=await upload.json();
+  const refused=await request('/work/retention','PUT',{closedTicketDays:365,revision:0},source);
+  assert.equal(refused.status,409);const refusal=await refused.json();
+  assert.equal(refusal.error.code,'retention_confirmation_required','RETENTION-001 setting a policy needs the owner to confirm what the next run deletes');
+  assert.match(refusal.error.message,/delete 1 closed ticket and 1 attachment/);
+  const preview=await ok('/work/retention/preview','POST',{closedTicketDays:365},source);
+  assert.deepEqual([preview.tickets,preview.attachments],[1,1],'RETENTION-001 preview counts the ticket closed 400 days ago and its attachment');
+  assert.equal((await request('/work/retention','PUT',{closedTicketDays:365,revision:0,confirmDeletions:{tickets:2,attachments:1}},source)).status,409,'RETENTION-001 a stale confirmation is refused');
+  const set=await ok('/work/retention','PUT',{closedTicketDays:365,revision:0,confirmDeletions:{tickets:1,attachments:1}},source);
+  assert.equal(set.closedTicketDays,365);
+  const run=await ok('/fixtures/retention-run','POST',{},source);
+  assert.deepEqual([run.tickets,run.attachments],[1,1]);
+  await ok('/fixtures/sweep','POST',{},source);
+  assert.equal((await request(`/work/${old.id}`,'GET',undefined,source)).status,404,'RETENTION-001 the ticket closed 400 days ago is deleted');
+  assert.equal((await request(`/attachments/${attachment.id}`,'GET',undefined,source)).status,404,'RETENTION-001 its attachment record is deleted');
+  assert.equal((await ok(`/fixtures/object-exists/${old.id}/${attachment.id}`,'GET',undefined,source)).exists,false,'RETENTION-001 its attachment bytes are deleted');
+  assert.equal((await ok(`/work/${recent.id}`,'GET',undefined,source)).work.id,recent.id,'RETENTION-001 a ticket closed 300 days ago stays');
+  assert.equal((await ok(`/work/${open.id}`,'GET',undefined,source)).work.id,open.id,'RETENTION-001 an open ticket stays');
+  const {receipts}=await ok('/work/retention/receipts','GET',undefined,source),receipt=receipts.find(r=>r.record_hash===hash(old.id));
+  assert.ok(receipt,'RETENTION-001 deletion leaves a receipt');
+  assert.deepEqual([receipt.kind,receipt.policy_days,receipt.attachments,receipt.bytes],['ticket',365,1,15]);
+  assert.ok(!JSON.stringify(receipts).includes('Retention printer jam'),'RETENTION-001 the receipt keeps no ticket content');
+  const auditor=await ok('/members','POST',{email:'retention-auditor@test.invalid',name:'Retention Auditor',password:'retention auditor password',roles:['auditor']},source,201);
+  const reader=await auth(await request('/login','POST',{email:'retention-auditor@test.invalid',password:'retention auditor password'}));
+  assert.ok((await ok('/work/retention/receipts','GET',undefined,reader)).receipts.some(r=>r.record_hash===hash(old.id)),'RETENTION-001 receipts are visible to the auditor');
+  assert.equal((await request('/work/retention','PUT',{closedTicketDays:30,revision:1},reader)).status,403,'RETENTION-001 only the owner sets retention');
+  const longer=await ok('/work/retention','PUT',{closedTicketDays:500,attachmentDays:null,revision:1},source);
+  assert.equal(longer.revision,2,'RETENTION-001 lengthening needs no deletion confirmation');
+  console.log(`PASS RETENTION-001 public routes: no hidden default, previewed+confirmed 365-day policy, ticket closed 400 days ago and its attachment deleted with receipt (auditor ${auditor.id ? 'reads' : 'missing'}), 300-day and open tickets kept`);
+}

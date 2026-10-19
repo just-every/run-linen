@@ -5,6 +5,7 @@ import { knowledgeDraftArchiveChecks } from './knowledge-draft-cases.mjs';
 import { attachArchiveRecurrence, checkArchiveRecurrence } from './recurrence-cases.mjs';
 import { classifyArchiveWork, checkArchiveClassification } from "./classification-cases.mjs";
 import { problemArchiveChecks } from "./problem-cases.mjs";
+import { retentionChecks } from './retention-cases.mjs';
 import { attachArchiveContracts, checkArchiveContracts } from "./asset-contract-cases.mjs";
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
@@ -42,5 +43,6 @@ try{await start();const setup=await request('/setup','POST',{email:'source@test.
  await problemArchiveChecks(ok,request,auth,source);
  await knowledgeDraftArchiveChecks(ok,request,auth,source);
  await checkCalendarHistoricalErasure(ok,request,dest);
+ await retentionChecks(ok,request,(path,init)=>harness.fetch(origin+'/api/v1'+path,{...init,headers:{Origin:origin,...init.headers}}),auth,source);
  console.log('PASS adoption local Worker + real D1/R2: snapshot isolation, chunk hashes, second-generation native restore and retained import artifacts, private history/bytes/assets/knowledge/calendars/costs, foreign tenant/CSRF denial, corrupt/missing bytes, native materialization work/services/intelligence/unknown operations, no live imported grants, crash/restart/resume, duplicate apply, held effects, Freshservice fixture polling/approval invalidation/dual executor/source conflict/writeback replay, late cutover rejection, unknown mapping quarantine, duplicate import and tombstone replay, complete domain/platform person erasure and real R2 deletion. No provider tenant used.')
 }}finally{await harness.close()}

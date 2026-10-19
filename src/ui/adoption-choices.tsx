@@ -3,6 +3,7 @@ import { ActionForm } from './forms';
 import { useRemote } from './state';
 import { ErrorNotice, Evidence, Notice } from './primitives';
 import type { RecordValue } from './api';
+import { RetentionPolicy } from './retention-policy';
 
 export function AdoptionChoices() {
   const retention = useRemote<RecordValue>('/adoption/retention');
@@ -16,6 +17,7 @@ export function AdoptionChoices() {
       fields={[{name:'archiveDays',label:'Days to retain private export and import archives',type:'number',required:true,value:Number(retention.data.archive_days ?? retention.data.archiveDays ?? 30)}]}
       explanation="This policy governs private archive copies. It does not erase the service history or establish a provider’s retention policy."
       onSaved={retention.refresh} />}
+    <RetentionPolicy />
     <ActionForm title="Choose who runs one action" path="/adoption/ownership"
       fields={[
         {name:'resource',label:'What would change',required:true,hint:'Name the connection, the item and the person the change is for.'},

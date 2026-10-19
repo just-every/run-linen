@@ -1377,6 +1377,31 @@ that product and marks how close the current code is (see [Status](#status)).
   closed tickets and attachments, with no hidden default; due deletion is durable
   and reported. **Acceptance evidence:** set ticket retention to 365 days; a
   ticket closed 400 days ago and its attachment are deleted with a receipt.
+  *Today's semantic:* the owner sets, per record kind, whole days from 1 to 3650
+  or keep: private export/import archives (counted from the archive's creation),
+  closed tickets, and attachments of closed tickets (both counted from the
+  ticket's `closed_at`; due when closed strictly more than N×24 hours ago, UTC
+  instants). Unset means keep and is shown as "Keep (no retention set)"; there is no
+  hidden default. Only tickets in the closed state are due; open, paused and
+  cancelled tickets are never deleted. Setting or shortening the ticket or
+  attachment period first shows how many tickets and attachments the next run
+  would delete, and saving needs the owner to confirm those exact counts;
+  lengthening or clearing needs no confirmation. A due ticket is held back and
+  reported (never deleted) while it has an open obligation (pending, blocked,
+  executing or unknown), a linked asset repair, or a linked service record that
+  is not verified, failed, compensated, cancelled, closed or resolved. Deleting
+  a ticket removes it with its messages, attachments (record and stored bytes,
+  through the durable deletion queue), intake events, classifications,
+  knowledge suggestions, commitments and obligations, in one atomic step per
+  ticket; effect, execution, fulfilment, lifecycle, time and audit records keep
+  only the opaque ticket id. Each deletion leaves a receipt (SHA-256 of the
+  record id, kind, closed time, deletion time, policy revision and days,
+  attachment count and bytes, no content) that the owner and auditors read, and
+  tombstones the id so restoring an older archive does not bring it back. Linen
+  has no legal-hold capability today; a future clause adding legal holds, or any
+  new ticket-owned record kind, inherits this rule (holds block deletion; new
+  ticket content is deleted with the ticket) before it ships. Approved by ct on
+  19 October (15:09Z), with the preview and owner confirmation.
 
 - **BASE-001 — Base platform replacements.** Linen uses Base's lobby, owner
   claim, operator sign-in, mail and dependency modules rather than private
@@ -1868,8 +1893,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 28 | 54 | 33 | 115 |
-| All | 32 | 74 | 33 | 139 |
+| Target and push further | 29 | 53 | 33 | 115 |
+| All | 33 | 73 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1974,7 +1999,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `API-003` | Agent access by MCP | target | missing |  | No MCP server. |
 | `PORT-001` | Portable native archive | target | done | `src/features/adoption/export.ts`, `src/features/adoption/import.ts`, `tests/adoption/runtime.mjs` |  |
 | `ERASURE-001` | Authorized erasure | target | done | `src/features/adoption/core.ts`, `src/features/work/privacy.ts`, `tests/adoption/runtime.mjs`, `tests/work/person-binding-runtime.mjs`, `tests/platform/privacy-runtime.mjs` |  |
-| `RETENTION-001` | Retention policies | target | partial | `src/features/adoption/retention.ts`, `tests/adoption/runtime.mjs` | Archive retention only; no ticket/attachment retention. |
+| `RETENTION-001` | Retention policies | target | done | `src/features/adoption/retention.ts`, `src/features/work/retention.ts`, `tests/adoption/retention-cases.mjs`, `tests/ui/connected-setup.mjs` | Public-route proof: no hidden default; a 365-day closed-ticket policy is previewed and needs the owner to confirm the exact counts; the run deletes a ticket closed 400 days ago and its attachment bytes with a content-free receipt the owner and auditor read, keeping tickets closed 300 days ago and open tickets. Owner preview/confirm form inspected at 1440/390. |
 | `BASE-001` | Base platform replacements | target | done | `src/platform/base-auth`, `src/base`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/mail-edge.mjs` |  |
 | `COST-001` | US pricing and budgets | target | partial | `src/features/intelligence`, `tests/intelligence/runtime.mjs` | No seat pricing or sales-tax invoices. |
 | `A11Y-001` | Accessibility | target | partial | `tests/ui/viewport-evidence.mjs`, `tests/ui/browser.mjs` | No WCAG audit. |

@@ -1,6 +1,6 @@
 import type { Env, Principal, Role } from './platform/types'
 import { ApiError, id, now } from './platform/http'
-import { processDueWork, executionPort } from './features/work'
+import { processDueWork, processDueRetention, executionPort } from './features/work'
 import { processDueExecution, processNotifications } from './features/execution'
 import { processDueServices } from './features/services'
 import { processDueIntelligence } from './features/intelligence'
@@ -59,6 +59,7 @@ export async function processScheduledWork(env: Env) {
   return Promise.allSettled([
     ...work,
     runLane(env, 'intelligence', null, () => processDueIntelligence(env)),
+    runLane(env, 'retention', null, () => processDueRetention(env)),
     runLane(env, 'adoption', null, () => processDueAdoption(env)),
   ])
 }

@@ -15,6 +15,7 @@ import { platformApp } from '../../src/platform/routes';
 import { ApiError, id, now } from '../../src/platform/http';
 import type { AppEnv } from '../../src/platform/types';
 import { registerAdoptionRoutes, assertAdoptionEffectAllowed, processDueAdoption } from '../../src/features/adoption';
+import { processDueRetention } from '../../src/features/work/retention';
 import { createWork, appendMessage, conversation, listWork } from '../../src/features/work/core';
 import { storeAttachment, readAttachment } from '../../src/features/work/attachments';
 import {eraseServicePerson} from '../../src/features/services/privacy';
@@ -72,6 +73,8 @@ api.post('/fixtures/corrupt/:id', async (c) => { const row: any = await c.env.DB
 api.post('/fixtures/effect', async (c) => { await assertAdoptionEffectAllowed({ env: c.env, principal: c.get('principal') }, { resource: 'target', action: 'fixture.action' }); return c.json({ permitted: true }); });
 api.get('/fixtures/archive-objects', async (c) => { const objects = await c.env.ATTACHMENTS.list({ prefix: c.get('principal').workspaceId + '/adoption/exports/' }); return c.json({ count: objects.objects.length }); });
 api.post('/fixtures/sweep', async (c) => c.json(await processDueAdoption(c.env)));
+api.post('/fixtures/backdate-closed/:id', async (c) => { const { days } = await c.req.json<{ days: number }>(); await c.env.DB.prepare('UPDATE work_records SET closed_at=? WHERE workspace_id=? AND id=?').bind(new Date(Date.now() - days * 86400000).toISOString(), c.get('principal').workspaceId, c.req.param('id')).run(); return c.json({ ok: true }); });
+api.post('/fixtures/retention-run', async (c) => c.json(await processDueRetention(c.env)));
 api.post('/fixtures/coexistence', async (c) => {
     const p = c.get('principal'), ctx = { env: c.env, principal: p }, source = id(), at = now();
     await c.env.DB.prepare("INSERT INTO adoption_sources(id,workspace_id,connection_id,provider,source_workspace,state,checkpoint,last_seen_at) VALUES(?,?,?,'freshservice',1,'current',?,?)").bind(source, p.workspaceId, id(), at, at).run();

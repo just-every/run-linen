@@ -48,6 +48,13 @@ export async function connectedSetup({page,api,base,out,fixture}) {
   await page.goto(base+'/app#/imports');
   await action(page,'Choose private archive retention',{archiveDays:14},'/adoption/retention');
   assert.equal((await api('/adoption/retention')).archive_days,14);
+  // RETENTION-001: the owner previews ticket retention, then confirms the exact counts the next run deletes to save it.
+  const retentionPreview=await action(page,'Preview ticket retention',{closedTicketDays:365},'/work/retention/preview','Preview deletions');
+  await page.getByText(`The next run would delete ${retentionPreview.tickets} closed tickets and ${retentionPreview.attachments} attachments.`).waitFor();
+  await action(page,'Confirm and save retention',{},'/work/retention','Confirm deletions and save');
+  assert.equal((await api('/work/retention')).closedTicketDays,365);
+  await page.getByText('Closed tickets: 365 days after closing.',{exact:false}).waitFor();
+  await captureJourney(page,{path:out+'/RETENTION-001-policy.png',fullPage:true});
   const ownedResource=graph.id+':reserved-test-target:provider-colleague';
   const ownership=await action(page,'Choose who runs one action',{resource:ownedResource,action:'group.add'},'/adoption/ownership');
   const conflict=await action(page,'Choose who runs one action',{resource:ownedResource,action:'group.add'},'/adoption/ownership','Save',409);

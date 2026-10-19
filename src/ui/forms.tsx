@@ -150,6 +150,7 @@ export function ActionForm({
   onOpen,
   transform,
   open = false,
+  savedNotice,
 }: {
   title: string;
   path: string;
@@ -162,6 +163,8 @@ export function ActionForm({
   onOpen?: () => void;
   transform?: (values: RecordValue) => RecordValue;
   open?: boolean;
+  /** Replaces the default saved notice, e.g. for a preview that records nothing. */
+  savedNotice?: string;
 }) {
   const action = useMutation(),
     [parseError, setParseError] = useState<unknown>(null),
@@ -202,8 +205,7 @@ export function ActionForm({
         <ErrorNotice error={parseError ?? action.error} />
         {saved && (
           <Notice>
-            Saved to the service record. Any external effects and verification
-            are shown separately.
+            {savedNotice ?? "Saved to the service record. Any external effects and verification are shown separately."}
             {savedResult?.custodyEventId ? (
               <p>
                 Recorded custody event:{" "}
