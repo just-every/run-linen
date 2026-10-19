@@ -3,7 +3,7 @@ import { request } from './api';
 import { useSession } from './state';
 export interface EffortEntry {
   id:string;work_id:string;obligation_id:string|null;actor_id:string;actor_role:string;effort_role:string;request_type:string;
-  source:string;active_ms:number;touches:number;note:string;state:string;sequence:number;created_at:string;
+  source:string;active_ms:number;touches:number;note:string;state:string;sequence:number;created_at:string;touch_kind:string;
 }
 /** Only visible, focused activity is credited. Every accepted heartbeat is server bounded and sequence fenced. */
 export function useWorkTimer(workId:string, onRecorded:()=>void) {
