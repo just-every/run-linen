@@ -46,6 +46,7 @@ export function WorkSla({ workId }: { workId: string }) {
   </section>;
 }
 
+const targetLabels: Record<string, string> = { firstResponse: "First response", nextResponse: "Next response", resolution: "Resolution" };
 /** DESK-004 report: breaches per target beside the denominator, with each ticket's resolution target. */
 export function SlaReport({ value }: { value: { definition: string; denominator: number; counts: Record<string, Record<string, number>>; rows: ({ workId: string; title: string } & WorkSlaData)[] } }) {
   return <section aria-label="Service levels">
@@ -53,7 +54,7 @@ export function SlaReport({ value }: { value: { definition: string; denominator:
     <p>{value.definition} Tickets: {value.denominator}.</p>
     <div style={{ overflowX: "auto" }}><table><caption>Targets by state</caption>
       <thead><tr><th scope="col">Target</th>{["met", "breached", "running", "paused"].map(s => <th scope="col" key={s}>{humanize(s)}</th>)}</tr></thead>
-      <tbody>{Object.entries(value.counts).map(([target, counts]) => <tr key={target}><th scope="row">{humanize(target)}</th>{["met", "breached", "running", "paused"].map(s => <td key={s}>{counts[s] ?? 0}</td>)}</tr>)}</tbody>
+      <tbody>{Object.entries(value.counts).map(([target, counts]) => <tr key={target}><th scope="row">{targetLabels[target] ?? humanize(target)}</th>{["met", "breached", "running", "paused"].map(s => <td key={s}>{counts[s] ?? 0}</td>)}</tr>)}</tbody>
     </table></div>
     <div style={{ overflowX: "auto" }}><table><caption>Resolution target per ticket</caption>
       <thead><tr><th scope="col">Ticket</th><th scope="col">Policy</th><th scope="col">State</th><th scope="col">Due</th><th scope="col">Breach</th></tr></thead>
