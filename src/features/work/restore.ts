@@ -1,3 +1,4 @@
+import { calendarDate } from './depreciation';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
@@ -10,6 +11,7 @@ const tables = new Set([
   "work_pending_people",
   "work_pending_services",
   "work_assets",
+  "work_asset_financials",
   "work_asset_contracts",
   "work_asset_repairs",
   "work_classifications",
@@ -167,11 +169,19 @@ export async function restoreAdoptionRecord(
       row.released_at=null;
     }
   }
-  if (['work_asset_contracts','work_asset_repairs'].includes(input.table)) {
+  if (['work_asset_contracts','work_asset_repairs','work_asset_financials'].includes(input.table)) {
     if (!await ctx.env.DB.prepare('SELECT 1 FROM work_assets WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,String(row.asset_id)).first())
       throw new ApiError(422,'restore_parent','Restore the matching asset first');
     if (input.table==='work_asset_contracts' && !await ctx.env.DB.prepare("SELECT 1 FROM svc_records WHERE workspace_id=? AND id=? AND kind='supplier'").bind(ctx.principal.workspaceId,String(row.vendor_id)).first())
       throw new ApiError(422,'restore_parent','Restore the matching vendor first');
+  }
+  if (input.table==='work_asset_financials') {
+    calendarDate(row.in_service_date,'In-service date');
+    if (!Number.isSafeInteger(row.purchase_cents) || Number(row.purchase_cents)<=0 || Number(row.purchase_cents)>100000000000
+      || !Number.isInteger(row.useful_months) || Number(row.useful_months)<2 || Number(row.useful_months)>600
+      || !['straight-line','declining-balance'].includes(String(row.method))
+      || typeof row.cost_center!=='string' || !row.cost_center.trim() || row.cost_center.length>200)
+      throw new ApiError(422,'restore_financial','Valid asset accounting policy required');
   }
   if (input.table==='work_classifications') {
     row.proposal_token=null;

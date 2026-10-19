@@ -145,3 +145,13 @@ require current owner/operator/auditor membership.
 Native and full-installation archives retain recorded effort, while restoring all
 timers completed with no live heartbeat authority. Person erasure clears private
 effort notes and ends affected timers without inventing or deleting active minutes.
+
+### ASSET-008 asset financials
+
+Owner/operators use `POST /assets/:id/financials` with `revision` (0 initially),
+`purchaseCents` (integer USD cents), `inServiceDate` (YYYY-MM-DD), `usefulMonths`,
+`method` (`straight-line` or `declining-balance`) and `costCenter`.
+`GET /assets/:id/financials?asOf=YYYY-MM-DD&fiscalStart=YYYY-MM-01` reads book
+value and the fiscal-year schedule. The matching `/financials.csv` door downloads
+the same fiscal schedule for accounting import. ASSET-008 in CONTRACT.md defines
+rounding, anniversary postings, zero salvage and fiscal bounds.

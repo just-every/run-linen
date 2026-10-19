@@ -1,3 +1,4 @@
+import { assetFinancialJourney } from './asset-financial-journey.mjs';
 import { problemJourney } from "./problem-journey.mjs";
 import { classificationJourney } from "./classification-journey.mjs";
 import { timeJourney } from './time-journey.mjs';
@@ -552,6 +553,7 @@ try {
   } finally {
     await other.close();
   }
+  await assetFinancialJourney({page,api,base,out});
   await timeJourney({page,base,api,workId,out});
   checks.push("DESK-012 manual and measured active effort reaches the role-scoped report at desktop and mobile widths");
   await problemJourney({page,api,base,out});

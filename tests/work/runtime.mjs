@@ -1,3 +1,4 @@
+import { assetFinancialChecks } from './asset-financial-cases.mjs';
 import { timeChecks } from "./time-cases.mjs";
 import { problemChecks } from "./problem-cases.mjs";
 import { assetCustodyChecks } from "./asset-custody-cases.mjs";
@@ -262,6 +263,7 @@ try {
   );
   await assetCustodyChecks(api, person.value.id);
   await assetContractChecks(api);
+  await assetFinancialChecks(api,(path,headers={})=>mf.dispatchFetch(`http://localhost${path}`,{headers}));
   const lifecycle = {
     personId: person.value.id,
     kind: "join",

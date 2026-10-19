@@ -832,6 +832,15 @@ that product and marks how close the current code is (see [Status](#status)).
   exportable to Pantry, QuickBooks Online or NetSuite as CSV or API.
   **Acceptance evidence:** a $2,400 laptop over 36 months straight-line shows
   book value at month 12; export the fiscal-year schedule as CSV.
+  Accounting semantics: costs are integer USD cents; straight-line rounds
+  cumulative expense to the nearest cent. Declining balance uses twice the
+  monthly straight-line rate on the opening book value, rounded to cents; the
+  remaining balance is expensed in the final month, with zero salvage value.
+  Postings occur on each completed UTC calendar-month anniversary of the
+  in-service date, clamped to month end without drifting later anniversaries.
+  Fiscal years start on a selected month's first day (inclusive) and end at the
+  next year's start (exclusive). The CSV downloads the schedule for import into
+  the named accounting products; a download does not claim a provider import.
 
 - **ASSET-009 — CMDB and service dependencies.** Configuration items for
   hardware, software, SaaS apps, business services and cloud resources with
@@ -1614,8 +1623,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 13 | 66 | 36 | 115 |
-| All | 17 | 86 | 36 | 139 |
+| Target and push further | 14 | 66 | 35 | 115 |
+| All | 18 | 86 | 35 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1684,7 +1693,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `ASSET-005` | Stock rooms and reorder | target | partial | `src/features/work/requests.ts` | No stock locations or reorder. |
 | `ASSET-006` | Software license management and compliance | target | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No IdP usage feed, reclamation through connectors, desktop installation compliance or prohibited titles. |
 | `ASSET-007` | Contracts, warranties and vendors | target | partial | `src/features/work/asset-contracts.ts`, `tests/work/asset-contract-cases.mjs`, `tests/ui/asset-contract-journey.mjs`, `tests/adoption/asset-contract-cases.mjs` | Local public-route and 1440/390 browser proof: purchase, lease, warranty and support records link assets/vendors; repair tickets show recorded coverage and current expiry alerts; official manufacturer lookup doors remain separate from recorded terms. Native archives retain vendor/asset/repair links through two generations. Authorized partner-API retrieval remains unimplemented and needs customer partner access; no automated manufacturer readback or provider acceptance claimed. |
-| `ASSET-008` | Asset financials | target | missing |  | No depreciation or accounting export. |
+| `ASSET-008` | Asset financials | target | done | `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs` via `tests/ui/browser.mjs`: ASSET-008 USD cost/center, both methods, month-12 value, fiscal CSV, scoped access and 1440/390 readback. | |
 | `ASSET-009` | CMDB and service dependencies | target | partial | `src/features/services/graph.ts`, `tests/services/run.mjs` | No CI type model or impact view. |
 | `ASSET-010` | Physical audits | target | missing |  | No physical audits. |
 | `ASSET-011` | Hardware requests and device swaps for existing employees | target | partial | `src/features/work/resources.ts`, `tests/ui/custody-journey.mjs` | No replacement/loaner chain, MDM enrollment, shipping, return kit or swap gate. |

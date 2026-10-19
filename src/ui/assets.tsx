@@ -1,3 +1,4 @@
+import { AssetFinancials } from './asset-financials';
 import { AssetContracts } from "./asset-contracts";
 import { usePeopleLabels } from "./people-labels";
 import { useState } from "react";
@@ -96,6 +97,7 @@ export function AssetsSpace() {
               }}
             />
             <AssetContracts assetId={text(asset.id)} />
+            <AssetFinancials assetId={text(asset.id)} />
             <AssetHistory key={`${asset.id}:${asset.revision}`} assetId={text(asset.id)} />
             <Evidence value={asset} />
           </section>

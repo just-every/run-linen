@@ -1,0 +1,61 @@
+import assert from 'node:assert/strict';
+export async function assetFinancialChecks(api,fetchRaw) {
+  const check=(response,status=200)=>{assert.equal(response.status,status,'ASSET-008 '+JSON.stringify(response));return response.value;};
+  const device=check(await api('/assets',{serial:'DENVER-FINANCE-2400',source:'Purchase order 2400'}),201);
+  const path=`/assets/${device.id}/financials`;
+  const policy={purchaseCents:240000,inServiceDate:'2025-01-31',usefulMonths:36,method:'straight-line',costCenter:'Denver IT',revision:0};
+  assert.equal(check(await api(path)).financial,null,'ASSET-008 missing financials remain explicit');
+  check(await api(path,{...policy,revision:9}),409);
+  check(await api(path,policy));
+  const report=check(await api(path+'?asOf=2026-01-31&fiscalStart=2025-07-01'));
+  assert.equal(report.bookCents,160000,'ASSET-008 $2400 laptop at month 12 has $1600 book value');
+  assert.equal(report.depreciationCents,80000,'ASSET-008 cent-accurate accumulated expense');
+  assert.equal(report.currency,'USD','ASSET-008 USD throughout');
+  assert.equal(report.financial.cost_center,'Denver IT','ASSET-008 cost center survives readback');
+  assert.equal(report.schedule.length,12,'ASSET-008 full fiscal-year schedule');
+  assert.equal(report.schedule[0].date,'2025-07-31');
+  assert.equal(report.schedule.at(-1).date,'2026-06-30');
+  assert.equal(report.fiscalDepreciationCents,80000);
+  assert.equal(check(await api(path+'?asOf=2026-01-30')).bookCents,166667,'ASSET-008 depreciation posts only at the anniversary');
+  assert.equal(check(await api(path+'?asOf=2024-12-31')).inService,false);
+  assert.equal(check(await api(path+'?asOf=2030-01-31')).bookCents,0,'ASSET-008 no depreciation below zero');
+  const feb=check(await api(path+'?asOf=2025-02-28&fiscalStart=2025-01-01'));
+  assert.equal(feb.schedule[0].date,'2025-02-28','ASSET-008 clamp month-end');
+  assert.equal(feb.schedule[1].date,'2025-03-31','ASSET-008 clamping does not drift future anniversaries');
+  assert.equal(feb.bookCents,233333);
+  check(await api(path,{...policy,revision:0}),409);
+  for (const patch of [{purchaseCents:-1},{purchaseCents:240000.5},{usefulMonths:0},{inServiceDate:'2025-02-30'},{method:'unknown'}])
+    check(await api(path,{...policy,revision:1,...patch}),422);
+  check(await api(path+'?fiscalStart=2025-07-02'),422);
+  check(await api(path+'?asOf=2025-02-30'),422);
+  const employee={'x-user':'employee','x-roles':'["employee"]'};
+  check(await api(path,undefined,employee),403);
+  check(await api(path,{...policy,revision:1},employee),403);
+  check(await api(path,undefined,{'x-workspace':'b'}),404);
+  const csv=await fetchRaw(path+'.csv?asOf=2026-01-31&fiscalStart=2025-07-01');
+  assert.equal(csv.status,200,'ASSET-008 fiscal CSV downloads through authenticated public door');
+  assert.match(csv.headers.get('content-type'),/text\/csv/);
+  const body=await csv.text(),lines=body.trim().split('\r\n');
+  assert.equal(lines.length,13,'ASSET-008 exported fiscal-year rows match report');
+  assert.ok(lines[1].includes('"Denver IT","USD","straight-line","2400.00"'));
+  assert.ok(lines[1].includes('"2025-07-01","2026-07-01","6","2025-07-31"'));
+  assert.equal((await fetchRaw(path+'.csv',employee)).status,403);
+  assert.equal((await fetchRaw(path+'.csv',{'x-workspace':'b'})).status,404);
+  check(await api(path,{...policy,revision:1,method:'declining-balance',costCenter:'=DANGEROUS()'}));
+  const declining=check(await api(path+'?asOf=2025-02-28&fiscalStart=2025-01-01'));
+  assert.equal(declining.bookCents,226667,'ASSET-008 double declining monthly expense rounds to cents');
+  assert.equal(declining.schedule[1].openingCents,226667);
+  assert.equal(declining.schedule[1].depreciationCents,12593);
+  const final=check(await api(path+'?asOf=2028-01-31&fiscalStart=2027-02-01'));
+  assert.equal(final.bookCents,0,'ASSET-008 remaining declining balance fully depreciated at end of useful life');
+  assert.equal(final.schedule.at(-1).bookCents,0);
+  assert.ok(final.schedule.every(r=>r.bookCents>=0 && r.depreciationCents>=0));
+  assert.ok((await (await fetchRaw(path+'.csv?fiscalStart=2025-01-01')).text()).includes('"\'=DANGEROUS()"'),'ASSET-008 formula-like user text is escaped in accounting CSV');
+  const restoredAsset=check(await api('/assets',{serial:'RESTORED-FINANCIAL-2400',source:'Accounting archive'}),201);
+  const restored=check(await api('/test/restore',{table:'work_asset_financials',sourceId:'financial-archive',sourceKey:'laptop-policy',
+    row:{workspace_id:'source',asset_id:restoredAsset.id,purchase_cents:240000,in_service_date:'2025-01-31',useful_months:36,
+      method:'straight-line',cost_center:'Denver IT',revision:1,recorded_by:'owner',recorded_at:'2025-01-31T00:00:00Z'}}));
+  assert.equal(restored.state,'restored_held','ASSET-008 financial policy is portable content');
+  assert.equal(check(await api(`/assets/${restoredAsset.id}/financials?asOf=2026-01-31`)).bookCents,160000,'ASSET-008 native restored policy retains book-value semantics');
+  console.log('PASS ASSET-008: persisted USD cost/center, straight-line and declining book values, cents and month-end arithmetic, fiscal reporting/CSV, scoped and stale-edit denials');
+}
