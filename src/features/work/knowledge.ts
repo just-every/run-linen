@@ -1,3 +1,4 @@
+import { effortReport } from "./effort-report";
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { createWork, operator, permit, type WorkContext } from "./core";
@@ -174,6 +175,7 @@ export async function workReport(
     timezone,
     obligations,
     calendars,
+    effort: await effortReport(ctx, from, to),
     denominator: rows.length,
     definition:
       "Normal-sensitivity work created in [from,to); closure is administrative, not verified fulfilment; ages are elapsed milliseconds excluding explicit pauses.",

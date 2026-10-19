@@ -3,6 +3,7 @@ import { ApiError, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
 const tables = new Set([
   "work_records",
+  "work_time_entries",
   "work_messages",
   "work_attachments",
   "work_people",
@@ -101,6 +102,16 @@ export async function restoreAdoptionRecord(
     !["employees", "operators", "hr"].includes(String(row.scope))
   )
     throw new ApiError(422, "restore_scope", "Known article scope required");
+  if (input.table === 'work_time_entries') {
+    if (!['manual','measured'].includes(String(row.source)) || !['employee','agent','approver','owner','vendor','technician'].includes(String(row.effort_role)) ||
+        !Number.isInteger(row.active_ms) || Number(row.active_ms)<0 || !Number.isInteger(row.touches) || Number(row.touches)<0)
+      throw new ApiError(422,'restore_time','Valid recorded effort required');
+    if (row.obligation_id && !await ctx.env.DB.prepare('SELECT 1 FROM work_obligations WHERE workspace_id=? AND work_id=? AND id=?')
+      .bind(ctx.principal.workspaceId,String(row.work_id),String(row.obligation_id)).first())
+      throw new ApiError(422,'restore_parent','Restore the matching task before its effort');
+    // Activity evidence is portable; a source browser's live timer authority is not.
+    row.state='completed'; row.last_seen_at=null; row.sequence=Number(row.sequence||0)+1;
+  }
   if (input.table === "work_obligations" && row.state !== "verified") {
     row.state = "blocked";
     row.last_error = `Restored held obligation; reconcile source operation ${row.operation_id || "none"} before resuming`;
@@ -167,7 +178,7 @@ export async function restoreAdoptionRecord(
     row.proposal_until=null;
     if(row.state==='proposing')row.state='restored';
   }
-  const subjects = [row.requester_id, row.beneficiary_id, row.author_id, row.person_id, row.pending_person_id,
+  const subjects = [row.requester_id, row.beneficiary_id, row.author_id, row.actor_id, row.person_id, row.pending_person_id,
     ...(input.table==='work_pending_people'?[row.id]:[])].filter(
     (v): v is string => typeof v === "string",
   );

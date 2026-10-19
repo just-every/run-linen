@@ -1614,8 +1614,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 11 | 67 | 37 | 115 |
-| All | 15 | 87 | 37 | 139 |
+| Target and push further | 12 | 67 | 36 | 115 |
+| All | 16 | 87 | 36 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1652,7 +1652,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-009` | Satisfaction surveys | target | missing |  | No CSAT. |
 | `DESK-010` | Custom fields, forms and statuses | target | missing |  | No custom fields, forms, statuses or required-on-status resolution code and close notes. |
 | `DESK-011` | Department workspaces | target | partial | `src/platform/auth.ts`, `src/features/work/core.ts`, `tests/platform/runtime.mjs` | No department workspaces under one portal. |
-| `DESK-012` | Time tracking and effort | target | missing |  | No time entries. |
+| `DESK-012` | Time tracking and effort | target | done | `src/features/work/time.ts`, `src/features/work/effort-report.ts`, `tests/work/time-cases.mjs`, `tests/ui/time-journey.mjs`, `tests/adoption/runtime.mjs` | Local public work/task routes and real 1440/390 browser interval: manual and measured active minutes feed role/request-type effort totals with touches and failed/pending work. Visibility/focus/inactivity pauses, server-bounded sequenced heartbeats, current scope, erasure and inert restored timers are proved. Labor rates and charges remain unavailable; REPORT-004 is not claimed complete. |
 | `DESK-013` | Scheduled and recurring work | target | missing |  | No recurring tickets. |
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
 | `DESK-015` | Agent scenarios and record templates | target | missing |  | No agent scenarios or record templates. |

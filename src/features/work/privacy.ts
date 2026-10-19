@@ -132,6 +132,7 @@ async function eraseSinglePerson(
     ctx.env.DB.prepare(
       "UPDATE work_messages SET body='[erased]' WHERE workspace_id=? AND (author_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))",
     ).bind(w, p, w, p, p),
+    ctx.env.DB.prepare("UPDATE work_time_entries SET note='[erased]',state='completed',last_seen_at=NULL,sequence=sequence+1 WHERE workspace_id=? AND (actor_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(w,p,w,p,p),
     ctx.env.DB.prepare(
       "UPDATE work_records SET title='[erased]',context_json='{}',revision=revision+1 WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)",
     ).bind(w, p, p),

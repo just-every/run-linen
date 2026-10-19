@@ -106,3 +106,42 @@ Disposal requires the actual ITAD partner, `certificateStandard` (`R2v3` or
 is retained with the receipt, actor and timestamp. Linen records the operator's
 attribution; it does not independently certify the partner or retain the remote
 certificate's bytes. The Devices page exposes these fields and custody history.
+
+### Human time and effort
+
+`GET /work/:id/time` lists scoped recorded effort. Service operators can see all
+entries on work they may read; participants see only their own entries. Private
+notes remain outside the public conversation.
+
+`POST /work/:id/time` accepts `{source:"manual", minutes:15,
+deduplicationKey, obligationId?, note?, effortRole?}` or `{source:"measured",
+deduplicationKey, obligationId?}`. Task IDs must belong to that same scoped work.
+The actor and actual workspace role come from current membership. The effort role
+defaults to that person's role (`operator`/`hr` maps to `agent`); operators can
+explicitly attribute manual vendor/technician work. A stable key replays the same
+entry and rejects changed content. Measured sessions cannot attribute another
+person's work. At most one active timer exists per person and workspace.
+
+`POST /work/:id/time/:entryId` accepts `{command, sequence, activeMs?}`. Commands
+are `heartbeat`, `pause`, `resume`, `stop`; every change requires the returned
+sequence. A heartbeat credits the smaller of the client's active duration and the
+server's elapsed interval, only while the prior heartbeat is fresh. Gaps over
+30 seconds earn zero. Pauses, stops and resumes add no elapsed minutes. Resume is
+a new touch; heartbeat is not. The browser sends activity only while visible,
+focused and recently used, and pauses on hidden/blur/inactivity. Failed or lost
+heartbeats never manufacture time; refresh reconciles the stored state.
+
+`GET /reports/effort?from=ISO&to=ISO` and the `effort` member of `/reports/work`
+return persisted manual/measured minutes and touches grouped by the recorded
+request type and effort role. The declared cohort is work created in the period,
+plus work with effort entries started in it; each entry's total is reported
+through `asOf`. Request type is the first selected catalog service, or work kind
+when none is selected. Pending, failed and verified obligations remain visible;
+closure does not establish verification. This is the human-effort input to
+REPORT-004, with unavailable charges/rates explicit; it does not establish a
+before/after savings claim. Reports include normal-sensitivity work only and
+require current owner/operator/auditor membership.
+
+Native and full-installation archives retain recorded effort, while restoring all
+timers completed with no live heartbeat authority. Person erasure clears private
+effort notes and ends affected timers without inventing or deleting active minutes.

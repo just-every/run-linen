@@ -1,4 +1,5 @@
 import { classificationJourney } from "./classification-journey.mjs";
+import { timeJourney } from './time-journey.mjs';
 import { nativeCreate, dstJourney, incidentNativeDetails, namedApproverJourney } from "./native-regressions.mjs";
 import { custodyJourney } from "./custody-journey.mjs";
 import { fulfilmentDecisionJourney } from "./fulfilment-decision-journey.mjs";
@@ -550,6 +551,8 @@ try {
   } finally {
     await other.close();
   }
+  await timeJourney({page,base,api,workId,out});
+  checks.push("DESK-012 manual and measured active effort reaches the role-scoped report at desktop and mobile widths");
   assert.deepEqual(errors, []);
   await writeFile(
     out + "/results.json",

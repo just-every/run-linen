@@ -1,4 +1,5 @@
 import { RepairCoverage } from "./asset-contracts";
+import { WorkTime } from "./work-time";
 import { useState, type FormEvent } from "react";
 import { date, humanize, text, type RecordValue } from "./api";
 import { useMutation, useRemote, useSession } from "./state";
@@ -120,6 +121,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <ConversationHistory conversation={detail.data!} />
       </section>
       <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />
+      {operator && <WorkTime workId={work.id} />}
       <WorkCommands work={work} onChanged={changed} operator={operator} />
       <details className="evidence">
         <summary>Request identity & context</summary>

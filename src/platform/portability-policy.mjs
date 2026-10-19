@@ -8,6 +8,7 @@ export const portabilityPolicy={
  requiredConfiguration:['OWNER_EMAIL','SESSION_SECRET','SETUP_TOKEN','AUTH_ORIGIN','ENCRYPTION_KEY','MAIL_PROVIDER','MAIL_FROM'],
  buckets:{ATTACHMENTS:{}},
  exportRow(table,row){
+  if(table==='work_time_entries')return {...row,state:'completed',last_seen_at:null,sequence:Number(row.sequence||0)+1}
   if(table==='work_people')return {...row,member_id:null,binding_id:null,manager_id:null}
   if(table==='work_fulfilment_approvals')return {...row,person_id:null,binding_id:null}
   if(table==='users')return {...row,password_hash:'!restored-email-link'}

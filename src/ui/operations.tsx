@@ -1,3 +1,4 @@
+import { EffortReport, type EffortReportData } from "./effort-report";
 import type { ReviewedMapping, CatalogChoice } from "./setup-permissions";
 import { settingsSections } from "./shell-rail";
 import { useState, type FormEvent } from "react";
@@ -314,6 +315,7 @@ export function ReportSpace() {
                 ["Verification coverage", report.data.verificationCoverage],
               ]}
             />
+            {report.data.effort && <EffortReport value={report.data.effort as unknown as EffortReportData} />}
             <Evidence
               value={report.data.rows}
               title="Underlying records and elapsed ages"

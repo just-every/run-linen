@@ -1,3 +1,4 @@
+import { timeChecks } from "./time-cases.mjs";
 import { assetCustodyChecks } from "./asset-custody-cases.mjs";
 import { assetContractChecks } from "./asset-contract-cases.mjs";
 import { classificationChecks, classificationEncryptionKey } from "./classification-cases.mjs";
@@ -502,6 +503,7 @@ try {
     JSON.parse(accessOperation.step_json).localBeneficiaryId,
     "employee",
   );
+  await timeChecks(api, db, w, accessDuty.id);
   const article = await api("/knowledge", {
     title: "VPN",
     body: "Reviewed network guidance",

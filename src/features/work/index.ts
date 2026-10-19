@@ -4,6 +4,7 @@ import type { Hono } from "hono";
 import type { AppEnv } from "../../platform/types";
 import { registerConversationRoutes } from "./conversation-routes";
 import { registerLifecycleRoutes } from "./lifecycle-routes";
+import { registerTimeRoutes } from "./time-routes";
 import { registerKnowledgeRoutes } from "./knowledge-routes";
 import { registerClassificationRoutes } from "./classification-routes";
 export * from "./core";
@@ -23,6 +24,7 @@ export function registerWorkRoutes(app: Hono<AppEnv>) {
   registerLifecycleRoutes(app);
   registerKnowledgeRoutes(app);
   registerClassificationRoutes(app);
+  registerTimeRoutes(app);
 }
 
 export * from "./delegation";
