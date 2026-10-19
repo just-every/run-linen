@@ -1207,6 +1207,18 @@ that product and marks how close the current code is (see [Status](#status)).
   milestones, link 30 asset relocations and two changes, see a blocked dependency
   flagged on the timeline, and see an agent's workload combine project tasks and
   tickets.
+  *Today's semantic:* owners and service agents create and edit projects, their
+  milestones and tasks; auditors read them; employees have no project view (the
+  owner acts for "admin" until that role exists). Each task has one owner, who
+  must be an active owner or agent, a due date (`YYYY-MM-DD`, UTC) and optional
+  dependencies on other tasks of the project. The timeline orders tasks by due
+  date under their milestones; a task waits on an open dependency and is flagged
+  blocked when that dependency is itself blocked, overdue or due after it, and a
+  task cannot be marked done while a dependency is open. Projects link
+  normal-sensitivity tickets (HR and restricted tickets are refused), changes,
+  assets with a note such as a relocation's from and to, and lifecycle plans. An
+  agent's workload counts open or paused tickets assigned to them beside their
+  open project tasks.
 
 ### Knowledge
 
@@ -1936,8 +1948,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 31 | 52 | 32 | 115 |
-| All | 36 | 71 | 32 | 139 |
+| Target and push further | 32 | 52 | 31 | 115 |
+| All | 37 | 71 | 31 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2023,7 +2035,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No automatic incident linking, health-check gate on success or PIR. |
 | `CHANGE-006` | Development-tool context | target | partial | `src/features/intelligence/engineering.ts` | No GitHub/Jira/Vector links or deployment-raised changes. |
 | `CHANGE-007` | Release management | target | partial | `src/features/services/changes.ts`, `src/features/execution/deployment.ts`, `tests/ui/connected-change.mjs` | No release records, go/no-go or release notes. |
-| `PROJECT-001` | IT team projects | target | missing |  | No IT projects. |
+| `PROJECT-001` | IT team projects | target | done | `src/features/work/projects.ts`, `src/ui/projects.tsx`, `tests/work/project-cases.mjs` | Public-route proof: "Denver office move" with 12 owned tasks across two milestones as a board and due-date timeline; a dependency due after its dependent task is flagged blocked and done is refused until it closes; 30 asset relocations, two changes and a ticket link (an HR ticket is refused); employees are denied; the agent's workload shows assigned tickets beside six project tasks. |
 | `KB-001` | Knowledge base | target | done | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs` |  |
 | `KB-002` | Federated knowledge sources | target | missing |  | No federated sources (Confluence, Slate, Google Drive, SharePoint, Notion). |
 | `KB-003` | Deflection with verified outcome | target | done | `src/features/work/deflection.ts`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/knowledge-draft-journey.mjs` | Local public-route and inspected 1440/390 browser proof: a VPN question is answered by the readable reviewed article before filing (never an HR-only one); the asker's confirmation is the only deflection; a second employee who files anyway, and a confirmation followed by filing, are not counted; asker-only confirmation and aggregate report counts. Slack/Teams suggestions are inherited by CHANNEL-001/002. |
