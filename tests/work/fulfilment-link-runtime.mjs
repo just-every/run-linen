@@ -34,6 +34,8 @@ try {
     INSERT INTO memberships VALUES('w','owner','["owner"]',1);
     INSERT INTO memberships VALUES('w','employee','["employee"]',1);
     INSERT INTO memberships VALUES('w','stranger','["employee"]',1);
+    INSERT INTO users VALUES('auditor','auditor@test','Auditor','unused','2026-01-01');
+    INSERT INTO memberships VALUES('w','auditor','["auditor"]',1);
     INSERT INTO memberships VALUES('other','employee','["employee"]',1);`);
   await ok('/test/connections', {});
   const actor = await ok('/automation-principals', { name: 'Fixture automation', idempotencyKey: 'actor' });
