@@ -4587,7 +4587,7 @@
       "executable": false
     },
     "tests/ui/response-journey.mjs": {
-      "sha256": "fb725d241e5ae84a8fa8b17e5765f6af386560d7a4eb4a9538d4899ba52bf0a8",
+      "sha256": "1cfe5465ff7e00881cdfcd288f9ce7da74a99ce515419e0050f6a3bd02ac4e8a",
       "executable": false
     },
     "tests/ui/run.mjs": {

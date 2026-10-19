@@ -92,5 +92,7 @@ export async function responseJourney({ page, api, base, out, width }) {
   const sent = page.waitForResponse(r => r.url().endsWith(`/work/${work.id}/messages`) && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Send message', exact: true }).click(); assert.equal((await sent).status(), 201);
   assert.equal((await api(`/work/${work.id}`)).messages.length, 22);
+  await page.locator('.message-body').getByText('Please restart the VPN client using the reviewed guidance and reply here if it still disconnects.', { exact: true }).waitFor();
+  await page.screenshot({ path: `${out}/desk-008-sent-${width}.png`, fullPage: true });
   console.log(`PASS DESK-008 native ${width}: canned requester name, twenty-message cited summary with knowledge, private-source isolation and unsent generated reply until agent Send.`);
 }
