@@ -797,10 +797,22 @@ that product and marks how close the current code is (see [Status](#status)).
   run.
 
 - **ASSET-004 — Hardware lifecycle and custody.** Procure, receive, assign, loan,
-  repair, return, retire and dispose with serial-level history, attributed
-  receipts and, for disposal, the ITAD partner's certificate (R2v3 or e-Stewards).
+  repair, return, retire and dispose with serial-level history and attributed
+  receipts. A disposal records the ITAD partner's certificate as a persisted
+  HTTPS reference to the partner's actual certificate document, stored with the
+  partner, standard (R2v3 or e-Stewards), operator and disposal timestamp. Linen
+  does not retain the original document bytes unless uploaded, never infers that
+  the partner is certified and never claims the document was independently
+  validated. Disposal is refused while the device is still assigned to someone,
+  including when it is in repair.
   **Acceptance evidence:** run a laptop through assign, repair, return and
-  dispose; disposal requires the certificate and is refused while assigned.
+  dispose; disposal requires the persisted HTTPS reference to the partner's
+  actual certificate document, with partner, R2v3 or e-Stewards standard, operator
+  and disposal timestamp retained after reopening. Refuse disposal while the
+  device is assigned, including during repair, and refuse a missing reference.
+  Confirm the reference alone retains no original document bytes, an uploaded
+  document retains its bytes, and neither view claims partner certification or
+  independent document validation.
 
 - **ASSET-005 — Stock rooms and reorder.** Stock locations hold counted devices
   and accessories with reorder thresholds; reaching a threshold raises a purchase
