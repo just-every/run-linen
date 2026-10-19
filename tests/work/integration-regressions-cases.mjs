@@ -34,7 +34,8 @@ export async function runIntegrationRegressions({ db, api, ok, journey, actor })
   // Real initial apply/verification, user cancellation, independently authorized removal.
   for (const ambiguous of [false, true]) {
     const key = ambiguous ? 'unknown-then-cancel' : 'verified-then-cancel';
-    const expiry = new Date(Date.now() + 1600).toISOString();
+    // Same margin as the provider-denied journey: /plans/granted refuses an expiry already past when the plan is recorded.
+    const expiry = new Date(Date.now() + 8000).toISOString();
     const item = await journey(key, { expiresAt: expiry });
     await ok('/test/link', item.input, 'employee');
     if (ambiguous) await ok('/test/lose-response', { target: key });
