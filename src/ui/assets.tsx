@@ -1,6 +1,7 @@
 import { LinkedTickets } from './work-relationships';
 import { AssetFinancials } from './asset-financials';
 import { AssetContracts } from "./asset-contracts";
+import { AssetAudits } from "./asset-audits";
 import { usePeopleLabels } from "./people-labels";
 import { useState } from "react";
 import { date, text, humanize, type RecordValue } from "./api";
@@ -25,6 +26,7 @@ export function AssetsSpace({selectedId}:{selectedId?:string}) {
           receipt or return identity for the matching lifecycle duty.
         </Notice>
       )}
+      {!selectedId && <AssetAudits onChanged={list.refresh} />}
       {list.loading ? (
         <Loading />
       ) : list.error ? (

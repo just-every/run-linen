@@ -998,6 +998,20 @@ that product and marks how close the current code is (see [Status](#status)).
   to scan tags, with expected-vs-found reconciliation and missing-device follow
   up. **Acceptance evidence:** audit the Denver stock room; scan 18 of 20
   expected devices; two missing devices open follow-up tasks.
+  *Today's semantic:* an owner or operator starts an audit for a location; the
+  expected list is snapshotted at that moment as every device whose recorded
+  location matches it (ignoring case and repeated spaces) and whose state is
+  stock, reserved, returned or retired; devices with a person are not expected
+  on the shelf. One audit per location is open at a time. Tags are scanned in
+  Linen's web app at phone width: a Bluetooth or keyboard-wedge scanner, or the
+  auditor, enters each asset tag or serial (case-insensitive) into the scan
+  field; Linen does not decode camera images. A repeat scan counts once; a code
+  recorded at another location, or matching no device, is reported beside the
+  reconciliation and never counted as found. Completing the audit is one atomic
+  step that marks found devices observed and opens one follow-up request per
+  expected device not scanned, assigned to the completing auditor and linked to
+  the device; a completed audit takes no further scans. CHANNEL-005's native
+  apps inherit this audit scan, including camera scanning, before they ship.
 
 - **ASSET-011 — Hardware requests and device swaps for existing employees.**
   Replacement of a broken or aging device, loaners, peripherals (monitor, dock,
@@ -1962,8 +1976,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 33 | 51 | 31 | 115 |
-| All | 38 | 70 | 31 | 139 |
+| Target and push further | 34 | 51 | 30 | 115 |
+| All | 39 | 70 | 30 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2034,7 +2048,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `ASSET-007` | Contracts, warranties and vendors | target | partial | `src/features/work/asset-contracts.ts`, `tests/work/asset-contract-cases.mjs`, `tests/ui/asset-contract-journey.mjs`, `tests/adoption/asset-contract-cases.mjs` | Local public-route and 1440/390 browser proof: purchase, lease, warranty and support records link assets/vendors; repair tickets show recorded coverage and current expiry alerts; official manufacturer lookup doors remain separate from recorded terms. Native archives retain vendor/asset/repair links through two generations. Authorized partner-API retrieval remains unimplemented and needs customer partner access; no automated manufacturer readback or provider acceptance claimed. |
 | `ASSET-008` | Asset financials | target | done | `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs` via `tests/ui/browser.mjs`: ASSET-008 USD cost/center, both methods, month-12 value, fiscal CSV, scoped access and 1440/390 readback. | |
 | `ASSET-009` | CMDB and service dependencies | target | done | `tests/services/dependency-cases.mjs`, `tests/ui/dependency-journey.mjs` | Local public-route and 1440/390 browser proof: five CI types, attributed typed dependencies, Payroll/Gusto/SSO, transitive incident/change upstream/downstream impact, stale/conflicting uncertainty, cycles and existing scope isolation. |
-| `ASSET-010` | Physical audits | target | missing |  | No physical audits. |
+| `ASSET-010` | Physical audits | target | done | `src/features/work/asset-audits.ts`, `tests/work/asset-custody-cases.mjs`, `tests/ui/asset-audit-journey.mjs` | Local public-route and 390/1440 browser proof: Denver stock room audit, 18 of 20 expected devices scanned, repeat/elsewhere/unknown scans reported, two missing devices open linked follow-up requests; native-app camera scanning is CHANNEL-005's. |
 | `ASSET-011` | Hardware requests and device swaps for existing employees | target | partial | `src/features/work/resources.ts`, `tests/ui/custody-journey.mjs` | No replacement/loaner chain, MDM enrollment, shipping, return kit or swap gate. |
 | `INC-001` | Major incidents | target | partial | `src/features/services/incidents.ts`, `tests/services/run.mjs` | No war room or Oncall/PagerDuty connector. |
 | `INC-002` | Monitoring and alert intake | target | partial | `src/features/services/integrations.ts`, `tests/services/run.mjs` | No named Uptime/Datadog/PagerDuty/Spool connectors or paging on intake. |

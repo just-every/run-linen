@@ -1,0 +1,5 @@
+-- ASSET-010: physical audits by location: the expected snapshot, every scan, and the follow-up opened for each missing device.
+CREATE TABLE work_asset_audits(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,location TEXT NOT NULL,location_key TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'open',expected_json TEXT NOT NULL,started_by TEXT NOT NULL,started_at TEXT NOT NULL,completed_by TEXT,completed_at TEXT,completion_id TEXT,revision INTEGER NOT NULL DEFAULT 1);
+CREATE UNIQUE INDEX work_asset_audits_open ON work_asset_audits(workspace_id,location_key) WHERE state='open';
+CREATE TABLE work_asset_audit_scans(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,audit_id TEXT NOT NULL,code TEXT NOT NULL,asset_id TEXT,outcome TEXT NOT NULL,scanned_by TEXT NOT NULL,scanned_at TEXT NOT NULL,UNIQUE(workspace_id,audit_id,code));
+CREATE TABLE work_asset_audit_followups(workspace_id TEXT NOT NULL,audit_id TEXT NOT NULL,asset_id TEXT NOT NULL,work_id TEXT NOT NULL,PRIMARY KEY(workspace_id,audit_id,asset_id));

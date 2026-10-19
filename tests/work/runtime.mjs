@@ -9,7 +9,7 @@ import { relationshipChecks } from './relationship-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
 import { timeChecks } from "./time-cases.mjs";
 import { problemChecks } from "./problem-cases.mjs";
-import { assetCustodyChecks } from "./asset-custody-cases.mjs";
+import { assetCustodyChecks, assetAuditChecks } from "./asset-custody-cases.mjs";
 import { assetContractChecks } from "./asset-contract-cases.mjs";
 import { classificationChecks, classificationEncryptionKey } from "./classification-cases.mjs";
 import { lifecycleEvidenceChecks } from "./lifecycle-evidence-cases.mjs";
@@ -275,6 +275,7 @@ try {
     422,
   );
   await assetCustodyChecks(api, person.value.id);
+  await assetAuditChecks(api, person.value.id);
   await assetContractChecks(api);
   await assetFinancialChecks(api,(path,headers={})=>mf.dispatchFetch(`http://localhost${path}`,{headers}));
   const lifecycle = {
