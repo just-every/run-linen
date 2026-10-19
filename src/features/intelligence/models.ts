@@ -78,6 +78,8 @@ export async function callModel(ctx: IntelligenceContext, input: {
     connectionId: string;
     commitmentId?: string;
     runId?: string;
+    /** The request this call serves; its charge is reported against that request (REPORT-004). */
+    workId?: string;
     purpose: string;
     prompt: string;
     schema: unknown;
@@ -86,7 +88,7 @@ export async function callModel(ctx: IntelligenceContext, input: {
 }) {
     ctx = await current(ctx);
     const attempt = id(), start = Date.now(), db = ctx.env.DB;
-    await db.prepare("INSERT INTO intelligence_attempts(id,workspace_id,actor_id,commitment_id,run_id,kind,provider,state,charge_status,created_at) VALUES(?,?,?,?,?,'model','openai','preparing','not_dispatched',?)").bind(attempt, ctx.principal.workspaceId, ctx.principal.userId, input.commitmentId || null, input.runId || null, now()).run();
+    await db.prepare("INSERT INTO intelligence_attempts(id,workspace_id,actor_id,commitment_id,run_id,work_id,kind,provider,state,charge_status,created_at) VALUES(?,?,?,?,?,?,'model','openai','preparing','not_dispatched',?)").bind(attempt, ctx.principal.workspaceId, ctx.principal.userId, input.commitmentId || null, input.runId || null, input.workId || null, now()).run();
     let reserved = 0, dispatched = false, cost: number | null = null, usage: unknown = null, requestId: string | null = null;
     try {
         const held: any = await db.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id=?').bind(ctx.principal.workspaceId).first();

@@ -1240,6 +1240,25 @@ that product and marks how close the current code is (see [Status](#status)).
   unresolved and failed work rather than tickets closed. **Acceptance evidence:**
   automate a request type; the report shows prior and current touches/minutes,
   cost per verified outcome and the failures in the same period.
+  Cost semantics: the owner chooses a baseline window (before automation) and a
+  current window, half-open `[from,to)` and non-overlapping; Linen does not infer
+  when automation started. Touches and active minutes are DESK-012's recorded
+  human effort by effort role (employee, agent, approver, owner, vendor,
+  technician); machine runtime is never human work. Labor USD is active minutes
+  / 60 × the owner-declared USD-per-hour rate for the role (cent precision),
+  using the current rates in both windows; only the owner declares rates, and
+  the existing report audience (owner, operator, auditor; normal-sensitivity
+  requests) reads them. Model USD is the configured-price estimate of model
+  calls that named the request (classification, reply/summary, employee
+  intake); a dispatched call without usage is an unknown charge. Linen receives
+  no provider invoice, so every provider dispatch is an unknown charge, never
+  $0. Known cost per verified outcome is the known USD of all work of the type
+  in the window, failed and pending included, divided by the requests whose
+  every duty was independently verified; it is labelled known cost only
+  whenever a role is unpriced or any charge is unknown, and closure never counts
+  as an outcome. A future clause that adds a model purpose, provider or human
+  door that serves a request (CHANNEL-001..008, ACCESS-002..010, AGENT-001)
+  attributes its calls, charges and touches to that request before it ships.
 
 - **REPORT-005 — IT operations and asset KPIs.** Incident MTTA and MTTR by
   priority and service, major-incident count and duration, change success rate,
@@ -1792,8 +1811,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 23 | 59 | 33 | 115 |
-| All | 27 | 79 | 33 | 139 |
+| Target and push further | 24 | 58 | 33 | 115 |
+| All | 28 | 78 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1830,7 +1849,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-009` | Satisfaction surveys | target | missing |  | No CSAT. |
 | `DESK-010` | Custom fields, forms and statuses | target | missing |  | No custom fields, forms, statuses or required-on-status resolution code and close notes. |
 | `DESK-011` | Department workspaces | target | partial | `src/platform/auth.ts`, `src/features/work/core.ts`, `tests/platform/runtime.mjs` | No department workspaces under one portal. |
-| `DESK-012` | Time tracking and effort | target | done | `src/features/work/time.ts`, `src/features/work/effort-report.ts`, `tests/work/time-cases.mjs`, `tests/ui/time-journey.mjs`, `tests/adoption/runtime.mjs` | Local public work/task routes and real 1440/390 browser interval: manual and measured active minutes feed role/request-type effort totals with touches and failed/pending work. Visibility/focus/inactivity pauses, server-bounded sequenced heartbeats, current scope, erasure and inert restored timers are proved. Labor rates and charges remain unavailable; REPORT-004 is not claimed complete. |
+| `DESK-012` | Time tracking and effort | target | done | `src/features/work/time.ts`, `src/features/work/effort-report.ts`, `tests/work/time-cases.mjs`, `tests/ui/time-journey.mjs`, `tests/adoption/runtime.mjs` | Local public work/task routes and real 1440/390 browser interval: manual and measured active minutes feed role/request-type effort totals with touches and failed/pending work. Visibility/focus/inactivity pauses, server-bounded sequenced heartbeats, current scope, erasure and inert restored timers are proved. REPORT-004 prices these minutes at owner-declared role rates. |
 | `DESK-013` | Scheduled and recurring work | target | done | `src/features/work/recurrence.ts`, `src/features/work/recurrence-calendar.ts`; DESK-013 public routes in `tests/work/recurrence-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/recurrence-journey.mjs` via `tests/ui/browser.mjs`, `tests/adoption/recurrence-cases.mjs` via `tests/adoption/runtime.mjs`: calendar tickets/task plans with owners, first business day/holiday, atomic occurrences, DST/month-end, pause/resume, inert restore and 1440/390 journeys. | |
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
 | `DESK-015` | Agent scenarios and record templates | target | missing |  | No agent scenarios or record templates. |
@@ -1888,7 +1907,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `REPORT-001` | Service desk dashboards | target | partial | `src/features/work/knowledge.ts`, `src/features/services/economics.ts`, `tests/adoption/prior-data-upgrade.mjs`, `tests/services/run.mjs` | No dashboards, CSAT, per-agent views or reporting on imported history. |
 | `REPORT-002` | Custom and scheduled reports | target | missing |  | No report builder or scheduling. |
 | `REPORT-003` | Data access for BI | target | partial | `src/features/work/index.ts`, `tests/work/runtime.mjs` | No scheduled BI or warehouse export. |
-| `REPORT-004` | Human work saved | target | partial | `src/features/intelligence/measurement.ts`, `tests/intelligence/runtime.mjs` | No per-request-type touch reporting. |
+| `REPORT-004` | Human work saved | target | done | `src/features/work/effort-report.ts`, `src/features/work/effort-window.ts`, `src/features/work/labor-rates.ts`, `src/ui/work-saved.tsx`, `tests/work/work-saved-cases.mjs`, `tests/work/fulfilment-link-runtime.mjs`, `tests/ui/time-journey.mjs` | Public work/report/execution doors: a request type handled by people in a baseline window and automated in the current window, with role touches/minutes, owner-declared role rates, request-attributed estimated model charges, unknown provider charges, known cost per verified outcome and the failure in the same period; 1440/390 report journey. Live provider invoices are not received, so provider charges stay unknown by design. |
 | `REPORT-005` | IT operations and asset KPIs | target | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No MTTA/MTTR, change success, emergency share or compliance/license KPIs. |
 | `ROLE-001` | Roles and permissions | target | partial | `src/platform/auth.ts`, `tests/ui/browser.mjs`, `tests/platform/runtime.mjs` | Fixed roles; no custom roles. |
 | `SSO-001` | Sign-in, SSO and SCIM | target | partial | `src/platform/sso.ts`, `src/platform/base-auth`, `tests/platform/runtime.mjs`, `tests/platform/base-auth-runtime.mjs` | No SAML/OIDC with named IdPs, SCIM or MFA enforcement. |

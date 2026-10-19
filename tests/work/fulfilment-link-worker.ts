@@ -29,6 +29,14 @@ globalThis.fetch = async (input: RequestInfo | URL, init: RequestInit = {}) => {
     verifierVersion: 1, actionVersion: 1, observedAt: new Date().toISOString(),
     negativeControl: true, usableWorkflow: true, cohort: [url.searchParams.get("beneficiary")],
   });
+  if (url.hostname === "api.openai.com") {
+    // Paid model edge for REPORT-004: a priced classification, or one whose usage the provider omits.
+    const packet = JSON.parse(JSON.parse(String(init.body)).input);
+    if (packet.purpose !== "ticket_classification") throw new Error("Unexpected model request in fulfilment test");
+    const value = { type: "service_request", category: "hardware", subcategory: "laptop", impact: "low", urgency: "medium", reason: "An individual asks for project tool access." };
+    return Response.json({ status: "completed", ...(packet.request.includes("unpriced") ? {} : { usage: { input_tokens: 120, output_tokens: 70, total_tokens: 190 } }),
+      output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify(value) }] }] });
+  }
   throw new Error(`Unexpected external request: ${url.origin}`);
 };
 const app = new Hono<AppEnv>();
@@ -55,6 +63,17 @@ app.post("/test/connections", async c => {
     ["probe", "workflow-probe", { url: "https://workflow.example.test/probe", allowedHosts: ["workflow.example.test"] }, { token: "fixture" }],
   ] as const) await c.env.DB.prepare("INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)")
     .bind(key, "w", provider, key, JSON.stringify(config), await encryptSecret(c.env.ENCRYPTION_KEY, JSON.stringify(secret)), "active", new Date().toISOString(), new Date().toISOString()).run();
+  return c.json({ configured: true });
+});
+app.post("/test/model-connection", async c => {
+  const t = new Date().toISOString();
+  await c.env.DB.batch([
+    c.env.DB.prepare("INSERT INTO connections VALUES('model','w','openai','Model fixture',?,?,'active',1,?,?)")
+      .bind(JSON.stringify({ model: "fixture-model", inputUsdPerMillion: 1, cachedInputUsdPerMillion: 0, outputUsdPerMillion: 2, maxOutputTokens: 1000, maxAttemptUsd: 1 }), await encryptSecret(c.env.ENCRYPTION_KEY, JSON.stringify({ apiKey: "synthetic-report-model-key" })), t, t),
+    c.env.DB.prepare("INSERT INTO workspace_settings(workspace_id,settings_json) VALUES('w','{}') ON CONFLICT(workspace_id) DO NOTHING"),
+    c.env.DB.prepare("UPDATE workspace_settings SET settings_json=json_set(settings_json,'$.defaultModelConnectionId','model') WHERE workspace_id='w'"),
+    c.env.DB.prepare("INSERT INTO intelligence_budgets(workspace_id,limit_usd) VALUES('w',10) ON CONFLICT(workspace_id) DO UPDATE SET limit_usd=10"),
+  ]);
   return c.json({ configured: true });
 });
 app.post("/test/deny-write", async c => { deniedWrites.add((await c.req.json()).target); return c.json({ configured: true }); });

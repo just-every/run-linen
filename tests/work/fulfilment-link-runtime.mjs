@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { workSavedChecks } from './work-saved-cases.mjs';
 import { readFile, readdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -132,5 +133,7 @@ try {
   assert.ok(expiredDuties.every(o => o.state === 'verified'));
   const expiryCount = await count(); await ok('/work/process-due', {}); assert.equal(await count(), expiryCount);
   assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_fulfilment_link_guards').first()).n, 0);
+  await workSavedChecks({ api, ok, actor });
+  console.log('REPORT-004 passed: baseline vs automated request type, role minutes at declared rates, request-attributed model charges, unknown provider charges and the failure in the same period');
   console.log('FULFILMENT LINK passed: real D1/workerd; employee + automation/grants + reviewed distinct provider mapping; initial/expiry atomic binding and replay; stranger/workspace/work/provider/change/amendment rejection; no duplicate dispatch; independent verification and pending revocation; truthful missing configuration/unknown/cancellation; no external provider traffic');
 } finally { await mf.dispose(); await rm(dir, { recursive: true, force: true }); }

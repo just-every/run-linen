@@ -137,10 +137,28 @@ request type and effort role. The declared cohort is work created in the period,
 plus work with effort entries started in it; each entry's total is reported
 through `asOf`. Request type is the first selected catalog service, or work kind
 when none is selected. Pending, failed and verified obligations remain visible;
-closure does not establish verification. This is the human-effort input to
-REPORT-004, with unavailable charges/rates explicit; it does not establish a
-before/after savings claim. Reports include normal-sensitivity work only and
-require current owner/operator/auditor membership.
+closure does not establish verification. The cohort also includes work with
+request-attributed model calls or provider dispatches started in the period.
+Reports include normal-sensitivity work only and require current
+owner/operator/auditor membership.
+
+REPORT-004. `GET /reports/labor-rates` (report readers) and
+`POST /reports/labor-rates {rates:{role:usdPerHour|null}}` (owner only, audited)
+hold the declared USD-per-active-hour rate for each effort role (`employee`,
+`agent`, `approver`, `owner`, `vendor`, `technician`), rounded to the cent;
+`null` withdraws a rate. Rates are costing assumptions per role, never a
+person's pay, and live in local workspace settings (not archived; re-declare
+after a restore). `GET /reports/work-saved?baselineFrom&baselineTo&currentFrom&currentTo`
+returns, per request type, the owner-chosen baseline window (before automation)
+beside the current window: incoming/verified/failed/pending/closed requests,
+touches and active minutes by effort role, labor USD at the current declared
+rates, estimated model USD of calls that named the request
+(`classification`, `reply`/`summary`, employee intake) with unknown-charge
+counts, provider dispatch attempts (always unknown charge: Linen receives no
+provider invoice), known cost, `costComplete`, and known cost per verified
+outcome (all work of the type in the window, including failed and pending
+work, divided by verified outcomes; `null` with none). Windows are
+half-open `[from,to)` ISO instants and must not overlap; amounts are unrounded.
 
 Native and full-installation archives retain recorded effort, while restoring all
 timers completed with no live heartbeat authority. Person erasure clears private

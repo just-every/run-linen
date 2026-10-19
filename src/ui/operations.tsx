@@ -1,4 +1,5 @@
 import { EffortReport, type EffortReportData } from "./effort-report";
+import { LaborRatesForm, WorkSavedReport, type WorkSavedData } from "./work-saved";
 import type { ReviewedMapping, CatalogChoice } from "./setup-permissions";
 import { settingsSections } from "./shell-rail";
 import { useState, type FormEvent } from "react";
@@ -260,13 +261,29 @@ export function OperationsSpace({ section }: { section: string }) {
 export function ReportSpace() {
   const [from, setFrom] = useState(""),
     [to, setTo] = useState(""),
+    [baselineFrom, setBaselineFrom] = useState(""),
+    [baselineTo, setBaselineTo] = useState(""),
     [path, setPath] = useState<string | null>(null),
-    report = useRemote<RecordValue>(path);
+    [savedPath, setSavedPath] = useState<string | null>(null),
+    { session } = useSession(),
+    report = useRemote<RecordValue>(path),
+    saved = useRemote<WorkSavedData>(savedPath),
+    rates = useRemote<{ rates: Record<string, number> }>("/reports/labor-rates");
+  const iso = (value: string) => encodeURIComponent(new Date(value).toISOString());
   function run(e: FormEvent) {
     e.preventDefault();
     setPath(
-      `/reports/work?from=${encodeURIComponent(new Date(from).toISOString())}&to=${encodeURIComponent(new Date(to).toISOString())}&timezone=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`,
+      `/reports/work?from=${iso(from)}&to=${iso(to)}&timezone=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`,
     );
+    // REPORT-004: an owner-chosen baseline window (before automation) beside this period.
+    setSavedPath(baselineFrom && baselineTo
+      ? `/reports/work-saved?baselineFrom=${iso(baselineFrom)}&baselineTo=${iso(baselineTo)}&currentFrom=${iso(from)}&currentTo=${iso(to)}`
+      : null);
+  }
+  function ratesSaved() {
+    rates.refresh();
+    report.refresh();
+    saved.refresh();
   }
   return (
     <>
@@ -296,9 +313,29 @@ export function ReportSpace() {
               onChange={(e) => setTo(e.target.value)}
             />
           </label>
+          <label>
+            Baseline from
+            <input
+              type="datetime-local"
+              value={baselineFrom}
+              onChange={(e) => setBaselineFrom(e.target.value)}
+            />
+          </label>
+          <label>
+            Baseline until
+            <input
+              type="datetime-local"
+              value={baselineTo}
+              onChange={(e) => setBaselineTo(e.target.value)}
+            />
+          </label>
         </div>
+        <p>Add a baseline window before an automation to compare human work and cost per verified outcome with this period.</p>
         <button className="action primary">Read this period</button>
       </form>
+      {session.principal.roles.includes("owner") && rates.data && (
+        <LaborRatesForm rates={rates.data.rates} onSaved={ratesSaved} />
+      )}
       {report.loading ? (
         <Loading />
       ) : report.error ? (
@@ -315,6 +352,7 @@ export function ReportSpace() {
                 ["Verification coverage", report.data.verificationCoverage],
               ]}
             />
+            {saved.error ? <ErrorNotice error={saved.error} retry={saved.refresh} /> : saved.data && <WorkSavedReport value={saved.data} />}
             {report.data.effort && <EffortReport value={report.data.effort as unknown as EffortReportData} />}
             <Evidence
               value={report.data.rows}

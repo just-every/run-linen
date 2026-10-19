@@ -33,6 +33,24 @@ export async function timeJourney({page,base,api,workId,out}) {
   await page.getByRole('heading',{name:'Human effort',exact:true}).waitFor();
   await captureJourney(page,{path:`${out}/DESK-012-effort.png`,fullPage:true});
   console.log('PASS DESK-012: manual and real measured active work feed the effort report at 1440/390');
+  // REPORT-004: the owner declares a role rate, then reads a baseline window beside this period.
+  await page.getByText('Declare labor rates',{exact:true}).click();
+  await page.getByLabel('Owner rate (USD/hour)',{exact:true}).fill('90');
+  await page.getByRole('button',{name:'Save labor rates',exact:true}).click();
+  await page.waitForFunction(async()=>(await (await fetch('/api/v1/reports/labor-rates')).json()).rates?.owner===90);
+  await page.getByLabel('Baseline from',{exact:true}).fill('2000-01-01T00:00');
+  await page.getByLabel('Baseline until',{exact:true}).fill('2001-01-01T00:00');
+  await page.getByLabel('From',{exact:true}).fill('2001-01-01T00:00');
+  await page.getByRole('button',{name:'Read this period',exact:true}).click();
+  await page.getByRole('heading',{name:'Human work saved',exact:true}).waitFor();
+  const saved=await api(`/reports/work-saved?baselineFrom=2000-01-01T00:00:00.000Z&baselineTo=2001-01-01T00:00:00.000Z&currentFrom=2001-01-01T00:00:00.000Z&currentTo=2099-01-01T00:00:00.000Z`);
+  const row=saved.requestTypes.find(r=>r.current?.byRole.owner);
+  assert.equal(row.baseline,null);assert.ok(row.current.labor.usd>=15/60*90);
+  const table=page.getByRole('table',{name:`${row.requestType}: baseline beside current`});
+  await table.getByRole('row',{name:/^Labor /}).getByText(`$${row.current.labor.usd.toFixed(2)}`,{exact:true}).waitFor();
+  await table.getByRole('row',{name:/^Cost per verified outcome/}).waitFor();
+  await captureJourney(page,{path:`${out}/REPORT-004-work-saved.png`,fullPage:true});
+  console.log('PASS REPORT-004: owner-declared role rate prices recorded minutes in the baseline/current work-saved report at 1440/390');
   return {workId,entries};
   } finally {
     await focus.send('Emulation.setFocusEmulationEnabled', { enabled: false });
