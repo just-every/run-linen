@@ -1,7 +1,7 @@
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
 import { type Kind } from './store';
-const kinds: Kind[] = ['problem-proposal', 'service', 'edge', 'incident', 'problem', 'change', 'supplier', 'asset', 'monitor', 'oncall', 'decision', 'person'];
+const kinds: Kind[] = ['calendar-window','problem-proposal', 'service', 'edge', 'incident', 'problem', 'change', 'supplier', 'asset', 'monitor', 'oncall', 'decision', 'person'];
 export async function restoreAdoptionRecord(ctx: {
     env: Env;
     principal: Principal;
@@ -63,7 +63,9 @@ export async function restoreAdoptionRecord(ctx: {
         throw new ApiError(409, 'restore_collision', 'Existing owner record must not be overwritten');
     }
     data.adoption = { sourceId: input.sourceId, sourceKey: input.sourceKey, restoredAt: now(), historical: true };
+    if(row.kind==='calendar-window')data.active=false;
     if (row.kind === 'change') {
+        data.emergencySchedulingActor=null;
         data.priorAuthorizations = [...(data.priorAuthorizations || []), ...(data.authorizations || [])];
         data.authorizations = [];
         data.importedState = data.state;

@@ -1,3 +1,4 @@
+import { ChangeCalendar } from './change-calendar';
 import { ProblemProposals } from './problem-proposals';
 import { DependencyDetails } from "./dependency-details";
 import { ProblemDetails } from "./problem-actions";
@@ -196,6 +197,7 @@ export function ServiceSpace({
           <Badge value={d.state ?? d.status ?? d.lifecycle ?? "recorded"} />
         )}
       </Hero>
+      {section === "changes" && !selectedId && <ChangeCalendar/>}
       {selectedId ? (
         detail.loading ? (
           <Loading />

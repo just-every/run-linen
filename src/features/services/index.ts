@@ -1,3 +1,4 @@
+import { registerCalendarRoutes } from './calendar-routes';
 import { recurrenceContext } from './recurrence-context';
 import { publishWorkaround, presentProblem } from './problem-knowledge';
 import type { Hono } from 'hono';
@@ -43,6 +44,7 @@ async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
     return { ...r, data: { ...r.data, links, diagnostics: [], recoveries: (r.data.recoveries || []).map((e: any) => ({ cohort: e.cohort, observedAt: e.observedAt, expiresAt: e.expiresAt })), updates: (r.data.updates || []).filter((u: any) => u.audience.includes(p.userId)).map((u: any) => ({ message: u.message, at: u.at })) } };
 }
 export function registerServiceRoutes(app: Hono<AppEnv>) {
+    registerCalendarRoutes(app);
     setChangeExecutionPort(changeExecutionPort);
     setServiceWorkPort(serviceWorkPort);
     app.get('/problem-proposals', async c => c.json(await listProblemProposals(c.env,c.get('principal'))));

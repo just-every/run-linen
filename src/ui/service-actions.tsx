@@ -162,6 +162,10 @@ export function ServiceActions({
             method="PATCH"
             defaults={defaults}
             fields={[
+              {name:"emergency",label:"Emergency change",type:"checkbox",value:d.emergency},
+              {name:"emergencyReason",label:"Emergency reason",type:"textarea",value:d.emergencyReason || ""},
+              {name:"windowStart",label:"New window starts",type:"datetime-local",hint:"Leave both new window fields blank to retain the exact recorded window."},
+              {name:"windowEnd",label:"New window ends",type:"datetime-local"},
               {
                 name: "implementation",
                 label: "Changed exact implementation",
@@ -184,6 +188,7 @@ export function ServiceActions({
               },
             ]}
             explanation="This invalidates prior decisions for the changed implementation. Active effects must first be reconciled."
+            transform={values=>{const {windowStart,windowEnd,...rest}=values;if(Boolean(windowStart)!==Boolean(windowEnd))throw Error("Set both new window bounds, or leave both blank.");return windowStart?{...rest,window:{start:windowStart,end:windowEnd}}:rest;}}
             onSaved={refresh}
           />
         </>

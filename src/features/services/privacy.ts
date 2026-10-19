@@ -1,3 +1,4 @@
+import { erasedCalendarPolicy } from './calendar-privacy';
 import { eraseProblemArticles } from './problem-privacy';
 import { eraseKnowledgeDraftPerson } from '../work/knowledge-draft-privacy';
 import type { Env, Principal } from '../../platform/types';
@@ -54,7 +55,8 @@ export async function eraseServicePerson(ctx: {
         if (!affected)
             continue;
         affectedRecords.add(r.id);
-        const data = redact(JSON.parse(r.data_json));
+        const original=JSON.parse(r.data_json),redacted=redact(original);
+        const data = r.kind==='calendar-window'?erasedCalendarPolicy(original,redacted):redacted;
         if (r.kind === 'change') {
             data.priorAuthorizations = [];
             data.authorizations = [];

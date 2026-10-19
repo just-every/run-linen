@@ -1,3 +1,4 @@
+import { calendarJourney } from './calendar-journey.mjs';
 import { searchJourney } from './search-journey.mjs';
 import { unsentReplyJourney } from './response-journey.mjs';
 import { problemDetectionJourney } from './problem-detection-journey.mjs';
@@ -560,6 +561,7 @@ try {
   }
   await dependencyJourney({page,api,base,out});
   await searchJourney({page,api,base,out});
+  await calendarJourney({page,api,base,out});
   await problemDetectionJourney({page,api,base,out});
   await recurrenceJourney({page,api,base,out});
   await assetFinancialJourney({page,api,base,out});

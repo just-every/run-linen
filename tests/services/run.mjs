@@ -1,3 +1,4 @@
+import { calendarChecks } from './calendar-cases.mjs';
 import { dependencyChecks } from './dependency-cases.mjs';
 import { sqlStatements } from '../sql-migrations.mjs';
 import assert from 'node:assert/strict'
@@ -16,9 +17,10 @@ try{
  const db=await mf.getD1Database('DB')
  const schema=await readFile(new URL('../../migrations/0300_services.sql',import.meta.url),'utf8')
  await db.exec('CREATE TABLE memberships(workspace_id TEXT,user_id TEXT,roles_json TEXT,active INTEGER); CREATE TABLE audit_events(id TEXT,workspace_id TEXT,actor_id TEXT,action TEXT,target TEXT,detail_json TEXT,created_at TEXT); CREATE TABLE connections(id TEXT,workspace_id TEXT,provider TEXT,status TEXT,config_json TEXT,secret_ciphertext TEXT,revision INTEGER DEFAULT 1); CREATE TABLE connection_validations(workspace_id TEXT,connection_id TEXT,connection_revision INTEGER,validated_at TEXT,state TEXT,evidence_json TEXT,PRIMARY KEY(workspace_id,connection_id)); CREATE TABLE workspace_settings(workspace_id TEXT,settings_json TEXT); CREATE TABLE adoption_holds(workspace_id TEXT,state TEXT); CREATE TABLE adoption_ownership(workspace_id TEXT,resource TEXT,action TEXT);')
- for(const sql of sqlStatements(schema))await db.prepare(sql).run();await db.exec("CREATE TABLE work_records(id TEXT,workspace_id TEXT,requester_id TEXT,beneficiary_id TEXT,sensitivity TEXT,kind TEXT,state TEXT DEFAULT 'open',created_at TEXT DEFAULT '2020-01-01',context_json TEXT DEFAULT '{}',revision INTEGER DEFAULT 1); INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,sensitivity,kind) VALUES('work-1','w1','employee','employee','normal','incident');")
+ for(const sql of sqlStatements(schema))await db.prepare(sql).run();
+ for(const sql of sqlStatements(await readFile(new URL('../../migrations/0749_change_calendar.sql',import.meta.url),'utf8')))await db.prepare(sql).run();await db.exec("CREATE TABLE work_records(id TEXT,workspace_id TEXT,requester_id TEXT,beneficiary_id TEXT,sensitivity TEXT,kind TEXT,state TEXT DEFAULT 'open',created_at TEXT DEFAULT '2020-01-01',context_json TEXT DEFAULT '{}',revision INTEGER DEFAULT 1); INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,sensitivity,kind) VALUES('work-1','w1','employee','employee','normal','incident');")
  for(const [w,u,roles] of [['w1','owner',['owner']],['w1','employee',['employee']],['w1','operator',['operator']],['w1','approver',['approver']],['w2','owner',['owner']]])await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind(w,u,JSON.stringify(roles)).run()
- async function request(method,url,body,headers={}){const response=await mf.dispatchFetch('http://localhost'+url,{method,headers:{'Content-Type':'application/json',...headers},body:body?JSON.stringify(body):undefined});const json=await response.json();return {status:response.status,json}}
+ async function request(method,url,body,headers={}){const response=await mf.dispatchFetch('http://localhost'+url,{method,headers:{'Content-Type':'application/json',...headers},body:body?JSON.stringify(body):undefined});const json=response.headers.get('content-type')?.includes('text/calendar')?await response.text():await response.json();return {status:response.status,json,headers:Object.fromEntries(response.headers)}}
  async function ok(method,url,body,headers){const r=await request(method,url,body,headers);assert.ok(r.status<300,JSON.stringify(r));return r.json}
  const service=await ok('POST','/services',{name:'Orders',description:'Order entry',businessImpact:'Sales cannot work',source:'owner',observedAt:new Date().toISOString(),visibility:'workspace'})
  const privateService=await ok('POST','/services',{name:'Private',description:'Restricted',businessImpact:'Restricted',source:'owner',observedAt:new Date().toISOString(),visibility:'restricted'})
@@ -44,7 +46,7 @@ try{
  assert.equal((await request('POST',`/changes/${change.id}/dispatch`,{revision:change.revision,phase:'canary',idempotencyKey:'first'})).status,409)
  change=await ok('POST',`/changes/${change.id}/authorize`,{revision:change.revision,reason:'Approve amended plan',grantReferences:[{id:'g',version:2}]})
  let conflict=await ok('POST','/changes',changeBody);conflict=await ok('POST',`/changes/${conflict.id}/authorize`,{revision:conflict.revision,reason:'Conflicting plan',grantReferences:[{id:'g',version:1}]})
- assert.equal((await request('POST',`/changes/${change.id}/dispatch`,{revision:change.revision,phase:'canary',idempotencyKey:'first'})).json.error.code,'conflicting_change')
+ assert.equal((await request('POST',`/changes/${change.id}/dispatch`,{revision:change.revision,phase:'canary',idempotencyKey:'first'})).json.error.code,'conflicting_change','CHANGE-004 admitted same-CI overlapping changes cannot dispatch')
  await db.prepare("UPDATE svc_records SET data_json=json_set(data_json,'$.state','cancelled') WHERE id=?").bind(conflict.id).run()
  change=await ok('POST',`/changes/${change.id}/dispatch`,{revision:change.revision,phase:'canary',idempotencyKey:'first'})
  change=await ok('POST',`/changes/${change.id}/verify`,{revision:change.revision,invocationId:change.data.invocations[0].id});assert.equal(change.data.state,'canary-verified')
@@ -84,5 +86,6 @@ try{
  const delivered=await ok('POST','/services/process-due',{});assert.ok(delivered.notifications.some(n=>n.state==='submitted'),'Configured provider submission uses real notification adapter');
  const submitted=(await ok('GET','/service-notifications')).items.find(n=>n.state==='submitted');assert.ok(submitted);const reconciled=await ok('POST',`/service-notifications/${submitted.id}/reconcile`,{});assert.equal(reconciled.state,'delivered','Fresh provider readback establishes delivery');
  await dependencyChecks(request);
+ await calendarChecks(request,db);
  console.log('SERVICES: real D1 privacy/tenant isolation, graph stale conflicts, private audience denial, independent partial cohort recovery, wrong-link correction, amended approval invalidation, conflicting windows, canary dispatch, incomplete compensation, supplier breaches, scoped business decisions and signed monitoring/replay rejection/staleness/automatic incident and on-call routing and actual notification adapter submission/readback and honest report denominators passed')
 }finally{await mf.dispose();await rm(dir,{recursive:true,force:true})}

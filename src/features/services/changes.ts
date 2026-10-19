@@ -1,3 +1,5 @@
+import { currentPrincipal } from '../work/identity';
+import { assertCalendarSchedule, emergencySchedulingActor } from './calendar';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { create, date, getService, list, mutate, strings, type ServiceRecord, dto, type RecordRow } from './store';
@@ -51,13 +53,28 @@ export async function validateChange(db: D1Database, p: Principal, b: Record<str
     const dependencies = Array.isArray(b.dependencies) ? b.dependencies : [];
     for (const d of dependencies)
         await getService(db, p, d, 'change');
-    return { title: requiredString(b.title, 'title'), risk: requiredString(b.risk, 'risk'), impact: requiredString(b.impact, 'impact'), services, window, cohorts, canaryCohorts: canary, dependencies, implementation: b.implementation, compensation: b.compensation, emergency: b.emergency === true, emergencyReason: b.emergency ? requiredString(b.emergencyReason, 'emergencyReason') : null };
+    return { title: requiredString(b.title, 'title'), risk: requiredString(b.risk, 'risk'), impact: requiredString(b.impact, 'impact'), services, window, cohorts, canaryCohorts: canary, dependencies, implementation: b.implementation, compensation: b.compensation, emergency: b.emergency === true, emergencyReason: b.emergency ? requiredString(b.emergencyReason, 'emergencyReason') : null, emergencySchedulingActor: emergencySchedulingActor(p,b) };
 }
-export async function newChange(db: D1Database, p: Principal, b: Record<string, any>) { return create(db, p, 'change', { ...await validateChange(db, p, b), implementationRevision: 1, state: 'draft', authorizations: [], invocations: [] }, { visibility: b.visibility, participants: b.participants }); }
+export async function newChange(db: D1Database, p: Principal, b: Record<string, any>) {
+    p=await currentPrincipal(db,p);
+    const data={...await validateChange(db,p,b),implementationRevision:1,state:'draft',authorizations:[],invocations:[]};
+    await assertCalendarSchedule(db,p,data);
+    try { return await create(db,p,'change',data,{visibility:b.visibility,participants:b.participants}); }
+    catch(error) { throw calendarError(error); }
+}
+function calendarError(error:unknown) {
+    if(String(error).includes('calendar_frozen'))return new ApiError(409,'calendar_frozen','Scheduling is blocked by calendar policy; current owner emergency authority and a reason are required');
+    if(String(error).includes('calendar_schedule_invalid'))return new ApiError(422,'calendar_schedule_invalid','A valid scheduled window and configuration items are required');
+    return error;
+}
 export async function editChange(db: D1Database, p: Principal, r: ServiceRecord, b: Record<string, any>) {
+    p=await currentPrincipal(db,p);
     if ((r.data.invocations || []).some((i: any) => !['verified', 'failed', 'cancelled'].includes(i.state)))
         throw new ApiError(409, 'in_flight', 'Reconcile active effects before changing implementation');
-    return mutate(db, p, r, b.revision, { ...r.data, ...await validateChange(db, p, { ...r.data, ...b }), implementationRevision: r.data.implementationRevision + 1, state: 'draft', authorizations: [], priorAuthorizations: [...(r.data.priorAuthorizations || []), ...(r.data.authorizations || [])] }, 'implementation-amended');
+    const data={...r.data,...await validateChange(db,p,{...r.data,...b}),emergencySchedulingActor:emergencySchedulingActor(p,b),implementationRevision:r.data.implementationRevision+1,state:'draft',authorizations:[],priorAuthorizations:[...(r.data.priorAuthorizations||[]),...(r.data.authorizations||[])]};
+    await assertCalendarSchedule(db,p,data);
+    try { return await mutate(db,p,r,b.revision,data,'implementation-amended'); }
+    catch(error) { throw calendarError(error); }
 }
 export async function authorizeChange(db: D1Database, p: Principal, r: ServiceRecord, b: Record<string, any>) {
     if (!p.roles.some(x => ['owner', 'approver'].includes(x)))
@@ -72,6 +89,7 @@ export async function authorizeChange(db: D1Database, p: Principal, r: ServiceRe
 }
 export async function changeGate(db: D1Database, p: Principal, r: ServiceRecord, phase: string, at = Date.now()) {
     const d = r.data;
+    if(phase!=='compensate')await assertCalendarSchedule(db,p,d);
     if (!d.authorizations?.some((a: any) => a.implementationRevision === d.implementationRevision))
         throw new ApiError(409, 'authorization', 'Current implementation requires a decision');
     if (phase !== 'compensate' && (at < Date.parse(d.window.start) || at >= Date.parse(d.window.end)))
@@ -119,7 +137,15 @@ export async function dispatchChange(env: Env, p: Principal, r: ServiceRecord, b
         if (lock?.change_id !== r.id)
             throw new ApiError(409, 'resource_busy', 'Affected service is fenced by another change');
     }
-    let next = await mutate(env.DB, p, r, b.revision, { ...r.data, state: 'dispatching', invocations: [...r.data.invocations, { ...invocation, state: 'dispatching' }] }, 'execution-intent');
+    let next:ServiceRecord;
+    try {next=await mutate(env.DB,p,r,b.revision,{...r.data,state:'dispatching',invocations:[...r.data.invocations,{...invocation,state:'dispatching'}]},'execution-intent');}
+    catch(error) {
+        if(String(error).includes('calendar_frozen'))await env.DB.prepare(`DELETE FROM svc_change_locks WHERE workspace_id=? AND change_id=?
+          AND EXISTS(SELECT 1 FROM svc_records r WHERE r.workspace_id=svc_change_locks.workspace_id AND r.id=svc_change_locks.change_id
+            AND json_array_length(r.data_json,'$.invocations')=0)`)
+          .bind(p.workspaceId,r.id).run();
+        throw calendarError(error);
+    }
     try {
         const result = await execution.invoke(env, p, invocation);
         next = await mutate(env.DB, p, next, next.revision, { ...next.data, state: result.state, invocations: next.data.invocations.map((i: any) => i.id === invocation.id ? { ...i, ...result } : i) }, 'execution-dispatched');

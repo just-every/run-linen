@@ -55,6 +55,10 @@ export function references(record: NativeRecord): Reference[] {
         for (const link of data.workarounds || []) if (link && typeof link.articleId === 'string')
             out.push({fromTable:record.table,fromKey:record.key,field:'data.workarounds.articleId',targets:['work_knowledge'],key:link.articleId});
     }
+    if(record.table==='svc_records'&&record.row.kind==='calendar-window') {
+        const data=JSON.parse(String(record.row.data_json));
+        for(const service of data.services||[])out.push({fromTable:record.table,fromKey:record.key,field:'data.services',targets:['svc_records'],key:service});
+    }
     if (record.table === 'svc_events' && record.row.record_id)
         out.push({ fromTable: record.table, fromKey: record.key, field: 'record_id', targets: ['svc_records'], key: String(record.row.record_id) });
     return out;

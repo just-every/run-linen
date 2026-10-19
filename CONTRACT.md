@@ -1030,6 +1030,30 @@ that product and marks how close the current code is (see [Status](#status)).
   detection and an ICS feed. **Acceptance evidence:** a change scheduled into a
   year-end freeze is refused without emergency authority; two changes on the
   same CI in overlapping windows conflict.
+  Only the current owner manages freeze and maintenance windows. A window may
+  name CIs or cover the workspace; its bounds are UTC instants, inclusive at the
+  start and exclusive at the end. Calendar range filtering uses the same overlap
+  rule, with dates displayed in the selected IANA time zone. Draft changes remain
+  possible and their overlaps are shown; existing dispatch conflict checks still
+  refuse conflicting admitted changes. An active freeze refuses a new schedule,
+  implementation edit or dispatch that overlaps a covered CI. Bypass requires an
+  owner-recorded emergency flag and reason, with that owner's membership still
+  current; a submitted actor ID or an operator's emergency flag grants nothing.
+  This authorizes scheduling only: execution keeps its separate versioned grants
+  and change approvals, and compensation keeps its existing separate grant.
+  Database admission and effect-time checks fence a freeze added after planning.
+  Reads and the ICS download require a session and inherit current record scope;
+  inaccessible conflicts produce one generic warning per visible affected change,
+  without exposing the hidden record or its count. Privileged reads/exports are
+  audited. Inactive restored windows require explicit current-owner reactivation;
+  restored changes retain no emergency scheduling authority. Person erasure
+  preserves typed calendar policy (kind, bounds, CIs and active state) while
+  pseudonymizing owner/audit actors and scrubbing title/adoption free text; it
+  never withdraws a business freeze. ICS uses stable
+  workspace/record UIDs and revision sequences, UTC seconds (start rounded down,
+  end rounded up to enclose the exact interval), escaped/folded text and tentative
+  planned events, with cancelled changes marked cancelled. Inactive windows do
+  not enter the feed. Calendar entries never claim provider execution.
 
 - **CHANGE-005 — Rollback, change-caused incidents and post-implementation review.**
   Backout runs under its own grant with readback. Each change names the
@@ -1723,8 +1747,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 20 | 62 | 33 | 115 |
-| All | 24 | 82 | 33 | 139 |
+| Target and push further | 21 | 61 | 33 | 115 |
+| All | 25 | 81 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1806,7 +1830,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CHANGE-001` | Change types and templates | target | partial | `src/features/services/changes.ts`, `tests/services/run.mjs` | No templates or standard-change catalog. |
 | `CHANGE-002` | Risk scoring | target | partial | `src/features/services/changes.ts` | No scoring. |
 | `CHANGE-003` | Change advisory board | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No CAB, meetings or votes. |
-| `CHANGE-004` | Change calendar and freeze windows | target | partial | `src/features/services/changes.ts`, `tests/ui/connected-change.mjs` | No calendar, freeze windows or ICS. |
+| `CHANGE-004` | Change calendar and freeze windows | target | done | `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs` | Public routes and connected execution prove scoped calendar/maintenance/freeze/ICS, half-open CI/workspace bounds, schedule/edit/later-dispatch refusal, owner emergency scheduling with separate effect grants, current role and generic hidden conflicts. Native archive preserves links with windows inactive until owner review; native 1440/390 calendar, editor, emergency and inactive states are inspected. Local evidence only. |
 | `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No automatic incident linking, health-check gate on success or PIR. |
 | `CHANGE-006` | Development-tool context | target | partial | `src/features/intelligence/engineering.ts` | No GitHub/Jira/Vector links or deployment-raised changes. |
 | `CHANGE-007` | Release management | target | partial | `src/features/services/changes.ts`, `src/features/execution/deployment.ts`, `tests/ui/connected-change.mjs` | No release records, go/no-go or release notes. |

@@ -14,6 +14,8 @@ export function NewChange({ onSaved }: { onSaved: (r: RecordValue) => void }) {
   const selected = deployment.find(c => c.id === connectionId);
   const targets: string[] = selected ? JSON.parse(String(selected.config_json)).targets ?? [] : [];
   const fields: Field[] = [
+    { name: "emergency", label: "Emergency change", type: "checkbox", hint: "A current owner must record the reason to schedule inside a freeze. Execution still requires its own grants." },
+    { name: "emergencyReason", label: "Emergency reason", type: "textarea" },
     { name: "title", label: "Intended change", required: true },
     { name: "service", label: "Affected service", type: "select", required: true, options: services.data?.items.map(s => ({ value: s.id, label: text(s.data.name) })) },
     { name: "risk", label: "Risk and uncertainty", type: "textarea", required: true },
@@ -37,7 +39,7 @@ export function NewChange({ onSaved }: { onSaved: (r: RecordValue) => void }) {
       const implementation = { connectionId: selected.id, connectionRevision: selected.revision, verifierConnectionId: verifier.id,
         verifierConnectionRevision: verifier.revision, target: f.get("target"), beneficiaryId: v.beneficiary, payload: { release: v.release } };
       const result = await mutation.mutate<RecordValue>("/changes", {
-        title: v.title, risk: v.risk, impact: v.impact, services: [v.service], cohorts: v.cohorts, canaryCohorts: v.canaryCohorts,
+        title: v.title, emergency: v.emergency, emergencyReason: v.emergencyReason, risk: v.risk, impact: v.impact, services: [v.service], cohorts: v.cohorts, canaryCohorts: v.canaryCohorts,
         window: { start: v.windowStart, end: v.windowEnd }, dependencies: [], participants: [], visibility: "operators",
         implementation, compensation: { ...implementation, payload: { release: v.compensationRelease } },
       });
