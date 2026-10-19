@@ -263,6 +263,7 @@ export function ReportSpace() {
     [to, setTo] = useState(""),
     [baselineFrom, setBaselineFrom] = useState(""),
     [baselineTo, setBaselineTo] = useState(""),
+    [cohort, setCohort] = useState(""),
     [path, setPath] = useState<string | null>(null),
     [savedPath, setSavedPath] = useState<string | null>(null),
     { session } = useSession(),
@@ -277,7 +278,7 @@ export function ReportSpace() {
     );
     // REPORT-004: an owner-chosen baseline window (before automation) beside this period.
     setSavedPath(baselineFrom && baselineTo
-      ? `/reports/work-saved?baselineFrom=${iso(baselineFrom)}&baselineTo=${iso(baselineTo)}&currentFrom=${iso(from)}&currentTo=${iso(to)}`
+      ? `/reports/work-saved?baselineFrom=${iso(baselineFrom)}&baselineTo=${iso(baselineTo)}&currentFrom=${iso(from)}&currentTo=${iso(to)}${cohort.split(",").map((t) => t.trim()).filter(Boolean).map((t) => `&requestType=${encodeURIComponent(t)}`).join("")}`
       : null);
   }
   function ratesSaved() {
@@ -330,6 +331,10 @@ export function ReportSpace() {
             />
           </label>
         </div>
+        <label>
+          Cohort request types (optional, comma-separated)
+          <input value={cohort} placeholder="All request types" onChange={(e) => setCohort(e.target.value)} />
+        </label>
         <p>Add a baseline window before an automation to compare human work and cost per verified outcome with this period.</p>
         <button className="action primary">Read this period</button>
       </form>

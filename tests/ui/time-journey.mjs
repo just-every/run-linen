@@ -50,6 +50,12 @@ export async function timeJourney({page,base,api,workId,out}) {
   await table.getByRole('row',{name:/^Labor /}).getByText(`$${row.current.labor.usd.toFixed(2)}`,{exact:true}).waitFor();
   await table.getByRole('row',{name:/^Cost per verified outcome/}).waitFor();
   await captureJourney(page,{path:`${out}/REPORT-004-work-saved.png`,fullPage:true});
+  // AGENT-006: the same report carries the ranked proposal, or says why nothing is ranked.
+  const proposal=page.getByRole('region',{name:'Next automation proposal'}),next=saved.automationProposal.next;
+  await proposal.getByText(next?`Automate ${next.requestType} next`:'No ranked request type still takes human minutes.',{exact:false}).first().waitFor();
+  for(const type of saved.automationProposal.notEnoughEvidence)await proposal.getByText(type,{exact:false}).first().waitFor();
+  await proposal.scrollIntoViewIfNeeded();
+  await captureJourney(page,{path:`${out}/AGENT-006-next-automation.png`,fullPage:true});
   console.log('PASS REPORT-004: owner-declared role rate prices recorded minutes in the baseline/current work-saved report at 1440/390');
   return {workId,entries};
   } finally {
