@@ -1077,6 +1077,19 @@ that product and marks how close the current code is (see [Status](#status)).
   the approval path. **Acceptance evidence:** a change touching SSO with a prior
   failed change scores high and requires CAB; the same change on a test CI scores
   low.
+  *Today's semantic:* four questions (a user-facing outage is expected; the
+  backout is untested; it is the first change of its kind; it touches
+  authentication or security) score +2 each when answered yes or left
+  unanswered. A production configuration item scores +3 (items are production,
+  test or development; items recorded before this existed count as production).
+  A window with any minute inside the named business calendar's hours scores +1,
+  and so does a change that names no calendar. Each failed or compensated change
+  on the same items whose window started in the prior 180 days scores +3, at most
+  +6. A score of 8 or more is high, 4 to 7 medium, 3 or less low. High and medium
+  take the CAB path; low takes one independent change-manager approval (an owner
+  or approver, never the change's owner). Emergency changes stay on ECAB and
+  standard changes on the catalog. The score, band and each factor are shown on
+  the change, and an edit recomputes them and withdraws any approval.
 
 - **CHANGE-003 — Change advisory board.** CAB membership, scheduled meetings
   with an agenda of pending changes, votes and quorum, approval from Slack,
@@ -1855,8 +1868,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 27 | 55 | 33 | 115 |
-| All | 31 | 75 | 33 | 139 |
+| Target and push further | 28 | 54 | 33 | 115 |
+| All | 32 | 74 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1936,7 +1949,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `PROB-001` | Problem management | target | done | `src/features/services/problems.ts`, `src/features/services/problem-knowledge.ts`, `tests/work/problem-cases.mjs`, `tests/ui/problem-journey.mjs`, `tests/adoption/problem-cases.mjs` | Local public-route and 1440/390 browser proof: three incident links, reviewed root cause/known error, versioned expiring Knowledge publication and preventive change; a later request is offered guidance matched by reviewer phrases and service/cohort context. Scoped, reviewed, current and unexpired content only; request stays open. Native archive links and authorized erasure are proved. |
 | `PROB-002` | Proactive problem detection | target | done | `tests/work/problem-detection-cases.mjs`, `tests/ui/problem-detection-journey.mjs`, `tests/adoption/problem-cases.mjs` | Public routes and 1440/390 journey prove eight floor Wi-Fi incidents, retained rejection without re-proposal after ninth/restart/restore, native acceptance and source links, service/app/model ticket and alert grouping, deduplication, concurrent decisions and current source/tenant/role boundaries. ct-approved restricted detector-only aggregation, including after acceptance. Local evidence only. |
 | `CHANGE-001` | Change types and templates | target | done | `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs` | Local public-route and native 1440/390 evidence: exact-version owner preapproval, standard catalog CAB bypass with separate grant checks, normal/ECAB decisions, retained snapshots and explicit withdrawal, amendment invalidation and inactive restored templates. No CAB meeting, vote, live provider or owner acceptance claimed. |
-| `CHANGE-002` | Risk scoring | target | partial | `src/features/services/changes.ts` | No scoring. |
+| `CHANGE-002` | Risk scoring | target | done | `src/features/services/change-risk.ts`, `tests/services/risk-cases.mjs`, `tests/ui/connected-change.mjs` | Local public-route and inspected 1440/390 proof: questionnaire, production/test configuration items, business-calendar schedule and prior failed changes score the change; an SSO change with a prior failed change scores high and takes CAB, the same change on a test item scores low and takes one independent change-manager approval; edits recompute and withdraw approval. |
 | `CHANGE-003` | Change advisory board | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No CAB, meetings or votes. |
 | `CHANGE-004` | Change calendar and freeze windows | target | done | `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs` | Public routes and connected execution prove scoped calendar/maintenance/freeze/ICS, half-open CI/workspace bounds, schedule/edit/later-dispatch refusal, owner emergency scheduling with separate effect grants, current role and generic hidden conflicts. Native archive preserves links with windows inactive until owner review; native 1440/390 calendar, editor, emergency and inactive states are inspected. Local evidence only. |
 | `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No automatic incident linking, health-check gate on success or PIR. |

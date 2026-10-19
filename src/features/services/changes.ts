@@ -1,3 +1,4 @@
+import { scoreChange } from './change-risk';
 import { catalogSnapshot, approvedTemplate, assertCatalogApproval, grantReferences } from './change-templates';
 import { currentPrincipal } from '../work/identity';
 import { assertCalendarSchedule, emergencySchedulingActor } from './calendar';
@@ -57,7 +58,9 @@ export async function validateChange(db: D1Database, p: Principal, b: Record<str
     const changeType=b.changeType ?? (b.emergency ? 'emergency' : 'normal');
     if (!['standard','normal','emergency'].includes(changeType)) throw new ApiError(400,'change_type','Choose standard, normal or emergency');
     const emergency=changeType==='emergency';
-    return { changeType, approvalPath:changeType==='standard'?'catalog':emergency?'ecab':'cab', implementationPlan:b.implementationPlan||null,testPlan:b.testPlan||null,backoutPlan:b.backoutPlan||null, title: requiredString(b.title, 'title'), risk: requiredString(b.risk, 'risk'), impact: requiredString(b.impact, 'impact'), services, window, cohorts, canaryCohorts: canary, dependencies, implementation: b.implementation, compensation: b.compensation, emergency, emergencyReason: emergency ? requiredString(b.emergencyReason, 'emergencyReason') : null, emergencySchedulingActor: emergencySchedulingActor(p,{...b,emergency}) };
+    // CHANGE-002: the scored band selects the path; low takes one independent change-manager approval.
+    const riskScore=await scoreChange(db,p,{services,window,calendarId:b.calendarId,riskAnswers:b.riskAnswers});
+    return { changeType, riskScore, riskAnswers:Object.fromEntries(Object.entries(riskScore.answers).filter(([,v])=>v!==null)), calendarId: typeof b.calendarId==='string'&&b.calendarId?b.calendarId:null, approvalPath:changeType==='standard'?'catalog':emergency?'ecab':riskScore.band==='low'?'change-manager':'cab', implementationPlan:b.implementationPlan||null,testPlan:b.testPlan||null,backoutPlan:b.backoutPlan||null, title: requiredString(b.title, 'title'), risk: requiredString(b.risk, 'risk'), impact: requiredString(b.impact, 'impact'), services, window, cohorts, canaryCohorts: canary, dependencies, implementation: b.implementation, compensation: b.compensation, emergency, emergencyReason: emergency ? requiredString(b.emergencyReason, 'emergencyReason') : null, emergencySchedulingActor: emergencySchedulingActor(p,{...b,emergency}) };
 }
 export async function newChange(db: D1Database, p: Principal, b: Record<string, any>) {
     p=await currentPrincipal(db,p);
@@ -93,10 +96,10 @@ export async function authorizeChange(db: D1Database, p: Principal, r: ServiceRe
     if (r.data.changeType==='standard') throw new ApiError(409,'catalog_approval','Standard changes use catalog preapproval and separate grant binding');
     if (!p.roles.some(x => ['owner', 'approver'].includes(x)))
         throw new ApiError(403, 'authority', 'Approver required');
-    if (r.ownerId === p.userId && !p.roles.includes('owner'))
+    if (r.ownerId === p.userId && (!p.roles.includes('owner') || r.data.approvalPath==='change-manager'))
         throw new ApiError(403, 'separation', 'Independent approver required');
     const refs = grantReferences(b.grantReferences);
-    const decision = { id: id(), approvalPath:r.data.emergency?'ecab':'cab', actor: p.userId, implementationRevision: r.data.implementationRevision, grantReferences: refs, emergency: r.data.emergency, reason: requiredString(b.reason, 'reason'), at: now() };
+    const decision = { id: id(), approvalPath:r.data.emergency?'ecab':r.data.approvalPath==='change-manager'?'change-manager':'cab', riskScore:r.data.riskScore?.score??null, actor: p.userId, implementationRevision: r.data.implementationRevision, grantReferences: refs, emergency: r.data.emergency, reason: requiredString(b.reason, 'reason'), at: now() };
     return mutate(db, p, r, b.revision, { ...r.data, state: 'authorized', authorizations: [...(r.data.authorizations || []), decision] }, 'change-decision');
 }
 export async function changeGate(db: D1Database, p: Principal, r: ServiceRecord, phase: string, at = Date.now()) {

@@ -44,6 +44,11 @@ export async function connectedChanges(env) {
   await until(async()=> (await employeeApi('/work/'+employeeWork)).work.kind==='incident','native employee service classification');
   assert.ok((await api('/incidents/'+incidentId)).data.links.some(l=>l.employeeIncidentId===employeeWork));
   const first=await newChange(env,'Remove recurring claims bridge for London',uid);
+  // CHANGE-002: the change shows its score, band, factors and the path the band selected.
+  assert.ok(first.data.riskScore.factors.some(f=>f.factor==='production'));assert.equal(first.data.approvalPath,first.data.riskScore.band==='low'?'change-manager':'cab');
+  await page.goto(base+'/app#/changes/'+first.id);await page.reload();
+  await page.getByText(`${first.data.riskScore.score} · ${first.data.riskScore.band}`,{exact:true}).waitFor();
+  await captureJourney(page,{path:out+'/CHANGE-002-risk-score.png',fullPage:true});
   await authorize(env,first);
   const conflict=await newChange(env,'Conflicting London release window',uid);await authorize(env,conflict);
   await page.goto(base+'/app#/changes/'+first.id);

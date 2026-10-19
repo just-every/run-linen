@@ -4,6 +4,8 @@ import { request, text, type RecordValue } from "./api";
 import { Fields, readFields, type Field } from "./forms";
 import { ErrorNotice, Notice, Loading } from "./primitives";
 import type { DomainRecord } from "./decisions";
+// CHANGE-002: each risk question is answered on the form; an unchecked box is a recorded "no".
+const riskQuestions = { userFacingOutage: "A user-facing outage is expected", untestedBackout: "The backout has not been tested", firstOfKind: "This is the first change of its kind", touchesSecurity: "It touches authentication or security" } as const;
 
 /** Pins are authored once with the draft. Display/approval never refreshes them. */
 export function NewChange({ onSaved, templateMode = false, templateRecord }: {
@@ -27,6 +29,7 @@ export function NewChange({ onSaved, templateMode = false, templateRecord }: {
     { name: "title", label: templateMode?"Template name":"Intended change", required: true, value:d?.title },
     { name: "service", label: "Affected service", type: "select", required: true, value:d?.services?.[0], options: services.data?.items.map(s => ({ value: s.id, label: text(s.data.name) })) },
     { name: "risk", label: "Risk and uncertainty", type: "textarea", required: true, value:d?.risk },
+    ...(!templateMode?Object.entries(riskQuestions).map(([name,label])=>({name,label,type:'checkbox' as const,value:d?.riskAnswers?.[name]??false})):[]),
     { name: "impact", label: "Impact on the business", type: "textarea", required: true, value:d?.impact },
     ...(!templateMode?windowFields:[]),
     { name: "cohorts", label: "Affected cohorts", type: "list", required: true, value:d?.cohorts?.join('\n') },
@@ -56,6 +59,7 @@ export function NewChange({ onSaved, templateMode = false, templateRecord }: {
         title: v.title, emergency: v.emergency, emergencyReason: v.emergencyReason, risk: v.risk, impact: v.impact, services: [v.service], cohorts: v.cohorts, canaryCohorts: v.canaryCohorts,
         ...(templateMode?{active:v.active,...(templateRecord?{revision:templateRecord.revision}:{})}:{window: { start: v.windowStart, end: v.windowEnd }}), dependencies: [], participants: [], visibility: "operators",
         implementationPlan:v.implementationPlan,testPlan:v.testPlan,backoutPlan:v.backoutPlan,
+        ...(templateMode?{}:{riskAnswers:Object.fromEntries(Object.keys(riskQuestions).map(name=>[name,Boolean(v[name])]))}),
         implementation, compensation: { ...implementation, payload: { release: v.compensationRelease } },
       },templateRecord?'PATCH':'POST');
       if (result) onSaved(result);

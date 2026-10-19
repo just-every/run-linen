@@ -61,6 +61,7 @@ export function ServiceSpace({
   const fields: Record<string, Field[]> = {
     services: [
       { name: "ciType", label: "Configuration item type", type: "select", value: "business_service", required: true, options: [{value:"hardware",label:"Hardware"},{value:"software",label:"Software"},{value:"saas_app",label:"SaaS app"},{value:"business_service",label:"Business service"},{value:"cloud_resource",label:"Cloud resource"}] },
+      { name: "environment", label: "Environment", type: "select", value: "production", required: true, options: [{value:"production",label:"Production"},{value:"test",label:"Test"},{value:"development",label:"Development"}], hint: "Change risk scoring (CHANGE-002) counts production items as higher risk." },
       { name: "provenance", label: "How these facts were obtained", type: "select", value: "asserted", required: true, options: [{value:"asserted",label:"Asserted"},{value:"observed",label:"Observed"},{value:"inferred",label:"Inferred"}] },
       { name: "name", label: "Service name", required: true },
       {
@@ -288,7 +289,8 @@ export function ServiceSpace({
                   <Facts
                     entries={[
                       ["Change type", d.changeType || (d.emergency ? "emergency" : "normal")],
-                      ["Approval path", d.approvalPath === "catalog" ? "Standard catalog · CAB skipped" : d.emergency ? "ECAB · explicit emergency decision required" : "CAB · recorded change decision"],
+                      ["Approval path", d.approvalPath === "catalog" ? "Standard catalog · CAB skipped" : d.emergency ? "ECAB · explicit emergency decision required" : d.approvalPath === "change-manager" ? "Change manager · one independent approval (low risk)" : "CAB · recorded change decision"],
+                      ...(d.riskScore ? [["Risk score", `${d.riskScore.score} · ${d.riskScore.band}`] as [string, unknown], ["Score factors", d.riskScore.factors.map((f: { points: number; detail: string }) => `+${f.points} ${f.detail}`).join("; ") || "None"] as [string, unknown]] : []),
                       ["Risk", d.risk],
                       ["Window starts", date(d.window?.start)],
                       ["Window ends", date(d.window?.end)],
