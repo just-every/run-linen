@@ -28,9 +28,9 @@ export function WorkSla({ workId }: { workId: string }) {
   const remote = useRemote<WorkSlaData>(`/work/${encodeURIComponent(workId)}/sla`, 30000), data = remote.data;
   if (remote.error) return <ErrorNotice error={remote.error} retry={remote.refresh} />;
   if (!data) return null;
-  if (!data.policy) return <section className="work-controls" aria-label="Service level"><h3>Service level</h3><p>No SLA policy matches this ticket's classification.</p></section>;
+  if (!data.policy) return <section className="work-controls" aria-label="SLA targets"><h3>Service level</h3><p>No SLA policy matches this ticket's classification.</p></section>;
   const zone = data.policy.calendar?.timezone ?? "UTC", next = data.nextResponses?.at(-1);
-  return <section className="work-controls" aria-label="Service level">
+  return <section className="work-controls" aria-label="SLA targets">
     <h3>Service level · {data.policy.name}</h3>
     <p>{data.policy.hours === "business"
       ? `Business hours in ${data.policy.calendar?.location ?? zone} (${zone})${data.policy.calendar?.holidayCatalog === "us-federal" ? ", US federal holidays observed" : ""}.`
@@ -49,7 +49,7 @@ export function WorkSla({ workId }: { workId: string }) {
 const targetLabels: Record<string, string> = { firstResponse: "First response", nextResponse: "Next response", resolution: "Resolution" };
 /** DESK-004 report: breaches per target beside the denominator, with each ticket's resolution target. */
 export function SlaReport({ value }: { value: { definition: string; denominator: number; counts: Record<string, Record<string, number>>; rows: ({ workId: string; title: string } & WorkSlaData)[] } }) {
-  return <section aria-label="Service levels">
+  return <section aria-label="SLA report">
     <h2>Service levels</h2>
     <p>{value.definition} Tickets: {value.denominator}.</p>
     <div style={{ overflowX: "auto" }}><table><caption>Targets by state</caption>
