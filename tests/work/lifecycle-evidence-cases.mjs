@@ -47,7 +47,8 @@ export async function lifecycleEvidenceChecks(api, db) {
   }
   assert.equal((await api('/work/process-due',{})).status,200);
   const dispatched = (await api(path)).value;
-  assert.equal(dispatched.effects.length,3,'LIFE-007 public dispatch retains every security/access effect');
+  assert.equal(dispatched.effects.length,2,'LIFE-007 public dispatch retains the disable and access effects');
+  assert.ok(!dispatched.effects.some(e=>e.action==='sessions.revoke'),'a leave revokes sessions only after its disable is verified (one account fence)');
   assert.ok(dispatched.effects.every(e=>e.created_at && e.grant.id && !e.independentlyVerified));
   const effect = dispatched.effects.find(e=>e.action==='identity.disable');
   const duty = duties.find(d=>d.kind==='identity.disable');
@@ -87,6 +88,8 @@ export async function lifecycleEvidenceChecks(api, db) {
   assert.ok(!pack.outstandingDuties.some(d=>d.id===duty.id));
   assert.ok(pack.outstandingDuties.some(d=>d.kind==='sessions.revoke'));
   assert.ok(pack.outstandingDuties.some(d=>d.kind==='device.return'));
+  assert.equal((await api('/work/process-due',{})).status,200);
+  assert.equal((await api(path)).value.effects.filter(e=>e.action==='sessions.revoke').length,1,'the verified disable releases the session revocation');
   const grant = grants.get('identity.disable');
   assert.deepEqual(completed.grant,grant);
   const authority = pack.authority.grants.find(g=>g.id===grant.id && g.version===grant.version);

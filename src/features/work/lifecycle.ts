@@ -228,7 +228,9 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
         "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,depends_on,owner_id) VALUES(?,?,?,?,?,?,?,?,?,?)",
       ).bind(i === 0 ? identityId : id(), ctx.principal.workspaceId, workId, lifecycleId,
         o.kind, o.target, input.personId, input.urgent && input.kind === "leave" ? now() : effectiveAt,
-        input.kind === "join" && i > 0 ? identityId : null, input.ownerId)),
+        // A leave revokes sessions once the disable is verified: both effects share one account
+        // fence, so a same-instant pair would invalidate the disable's verification.
+        (input.kind === "join" && i > 0) || (input.kind === "leave" && o.kind === "sessions.revoke") ? identityId : null, input.ownerId)),
       // LIFE-006: both expiry duties fall due at the end instant. Sessions are revoked once the
       // disable is verified: the two effects share one account fence, so they never race.
       ...(expiry ? [["identity.disable", expiryDisableId, null], ["sessions.revoke", id(), expiryDisableId]].map(([kind, dutyId, dependsOn]) => ctx.env.DB.prepare(
