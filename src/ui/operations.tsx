@@ -1,4 +1,5 @@
 import { EffortReport, type EffortReportData } from "./effort-report";
+import { SlaReport } from "./work-sla";
 import { LaborRatesForm, WorkSavedReport, type WorkSavedData } from "./work-saved";
 import type { ReviewedMapping, CatalogChoice } from "./setup-permissions";
 import { settingsSections } from "./shell-rail";
@@ -359,6 +360,7 @@ export function ReportSpace() {
             />
             {saved.error ? <ErrorNotice error={saved.error} retry={saved.refresh} /> : saved.data && <WorkSavedReport value={saved.data} />}
             {report.data.effort && <EffortReport value={report.data.effort as unknown as EffortReportData} />}
+            {report.data.sla && <SlaReport value={report.data.sla as unknown as Parameters<typeof SlaReport>[0]["value"]} />}
             <Evidence
               value={report.data.rows}
               title="Underlying records and elapsed ages"

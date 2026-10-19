@@ -4,6 +4,7 @@ import { progressFor, requestProgress } from "./progress";
 import { hashToken } from "../../platform/crypto";
 import { cancelWorkExecution } from "./execution";
 import { shiftCommitmentForPause } from "./calendar";
+import { slaPauseStatements, validWaitingOn } from "./sla-policies";
 import { currentWorkPrincipal } from "./identity";
 import type { Env, Principal } from "../../platform/types";
 import { ApiError, id, now } from "../../platform/http";
@@ -26,6 +27,8 @@ export interface WorkRecord {
   created_at: string;
   paused_ms: number;
   paused_at: string | null;
+  response_at?: string | null;
+  closed_at?: string | null;
   pending_person_id?: string | null;
 }
 export function operator(p: Principal) {
@@ -362,10 +365,12 @@ export async function transitionWork(
   command: string,
   reason: string,
   assigneeId?: string,
+  waitingOn?: unknown,
 ) {
   await currentWorkPrincipal(ctx);
 
   const work = await getWork(ctx, workId);
+  const waiting = validWaitingOn(command, waitingOn);
   if (!reason?.trim())
     throw new ApiError(422, "reason_required", "Explain this transition");
   const state = (
@@ -423,6 +428,8 @@ export async function transitionWork(
     );
   if (work.paused_at)
     await shiftCommitmentForPause(ctx, workId, work.paused_at, t);
+  if (work.paused_at || command === "pause")
+    await ctx.env.DB.batch(slaPauseStatements(ctx, workId, command, waiting, t));
   let pendingCancellation = 0;
   if (command === "cancel") {
     await ctx.env.DB.batch([
