@@ -1,3 +1,4 @@
+import { slaReport } from "./sla-policies";
 import { effortReport } from "./effort-report";
 import { deflectionReport } from "./deflection";
 import { validateArticle, newArticleWrites, type ArticleInput } from './article-write';
@@ -157,6 +158,7 @@ export async function workReport(
     obligations,
     calendars,
     effort: await effortReport(ctx, from, to),
+    sla: await slaReport(ctx, from, to),
     deflection: await deflectionReport(ctx, from, to),
     denominator: rows.length,
     definition:

@@ -58,9 +58,9 @@ export function Loading({ label = "Reading your work…" }: { label?: string }) 
 }
 // Badge tones (SPEC §2.1): verified work, work still moving, finished work, and failures.
 const tones: Record<string, [string, string]> = {
-  verified: ["ok", "check"], active: ["ok", "check"], validated: ["ok", "check"], completed: ["ok", "check"], restored: ["ok", "check"], approved: ["ok", "check"], succeeded: ["ok", "check"], delivered: ["ok", "check"], adopted: ["ok", "check"],
+  verified: ["ok", "check"], active: ["ok", "check"], validated: ["ok", "check"], completed: ["ok", "check"], restored: ["ok", "check"], approved: ["ok", "check"], succeeded: ["ok", "check"], delivered: ["ok", "check"], adopted: ["ok", "check"], met: ["ok", "check"],
   closed: ["done", "check"], cancelled: ["done", "close"], revoked: ["done", "close"], superseded: ["done", "close"], disconnected: ["done", "close"], declined: ["done", "close"],
-  failed: ["alert", "alert"], blocked: ["alert", "alert"], error: ["alert", "alert"], rejected: ["alert", "alert"], stale: ["alert", "alert"], uncertain: ["alert", "alert"], unknown: ["alert", "alert"],
+  failed: ["alert", "alert"], blocked: ["alert", "alert"], error: ["alert", "alert"], rejected: ["alert", "alert"], stale: ["alert", "alert"], uncertain: ["alert", "alert"], unknown: ["alert", "alert"], breached: ["alert", "alert"],
 };
 export function Badge({ value }: { value: unknown }) {
   const key = String(value ?? "unknown").replace(/[^a-z_]/gi, "");
