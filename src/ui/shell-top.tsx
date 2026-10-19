@@ -41,6 +41,7 @@ function ConnectionDots() {
 export function TopBar({ onSignOut, query }: { onSignOut: () => void; query: string }) {
   const { session } = useSession(),
     [profile, setProfile] = useState(false),
+    searchAgent = session.principal.roles.some(r => ["owner", "operator", "hr"].includes(r)),
     operator = session.principal.roles.some((r) => ["owner", "operator", "hr", "auditor"].includes(r));
   return (
     <header className="topbar">
@@ -54,11 +55,11 @@ export function TopBar({ onSignOut, query }: { onSignOut: () => void; query: str
         onSubmit={(event) => {
           event.preventDefault();
           const q = String(new FormData(event.currentTarget).get("q") ?? "").trim();
-          location.hash = `/knowledge${q ? `?q=${encodeURIComponent(q)}` : ""}`;
+          location.hash = `/${searchAgent ? "search" : "knowledge"}${q ? `?q=${encodeURIComponent(q)}` : ""}`;
         }}
       >
         <Icon name="search" size={20} />
-        <input key={query} name="q" type="search" defaultValue={query} aria-label="Search knowledge" placeholder="Search reviewed knowledge…" />
+        <input key={query} name="q" type="search" defaultValue={query} aria-label={searchAgent ? "Search workspace" : "Search knowledge"} placeholder={searchAgent ? "Search your workspace…" : "Search reviewed knowledge…"} />
       </form>
       {operator && <ConnectionDots />}
       <div className="account">

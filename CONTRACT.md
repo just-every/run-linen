@@ -548,6 +548,25 @@ that product and marks how close the current code is (see [Status](#status)).
   and its assigned person; search a requester's name and see their tickets; an IT
   agent's search for a term in an HR-workspace ticket returns no result and no
   count for it.
+  Search uses each current source door's readership, refreshed membership and
+  message visibility before matching, pagination or counts; no index, model or
+  external flow is created. Privileged searches are audited without storing query
+  content. Owners, operators and HR agents use the search;
+  employees retain their reviewed-knowledge search. People expose recorded names
+  and IDs only, with the existing operator projection. Tickets match their native
+  ID (the current ticket number), title, readable conversation text and requester
+  name. Assets match serial and recorded asset tag. Explicit repair, device-duty
+  or recorded asset-ID links let a serial find its tickets; its assigned person
+  is found through the recorded custody relationship, never an inferred identity.
+  CIs, changes and problems retain existing service/source checks; articles must
+  remain reviewed, current and source-readable. Matching normalizes Unicode NFKC,
+  case and non-letter/number separators. A normalized phrase substring ranks
+  first, followed by all exact query tokens, then all tokens allowing one inserted,
+  omitted, substituted or adjacent-transposed character per token of at least
+  four characters. Tokens can span readable fields. Queries allow at most 200
+  UTF-16 code units; pages contain at most 50 visible matches with the total for
+  the selected type, ordered by match rank, type, title and ID. No hidden rows or
+  source-list truncation affect that count.
 
 - **DESK-017 — Ticket activity history.** Every ticket, task, change, problem
   and asset shows a chronological, append-only history of each field change
@@ -1702,8 +1721,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 19 | 63 | 33 | 115 |
-| All | 23 | 83 | 33 | 139 |
+| Target and push further | 20 | 62 | 33 | 115 |
+| All | 24 | 82 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1744,7 +1763,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-013` | Scheduled and recurring work | target | done | `src/features/work/recurrence.ts`, `src/features/work/recurrence-calendar.ts`; DESK-013 public routes in `tests/work/recurrence-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/recurrence-journey.mjs` via `tests/ui/browser.mjs`, `tests/adoption/recurrence-cases.mjs` via `tests/adoption/runtime.mjs`: calendar tickets/task plans with owners, first business day/holiday, atomic occurrences, DST/month-end, pause/resume, inert restore and 1440/390 journeys. | |
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
 | `DESK-015` | Agent scenarios and record templates | target | missing |  | No agent scenarios or record templates. |
-| `DESK-016` | Global agent search | target | partial | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs` | Articles only; no search across tickets, people, assets, CIs, changes or problems. |
+| `DESK-016` | Global agent search | target | done | `src/features/work/search.ts`, `tests/work/search-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/search-journey.mjs` | Local public-route and 1440/390 browser evidence: all eight current record types, filters, typo matching, serial-linked asset/ticket/person, native ticket ID, subject/content/requester, recorded asset tags, scoped visible counts and pages. HR/private/restricted/article/current-role fences and generated-source withdrawal are asserted. |
 | `DESK-017` | Ticket activity history | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs` | State transitions only, as public messages; no field-level before/after history, actor types or imported source history. |
 | `NOTIFY-001` | Default notifications by role and event | target | partial | `src/features/execution/notifications.ts`, `tests/execution/runtime.mjs` | Explicit per-message only; no event-driven default set, chat or push delivery, or actionable agent notifications. |
 | `NOTIFY-002` | Admin-configured rules, templates and preferences | target | missing |  | No notification rules, templates, branding or preferences. |

@@ -6,7 +6,7 @@ import { date, text, humanize, type RecordValue } from "./api";
 import { useRemote } from "./state";
 import { ActionForm } from "./forms";
 import { Badge, Empty, ErrorNotice, Evidence, Facts, Hero, Loading, Notice } from "./primitives";
-export function AssetsSpace() {
+export function AssetsSpace({selectedId}:{selectedId?:string}) {
   const [custody, setCustody] = useState<string | null>(null);
   const list = useRemote<{ items: RecordValue[] }>("/assets"),
     people = useRemote<{ items: RecordValue[] }>("/people");
@@ -29,7 +29,7 @@ export function AssetsSpace() {
       ) : list.error ? (
         <ErrorNotice error={list.error} retry={list.refresh} />
       ) : list.data?.items.length ? (
-        list.data.items.map((asset) => (
+        list.data.items.filter(asset=>!selectedId||asset.id===selectedId).map((asset) => (
           <section className="connection-record" key={text(asset.id)}>
             <div className="section-heading">
               <h2>{text(asset.serial)}</h2>
@@ -42,6 +42,7 @@ export function AssetsSpace() {
                   people.data?.items.find((p) => p.id === asset.person_id)
                     ?.name ?? asset.person_id,
                 ],
+                ["Asset tag", asset.asset_tag],
                 ["Location", asset.location],
                 ["Source", asset.source],
                 ["Last observed", date(asset.observed_at)],
@@ -113,6 +114,7 @@ export function AssetsSpace() {
         path="/assets"
         fields={[
           { name: "serial", label: "Unique serial number", required: true },
+          { name: "assetTag", label: "Asset tag" },
           {
             name: "source",
             label: "Authoritative device source",

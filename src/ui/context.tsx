@@ -1,3 +1,4 @@
+import { SearchSpace } from './search';
 import { AdoptionSpace } from "./adoption";
 import { Hero, Empty } from "./primitives";
 import { Connections } from "./connections";
@@ -11,10 +12,12 @@ export function ContextSpace({
   section,
   selectedId,
   query,
+  parameters,
 }: {
   section: string;
   selectedId?: string;
   query: string;
+  parameters: string;
 }) {
   const serviceSections = [
       "services",
@@ -50,7 +53,9 @@ export function ContextSpace({
             {section === "lifecycle" ? (
               <LifecycleSpace selectedId={selectedId} />
             ) : section === "assets" ? (
-              <AssetsSpace />
+              <AssetsSpace selectedId={selectedId} />
+            ) : section === "search" ? (
+              <SearchSpace query={query} parameters={parameters}/>
             ) : section === "knowledge" ? (
               <KnowledgeSpace key={query} query={query} />
             ) : section === "imports" ? (

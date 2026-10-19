@@ -45,6 +45,7 @@ export async function knowledgeDraftChecks(api,db) {
   assert.equal(draft.reviewerId,'stranger');assert.ok(draft.articleId);
   const articles=check(await api('/knowledge?q=Recover%20network',undefined,employee)).items;
   assert.ok(articles.some(a=>a.id===draft.articleId));assert.equal(articles.find(a=>a.id===draft.articleId).sources.length,3);
+  assert.ok(check(await api('/search?q=Recover%20network&type=article')).items.some(a=>a.id===draft.articleId),'DESK-016 search includes current generated guidance');
   const stranger={'x-user':'stranger','x-roles':'["employee"]'};
   assert.ok(!check(await api('/knowledge?q=Recover%20network',undefined,stranger)).items.some(a=>a.id===draft.articleId),'Article does not grant readership of another employee’s sources');
   await db.prepare("INSERT INTO workspace_settings(workspace_id,settings_json) VALUES('a',?) ON CONFLICT(workspace_id) DO UPDATE SET settings_json=excluded.settings_json")
@@ -75,6 +76,7 @@ export async function knowledgeDraftChecks(api,db) {
   check(await api('/test/knowledge-provider',{mode:'ok'}));
   check(await api(`/work/${three[0].id}/commands`,{revision:three[0].revision,command:'reopen',reason:'Still broken'},employee));
   assert.ok(!check(await api('/knowledge?q=Recover%20network')).items.some(a=>a.id===draft.articleId));
+  assert.ok(!check(await api('/search?q=Recover%20network&type=article')).items.some(a=>a.id===draft.articleId),'DESK-016 current generated-source checks withdraw reopened guidance from results and counts');
   check(await api(`/knowledge/${draft.articleId}/escalate`,{question:'Need help',deduplicationKey:crypto.randomUUID()}),404);
   const rejectedTickets=[await ticket('KB004 Reject'),await ticket('KB004 Reject'),await ticket('KB004 Reject')];
   let rejected=group(await detect(),'KB004 Reject');

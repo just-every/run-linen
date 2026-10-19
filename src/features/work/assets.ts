@@ -3,18 +3,19 @@ import { ApiError, id, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
 
 export async function acquireAsset(ctx: WorkContext, input: {
-  serial: string; source: string; location?: string; procured?: boolean;
+  serial: string; source: string; location?: string; procured?: boolean; assetTag?: string;
 }) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "operator", "integration"]);
   if (!input || ![input.serial, input.source].every(v => typeof v === "string" && v.trim().length > 0 && v.length < 1000)
-    || (input.procured !== undefined && typeof input.procured !== "boolean"))
+    || (input.procured !== undefined && typeof input.procured !== "boolean")
+    || (input.assetTag !== undefined && (typeof input.assetTag !== "string" || input.assetTag.length > 200)))
     throw new ApiError(422, "asset_input", "Serial and observation or procurement source required");
   const assetId = id(), eventId = id(), at = now(), w = ctx.principal.workspaceId;
   try {
     await ctx.env.DB.batch([
-      ctx.env.DB.prepare(`INSERT INTO work_assets(id,workspace_id,serial,state,location,source,observed_at,latest_event_id)
-        VALUES(?,?,?,?,?,?,?,?)`).bind(assetId,w,input.serial.trim(),input.procured ? "procured" : "stock",input.location || null,input.source,at,eventId),
+      ctx.env.DB.prepare(`INSERT INTO work_assets(id,workspace_id,serial,state,location,source,observed_at,latest_event_id,asset_tag)
+        VALUES(?,?,?,?,?,?,?,?,?)`).bind(assetId,w,input.serial.trim(),input.procured ? "procured" : "stock",input.location || null,input.source,at,eventId,input.assetTag?.trim() || null),
       ctx.env.DB.prepare(`INSERT INTO work_custody(id,workspace_id,asset_id,actor_id,kind,person_id,evidence,created_at)
         VALUES(?,?,?,?,?,NULL,?,?)`).bind(eventId,w,assetId,ctx.principal.userId,input.procured ? "procure" : "record",input.source,at),
     ]);

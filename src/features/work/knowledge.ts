@@ -8,12 +8,12 @@ interface KnowledgeArticle {
   id: string; title: string; body: string; revision: number;
   scope: 'employees' | 'operators' | 'hr'; reviewed_at: string; expires_at: string;
 }
-export async function searchKnowledge(ctx: WorkContext, query: string) {
+export async function searchKnowledge(ctx: WorkContext, query: string, limit: number | null = 50) {
   await currentWorkPrincipal(ctx);
   const p = ctx.principal;
   const candidates = (
     await ctx.env.DB.prepare(
-      `SELECT id,title,body,revision,scope,reviewed_at,expires_at FROM work_knowledge WHERE workspace_id=? AND reviewed_at IS NOT NULL AND expires_at>? AND (scope='employees' OR (scope='operators' AND ?=1) OR (scope='hr' AND ?=1)) AND (title LIKE ? ESCAPE '\\' OR body LIKE ? ESCAPE '\\') ORDER BY updated_at DESC LIMIT 50`,
+      `SELECT id,title,body,revision,scope,reviewed_at,expires_at FROM work_knowledge WHERE workspace_id=? AND reviewed_at IS NOT NULL AND expires_at>? AND (scope='employees' OR (scope='operators' AND ?=1) OR (scope='hr' AND ?=1)) AND (title LIKE ? ESCAPE '\\' OR body LIKE ? ESCAPE '\\') ORDER BY updated_at DESC ${limit === null ? "" : "LIMIT 50"}`,
     )
       .bind(
         p.workspaceId,

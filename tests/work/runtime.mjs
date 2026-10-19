@@ -1,3 +1,4 @@
+import { searchChecks } from './search-cases.mjs';
 import { problemDetectionChecks } from './problem-detection-cases.mjs';
 import { responseChecks } from './response-cases.mjs';
 import { recurrenceChecks } from './recurrence-cases.mjs';
@@ -676,6 +677,7 @@ try {
     .prepare("UPDATE memberships SET active=1 WHERE user_id=?")
     .bind("employee")
     .run();
+  await searchChecks(api,db);
   await mf.dispose();
   mf = new Miniflare({
     ...convertV4MiniflareOptions({ ...options, port: Number(process.env.LINEN_TEST_WORKER_PORT || 0) }),

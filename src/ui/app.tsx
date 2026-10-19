@@ -102,7 +102,7 @@ function Workspace() {
           ) : section === "decisions" ? (
             <DecisionSpace selectedId={id} />
           ) : (
-            <ContextSpace section={section} selectedId={id} query={query} />
+            <ContextSpace section={section} selectedId={id} query={query} parameters={search} />
           )}
         </div>
         {/* After the screen in reading and focus order; the grid draws it as the left rail. */}

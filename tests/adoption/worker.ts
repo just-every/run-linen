@@ -43,7 +43,7 @@ api.post('/fixtures', async (c) => {
     const plan = id(), operation = id(), grant = id(), service = id(), commitment = id();
     await c.env.DB.batch([
         c.env.DB.prepare('INSERT INTO work_people(id,workspace_id,source,source_id,name,observed_at,effective_at) VALUES(?,?,?,?,?,?,?)').bind(person, w, 'fixture', 'person-1', 'Sensitive Person', t, t),
-        c.env.DB.prepare("INSERT INTO work_assets(id,workspace_id,serial,state,person_id,source,observed_at) VALUES(?,?,?,'assigned',?,'fixture',?)").bind(id(), w, 'fixture-serial', person, t),
+        c.env.DB.prepare("INSERT INTO work_assets(id,workspace_id,serial,state,person_id,source,observed_at,asset_tag) VALUES(?,?,?,'assigned',?,'fixture',?,'DEN-IT-042')").bind(id(), w, 'fixture-serial', person, t),
         c.env.DB.prepare("INSERT INTO work_knowledge(id,workspace_id,title,body,scope,expires_at,updated_at) VALUES(?,?,?,?,'operators','2099-01-01T00:00:00.000Z',?)").bind(id(), w, 'Private knowledge', 'Private remedy', t),
         c.env.DB.prepare("INSERT INTO work_calendars(id,workspace_id,name,timezone,weekdays_json,start_hour,end_hour,holidays_json) VALUES(?,?,'Business hours','Australia/Brisbane','[1,2,3,4,5]',9,17,'[\"2026-12-25\"]')").bind(id(), w),
         c.env.DB.prepare("INSERT INTO intelligence_attempts(id,workspace_id,actor_id,kind,provider,state,cost_usd,charge_status,usage_json,elapsed_ms,created_at) VALUES(?,?,?,'fixture','fixture','completed',0.125,'known','{\"total_tokens\":42}',12,?)").bind(id(), w, p.userId, t),
