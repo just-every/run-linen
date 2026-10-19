@@ -1,3 +1,4 @@
+import { catalogItems } from './application-routes';
 import { suggestWorkarounds } from './workaround-suggestions';
 import type { Hono } from "hono";
 import type { AppEnv } from "../../platform/types";
@@ -38,13 +39,7 @@ export function registerKnowledgeRoutes(app: Hono<AppEnv>) {
   app.get('/work/:id/workarounds', async c => c.json({ items: await suggestWorkarounds({env:c.env,principal:c.get('principal')},c.req.param('id')) }));
   app.get("/catalog", async (c) =>
     c.json({
-      items: (
-        await c.env.DB.prepare(
-          "SELECT id,name,kind,target,owner_id,capacity,revision FROM work_catalog WHERE workspace_id=?",
-        )
-          .bind(c.get("principal").workspaceId)
-          .all()
-      ).results,
+      items: await catalogItems({env:c.env,principal:c.get('principal')}),
     }),
   );
   app.post("/catalog", async (c) =>

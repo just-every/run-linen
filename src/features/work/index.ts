@@ -1,3 +1,4 @@
+import { registerApplicationRoutes } from './application-routes';
 import { registerSearchRoutes } from './search';
 import { registerRecurrenceRoutes } from './recurrence-routes';
 import { registerResponseRoutes } from './response-routes';
@@ -24,6 +25,7 @@ export { restoreAdoptionRecord } from "./restore";
 export { erasePerson, processBlobErasure } from "./privacy";
 export function registerWorkRoutes(app: Hono<AppEnv>) {
   setWorkIntakePort(workIntakePort);
+  registerApplicationRoutes(app);
   registerSearchRoutes(app);
   registerConversationRoutes(app);
   registerLifecycleRoutes(app);

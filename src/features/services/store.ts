@@ -1,7 +1,7 @@
 import { assertProblemSources } from './problem-source-access';
 import type { Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
-export type Kind = 'calendar-window' | 'problem-proposal' | 'service' | 'edge' | 'incident' | 'problem' | 'change' | 'supplier' | 'asset' | 'monitor' | 'oncall' | 'decision' | 'person';
+export type Kind = 'application' | 'calendar-window' | 'problem-proposal' | 'service' | 'edge' | 'incident' | 'problem' | 'change' | 'supplier' | 'asset' | 'monitor' | 'oncall' | 'decision' | 'person';
 export interface RecordRow {
     id: string;
     workspace_id: string;

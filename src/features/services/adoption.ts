@@ -1,7 +1,8 @@
+import { applicationData, type ApplicationData } from '../work/application-schema';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
 import { type Kind } from './store';
-const kinds: Kind[] = ['calendar-window','problem-proposal', 'service', 'edge', 'incident', 'problem', 'change', 'supplier', 'asset', 'monitor', 'oncall', 'decision', 'person'];
+const kinds: Kind[] = ['application','calendar-window','problem-proposal', 'service', 'edge', 'incident', 'problem', 'change', 'supplier', 'asset', 'monitor', 'oncall', 'decision', 'person'];
 export async function restoreAdoptionRecord(ctx: {
     env: Env;
     principal: Principal;
@@ -62,6 +63,7 @@ export async function restoreAdoptionRecord(ctx: {
             return { id: row.id, restored: true, duplicate: true, inert: true };
         throw new ApiError(409, 'restore_collision', 'Existing owner record must not be overwritten');
     }
+    if(row.kind==='application')data={...data,...applicationData(data,data as ApplicationData)};
     data.adoption = { sourceId: input.sourceId, sourceKey: input.sourceKey, restoredAt: now(), historical: true };
     if(row.kind==='calendar-window')data.active=false;
     if (row.kind === 'change') {

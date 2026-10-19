@@ -1,3 +1,4 @@
+import { eraseApplicationSnapshots } from './application-privacy';
 import { privacyPeople, privacyBindingFence, type PrivacyPerson } from './person-privacy';
 import { eraseKnowledgeDraftPerson } from './knowledge-draft-privacy';
 import { hashToken } from "../../platform/crypto";
@@ -179,6 +180,7 @@ async function eraseSinglePerson(
   if (!changed[1].meta.changes)
     throw new ApiError(409, "revision_conflict", "Person changed");
   await eraseKnowledgeDraftPerson(ctx, p);
+  await eraseApplicationSnapshots(ctx,p);
   const failed = await processBlobErasure(ctx);
   return {
     personId: p,

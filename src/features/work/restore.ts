@@ -1,3 +1,4 @@
+import { prepareApplicationWorkRestore } from './application-restore';
 import { validateRecurrence, type RecurrenceRule } from './recurrence-calendar';
 import type { BusinessCalendar } from './calendar';
 import { calendarDate } from './depreciation';
@@ -246,6 +247,7 @@ export async function restoreAdoptionRecord(
         "Restore parent work in this workspace first",
       );
   }
+  await prepareApplicationWorkRestore(ctx,input.table,row);
   if (input.table === 'work_knowledge_drafts') await prepareKnowledgeDraftRestore(ctx, row);
   const keys = Object.keys(row),
     recordId = String(row.id || row.article_id || (input.table==='work_pending_services'?`${row.work_id}:${row.catalog_id}`:input.sourceKey));

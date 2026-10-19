@@ -7,9 +7,22 @@ export interface Reference {
     targets: string[];
     key: string;
 }
-const fields: Record<string, string[]> = { work_id: ['work_records'], obligation_id: ['work_obligations'], plan_id: ['execution_plans'], operation_id: ['execution_operations'], attempt_id: ['execution_attempts'], asset_id: ['work_assets'], vendor_id: ['svc_records'], lifecycle_id: ['work_lifecycle'], calendar_id: ['work_calendars'], catalog_id: ['work_catalog'], article_id: ['work_knowledge'], commitment_id: ['intelligence_commitments'], research_id: ['intelligence_research'], capability_id: ['intelligence_capabilities'], person_id: ['work_people', 'identities'], requester_id: ['identities', 'work_people'], beneficiary_id: ['identities', 'work_people'], manager_id: ['work_people', 'identities'] };
+const fields: Record<string, string[]> = { application_id: ['svc_records'], work_id: ['work_records'], obligation_id: ['work_obligations'], plan_id: ['execution_plans'], operation_id: ['execution_operations'], attempt_id: ['execution_attempts'], asset_id: ['work_assets'], vendor_id: ['svc_records'], lifecycle_id: ['work_lifecycle'], calendar_id: ['work_calendars'], catalog_id: ['work_catalog'], article_id: ['work_knowledge'], commitment_id: ['intelligence_commitments'], research_id: ['intelligence_research'], capability_id: ['intelligence_capabilities'], person_id: ['work_people', 'identities'], requester_id: ['identities', 'work_people'], beneficiary_id: ['identities', 'work_people'], manager_id: ['work_people', 'identities'] };
 export function references(record: NativeRecord): Reference[] {
     const out: Reference[] = [];
+    if(record.table==='work_fulfilments' && record.row.application_json) {
+        let value;
+        try {value=JSON.parse(String(record.row.application_json));}catch{throw new ApiError(422,'restore_application_snapshot','Valid application snapshot required');}
+        if(typeof value.applicationId!=='string'||!Array.isArray(value.approverIds))throw new ApiError(422,'restore_application_snapshot','Typed application references required');
+        out.push({fromTable:record.table,fromKey:record.key,field:'application.applicationId',targets:['svc_records'],key:value.applicationId});
+        for(const key of [value.ownerId,...value.approverIds])if(typeof key==='string'&&!key.startsWith('erased'))out.push({fromTable:record.table,fromKey:record.key,field:'application.actor',targets:['identities'],key});
+    }
+    if(record.table==='svc_records' && record.row.kind==='application') {
+        let value;
+        try {value=JSON.parse(String(record.row.data_json));}catch{throw new ApiError(422,'restore_application','Valid application metadata required');}
+        if(!Array.isArray(value.approverIds))throw new ApiError(422,'restore_application','Typed application approver references required');
+        for(const key of [record.row.owner_id,...value.approverIds])if(typeof key==='string'&&!key.startsWith('erased'))out.push({fromTable:record.table,fromKey:record.key,field:'application.actor',targets:['identities'],key});
+    }
     if (record.table === 'work_knowledge_drafts') {
         let sources, group;
         try { sources = JSON.parse(String(record.row.sources_json)); group = JSON.parse(String(record.row.group_json)); }

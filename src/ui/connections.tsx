@@ -1,3 +1,4 @@
+import { Applications } from './applications';
 import { useState } from "react";
 import { date, text, type RecordValue } from "./api";
 import { useMutation, useRemote, useSession } from "./state";
@@ -96,6 +97,7 @@ export function Connections() {
         )}
         <DiscoveryReview revision={version} onChanged={refresh} />
         <IdentityReview key={version} />
+        <Applications />
       </main>
       <aside className="context-rail">
         <section className="rail-section">

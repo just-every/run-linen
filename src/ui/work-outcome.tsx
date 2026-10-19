@@ -1,3 +1,4 @@
+import { RequestedApplications } from './applications';
 import { useState } from "react";
 import { usePeopleLabels } from "./people-labels";
 import { date, text, type RecordValue } from "./api";
@@ -27,6 +28,7 @@ export function WorkOutcome({ work, onChanged, pendingPerson }: { work: WorkReco
     );
   return (
     <section className="work-outcome">
+      <RequestedApplications key={saved ? JSON.stringify(saved) : workId} workId={workId}/>
       {obligations.loading ? (
         <Loading label="Reading the remaining responsibilities…" />
       ) : obligations.error ? (
@@ -79,7 +81,7 @@ export function WorkOutcome({ work, onChanged, pendingPerson }: { work: WorkReco
               required: true,
               options: catalog.data!.items.map((c) => ({
                 value: text(c.id),
-                label: text(c.name),
+                label: text(c.name)+(c.application ? ` · $${(Number((c.application as RecordValue).costCents)/100).toFixed(2)} / ${text((c.application as RecordValue).billingPeriod)}` : c.applicationUnavailable ? ' · registration needs review' : ''),
               })),
             },
             {

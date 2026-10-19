@@ -1,3 +1,4 @@
+import { eraseApplicationSnapshots } from '../work/application-privacy';
 import { erasePlatformIdentity } from '../../platform/privacy';
 import { erasePerson } from '../work/privacy';
 import { eraseServicePerson } from '../services/privacy';
@@ -7,6 +8,7 @@ import { check, queueDelete, type AdoptionContext } from './core';
 export const builtinErasurePorts = [
     { name: 'intelligence', async erase(ctx: AdoptionContext, identity: string) { await eraseIntelligenceIdentity(ctx, identity); } },
     { name: 'work', async erase(ctx: AdoptionContext, identity: string) {
+            await eraseApplicationSnapshots(ctx,identity);
             const row = await ctx.env.DB.prepare("SELECT id,revision FROM work_people WHERE workspace_id=? AND (id=? OR source||':'||source_id=?)").bind(ctx.principal.workspaceId, identity, identity).first<{
                 id: string;
                 revision: number;

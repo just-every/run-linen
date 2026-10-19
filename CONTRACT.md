@@ -691,6 +691,22 @@ that product and marks how close the current code is (see [Status](#status)).
   **Acceptance evidence:** register Salesforce with two permission sets and an
   owner; a request for the admin set routes to the owner and shows the seat
   cost.
+  The current owner manages the registry until an admin role exists; current
+  owners and operators read its metadata. Employees see only linked entitlement
+  names and seat costs with their billing period. Owner and approver IDs must be
+  active members when recorded; approver metadata never confers approval or
+  execution rights. A linked catalog item takes its target from the selected
+  entitlement. Its existing access-grant and expiry duties route to the recorded
+  application owner; manager-required approvals and separate provider grants
+  remain mandatory. Each request snapshots its entitlement, owner, registry
+  revision and cost; later registry edits affect new requests, while retries
+  retain that snapshot. Seat costs are nonnegative integer USD cents
+  per month, year or one-time period, without conversion or a charge claim.
+  Connector descriptions are recorded metadata, not provider verification;
+  ACCESS-005 carries SaaS provisioning. Native restore remaps references without
+  activating historical membership or releasing the execution hold; erasure
+  anonymizes retained registry/request actors. These authority and visibility
+  semantics were approved by ct on 19 October.
 
 - **ACCESS-009 — User access reviews.** Scheduled reviews ask managers or app
   owners to certify each person's entitlements; revocations from the review run
@@ -1747,8 +1763,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 21 | 61 | 33 | 115 |
-| All | 25 | 81 | 33 | 139 |
+| Target and push further | 22 | 60 | 33 | 115 |
+| All | 26 | 80 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1800,7 +1816,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `ACCESS-005` | SaaS application provisioning | target | missing |  | No GitHub, Slack, Salesforce, Atlassian, Zoom or AWS connectors. |
 | `ACCESS-006` | Just-in-time and time-bound access | target | done | `src/features/work/requests.ts`, `src/features/execution/automation.ts`, `tests/ui/connected-request.mjs` |  |
 | `ACCESS-007` | Self-service account recovery | target | missing |  | No password/MFA reset or unlock, in a cloud IdP or in on-premises AD. |
-| `ACCESS-008` | Application catalog and owners | target | partial | `src/features/work/requests.ts`, `src/features/services/economics.ts` | No app registry with entitlements. |
+| `ACCESS-008` | Application catalog and owners | target | done | `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs` | Local public-route and native 1440/390 proof of two Salesforce permission sets, linked catalog, owner routing, USD seat-cost snapshots, current scope/manager gates, erasure and held remapped restore. Connector metadata never claims provisioning or provider verification. |
 | `ACCESS-009` | User access reviews | target | missing |  | No access reviews. |
 | `ACCESS-010` | On-premises Active Directory (hybrid identity) | target | missing |  | No on-premises AD relay, source-of-authority routing or domain-controller readback. |
 | `LIFE-001` | HRIS-triggered lifecycle | target | missing |  | No Rippling, Gusto, BambooHR, Workday or Willow connector; lifecycle accepts HR facts through the API only. |

@@ -7,7 +7,8 @@ export async function getFulfilmentReadiness(ctx: WorkContext, workId: string, c
 }> {
   const work=await getWork(ctx,workId),db=ctx.env.DB,w=ctx.principal.workspaceId;
   const catalog=await db.prepare('SELECT * FROM work_catalog WHERE workspace_id=? AND id=?').bind(w,catalogId).first<any>();
-  const ownerId=catalog?.owner_id||work.assignee_id||work.requester_id;
+  const saved=await db.prepare('SELECT application_json FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?').bind(w,workId,catalogId).first<{application_json:string|null}>();
+  const ownerId=(saved?.application_json?JSON.parse(saved.application_json).ownerId:null)||catalog?.owner_id||work.assignee_id||work.requester_id;
   const blocked=(reason:string,holder:string|null=ownerId)=>({ready:false,reason,ownerId:holder});
   if(!catalog)return blocked('Catalogue item is unavailable; fulfilment owner must review');
   if(['closed','cancelled'].includes(work.state))return blocked('Work is closed or cancelled');

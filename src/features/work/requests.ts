@@ -1,3 +1,4 @@
+import { resolveApplication, applicationForRequest, applicationProjection } from './application-catalog';
 import { bindingErasureGuard, personForMember } from './person-binding';
 import { fulfilmentManagerApproval } from "./fulfilment-authority";
 import { amendFulfilment } from "./fulfilment-amend";
@@ -10,14 +11,23 @@ export async function createCatalogItem(
   input: {
     name: string;
     kind: "access" | "software" | "device";
-    target: string;
-    ownerId: string;
+    target?: string;
+    ownerId?: string;
+    applicationId?: string;
+    entitlementId?: string;
     requiresManager?: boolean;
     capacity?: number;
   },
 ) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner"]);
+  const application = input.applicationId && input.entitlementId ? await resolveApplication(ctx,input.applicationId,input.entitlementId) : null;
+  if(Boolean(input.applicationId)!==Boolean(input.entitlementId))throw new ApiError(422,'application_link','Application and entitlement must be selected together');
+  if(application) {
+    if(input.kind==='device' || (input.target && input.target!==application.target) || (input.ownerId && input.ownerId!==application.ownerId))
+      throw new ApiError(422,'application_link','Linked catalog target and owner come from the application');
+    input={...input,target:application.target,ownerId:application.ownerId};
+  }
   if (
     !input.name ||
     !input.target ||
@@ -32,7 +42,7 @@ export async function createCatalogItem(
       "Name, target, owner, kind and nonnegative capacity required",
     );
   const itemId = id();
-  await ctx.env.DB.prepare("INSERT INTO work_catalog VALUES(?,?,?,?,?,?,?,?,1)")
+  await ctx.env.DB.prepare("INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,requires_manager,capacity,revision,application_id,entitlement_id) VALUES(?,?,?,?,?,?,?,?,1,?,?)")
     .bind(
       itemId,
       ctx.principal.workspaceId,
@@ -42,6 +52,8 @@ export async function createCatalogItem(
       input.ownerId,
       Number(input.requiresManager || false),
       input.capacity ?? null,
+      input.applicationId || null,
+      input.entitlementId || null,
     )
     .run();
   return { id: itemId };
@@ -88,6 +100,9 @@ export async function requestFulfilment(
   )
     .bind(ctx.principal.workspaceId, input.catalogId)
     .first<{
+      id: string;
+      application_id: string | null;
+      entitlement_id: string | null;
       kind: string;
       target: string;
       owner_id: string;
@@ -95,6 +110,8 @@ export async function requestFulfilment(
       capacity: number | null;
     }>();
   if (!catalog) throw new ApiError(404, "not_found", "Catalog item not found");
+  const application = await applicationForRequest(ctx,workId,catalog);
+  if(application)catalog.owner_id=application.ownerId;
   const person = await personForMember(ctx, input.beneficiaryId);
   let blocked: string | null = null;
   const decisionOwner = await resolveManager(ctx, person?.manager_id || null);
@@ -165,7 +182,7 @@ export async function requestFulfilment(
   const kind = catalog.kind === "device" ? "device.deliver" : "access.grant";
   await ctx.env.DB.batch([
     ctx.env.DB.prepare(
-      "INSERT OR IGNORE INTO work_fulfilments VALUES(?,?,?,?,?,?,?,1)",
+      "INSERT OR IGNORE INTO work_fulfilments(id,workspace_id,work_id,catalog_id,beneficiary_id,purpose,expires_at,revision,application_json) VALUES(?,?,?,?,?,?,?,1,?)",
     ).bind(
       fid,
       ctx.principal.workspaceId,
@@ -174,6 +191,7 @@ export async function requestFulfilment(
       input.beneficiaryId,
       input.purpose,
       input.expiresAt || null,
+      application ? JSON.stringify(application) : null,
     ),
     ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,last_error) VALUES(?,?,?,?,?,?,?,?,?,?)",
@@ -213,6 +231,7 @@ export async function requestFulfilment(
     reason: blocked,
     ownerId: catalog.owner_id,
     decisionOwner,
+    application: application ? applicationProjection(ctx,application) : null,
     authority:
       "Execution must independently check current action grant; manager identity is not a grant",
   };
