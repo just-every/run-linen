@@ -1,3 +1,5 @@
+import { validateRecurrence, type RecurrenceRule } from './recurrence-calendar';
+import type { BusinessCalendar } from './calendar';
 import { calendarDate } from './depreciation';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, now } from "../../platform/http";
@@ -11,6 +13,9 @@ const tables = new Set([
   "work_pending_people",
   "work_pending_services",
   "work_assets",
+  "work_recurring_plans",
+  "work_recurring_occurrences",
+  "work_recurring_tasks",
   "work_asset_financials",
   "work_asset_contracts",
   "work_asset_repairs",
@@ -175,6 +180,19 @@ export async function restoreAdoptionRecord(
     if (input.table==='work_asset_contracts' && !await ctx.env.DB.prepare("SELECT 1 FROM svc_records WHERE workspace_id=? AND id=? AND kind='supplier'").bind(ctx.principal.workspaceId,String(row.vendor_id)).first())
       throw new ApiError(422,'restore_parent','Restore the matching vendor first');
   }
+  if (input.table==='work_recurring_plans') {
+    let rule:RecurrenceRule,calendar:BusinessCalendar,tasks:unknown;
+    try { rule=JSON.parse(String(row.rule_json));calendar=JSON.parse(String(row.calendar_json));tasks=JSON.parse(String(row.tasks_json)); }
+    catch { throw new ApiError(422,'restore_recurrence','Valid recurring plan content required'); }
+    if (!rule || !calendar || !Array.isArray(tasks)) throw new ApiError(422,'restore_recurrence','Valid recurring plan content required');
+    validateRecurrence(rule,calendar);
+    // Imported instructions never activate scheduled work under source authority.
+    row.enabled=0;
+  }
+  if (input.table==='work_recurring_occurrences' && !await ctx.env.DB.prepare('SELECT 1 FROM work_recurring_plans WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,String(row.plan_id)).first())
+    throw new ApiError(422,'restore_parent','Restore the recurring plan before its occurrence');
+  if (input.table==='work_recurring_tasks' && !await ctx.env.DB.prepare('SELECT 1 FROM work_recurring_occurrences WHERE workspace_id=? AND id=? AND work_id=?').bind(ctx.principal.workspaceId,String(row.occurrence_id),String(row.work_id)).first())
+    throw new ApiError(422,'restore_parent','Restore the matching occurrence before its tasks');
   if (input.table==='work_asset_financials') {
     calendarDate(row.in_service_date,'In-service date');
     if (!Number.isSafeInteger(row.purchase_cents) || Number(row.purchase_cents)<=0 || Number(row.purchase_cents)>100000000000
@@ -189,6 +207,7 @@ export async function restoreAdoptionRecord(
     if(row.state==='proposing')row.state='restored';
   }
   const subjects = [row.requester_id, row.beneficiary_id, row.author_id, row.actor_id, row.person_id, row.pending_person_id,
+    ...(input.table.startsWith('work_recurring_')?[row.creator_id,row.owner_id,row.completed_by]:[]),
     ...(input.table==='work_pending_people'?[row.id]:[])].filter(
     (v): v is string => typeof v === "string",
   );

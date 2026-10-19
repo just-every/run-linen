@@ -1,3 +1,4 @@
+import { RecurringWork } from './recurring-work';
 import { useEffect } from "react";
 import { useSession } from "./state";
 import type { RecordValue } from "./api";
@@ -77,6 +78,7 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
         )}
       </div>
       <div className="workbench-queue">
+        <RecurringWork />
         <Queue selectedId={selectedId} />
       </div>
       <div className="workbench-detail">

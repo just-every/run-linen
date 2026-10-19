@@ -1,3 +1,4 @@
+import { processDueRecurrences } from './recurrence';
 import { resumeFulfilmentAmendment } from "./fulfilment-amend-execution";
 import { currentWorkPrincipal } from "./identity";
 import { now } from "../../platform/http";
@@ -33,6 +34,7 @@ export async function processDueWork(
 ) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "integration"]);
+  await processDueRecurrences(ctx,at);
   const prepared = await ctx.env.DB.prepare("SELECT * FROM work_fulfilment_amendments WHERE workspace_id=? AND state='prepared' ORDER BY created_at LIMIT 50")
     .bind(ctx.principal.workspaceId).all();
   // Recovery uses the current scheduler principal and the recorded actor/grants;

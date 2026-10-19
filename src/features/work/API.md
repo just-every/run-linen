@@ -155,3 +155,16 @@ Owner/operators use `POST /assets/:id/financials` with `revision` (0 initially),
 value and the fiscal-year schedule. The matching `/financials.csv` door downloads
 the same fiscal schedule for accounting import. ASSET-008 in CONTRACT.md defines
 rounding, anniversary postings, zero salvage and fiscal bounds.
+
+### DESK-013 recurring work
+
+`GET/POST /recurring-work` lists or creates owned calendar plans. Creation takes
+`title`, `body`, `ownerId`, `calendar` (timezone, weekdays, startHour, holidays),
+`rule` (startDate, frequency, interval, firstBusinessDay), and optional
+`tasks: [{title,ownerId}]`. Plan content and calendar are immutable;
+`POST /recurring-work/:id` with current `revision` and `enabled` pauses/resumes.
+The existing scheduler and `POST /work/process-due` create due occurrences,
+one per plan per tick, atomically with the ticket, local tasks and cursor.
+`GET /work/:id/recurring-tasks` reads duties;
+`POST /work/:id/recurring-tasks/:task` with `revision` records completion.
+Imported plans remain disabled and need current active owners before resumption.

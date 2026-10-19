@@ -489,6 +489,16 @@ that product and marks how close the current code is (see [Status](#status)).
   refresh) are created on a calendar with owners. **Acceptance evidence:** create
   a monthly recurring task on the first business day; skip a holiday and see the
   next business day used.
+  Calendar semantics: each plan snapshots its time zone, business weekdays,
+  holiday dates and local creation hour. Daily, weekly, monthly and annual
+  intervals retain their original anchor; month-end dates clamp without drift.
+  Non-business dates roll forward. First-business-day schedules use the first
+  of each month (or annual anchor month); the initial occurrence never precedes
+  the selected start date. A daylight-saving fold uses the earliest matching
+  instant; a skipped local hour advances to the next real minute. Pausing keeps
+  existing work and overdue periods; resuming catches up one occurrence per
+  plan per scheduler tick. Task plans create owned local duties, each separately
+  completed; they do not authorize provider effects.
 
 - **DESK-014 — Remote support handoff.** From a ticket, an agent starts a remote
   session through the buyer's BeyondTrust Remote Support, TeamViewer or
@@ -1623,8 +1633,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 14 | 66 | 35 | 115 |
-| All | 18 | 86 | 35 | 139 |
+| Target and push further | 15 | 66 | 34 | 115 |
+| All | 19 | 86 | 34 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1662,7 +1672,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-010` | Custom fields, forms and statuses | target | missing |  | No custom fields, forms, statuses or required-on-status resolution code and close notes. |
 | `DESK-011` | Department workspaces | target | partial | `src/platform/auth.ts`, `src/features/work/core.ts`, `tests/platform/runtime.mjs` | No department workspaces under one portal. |
 | `DESK-012` | Time tracking and effort | target | done | `src/features/work/time.ts`, `src/features/work/effort-report.ts`, `tests/work/time-cases.mjs`, `tests/ui/time-journey.mjs`, `tests/adoption/runtime.mjs` | Local public work/task routes and real 1440/390 browser interval: manual and measured active minutes feed role/request-type effort totals with touches and failed/pending work. Visibility/focus/inactivity pauses, server-bounded sequenced heartbeats, current scope, erasure and inert restored timers are proved. Labor rates and charges remain unavailable; REPORT-004 is not claimed complete. |
-| `DESK-013` | Scheduled and recurring work | target | missing |  | No recurring tickets. |
+| `DESK-013` | Scheduled and recurring work | target | done | `src/features/work/recurrence.ts`, `src/features/work/recurrence-calendar.ts`; DESK-013 public routes in `tests/work/recurrence-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/recurrence-journey.mjs` via `tests/ui/browser.mjs`, `tests/adoption/recurrence-cases.mjs` via `tests/adoption/runtime.mjs`: calendar tickets/task plans with owners, first business day/holiday, atomic occurrences, DST/month-end, pause/resume, inert restore and 1440/390 journeys. | |
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
 | `DESK-015` | Agent scenarios and record templates | target | missing |  | No agent scenarios or record templates. |
 | `DESK-016` | Global agent search | target | partial | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs` | Articles only; no search across tickets, people, assets, CIs, changes or problems. |
