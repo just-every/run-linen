@@ -1,3 +1,4 @@
+import { DependencyDetails } from "./dependency-details";
 import { ProblemDetails } from "./problem-actions";
 import { NewChange } from "./setup-change";
 import { usePeopleLabels } from "./people-labels";
@@ -56,6 +57,8 @@ export function ServiceSpace({
   }));
   const fields: Record<string, Field[]> = {
     services: [
+      { name: "ciType", label: "Configuration item type", type: "select", value: "business_service", required: true, options: [{value:"hardware",label:"Hardware"},{value:"software",label:"Software"},{value:"saas_app",label:"SaaS app"},{value:"business_service",label:"Business service"},{value:"cloud_resource",label:"Cloud resource"}] },
+      { name: "provenance", label: "How these facts were obtained", type: "select", value: "asserted", required: true, options: [{value:"asserted",label:"Asserted"},{value:"observed",label:"Observed"},{value:"inferred",label:"Inferred"}] },
       { name: "name", label: "Service name", required: true },
       {
         name: "description",
@@ -221,6 +224,7 @@ export function ServiceSpace({
                   ]}
                 />
               </div>
+              {["services", "incidents", "changes"].includes(section) && <DependencyDetails section={section} record={record} canEdit={canEdit} />}
               {section === "incidents" && (
                 <>
                   <h2>What is known about recovery</h2>

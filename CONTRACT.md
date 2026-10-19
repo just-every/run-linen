@@ -858,6 +858,16 @@ that product and marks how close the current code is (see [Status](#status)).
   upstream/downstream impact. **Acceptance evidence:** relate "Payroll" to Gusto
   and to the SSO service; a change to SSO shows Payroll as impacted; a stale
   relationship is marked stale.
+  Configuration item types are hardware, software, SaaS app, business service
+  and cloud resource; existing service records are business services. Facts are
+  labeled observed, asserted or inferred. Relationships point from dependent to
+  dependency: `depends_on`, `hosted_on`, `runs_on` and `uses` contribute to impact;
+  `connects_to` records a non-dependency connection. Upstream means dependencies,
+  downstream means dependents, transitively, within the reader's existing scope.
+  Freshness is inclusive from observed time through observed time plus the
+  recorded millisecond window; a future observation is not fresh. Stale,
+  conflicting or not-yet-effective relationships yield uncertain possible impact.
+  An absent relationship is unknown; inferred impact does not establish an outage.
 
 - **ASSET-010 — Physical audits.** Asset audits by location using the mobile app
   to scan tags, with expected-vs-found reconciliation and missing-device follow
@@ -1633,8 +1643,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 15 | 66 | 34 | 115 |
-| All | 19 | 86 | 34 | 139 |
+| Target and push further | 16 | 65 | 34 | 115 |
+| All | 20 | 85 | 34 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1704,7 +1714,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `ASSET-006` | Software license management and compliance | target | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No IdP usage feed, reclamation through connectors, desktop installation compliance or prohibited titles. |
 | `ASSET-007` | Contracts, warranties and vendors | target | partial | `src/features/work/asset-contracts.ts`, `tests/work/asset-contract-cases.mjs`, `tests/ui/asset-contract-journey.mjs`, `tests/adoption/asset-contract-cases.mjs` | Local public-route and 1440/390 browser proof: purchase, lease, warranty and support records link assets/vendors; repair tickets show recorded coverage and current expiry alerts; official manufacturer lookup doors remain separate from recorded terms. Native archives retain vendor/asset/repair links through two generations. Authorized partner-API retrieval remains unimplemented and needs customer partner access; no automated manufacturer readback or provider acceptance claimed. |
 | `ASSET-008` | Asset financials | target | done | `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs` via `tests/ui/browser.mjs`: ASSET-008 USD cost/center, both methods, month-12 value, fiscal CSV, scoped access and 1440/390 readback. | |
-| `ASSET-009` | CMDB and service dependencies | target | partial | `src/features/services/graph.ts`, `tests/services/run.mjs` | No CI type model or impact view. |
+| `ASSET-009` | CMDB and service dependencies | target | done | `tests/services/dependency-cases.mjs`, `tests/ui/dependency-journey.mjs` | Local public-route and 1440/390 browser proof: five CI types, attributed typed dependencies, Payroll/Gusto/SSO, transitive incident/change upstream/downstream impact, stale/conflicting uncertainty, cycles and existing scope isolation. |
 | `ASSET-010` | Physical audits | target | missing |  | No physical audits. |
 | `ASSET-011` | Hardware requests and device swaps for existing employees | target | partial | `src/features/work/resources.ts`, `tests/ui/custody-journey.mjs` | No replacement/loaner chain, MDM enrollment, shipping, return kit or swap gate. |
 | `INC-001` | Major incidents | target | partial | `src/features/services/incidents.ts`, `tests/services/run.mjs` | No war room or Oncall/PagerDuty connector. |

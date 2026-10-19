@@ -6,6 +6,8 @@ export async function addEdge(db: D1Database, p: Principal, b: Record<string, an
     const from = await getService(db, p, requiredString(b.from, 'from')), to = await getService(db, p, requiredString(b.to, 'to'));
     if (!['observed', 'asserted', 'inferred'].includes(b.provenance))
         throw new ApiError(400, 'provenance', 'Observed, asserted or inferred provenance required');
+    if (!['depends_on', 'hosted_on', 'runs_on', 'uses', 'connects_to'].includes(b.relationship)) throw new ApiError(400, 'relationship', 'Choose a supported relationship type');
+    if (b.value !== undefined && typeof b.value !== 'boolean') throw new ApiError(400, 'relationship_value', 'Relationship value must be boolean');
     const data = { from: from.id, to: to.id, relationship: requiredString(b.relationship, 'relationship'), provenance: b.provenance, source: requiredString(b.source, 'source'), sourceRevision: requiredString(b.sourceRevision, 'sourceRevision'), observedAt: date(b.observedAt, 'observedAt'), effectiveAt: date(b.effectiveAt, 'effectiveAt'), freshnessMs: number(b.freshnessMs, 'freshnessMs', 1), value: b.value ?? true, ingestedAt: new Date().toISOString() };
     return create(db, p, 'edge', data, { visibility: from.visibility === 'restricted' || to.visibility === 'restricted' ? 'restricted' : 'operators', participants: [p.userId] });
 }

@@ -8,6 +8,8 @@ import { advanceDecision, newDecision, decide, amendDecision } from './decisions
 import { changeExecutionPort } from '../execution/change-port';
 import { setChangeExecutionPort } from './changes';
 import { addEdge, serviceGraph } from './graph';
+import { newConfigurationItem } from './configuration';
+import { dependencyImpact } from './dependency-impact';
 import { diagnosticFinding, incidentFollowup, newIncident, linkIncident, updateIncident, assignDiagnostic, incidentCandidates, recordVerifiedRecovery, type RecoveryEvidence } from './incidents';
 import { newChange, editChange, authorizeChange, dispatchChange, verifyChange } from './changes';
 import { supplierObservation,reviewSupplierOutcome,assignAsset, returnAsset, recordCharge, newSupplier, supplierCommitment, supplierHandoff, acceptHandoff, supplierBreaches, newAsset, assetTransition, assetUsage, reclamationDecision, serviceReport } from './economics';
@@ -57,7 +59,9 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     app.post('/decisions/:id/advance', async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await advanceDecision(c.env, p, await getService(c.env.DB, p, c.req.param('id'), 'decision'))); });
     app.post('/decisions/:id/amend', async (c) => { const p = c.get('principal'); return c.json(await amendDecision(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'decision'), await jsonBody(c))); });
     app.post('/service-people', async (c) => { const p = requireRole(c, 'owner', 'operator', 'hr'), b = await jsonBody(c); return c.json(await create(c.env.DB, p, 'person', { name: requiredString(b.name, 'name'), externalId: requiredString(b.externalId, 'externalId'), source: requiredString(b.source, 'source'), sourceRevision: requiredString(b.sourceRevision, 'sourceRevision'), observedAt: date(b.observedAt, 'observedAt'), freshnessMs: number(b.freshnessMs, 'freshnessMs', 1), provenance: 'observed' }, { visibility: 'restricted', participants: b.participants as string[] }), 201); });
-    app.post('/services', async (c) => { const p = requireRole(c, 'owner', 'operator'); const b = await jsonBody(c); return c.json(await create(c.env.DB, p, 'service', { name: requiredString(b.name, 'name'), description: requiredString(b.description, 'description'), businessImpact: requiredString(b.businessImpact, 'businessImpact'), source: requiredString(b.source, 'source'), observedAt: date(b.observedAt, 'observedAt'), freshnessMs: number(b.freshnessMs ?? 86400000, 'freshnessMs', 1) }, { visibility: b.visibility as string, participants: b.participants as string[] }), 201); });
+    app.post('/services', async c => c.json(await newConfigurationItem(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
+    for (const [path, kind] of [['services','service'],['incidents','incident'],['changes','change']] as const)
+        app.get(`/${path}/:id/impact`, async c => { const p=c.get('principal'); return c.json(await dependencyImpact(c.env.DB,p,await getService(c.env.DB,p,c.req.param('id'),kind))); });
     app.get('/service-graph', async (c) => c.json(await serviceGraph(c.env.DB, c.get('principal'))));
     app.post('/service-graph/edges', async (c) => c.json(await addEdge(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     app.post('/incidents', async (c) => c.json(await newIncident(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));

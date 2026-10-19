@@ -480,3 +480,7 @@ a.record-row:hover {
     grid-area: arrow;
   }
 }
+
+/* Dependency facts wrap as a single text column beside their freshness badge. */
+.dependency-details .record-row > span:first-child > strong,
+.dependency-details .record-row > span:first-child > small { grid-area: auto; white-space: normal; }
