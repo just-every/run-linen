@@ -1,5 +1,6 @@
 import { catalogItems } from './application-routes';
 import { suggestWorkarounds } from './workaround-suggestions';
+import { suggestArticles, confirmSuggestion } from './deflection';
 import type { Hono } from "hono";
 import type { AppEnv } from "../../platform/types";
 import { jsonBody, requiredString } from "../../platform/http";
@@ -96,6 +97,15 @@ export function registerKnowledgeRoutes(app: Hono<AppEnv>) {
       201,
     ),
   );
+  // KB-003: answer before filing; only the asker's confirmation counts as a deflection.
+  app.post("/knowledge/suggestions", async (c) => {
+    const b = await jsonBody(c);
+    return c.json(await suggestArticles({ env: c.env, principal: c.get("principal") }, requiredString(b.question, "question", 50000)), 201);
+  });
+  app.post("/knowledge/suggestions/:id/confirm", async (c) => {
+    const b = await jsonBody(c);
+    return c.json(await confirmSuggestion({ env: c.env, principal: c.get("principal") }, c.req.param("id"), requiredString(b.articleId, "articleId")));
+  });
   app.post("/knowledge/:id/escalate", async (c) => {
     const b = await jsonBody(c);
     return c.json(

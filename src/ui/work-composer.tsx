@@ -6,6 +6,7 @@ import { ErrorNotice, Notice } from "./primitives";
 import { draftKey, readDraft, writeDraft } from "./drafts";
 import type { PendingPerson } from "./pending-people";
 import { ResponseTools } from './response-tools';
+import { KnowledgeSuggestions, type OfferedArticles } from "./knowledge-suggestions";
 export function Composer({
   workId,
   onSent,
@@ -18,7 +19,10 @@ export function Composer({
     [file, setFile] = useState<File | null>(null),
     [attachmentName, setAttachmentName] = useState(""),
     [uploadError, setUploadError] = useState<unknown>(null),
-    [uploading, setUploading] = useState(false);
+    [uploading, setUploading] = useState(false),
+    // KB-003: articles offered for exactly this text, or null when none were asked for yet.
+    [offer, setOffer] = useState<{ body: string; value: OfferedArticles | null } | null>(null),
+    [solvedTitle, setSolvedTitle] = useState("");
   const key = useRef<string>(crypto.randomUUID()),
     fileInput = useRef<HTMLInputElement>(null),
     mutation = useMutation(),
@@ -61,6 +65,8 @@ export function Composer({
     return () => { active = false; };
   }, [session.csrfToken, session.principal.userId, session.principal.workspaceId, privateAllowed, workId]);
   function updateDraft(nextBody: string, nextVisibility: string, nextAttachmentName = attachmentName) {
+    if (nextBody !== offer?.body) setOffer(null);
+    setSolvedTitle("");
     setBody(nextBody);
     setVisibility(nextVisibility);
     setAttachmentName(nextAttachmentName);
@@ -73,6 +79,18 @@ export function Composer({
     event.preventDefault();
     if (attachmentName && !file) return;
     setUploadError(null);
+    // A new request for yourself is first checked against reviewed knowledge.
+    if (!workId && !forId && offer?.body !== body) {
+      const found = await mutation.mutate<{ id: string | null; items: RecordValue[] }>("/knowledge/suggestions", { question: body });
+      if (!found) return;
+      const value = found.id && found.items.length ? { id: found.id, items: found.items } : null;
+      setOffer({ body, value });
+      if (value) return;
+    }
+    // Pressing Send again on the same text after an offer is sending anyway.
+    await send(!workId && !forId && offer?.body === body ? offer.value?.id ?? null : null);
+  }
+  async function send(suggestionId: string | null) {
     const result = await mutation.mutate<RecordValue>(
       workId ? `/work/${workId}/messages` : "/work",
       workId
@@ -82,6 +100,7 @@ export function Composer({
             body,
             deduplicationKey: key.current,
             ...(pendingId ? { pendingPersonId: pendingId, catalogIds } : forId ? { beneficiaryId: forId } : {}),
+            ...(suggestionId ? { suggestionId } : {}),
           },
     );
     if (!result) return;
@@ -119,6 +138,7 @@ export function Composer({
       }
     }
     updateDraft("", visibility, "");
+    setOffer(null);
     setForId("");
     setCatalogIds([]);
     key.current = crypto.randomUUID();
@@ -241,6 +261,22 @@ export function Composer({
           This note is hidden from employees without service-team access.
         </small>
       )}
+      {offer?.value && offer.body === body && (
+        <KnowledgeSuggestions
+          offer={offer.value}
+          sending={mutation.pending || uploading}
+          onSendAnyway={() => send(offer.value!.id)}
+          onSolved={(title) => {
+            updateDraft("", visibility, "");
+            setOffer(null);
+            if (fileInput.current) fileInput.current.value = "";
+            setFile(null);
+            key.current = crypto.randomUUID();
+            setSolvedTitle(title);
+          }}
+        />
+      )}
+      {solvedTitle && <Notice>Glad “{solvedTitle}” solved it. Nothing was sent; ask again any time.</Notice>}
       <ErrorNotice error={mutation.error} />
       <ErrorNotice error={uploadError} />
       {attachmentName && !file && <Notice>Reselect the attachment before sending, or remove it.</Notice>}

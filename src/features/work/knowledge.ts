@@ -1,4 +1,5 @@
 import { effortReport } from "./effort-report";
+import { deflectionReport } from "./deflection";
 import { validateArticle, newArticleWrites, type ArticleInput } from './article-write';
 import { currentWorkPrincipal } from "./identity";
 import { assertKnowledgeArticleSources } from './knowledge-draft-sources';
@@ -156,6 +157,7 @@ export async function workReport(
     obligations,
     calendars,
     effort: await effortReport(ctx, from, to),
+    deflection: await deflectionReport(ctx, from, to),
     denominator: rows.length,
     definition:
       "Normal-sensitivity work created in [from,to); closure is administrative, not verified fulfilment; ages are elapsed milliseconds excluding explicit pauses.",

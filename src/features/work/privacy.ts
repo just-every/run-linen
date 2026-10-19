@@ -136,6 +136,7 @@ async function eraseSinglePerson(
     ).bind(w, p, w, p, p),
     ctx.env.DB.prepare("UPDATE work_recurring_plans SET title='[erased]',body='[erased]',tasks_json='[]',enabled=0,revision=revision+1 WHERE workspace_id=? AND (creator_id=? OR owner_id=? OR EXISTS(SELECT 1 FROM json_each(tasks_json) WHERE json_extract(value,'$.ownerId')=?))").bind(w,p,p,p),
     ctx.env.DB.prepare("UPDATE work_recurring_tasks SET title='[erased]',owner_id=CASE WHEN owner_id=? THEN '[erased]' ELSE owner_id END,completed_by=CASE WHEN completed_by=? THEN '[erased]' ELSE completed_by END,revision=revision+1 WHERE workspace_id=? AND (owner_id=? OR completed_by=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(p,p,w,p,p,w,p,p),
+    ctx.env.DB.prepare("UPDATE work_knowledge_suggestions SET asker_id='[erased]',articles_json='[]' WHERE workspace_id=? AND asker_id=?").bind(w,p),
     ctx.env.DB.prepare("UPDATE work_time_entries SET note='[erased]',state='completed',last_seen_at=NULL,sequence=sequence+1 WHERE workspace_id=? AND (actor_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(w,p,w,p,p),
     ctx.env.DB.prepare(
       "UPDATE work_records SET title='[erased]',context_json='{}',revision=revision+1 WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)",

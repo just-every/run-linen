@@ -1,3 +1,4 @@
+import { fileAfterSuggestion } from "./deflection";
 import { listPendingPeople, savePendingPerson, withdrawPendingPerson } from './pending-people';
 import { listFulfilmentDecisions } from "./fulfilment-decisions";
 import { approveFulfilment } from "./fulfilment-authority";
@@ -98,26 +99,21 @@ export function registerConversationRoutes(app: Hono<AppEnv>) {
   for (const path of ["/work", "/requests"])
     app.post(path, async (c) => {
       const b = await jsonBody(c);
+      const ctx = { env: c.env, principal: c.get("principal") };
+      const input = {
+        title: requiredString(b.title, "title"),
+        body: requiredString(b.body, "body", 50000),
+        deduplicationKey: requiredString(b.deduplicationKey, "deduplicationKey"),
+        kind: typeof b.kind === "string" ? b.kind : undefined,
+        beneficiaryId: typeof b.beneficiaryId === "string" ? b.beneficiaryId : undefined,
+        sensitivity: typeof b.sensitivity === "string" ? b.sensitivity : undefined,
+        context: b.context,
+        pendingPersonId: typeof b.pendingPersonId === 'string' ? b.pendingPersonId : undefined,
+        catalogIds: b.catalogIds as string[] | undefined,
+      };
+      // KB-003: filing after reviewed articles were offered records the request on that suggestion.
       return c.json(
-        await createWork(
-          { env: c.env, principal: c.get("principal") },
-          {
-            title: requiredString(b.title, "title"),
-            body: requiredString(b.body, "body", 50000),
-            deduplicationKey: requiredString(
-              b.deduplicationKey,
-              "deduplicationKey",
-            ),
-            kind: typeof b.kind === "string" ? b.kind : undefined,
-            beneficiaryId:
-              typeof b.beneficiaryId === "string" ? b.beneficiaryId : undefined,
-            sensitivity:
-              typeof b.sensitivity === "string" ? b.sensitivity : undefined,
-            context: b.context,
-            pendingPersonId:typeof b.pendingPersonId==='string'?b.pendingPersonId:undefined,
-            catalogIds:b.catalogIds as string[]|undefined,
-          },
-        ),
+        await (typeof b.suggestionId === "string" ? fileAfterSuggestion(ctx, b.suggestionId, input) : createWork(ctx, input)),
         201,
       );
     });

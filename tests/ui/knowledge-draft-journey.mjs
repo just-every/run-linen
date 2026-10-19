@@ -30,6 +30,35 @@ export async function knowledgeDraftJourney({page,api,base,out,model}) {
   await page.goto(base+'/app#/knowledge?q='+encodeURIComponent(draft.title));
   await page.getByRole('heading',{name:draft.title,exact:true}).first().waitFor();
   await captureJourney(page,{path:out+'/KB-004-published.png',fullPage:true});
+  // KB-003: the published answer is offered before a request is sent; confirming files nothing, sending anyway is never deflected.
+  const reportPath=`/reports/work?from=${encodeURIComponent(new Date(Date.now()-60000).toISOString())}&to=2099-01-01T00:00:00.000Z&timezone=UTC`;
+  const ask=async question=>{
+    await page.goto(base+'/app#/work');
+    await page.locator('#conversation-message').fill(question);
+    const offered=page.waitForResponse(r=>r.url().endsWith('/knowledge/suggestions')&&r.request().method()==='POST');
+    await page.getByRole('button',{name:'Send message'}).click();
+    assert.equal((await offered).status(),201);
+    const panel=page.getByRole('region',{name:'Reviewed answers before you send'});
+    await panel.getByRole('heading',{name:draft.title,exact:true}).waitFor();
+    return panel;
+  };
+  const before=(await api('/work')).items.length;
+  let panel=await ask('How do I recover network access?');
+  await captureJourney(page,{path:out+'/KB-003-offered.png',fullPage:true});
+  await panel.getByRole('button',{name:'This solved it'}).click();
+  await page.getByText('Nothing was sent',{exact:false}).waitFor();
+  assert.equal((await api('/work')).items.length,before,'KB-003 a confirmed answer files no request');
+  assert.equal((await api(reportPath)).deflection.deflected,1);
+  await page.setViewportSize({width:390,height:900});
+  panel=await ask('Recover network access did not work for me');
+  await captureJourney(page,{path:out+'/KB-003-send-anyway-390.png',fullPage:true});
+  await panel.getByRole('button',{name:'Send my request anyway'}).click();
+  await page.waitForURL(/#\/work\/[^/?]+$/);
+  const filed=await api('/work/'+page.url().split('#/work/')[1]);
+  assert.ok(JSON.parse(filed.work.context_json).knowledgeSuggestionId,'KB-003 filing anyway keeps the offered suggestion on the request');
+  const deflection=(await api(reportPath)).deflection;
+  assert.equal(deflection.deflected,1,'KB-003 sending anyway is never counted as deflected');assert.equal(deflection.filedAfterSuggestion,1);
+  await page.setViewportSize({width:1440,height:1000});
   const reader=await api('/members',{email:'knowledge-recipient@example.test',name:'Casey Recipient',password:'synthetic recipient browser password',roles:['employee']});
   const reply=await api('/work',{title:'Network guidance for Casey',body:'Casey needs help with a network session.',beneficiaryId:reader.id,deduplicationKey:crypto.randomUUID()});
   const callsBefore=(await (await fetch(base+'/__fixture/evidence')).json()).calls.filter(c=>c.kind==='model').length;

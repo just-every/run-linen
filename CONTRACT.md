@@ -1169,6 +1169,25 @@ that product and marks how close the current code is (see [Status](#status)).
   **Acceptance evidence:** a "how do I connect to VPN" question is answered with
   an article; the employee confirms; a second employee who files a ticket anyway
   is not counted as deflected.
+  *Today's semantic:* a request a person sends for themselves from the portal is
+  first matched against current reviewed articles they may read. An article is
+  offered when at least half (rounded up) of the question's content words
+  (normalized tokens of three or more characters, excluding common English
+  function words) appear in its title and body, with at least one in its title;
+  at most three are offered, by words matched then recency. A suggestion records
+  the asker, the offered article revisions and the outcome, never the question
+  text. Today the only evidence that the issue is resolved is the asker's own
+  confirmation of an offered article that is still current and readable; a
+  request filed from that question, even after a confirmation, is never a
+  deflection, and an unanswered suggestion is not counted. The work report shows
+  offered, deflected, filed-after-suggestion and unanswered counts as aggregates
+  only. No self-service action resolves an issue without a request today (catalog
+  services are fulfilled through one), so there is no action to suggest yet.
+  CHANNEL-001 (Slack) and CHANNEL-002 (Teams) inherit this suggestion and count
+  before they ship; ACCESS-007 and CATALOG-001 inherit it for any self-service
+  action they add; and any later resolution evidence (such as a verified
+  execution outcome, AGENT-003) inherits the rule that only a resolved issue
+  counts.
 
 - **KB-004 — Articles from resolved work.** Linen drafts articles from resolved
   tickets and known errors with source links; a reviewer publishes or rejects.
@@ -1811,8 +1830,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 24 | 58 | 33 | 115 |
-| All | 28 | 78 | 33 | 139 |
+| Target and push further | 25 | 57 | 33 | 115 |
+| All | 29 | 77 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1901,7 +1920,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `PROJECT-001` | IT team projects | target | missing |  | No IT projects. |
 | `KB-001` | Knowledge base | target | done | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs` |  |
 | `KB-002` | Federated knowledge sources | target | missing |  | No federated sources (Confluence, Slate, Google Drive, SharePoint, Notion). |
-| `KB-003` | Deflection with verified outcome | target | partial | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs` | No suggestion before filing or deflection count. |
+| `KB-003` | Deflection with verified outcome | target | done | `src/features/work/deflection.ts`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/knowledge-draft-journey.mjs` | Local public-route and inspected 1440/390 browser proof: a VPN question is answered by the readable reviewed article before filing (never an HR-only one); the asker's confirmation is the only deflection; a second employee who files anyway, and a confirmation followed by filing, are not counted; asker-only confirmation and aggregate report counts. Slack/Teams suggestions are inherited by CHANNEL-001/002. |
 | `KB-004` | Articles from resolved work | target | done | `src/features/work/knowledge-drafts.ts`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/knowledge-draft-journey.mjs`, `tests/adoption/knowledge-draft-cases.mjs` | Local public-route and paid-model-edge fixtures prove three-source and known-error drafts, all-source citations, explicit generation/budget, reviewer publication/rejection and durable suppression; current scope/source/reopen/erasure gates, native restore and inspected 1440/390 journeys. No live-model quality claim. |
 | `KB-005` | Article feedback, attachments and templates | target | missing |  | No article feedback, attachments or templates. |
 | `REPORT-001` | Service desk dashboards | target | partial | `src/features/work/knowledge.ts`, `src/features/services/economics.ts`, `tests/adoption/prior-data-upgrade.mjs`, `tests/services/run.mjs` | No dashboards, CSAT, per-agent views or reporting on imported history. |

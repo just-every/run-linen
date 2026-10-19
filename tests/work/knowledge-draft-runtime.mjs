@@ -1,4 +1,4 @@
-import {knowledgeDraftChecks} from './knowledge-draft-cases.mjs';
+import {knowledgeDraftChecks,deflectionChecks} from './knowledge-draft-cases.mjs';
 import {readFile,readdir,mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -22,4 +22,5 @@ try {
     await db.exec((await readFile(join(root,'migrations',file),'utf8')).replace(/^--.*$/gm,'').replace(/\n/g,' '));
   await db.exec(`INSERT INTO workspaces VALUES('a','A','2026-01-01'); INSERT INTO users VALUES('owner','owner@test','Owner','unused','2026-01-01'); INSERT INTO users VALUES('employee','employee@test','Employee','unused','2026-01-01'); INSERT INTO users VALUES('stranger','stranger@test','Stranger','unused','2026-01-01'); INSERT INTO memberships VALUES('a','owner','["owner"]',1); INSERT INTO memberships VALUES('a','employee','["employee"]',1); INSERT INTO memberships VALUES('a','stranger','["operator"]',1);`);
   await knowledgeDraftChecks(api,db);
+  await deflectionChecks(api,db);
 }finally{await mf.dispose();await rm(dir,{recursive:true,force:true});}

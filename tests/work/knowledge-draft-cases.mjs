@@ -133,3 +133,34 @@ export async function knowledgeDraftChecks(api,db) {
   console.log('PASS KB-004 public routes: three-source draft, known errors, explicit paid generation/budget, schema/citations, private exclusion, reviewer publication/rejection, durable dedup and source withdrawal');
   return {draftId:draft.id,articleId:draft.articleId,knownDraftId:known.id};
 }
+/** KB-003: an article answers a question before filing; only the asker's confirmation counts as deflected. */
+export async function deflectionChecks(api,db) {
+  const check=(r,status=200)=>{assert.equal(r.status,status,JSON.stringify(r));return r.value;};
+  const from=new Date(Date.now()-1000).toISOString(),to=new Date(Date.now()+86400000).toISOString();
+  await db.exec(`INSERT INTO users VALUES('second','second@test','Second','unused','2026-01-01'); INSERT INTO memberships VALUES('a','second','["employee"]',1);`);
+  const first={'x-user':'employee','x-roles':'["employee"]'},second={'x-user':'second','x-roles':'["employee"]'};
+  const expiresAt=new Date(Date.now()+86400000).toISOString();
+  const vpn=check(await api('/knowledge',{title:'Connect to the VPN',body:'Open the VPN client, choose Company VPN and sign in with your work account.',scope:'employees',expiresAt,review:true}),201);
+  const hr=check(await api('/knowledge',{title:'VPN for HR investigations',body:'Restricted HR VPN connect procedure.',scope:'hr',expiresAt,review:true}),201);
+  const ask=async headers=>check(await api('/knowledge/suggestions',{question:'How do I connect to VPN?'},headers),201);
+  const offered=await ask(first);
+  assert.ok(offered.id);assert.deepEqual(offered.items.map(a=>a.id),[vpn.id],'KB-003 the VPN question is answered with the readable reviewed article, never the HR-only one');
+  assert.ok(!offered.items.some(a=>a.id===hr.id));
+  assert.deepEqual(check(await api('/knowledge/suggestions',{question:'Printer jams on floor three'},first),201),{id:null,items:[]},'KB-003 no matching article offers nothing and records nothing');
+  check(await api(`/knowledge/suggestions/${offered.id}/confirm`,{articleId:vpn.id},second),404);
+  check(await api(`/knowledge/suggestions/${offered.id}/confirm`,{articleId:hr.id},first),404);
+  assert.equal(check(await api(`/knowledge/suggestions/${offered.id}/confirm`,{articleId:vpn.id},first)).outcome,'confirmed');
+  const anyway=await ask(second);
+  const filed=check(await api('/work',{title:'VPN still fails',body:'How do I connect to VPN? The article did not help.',suggestionId:anyway.id,deduplicationKey:crypto.randomUUID()},second),201);
+  assert.equal(JSON.parse(check(await api(`/work/${filed.id}`,undefined,second)).work.context_json).knowledgeSuggestionId,anyway.id);
+  check(await api(`/knowledge/suggestions/${anyway.id}/confirm`,{articleId:vpn.id},second),409);
+  check(await api('/work',{title:'Not mine',body:'Filed on another suggestion',suggestionId:offered.id,deduplicationKey:crypto.randomUUID()},second),404);
+  const later=await ask(first);
+  check(await api(`/knowledge/suggestions/${later.id}/confirm`,{articleId:vpn.id},first));
+  check(await api('/work',{title:'VPN dropped again',body:'It worked, then failed again.',suggestionId:later.id,deduplicationKey:crypto.randomUUID()},first),201);
+  const report=check(await api(`/reports/work?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&timezone=UTC`));
+  assert.deepEqual({...report.deflection,definition:undefined},{offered:3,deflected:1,filedAfterSuggestion:2,unanswered:0,definition:undefined},'KB-003 the second employee who filed anyway, and a confirmation followed by filing, are not deflections');
+  assert.ok(report.deflection.definition);
+  check(await api(`/reports/work?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&timezone=UTC`,undefined,first),403);
+  console.log('PASS KB-003 public routes: VPN question answered before filing, confirmed deflection counted, filing anyway never counted, scoped articles and asker-only confirmation');
+}
