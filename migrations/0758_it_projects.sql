@@ -1,0 +1,6 @@
+-- PROJECT-001: IT team projects with milestones, dependent tasks and links to tickets, changes, assets and lifecycle plans.
+CREATE TABLE work_projects(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,name TEXT NOT NULL,description TEXT NOT NULL DEFAULT '',owner_id TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'active',revision INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE work_project_milestones(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,project_id TEXT NOT NULL,name TEXT NOT NULL,due_date TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE TABLE work_project_tasks(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,project_id TEXT NOT NULL,milestone_id TEXT,title TEXT NOT NULL,owner_id TEXT NOT NULL,due_date TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'todo',depends_on_json TEXT NOT NULL DEFAULT '[]',revision INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE INDEX work_project_tasks_owner ON work_project_tasks(workspace_id,owner_id,status);
+CREATE TABLE work_project_links(workspace_id TEXT NOT NULL,project_id TEXT NOT NULL,kind TEXT NOT NULL,target_id TEXT NOT NULL,task_id TEXT,detail TEXT NOT NULL DEFAULT '',created_by TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(workspace_id,project_id,kind,target_id));

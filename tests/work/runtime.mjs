@@ -4,6 +4,7 @@ import { problemDetectionChecks } from './problem-detection-cases.mjs';
 import { responseChecks } from './response-cases.mjs';
 import { recurrenceChecks } from './recurrence-cases.mjs';
 import { slaPolicyChecks } from './sla-policy-cases.mjs';
+import { projectChecks } from './project-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
 import { timeChecks } from "./time-cases.mjs";
 import { problemChecks } from "./problem-cases.mjs";
@@ -683,6 +684,7 @@ try {
     .bind("employee")
     .run();
   await searchChecks(api,db);
+  await projectChecks(api);
   await mf.dispose();
   mf = new Miniflare({
     ...convertV4MiniflareOptions({ ...options, port: Number(process.env.LINEN_TEST_WORKER_PORT || 0) }),
