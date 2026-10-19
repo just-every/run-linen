@@ -77,7 +77,10 @@ export async function knowledgeDraftChecks(api,db) {
   assert.ok(!check(await api('/knowledge?q=Recover%20network')).items.some(a=>a.id===draft.articleId));
   check(await api(`/knowledge/${draft.articleId}/escalate`,{question:'Need help',deduplicationKey:crypto.randomUUID()}),404);
   const rejectedTickets=[await ticket('KB004 Reject'),await ticket('KB004 Reject'),await ticket('KB004 Reject')];
-  let rejected=group(await detect(),'KB004 Reject');rejected=check(await api(`/knowledge-drafts/${rejected.id}/reject`,{revision:rejected.revision,reason:'These outcomes do not establish a shared remedy'}));
+  let rejected=group(await detect(),'KB004 Reject');
+  rejected=check(await api(`/knowledge-drafts/${rejected.id}/generate`,{revision:rejected.revision,connectionId:'knowledge-model',generate:true}));
+  assert.equal(rejected.state,'draft');
+  rejected=check(await api(`/knowledge-drafts/${rejected.id}/reject`,{revision:rejected.revision,reason:'These outcomes do not establish a shared remedy'}));
   await ticket('KB004 Reject');assert.equal(group(await detect(),'KB004 Reject').state,'rejected');
   assert.equal(group(await detect(),'KB004 Reject').id,rejected.id);
   await ticket('KB004 Sensitive',{},'hr');await ticket('KB004 Sensitive',{},'hr');await ticket('KB004 Sensitive',{},'hr');

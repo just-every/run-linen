@@ -1824,7 +1824,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `A3` | Durable effects | published | done | `src/features/execution/engine.ts`, `tests/ui/connected-cancellation.mjs`, `tests/ui/connected-restart.mjs`, `tests/execution/runtime.mjs` |  |
 | `A4` | Verifiable outcomes | published | done | `src/features/execution/verification.ts`, `tests/ui/connected-request.mjs`, `tests/execution/runtime.mjs` |  |
 | `A5` | Legible service | published | partial | `src/ui`, `tests/ui/run.mjs`, `tests/ui/viewport-evidence.mjs` | No chat channels; bounded accessibility evidence. |
-| `A6` | Data and source custody | published | partial | `src/features/adoption`, `tests/adoption/prior-data-upgrade.mjs`, `tests/adoption/runtime.mjs` | Incumbent imports bounded to Freshservice. |
+| `A6` | Data and source custody | published | partial | `src/features/adoption`, `tests/adoption/prior-data-upgrade.mjs`, `tests/adoption/runtime.mjs` | Incumbent imports bounded to Freshservice. Legacy domain `/exports` also refuses a fresh post-erasure snapshot with `erasure_invalidated_snapshot`; this gap was observed during KB-004 checks and remains open. |
 | `A7` | Honest operating and cost boundaries | published | partial | `src/features/intelligence/measurement.ts`, `tests/intelligence/runtime.mjs` | Human touch counting incomplete. |
 | `O1` | Service graph and major incidents | published | partial | `src/features/services/graph.ts`, `tests/services/run.mjs`, `tests/services/integration.mjs` | No real monitoring/on-call. |
 | `O2` | Change, release and prevention | published | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs`, `tests/ui/connected-frontier.mjs` | No live provider or sustained prevention. |

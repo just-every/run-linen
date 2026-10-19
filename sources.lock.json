@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "39750088ab8c94d7ff66bec4da00cb874e309ec445b599222a60286d29941adc",
+      "sha256": "bc04de5887c3e0f3ac7b9381ea6c482909486726de3e95e760550e8260b58daf",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "99f4db49de46f4e208f7a3c54d1ad64f7ee3280272a80f89d6dbef399a4b645f",
+      "sha256": "d671f471aa117c0192fb2ac806b499bc768f60eb4082bba76375683050f90ac5",
       "executable": false
     },
     "DEMO.md": {
@@ -4235,7 +4235,11 @@
       "executable": false
     },
     "tests/adoption/knowledge-draft-cases.mjs": {
-      "sha256": "9101567a4e85e7a0f2d7140fb612e329cb25c28c7247868121416d52dd20e774",
+      "sha256": "fd7493732c35768470d66c1e2b05d3185128c946a01bf4b4a036e760cae0fb73",
+      "executable": false
+    },
+    "tests/adoption/knowledge-model-edge.ts": {
+      "sha256": "4f3adc02297845b7b65b9bf888f62582acf147fa518e817223bf07c30b7a3956",
       "executable": false
     },
     "tests/adoption/prior-data-harness.mjs": {
@@ -4271,7 +4275,7 @@
       "executable": false
     },
     "tests/adoption/worker.ts": {
-      "sha256": "3f41d48f37244ec1bc9b28c23e18c655bcbf9eb28cc0f656eecfb8ce9245ec73",
+      "sha256": "01b6a0dab0397b32b9d558756cc1c91825451f041c99cba348ea11cab7921397",
       "executable": false
     },
     "tests/connections/runtime.mjs": {
@@ -4739,7 +4743,7 @@
       "executable": false
     },
     "tests/work/knowledge-draft-cases.mjs": {
-      "sha256": "55117436d2759032b31ce3508adf5891bbda8000bca29c58b61df765f5b37f9c",
+      "sha256": "27bcd74d385e21e95e8dc4208bd3bad16c1f38f19c8cde8eac37a8bac3de9a18",
       "executable": false
     },
     "tests/work/knowledge-draft-runtime.mjs": {
