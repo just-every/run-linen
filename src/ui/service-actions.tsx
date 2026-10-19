@@ -1,3 +1,4 @@
+import { ProblemActions } from "./problem-actions";
 import { Notice } from "./primitives";
 import { useRemote, useSession } from "./state";
 import { ActionForm } from "./forms";
@@ -249,29 +250,7 @@ export function ServiceActions({
           />
         </>
       )}
-      {section === "problems" && (
-        <ActionForm
-          title="Record a reviewed workaround"
-          path={`${base}/workarounds`}
-          defaults={defaults}
-          fields={[
-            {
-              name: "text",
-              label: "Workaround and limits",
-              type: "textarea",
-              required: true,
-            },
-            { name: "source", label: "Evidence source", required: true },
-            {
-              name: "expiresAt",
-              label: "Review expiry",
-              type: "datetime-local",
-              required: true,
-            },
-          ]}
-          onSaved={refresh}
-        />
-      )}
+      {section === "problems" && <ProblemActions record={record} refresh={refresh} />}
     </>
   );
 }

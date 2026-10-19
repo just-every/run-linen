@@ -1,3 +1,4 @@
+import { ApiError } from '../../platform/http';
 import type { NativeRecord } from './import';
 export interface Reference {
     fromTable: string;
@@ -20,6 +21,15 @@ export function references(record: NativeRecord): Reference[] {
     if (typeof pendingId === 'string' && pendingId)
         out.push({fromTable:record.table,fromKey:record.key,field:record.table==='work_pending_services'?'person_id':'pending_person_id',
             targets:['work_pending_people'],key:JSON.stringify([record.row.workspace_id,pendingId])});
+    if (record.table === 'svc_records' && record.row.kind === 'problem') {
+        let data;
+        try { data = JSON.parse(String(record.row.data_json)); }
+        catch { throw new ApiError(422,'restore_json','Problem data must be valid JSON'); }
+        if (!data || typeof data !== 'object' || Array.isArray(data) || (data.workarounds && !Array.isArray(data.workarounds)))
+            throw new ApiError(422,'restore_shape','Problem workarounds must be a list');
+        for (const link of data.workarounds || []) if (link && typeof link.articleId === 'string')
+            out.push({fromTable:record.table,fromKey:record.key,field:'data.workarounds.articleId',targets:['work_knowledge'],key:link.articleId});
+    }
     if (record.table === 'svc_events' && record.row.record_id)
         out.push({ fromTable: record.table, fromKey: record.key, field: 'record_id', targets: ['svc_records'], key: String(record.row.record_id) });
     return out;

@@ -1,3 +1,4 @@
+import { WorkaroundSuggestions } from "./workaround-suggestions";
 import { RepairCoverage } from "./asset-contracts";
 import { WorkTime } from "./work-time";
 import { useState, type FormEvent } from "react";
@@ -108,6 +109,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       </dl>
       {operator && <WorkClassification workId={work.id} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner","operator"].includes(r)) && <RepairCoverage workId={work.id} />}
+      <WorkaroundSuggestions workId={work.id} />
       <Progress items={progress} exception={exception} operator={operator} />
       <HeldServices person={detail.data?.pendingPerson} services={detail.data?.heldServices} />
       <ErrorNotice error={detail.backgroundError} />

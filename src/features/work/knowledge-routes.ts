@@ -1,3 +1,4 @@
+import { suggestWorkarounds } from './workaround-suggestions';
 import type { Hono } from "hono";
 import type { AppEnv } from "../../platform/types";
 import { jsonBody, requiredString } from "../../platform/http";
@@ -34,6 +35,7 @@ import {
 import { saveCalendar, setCommitment } from "./calendar";
 import { executionPort, bindObligationExecution } from "./execution";
 export function registerKnowledgeRoutes(app: Hono<AppEnv>) {
+  app.get('/work/:id/workarounds', async c => c.json({ items: await suggestWorkarounds({env:c.env,principal:c.get('principal')},c.req.param('id')) }));
   app.get("/catalog", async (c) =>
     c.json({
       items: (

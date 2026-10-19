@@ -1,4 +1,5 @@
 import { effortReport } from "./effort-report";
+import { validateArticle, newArticleWrites, type ArticleInput } from './article-write';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { createWork, operator, permit, type WorkContext } from "./core";
@@ -22,30 +23,9 @@ export async function searchKnowledge(ctx: WorkContext, query: string) {
 }
 export async function saveArticle(
   ctx: WorkContext,
-  input: {
-    id?: string;
-    revision?: number;
-    title: string;
-    body: string;
-    scope: "employees" | "operators" | "hr";
-    expiresAt: string;
-    review: boolean;
-  },
+  input: ArticleInput,
 ) {
-  await currentWorkPrincipal(ctx);
-  permit(ctx, input.scope === "hr" ? ["owner", "hr"] : ["owner", "operator"]);
-  if (
-    !["employees", "operators", "hr"].includes(input.scope) ||
-    !input.title ||
-    !input.body ||
-    Date.parse(input.expiresAt) <= Date.now() ||
-    !Number.isFinite(Date.parse(input.expiresAt))
-  )
-    throw new ApiError(
-      422,
-      "invalid_article",
-      "Valid content, scope and future expiry required",
-    );
+  await validateArticle(ctx, input);
   const articleId = input.id || id(),
     t = now();
   if (input.id) {
@@ -73,22 +53,10 @@ export async function saveArticle(
         "revision_conflict",
         "Article changed or inaccessible",
       );
-  } else
-    await ctx.env.DB.prepare(
-      "INSERT INTO work_knowledge VALUES(?,?,?,?,?,1,?,?,?,?)",
-    )
-      .bind(
-        articleId,
-        ctx.principal.workspaceId,
-        input.title,
-        input.body,
-        input.scope,
-        input.review ? ctx.principal.userId : null,
-        input.review ? t : null,
-        input.expiresAt,
-        t,
-      )
-      .run();
+  } else {
+    await ctx.env.DB.batch(newArticleWrites(ctx, articleId, input));
+    return { id: articleId, revision: 1 };
+  }
   await ctx.env.DB.prepare(
     "INSERT INTO work_article_versions VALUES(?,?,?,?,?)",
   )

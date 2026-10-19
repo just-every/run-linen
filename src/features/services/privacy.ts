@@ -1,3 +1,4 @@
+import { eraseProblemArticles } from './problem-privacy';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
 import { hashToken } from '../../platform/crypto';
@@ -45,7 +46,9 @@ export async function eraseServicePerson(ctx: {
     const affectedRecords = new Set<string>();
     for (const r of rows.results) {
         const participants = JSON.parse(r.participants_json) as string[];
-        const affected = r.owner_id === input.userId || participants.includes(input.userId) || tokens.some(t => r.data_json.includes(t));
+        const affectedProblem = r.owner_id === input.userId || participants.includes(input.userId) || tokens.some(t => r.data_json.includes(t));
+        const affectedArticle = await eraseProblemArticles(env.DB, p, r, input.userId, tokens, affectedProblem, redact);
+        const affected = affectedProblem || affectedArticle;
         if (!affected)
             continue;
         affectedRecords.add(r.id);

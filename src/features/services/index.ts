@@ -1,3 +1,4 @@
+import { publishWorkaround, presentProblem } from './problem-knowledge';
 import type { Hono } from 'hono';
 import type { AppEnv, Env, Principal } from '../../platform/types';
 import { ApiError, requiredString, jsonBody, requireRole, audit, now } from '../../platform/http';
@@ -10,7 +11,7 @@ import { addEdge, serviceGraph } from './graph';
 import { diagnosticFinding, incidentFollowup, newIncident, linkIncident, updateIncident, assignDiagnostic, incidentCandidates, recordVerifiedRecovery, type RecoveryEvidence } from './incidents';
 import { newChange, editChange, authorizeChange, dispatchChange, verifyChange } from './changes';
 import { supplierObservation,reviewSupplierOutcome,assignAsset, returnAsset, recordCharge, newSupplier, supplierCommitment, supplierHandoff, acceptHandoff, supplierBreaches, newAsset, assetTransition, assetUsage, reclamationDecision, serviceReport } from './economics';
-import { newProblem, knownError, addWorkaround, linkPrevention, visibleWorkarounds } from './problems';
+import { newProblem, knownError, linkPrevention } from './problems';
 import { reconcileNotification, ingestMonitoring, routeOnCall, processDueServices } from './integrations';
 export { registerServiceWebhooks } from './webhooks';
 export { eraseServicePerson } from './privacy';
@@ -26,7 +27,7 @@ export interface ServiceWorkPort {
 let workPort: ServiceWorkPort | undefined;
 export function setServiceWorkPort(port: ServiceWorkPort) { workPort = port; }
 async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
-    if(r.kind==='problem')return {...r,data:{...r.data,workarounds:visibleWorkarounds(r)}};
+    if(r.kind==='problem')return presentProblem(env.DB,p,r);
     if(r.kind==='supplier')return {...r,data:{...r.data,breaches:supplierBreaches(r)}};
     if (r.kind !== 'incident' || staff(p) || p.roles.includes('auditor'))
         return r;
@@ -41,7 +42,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     setServiceWorkPort(serviceWorkPort);
     const paths: Record<string, Kind> = { 'service-people': 'person', decisions: 'decision', services: 'service', incidents: 'incident', problems: 'problem', changes: 'change', suppliers: 'supplier', 'software-assets': 'asset', monitors: 'monitor', 'oncall-rotations': 'oncall' };
     for (const [path, kind] of Object.entries(paths)) {
-        app.get(`/${path}`, async (c) => { const items = await Promise.all((await list(c.env.DB, c.get('principal'), kind)).map(r => presentRecord(c.env, c.get('principal'), r))); return c.json({ items: items.map(r => kind === 'problem' ? { ...r, workarounds: visibleWorkarounds(r) } : kind === 'supplier' ? { ...r, breaches: supplierBreaches(r) } : r) }); });
+        app.get(`/${path}`, async (c) => { const items = await Promise.all((await list(c.env.DB, c.get('principal'), kind)).map(r => presentRecord(c.env, c.get('principal'), r))); return c.json({ items: items.map(r => kind === 'supplier' ? { ...r, breaches: supplierBreaches(r) } : r) }); });
         app.get(`/${path}/:id`, async (c) => {
             const r = await getService(c.env.DB, c.get('principal'), c.req.param('id'), kind);
             if (r.visibility === 'restricted')
@@ -81,7 +82,8 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
         return c.json(await recordVerifiedRecovery(c.env.DB, p, r, b.evidence, e => workPort!.admitRecovery(c.env, p, e)));
     });
     app.post('/problems', async (c) => c.json(await newProblem(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
-    for (const [path, fn] of [['known-error', knownError], ['workarounds', addWorkaround], ['prevention', linkPrevention]] as const)
+    app.post('/problems/:id/workarounds', async c => { const p=requireRole(c,'owner','operator'); return c.json(await publishWorkaround(c.env,p,await getService(c.env.DB,p,c.req.param('id'),'problem'),await jsonBody(c))); });
+    for (const [path, fn] of [['known-error', knownError], ['prevention', linkPrevention]] as const)
         app.post(`/problems/:id/${path}`, async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await fn(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'problem'), await jsonBody(c))); });
     app.post('/changes', async (c) => c.json(await newChange(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     app.patch('/changes/:id', async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await editChange(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'change'), await jsonBody(c))); });

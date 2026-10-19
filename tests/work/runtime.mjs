@@ -1,4 +1,5 @@
 import { timeChecks } from "./time-cases.mjs";
+import { problemChecks } from "./problem-cases.mjs";
 import { assetCustodyChecks } from "./asset-custody-cases.mjs";
 import { assetContractChecks } from "./asset-contract-cases.mjs";
 import { classificationChecks, classificationEncryptionKey } from "./classification-cases.mjs";
@@ -657,6 +658,7 @@ try {
   assert.equal(restoredDuty.state, "blocked");
   assert.equal(restoredDuty.operation_id, null);
   assert.match(restoredDuty.last_error, /source-uncertain-operation/);
+  await problemChecks(api, db);
   await db
     .prepare("UPDATE memberships SET active=0 WHERE user_id=?")
     .bind("employee")

@@ -1,3 +1,4 @@
+import { ProblemDetails } from "./problem-actions";
 import { NewChange } from "./setup-change";
 import { usePeopleLabels } from "./people-labels";
 import { date, text, humanize } from "./api";
@@ -40,6 +41,7 @@ export function ServiceSpace({
     detail = useRemote<DomainRecord>(
       selectedId ? `/${section}/${selectedId}` : null,
     ),
+    incidents = useRemote<{ items: DomainRecord[] }>(section === "problems" ? "/incidents" : null),
     services = useRemote<{ items: DomainRecord[] }>("/services"),
     { session } = useSession(),
     label = labels[section] ?? labels.services;
@@ -138,6 +140,9 @@ export function ServiceSpace({
         type: "textarea",
         required: true,
       },
+      { name: "incidentIds", label: "Related incidents", type: "checkboxes", required: true,
+        options: incidents.data?.items.map(r => ({value:r.id,label:text(r.data.title)})),
+        hint: "Select the incidents that belong to the affected service." },
     ],
     "software-assets": [
       { name: "name", label: "Software or entitlement", required: true },
@@ -300,6 +305,7 @@ export function ServiceSpace({
                   ]}
                 />
               )}
+              {section === "problems" && <ProblemDetails record={record} incidents={incidents.data?.items} />}
               <ServiceActions
                 section={section}
                 record={record}

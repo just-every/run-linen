@@ -1614,8 +1614,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 12 | 67 | 36 | 115 |
-| All | 16 | 87 | 36 | 139 |
+| Target and push further | 13 | 66 | 36 | 115 |
+| All | 17 | 86 | 36 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1692,7 +1692,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `INC-002` | Monitoring and alert intake | target | partial | `src/features/services/integrations.ts`, `tests/services/run.mjs` | No named Uptime/Datadog/PagerDuty/Spool connectors or paging on intake. |
 | `INC-003` | Status communication | target | partial | `src/features/services/integrations.ts`, `tests/services/run.mjs` | No Lamp or Statuspage connector. |
 | `INC-004` | Engineering escalation | target | missing |  | No Jira/GitHub/Linear/Vector escalation. |
-| `PROB-001` | Problem management | target | partial | `src/features/services/problems.ts` | No public-door test; no KB publishing of workarounds. |
+| `PROB-001` | Problem management | target | done | `src/features/services/problems.ts`, `src/features/services/problem-knowledge.ts`, `tests/work/problem-cases.mjs`, `tests/ui/problem-journey.mjs`, `tests/adoption/problem-cases.mjs` | Local public-route and 1440/390 browser proof: three incident links, reviewed root cause/known error, versioned expiring Knowledge publication and preventive change; a later request is offered guidance matched by reviewer phrases and service/cohort context. Scoped, reviewed, current and unexpired content only; request stays open. Native archive links and authorized erasure are proved. |
 | `PROB-002` | Proactive problem detection | target | partial | `src/features/intelligence/investigations.ts`, `src/features/intelligence/capabilities.ts` | No ticket clustering into problems. |
 | `CHANGE-001` | Change types and templates | target | partial | `src/features/services/changes.ts`, `tests/services/run.mjs` | No templates or standard-change catalog. |
 | `CHANGE-002` | Risk scoring | target | partial | `src/features/services/changes.ts` | No scoring. |

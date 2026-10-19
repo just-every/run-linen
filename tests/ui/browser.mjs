@@ -1,3 +1,4 @@
+import { problemJourney } from "./problem-journey.mjs";
 import { classificationJourney } from "./classification-journey.mjs";
 import { timeJourney } from './time-journey.mjs';
 import { nativeCreate, dstJourney, incidentNativeDetails, namedApproverJourney } from "./native-regressions.mjs";
@@ -553,6 +554,8 @@ try {
   }
   await timeJourney({page,base,api,workId,out});
   checks.push("DESK-012 manual and measured active effort reaches the role-scoped report at desktop and mobile widths");
+  await problemJourney({page,api,base,out});
+  checks.push("PROB-001 reviewed expiring workaround published from three incidents and offered on a matching request");
   assert.deepEqual(errors, []);
   await writeFile(
     out + "/results.json",

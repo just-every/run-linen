@@ -4,7 +4,7 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 139 clauses (132 in the contract plus F1–F7), 16 done, 87
+Current count: 139 clauses (132 in the contract plus F1–F7), 17 done, 86
 partial and 36 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
@@ -174,7 +174,7 @@ test, or the gap.
 | **INC-002 Monitoring and alert intake** | Send a Datadog alert twice and an Uptime recovery; see one incident, the duplicate ignored, and recovery recorded without closing employee tickets; an Uptime check failure on the SSO service opens an incident tagged with that service and pages its Oncall rotation. | `src/features/services/integrations.ts` (signed monitoring webhook, dedupe, staleness); `tests/services/run.mjs`. No named Uptime/Datadog/PagerDuty/Spool connectors or paging on intake. | partial |
 | **INC-003 Status communication** | Post an incident update to a Lamp test page and see the delivered state, or the failure, on the incident. | `src/features/services/integrations.ts` (notification webhook, delivery reconcile); `tests/services/run.mjs`. No Lamp or Statuspage connector. | partial |
 | **INC-004 Engineering escalation** | Escalate a bug to GitHub Issues; closing the issue posts a private note and moves the ticket to "verify with employee". | No Jira/GitHub/Linear/Vector escalation. | missing |
-| **PROB-001 Problem management** | Create a problem from three incidents, record the known error and a workaround article, link the preventive change, and see a later matching ticket offered the workaround. | `src/features/services/problems.ts`. No public-door test; no KB publishing of workarounds. | partial |
+| **PROB-001 Problem management** | Create a problem from three incidents, record the known error and a workaround article, link the preventive change, and see a later matching ticket offered the workaround. | `tests/work/problem-cases.mjs`: real public work/service/Knowledge routes prove all steps, scoped reviewer phrases/service/cohort matching, expiry, exact reviewed revision, tenant privacy and concurrent publication. `tests/ui/problem-journey.mjs`: native problem, Knowledge and later-ticket journey at 1440/390; guidance does not resolve the request. `tests/adoption/problem-cases.mjs`: native links/version restore and published-content erasure. Local evidence only. | done |
 | **PROB-002 Proactive problem detection** | Seed eight Wi-Fi tickets from one floor; a proposed problem lists them; rejection is kept and does not re-propose the same cluster. | `src/features/intelligence/investigations.ts`; `src/features/intelligence/capabilities.ts`. No ticket clustering into problems. | partial |
 
 ### Change management
