@@ -74,7 +74,8 @@ export async function contractorSponsorChecks(api, db, input) {
   const moved = (await db.prepare('SELECT due_at FROM work_obligations WHERE lifecycle_id=? AND is_expiry=1').bind(id).all()).results;
   assert.ok(moved.length === 2 && moved.every(o => o.due_at === extended), 'LIFE-006 re-attestation moves both expiry duties');
   assert.ok(await db.prepare("SELECT 1 FROM audit_events WHERE action='lifecycle.sponsor_reattested' AND target=?").bind(id).first());
-  const endAt = iso(1500);
+  // The end instant must still be ahead after admission and the first process-due on a slow runner.
+  const endAt = iso(6000);
   const lapse = await api('/lifecycle', { ...contractor, source: 'contractor-hr-lapse', expiresAt: endAt, sponsorId: 'employee' });
   assert.equal(lapse.status, 201, JSON.stringify(lapse));
   const duties = async () => (await db.prepare('SELECT id,kind,state,due_at,depends_on FROM work_obligations WHERE lifecycle_id=? AND is_expiry=1 ORDER BY kind').bind(lapse.value.lifecycleId).all()).results;

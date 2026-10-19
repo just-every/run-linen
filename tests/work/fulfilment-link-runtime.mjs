@@ -120,7 +120,8 @@ try {
   assert.equal(cancelled.state, 'unknown'); assert.match(cancelled.reason, /separately authorize compensation/);
   assert.equal((await api('/test/link', missing.input, 'employee')).status, 409);
   // Real execution-engine expiry at the declared instant, with only test provider traffic.
-  const expirySoon = new Date(Date.now() + 2500).toISOString();
+  // Room for four requests before the expiry on a slow runner: the removal must still be queued, then the test waits it out.
+  const expirySoon = new Date(Date.now() + 8000).toISOString();
   const expiring = await journey('actual-expiry', { expiresAt: expirySoon });
   await ok('/test/link', expiring.input, 'employee');
   await ok('/test/run', { operationId: expiring.initial.id }, actor.id);
