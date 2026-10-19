@@ -13,11 +13,11 @@ interface TypeRow { requestType: string; baseline: WindowLike | null; current: W
 
 export const proposalDefinition = 'Ranked by the human work automating each request type would remove: current-window human active minutes per verified outcome × current verified outcomes (ties: more failures first, then name). The realized saving per verified outcome (baseline minus current minutes) is shown as evidence. A type with no verified outcome in the current window has not enough evidence and is not ranked. This is a proposal; it authorizes nothing.';
 
-export function automationProposal(rows: TypeRow[], owner: boolean) {
+export function automationProposal(rows: TypeRow[]) {
   const evidence = (w: WindowLike | null) => w && {
     verified: w.verified, failed: w.failed, incoming: w.incoming, touches: w.touches, activeMinutes: w.activeMinutes,
     minutesPerVerifiedOutcome: w.verified ? w.activeMinutes / w.verified : null,
-    ...(owner ? { knownCostPerVerifiedOutcomeUsd: w.knownCostPerVerifiedOutcomeUsd, costComplete: w.costComplete } : {}),
+    knownCostPerVerifiedOutcomeUsd: w.knownCostPerVerifiedOutcomeUsd, costComplete: w.costComplete,
   };
   const ranked = rows.filter(r => r.current && r.current.verified > 0).map(r => {
     const perOutcome = r.current!.activeMinutes / r.current!.verified;
