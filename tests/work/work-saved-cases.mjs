@@ -10,6 +10,7 @@ export async function workSavedChecks({ api, ok, actor }) {
   const catalogs = {};
   for (const target of ['design-tool', 'design-tool-regional'])
     catalogs[target] = await ok('/catalog', { name: 'Design tool access', kind: 'access', target, ownerId: 'owner' });
+  catalogs['analytics-tool'] = await ok('/catalog', { name: 'Analytics access', kind: 'access', target: 'analytics-tool', ownerId: 'owner' });
   async function request(key, { classified = false, target = 'design-tool' } = {}) {
     let work = await ok('/work', { title: key, body: 'Design tool access for project work', deduplicationKey: key }, 'employee');
     // Automated intake classifies through the configured model before fulfilment is planned.
@@ -54,6 +55,10 @@ export async function workSavedChecks({ api, ok, actor }) {
   await ok('/test/deny-write', { target: 'design-tool-regional' });
   assert.equal((await ok('/test/run', { operationId: failing.operation.id }, actor.id)).state, 'failed');
   await ok('/work/process-due', {});
+  // AGENT-006: a second request type is still handled by hand in the current window.
+  const analytics = await request('report-analytics-manual', { target: 'analytics-tool' });
+  await time(analytics.work, 'report-analytics-handling', 25);
+  await fulfil(analytics);
   await tick(); const currentTo = at();
 
   // Only the owner declares role rates; they are costing assumptions validated per role.
@@ -93,6 +98,23 @@ export async function workSavedChecks({ api, ok, actor }) {
   assert.equal((await api(`/reports/work-saved?baselineFrom=${boundary}&baselineTo=${baselineFrom}&currentFrom=${boundary}&currentTo=${currentTo}`)).status, 422);
   const effort = (await ok(`/reports/effort?from=${boundary}&to=${currentTo}`)).byRequestType.find(r => r.requestType === 'Design tool access');
   assert.equal(effort.failed, 1); assert.equal(effort.model.unknownCharges, 1);
+  // AGENT-006: REPORT-004's report for two request types names the next automation by human work it removes.
+  const proposal = (await ok(path)).automationProposal;
+  assert.deepEqual(proposal.ranked.map(r => [r.rank, r.requestType, r.humanMinutesToRemove]), [[1, 'Analytics access', 25], [2, 'Design tool access', 0]],
+    'AGENT-006 ranks by human minutes per verified outcome × verified outcomes, not tickets closed');
+  assert.deepEqual(proposal.next, { requestType: 'Analytics access', humanMinutesToRemove: 25 });
+  assert.equal(proposal.ranked[1].realizedSavingMinutesPerOutcome, 35, 'AGENT-006 the automated type shows its realized saving as evidence');
+  assert.equal(proposal.ranked[1].evidence.current.failed, 1);
+  assert.equal(proposal.ranked[0].evidence.baseline, null);
+  assert.ok('knownCostPerVerifiedOutcomeUsd' in proposal.ranked[0].evidence.current, 'AGENT-006 the owner sees cost evidence');
+  const audited = (await ok(path, undefined, 'auditor')).automationProposal;
+  assert.deepEqual(audited.ranked.map(r => r.requestType), proposal.ranked.map(r => r.requestType));
+  assert.ok(!('knownCostPerVerifiedOutcomeUsd' in audited.ranked[0].evidence.current), 'AGENT-006 non-owners see the ranking without monetary values');
+  const cohort = await ok(`${path}&requestType=${encodeURIComponent('Design tool access')}`);
+  assert.deepEqual(cohort.requestTypes.map(r => r.requestType), ['Design tool access'], 'AGENT-006 the owner chooses the cohort');
+  assert.deepEqual(cohort.automationProposal.ranked.map(r => r.requestType), ['Design tool access']);
+  const empty = (await ok(`/reports/work-saved?baselineFrom=${baselineFrom}&baselineTo=${boundary}&currentFrom=${currentTo}&currentTo=${new Date(Date.parse(currentTo) + 1000).toISOString()}`)).automationProposal;
+  assert.deepEqual(empty.ranked, []); assert.equal(empty.next, null);
   await ok('/reports/labor-rates', { rates: { vendor: null } });
   assert.deepEqual((await ok('/reports/labor-rates')).rates, { owner: 90, employee: 40 });
   assert.deepEqual((await read()).baseline.labor.unpricedRoles, ['vendor']);

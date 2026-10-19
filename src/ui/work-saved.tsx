@@ -14,6 +14,14 @@ export interface WorkSavedData {
   baseline: { from: string; to: string }; current: { from: string; to: string };
   requestTypes: { requestType: string; baseline: WindowRow | null; current: WindowRow | null }[];
   definition: string; costDefinition: string;
+  cohort: string[] | null;
+  automationProposal: AutomationProposal;
+}
+interface ProposalEvidence { verified: number; failed: number; touches: number; activeMinutes: number; minutesPerVerifiedOutcome: number | null; knownCostPerVerifiedOutcomeUsd?: number | null; costComplete?: boolean }
+export interface AutomationProposal {
+  next: { requestType: string; humanMinutesToRemove: number } | null;
+  ranked: { rank: number; requestType: string; humanMinutesToRemove: number; realizedSavingMinutesPerOutcome: number | null; evidence: { baseline: ProposalEvidence | null; current: ProposalEvidence } }[];
+  notEnoughEvidence: string[]; definition: string;
 }
 /** Sub-cent model estimates stay visible instead of rounding to $0.00. */
 export const usd = (n: number) => n === 0 || Math.abs(n) >= 0.01 ? `$${n.toFixed(2)}` : `$${n.toFixed(4)}`;
@@ -34,7 +42,9 @@ function cells(label: string, value: (row: WindowRow) => string | number, data: 
 
 export function WorkSavedReport({ value }: { value: WorkSavedData }) {
   return <section className="record-stack"><h2>Human work saved</h2><p>{value.definition}</p><p>{value.costDefinition}</p>
+    {value.cohort && <p>Cohort: {value.cohort.join(', ')}</p>}
     {!value.requestTypes.length && <p>No requests in either window.</p>}
+    <NextAutomation value={value.automationProposal} />
     {value.requestTypes.map(data => {
       const present = roles.filter(role => data.baseline?.byRole[role] || data.current?.byRole[role]);
       return <article className="connection-record" key={data.requestType}><h3>{data.requestType}</h3>
@@ -66,4 +76,19 @@ export function LaborRatesForm({ rates, onSaved }: { rates: Record<string, numbe
     fields={roles.map(role => ({ name: role, label: `${humanize(role)} rate (USD/hour)`, type: 'number' as const }))}
     transform={(values: RecordValue) => ({ rates: Object.fromEntries(roles.map(role => [role, values[role] === '' || values[role] === undefined || values[role] === null ? null : Number(values[role])])) })}
     onSaved={onSaved} />;
+}
+
+const minutes = (n: number | null) => n === null ? '—' : `${n.toFixed(2)} min`;
+/** AGENT-006: the ranked next automation, with the windows' evidence beside each type. */
+function NextAutomation({ value }: { value: AutomationProposal }) {
+  return <section className="connection-record" aria-label="Next automation proposal"><h3>Next automation proposal</h3>
+    <p>{value.next ? `Automate ${value.next.requestType} next: about ${value.next.humanMinutesToRemove.toFixed(2)} human minutes this period.` : 'No ranked request type still takes human minutes.'}</p>
+    <p>{value.definition}</p>
+    {value.ranked.length > 0 && <div style={{ overflowX: 'auto' }}><table><caption>Request types ranked by human work automation would remove</caption>
+      <thead><tr><th scope="col">Rank</th><th scope="col">Request type</th><th scope="col">Human minutes to remove</th><th scope="col">Minutes per verified outcome</th><th scope="col">Realized saving per outcome</th><th scope="col">Verified / failed</th></tr></thead>
+      <tbody>{value.ranked.map(r => <tr key={r.requestType}><td>{r.rank}</td><th scope="row">{r.requestType}</th><td>{minutes(r.humanMinutesToRemove)}</td>
+        <td>{minutes(r.evidence.current.minutesPerVerifiedOutcome)}</td><td>{minutes(r.realizedSavingMinutesPerOutcome)}</td>
+        <td>{r.evidence.current.verified} / {r.evidence.current.failed}</td></tr>)}</tbody></table></div>}
+    {value.notEnoughEvidence.length > 0 && <p>Not enough evidence (no verified outcome this period): {value.notEnoughEvidence.join(', ')}</p>}
+  </section>;
 }
