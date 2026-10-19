@@ -8,6 +8,10 @@ globalThis.fetch = async (input: RequestInfo | URL, init: RequestInit = {}) => {
   const u=new URL(String(input)),db=env.DB;
   if(u.hostname==='login.microsoftonline.com')return Response.json({access_token:'fixture'});
   if(u.hostname==='graph.microsoft.com') {
+    // Licences (CATALOG-004 software child): assignLicense writes and licenseDetails reads the same fixture rows as groups.
+    if(u.pathname.endsWith('/assignLicense')){const b=JSON.parse(String(init.body));const sku=b.addLicenses[0]?.skuId??b.removeLicenses[0];
+      await db.prepare('INSERT INTO test_provider VALUES(?,?,1,0) ON CONFLICT(target) DO UPDATE SET present=excluded.present,writes=test_provider.writes+1').bind(sku,Number(!!b.addLicenses.length)).run();return Response.json({id:u.pathname.split('/')[3]});}
+    if(u.pathname.endsWith('/licenseDetails'))return Response.json({value:(await db.prepare('SELECT target FROM test_provider WHERE present=1').all<any>()).results.map(r=>({skuId:r.target}))});
     if(u.pathname.startsWith('/v1.0/users/'))return Response.json({id:u.pathname.split('/').at(-1)});
     const target=u.pathname.split('/')[3];
     const row=await db.prepare('SELECT * FROM test_provider WHERE target=?').bind(target).first<any>();

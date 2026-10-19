@@ -3,6 +3,7 @@ import { ApiFailure, date, errorText, request, text } from "./api";
 import { useSession } from "./state";
 import { Badge, ErrorNotice, Facts, Loading, Notice } from "./primitives";
 import type { FulfilmentDecision } from "../features/work/fulfilment-decisions";
+import { BundleDecision } from "./bundles";
 
 export type { FulfilmentDecision } from "../features/work/fulfilment-decisions";
 
@@ -196,7 +197,11 @@ export function FulfilmentDecisions({
         <ErrorNotice error={submissionError} retry={() => void refreshQueue()} />
       )}
       <div>
-        {queue.items.map((item) => {
+        {[...new Set(queue.items.filter((i) => i.bundleName).map((i) => i.workId))].map((workId) => (
+          <BundleDecision key={workId} items={queue.items.filter((i) => i.workId === workId)}
+            onDone={(message) => { setBanner({ tone: "info", message }); void refreshQueue(); }} />
+        ))}
+        {queue.items.filter((item) => !item.bundleName).map((item) => {
           const identity = decisionIdentity(item);
           const key = reviewKey(item);
           const needsReview = Boolean(reviewRequired[identity]);

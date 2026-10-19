@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {harness} from './amend-harness.mjs';
+import {bundleChecks} from './bundle-cases.mjs';
 const h=await harness(),{db,ok,api}=h;const future=ms=>new Date(Date.now()+ms).toISOString();
 try {
   await ok('/test/connections',{});
@@ -65,5 +66,6 @@ try {
   await db.exec("UPDATE work_catalog SET revision=revision+1 WHERE target='managed'");
   assert.equal((await ok(`/work/${work.id}/fulfilment`,{...request,expiresAt:current.expiresAt},'employee')).state,'blocked','standing approval is tied to catalogue revision');
   assert.equal((await api('/test/manager-policy',{step:resolved.step,planId:'work:'+work.id})).value.code,'manager_approval_required');
+  await bundleChecks({ok,api,db,actor,future});
   console.log('MANAGER APPROVAL passed: current manager alone/unrelated issuer denied; exact revision-scoped approval and replay; wrong holder denied; manager change invalidates at effect; current manager-issued scoped standing grant proceeds without extra approval.');
 } finally {await h.close();}

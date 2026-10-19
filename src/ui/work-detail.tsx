@@ -11,6 +11,7 @@ import { Badge, ErrorNotice, Facts, Loading, Notice } from "./primitives";
 import { Composer } from "./work-composer";
 import { objectFacts, roleList } from "./labels";
 import { WorkOutcome } from "./work-outcome";
+import { BundleProgress } from "./bundles";
 import { HeldServices } from "./pending-people";
 import { WorkClassification } from "./work-classification";
 import { usePeopleLabels } from "./people-labels";
@@ -138,6 +139,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <ConversationHistory conversation={detail.data!} />
       </section>
       <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />
+      <BundleProgress key={`bundle-${work.id}`} workId={work.id} />
       {sponsorReminder && work.beneficiary_id === session.principal.userId && <SponsorReattest context={sponsorReminder} onChanged={changed} />}
       {operator && <WorkTime workId={work.id} />}
       <WorkCommands work={work} onChanged={changed} operator={operator} />

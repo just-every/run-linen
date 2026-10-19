@@ -72,11 +72,20 @@ export async function assertWorkFulfilmentAuthority(ctx: WorkContext, step: Step
   }
 }
 
-export async function approveFulfilment(ctx: WorkContext, workId: string, input: {
+export interface FulfilmentApprovalInput {
   catalogId:string;expectedWorkRevision:number;expectedFulfilmentRevision:number;idempotencyKey:string;
   expectedCatalogRevision:number;expectedPersonId:string;expectedPersonRevision:number;expectedBindingId:string;expectedHolderId:string;
-}) {
+}
+export async function approveFulfilment(ctx: WorkContext, workId: string, input: FulfilmentApprovalInput) {
   await currentWorkPrincipal(ctx);
+  if(await ctx.env.DB.prepare('SELECT 1 FROM work_bundle_requests WHERE workspace_id=? AND work_id=?').bind(ctx.principal.workspaceId,workId).first())
+    throw new ApiError(409,'bundle_decision_required','Approve a bundle with one decision covering every item that needs approval');
+  const prepared=await prepareFulfilmentApproval(ctx,workId,input);
+  if(prepared.statements.length)await ctx.env.DB.batch(prepared.statements);
+  return {id:prepared.approvalId,state:'approved' as const};
+}
+/** Checks one manager approval and returns its guarded writes, so a bundle can record several in one atomic batch (CATALOG-004). */
+export async function prepareFulfilmentApproval(ctx: WorkContext, workId: string, input: FulfilmentApprovalInput) {
   const db=ctx.env.DB,w=ctx.principal.workspaceId;
   const work=await db.prepare('SELECT * FROM work_records WHERE workspace_id=? AND id=?').bind(w,workId).first<WorkRecord>();
   if(!work)throw new ApiError(404,'not_found','Work not found');
@@ -97,10 +106,10 @@ export async function approveFulfilment(ctx: WorkContext, workId: string, input:
   if(previous) {
     if(previous.fulfilment_id!==f.id||previous.work_revision!==work.revision||previous.fulfilment_revision!==f.revision||previous.catalog_revision!==catalog.revision||previous.person_revision!==person.revision||previous.person_id!==person.id||previous.binding_id!==person.binding_id||previous.holder_id!==holder)
       throw new ApiError(409,'idempotency_conflict','Approval event describes another authority revision');
-    return {id:previous.id,state:'approved' as const};
+    return {approvalId:previous.id as string,statements:[] as D1PreparedStatement[]};
   }
   const approvalId=id(),guard=id();
-  await db.batch([
+  return {approvalId,statements:[
     db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
       EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=?) AND
       EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=? AND revision=?) AND
@@ -114,8 +123,7 @@ export async function approveFulfilment(ctx: WorkContext, workId: string, input:
         catalogRevision:catalog.revision,personRevision:person.revision,managerId:person.manager_id,holderId:holder,
         beneficiaryId:f.beneficiary_id,expiresAt:f.expires_at}),now()),
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(now(),w,workId),
-    db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)]);
-  return {id:approvalId,state:'approved' as const};
+    db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)]};
 }
 
 

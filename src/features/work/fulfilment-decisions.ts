@@ -8,6 +8,8 @@ export interface FulfilmentDecision {
   purpose:string; expiresAt:string|null; expectedWorkRevision:number; expectedFulfilmentRevision:number;
   expectedCatalogRevision:number; expectedPersonId:string; expectedPersonRevision:number; expectedBindingId:string;
   holderId:string; holderName:string; state:'needs_approval'; reason:string;
+  /** CATALOG-004: set when the item is a bundle child; bundle children are approved together. */
+  bundleName:string|null;
 }
 /** Only the current decision holder sees the minimal business scope, never conversation or context. */
 export async function listFulfilmentDecisions(ctx: WorkContext): Promise<{items:FulfilmentDecision[]}> {
@@ -16,7 +18,8 @@ export async function listFulfilmentDecisions(ctx: WorkContext): Promise<{items:
   const candidates=(await db.prepare(`SELECT f.*,c.name catalog_name,c.revision catalog_revision,c.target,c.kind,c.requires_manager,
     r.title,r.revision work_revision,r.requester_id,r.beneficiary_id request_beneficiary_id,r.state work_state,p.name beneficiary_name,
     COALESCE(rq.name,'Unknown person') requester_name,COALESCE(rb.name,'Unknown person') request_for_name,
-    p.id person_id,p.revision person_revision,p.binding_id person_binding_id
+    p.id person_id,p.revision person_revision,p.binding_id person_binding_id,
+    (SELECT b.name FROM work_bundle_requests br JOIN work_catalog_bundles b ON b.workspace_id=br.workspace_id AND b.id=br.bundle_id WHERE br.workspace_id=f.workspace_id AND br.work_id=f.work_id) bundle_name
     FROM work_fulfilments f JOIN work_catalog c ON c.workspace_id=f.workspace_id AND c.id=f.catalog_id
     JOIN work_records r ON r.workspace_id=f.workspace_id AND r.id=f.work_id
     LEFT JOIN users rq ON rq.id=r.requester_id LEFT JOIN users rb ON rb.id=r.beneficiary_id
@@ -39,7 +42,7 @@ export async function listFulfilmentDecisions(ctx: WorkContext): Promise<{items:
       expectedFulfilmentRevision:f.revision,expectedCatalogRevision:f.catalog_revision,
       expectedPersonId:f.person_id,expectedPersonRevision:f.person_revision,expectedBindingId:f.person_binding_id,
       holderId:ctx.principal.userId,holderName:holder?.name||'Current manager',
-      state:'needs_approval',reason:'Current scoped manager approval is required before independently granted fulfillment can proceed.'});
+      state:'needs_approval',reason:'Current scoped manager approval is required before independently granted fulfillment can proceed.',bundleName:f.bundle_name??null});
   }
   return {items};
 }

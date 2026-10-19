@@ -332,6 +332,19 @@ that product and marks how close the current code is (see [Status](#status)).
   hardware, software and access items with shared approval and individual
   fulfillment. **Acceptance evidence:** request the bundle; see one approval, five
   child fulfilments, and the bundle complete only when all children verify.
+  *Today's semantic:* the owner builds a bundle from 2 to 30 different existing
+  catalog items, each pinned at its revision when the bundle is saved.
+  Requesting it opens one ticket with one child fulfilment per item, all for the
+  same person, purpose and expiry; a bundle or item changed since it was pinned
+  refuses the request until the owner rebuilds the bundle. "One approval" is one
+  decision by the person's current scoped manager or delegate (the same rule as
+  a single catalog approval) that records every manager-gated child's exact
+  approval binding in one atomic step, never some of them; bundle children are
+  never approved one at a time. Stock and licence capacity, provider grants and
+  verification stay per child, and a bundle never creates a grant. The bundle
+  reads complete only when every child's delivery obligation (device delivery
+  or access grant) is verified; pending, held, failed or unknown children keep
+  it in progress, shown per child. Approved by ct on 19 October (17:42Z).
 
 - **CATALOG-005 — Software requests installed through MDM.** Admins bind a
   software catalog item to an MDM application:
@@ -1893,8 +1906,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 29 | 53 | 33 | 115 |
-| All | 33 | 73 | 33 | 139 |
+| Target and push further | 30 | 53 | 32 | 115 |
+| All | 34 | 73 | 32 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1917,7 +1930,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CATALOG-001` | Catalog items with forms | target | partial | `src/features/work/requests.ts`, `tests/ui/connected-request.mjs` | No form builder, conditional fields, required attachments, audience or cost. |
 | `CATALOG-002` | Approval chains | target | partial | `src/features/work/fulfilment-decisions.ts`, `src/features/work/delegation.ts`, `tests/ui/fulfilment-decision-journey.mjs`, `tests/execution/authority-manager-cases.mjs` | Single manager approval; no multi-level, finance threshold, approval SLA or email-reply approval. |
 | `CATALOG-003` | Fulfillment task plans | target | partial | `src/features/work/requests.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No team task templates. |
-| `CATALOG-004` | Bundles and kits | target | missing |  | No bundles. |
+| `CATALOG-004` | Bundles and kits | target | done | `src/features/work/bundles.ts`, `src/ui/bundles.tsx`, `tests/work/bundle-cases.mjs` | Public-route proof: an owner-built hardware/software/access bundle opens one ticket with five child fulfilments; one atomic manager decision covers both gated children (partial and single-child approvals refused); per-child grants run and verify; the bundle stays in progress until the laptop handoff verifies the fifth child, then reads complete; a changed item refuses the stale bundle. Bundle builder, grouped manager decision and per-item progress inspected at 1440/390. |
 | `CATALOG-005` | Software requests installed through MDM | target | partial | `src/features/work/requests.ts`, `src/features/execution/verification.ts` | Software is a catalog kind fulfilled as an access grant; no MDM app binding, install-group assignment, installed-inventory verification, deployment failure task or lease uninstall. |
 | `CATALOG-006` | Requests for pending people | target | done | `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/pending-person-browser.mjs` | Local D1/runtime and 1440/390 browser: reviewed creation/edit, held catalog services, native email proof and password sign-in binding, normal fulfillment release, employee visibility, withdrawal/cancellation and attributed audit. Provider delivery and live SSO are not claimed. |
 | `DESK-001` | Queues, groups and views | target | partial | `src/features/work/core.ts`, `src/ui/work.tsx` | No groups, saved views, bulk actions or triage shortcuts. |

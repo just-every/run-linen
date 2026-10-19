@@ -1,6 +1,7 @@
 import { registerApplicationRoutes } from './application-routes';
 import { registerSearchRoutes } from './search';
 import { registerRetentionRoutes } from './retention-routes';
+import { registerBundleRoutes } from './bundle-routes';
 import { registerRecurrenceRoutes } from './recurrence-routes';
 import { registerResponseRoutes } from './response-routes';
 import { registerKnowledgeDraftRoutes } from './knowledge-draft-routes';
@@ -29,6 +30,7 @@ export function registerWorkRoutes(app: Hono<AppEnv>) {
   setWorkIntakePort(workIntakePort);
   // Before /work/:id so the literal retention paths win.
   registerRetentionRoutes(app);
+  registerBundleRoutes(app);
   registerApplicationRoutes(app);
   registerSearchRoutes(app);
   registerConversationRoutes(app);

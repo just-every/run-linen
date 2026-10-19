@@ -1,4 +1,5 @@
 import { RecurringWork } from './recurring-work';
+import { Bundles } from "./bundles";
 import { useEffect } from "react";
 import { useSession } from "./state";
 import type { RecordValue } from "./api";
@@ -90,6 +91,7 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
               <span className="eyebrow">{session.workspace.name}</span>
               <Composer onSent={queue.refresh} />
             </section>
+            <Bundles onRequested={queue.refresh} />
             <section className="decision-card">
               <Icon name="approve" size={24} />
               <div>
