@@ -1699,7 +1699,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-005` | Escalation and supervisor rules | target | partial | `src/features/services/integrations.ts`, `src/features/intelligence/followup.ts` | No multi-level escalation or supervisor rules. |
 | `DESK-006` | Ticket relationships | target | partial | `src/features/services/incidents.ts` | No merge, split or parent/child tickets. |
 | `DESK-007` | Collaboration | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs`, `tests/ui/browser.mjs` | No mentions, watchers or side conversations. |
-| `DESK-008` | Responses and summaries | target | partial | `src/features/intelligence/models.ts`, `src/features/intelligence/intake.ts` | No canned responses or cited summaries. |
+| `DESK-008` | Responses and summaries | target | partial | `src/ui/work-composer.tsx`, `src/ui/drafts.ts`, `tests/ui/response-journey.mjs` | Public browser proof at 1440/390 shows unsent reply persistence, no send on edit/reload, one explicit agent Send and clearing after send. Canned responses, assistant reply generation and cited 20-message summaries remain. |
 | `DESK-009` | Satisfaction surveys | target | missing |  | No CSAT. |
 | `DESK-010` | Custom fields, forms and statuses | target | missing |  | No custom fields, forms, statuses or required-on-status resolution code and close notes. |
 | `DESK-011` | Department workspaces | target | partial | `src/platform/auth.ts`, `src/features/work/core.ts`, `tests/platform/runtime.mjs` | No department workspaces under one portal. |

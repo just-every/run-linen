@@ -1,3 +1,4 @@
+import { unsentReplyJourney } from './response-journey.mjs';
 import { problemDetectionJourney } from './problem-detection-journey.mjs';
 import { dependencyJourney } from './dependency-journey.mjs';
 import { recurrenceJourney } from './recurrence-journey.mjs';
@@ -564,6 +565,8 @@ try {
   checks.push("DESK-012 manual and measured active effort reaches the role-scoped report at desktop and mobile widths");
   await problemJourney({page,api,base,out});
   checks.push("PROB-001 reviewed expiring workaround published from three incidents and offered on a matching request");
+  for (const width of [1440, 390]) await unsentReplyJourney({ page, api, base, out, width });
+  checks.push("DESK-008 unsent reply drafts survive reload and post only on explicit Send");
   assert.deepEqual(errors, []);
   await writeFile(
     out + "/results.json",
