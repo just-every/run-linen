@@ -58,12 +58,14 @@ export async function amendLifecycle(
             : original.kind === "device.deliver"
               ? ["device.return"]
               : [];
+      // A cancelled hire's sessions are revoked once its disable is verified (one account fence).
+      const disableId = crypto.randomUUID();
       for (const kind of kinds)
         await ctx.env.DB.prepare(
-          "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,owner_id,last_error) VALUES(?,?,?,?,?,?,?,?,?,?)",
+          "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,owner_id,last_error,depends_on) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
         )
           .bind(
-            crypto.randomUUID(),
+            kind === "identity.disable" ? disableId : crypto.randomUUID(),
             ctx.principal.workspaceId,
             row.work_id,
             id,
@@ -73,6 +75,7 @@ export async function amendLifecycle(
             now(),
             original.owner_id,
             "Cancelled hire: reconcile prior effect and satisfy separate compensation authority",
+            kind === "sessions.revoke" ? disableId : null,
           )
           .run();
     }
