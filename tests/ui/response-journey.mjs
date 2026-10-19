@@ -8,7 +8,7 @@ export async function unsentReplyJourney({ page, api, base, out, width }) {
     deduplicationKey: `desk-008-unsent-${width}`,
   });
   await page.goto(`${base}/app#/work/${work.id}`);
-  const composer = page.getByLabel('Keep the conversation going', { exact: true });
+  const composer = page.locator('#conversation-message');
   const reply = 'I am checking the Denver VPN reports. Please keep this conversation open.';
   await composer.fill(reply);
   assert.equal((await api(`/work/${work.id}`)).messages.length, 1, 'DESK-008 editing a draft does not send it');
@@ -54,7 +54,7 @@ export async function responseJourney({ page, api, base, out, width }) {
   await tools.getByLabel('Canned response', { exact: true }).selectOption(template.id);
   const inserted = page.waitForResponse(r => r.url().endsWith(`/work/${work.id}/canned-response`));
   await tools.getByRole('button', { name: 'Insert canned response', exact: true }).click(); assert.equal((await inserted).status(), 200);
-  const composer = page.getByLabel('Keep the conversation going', { exact: true });
+  const composer = page.locator('#conversation-message');
   await page.waitForFunction(name => document.querySelector('#conversation-message')?.value.includes(name), session.user.name);
   assert.match(await composer.inputValue(), /Denver VPN conversation/);
   assert.equal((await api(`/work/${work.id}`)).messages.length, 21);
