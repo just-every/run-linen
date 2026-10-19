@@ -15,6 +15,7 @@ import { BundleProgress } from "./bundles";
 import { HeldServices } from "./pending-people";
 import { WorkClassification } from "./work-classification";
 import { WorkSla } from "./work-sla";
+import { WorkRelationships } from "./work-relationships";
 import { usePeopleLabels } from "./people-labels";
 import { shortRef } from "./work-queue";
 import { useQueue } from "./queue";
@@ -125,6 +126,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       </dl>
       {operator && <WorkClassification workId={work.id} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkSla workId={work.id} />}
+      {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkRelationships workId={work.id} messages={(detail.data?.messages ?? []) as never} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner","operator"].includes(r)) && <RepairCoverage workId={work.id} />}
       <WorkaroundSuggestions workId={work.id} />
       <RecurringTasks workId={work.id} />

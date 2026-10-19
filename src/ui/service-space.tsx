@@ -1,3 +1,4 @@
+import { LinkedTickets } from "./work-relationships";
 import { ChangeTemplates } from './change-templates';
 import { ChangeCalendar } from './change-calendar';
 import { ProblemProposals } from './problem-proposals';
@@ -230,6 +231,7 @@ export function ServiceSpace({
                 />
               </div>
               {["services", "incidents", "changes"].includes(section) && <DependencyDetails section={section} record={record} canEdit={canEdit} />}
+              {["problems", "changes"].includes(section) && <LinkedTickets kind={section === "problems" ? "problem" : "change"} targetId={record.id} />}
               {section === "incidents" && (
                 <>
                   <h2>What is known about recovery</h2>
