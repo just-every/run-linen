@@ -1,3 +1,4 @@
+import { bindSlaPolicy } from './sla-policies';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { callModel, objectSchema, textSchema } from '../intelligence/models';
 import { conversation, getWork, operator, permit, type WorkContext, type WorkRecord } from './core';
@@ -46,6 +47,7 @@ async function apply(ctx: WorkContext, work: WorkRecord, expected: number, after
         JSON.stringify({ before, after, reason, ...(proposal ? { attemptId: proposal.attemptId, model: proposal.model } : {}) }), t),
   ]);
   if (!result[0].meta.changes) throw new ApiError(409, 'classification_conflict', 'Work, classification or current authority changed; refresh before applying');
+  await bindSlaPolicy(ctx, work, after);
 }
 export async function overrideClassification(ctx: WorkContext, workId: string, input: any) {
   const work = await getWork(ctx, workId);

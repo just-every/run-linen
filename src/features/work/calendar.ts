@@ -1,28 +1,38 @@
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id } from "../../platform/http";
 import { getWork, permit, type WorkContext } from "./core";
+import { holidayCatalogs, usFederalHolidays, type HolidayCatalog } from "./sla-holidays";
 export interface BusinessCalendar {
   timezone: string;
   weekdays: number[];
   startHour: number;
   endHour: number;
   holidays: string[];
+  /** DESK-004: the location this calendar serves and the holiday catalog it observes. */
+  location?: string | null;
+  holidayCatalog?: HolidayCatalog | null;
 }
-export function businessDue(
-  start: string,
-  minutes: number,
-  calendar: BusinessCalendar,
-) {
+export function validateCalendar(calendar: BusinessCalendar) {
+  let zone = true;
+  try { new Intl.DateTimeFormat("en", { timeZone: calendar.timezone }).format(); } catch { zone = false; }
   if (
-    !Number.isInteger(minutes) ||
-    minutes < 0 ||
-    minutes > 525600 ||
+    !zone ||
+    !Array.isArray(calendar.weekdays) ||
+    !calendar.weekdays.length ||
+    !calendar.weekdays.every((d) => Number.isInteger(d) && d >= 0 && d <= 6) ||
+    !Number.isInteger(calendar.startHour) ||
+    !Number.isInteger(calendar.endHour) ||
     calendar.startHour < 0 ||
     calendar.endHour > 24 ||
     calendar.startHour >= calendar.endHour ||
-    !calendar.weekdays.length
+    !Array.isArray(calendar.holidays) ||
+    !calendar.holidays.every((d) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) ||
+    (calendar.holidayCatalog != null && !holidayCatalogs.includes(calendar.holidayCatalog))
   )
     throw new ApiError(422, "calendar", "Invalid business calendar/duration");
+}
+/** Whether the minute starting at instant t is working time on the calendar, in its own time zone. */
+export function businessMinuteTest(calendar: BusinessCalendar) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: calendar.timezone,
     year: "numeric",
@@ -32,23 +42,43 @@ export function businessDue(
     hourCycle: "h23",
     weekday: "short",
   });
+  return (t: number) => {
+    const parts = Object.fromEntries(formatter.formatToParts(t).map((p) => [p.type, p.value]));
+    const day = `${parts.year}-${parts.month}-${parts.day}`;
+    return (
+      calendar.weekdays.includes(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.weekday!)) &&
+      Number(parts.hour) >= calendar.startHour &&
+      Number(parts.hour) < calendar.endHour &&
+      !calendar.holidays.includes(day) &&
+      !(calendar.holidayCatalog === "us-federal" && usFederalHolidays(Number(parts.year)).has(day))
+    );
+  };
+}
+export function calendarFromRow(c: { timezone: string; weekdays_json: string; start_hour: number; end_hour: number; holidays_json: string; location?: string | null; holiday_catalog?: string | null }): BusinessCalendar {
+  return {
+    timezone: c.timezone,
+    weekdays: JSON.parse(c.weekdays_json),
+    startHour: c.start_hour,
+    endHour: c.end_hour,
+    holidays: JSON.parse(c.holidays_json),
+    location: c.location ?? null,
+    holidayCatalog: (c.holiday_catalog as HolidayCatalog | null) ?? null,
+  };
+}
+export function businessDue(
+  start: string,
+  minutes: number,
+  calendar: BusinessCalendar,
+) {
+  validateCalendar(calendar);
+  if (!Number.isInteger(minutes) || minutes < 0 || minutes > 525600)
+    throw new ApiError(422, "calendar", "Invalid business calendar/duration");
+  const working = businessMinuteTest(calendar);
   let t = Date.parse(start);
   if (!Number.isFinite(t)) throw new ApiError(422, "time", "Invalid start");
   let remaining = minutes;
   for (let step = 0; remaining && step < 5270400; step++) {
-    const parts = Object.fromEntries(
-      formatter.formatToParts(t).map((p) => [p.type, p.value]),
-    );
-    const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(
-      parts.weekday!,
-    );
-    if (
-      calendar.weekdays.includes(weekday) &&
-      Number(parts.hour) >= calendar.startHour &&
-      Number(parts.hour) < calendar.endHour &&
-      !calendar.holidays.includes(`${parts.year}-${parts.month}-${parts.day}`)
-    )
-      remaining--;
+    if (working(t)) remaining--;
     t += 60000;
   }
   if (remaining)
@@ -66,9 +96,11 @@ export async function saveCalendar(
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "operator"]);
   businessDue(new Date().toISOString(), 1, input);
+  if (input.location != null && (typeof input.location !== "string" || !input.location.trim() || input.location.length > 120))
+    throw new ApiError(422, "calendar_location", "Location must be a short name");
   const calendarId = id();
   await ctx.env.DB.prepare(
-    "INSERT INTO work_calendars VALUES(?,?,?,?,?,?,?,?,1)",
+    "INSERT INTO work_calendars(id,workspace_id,name,timezone,weekdays_json,start_hour,end_hour,holidays_json,revision,location,holiday_catalog) VALUES(?,?,?,?,?,?,?,?,1,?,?)",
   )
     .bind(
       calendarId,
@@ -79,6 +111,8 @@ export async function saveCalendar(
       input.startHour,
       input.endHour,
       JSON.stringify(input.holidays),
+      input.location?.trim() || null,
+      input.holidayCatalog ?? null,
     )
     .run();
   return { id: calendarId };
@@ -106,16 +140,12 @@ export async function setCommitment(
       start_hour: number;
       end_hour: number;
       holidays_json: string;
+      location: string | null;
+      holiday_catalog: string | null;
     }>();
   if (!c)
     throw new ApiError(422, "calendar_missing", "Configured calendar required");
-  const calendar = {
-    timezone: c.timezone,
-    weekdays: JSON.parse(c.weekdays_json),
-    startHour: c.start_hour,
-    endHour: c.end_hour,
-    holidays: JSON.parse(c.holidays_json),
-  };
+  const calendar = calendarFromRow(c);
   const response = businessDue(
       work.created_at,
       input.responseMinutes,
@@ -173,7 +203,7 @@ export async function shiftCommitmentForPause(
   to: string,
 ) {
   const row = await ctx.env.DB.prepare(
-    "SELECT c.*,b.timezone,b.weekdays_json,b.start_hour,b.end_hour,b.holidays_json FROM work_commitments c JOIN work_calendars b ON b.id=c.calendar_id AND b.workspace_id=c.workspace_id WHERE c.workspace_id=? AND c.work_id=?",
+    "SELECT c.*,b.timezone,b.weekdays_json,b.start_hour,b.end_hour,b.holidays_json,b.location,b.holiday_catalog FROM work_commitments c JOIN work_calendars b ON b.id=c.calendar_id AND b.workspace_id=c.workspace_id WHERE c.workspace_id=? AND c.work_id=?",
   )
     .bind(ctx.principal.workspaceId, workId)
     .first<{
@@ -185,45 +215,18 @@ export async function shiftCommitmentForPause(
       start_hour: number;
       end_hour: number;
       holidays_json: string;
+      location: string | null;
+      holiday_catalog: string | null;
     }>();
   if (!row) return;
-  const calendar = {
-    timezone: row.timezone,
-    weekdays: JSON.parse(row.weekdays_json),
-    startHour: row.start_hour,
-    endHour: row.end_hour,
-    holidays: JSON.parse(row.holidays_json),
-  };
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: calendar.timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    hourCycle: "h23",
-    weekday: "short",
-  });
+  const calendar = calendarFromRow(row), working = businessMinuteTest(calendar);
   let pausedMinutes = 0;
   for (
     let instant = Date.parse(from);
     instant < Date.parse(to);
     instant += 60000
-  ) {
-    const part = Object.fromEntries(
-      formatter.formatToParts(instant).map((p) => [p.type, p.value]),
-    );
-    if (
-      calendar.weekdays.includes(
-        ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(
-          part.weekday!,
-        ),
-      ) &&
-      Number(part.hour) >= calendar.startHour &&
-      Number(part.hour) < calendar.endHour &&
-      !calendar.holidays.includes(`${part.year}-${part.month}-${part.day}`)
-    )
-      pausedMinutes++;
-  }
+  )
+    if (working(instant)) pausedMinutes++;
   const response = businessDue(row.response_due_at, pausedMinutes, calendar),
     resolution = businessDue(row.resolution_due_at, pausedMinutes, calendar);
   await ctx.env.DB.prepare(

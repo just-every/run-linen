@@ -14,6 +14,7 @@ import { WorkOutcome } from "./work-outcome";
 import { BundleProgress } from "./bundles";
 import { HeldServices } from "./pending-people";
 import { WorkClassification } from "./work-classification";
+import { WorkSla } from "./work-sla";
 import { usePeopleLabels } from "./people-labels";
 import { shortRef } from "./work-queue";
 import { useQueue } from "./queue";
@@ -123,6 +124,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         </div>
       </dl>
       {operator && <WorkClassification workId={work.id} onChanged={changed} />}
+      {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkSla workId={work.id} />}
       {session.principal.roles.some(r => ["owner","operator"].includes(r)) && <RepairCoverage workId={work.id} />}
       <WorkaroundSuggestions workId={work.id} />
       <RecurringTasks workId={work.id} />
@@ -265,6 +267,7 @@ function WorkCommands({ work, onChanged, operator }: { work: WorkRecord; onChang
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const values = Object.fromEntries(new FormData(e.currentTarget));
+    if (!values.waitingOn) delete values.waitingOn;
     const result = await mutation.mutate(`/work/${work.id}/commands`, { ...values, command, revision: work.revision });
     if (result) {
       setCommand("");
@@ -307,6 +310,16 @@ function WorkCommands({ work, onChanged, operator }: { work: WorkRecord; onChang
             {command === "reopen" ? "What is happening?" : "Reason"}
             <textarea name="reason" required rows={3} />
           </label>
+          {command === "pause" && (
+            <label>
+              Waiting on
+              <select name="waitingOn" defaultValue="">
+                <option value="">Nobody outside the desk (SLA clock keeps running)</option>
+                <option value="requester">The requester</option>
+                <option value="vendor">A vendor</option>
+              </select>
+            </label>
+          )}
           {command === "assign" && (
             <label>
               Assign to

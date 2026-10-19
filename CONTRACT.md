@@ -431,6 +431,25 @@ that product and marks how close the current code is (see [Status](#status)).
   **Acceptance evidence:** a P2 opened at 4:30 pm Friday in `America/New_York`
   before a federal holiday Monday gets a due time on Tuesday; pausing for the
   requester extends it; a breach shows on the ticket and the report.
+  *Today's semantic:* the owner (acting for "admin" until that role exists)
+  orders SLA policies by position; a ticket binds the first policy, lowest
+  position first, whose set criteria (priority, category, requester group) all
+  match, with unset criteria matching anything, whenever its classification is
+  applied, so a priority change rebinds from the ticket's opening. A policy with
+  a business calendar counts only that calendar's working minutes, in its IANA
+  time zone, from the start hour up to (not including) the end hour; without one
+  it counts every minute (calendar hours). A calendar names its location and may
+  observe the US federal holiday catalog (5 U.S.C. 6103 dates; Saturday holidays
+  observed the Friday before, Sunday holidays the Monday after; Inauguration Day
+  excluded) beside its own listed dates. First response and resolution run from
+  the ticket's opening; first response is met by the first public agent reply
+  and resolution by closing. Each public requester message after an agent reply
+  starts a next-response target met by the next public agent reply. A pause
+  names who the ticket waits on (requester or vendor); only those the policy
+  pauses on stop its clock, an internal hold does not, and a pause that starts
+  after a due time never clears that breach. A target is breached when met after,
+  or still unmet past, its due time, and its breach time is that due time.
+  Owners, agents and auditors read each ticket's targets and the period report.
 
 - **DESK-005 — Escalation and supervisor rules.** Multi-level escalation before
   and after an SLA breach (agent, group lead, IT manager), and time-based rules
@@ -1906,8 +1925,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 30 | 53 | 32 | 115 |
-| All | 34 | 73 | 32 | 139 |
+| Target and push further | 31 | 52 | 32 | 115 |
+| All | 35 | 72 | 32 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1936,7 +1955,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-001` | Queues, groups and views | target | partial | `src/features/work/core.ts`, `src/ui/work.tsx` | No groups, saved views, bulk actions or triage shortcuts. |
 | `DESK-002` | Classification and priority | target | done | `src/features/work/classification.ts`, `tests/work/classification-cases.mjs`, `tests/ui/classification-journey.mjs`, `tests/adoption/classification-cases.mjs` | Local public-route/model-edge fixture proof of incident/service request/question proposals, category/subcategory, impact × urgency and reason; audited operator P1-to-P2 override, current-role/scope/CAS and late-result fencing. Native 1440/390 controls and persistence, missing-provider state, held archive restore and erasure. No live-model quality claim. |
 | `DESK-003` | Routing and assignment | target | partial | `src/features/work/core.ts`, `src/features/intelligence/intake-execution.ts` | No rules, round-robin, load, skills or CI/service support-group routing. |
-| `DESK-004` | SLA policies | target | partial | `src/features/work/calendar.ts`, `tests/work/runtime.mjs` | One commitment per ticket; no policy sets or holiday catalogs. |
+| `DESK-004` | SLA policies | target | done | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs` | Public-route proof: owner-ordered policies by priority and requester group (business and calendar hours); a P2 opened 4:30 pm Friday in `America/New_York` before Martin Luther King Jr. Day is due Tuesday 12:30 pm (first response 9:30 am); a requester pause from 10 to 11 am moves it to 1:30 pm while an internal hold does not; next-response targets start and are met; breaches show with their time on the ticket and in the period report. |
 | `DESK-005` | Escalation and supervisor rules | target | partial | `src/features/services/integrations.ts`, `src/features/intelligence/followup.ts` | No multi-level escalation or supervisor rules. |
 | `DESK-006` | Ticket relationships | target | partial | `src/features/services/incidents.ts` | No merge, split or parent/child tickets. |
 | `DESK-007` | Collaboration | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs`, `tests/ui/browser.mjs` | No mentions, watchers or side conversations. |
