@@ -106,10 +106,9 @@ export async function workSavedChecks({ api, ok, actor }) {
   assert.equal(proposal.ranked[1].realizedSavingMinutesPerOutcome, 35, 'AGENT-006 the automated type shows its realized saving as evidence');
   assert.equal(proposal.ranked[1].evidence.current.failed, 1);
   assert.equal(proposal.ranked[0].evidence.baseline, null);
-  assert.ok('knownCostPerVerifiedOutcomeUsd' in proposal.ranked[0].evidence.current, 'AGENT-006 the owner sees cost evidence');
+  assert.ok('knownCostPerVerifiedOutcomeUsd' in proposal.ranked[0].evidence.current, 'AGENT-006 cost per verified outcome is evidence');
   const audited = (await ok(path, undefined, 'auditor')).automationProposal;
-  assert.deepEqual(audited.ranked.map(r => r.requestType), proposal.ranked.map(r => r.requestType));
-  assert.ok(!('knownCostPerVerifiedOutcomeUsd' in audited.ranked[0].evidence.current), 'AGENT-006 non-owners see the ranking without monetary values');
+  assert.deepEqual(audited, proposal, 'AGENT-006 the proposal has REPORT-004\'s audience: an auditor reads the same ranking and evidence');
   const cohort = await ok(`${path}&requestType=${encodeURIComponent('Design tool access')}`);
   assert.deepEqual(cohort.requestTypes.map(r => r.requestType), ['Design tool access'], 'AGENT-006 the owner chooses the cohort');
   assert.deepEqual(cohort.automationProposal.ranked.map(r => r.requestType), ['Design tool access']);

@@ -47,8 +47,8 @@ export async function workSavedReport(ctx: WorkContext, q: { baselineFrom: strin
     baseline: { from: baselineFrom, to: baselineTo }, current: { from: currentFrom, to: currentTo },
     cohort: cohort ? [...cohort].sort() : null,
     requestTypes,
-    // USD evidence follows the role-rate audience: the owner only.
-    automationProposal: automationProposal(requestTypes, ctx.principal.roles.includes('owner')),
+    // Same audience as the rest of this report (owner, operator, auditor).
+    automationProposal: automationProposal(requestTypes),
     definition: `${effortDefinition} Baseline and current are owner-chosen, non-overlapping windows; Linen does not infer when automation started.`,
     costDefinition,
   };

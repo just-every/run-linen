@@ -1736,9 +1736,9 @@ evidence (A4). Humans can see, take over, correct or stop any run.
   each shows the realized saving per verified outcome (baseline minus current
   minutes), touches, verified and failed counts as evidence. A type with no
   verified outcome in the current window is listed as not enough evidence, never
-  ranked. The proposal authorizes nothing. Cost evidence in USD follows the
-  role-rate audience (the owner); operators and auditors see the same ranking
-  without monetary values.
+  ranked. The proposal authorizes nothing. Its audience is REPORT-004's: the
+  owner, operators and auditors read the same ranking and evidence, including
+  cost at the declared role rates.
 
 - **AGENT-007 — Mine ticket history for automations.** The agent clusters
   historic and recent tickets, drafts catalog items, workflows, standing grants
@@ -1973,7 +1973,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `AGENT-003` | Verify the employee can work again | push-further | partial | `src/features/execution/verification.ts`, `tests/ui/connected-request.mjs` | No sign-in, device-compliance or installed-app signals. |
 | `AGENT-004` | Investigate multi-system failures | push-further | partial | `src/features/intelligence/research.ts`, `tests/intelligence/frontier.mjs` | No held-out live case against real IdP, MDM and monitoring logs. |
 | `AGENT-005` | Build a missing connector | push-further | partial | `src/features/intelligence/engineering.ts`, `tests/ui/connected-frontier.mjs` | No released provider connector. |
-| `AGENT-006` | Measure human work saved | push-further | done | `src/features/work/automation-proposal.ts`, `tests/work/work-saved-cases.mjs`, `tests/ui/time-journey.mjs` | Local public-route and inspected 1440/390 proof: REPORT-004's report for two request types with the owner's cohort and windows, a ranked next-automation proposal by human minutes it would remove, realized saving and failures as evidence, not-enough-evidence types unranked, and USD evidence for the owner only. |
+| `AGENT-006` | Measure human work saved | push-further | done | `src/features/work/automation-proposal.ts`, `tests/work/work-saved-cases.mjs`, `tests/ui/time-journey.mjs` | Local public-route and inspected 1440/390 proof: REPORT-004's report for two request types with the owner's cohort and windows, a ranked next-automation proposal by human minutes it would remove, realized saving and failures as evidence, not-enough-evidence types unranked, read by REPORT-004's audience. |
 | `AGENT-007` | Mine ticket history for automations | push-further | partial | `src/features/intelligence/capabilities.ts`, `tests/intelligence/frontier.mjs` | No ticket-history mining. |
 | `AGENT-008` | Keep devices and licenses healthy | push-further | missing |  | No MDM/EDR signals. |
 | `AGENT-009` | Carry service commitments across tickets | push-further | partial | `src/features/intelligence/commitments.ts`, `tests/intelligence/frontier.mjs` | No live provider observations (such as GitHub access readback) behind commitments. |
