@@ -13,6 +13,14 @@ export async function timeChecks(api,db,workId,taskId) {
   assert.equal((await api(path,{...manual,deduplicationKey:'bad-task',obligationId:'absent-task'})).status,404);
   const task=await api(path,{...manual,minutes:7,deduplicationKey:'task-time',obligationId:taskId,effortRole:'technician'});
   assert.equal(task.status,201,JSON.stringify(task));assert.equal(task.value.obligation_id,taskId);assert.equal(task.value.effort_role,'technician');
+  // A7: each touch records what it was for; vendor/technician work defaults to its own kind.
+  assert.equal(task.value.touch_kind,'vendor_technician');
+  assert.equal((await api(path,{...manual,deduplicationKey:'bad-kind',touchKind:'coffee'})).status,422);
+  const consent=await api(path,{source:'manual',minutes:3,note:'Approved the provider consent screen',deduplicationKey:'consent-time',touchKind:'sign_in_consent'},employee);
+  assert.equal(consent.status,201,JSON.stringify(consent));assert.equal(consent.value.touch_kind,'sign_in_consent');
+  assert.equal((await api(path,{source:'manual',minutes:3,note:'Approved the provider consent screen',deduplicationKey:'consent-time',touchKind:'correction'},employee)).status,409);
+  for (const [touchKind,minutes] of [['setup_gap',4],['correction',2],['physical_custody',6],['takeover',8],['recovery',5]])
+    assert.equal((await api(path,{source:'manual',minutes,note:`A7 ${touchKind}`,deduplicationKey:`touch-${touchKind}`,touchKind})).status,201);
   const start=await api(path,{source:'measured',deduplicationKey:'timer'});assert.equal(start.status,201,JSON.stringify(start));
   assert.equal((await api(path,{source:'measured',deduplicationKey:'parallel'})).status,409);
   const timerPath=`${path}/${start.value.id}`;
@@ -33,9 +41,14 @@ export async function timeChecks(api,db,workId,taskId) {
   const pending=await api('/work',{title:'Unresolved printer request',body:'Printer still unavailable',deduplicationKey:'effort-pending'},employee);assert.equal(pending.status,201);
   const report=await api(`/reports/work?from=${from}&to=${to}&timezone=UTC`);assert.equal(report.status,200,JSON.stringify(report));
   const effort=report.value.effort;assert.ok(effort.groups.some(row=>row.source==='manual'&&row.role==='owner'&&row.activeMinutes===15));assert.ok(effort.groups.some(row=>row.source==='measured'&&row.activeMinutes>0&&row.touches===2));assert.ok(effort.groups.some(row=>row.role==='technician'&&row.activeMinutes===7));assert.ok(effort.byRequestType.some(row=>row.failed>0));assert.ok(effort.byRequestType.some(row=>row.pending>0));
+  const kinds=effort.byRequestType.find(row=>row.byTouchKind.recovery).byTouchKind;
+  assert.deepEqual(Object.fromEntries(['sign_in_consent','setup_gap','correction','physical_custody','vendor_technician','takeover','recovery'].map(k=>[k,kinds[k]?.activeMinutes])),
+    {sign_in_consent:3,setup_gap:4,correction:2,physical_custody:6,vendor_technician:7,takeover:8,recovery:5},'A7 human touches and active minutes counted per kind');
+  assert.ok(Object.values(kinds).every(k=>k.touches>=1));
+  const typed=effort.byRequestType.find(row=>row.byTouchKind.recovery);assert.ok(typed.failed+typed.pending>0,'A7 unresolved and failed work reported beside the touches');
   assert.equal((await api(`/reports/effort?from=${from}&to=${to}`,undefined,employee)).status,403);
   assert.equal((await api(`/reports/effort?from=${to}&to=${from}`)).status,422);
-  const entries=(await api(path)).value.items;assert.equal(entries.length,3);
+  const entries=(await api(path)).value.items;assert.equal(entries.length,9);
   const restored={...start.value,id:crypto.randomUUID(),dedup_key:'restored-active',active_ms:beat.value.active_ms};
   const restore=await api('/test/restore',{table:'work_time_entries',row:restored,sourceId:'effort-backup',sourceKey:'timer'});assert.equal(restore.status,200,JSON.stringify(restore));
   const restoredRow=(await api(path)).value.items.find(row=>row.id===restored.id);assert.equal(restoredRow.state,'completed');assert.equal(restoredRow.last_seen_at,null);assert.equal(restoredRow.active_ms,beat.value.active_ms);

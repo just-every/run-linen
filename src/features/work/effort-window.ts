@@ -3,7 +3,7 @@ import type { LaborRates } from './labor-rates';
 
 interface Cohort { id: string; requestType: string; state: string; failed: number; verified: number }
 interface Charge { workId: string; attempts: number; usd: number; unknown: number }
-export interface EffortGroup { requestType: string; role: string; actorRole: string; source: string; entries: number; touches: number; activeMinutes: number; unfinishedTimers: number }
+export interface EffortGroup { requestType: string; role: string; actorRole: string; source: string; touchKind: string; entries: number; touches: number; activeMinutes: number; unfinishedTimers: number }
 
 /**
  * One reporting window [from,to) (REPORT-004). Labor is recorded human minutes at the
@@ -12,12 +12,12 @@ export interface EffortGroup { requestType: string; role: string; actorRole: str
  */
 export async function effortWindow(ctx: WorkContext, from: string, to: string, rates: LaborRates) {
   const db = ctx.env.DB, w = ctx.principal.workspaceId;
-  const groups = (await db.prepare(`SELECT e.request_type requestType,e.effort_role role,e.actor_role actorRole,e.source,
+  const groups = (await db.prepare(`SELECT e.request_type requestType,e.effort_role role,e.actor_role actorRole,e.source,e.touch_kind touchKind,
     COUNT(*) entries,SUM(e.touches) touches,SUM(e.active_ms)/60000.0 activeMinutes,
     SUM(CASE WHEN e.state='active' THEN 1 ELSE 0 END) unfinishedTimers
     FROM work_time_entries e JOIN work_records w ON w.workspace_id=e.workspace_id AND w.id=e.work_id
     WHERE e.workspace_id=? AND w.sensitivity='normal' AND e.created_at>=? AND e.created_at<?
-    GROUP BY e.request_type,e.effort_role,e.actor_role,e.source ORDER BY e.request_type,e.effort_role,e.actor_role,e.source`)
+    GROUP BY e.request_type,e.effort_role,e.actor_role,e.source,e.touch_kind ORDER BY e.request_type,e.effort_role,e.actor_role,e.source,e.touch_kind`)
     .bind(w, from, to).all<EffortGroup>()).results;
   const providerAttempts = `SELECT 1 FROM execution_plans p JOIN execution_operations o ON o.workspace_id=p.workspace_id AND o.plan_id=p.id
     JOIN execution_attempts x ON x.workspace_id=o.workspace_id AND x.operation_id=o.id
@@ -52,6 +52,11 @@ export async function effortWindow(ctx: WorkContext, from: string, to: string, r
       const role = byRole[g.role] ||= { touches: 0, activeMinutes: 0 };
       role.touches += g.touches; role.activeMinutes += g.activeMinutes;
     }
+    const byTouchKind: Record<string, { touches: number; activeMinutes: number }> = {};
+    for (const g of effort) {
+      const kind = byTouchKind[g.touchKind] ||= { touches: 0, activeMinutes: 0 };
+      kind.touches += g.touches; kind.activeMinutes += g.activeMinutes;
+    }
     const unpricedRoles = Object.keys(byRole).filter(role => byRole[role].activeMinutes > 0 && rates[role as keyof LaborRates] === undefined);
     const laborUsd = Object.entries(byRole).reduce((n, [role, v]) => n + v.activeMinutes / 60 * (rates[role as keyof LaborRates] ?? 0), 0);
     const charges = (list: Charge[]) => list.filter(c => typeOf.get(c.workId) === requestType)
@@ -62,7 +67,7 @@ export async function effortWindow(ctx: WorkContext, from: string, to: string, r
     return {
       requestType, incoming: rows.length, verified, failed: rows.filter(r => r.failed).length,
       pending: rows.filter(r => !r.verified && !r.failed).length, closed: rows.filter(r => r.state === 'closed').length,
-      touches: effort.reduce((n, g) => n + g.touches, 0), activeMinutes: effort.reduce((n, g) => n + g.activeMinutes, 0), byRole,
+      touches: effort.reduce((n, g) => n + g.touches, 0), activeMinutes: effort.reduce((n, g) => n + g.activeMinutes, 0), byRole, byTouchKind,
       labor: { usd: laborUsd, unpricedRoles },
       model: { attempts: m.attempts, estimatedUsd: m.usd, unknownCharges: m.unknownCharges },
       provider: { attempts: p.attempts, unknownCharges: p.unknownCharges },

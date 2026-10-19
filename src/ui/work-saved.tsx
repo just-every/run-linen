@@ -4,7 +4,7 @@ import { ActionForm } from './forms';
 const roles = ['employee', 'agent', 'approver', 'owner', 'vendor', 'technician'] as const;
 export interface WindowRow {
   requestType: string; incoming: number; verified: number; failed: number; pending: number; closed: number;
-  touches: number; activeMinutes: number; byRole: Record<string, { touches: number; activeMinutes: number }>;
+  touches: number; activeMinutes: number; byRole: Record<string, { touches: number; activeMinutes: number }>; byTouchKind: Record<string, { touches: number; activeMinutes: number }>;
   labor: { usd: number; unpricedRoles: string[] };
   model: { attempts: number; estimatedUsd: number; unknownCharges: number };
   provider: { attempts: number; unknownCharges: number };

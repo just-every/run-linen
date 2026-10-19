@@ -1715,6 +1715,17 @@ that product and marks how close the current code is (see [Status](#status)).
   execution. **Acceptance evidence:** exhaust a budget with unresolved
   obligations, record an unknown charge and restart; missing configuration
   returns `needs_configuration`, never data.
+  *Today's semantic:* every recorded human touch (a time entry, or a resumed
+  measured session) names what it was for: the request itself, sign-in or
+  consent, a setup gap, a correction, physical custody, vendor or technician
+  work (the default for work attributed to a vendor or technician), takeover or
+  recovery. The period effort report counts touches and active minutes per
+  kind for each request type beside that type's unresolved and failed requests,
+  so a lower-touch period never hides missed work. An exhausted model budget
+  holds an employee's request as `budget_held` for the workspace owner; a
+  dispatched call without a usage receipt is an unknown charge that keeps its
+  budget reservation; both survive a restart; and assessment without a model
+  connection returns `needs_configuration` with no interpretation.
 
 ## Flagship service operations (retained)
 
@@ -1924,9 +1935,9 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 4 | 20 | 0 | 24 |
+| Published | 5 | 19 | 0 | 24 |
 | Target and push further | 31 | 52 | 32 | 115 |
-| All | 35 | 72 | 32 | 139 |
+| All | 36 | 71 | 32 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2048,7 +2059,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `A4` | Verifiable outcomes | published | done | `src/features/execution/verification.ts`, `tests/ui/connected-request.mjs`, `tests/execution/runtime.mjs` |  |
 | `A5` | Legible service | published | partial | `src/ui`, `tests/ui/run.mjs`, `tests/ui/viewport-evidence.mjs` | No chat channels; bounded accessibility evidence. |
 | `A6` | Data and source custody | published | partial | `src/features/adoption`, `tests/adoption/prior-data-upgrade.mjs`, `tests/adoption/runtime.mjs` | Incumbent imports bounded to Freshservice. Legacy domain `/exports` also refuses a fresh post-erasure snapshot with `erasure_invalidated_snapshot`; this gap was observed during KB-004 checks and remains open. |
-| `A7` | Honest operating and cost boundaries | published | partial | `src/features/intelligence/measurement.ts`, `tests/intelligence/runtime.mjs` | Human touch counting incomplete. |
+| `A7` | Honest operating and cost boundaries | published | done | `src/features/intelligence/measurement.ts`, `src/features/work/time.ts`, `src/features/work/effort-window.ts`, `tests/intelligence/runtime.mjs`, `tests/work/time-cases.mjs` | Public-route proof: an exhausted budget holds an employee request for the owner, a lost provider response stays an unknown reserved charge, both survive a Worker restart, and a removed model connection returns `needs_configuration` with no interpretation; human touches and minutes are recorded and reported per kind (sign-in/consent, setup gap, correction, custody, vendor/technician, takeover, recovery) beside unresolved and failed requests. Local runtime and fixture provider only. |
 | `O1` | Service graph and major incidents | published | partial | `src/features/services/graph.ts`, `tests/services/run.mjs`, `tests/services/integration.mjs` | No real monitoring/on-call. |
 | `O2` | Change, release and prevention | published | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs`, `tests/ui/connected-frontier.mjs` | No live provider or sustained prevention. |
 | `O3` | Lifecycle and economics | published | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No real supplier or reclamation. |
