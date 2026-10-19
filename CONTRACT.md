@@ -1841,8 +1841,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 25 | 57 | 33 | 115 |
-| All | 29 | 77 | 33 | 139 |
+| Target and push further | 26 | 56 | 33 | 115 |
+| All | 30 | 76 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
