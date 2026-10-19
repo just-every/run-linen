@@ -412,7 +412,13 @@ try {
   await page
     .getByLabel("Keep the conversation going")
     .fill("The design workspace is still unavailable.");
+  const replySaved = page.waitForResponse(r => r.url().endsWith(`/work/${workId}/messages`)
+    && r.request().method() === "POST");
   await page.getByRole("button", { name: "Send message", exact: true }).click();
+  assert.equal((await replySaved).status(), 201);
+  // Start the next user action from persisted readback. A concurrent reply
+  // refresh must not detach the correction form while this test opens it.
+  await page.reload();
   await page
     .getByText("The design workspace is still unavailable.", { exact: true })
     .waitFor();
