@@ -38,7 +38,7 @@ export function WorkRelationships({ workId, messages, onChanged }: { workId: str
         fields={[{ name: "intoId", label: "Surviving ticket ID", required: true }, { name: "reason", label: "Why they are duplicates", type: "textarea", required: true }]} />
       <ActionForm title="Split messages into a new ticket" path={`/work/${workId}/split`} onSaved={changed} submit="Split"
         fields={[{ name: "title", label: "New ticket title", required: true },
-          { name: "messageIds", label: "Messages to move", type: "checkboxes", required: true, options: messages.filter((m) => m.visibility === "public").map((m) => ({ value: m.id, label: m.body.slice(0, 80) })) },
+          { name: "messageIds", label: "Messages to move", type: "checkboxes", required: true, options: messages.filter((m) => m.visibility === "public").map((m, i) => ({ value: m.id, label: `Message ${i + 1}: ${m.body.slice(0, 80)}` })) },
           { name: "reason", label: "Why this is a separate ask", type: "textarea", required: true }]} />
       <ActionForm title="Link a record" path={`/work/${workId}/links`} onSaved={changed} submit="Link"
         fields={[{ name: "kind", label: "Record type", type: "select", required: true, options: ["asset", "problem", "change", "engineering_issue"].map((k) => ({ value: k, label: humanize(k) })) },
