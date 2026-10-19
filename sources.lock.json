@@ -4527,7 +4527,7 @@
       "executable": false
     },
     "tests/runtime.mjs": {
-      "sha256": "f3dc95d073835c7791ac285acae49074e5d54834deabc6123a43086ad6c4ac3d",
+      "sha256": "2f5e08a44fe50a019c440ef181abbe3447e64bc826d10c094cd9c20bc4cdcec9",
       "executable": false
     },
     "tests/services/calendar-cases.mjs": {
@@ -4719,7 +4719,7 @@
       "executable": false
     },
     "tests/ui/setup-change-checks.mjs": {
-      "sha256": "6738350b7e2a2532c84bf934332ba0d6c2c8c71bd345db7230e548c2ef6a1800",
+      "sha256": "c18360f59cf67a39b2c077dbc1006f01bfce2b1f20121ce794fff4c84b50fc86",
       "executable": false
     },
     "tests/ui/setup-fixtures.mjs": {
