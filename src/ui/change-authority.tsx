@@ -13,7 +13,7 @@ export function ChangeAuthority({record,refresh}:{record:DomainRecord;refresh:()
       options:grants.data?.filter(g=>g.action===`deployment.${phase}`&&!g.revoked_at).map(g=>({value:text(g.id),label:`${text(g.target)} · ${text(g.beneficiary_id)} · version ${text(g.version)}`}))}))];
   return <><Notice>{standard?'CAB is skipped under the recorded catalog preapproval. Bind existing execution grants to continue; their live scope is checked at every effect.':record.data.emergency?'ECAB path: a current owner or independent approver records the emergency decision and reason. Execution grants remain separate.':'CAB path: a current owner or independent approver records the change decision. Execution grants remain separate.'}</Notice>
     <ErrorNotice error={grants.error}/><ActionForm title={standard?'Bind existing execution grants':record.data.emergency?'Record ECAB decision':'Record current change authority'}
-      path={`/changes/${record.id}/${standard?'grants':'authorize'}`} defaults={{revision:record.revision}} fields={fields}
+      path={`/changes/${record.id}/${standard?'grants':'authorize'}`} defaults={{revision:record.revision}} fields={fields} onOpen={grants.refresh}
       transform={values=>({revision:values.revision,...(!standard?{reason:values.reason}:{}),grantReferences:['canary','rollout','compensate'].flatMap(phase=>{
         const grant=grants.data?.find(g=>g.id===values[phase]);return grant?[{id:grant.id,version:grant.version,phase}]:[];
       })})} onSaved={refresh}/></>;

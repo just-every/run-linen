@@ -65,7 +65,7 @@ export function NewChange({ onSaved, templateMode = false, templateRecord }: {
     ? <ErrorNotice error={connections.error || services.error} retry={()=>{connections.refresh();services.refresh();}}/>
     : <Loading label="Reading the template’s services and checked connections…"/>;
   return <details className="action-disclosure" onToggle={e=>{if(e.currentTarget.open&&!templateMode)templates.refresh();}}><summary>{templateMode?(templateRecord?`Edit template ${text(d?.title)}`:'Add change template'):'Add change'}</summary><form className="inline-form" onSubmit={save}>
-    {!templateMode&&<label>Standard change catalog<select value={templateId} onChange={e=>setTemplateId(e.target.value)}><option value="">Normal or emergency change…</option>{catalog.map(t=><option key={t.id} value={t.id}>{text(t.data.title)} · version {t.data.version}</option>)}</select></label>}
+    {!templateMode&&<label>Standard change catalog<select aria-label="Standard change catalog" value={templateId} onChange={e=>setTemplateId(e.target.value)}><option value="">Normal or emergency change…</option>{catalog.map(t=><option key={t.id} value={t.id}>{text(t.data.title)} · version {t.data.version}</option>)}</select></label>}
     {chosen?<><Notice>Standard change: CAB is skipped under this exact owner-preapproved template. Separate execution grants and calendar policy still apply.</Notice>
       <p>{chosen.data.impact}</p>{['implementationPlan','testPlan','backoutPlan'].map((name,i)=><section key={name}><h3>{['Implementation plan','Test plan','Backout plan'][i]}</h3><p>{chosen.data[name]}</p></section>)}<Fields fields={windowFields}/></>:<>
     <Fields fields={fields} />

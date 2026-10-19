@@ -147,6 +147,7 @@ export function ActionForm({
   submit = "Save",
   explanation,
   onSaved,
+  onOpen,
   transform,
   open = false,
 }: {
@@ -158,6 +159,7 @@ export function ActionForm({
   submit?: string;
   explanation?: string;
   onSaved?: (result: RecordValue) => void;
+  onOpen?: () => void;
   transform?: (values: RecordValue) => RecordValue;
   open?: boolean;
 }) {
@@ -190,7 +192,7 @@ export function ActionForm({
     }
   }
   return (
-    <details className="action-disclosure" data-action-path={path} open={open || undefined}>
+    <details className="action-disclosure" data-action-path={path} open={open || undefined} onToggle={e=>{if(e.currentTarget.open)onOpen?.();}}>
       <summary>{title}</summary>
       <form className="inline-form" onSubmit={send}>
         {explanation && <p>{explanation}</p>}
