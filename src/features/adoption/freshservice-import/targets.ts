@@ -1,7 +1,7 @@
 import type { D1TargetAdapter, D1Sql, D1Database, TargetRow } from '../../../modules/import-kit/src/d1/index';
 import { canonicalJson } from '../../../modules/import-kit/src/d1/index';
 
-export const workColumns = ['id','workspace_id','requester_id','beneficiary_id','kind','title','state','sensitivity','assignee_id','impact','revision','created_at','updated_at','closed_at','paused_at','paused_ms','response_at','resolution_at','context_json','dedup_key','request_hash','pending_person_id'];
+export const workColumns = ['id','workspace_id','requester_id','beneficiary_id','kind','title','state','sensitivity','assignee_id','impact','revision','created_at','updated_at','closed_at','paused_at','paused_ms','response_at','resolution_at','context_json','dedup_key','request_hash','pending_person_id','merged_into','split_from','parent_id'];
 const messageColumns = ['id','workspace_id','work_id','author_id','visibility','body','source_key','created_at'];
 // A later native attachment, fulfilment, execution or intake prevents deletion.
 const dependents = ['work_attachments','work_lifecycle','work_obligations','work_fulfilments','work_commitments','work_catalog_reservations','execution_plans','execution_outbox','work_fulfilment_execution','work_fulfilment_amendments','work_fulfilment_approvals','intelligence_investigations','intelligence_pending_fulfilments','intelligence_fulfilment_runs','work_intake_events','work_pending_services'];

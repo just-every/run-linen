@@ -467,6 +467,20 @@ that product and marks how close the current code is (see [Status](#status)).
   a ticket carrying two unrelated asks into two tickets, each with its own SLA
   and history and a link back to the original messages; link a ticket to a
   laptop and a problem and see it on each record.
+  *Today's semantic:* agents merge a duplicate into a surviving ticket: the
+  duplicate closes with a pointer to it, and the duplicate's requester (and
+  beneficiary) become participants of the surviving ticket who read only its
+  public messages and status, never private notes, attachments or actions on it;
+  both tickets carry a public merge notice. HR and restricted tickets, or tickets
+  of different sensitivity, are never merged. A split copies chosen public
+  messages into a new ticket for the same requester and beneficiary, each copy
+  citing its source message, and carries the original's classification so the
+  new ticket binds its own SLA policy (DESK-004) and keeps its own history.
+  Tickets take a parent (cycles refused) and links to assets, problems, changes
+  and engineering issues; an engineering issue is an https URL kept as a
+  reference, never a synced issue. Each linked asset, problem or change lists
+  only the tickets its reader can already read. Approved by ct on 19 October
+  (19:44Z).
 
 - **DESK-007 — Collaboration.** Private notes, @mentions, watchers, and side
   conversations by email or Slack with vendors and other teams that stay off the
@@ -1948,8 +1962,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 32 | 52 | 31 | 115 |
-| All | 37 | 71 | 31 | 139 |
+| Target and push further | 33 | 51 | 31 | 115 |
+| All | 38 | 70 | 31 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1980,7 +1994,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-003` | Routing and assignment | target | partial | `src/features/work/core.ts`, `src/features/intelligence/intake-execution.ts` | No rules, round-robin, load, skills or CI/service support-group routing. |
 | `DESK-004` | SLA policies | target | done | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs` | Public-route proof: owner-ordered policies by priority and requester group (business and calendar hours); a P2 opened 4:30 pm Friday in `America/New_York` before Martin Luther King Jr. Day is due Tuesday 12:30 pm (first response 9:30 am); a requester pause from 10 to 11 am moves it to 1:30 pm while an internal hold does not; next-response targets start and are met; breaches show with their time on the ticket and in the period report. |
 | `DESK-005` | Escalation and supervisor rules | target | partial | `src/features/services/integrations.ts`, `src/features/intelligence/followup.ts` | No multi-level escalation or supervisor rules. |
-| `DESK-006` | Ticket relationships | target | partial | `src/features/services/incidents.ts` | No merge, split or parent/child tickets. |
+| `DESK-006` | Ticket relationships | target | done | `src/features/work/relationships.ts`, `src/ui/work-relationships.tsx`, `tests/work/relationship-cases.mjs` | Public-route proof: a duplicate printer ticket merges into the survivor (closed with a pointer, HR merge refused); both requesters see the merge notice on the surviving ticket, the merged requester reads its public messages only and cannot act on it; a split moves the monitor ask into its own ticket citing the original message, with its own SLA binding, and becomes a child (cycle refused); a laptop, a problem and an engineering-issue URL link to the ticket, and the laptop and problem each list it. |
 | `DESK-007` | Collaboration | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs`, `tests/ui/browser.mjs` | No mentions, watchers or side conversations. |
 | `DESK-008` | Responses and summaries | target | done | `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs` | Local public-route and paid-model-edge fixture proof of safe canned placeholders, generated knowledge/history citations, a complete 20-message summary, native 1440/390 unsent-draft persistence and explicit agent Send; current role/scope, provider/citation failures and changed-message/article/expiry fences. Native template restore remains inert. No live-model quality claim. |
 | `DESK-009` | Satisfaction surveys | target | missing |  | No CSAT. |
