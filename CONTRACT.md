@@ -809,6 +809,20 @@ that product and marks how close the current code is (see [Status](#status)).
   re-attests before the end date. **Acceptance evidence:** a contractor with an end
   date in three days triggers a sponsor reminder; without re-attestation access is
   removed and verified at the end instant.
+  *Today's semantic:* every lifecycle record with an end date names a sponsor, a
+  current active member other than the contractor. When the end instant is 72
+  hours away or less, the sponsor receives one reminder as a request in their own
+  portal queue (email and chat delivery are inherited by NOTIFY-001 before it
+  ships). Only the current active sponsor re-attests, choosing any later end
+  date; this moves the identity-disable and session-revoke expiry duties, clears
+  the reminder so a new one precedes the new end, and is audited. If the sponsor
+  is no longer an active member, the reminder goes to the owner, labelled
+  "Sponsor left; owner to reassign or re-attest", and the owner (acting for
+  "admin") may re-attest or name a new sponsor, who is then reminded afresh. Without
+  re-attestation the account disable starts at the end instant and session
+  revocation follows once the disable is independently verified (both act on the
+  same account, through their bound provider grants); once either duty has
+  started, the end date cannot be re-attested.
 
 - **LIFE-007 — Lifecycle evidence pack.** For each join, move and leave, an
   exportable record shows what was granted or revoked, when, by which authority,
@@ -1830,8 +1844,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 20 | 0 | 24 |
-| Target and push further | 25 | 57 | 33 | 115 |
-| All | 29 | 77 | 33 | 139 |
+| Target and push further | 26 | 56 | 33 | 115 |
+| All | 30 | 76 | 33 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1891,7 +1905,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `LIFE-003` | Birthright access baselines | target | partial | `src/features/work/lifecycle.ts`, `tests/ui/connected-lifecycle.mjs` | No access policies. |
 | `LIFE-004` | Joiner device readiness | target | partial | `src/features/work/resources.ts`, `tests/ui/custody-journey.mjs` | No zero-touch enrollment or shipping. |
 | `LIFE-005` | Leaver revocation everywhere | target | partial | `src/features/execution/identity.ts`, `src/features/work/lifecycle.ts`, `tests/ui/connected-lifecycle.mjs` | Entra only; no Okta, Google, SaaS or on-premises AD revocation, data transfer or device actions. |
-| `LIFE-006` | Contractors and temporary staff | target | partial | `src/features/work/lifecycle.ts`, `tests/work/runtime.mjs` | No sponsor re-attestation. |
+| `LIFE-006` | Contractors and temporary staff | target | done | `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs` | Local public-route and inspected 1440/390 connected-fixture proof: an end date requires an active sponsor; a 72-hour reminder reaches the sponsor's requests; only the sponsor re-attests (owner once the sponsor has left, with reassignment); without re-attestation the Graph-fixture disable and session revocation start at the end instant and are independently verified. No live HRIS or IdP claim. |
 | `LIFE-007` | Lifecycle evidence pack | target | done | `src/features/work/lifecycle-evidence.ts`, `tests/work/lifecycle-evidence-cases.mjs`, `tests/ui/custody-journey.mjs` | Local public-door join/move/leave export with exact historical grants, decisions, attempts, readback, independent verification and outstanding security/custody duties; owner/HR isolation and erasure protection. JSON download exercised at 1440/390. Provider evidence remains test-only; no compliance certification or legal-hold storage claim. |
 | `ASSET-001` | MDM sync | target | missing |  | No Jamf, Intune or Kandji connector and no installed-application inventory. |
 | `ASSET-002` | Device actions under grant | target | missing |  | No device actions or inventory-verified app push and removal. |

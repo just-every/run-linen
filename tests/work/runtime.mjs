@@ -10,7 +10,7 @@ import { assetCustodyChecks } from "./asset-custody-cases.mjs";
 import { assetContractChecks } from "./asset-contract-cases.mjs";
 import { classificationChecks, classificationEncryptionKey } from "./classification-cases.mjs";
 import { lifecycleEvidenceChecks } from "./lifecycle-evidence-cases.mjs";
-import { lifecycleReplayChecks, lifecycleIntegrationChecks } from "./lifecycle-regressions.mjs";
+import { lifecycleReplayChecks, lifecycleIntegrationChecks, contractorSponsorChecks } from "./lifecycle-regressions.mjs";
 import assert from "node:assert/strict";
 import { readFile, readdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -412,6 +412,7 @@ try {
   );
   await lifecycleReplayChecks(api, lifecycle, life.value.lifecycleId);
   await lifecycleIntegrationChecks(api, db, lifecycle);
+  await contractorSponsorChecks(api, db, lifecycle);
   await lifecycleEvidenceChecks(api, db);
   const catalog = await api("/catalog", {
     name: "Editor licence",

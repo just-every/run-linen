@@ -3,14 +3,14 @@ import { action, local, later } from './connected-helpers.mjs';
 import { nativeCreate } from './native-regressions.mjs';
 import { captureJourney } from './viewport-evidence.mjs';
 export async function connectedLifecycle(env) {
-  const {page,api,base,out,issuerApi,graph,probe,tick,until}=env,uid=(await api('/session')).principal.userId;
+  const {page,api,base,out,issuerApi,graph,probe,tick,until,fixture}=env,uid=(await api('/session')).principal.userId;
   const person=(await api('/people')).items.find(p=>p.source_id==='provider-colleague');assert.ok(person);
   const id=await nativeCreate(page,base,'lifecycle','Record an authoritative HR change',{'Person':person.id,'What is changing?':'leave','Effective date and time':local(-60000),'Employment timezone':'UTC','Authoritative HR source':'Selected fixture HR','HR source revision':1,'Accountable owner':uid,'Immutable provider account or UPN':'provider-colleague','Access that remains valid':'independent-alumni-right','Access to remove':'old-team'});
   let life=await api('/lifecycle/'+id);
   const disable=life.obligations.find(o=>o.kind==='identity.disable');
-  async function bind(duty) {
+  async function bind(duty, lifecycleId = id) {
     const grant=await issuerApi('/grants',{principalId:uid,beneficiaryId:person.id,action:duty.kind,actionVersion:1,target:'provider-colleague',connectionId:graph.id,validFrom:later(-60000),validUntil:later(3600000),maxUses:5,conditions:{},verifierConnectionId:probe.id});
-    await page.goto(base+'/app#/lifecycle/'+id);
+    await page.goto(base+'/app#/lifecycle/'+lifecycleId);
     await action(page,'Bind the reviewed security action',{step:{action:duty.kind,actionVersion:1,target:'provider-colleague',beneficiaryId:person.id,connectionId:graph.id,connectionRevision:graph.revision,verifierConnectionId:probe.id,verifierConnectionRevision:probe.revision,grantId:grant.id,grantVersion:grant.version,cohort:[person.id]}},'/obligations/'+duty.id+'/execution');
   }
   await bind(disable);
@@ -25,4 +25,37 @@ export async function connectedLifecycle(env) {
   await tick();assert.equal((await (await fetch(base+'/__fixture/evidence')).json()).state.sessionsRevokedAt,before.state.sessionsRevokedAt);
   await page.reload();await page.getByText('Existing sessions were invalidated.',{exact:false}).waitFor();
   await captureJourney(page,{path:out+'/J3-cancel-stopped-and-irreversible.png',fullPage:true});
+  // LIFE-006: a contractor end date names a sponsor; the 72-hour reminder lets only the sponsor re-attest,
+  // and without re-attestation the removal runs and is independently verified at the end instant.
+  const contract=(source,expiresAt)=>api('/lifecycle',{personId:person.id,kind:'move',effectiveAt:later(-60000),timezone:'UTC',source,sourceRevision:1,ownerId:uid,
+    identityTarget:'provider-colleague',retained:[],added:[],removed:[],deviceIds:[],expiresAt,sponsorId:uid});
+  const kept=(await contract('LIFE-006 sponsored contract',later(71*3600000))).lifecycleId;
+  await tick();
+  const reminder=(await api('/work')).items.find(w=>JSON.parse(w.context_json||'{}').sponsorReminder?.lifecycleId===kept);
+  assert.ok(reminder,'LIFE-006 the sponsor is reminded within 72 hours of the end date');
+  await page.goto(base+'/app#/work/'+reminder.id);
+  await page.getByRole('region',{name:'Sponsor re-attestation'}).waitFor();
+  await captureJourney(page,{path:out+'/LIFE-006-sponsor-reminder.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  const extended=await action(page,'Re-attest with a later end date',{expiresAt:local(10*86400000)},`/lifecycle/${kept}/reattest`,'Re-attest');
+  await page.setViewportSize({width:1440,height:1000});
+  assert.equal((await api('/lifecycle/sponsored')).items.find(i=>i.lifecycleId===kept).expiresAt,extended.expiresAt,'LIFE-006 re-attestation at 390 moves the end date');
+  // The contractor's provider account is active again before the contract ends (the J3 leave above disabled it).
+  await fixture({disabled:false,sessionsRevokedAt:null});
+  const endAt=later(75000),lapsed=(await contract('LIFE-006 lapsed contract',endAt)).lifecycleId;
+  const expiry=()=>api('/lifecycle/'+lapsed).then(l=>l.obligations.filter(o=>['identity.disable','sessions.revoke'].includes(o.kind)));
+  assert.equal((await expiry()).length,2);
+  for(const duty of await expiry())await bind(duty,lapsed);
+  await tick();
+  assert.ok(Date.now()<Date.parse(endAt),'LIFE-006 bindings completed before the end instant');
+  assert.ok((await expiry()).every(o=>o.state==='pending'&&!o.operation_id),'LIFE-006 access remains until the end instant');
+  await page.waitForTimeout(Math.max(0,Date.parse(endAt)-Date.now()+500));
+  await until(async()=>(await expiry()).every(o=>o.state==='verified'),'LIFE-006 removal verified after the end instant');
+  const operations=await api('/operations');
+  for(const duty of await expiry()){const op=operations.find(o=>o.id===duty.operation_id);assert.ok(op&&op.created_at>=endAt,'LIFE-006 removal began at or after the end instant')}
+  const provider=(await (await fetch(base+'/__fixture/evidence')).json()).state;
+  assert.equal(provider.disabled,true);assert.ok(provider.sessionsRevokedAt>=endAt,'LIFE-006 the provider account was disabled and its sessions revoked after the end instant');
+  await page.goto(base+'/app#/lifecycle/'+lapsed);await page.reload();
+  await page.getByText('Existing sessions were invalidated.',{exact:false}).waitFor();
+  await captureJourney(page,{path:out+'/LIFE-006-expired-verified.png',fullPage:true});
 }

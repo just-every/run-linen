@@ -1,3 +1,4 @@
+import { SponsorReattest } from "./sponsor-reattest";
 import { RecurringTasks } from './recurring-work';
 import { WorkaroundSuggestions } from "./workaround-suggestions";
 import { RepairCoverage } from "./asset-contracts";
@@ -55,6 +56,9 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
   if (detail.error) return <ErrorNotice error={detail.error} retry={detail.refresh} />;
   if (!work) return null;
   const progress = detail.data?.progress ?? [];
+  const sponsorReminder = (() => {
+    try { return (JSON.parse(work.context_json || "{}") as { sponsorReminder?: RecordValue }).sponsorReminder; } catch { return undefined; }
+  })();
   const exception = progressException(progress),
     { team, place, neededBy } = requestFacts(work),
     service = queue.data?.items.find((item) => item.id === work.id)?.services?.[0];
@@ -134,6 +138,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <ConversationHistory conversation={detail.data!} />
       </section>
       <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />
+      {sponsorReminder && work.beneficiary_id === session.principal.userId && <SponsorReattest context={sponsorReminder} onChanged={changed} />}
       {operator && <WorkTime workId={work.id} />}
       <WorkCommands work={work} onChanged={changed} operator={operator} />
       <details className="evidence">

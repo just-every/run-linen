@@ -1,3 +1,4 @@
+import { reassignSponsor, reattestAccess, sponsoredAccess } from "./contractor-sponsor";
 import { registerAssetFinancialRoutes } from './asset-financials';
 import { registerAssetContractRoutes } from "./asset-contracts";
 import { assetHistory } from "./assets";
@@ -106,6 +107,16 @@ export function registerLifecycleRoutes(app: Hono<AppEnv>) {
     c.header("Content-Disposition", `attachment; filename="lifecycle-${c.req.param("id").replace(/[^a-zA-Z0-9-]/g, "_")}.json"`);
     c.header("Cache-Control", "private, no-store");
     return c.json(pack);
+  });
+  // LIFE-006: the sponsor sees only the end dates they sponsor, and alone re-attests.
+  app.get("/lifecycle/sponsored", async (c) => c.json({ items: await sponsoredAccess({ env: c.env, principal: c.get("principal") }) }));
+  app.post("/lifecycle/:id/reattest", async (c) => {
+    const b = await jsonBody(c);
+    return c.json(await reattestAccess({ env: c.env, principal: c.get("principal") }, c.req.param("id"), requiredString(b.expiresAt, "expiresAt")));
+  });
+  app.post("/lifecycle/:id/sponsor", async (c) => {
+    const b = await jsonBody(c);
+    return c.json(await reassignSponsor({ env: c.env, principal: c.get("principal") }, c.req.param("id"), requiredString(b.sponsorId, "sponsorId")));
   });
   app.get("/lifecycle/:id", async (c) => {
     const ctx = { env: c.env, principal: c.get("principal") };

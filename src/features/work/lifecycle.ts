@@ -2,6 +2,7 @@ import { hashToken } from "../../platform/crypto";
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { createWork, getWork, permit, type WorkContext } from "./core";
+import { assertSponsor } from "./contractor-sponsor";
 export interface LifecycleInput {
   personId: string;
   kind: "join" | "move" | "leave";
@@ -14,6 +15,8 @@ export interface LifecycleInput {
   removed: string[];
   deviceIds: string[];
   expiresAt?: string;
+  /** LIFE-006: required with an end date; re-attests or lets access expire. */
+  sponsorId?: string;
   ownerId: string;
   urgent?: boolean;
   identityTarget?: string;
@@ -165,6 +168,7 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
     retained: [...new Set(input.retained)].sort(), added: [...new Set(input.added)].sort(),
     removed: [...new Set(input.removed)].sort(), deviceIds: [...new Set(input.deviceIds)].sort(),
     expiresAt: expiry, urgent: Boolean(input.urgent), identityTarget: input.identityTarget || input.personId,
+    ...(expiry ? { sponsorId: input.sponsorId } : {}),
   };
   const fingerprint = await hashToken(JSON.stringify(material));
   const prior = await ctx.env.DB.prepare(
@@ -177,6 +181,8 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
     // Replay is read-only even after an amendment or cancellation.
     return { work: await getWork(ctx, prior.work_id), lifecycleId: prior.id };
   }
+  // A new admission with an end date names a sponsor (LIFE-006); replays above are read-only.
+  const sponsorId = expiry ? await assertSponsor(ctx, input.sponsorId, input.personId) : null;
   const lifecycleId = id();
   const obligations = [
     ...input.added.map((target) => ({ kind: "access.grant", target })),
@@ -202,7 +208,7 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
       kind: "identity.create",
       target: input.identityTarget || input.personId,
     });
-  const identityId = id();
+  const identityId = id(), expiryDisableId = id();
   let work;
   try { work = await createWork(ctx, {
     title: `${input.kind}: ${person.name}`,
@@ -215,18 +221,20 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
       ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN NOT EXISTS(SELECT 1 FROM work_lifecycle WHERE workspace_id=? AND source=? AND person_id=? AND source_revision>?) THEN 1 ELSE 0 END)`).bind(lifecycleId, ctx.principal.workspaceId, input.source, input.personId, input.sourceRevision),
       // Plain INSERT makes a concurrent source replay roll back the entire intake.
       ctx.env.DB.prepare(
-        "INSERT INTO work_lifecycle(id,workspace_id,work_id,person_id,kind,effective_at,timezone,source,source_revision,source_hash) VALUES(?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO work_lifecycle(id,workspace_id,work_id,person_id,kind,effective_at,timezone,source,source_revision,source_hash,sponsor_id) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
       ).bind(lifecycleId, ctx.principal.workspaceId, workId, input.personId, input.kind,
-        effectiveAt, input.timezone, input.source, input.sourceRevision, fingerprint),
+        effectiveAt, input.timezone, input.source, input.sourceRevision, fingerprint, sponsorId),
       ...obligations.map((o, i) => ctx.env.DB.prepare(
         "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,depends_on,owner_id) VALUES(?,?,?,?,?,?,?,?,?,?)",
       ).bind(i === 0 ? identityId : id(), ctx.principal.workspaceId, workId, lifecycleId,
         o.kind, o.target, input.personId, input.urgent && input.kind === "leave" ? now() : effectiveAt,
         input.kind === "join" && i > 0 ? identityId : null, input.ownerId)),
-      ...(expiry ? ["identity.disable", "sessions.revoke"].map(kind => ctx.env.DB.prepare(
-        "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,owner_id,is_expiry) VALUES(?,?,?,?,?,?,?,?,?,1)",
-      ).bind(id(), ctx.principal.workspaceId, workId, lifecycleId, kind, material.identityTarget,
-        input.personId, expiry, input.ownerId)) : []),
+      // LIFE-006: both expiry duties fall due at the end instant. Sessions are revoked once the
+      // disable is verified: the two effects share one account fence, so they never race.
+      ...(expiry ? [["identity.disable", expiryDisableId, null], ["sessions.revoke", id(), expiryDisableId]].map(([kind, dutyId, dependsOn]) => ctx.env.DB.prepare(
+        "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,depends_on,owner_id,is_expiry) VALUES(?,?,?,?,?,?,?,?,?,?,1)",
+      ).bind(dutyId, ctx.principal.workspaceId, workId, lifecycleId, kind, material.identityTarget,
+        input.personId, expiry, dependsOn, input.ownerId)) : []),
       ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id=?").bind(lifecycleId),
     ],
   }); } catch (error) {

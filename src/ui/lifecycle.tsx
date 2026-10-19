@@ -99,6 +99,13 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
     },
     { name: "identityTarget", label: "Immutable provider account or UPN", hint: "Required to bind identity duties to the selected provider account." },
     { name: "expiresAt", label: "Contractor access expires", type: "datetime-local" },
+    {
+      name: "sponsorId",
+      label: "Sponsor who re-attests before the end date",
+      type: "select",
+      hint: "Required with an end date. Reminded 72 hours before; without re-attestation access is removed at the end.",
+      options: members.data?.filter((m) => m.active).map((m) => ({ value: text(m.id), label: text(m.name) })),
+    },
     { name: "urgent", label: "Urgent departure", type: "checkbox" },
   ];
   return (

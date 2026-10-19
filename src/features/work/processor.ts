@@ -1,3 +1,4 @@
+import { remindSponsors } from "./contractor-sponsor";
 import { processDueRecurrences } from './recurrence';
 import { resumeFulfilmentAmendment } from "./fulfilment-amend-execution";
 import { currentWorkPrincipal } from "./identity";
@@ -35,6 +36,7 @@ export async function processDueWork(
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "integration"]);
   await processDueRecurrences(ctx,at);
+  const reminders = await remindSponsors(ctx, at);
   const prepared = await ctx.env.DB.prepare("SELECT * FROM work_fulfilment_amendments WHERE workspace_id=? AND state='prepared' ORDER BY created_at LIMIT 50")
     .bind(ctx.principal.workspaceId).all();
   // Recovery uses the current scheduler principal and the recorded actor/grants;
@@ -47,7 +49,7 @@ export async function processDueWork(
     .all<Obligation>();
   // Settle each independent duty separately. No rejected operation may prevent
   // another due duty (including physical handoff) from recording its own status.
-  return Promise.all(rows.results.map(async (o) => {
+  const settled = await Promise.all(rows.results.map(async (o) => {
     try {
       if (o.kind.startsWith("device.")) {
         await ctx.env.DB.prepare(
@@ -97,4 +99,5 @@ export async function processDueWork(
       return { id: o.id, state: "blocked" };
     }
   }));
+  return [...reminders, ...settled];
 }
