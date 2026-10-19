@@ -103,7 +103,8 @@ export async function runIntegrationRegressions({ db, api, ok, journey, actor })
   assert.match(mixedRows.find(r => r.id === 'mixed-security').last_error, /configure/);
   assert.match(mixedRows.find(r => r.id === 'mixed-return').last_error, /Physical handoff/);
   assert.equal(mixedRows.find(r => r.id === 'mixed-dependent').state, 'pending');
-  const failedExpiry = new Date(Date.now() + 1400).toISOString();
+  // The expiry must still be ahead when the plan is recorded several requests later, even on a slow runner; the test then waits it out.
+  const failedExpiry = new Date(Date.now() + 8000).toISOString();
   const failed = await journey('provider-denied-security', { expiresAt: failedExpiry });
   await ok('/test/link', failed.input, 'employee');
   await ok('/test/run', { operationId: failed.initial.id }, actor.id);
