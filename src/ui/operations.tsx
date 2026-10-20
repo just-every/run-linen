@@ -1,3 +1,4 @@
+import { OperationsKpis } from './operations-kpis';
 import { EffortReport, type EffortReportData } from "./effort-report";
 import { SlaReport } from "./work-sla";
 import { LaborRatesForm, WorkSavedReport, type WorkSavedData } from "./work-saved";
@@ -295,6 +296,7 @@ export function ReportSpace() {
           coverage alongside every count.
         </p>
       </Hero>
+      <OperationsKpis />
       <form className="inline-form" onSubmit={run}>
         <div className="field-grid">
           <label>

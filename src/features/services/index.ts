@@ -1,3 +1,5 @@
+import { operationsKpis } from './operations-kpis';
+import { recordOperationsObservation } from './operations-observations';
 import { registerTemplateRoutes, bindChangeGrants, assertCatalogApproval } from './change-templates';
 import { registerCalendarRoutes } from './calendar-routes';
 import { recurrenceContext } from './recurrence-context';
@@ -15,7 +17,7 @@ import { detectProblemProposals } from './problem-detection';
 import { listProblemProposals, getProblemProposal, decideProblemProposal, problemEvidence } from './problem-proposals';
 import { newConfigurationItem } from './configuration';
 import { dependencyImpact } from './dependency-impact';
-import { diagnosticFinding, incidentFollowup, newIncident, linkIncident, updateIncident, assignDiagnostic, incidentCandidates, recordVerifiedRecovery, type RecoveryEvidence } from './incidents';
+import { diagnosticFinding, incidentFollowup, newIncident, acknowledgeIncident, linkIncident, updateIncident, assignDiagnostic, incidentCandidates, recordVerifiedRecovery, type RecoveryEvidence } from './incidents';
 import { newChange, editChange, authorizeChange, dispatchChange, verifyChange } from './changes';
 import { supplierObservation,reviewSupplierOutcome,assignAsset, returnAsset, recordCharge, newSupplier, supplierCommitment, supplierHandoff, acceptHandoff, supplierBreaches, newAsset, assetTransition, assetUsage, reclamationDecision, serviceReport } from './economics';
 import { newProblem, knownError, linkPrevention } from './problems';
@@ -80,6 +82,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     app.get('/service-graph', async (c) => c.json(await serviceGraph(c.env.DB, c.get('principal'))));
     app.post('/service-graph/edges', async (c) => c.json(await addEdge(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     app.post('/incidents', async (c) => c.json(await newIncident(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
+    app.post('/incidents/:id/acknowledge', async c => { const p = requireRole(c, 'owner', 'operator'); return c.json(await acknowledgeIncident(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'incident'), await jsonBody(c))); });
     app.get('/incidents/candidates/:serviceId', async (c) => c.json({ items: await incidentCandidates(c.env.DB, c.get('principal'), c.req.param('serviceId')) }));
     app.post('/incidents/:id/link', async (c) => {
         const p = c.get('principal'), b = await jsonBody(c), workId = requiredString(b.employeeIncidentId, 'employeeIncidentId');
@@ -113,6 +116,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     app.post('/suppliers', async (c) => c.json(await newSupplier(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     for (const [path, fn] of [['observations',supplierObservation],['review-outcome',reviewSupplierOutcome],['charges', recordCharge], ['commitments', supplierCommitment], ['handoffs', supplierHandoff], ['accept-handoff', acceptHandoff]] as const)
         app.post(`/suppliers/:id/${path}`, async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await fn(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'supplier'), await jsonBody(c))); });
+    app.post('/software-assets/:id/operations-observation', async c => { const p = requireRole(c, 'owner', 'operator'); return c.json(await recordOperationsObservation(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'asset'), await jsonBody(c))); });
     app.post('/software-assets', async (c) => c.json(await newAsset(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     for (const [path, fn] of [['assign', assignAsset], ['return', returnAsset], ['charges', recordCharge], ['transition', assetTransition], ['usage', assetUsage], ['reclamation', reclamationDecision]] as const)
         app.post(`/software-assets/:id/${path}`, async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await fn(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'asset'), await jsonBody(c))); });
@@ -126,6 +130,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
             throw new ApiError(400, 'window', 'Positive shift required');
         return c.json(await create(c.env.DB, p, 'oncall', { serviceId: b.serviceId, startsAt: start, endsAt: end, recipientIds: strings(b.recipientIds, 'recipientIds') }, { visibility: 'operators' }), 201);
     });
+    app.get('/operations-kpis', async c => { const p = requireRole(c, 'owner', 'operator', 'auditor'); return c.json(await operationsKpis(c.env.DB, p, c.req.query('start') || '', c.req.query('end') || '', c.req.query('timezone') || '')); });
     app.get('/service-reports', async (c) => { requireRole(c, 'owner', 'operator', 'auditor'); return c.json(await serviceReport(c.env.DB, c.get('principal'), c.req.query('start') || new Date(Date.now() - 2592000000).toISOString(), c.req.query('end') || now())); });
     app.post('/services/process-due', async (c) => c.json(await processDueServices(c.env, requireRole(c, 'owner', 'operator'))));
     app.post('/service-notifications/:id/reconcile', async (c) => c.json(await reconcileNotification(c.env, requireRole(c, 'owner', 'operator'), c.req.param('id'))));

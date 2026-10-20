@@ -1,3 +1,4 @@
+import { operationsKpiChecks } from './kpi-cases.mjs';
 import { templateIntegration, templateErasureCheck } from './template-integration.mjs';
 import { changeRiskChecks } from './risk-cases.mjs';
 import { applyMigrations } from '../sql-migrations.mjs';
@@ -21,6 +22,8 @@ await db.prepare("INSERT INTO workspace_settings VALUES('w','{}',1)").run()
 async function call(method,path,body,user='owner'){const response=await mf.dispatchFetch('http://localhost'+path,{method,headers:{'content-type':'application/json','x-user':user},body:body===undefined?undefined:JSON.stringify(body)});return {status:response.status,body:await response.json()}}
 async function ok(method,path,body,user){const r=await call(method,path,body,user);assert.ok(r.status<300,JSON.stringify(r));return r.body}
 for(const [id,provider,config] of [['deploy','controlled-deployment',{url:'https://deployment.fixture.test/change',allowedHosts:['deployment.fixture.test'],targets:['orders']}],['probe','workflow-probe',{url:'https://probe.fixture.test/check',allowedHosts:['probe.fixture.test']}]]){const secret=(await ok('POST','/fixture/secret',{token:'fixture'})).secret;await db.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind(id,'w',provider,id,JSON.stringify(config),secret,'active',now,now).run()}
+await operationsKpiChecks({ok,call,implementation:{connectionId:'deploy',connectionRevision:1,verifierConnectionRevision:1,target:'orders',beneficiaryId:'sales',verifierConnectionId:'probe',payload:{release:'kpi-proof'}}});
+await ok('POST','/fixture/state',{reset:true});
 const service=await ok('POST','/services',{name:'Orders',description:'Usable order preparation',businessImpact:'Sales interrupted',source:'fixture',observedAt:now})
 const automaticIncident=await ok('POST','/incidents',{title:'Automatic cohort recovery',serviceId:service.id,impact:'Sales cannot work',cohorts:['a','b']});
 const unrelatedService=await ok('POST','/services',{name:'Unrelated service',description:'Another workflow',businessImpact:'Separate cohort',source:'fixture',observedAt:now});
@@ -45,7 +48,7 @@ await ok('POST','/services/process-due',{});
 const recoveredIncident=await ok('GET','/incidents/'+automaticIncident.id);assert.equal(recoveredIncident.data.status,'restored');assert.deepEqual(recoveredIncident.data.unresolvedCohorts,[]);assert.ok(recoveredIncident.data.recoveries.every(e=>e.source==='probe'));
 assert.equal((await ok('GET','/incidents/'+unrelatedIncident.id)).data.status,'investigating','Unrelated service cannot borrow valid Orders evidence');
 const revisionBefore=recoveredIncident.revision;await ok('POST','/services/process-due',{});assert.equal((await ok('GET','/incidents/'+automaticIncident.id)).revision,revisionBefore,'Same proof is never reinserted on scheduler replay');
-assert.equal((await ok('POST','/fixture/state',{})).writes,2);assert.equal((await db.prepare('SELECT COUNT(*) n FROM execution_verifications WHERE state=?').bind('verified').first()).n,2)
+assert.equal((await ok('POST','/fixture/state',{})).writes,2);assert.equal((await db.prepare('SELECT COUNT(*) n FROM execution_verifications WHERE state=? AND operation_id IN (?,?)').bind('verified',...change.data.invocations.map(i=>i.executionId)).first()).n,2)
 let nextChange=await ok('POST','/changes',{title:'Decision-driven release',risk:'Bounded',impact:'Sales',services:[service.id],window:{start:new Date(Date.now()-60000).toISOString(),end:new Date(Date.now()+3600000).toISOString()},cohorts:['a','b'],canaryCohorts:['a','b'],implementation,compensation:{...implementation,payload:{release:'r1'}}});
 nextChange=await ok('POST',`/changes/${nextChange.id}/authorize`,{revision:nextChange.revision,reason:'Existing scoped grants',grantReferences:references});
 const packet={title:'Choose release',contextId:nextChange.id,holderId:'owner',holderRoles:['owner'],executorId:'operator',options:[{id:'release',label:'Release',consequences:'Bounded deployment',effect:{kind:'change',phase:'release',changeId:nextChange.id,implementationRevision:1}},{id:'hold',label:'Hold',consequences:'Service remains unchanged'}],recommendation:'release',quote:'No new purchase',quoteSource:'Current contract',terms:'Existing provider account',cohorts:['a','b'],impact:'Orders recovery',reversibility:'Compensation release r1',deadline:new Date(Date.now()+600000).toISOString(),uncertainty:'Probe each cohort'};

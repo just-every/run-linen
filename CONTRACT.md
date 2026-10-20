@@ -1449,6 +1449,42 @@ that product and marks how close the current code is (see [Status](#status)).
   incidents, 25 changes (2 failed, 3 emergency) and 300 assets, the KPI page shows
   MTTA and MTTR by priority, a 92% change success rate and a 12% emergency share,
   and each tile drills through to the records it counts.
+  Metric semantics: incident and change cohorts are records created in the
+  half-open instant range `[start,end)`; the selected IANA time zone labels the
+  range, and the month picker computes midnight boundaries in that zone.
+  MTTA is elapsed time to first operator acknowledgement; MTTR and major-incident
+  duration use independently admitted all-cohort restoration, with missing
+  observations excluded from the mean and disclosed. Priority is recorded,
+  never inferred; major incidents require an explicit designation. Change
+  success is independently verified current-version rollout divided by every
+  change in the cohort, including failed and pending work; emergency share uses
+  that same denominator. Causal incident rates require evidenced causal
+  assessments: absent assessments remain unknown, never zero by inference.
+  Problems remain in the backlog, with age and reviewed known errors, until
+  permanent-fix effectiveness is verified. Lifecycle and outcome state is the
+  current recorded state, not reconstructed historical state. Ages and
+  observation freshness use the earlier of report end and report observation.
+  Native asset age starts at the recorded in-service date or first custody
+  record; service asset age starts at record creation. Each source record counts
+  separately, without inferring cross-source identity. Device compliance uses
+  fresh attributed observations, labelled operator-recorded unless independently
+  provider-verified; absent or expired observations remain unknown. License
+  utilization sums active users over allocated seats from each software asset's
+  latest usage period wholly within the range. Known USD spend sums recorded
+  USD invoice charges wholly within it, excluding usage estimates and acquisition
+  prices; missing and non-USD charges stay explicit, with no inferred conversion.
+  Upcoming means `[end,end+30 elapsed days)` for recorded renewals, coverage
+  expiries and refresh plans; native useful-life anniversaries are labelled
+  planning indicators. Counts and means retain their source records, definitions,
+  denominators and unknowns. Elapsed milliseconds display as minutes to two
+  decimals; USD displays to cents. Percentages and other numbers round to two
+  decimals with redundant trailing zeroes omitted; JSON retains numeric precision.
+  The report uses existing report and source scopes;
+  an auditor's unavailable native-device scope is disclosed. All capabilities
+  present today supply these measures where they have observations; a missing
+  feed or outcome is unknown. Future source capabilities in INC-001/002,
+  CHANGE-005, ASSET-001/003/006/007/008 and PROB-001/002 inherit this reporting
+  obligation before shipping; the report does not itself claim those feeds.
 
 ### Platform, administration and integration
 
@@ -2007,7 +2043,8 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
   reads back results.
 - **Not the HRIS or payroll.** Employment facts come from Willow, Rippling, Gusto,
   BambooHR or Workday and stay authoritative there. Payroll, benefits and
-  W-2/1099 tax filing stay with the buyer's payroll provider.
+  W-2/1099 tax filing stay with the buyer's payroll provider. See also
+  [Envelope](https://github.com/just-every/run-envelope).
 - **Not MDM or EDR.** Device commands run through Jamf Pro, Kandji or Microsoft
   Intune, and endpoint security through CrowdStrike or SentinelOne. Linen does not
   ship its own endpoint agent; its optional network discovery runner only
@@ -2015,7 +2052,8 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 - **Not paging, monitoring or public status.** Oncall, PagerDuty or Opsgenie
   page responders; Uptime, Datadog or Spool observe systems; Lamp or Atlassian
   Statuspage publish status. Linen holds the incident, change and employee record
-  and delivers into them.
+  and delivers into them. See also
+  [Porthole](https://github.com/just-every/run-porthole).
 - **Not physical logistics or disposal.** Shipping, kitting, repair and certified
   disposal are done by the buyer's partners (Firstbase, GroWrk, Apple or Dell
   repair, R2v3/e-Stewards ITAD). Linen tracks custody and needs their receipts;
@@ -2025,7 +2063,8 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
   Bitwarden or Keeper, which Linen links but does not replace.
 - **Not general project management.** Linen runs IT team projects (PROJECT-001);
   software delivery projects stay in Vector or Jira, and cross-functional
-  business projects stay in the buyer's Asana, monday.com or ClickUp.
+  business projects stay in the buyer's Asana, monday.com or ClickUp. See also
+  [Pegboard](https://github.com/just-every/run-pegboard).
 - **Not procurement, accounting, the team wiki or chat.** Purchases go to Purse
   or the buyer's vendor; asset depreciation exports to Pantry, QuickBooks Online
   or NetSuite; Linen's IT knowledge base is native, while wider team knowledge
@@ -2048,8 +2087,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 36 | 50 | 29 | 115 |
-| All | 41 | 69 | 29 | 139 |
+| Target and push further | 37 | 49 | 29 | 115 |
+| All | 42 | 68 | 29 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2145,7 +2184,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `REPORT-002` | Custom and scheduled reports | target | missing |  | No report builder or scheduling. |
 | `REPORT-003` | Data access for BI | target | partial | `src/features/work/index.ts`, `tests/work/runtime.mjs` | No scheduled BI or warehouse export. |
 | `REPORT-004` | Human work saved | target | done | `src/features/work/effort-report.ts`, `src/features/work/effort-window.ts`, `src/features/work/labor-rates.ts`, `src/ui/work-saved.tsx`, `tests/work/work-saved-cases.mjs`, `tests/work/fulfilment-link-runtime.mjs`, `tests/ui/time-journey.mjs` | Public work/report/execution doors: a request type handled by people in a baseline window and automated in the current window, with role touches/minutes, owner-declared role rates, request-attributed estimated model charges, unknown provider charges, known cost per verified outcome and the failure in the same period; 1440/390 report journey. Live provider invoices are not received, so provider charges stay unknown by design. |
-| `REPORT-005` | IT operations and asset KPIs | target | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No MTTA/MTTR, change success, emergency share or compliance/license KPIs. |
+| `REPORT-005` | IT operations and asset KPIs | target | done | `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/kpi-journey.mjs` | Public routes and native 1440/390 journey: 40 incidents, 25 actual-engine changes (2 terminal failures, 3 emergency), 300 assets, 92% success and 12% emergency; defined timing groups, major durations, problem/known-error age, physical/software state and age, recorded compliance, utilization/known USD invoices, renewals and refreshes, every tile drill-through, Denver DST and current source scopes. Missing observations and provider capabilities remain explicit unknowns; no live-provider outcome claimed. |
 | `ROLE-001` | Roles and permissions | target | partial | `src/platform/auth.ts`, `tests/ui/browser.mjs`, `tests/platform/runtime.mjs` | Fixed roles; no custom roles. |
 | `SSO-001` | Sign-in, SSO and SCIM | target | partial | `src/platform/sso.ts`, `src/platform/base-auth`, `tests/platform/runtime.mjs`, `tests/platform/base-auth-runtime.mjs` | No SAML/OIDC with named IdPs, SCIM or MFA enforcement. |
 | `AUDIT-001` | Audit log | target | done | `src/platform/privacy.ts`, `tests/platform/privacy-runtime.mjs`, `tests/platform/config-runtime.mjs` |  |

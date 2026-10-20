@@ -26,6 +26,7 @@ export function ServiceActions({
     <>
       {section === "incidents" && (
         <>
+          {!d.acknowledgedAt && <ActionForm title="Acknowledge this incident" path={`${base}/acknowledge`} defaults={defaults} fields={[]} submit="Acknowledge incident" onSaved={refresh} />}
           <ActionForm
             title="Share an audience-scoped update"
             path={`${base}/updates`}

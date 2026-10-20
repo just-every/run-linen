@@ -38,6 +38,7 @@ const checks = [
   ['named setup read scope', process.execPath, ['tests/execution/setup-read.mjs']],
   ['services', process.execPath, ['tests/services/run.mjs']],
   ['service integration', process.execPath, ['tests/services/integration.mjs']],
+  ['operations KPI browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/kpi-journey.mjs']],
   ['connection discovery', process.execPath, ['tests/connections/runtime.mjs']],
   ['email provider configuration', process.execPath, ['tests/connections/sendgrid-runtime.mjs']],
   ['native network transport', process.execPath, ['tests/transport/runtime.mjs']],

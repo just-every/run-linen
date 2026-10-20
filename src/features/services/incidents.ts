@@ -16,7 +16,17 @@ export interface RecoveryEvidence {
     executionId: string;
     source: string;
 }
-export async function newIncident(db: D1Database, p: Principal, b: Record<string, any>) { const service = await getService(db, p, requiredString(b.serviceId, 'serviceId'), 'service'); return create(db, p, 'incident', { title: requiredString(b.title, 'title'), serviceId: service.id, impact: requiredString(b.impact, 'impact'), cohorts: strings(b.cohorts, 'cohorts'), status: 'investigating', followupWindowMs: number(b.followupWindowMs ?? 604800000, 'followupWindowMs', 60000), monitorEventKey: b.monitorEventKey || null, context: recurrenceContext(b.context), commander: p.userId, cadenceMs: number(b.cadenceMs ?? 1800000, 'cadenceMs', 60000), nextUpdateAt: now(), links: [], diagnostics: [], recoveries: [], updates: [] }, { visibility: b.visibility || service.visibility, participants: b.participants }); }
+export async function newIncident(db: D1Database, p: Principal, b: Record<string, any>) {
+    if (b.major !== undefined && typeof b.major !== 'boolean') throw new ApiError(400, 'major', 'Major designation must be boolean');
+    const priority = b.priority === undefined ? 'unspecified' : requiredString(b.priority, 'priority', 100);
+    const service = await getService(db, p, requiredString(b.serviceId, 'serviceId'), 'service');
+    return create(db, p, 'incident', { priority, major: b.major === true, acknowledgedAt: null, acknowledgedBy: null, title: requiredString(b.title, 'title'), serviceId: service.id, impact: requiredString(b.impact, 'impact'), cohorts: strings(b.cohorts, 'cohorts'), status: 'investigating', followupWindowMs: number(b.followupWindowMs ?? 604800000, 'followupWindowMs', 60000), monitorEventKey: b.monitorEventKey || null, context: recurrenceContext(b.context), commander: p.userId, cadenceMs: number(b.cadenceMs ?? 1800000, 'cadenceMs', 60000), nextUpdateAt: now(), links: [], diagnostics: [], recoveries: [], updates: [] }, { visibility: b.visibility || service.visibility, participants: b.participants }); }
+/** First acknowledgement is a server-recorded operator event, not receipt or restoration. */
+export async function acknowledgeIncident(db: D1Database, p: Principal, r: ServiceRecord, b: Record<string, any>) {
+    if (b.revision !== r.revision) throw new ApiError(409, 'revision_conflict', 'Reload the current revision');
+    if (r.data.acknowledgedAt) return r;
+    return mutate(db, p, r, b.revision, { ...r.data, acknowledgedAt: now(), acknowledgedBy: p.userId }, 'incident-acknowledged');
+}
 export async function linkIncident(db: D1Database, p: Principal, incidentId: string, revision: number, employeeIncidentId: string, correction = false) {
     const r = await getService(db, p, incidentId, 'incident');
     const work = await db.prepare('SELECT requester_id,beneficiary_id,sensitivity,kind FROM work_records WHERE workspace_id=? AND id=?').bind(p.workspaceId, employeeIncidentId).first<any>();

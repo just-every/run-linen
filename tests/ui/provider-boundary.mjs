@@ -68,7 +68,9 @@ globalThis.fetch = async (input, init = {}) => {
     }
     if (host.startsWith('deploy')) {
       if (init.method === 'POST') {
-        const body = JSON.parse(init.body); await event('deployment-write', body);
+        const body = JSON.parse(init.body);
+        if (config.failDeployment) { await event('deployment-rejected', body); return Response.json({accepted:false}, {status:409}); }
+        await event('deployment-write', body);
         if (config.failedRollback && (body.phase === 'compensate' || body.payload?.phase === 'compensate')) throw new Error('Test rollback result unknown');
         await environment.DB.prepare('UPDATE native_fixture SET data=? WHERE id=1').bind(JSON.stringify({ ...config, repaired: !config.partial })).run();
         return Response.json({ accepted: true });

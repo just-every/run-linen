@@ -92,6 +92,8 @@ export function ServiceSpace({
       },
     ],
     incidents: [
+      { name: "priority", label: "Incident priority", type: "select", value: "unspecified", options: ["unspecified","P1","P2","P3","P4"].map(value => ({value,label:value})) },
+      { name: "major", label: "Major incident", type: "checkbox" },
       { name: "title", label: "What is happening?", required: true },
       {
         name: "serviceId",
