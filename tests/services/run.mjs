@@ -1,3 +1,4 @@
+import { employeeNoticeChecks } from './employee-notice-cases.mjs';
 import { templateChecks } from './template-cases.mjs';
 import { calendarChecks } from './calendar-cases.mjs';
 import { dependencyChecks } from './dependency-cases.mjs';
@@ -13,13 +14,14 @@ const {Miniflare,convertV4MiniflareOptions}=require('../../node_modules/.pnpm/mi
 const {build}=require('../../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild')
 const dir=await mkdtemp(path.join(tmpdir(),'linen-services-'))
 await build({entryPoints:[new URL('./worker.ts',import.meta.url).pathname],outfile:path.join(dir,'worker.mjs'),bundle:true,format:'esm',platform:'browser',target:'es2022'})
-const mf=new Miniflare(convertV4MiniflareOptions({ port: Number(process.env.LINEN_TEST_WORKER_PORT || 0), modules:true,script:await readFile(path.join(dir,'worker.mjs'),'utf8'),compatibilityDate:'2026-09-01',d1Databases:{DB:'services-test'},bindings:{SESSION_SECRET:'test-only',ENCRYPTION_KEY:btoa('a'.repeat(32))}}))
+const mf=new Miniflare(convertV4MiniflareOptions({ port: Number(process.env.LINEN_TEST_WORKER_PORT || 0), modules:true,script:await readFile(path.join(dir,'worker.mjs'),'utf8'),compatibilityDate:'2026-09-01',d1Databases:{DB:'services-test'},bindings:{SESSION_SECRET:'test-only',APP_ORIGIN:'https://linen.example.test',ENCRYPTION_KEY:btoa('a'.repeat(32))}}))
 try{
  const db=await mf.getD1Database('DB')
  const schema=await readFile(new URL('../../migrations/0300_services.sql',import.meta.url),'utf8')
  await db.exec('CREATE TABLE memberships(workspace_id TEXT,user_id TEXT,roles_json TEXT,active INTEGER); CREATE TABLE audit_events(id TEXT,workspace_id TEXT,actor_id TEXT,action TEXT,target TEXT,detail_json TEXT,created_at TEXT); CREATE TABLE connections(id TEXT,workspace_id TEXT,provider TEXT,status TEXT,config_json TEXT,secret_ciphertext TEXT,revision INTEGER DEFAULT 1); CREATE TABLE connection_validations(workspace_id TEXT,connection_id TEXT,connection_revision INTEGER,validated_at TEXT,state TEXT,evidence_json TEXT,PRIMARY KEY(workspace_id,connection_id)); CREATE TABLE workspace_settings(workspace_id TEXT,settings_json TEXT); CREATE TABLE adoption_holds(workspace_id TEXT,state TEXT); CREATE TABLE adoption_ownership(workspace_id TEXT,resource TEXT,action TEXT);')
  for(const sql of sqlStatements(schema))await db.prepare(sql).run();
  for(const sql of sqlStatements(await readFile(new URL('../../migrations/0749_change_calendar.sql',import.meta.url),'utf8')))await db.prepare(sql).run();await db.exec("CREATE TABLE work_records(id TEXT,workspace_id TEXT,requester_id TEXT,beneficiary_id TEXT,sensitivity TEXT,kind TEXT,state TEXT DEFAULT 'open',created_at TEXT DEFAULT '2020-01-01',context_json TEXT DEFAULT '{}',revision INTEGER DEFAULT 1); INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,sensitivity,kind) VALUES('work-1','w1','employee','employee','normal','incident');")
+ await db.exec('CREATE TABLE users(id TEXT PRIMARY KEY,email TEXT,name TEXT); CREATE TABLE work_requester_groups(id TEXT PRIMARY KEY,workspace_id TEXT,name TEXT,members_json TEXT,created_at TEXT);');
  for(const [w,u,roles] of [['w1','owner',['owner']],['w1','employee',['employee']],['w1','operator',['operator']],['w1','approver',['approver']],['w2','owner',['owner']]])await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind(w,u,JSON.stringify(roles)).run()
  async function request(method,url,body,headers={}){const response=await mf.dispatchFetch('http://localhost'+url,{method,headers:{'Content-Type':'application/json',...headers},body:body?JSON.stringify(body):undefined});const json=response.headers.get('content-type')?.includes('text/calendar')?await response.text():await response.json();return {status:response.status,json,headers:Object.fromEntries(response.headers)}}
  async function ok(method,url,body,headers){const r=await request(method,url,body,headers);assert.ok(r.status<300,JSON.stringify(r));return r.json}
@@ -86,6 +88,7 @@ try{
  await db.prepare('INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext) VALUES(?,?,?,?,?,?)').bind('notify','w1','notification-webhook','active',JSON.stringify({url:'https://notification.fixture.test/send',allowedHosts:['notification.fixture.test']}),notificationSecret).run();await db.prepare('INSERT INTO workspace_settings VALUES(?,?)').bind('w1',JSON.stringify({notificationConnectionId:'notify'})).run();
  const delivered=await ok('POST','/services/process-due',{});assert.ok(delivered.notifications.some(n=>n.state==='submitted'),'Configured provider submission uses real notification adapter');
  const submitted=(await ok('GET','/service-notifications')).items.find(n=>n.state==='submitted');assert.ok(submitted);const reconciled=await ok('POST',`/service-notifications/${submitted.id}/reconcile`,{});assert.equal(reconciled.state,'delivered','Fresh provider readback establishes delivery');
+ await employeeNoticeChecks(request, db);
  await dependencyChecks(request);
  await calendarChecks(request,db);
  await templateChecks(request,db);

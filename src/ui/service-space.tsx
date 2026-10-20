@@ -1,3 +1,4 @@
+import { NoticeControls } from './service-notices';
 import { LinkedTickets } from "./work-relationships";
 import { ChangeTemplates } from './change-templates';
 import { ChangeCalendar } from './change-calendar';
@@ -323,6 +324,7 @@ export function ServiceSpace({
                 />
               )}
               {section === "problems" && <ProblemDetails record={record} incidents={incidents.data?.items} />}
+              {canEdit && ["incidents", "changes"].includes(section) && <NoticeControls record={record} section={section} />}
               <ServiceActions
                 section={section}
                 record={record}

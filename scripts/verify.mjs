@@ -55,6 +55,7 @@ const checks = [
   ['desk scenarios and templates browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/desk-scenario-browser.mjs']],
   ['native connected provider journeys', process.execPath, ['tests/ui/connected-run.mjs']],
   ['connection and authority setup', process.execPath, ['tests/ui/setup-run.mjs']],
+  ['service notice browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/service-notice-journey.mjs']],
   ['operations KPI browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/kpi-journey.mjs']],
 ]
 const shardValue = process.env.LINEN_VERIFY_SHARD

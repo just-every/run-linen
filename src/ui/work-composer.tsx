@@ -16,6 +16,7 @@ export function Composer({
   workId?: string;
   onSent: () => void;
 }) {
+  const [noticeOffer, setNoticeOffer] = useState<{body:string;items:{id:string;message:string}[]} | null>(null);
   const [body, setBody] = useState(""),
     [visibility, setVisibility] = useState("public"),
     [file, setFile] = useState<File | null>(null),
@@ -71,6 +72,7 @@ export function Composer({
   }, [session.csrfToken, session.principal.userId, session.principal.workspaceId, privateAllowed, workId]);
   function updateDraft(nextBody: string, nextVisibility: string, nextAttachmentName = attachmentName) {
     if (nextBody !== offer?.body) setOffer(null);
+    if (nextBody !== noticeOffer?.body) setNoticeOffer(null);
     setSolvedTitle("");
     setBody(nextBody);
     setVisibility(nextVisibility);
@@ -90,6 +92,13 @@ export function Composer({
     event.preventDefault();
     if (attachmentName && !file) return;
     setUploadError(null);
+    // CHANNEL-008: an exact service-name match offers only notices this person can currently read.
+    if (!workId && !forId && noticeOffer?.body !== body) {
+      const found = await mutation.mutate<{items:{id:string;message:string}[]}>("/service-notices/suggestions", { question: body });
+      if (!found) return;
+      setNoticeOffer({body,items:found.items});
+      if (found.items.length) return;
+    }
     // A new request for yourself is first checked against reviewed knowledge.
     if (!workId && !forId && offer?.body !== body) {
       const found = await mutation.mutate<{ id: string | null; items: RecordValue[] }>("/knowledge/suggestions", { question: body });
@@ -276,6 +285,12 @@ export function Composer({
           This note is hidden from employees without service-team access.
         </small>
       )}
+      {!workId && noticeOffer?.body === body && noticeOffer.items.length > 0 && <section aria-label="A matching service notice">
+        <Notice><strong>This may be the interruption you are seeing</strong>
+          {noticeOffer.items.map(n=><p key={n.id}>{n.message}</p>)}
+          <p>Send again to file your own request. This notice does not mark your work as recovered.</p>
+        </Notice>
+      </section>}
       {offer?.value && offer.body === body && (
         <KnowledgeSuggestions
           offer={offer.value}

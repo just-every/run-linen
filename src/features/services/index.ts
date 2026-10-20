@@ -1,3 +1,4 @@
+import { registerEmployeeNotices } from './employee-notice-routes';
 import { operationsKpis } from './operations-kpis';
 import { recordOperationsObservation } from './operations-observations';
 import { registerTemplateRoutes, bindChangeGrants, assertCatalogApproval } from './change-templates';
@@ -36,6 +37,9 @@ export interface ServiceWorkPort {
 let workPort: ServiceWorkPort | undefined;
 export function setServiceWorkPort(port: ServiceWorkPort) { workPort = port; }
 async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
+    // Cohort messages are read only through their membership and source gates.
+    const { employeeNotices: _notices, ...data } = r.data;
+    r = { ...r, data };
     if(r.kind==='change'&&r.data.changeType==='standard') {
         try {await assertCatalogApproval(env.DB,p,r);return {...r,data:{...r.data,catalogApprovalStatus:'retained'}};}
         catch(error) {if(!(error instanceof ApiError)||![403,404,409].includes(error.status))throw error;return {...r,data:{...r.data,catalogApprovalStatus:'unavailable'}};}
@@ -51,6 +55,7 @@ async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
     return { ...r, data: { ...r.data, links, diagnostics: [], recoveries: (r.data.recoveries || []).map((e: any) => ({ cohort: e.cohort, observedAt: e.observedAt, expiresAt: e.expiresAt })), updates: (r.data.updates || []).filter((u: any) => u.audience.includes(p.userId)).map((u: any) => ({ message: u.message, at: u.at })) } };
 }
 export function registerServiceRoutes(app: Hono<AppEnv>) {
+    registerEmployeeNotices(app);
     registerCalendarRoutes(app);
     registerTemplateRoutes(app);
     setChangeExecutionPort(changeExecutionPort);
@@ -88,7 +93,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
         const p = c.get('principal'), b = await jsonBody(c), workId = requiredString(b.employeeIncidentId, 'employeeIncidentId');
         if (!workPort || !await workPort.canLink(c.env, p, workId))
             throw new ApiError(403, 'work_scope', 'Accessible employee work reference required');
-        return c.json(await linkIncident(c.env.DB, p, c.req.param('id'), number(b.revision, 'revision', 1), workId, b.correction === true));
+        return c.json(await presentRecord(c.env, p, await linkIncident(c.env.DB, p, c.req.param('id'), number(b.revision, 'revision', 1), workId, b.correction === true)));
     });
     app.post('/incidents/:id/updates', async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await updateIncident(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'incident'), await jsonBody(c))); });
     app.post('/incidents/:id/diagnostics', async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await assignDiagnostic(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'incident'), await jsonBody(c))); });

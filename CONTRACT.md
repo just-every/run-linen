@@ -299,6 +299,27 @@ that product and marks how close the current code is (see [Status](#status)).
   only for that cohort, file a new matching ticket and be offered the notice,
   then see the all-clear.
 
+  *Today's semantic (ct, 20 October 20:20Z):* an owner-managed requester group
+  defines a cohort. A current owner or operator publishes against an incident or
+  planned change. Every read and send rechecks active membership, current cohort
+  membership and access to the source and its affected services. Chat notices
+  inherit CHANNEL-001/CHANNEL-002 and carry only a generic notice and an
+  authenticated link. An all-clear requires a named person to record verified
+  recovery; it is retained until that same person withdraws it. The incident must
+  have fresh independently admitted recovery for every affected cohort, or the
+  change must have independently verified completion, before that record is made.
+  Portal matching is an exact whole service-name phrase, ignoring case and
+  punctuation, in the prospective ticket's text; it offers only an open notice
+  for an open incident the requester can currently read. Filing anyway opens a
+  separate ticket; a notice never establishes that ticket's recovery. Update
+  cadence is whole minutes (1–10080): the portal shows when the next update is due;
+  when email is enabled, the scheduler repeats a generic sign-in link at that
+  cadence without inventing a fresh human progress update. Email uses a selected
+  active SendGrid connection; provider acceptance is distinct from delivery and
+  an uncertain send is not automatically repeated. Restored historical sources
+  do not publish notices. Slack and Teams delivery remain required under
+  CHANNEL-001 and CHANNEL-002 and are not implemented in this slice.
+
 - **CHANNEL-009 — Request sharing and manager visibility.** A requester shares a
   request with named colleagues, who can read and reply to its public thread but
   never see private notes; a request filed on behalf of someone shows to both the
@@ -2257,7 +2278,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CHANNEL-005` | Mobile for employees, approvers and technicians | target | partial | `tests/ui/viewport-evidence.mjs` | No native iOS/Android apps, push or quiet hours. |
 | `CHANNEL-006` | Conversational help that acts | target | partial | `src/features/intelligence/intake.ts`, `src/features/intelligence/intake-execution.ts`, `tests/ui/connected-request.mjs` | Portal only; no Slack/Teams or live agent handoff. |
 | `CHANNEL-007` | Phone and walk-up intake | target | missing |  | No phone-system or walk-up intake. |
-| `CHANNEL-008` | Service notices to employees | target | partial | `src/features/services/incidents.ts`, `tests/services/run.mjs` | No portal banner or chat posting. |
+| `CHANNEL-008` | Service notices to employees | target | partial | `src/features/services/employee-notices.ts`, `src/features/services/employee-notice-mail.ts`, `src/ui/service-notices.tsx`, `tests/services/employee-notice-cases.mjs`, `tests/services/run.mjs`, `tests/ui/service-notice-journey.mjs` | Portal cohort notices, matching-ticket offers, cadence, generic SendGrid mail, named verified all-clear and withdrawal implemented. Gap: Slack and Teams delivery/adapter acceptance under CHANNEL-001/002. |
 | `CHANNEL-009` | Request sharing and manager visibility | target | done | `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs` | |
 | `CATALOG-001` | Catalog items with forms | target | partial | `src/features/work/requests.ts`, `tests/ui/connected-request.mjs` | No form builder, conditional fields, required attachments, audience or cost. |
 | `CATALOG-002` | Approval chains | target | partial | `src/features/work/fulfilment-decisions.ts`, `src/features/work/delegation.ts`, `tests/ui/fulfilment-decision-journey.mjs`, `tests/execution/authority-manager-cases.mjs` | Single manager approval; no multi-level, finance threshold, approval SLA or email-reply approval. |

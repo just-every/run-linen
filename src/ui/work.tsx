@@ -1,3 +1,4 @@
+import { ServiceNotices } from './service-notices';
 import { RecurringWork } from './recurring-work';
 import { TeamRequests, managerDisclosure } from "./work-shares";
 import { Bundles } from "./bundles";
@@ -89,6 +90,7 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
         <TeamRequests />
       </div>
       <div className="workbench-detail">
+        <ServiceNotices />
         {selectedId ? (
           <RequestDetail key={selectedId} selectedId={selectedId} onChanged={queue.refresh} />
         ) : (

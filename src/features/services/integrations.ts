@@ -1,3 +1,5 @@
+import { deliverNoticeMail } from './employee-notice-mail';
+import { queueNoticeCadence } from './employee-notices';
 import { detectProblemProposals } from './problem-detection';
 import { observeIncidentRecovery } from "./recovery";
 import { assertAdoptionEffectAllowed } from '../adoption/authority';
@@ -81,7 +83,7 @@ function endpoint(config: any) {
     return u;
 }
 export async function deliverNotifications(env: Env, p: Principal) {
-    const out = await env.DB.prepare("SELECT * FROM svc_outbox WHERE workspace_id=? AND state='pending' AND next_at<=? ORDER BY next_at LIMIT 50").bind(p.workspaceId, now()).all<any>();
+    const out = await env.DB.prepare("SELECT * FROM svc_outbox WHERE workspace_id=? AND state='pending' AND kind!='employee-notice' AND next_at<=? ORDER BY next_at LIMIT 50").bind(p.workspaceId, now()).all<any>();
     const results = [];
     for (const job of out.results) {
         const member = await env.DB.prepare('SELECT roles_json FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(p.workspaceId, job.recipient_id).first<{
@@ -205,10 +207,11 @@ export async function processDueServices(env: Env, p: Principal) {
             failures.push({ id: r.id, error: error instanceof ApiError ? error.code : 'due_obligation_failed' });
         }
     }
-    return { notifications: await deliverNotifications(env, p), failures, problemProposals: await detectProblemProposals(env, p) };
+    try { await queueNoticeCadence(env, p); } catch (error) { failures.push({ id: 'employee-notices', error: error instanceof ApiError ? error.code : 'notice_cadence_failed' }); }
+    return { noticeMail: await deliverNoticeMail(env, p), notifications: await deliverNotifications(env, p), failures, problemProposals: await detectProblemProposals(env, p) };
 }
 export async function reconcileNotification(env: Env, p: Principal, notificationId: string) { const job = await env.DB.prepare('SELECT * FROM svc_outbox WHERE workspace_id=? AND id=?').bind(p.workspaceId, notificationId).first<any>(); if (!job)
-    throw new ApiError(404, 'not_found', 'Notification not found'); await getService(env.DB, p, job.record_id); if (!['sending', 'submitted', 'unknown'].includes(job.state))
+    throw new ApiError(404, 'not_found', 'Notification not found'); await getService(env.DB, p, job.record_id); if (job.kind === 'employee-notice') throw new ApiError(409, 'mail_receipt', 'SendGrid acceptance is not a delivered receipt; generic webhook reconciliation cannot establish it'); if (!['sending', 'submitted', 'unknown'].includes(job.state))
     return { id: job.id, state: job.state }; const conn = await connection(env, p, job.connection_id, 'notification-webhook'), url = endpoint(conn.config), nonce = id(); url.searchParams.set('id', job.id); url.searchParams.set('nonce', nonce); const start = Date.now(); const response = await fetch(url, { headers: { Authorization: `Bearer ${conn.secret.token}`, 'Cache-Control': 'no-cache' }, redirect: 'manual', signal: AbortSignal.timeout(15000) }); if (!response.ok)
     throw new ApiError(503, 'reconciliation_unavailable', 'Delivery observation unavailable'); const receipt: any = await response.json(); if (receipt.id !== job.id || receipt.nonce !== nonce || !['delivered', 'failed', 'submitted', 'unknown'].includes(receipt.state) || Date.parse(receipt.observedAt) < start || Date.parse(receipt.observedAt) > Date.now() + 1000)
     throw new ApiError(422, 'receipt_invalid', 'Fresh correlated delivery observation required'); await env.DB.prepare('UPDATE svc_outbox SET state=?,error=? WHERE workspace_id=? AND id=? AND state=?').bind(receipt.state, receipt.state === 'failed' ? 'Provider reported failed delivery' : null, p.workspaceId, job.id, job.state).run(); return { id: job.id, state: receipt.state, observedAt: receipt.observedAt }; }
