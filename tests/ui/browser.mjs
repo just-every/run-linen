@@ -7,6 +7,7 @@ import { dependencyJourney } from './dependency-journey.mjs';
 import { recurrenceJourney } from './recurrence-journey.mjs';
 import { assetFinancialJourney } from './asset-financial-journey.mjs';
 import { assetAuditJourney, stockJourney } from './asset-audit-journey.mjs';
+import { sharingJourney } from './sharing-journey.mjs';
 import { problemJourney } from "./problem-journey.mjs";
 import { classificationJourney } from "./classification-journey.mjs";
 import { timeJourney } from './time-journey.mjs';
@@ -570,6 +571,7 @@ try {
   await assetFinancialJourney({page,api,base,out});
   await assetAuditJourney({page,api,base,out});
   await stockJourney({page,api,base,out});
+  await sharingJourney({browser,api,base,out,errors});
   await timeJourney({page,base,api,workId,out});
   checks.push("DESK-012 manual and measured active effort reaches the role-scoped report at desktop and mobile widths");
   await problemJourney({page,api,base,out});

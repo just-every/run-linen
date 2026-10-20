@@ -6,6 +6,7 @@ import { cancelWorkExecution } from "./execution";
 import { shiftCommitmentForPause } from "./calendar";
 import { slaPauseStatements, validWaitingOn } from "./sla-policies";
 import { participantView } from "./relationships";
+import { sharedListClause, sharedReplyAllowed, sharedView } from "./sharing";
 import { currentWorkPrincipal } from "./identity";
 import type { Env, Principal } from "../../platform/types";
 import { ApiError, id, now } from "../../platform/http";
@@ -78,13 +79,14 @@ export async function listWork(ctx: WorkContext) {
   const p = ctx.principal;
   const rows = (
     await ctx.env.DB.prepare(
-      `SELECT work_records.*,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=? OR (sensitivity='normal' AND EXISTS(SELECT 1 FROM work_participants wp WHERE wp.workspace_id=work_records.workspace_id AND wp.work_id=work_records.id AND wp.user_id=?))))) ORDER BY updated_at DESC LIMIT 200`,
+      `SELECT work_records.*,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=? OR (sensitivity='normal' AND EXISTS(SELECT 1 FROM work_participants wp WHERE wp.workspace_id=work_records.workspace_id AND wp.work_id=work_records.id AND wp.user_id=?)) OR (sensitivity='normal' AND ${sharedListClause})))) ORDER BY updated_at DESC LIMIT 200`,
     )
       .bind(
         p.workspaceId,
         Number(p.roles.includes("hr") || p.roles.includes("owner")),
         Number(p.roles.includes("owner")),
         Number(operator(p)),
+        p.userId,
         p.userId,
         p.userId,
         p.userId,
@@ -256,7 +258,12 @@ export async function appendMessage(
 ) {
   await currentWorkPrincipal(ctx);
 
-  const work = await getWork(ctx, input.workId);
+  // CHANNEL-009: a colleague the request is shared with adds public replies only; the reply is conversation, not new intake.
+  let work: WorkRecord;
+  try { work = await getWork(ctx, input.workId); } catch (error) {
+    if (input.visibility !== "public" || !await sharedReplyAllowed(ctx, input.workId)) throw error;
+    return appendSharedReply(ctx, input);
+  }
   if (
     input.visibility === "private" &&
     !operator(ctx.principal) &&
@@ -335,13 +342,27 @@ export async function appendMessage(
     .bind(ctx.principal.workspaceId, input.workId, input.sourceMessageId)
     .first();
 }
+async function appendSharedReply(ctx: WorkContext, input: { workId: string; body: string; sourceMessageId: string }) {
+  const w = ctx.principal.workspaceId, db = ctx.env.DB, at = now();
+  const previous = await db.prepare("SELECT author_id,visibility,body FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?")
+    .bind(w, input.workId, input.sourceMessageId).first<{ author_id: string; visibility: string; body: string }>();
+  if (previous && (previous.author_id !== ctx.principal.userId || previous.visibility !== "public" || previous.body !== input.body))
+    throw new ApiError(409, "idempotency_conflict", "Message identity already used");
+  if (!input.body.trim()) throw new ApiError(422, "invalid_message", "Body and sourceMessageId required");
+  await db.batch([
+    db.prepare("INSERT OR IGNORE INTO work_messages VALUES(?,?,?,?,'public',?,?,?)").bind(id(), w, input.workId, ctx.principal.userId, input.body, input.sourceMessageId, at),
+    db.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=? AND changes()>0").bind(at, w, input.workId),
+  ]);
+  return db.prepare("SELECT * FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?").bind(w, input.workId, input.sourceMessageId).first();
+}
 export async function conversation(ctx: WorkContext, workId: string) {
   await currentWorkPrincipal(ctx);
 
   // DESK-006: a merged duplicate's requester follows the surviving ticket's public conversation only.
   let work: WorkRecord;
   try { work = await getWork(ctx, workId); } catch (error) {
-    const shared = await participantView(ctx, workId);
+    // CHANNEL-009: a shared colleague or the beneficiary's manager gets the public thread only.
+    const shared = await participantView(ctx, workId) ?? await sharedView(ctx, workId);
     if (!shared) throw error;
     return shared;
   }

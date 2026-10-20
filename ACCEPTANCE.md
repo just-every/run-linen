@@ -4,8 +4,8 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 139 clauses (132 in the contract plus F1–F7), 40 done, 69
-partial and 30 missing.
+Current count: 139 clauses (132 in the contract plus F1–F7), 41 done, 69
+partial and 29 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
 checks, connected journeys, setup checks, emitted HTTP checks and intelligence
@@ -81,7 +81,7 @@ test, or the gap.
 | **CHANNEL-006 Conversational help that acts** | Ask in Slack and in the portal "I need edit access to the Finance shared drive until Friday"; see the resolved catalog item, the clarifying question, the executed grant with readback, and a refusal when the employee is outside the grant's audience. In the portal assistant at 11 am, ask for a person: an available agent accepts and replies in the same chat with the transcript in view; at 9 pm the same request files a ticket with the transcript and states the expected response time. | `src/features/intelligence/intake.ts`; `src/features/intelligence/intake-execution.ts`; `tests/ui/connected-request.mjs`. Portal only; no Slack/Teams or live agent handoff. | partial |
 | **CHANNEL-007 Phone and walk-up intake** | Place a call through a connected RingCentral sandbox and see a ticket with the caller matched and a transcript; check an employee into the walk-up queue and resolve the visit. | No phone-system or walk-up intake. | missing |
 | **CHANNEL-008 Service notices to employees** | Declare an incident affecting the Sales cohort, see a banner and Slack post only for that cohort, file a new matching ticket and be offered the notice, then see the all-clear. | `src/features/services/incidents.ts` (audience-bound updates); `tests/services/run.mjs`. No portal banner or chat posting. | partial |
-| **CHANNEL-009 Request sharing and manager visibility** | An employee shares a ticket with a colleague, who reads and replies but does not see the private note; a manager sees two reports' requests but not a report's HR workspace ticket; after the HRIS changes the report's manager, the old manager loses visibility and the new one gains it. | No request sharing or manager team view. | missing |
+| **CHANNEL-009 Request sharing and manager visibility** | An employee shares a ticket with a colleague, who reads and replies but does not see the private note; a manager sees two reports' requests but not a report's HR workspace ticket; after the HRIS changes the report's manager, the old manager loses visibility and the new one gains it. Shares are audited and revocable, HR and restricted requests are never shared or shown to managers, and the portal discloses manager visibility. | `tests/work/relationship-cases.mjs` (`sharingChecks`) via `tests/work/runtime.mjs`: public routes for every point, direct and indirect reports, audit events and revoke; `tests/ui/sharing-journey.mjs` via `tests/ui/browser.mjs`: requester shares at 390, colleague reads and replies at 1440 without the private note, manager read-only team view, revoke and the HR manager change. | done |
 
 ### Service catalog and approvals
 

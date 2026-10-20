@@ -289,6 +289,26 @@ that product and marks how close the current code is (see [Status](#status)).
   private note; a manager sees two reports' requests but not a report's HR
   workspace ticket; after the HRIS changes the report's manager, the old manager
   loses visibility and the new one gains it.
+  *Today's semantic (ct, 20 October):* the requester or the person a normal
+  request is for shares it by a colleague's work email with a current workspace
+  member. A shared colleague reads and replies to the public thread only: never
+  private notes or attachments, and their replies are conversation, not new
+  intake. HR and restricted requests are never shared. The requester, the
+  person it is for or a service operator revokes a share; every share and
+  revoke is an audit event and the request lists current and earlier shares.
+  A request filed on behalf of someone shows to the submitter and the person it
+  is for (filing for someone else is the service team's or HR's today).
+  "My team's requests" lists, read-only, the public thread of normal requests
+  for a manager's direct and indirect reports, following each person's current
+  manager on their reviewed HR-fact record at read time, so an HR change moves
+  visibility at once; HR and restricted requests and private notes are never
+  shown there, and a manager cannot reply from it. Linen's taxonomy has no
+  separate security, health or leaver categories: security and health requests
+  are restricted, and leaver lifecycle work is not a request. The request portal
+  tells requesters and beneficiaries that their managers can read the public
+  thread of their normal requests. HR facts arrive through the people API until
+  LIFE-001's HRIS connectors inherit it, and DESK-011's department workspaces
+  inherit the HR exclusion before they ship.
 
 ### Service catalog and approvals
 
@@ -2028,8 +2048,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 35 | 50 | 30 | 115 |
-| All | 40 | 69 | 30 | 139 |
+| Target and push further | 36 | 50 | 29 | 115 |
+| All | 41 | 69 | 29 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2048,7 +2068,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CHANNEL-006` | Conversational help that acts | target | partial | `src/features/intelligence/intake.ts`, `src/features/intelligence/intake-execution.ts`, `tests/ui/connected-request.mjs` | Portal only; no Slack/Teams or live agent handoff. |
 | `CHANNEL-007` | Phone and walk-up intake | target | missing |  | No phone-system or walk-up intake. |
 | `CHANNEL-008` | Service notices to employees | target | partial | `src/features/services/incidents.ts`, `tests/services/run.mjs` | No portal banner or chat posting. |
-| `CHANNEL-009` | Request sharing and manager visibility | target | missing |  | No request sharing or manager team view. |
+| `CHANNEL-009` | Request sharing and manager visibility | target | done | `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs` | |
 | `CATALOG-001` | Catalog items with forms | target | partial | `src/features/work/requests.ts`, `tests/ui/connected-request.mjs` | No form builder, conditional fields, required attachments, audience or cost. |
 | `CATALOG-002` | Approval chains | target | partial | `src/features/work/fulfilment-decisions.ts`, `src/features/work/delegation.ts`, `tests/ui/fulfilment-decision-journey.mjs`, `tests/execution/authority-manager-cases.mjs` | Single manager approval; no multi-level, finance threshold, approval SLA or email-reply approval. |
 | `CATALOG-003` | Fulfillment task plans | target | partial | `src/features/work/requests.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No team task templates. |

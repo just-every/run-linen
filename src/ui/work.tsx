@@ -1,4 +1,5 @@
 import { RecurringWork } from './recurring-work';
+import { TeamRequests, managerDisclosure } from "./work-shares";
 import { Bundles } from "./bundles";
 import { useEffect } from "react";
 import { useSession } from "./state";
@@ -81,6 +82,7 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
       <div className="workbench-queue">
         <RecurringWork />
         <Queue selectedId={selectedId} />
+        <TeamRequests />
       </div>
       <div className="workbench-detail">
         {selectedId ? (
@@ -90,6 +92,7 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
             <section className="new-request" aria-label="A new request">
               <span className="eyebrow">{session.workspace.name}</span>
               <Composer onSent={queue.refresh} />
+              <p className="meta-sub">{managerDisclosure}</p>
             </section>
             <Bundles onRequested={queue.refresh} />
             <section className="decision-card">

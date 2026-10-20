@@ -1,4 +1,5 @@
 import { SponsorReattest } from "./sponsor-reattest";
+import { WorkShares } from "./work-shares";
 import { RecurringTasks } from './recurring-work';
 import { WorkaroundSuggestions } from "./workaround-suggestions";
 import { RepairCoverage } from "./asset-contracts";
@@ -62,6 +63,10 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
   const sponsorReminder = (() => {
     try { return (JSON.parse(work.context_json || "{}") as { sponsorReminder?: RecordValue }).sponsorReminder; } catch { return undefined; }
   })();
+  const access = (work as WorkRecord & { access?: string }).access,
+    mine = [work.requester_id, work.beneficiary_id].includes(session.principal.userId);
+  // A shared colleague or a manager has no member directory; the shared view names the person it is for.
+  const forName = access && work.beneficiary_name ? work.beneficiary_name : requestFor(work, personName);
   const exception = progressException(progress),
     { team, place, neededBy } = requestFacts(work),
     service = queue.data?.items.find((item) => item.id === work.id)?.services?.[0];
@@ -85,7 +90,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <div>
           <Icon name="user" size={24} />
           <dt>For</dt>
-          <dd>{requestFor(work, personName)}</dd>
+          <dd>{forName}</dd>
           {team && <dd className="meta-sub">{team}</dd>}
         </div>
         {place && (
@@ -128,6 +133,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkSla workId={work.id} />}
       {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkRelationships workId={work.id} messages={(detail.data?.messages ?? []) as never} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner","operator"].includes(r)) && <RepairCoverage workId={work.id} />}
+      {!access && work.sensitivity === "normal" && (mine || operator) && <WorkShares workId={work.id} canShare={mine} canRevoke />}
       <WorkaroundSuggestions workId={work.id} />
       <RecurringTasks workId={work.id} />
       <Progress items={progress} exception={exception} operator={operator} />
@@ -139,17 +145,20 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
           Linen
         </h3>
         <p className="agent-note">Linen reads each message against your catalog and services. Effects need a standing grant and are verified separately.</p>
-        <Composer workId={work.id} onSent={changed} />
+        {access === "team"
+          ? <Notice>You see this request because the person it is for reports to you. It is read-only: only the people it is shared with can reply.</Notice>
+          : <Composer workId={work.id} onSent={changed} />}
+        {access === "shared" && <Notice>Shared with you. You can read and reply to its public messages.</Notice>}
         <ConversationHistory conversation={detail.data!} />
       </section>
-      <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />
+      {!access && <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />}
       <BundleProgress key={`bundle-${work.id}`} workId={work.id} />
       {sponsorReminder && work.beneficiary_id === session.principal.userId && <SponsorReattest context={sponsorReminder} onChanged={changed} />}
       {operator && <WorkTime workId={work.id} />}
-      <WorkCommands work={work} onChanged={changed} operator={operator} />
+      {!access && <WorkCommands work={work} onChanged={changed} operator={operator} />}
       <details className="evidence">
         <summary>Request identity & context</summary>
-        <Facts entries={[["Visibility", work.sensitivity === "hr" ? "Restricted HR conversation" : "Request participants and permitted service team"], ["Requested by", work.requester_name ?? personName(work.requester_id)], ["For", requestFor(work, personName)], ...objectFacts(work.context_json)]} />
+        <Facts entries={[["Visibility", work.sensitivity === "hr" ? "Restricted HR conversation" : "Request participants and permitted service team"], ["Requested by", work.requester_name ?? personName(work.requester_id)], ["For", forName], ...objectFacts(work.context_json)]} />
       </details>
     </article>
   );

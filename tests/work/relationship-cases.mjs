@@ -56,3 +56,66 @@ export async function relationshipChecks(api) {
   await make(`/work-links?kind=asset&targetId=${laptop.id}`, undefined, employee, 403);
   console.log('PASS DESK-006 public routes: merged duplicate closes with pointer, both requesters informed, public-only participant, HR merge refused; split with cited messages, own SLA and parent/child (cycle refused); asset/problem/engineering-issue links shown on each record');
 }
+
+/** CHANNEL-009: share a request with a colleague (public thread, reply, never private notes; audited and revocable),
+ * on-behalf visibility, and "My team's requests" following the current HR-fact manager chain without HR tickets. */
+export async function sharingChecks(api, db) {
+  const users = ['c9-ana', 'c9-ben', 'c9-cy', 'c9-mia', 'c9-noah', 'c9-dir'];
+  for (const u of users) await db.exec(`INSERT INTO users VALUES('${u}','${u}@example.test','${u.slice(3)}','unused','2026-01-01'); INSERT INTO memberships VALUES('a','${u}','["employee"]',1);`);
+  await db.exec(`INSERT INTO users VALUES('c9-hrp','c9-hrp@example.test','People partner','unused','2026-01-01'); INSERT INTO memberships VALUES('a','c9-hrp','["hr"]',1);`);
+  // Ana and Cy report to Mia, Mia to the director. Bound person records stand in for HRIS facts already received.
+  for (const [u, manager] of [['c9-ana', 'c9-mia'], ['c9-cy', 'c9-mia'], ['c9-mia', 'c9-dir'], ['c9-noah', 'c9-dir']])
+    await db.exec(`INSERT INTO work_people(id,workspace_id,source,source_id,name,manager_id,active,revision,observed_at,effective_at,member_id,binding_id) VALUES('p-${u}','a','hris-c9','${u}','${u.slice(3)}','${manager}',1,1,'2026-01-01T00:00:00Z','2026-01-01T00:00:00Z','${u}','b-${u}')`);
+  const as = (u) => ({ 'x-user': u, 'x-roles': '["employee"]' });
+  const call = async (path, body, headers, status = 200) => { const r = await api(path, body, headers); assert.equal(r.status, status, 'CHANNEL-009 ' + path + ' ' + JSON.stringify(r.value)); return r.value; };
+  const ticket = await call('/work', { title: 'Laptop fan is loud', body: 'My laptop fan runs all day.', deduplicationKey: 'c9-ana-1' }, as('c9-ana'), 201);
+  await call(`/work/${ticket.id}/messages`, { body: 'Internal: warranty case 5521', visibility: 'private', sourceMessageId: 'c9-private' }, undefined, 201);
+  await call(`/work/${ticket.id}`, undefined, as('c9-ben'), 404);
+  await call(`/work/${ticket.id}/shares`, { email: 'c9-ana@example.test' }, as('c9-ben'), 404);
+  await call(`/work/${ticket.id}/shares`, { email: 'nobody@example.test' }, as('c9-ana'), 422);
+  const shared = await call(`/work/${ticket.id}/shares`, { email: 'C9-BEN@example.test' }, as('c9-ana'), 201);
+  assert.deepEqual(shared.items.map(s => [s.user_id, s.revoked_at]), [['c9-ben', null]], 'CHANNEL-009 the requester shares with a named colleague');
+  const seen = await call(`/work/${ticket.id}`, undefined, as('c9-ben'));
+  assert.equal(seen.work.access, 'shared');
+  assert.ok(seen.messages.some(m => m.body === 'My laptop fan runs all day.'), 'CHANNEL-009 the colleague reads the public thread');
+  assert.ok(!seen.messages.some(m => m.visibility === 'private' || m.body.includes('warranty case')), 'CHANNEL-009 the colleague never sees the private note');
+  assert.ok((await call('/work', undefined, as('c9-ben'))).items.some(w => w.id === ticket.id), 'CHANNEL-009 a shared request lists for the colleague');
+  await call(`/work/${ticket.id}/messages`, { body: 'Mine did this too; a BIOS update fixed it.', visibility: 'public', sourceMessageId: 'c9-ben-reply' }, as('c9-ben'), 201);
+  await call(`/work/${ticket.id}/messages`, { body: 'Sneaky note', visibility: 'private', sourceMessageId: 'c9-ben-private' }, as('c9-ben'), 404);
+  assert.ok((await call(`/work/${ticket.id}`, undefined, as('c9-ana'))).messages.some(m => m.author_id === 'c9-ben' && m.visibility === 'public'), 'CHANNEL-009 the colleague replies on the public thread');
+  await call(`/work/${ticket.id}/shares/c9-ben/revoke`, {}, as('c9-cy'), 404);
+  await call(`/work/${ticket.id}/shares/c9-ben/revoke`, {}, as('c9-ana'));
+  await call(`/work/${ticket.id}`, undefined, as('c9-ben'), 404);
+  await call(`/work/${ticket.id}/messages`, { body: 'After revoke', visibility: 'public', sourceMessageId: 'c9-ben-late' }, as('c9-ben'), 404);
+  const history = await call(`/work/${ticket.id}/shares`, undefined, as('c9-ana'));
+  assert.ok(history.items[0].revoked_at, 'CHANNEL-009 a revoked share stays on the record');
+  const events = (await db.prepare("SELECT action FROM audit_events WHERE workspace_id='a' AND target=? AND action LIKE 'work.share%' ORDER BY created_at,rowid").bind(ticket.id).all()).results.map(e => e.action);
+  assert.deepEqual(events, ['work.shared', 'work.share_revoked'], 'CHANNEL-009 every share and revoke is audited');
+  const hrTicket = await call('/work', { title: 'Accommodation request', body: 'Private', sensitivity: 'hr', beneficiaryId: 'c9-cy', deduplicationKey: 'c9-hr' }, undefined, 201);
+  const restricted = await call('/work', { title: 'Security incident on my account', body: 'Possible phishing', sensitivity: 'restricted', beneficiaryId: 'c9-ana', deduplicationKey: 'c9-restricted' }, undefined, 201);
+  await call(`/work/${restricted.id}`, undefined, as('c9-ana'));
+  await call(`/work/${restricted.id}/shares`, { email: 'c9-ben@example.test' }, as('c9-ana'), 422);
+  // On behalf: a people partner files for Cy (filing for someone else is the service team's or HR's today); both see it.
+  const hrp = { 'x-user': 'c9-hrp', 'x-roles': '["hr"]' };
+  const behalf = await call('/work', { title: 'Monitor for Cy', body: 'Cy needs a second monitor.', beneficiaryId: 'c9-cy', deduplicationKey: 'c9-behalf' }, hrp, 201);
+  for (const who of [hrp, as('c9-cy')]) assert.ok((await call('/work', undefined, who)).items.some(w => w.id === behalf.id), 'CHANNEL-009 an on-behalf request shows to the submitter and the beneficiary');
+  await call(`/work/${behalf.id}`, undefined, as('c9-ben'), 404);
+  // My team's requests: Mia sees Ana's and Cy's requests, not Cy's HR ticket; the director sees them through Mia.
+  const team = (u) => call('/team-requests', undefined, as(u)).then(r => r.items.map(w => w.id).sort());
+  assert.deepEqual(await team('c9-mia'), [ticket.id, behalf.id].sort(), 'CHANNEL-009 a manager sees two reports\' requests but not the HR or restricted ticket');
+  assert.deepEqual(await team('c9-dir'), [ticket.id, behalf.id].sort(), 'CHANNEL-009 indirect reports follow the reporting line');
+  assert.deepEqual(await team('c9-noah'), []);
+  const managerView = await call(`/work/${ticket.id}`, undefined, as('c9-mia'));
+  assert.deepEqual([managerView.work.access, managerView.work.canReply], ['team', false]);
+  assert.ok(!managerView.messages.some(m => m.visibility === 'private'), 'CHANNEL-009 a manager never sees private notes');
+  await call(`/work/${hrTicket.id}`, undefined, as('c9-mia'), 404);
+  await call(`/work/${restricted.id}`, undefined, as('c9-mia'), 404);
+  await call(`/work/${ticket.id}/messages`, { body: 'Manager reply', visibility: 'public', sourceMessageId: 'c9-mia-reply' }, as('c9-mia'), 404);
+  // The HRIS moves Ana to Noah: Mia loses her requests at once and Noah gains them.
+  await call('/people', { source: 'hris-c9', sourceId: 'c9-ana', name: 'ana', managerId: 'c9-noah', effectiveAt: '2026-06-01T00:00:00Z', observedAt: '2026-06-01T00:00:00Z' }, undefined, 201);
+  assert.deepEqual(await team('c9-mia'), [behalf.id], 'CHANNEL-009 after the HRIS change the old manager loses visibility');
+  assert.deepEqual(await team('c9-noah'), [ticket.id], 'CHANNEL-009 and the new manager gains it');
+  await call(`/work/${ticket.id}`, undefined, as('c9-mia'), 404);
+  assert.equal((await call(`/work/${ticket.id}`, undefined, as('c9-noah'))).work.access, 'team');
+  console.log('PASS CHANNEL-009 public routes: share by work email, colleague reads and replies without private notes, revoke and audit; on-behalf for both; manager team view over direct and indirect reports without HR tickets; HRIS manager change moves visibility');
+}

@@ -5,7 +5,7 @@ import { responseChecks } from './response-cases.mjs';
 import { recurrenceChecks } from './recurrence-cases.mjs';
 import { slaPolicyChecks, escalationChecks } from './sla-policy-cases.mjs';
 import { projectChecks } from './project-cases.mjs';
-import { relationshipChecks } from './relationship-cases.mjs';
+import { relationshipChecks, sharingChecks } from './relationship-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
 import { timeChecks } from "./time-cases.mjs";
 import { problemChecks } from "./problem-cases.mjs";
@@ -690,6 +690,7 @@ try {
   await searchChecks(api,db);
   await projectChecks(api);
   await relationshipChecks(api);
+  await sharingChecks(api, db);
   await mf.dispose();
   mf = new Miniflare({
     ...convertV4MiniflareOptions({ ...options, port: Number(process.env.LINEN_TEST_WORKER_PORT || 0) }),
