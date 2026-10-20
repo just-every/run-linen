@@ -1,0 +1,5 @@
+-- DESK-005: owner escalation levels on SLA targets, the awaiting-requester reminder rule, and every persisted escalation or reminder with its next due time.
+CREATE TABLE work_escalation_levels(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,target TEXT NOT NULL,level INTEGER NOT NULL,offset_minutes INTEGER NOT NULL,notify TEXT NOT NULL,label TEXT NOT NULL,created_by TEXT NOT NULL,created_at TEXT NOT NULL,UNIQUE(workspace_id,target,level));
+CREATE TABLE work_waiting_rules(workspace_id TEXT PRIMARY KEY,remind_business_days INTEGER NOT NULL,resolve_business_days INTEGER NOT NULL,revision INTEGER NOT NULL DEFAULT 1,updated_by TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE work_followups(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,work_id TEXT NOT NULL,kind TEXT NOT NULL,episode TEXT NOT NULL,level INTEGER NOT NULL,notify_id TEXT,label TEXT NOT NULL,next_due_at TEXT,state TEXT NOT NULL DEFAULT 'scheduled',fired_at TEXT,stopped_at TEXT,stop_reason TEXT,UNIQUE(workspace_id,work_id,kind,episode,level));
+CREATE INDEX work_followups_due ON work_followups(workspace_id,state,next_due_at);

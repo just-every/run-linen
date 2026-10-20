@@ -3,7 +3,7 @@ import { searchChecks } from './search-cases.mjs';
 import { problemDetectionChecks } from './problem-detection-cases.mjs';
 import { responseChecks } from './response-cases.mjs';
 import { recurrenceChecks } from './recurrence-cases.mjs';
-import { slaPolicyChecks } from './sla-policy-cases.mjs';
+import { slaPolicyChecks, escalationChecks } from './sla-policy-cases.mjs';
 import { projectChecks } from './project-cases.mjs';
 import { relationshipChecks } from './relationship-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
@@ -89,6 +89,7 @@ try {
   const proposalProof=await problemDetectionChecks(api,db);
   await recurrenceChecks(api,db);
   await slaPolicyChecks(api,db);
+  await escalationChecks(api,db);
   const cal = {
     timezone: "America/New_York",
     weekdays: [1, 2, 3, 4, 5],

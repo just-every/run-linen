@@ -43,7 +43,24 @@ export function WorkSla({ workId }: { workId: string }) {
         {data.resolution && <SlaTargetRow value={data.resolution} zone={zone} />}
       </tbody>
     </table></div>
+    <WorkFollowups workId={workId} zone={zone} />
   </section>;
+}
+
+interface Followup { id: string; kind: string; level: number; label: string; notify_name: string | null; state: string; next_due_at: string | null; fired_at: string | null; stop_reason: string | null }
+/** DESK-005: each persisted escalation and requester reminder with its next due time, firing or stop reason. */
+function WorkFollowups({ workId, zone }: { workId: string; zone: string }) {
+  const remote = useRemote<{ items: Followup[] }>(`/work/${encodeURIComponent(workId)}/followups`, 30000);
+  if (!remote.data?.items.length) return null;
+  return <div style={{ overflowX: "auto" }}><table><caption>Escalations and reminders</caption>
+    <thead><tr><th scope="col">Step</th><th scope="col">For</th><th scope="col">State</th><th scope="col">When</th></tr></thead>
+    <tbody>{remote.data.items.map(f => <tr key={f.id}>
+      <th scope="row">{f.kind === "escalation" ? `Level ${f.level} escalation · ${f.label}` : f.label}</th>
+      <td>{f.kind === "escalation" ? f.notify_name ?? "No agent assigned" : "Requester"}</td>
+      <td><Badge value={f.state} /></td>
+      <td>{f.state === "fired" ? slaTime(f.fired_at, zone) : f.state === "stopped" ? humanize(f.stop_reason) : f.next_due_at ? `Due ${slaTime(f.next_due_at, zone)}` : "Clock paused"}</td>
+    </tr>)}</tbody>
+  </table></div>;
 }
 
 const targetLabels: Record<string, string> = { firstResponse: "First response", nextResponse: "Next response", resolution: "Resolution" };

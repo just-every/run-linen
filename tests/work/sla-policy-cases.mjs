@@ -88,3 +88,109 @@ export async function slaPolicyChecks(api, db) {
   check(await api('/reports/work?from=2026-01-16T00:00:00.000Z&to=2026-01-17T00:00:00.000Z&timezone=America/New_York', undefined, requester), 403);
   console.log('PASS DESK-004 public routes: ordered policies by priority/category/requester group, business or calendar hours, US federal holiday catalog per location calendar, first/next/resolution targets, waiting-on pauses, breaches on ticket and report');
 }
+
+/** DESK-005: escalation levels before and after an SLA breach and the awaiting-requester reminder rule, through public routes and the scheduler duty. */
+export async function escalationChecks(workspaceApi, db) {
+  // An own workspace keeps these rules from escalating or resolving other suites' tickets.
+  const api = (path, body, headers = {}) => workspaceApi(path, body, { 'x-workspace': 'desk005', ...headers });
+  const check = (r, status = 200) => { assert.equal(r.status, status, 'DESK-005 ' + JSON.stringify(r)); return r.value; };
+  const employee = { 'x-user': 'employee', 'x-roles': '["employee"]' };
+  await db.exec(`INSERT INTO workspaces VALUES('desk005','Desk 005','2026-01-01'); INSERT INTO users VALUES('desk-agent','agent@test','Avery Agent','unused','2026-01-01'); INSERT INTO users VALUES('desk-lead','lead@test','Lee Lead','unused','2026-01-01'); INSERT INTO users VALUES('it-manager','manager@test','Morgan Manager','unused','2026-01-01'); INSERT INTO memberships VALUES('desk005','owner','["owner"]',1); INSERT INTO memberships VALUES('desk005','employee','["employee"]',1); INSERT INTO memberships VALUES('desk005','desk-agent','["operator"]',1); INSERT INTO memberships VALUES('desk005','desk-lead','["operator"]',1); INSERT INTO memberships VALUES('desk005','it-manager','["operator"]',1);`);
+  const calendar = check(await api('/calendars', { name: 'New York office', location: 'New York', timezone: 'America/New_York', weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [], holidayCatalog: 'us-federal' }), 201);
+  check(await api('/sla-policies', { name: 'P2 business hours', position: 1, priority: 'P2', calendarId: calendar.id, firstResponseMinutes: 60, nextResponseMinutes: 120, resolutionMinutes: 240 }), 201);
+  check(await api('/sla-policies', { name: 'Everything else', position: 2, firstResponseMinutes: 480, nextResponseMinutes: 480, resolutionMinutes: 2880 }), 201);
+  const level = (n, offsetMinutes, notify, label) => ({ target: 'first_response', level: n, offsetMinutes, notify, label });
+  check(await api('/escalation-levels', level(1, -15, 'assignee', 'Agent'), employee), 403);
+  check(await api('/escalation-levels', level(2, -5, 'employee', 'Group lead')), 422);
+  check(await api('/escalation-levels', level(1, -15, 'assignee', 'Agent')));
+  check(await api('/escalation-levels', level(2, -5, 'desk-lead', 'Group lead')));
+  check(await api('/escalation-levels', level(3, 30, 'it-manager', 'IT manager')));
+  check(await api('/waiting-rule', { remindBusinessDays: 5, resolveBusinessDays: 3 }), 422);
+  const rules = check(await api('/waiting-rule', { remindBusinessDays: 3, resolveBusinessDays: 5 }));
+  assert.deepEqual(rules.levels.map(l => [l.level, l.offset_minutes, l.notify]), [[1, -15, 'assignee'], [2, -5, 'desk-lead'], [3, 30, 'it-manager']]);
+  const minutesAgo = m => new Date(Date.now() - m * 60000).toISOString(), daysAgo = d => minutesAgo(d * 1440 + 10);
+  async function ticket(key, priority, impact) {
+    const work = check(await api('/work', { title: `Escalation ${key}`, body: 'Payroll export fails.', deduplicationKey: `desk005-${key}` }, employee), 201);
+    const current = check(await api(`/work/${work.id}`)).work;
+    check(await api(`/work/${work.id}/classification/override`, { type: 'incident', category: 'software', subcategory: 'application', impact, urgency: 'high', priority, revision: 0, workRevision: current.revision, reason: 'Payroll cannot run.' }));
+    return check(await api(`/work/${work.id}`)).work;
+  }
+  const tick = () => api('/work/process-due', {});
+  const followups = async id => check(await api(`/work/${id}/followups`)).items;
+  const notes = async (id, headers) => check(await api(`/work/${id}`, undefined, headers)).messages;
+
+  // A P1 nears its first-response target: level 1 (agent) fires 15 minutes before, level 2 (group lead) 5 minutes before, level 3 after the breach.
+  let p1 = await ticket('p1', 'P1', 'high');
+  p1 = check(await api(`/work/${p1.id}/commands`, { revision: p1.revision, command: 'assign', reason: 'On shift', assigneeId: 'desk-agent' }));
+  const due = check(await api(`/work/${p1.id}/sla`)).firstResponse;
+  const minutesToDue = 470;
+  await db.prepare('UPDATE work_records SET created_at=? WHERE id=?').bind(minutesAgo(minutesToDue), p1.id).run();
+  check(await tick());
+  let rows = (await followups(p1.id)).filter(r => r.kind === 'escalation');
+  assert.deepEqual(rows.map(r => [r.level, r.state]), [[1, 'fired'], [2, 'scheduled'], [3, 'scheduled']], 'DESK-005 level 1 fires before the P1 response target, level 2 is persisted with its next due time');
+  assert.equal(rows[0].notify_id, 'desk-agent');
+  assert.ok(rows[1].next_due_at > new Date().toISOString(), 'DESK-005 level 2 waits for its own due time');
+  assert.ok(due.dueAt, 'DESK-004 target exists');
+  await db.prepare('UPDATE work_records SET created_at=? WHERE id=?').bind(minutesAgo(477), p1.id).run();
+  check(await tick());
+  rows = (await followups(p1.id)).filter(r => r.kind === 'escalation');
+  assert.deepEqual(rows.map(r => [r.level, r.state]), [[1, 'fired'], [2, 'fired'], [3, 'scheduled']], 'DESK-005 level 2 follows level 1');
+  const escalationNotes = (await notes(p1.id)).filter(m => m.body.includes('escalation'));
+  assert.deepEqual(escalationNotes.map(m => m.visibility), ['private', 'private']);
+  assert.match(escalationNotes[0].body, /^Level 1 escalation \(Agent: Avery Agent\): first response due /);
+  assert.match(escalationNotes[1].body, /^Level 2 escalation \(Group lead: Lee Lead\)/);
+  assert.equal((await notes(p1.id, employee)).filter(m => m.body.includes('escalation')).length, 0, 'DESK-005 the requester never sees escalations');
+  check(await tick());
+  assert.equal((await notes(p1.id)).filter(m => m.body.includes('escalation')).length, 2, 'DESK-005 each level fires once');
+  check(await api(`/work/${p1.id}/messages`, { body: 'Looking at the payroll export now.', visibility: 'public', sourceMessageId: 'desk005-agent-reply' }, { 'x-user': 'desk-agent', 'x-roles': '["operator"]' }), 201);
+  check(await tick());
+  rows = (await followups(p1.id)).filter(r => r.kind === 'escalation');
+  assert.deepEqual([rows[2].state, rows[2].stop_reason], ['stopped', 'target met'], 'DESK-005 an agent response stops the remaining level');
+
+  // Awaiting the requester: reminder after 3 business days, resolution with disclosure after 5.
+  const pauseFor = async (work, key) => check(await api(`/work/${work.id}/commands`, { revision: work.revision, command: 'pause', reason: `Asked for the error text ${key}`, waitingOn: 'requester' }));
+  // Test time fixture: the ticket, its messages so far and its pause move back together.
+  const pausedAt = async (id, at) => {
+    const pause = await db.prepare('SELECT paused_at FROM work_sla_pauses WHERE work_id=? AND resumed_at IS NULL').bind(id).first();
+    const shift = Date.parse(pause.paused_at) - Date.parse(at);
+    for (const [table, column, key] of [['work_records', 'created_at', 'id'], ['work_messages', 'created_at', 'work_id'], ['work_sla_pauses', 'paused_at', 'work_id']])
+      await db.prepare(`UPDATE ${table} SET ${column}=strftime('%Y-%m-%dT%H:%M:%fZ', julianday(${column}) - ?/86400000.0) WHERE ${key}=? AND ${column}<=?`).bind(shift, id, pause.paused_at).run();
+  };
+  let quiet = await ticket('quiet', 'P3', 'medium');
+  quiet = await pauseFor(quiet, 'quiet');
+  await pausedAt(quiet.id, daysAgo(3));
+  check(await tick());
+  let reminders = (await followups(quiet.id)).filter(r => r.kind === 'requester_reminder');
+  assert.deepEqual(reminders.map(r => [r.level, r.state]), [[1, 'fired'], [2, 'scheduled']], 'DESK-005 the reminder fires and the resolution stays persisted with its due time');
+  const reminder = (await notes(quiet.id, employee)).find(m => m.body.startsWith('Reminder: we are waiting for your reply.'));
+  assert.ok(reminder && reminder.visibility === 'public', 'DESK-005 the requester sees the reminder');
+  assert.equal(check(await api(`/work/${quiet.id}`)).work.state, 'paused');
+  await pausedAt(quiet.id, daysAgo(5));
+  check(await tick());
+  const closed = check(await api(`/work/${quiet.id}`, undefined, employee));
+  assert.equal(closed.work.state, 'closed', 'DESK-005 the ticket resolves after 5 business days without a reply');
+  assert.ok(closed.messages.some(m => m.visibility === 'public' && m.body.startsWith('Closed: Resolved without a reply: no reply arrived within 5 business days')), 'DESK-005 the resolution is disclosed to the requester');
+
+  let answered = await ticket('answered', 'P3', 'medium');
+  answered = await pauseFor(answered, 'answered');
+  await pausedAt(answered.id, daysAgo(2));
+  check(await tick());
+  assert.deepEqual((await followups(answered.id)).filter(r => r.kind === 'requester_reminder').map(r => r.state), ['scheduled', 'scheduled']);
+  check(await api(`/work/${answered.id}/messages`, { body: 'The error says export locked.', visibility: 'public', sourceMessageId: 'desk005-requester-reply' }, employee), 201);
+  check(await tick());
+  await pausedAt(answered.id, daysAgo(6));
+  check(await tick());
+  reminders = (await followups(answered.id)).filter(r => r.kind === 'requester_reminder');
+  assert.deepEqual(reminders.map(r => [r.state, r.stop_reason]), [['stopped', 'requester replied'], ['stopped', 'requester replied']], 'DESK-005 a reply before the due time stops both');
+  assert.equal(check(await api(`/work/${answered.id}`)).work.state, 'paused');
+  assert.equal((await notes(answered.id, employee)).filter(m => m.body.startsWith('Reminder:')).length, 0);
+
+  // Business days follow the ticket's SLA calendar: Friday 15 January 2027, 4:30 pm in New York; Monday 18 January is a federal holiday.
+  let business = await ticket('business', 'P2', 'medium');
+  business = await pauseFor(business, 'business');
+  await pausedAt(business.id, '2027-01-15T21:30:00.000Z');
+  check(await tick());
+  reminders = (await followups(business.id)).filter(r => r.kind === 'requester_reminder');
+  assert.deepEqual(reminders.map(r => r.next_due_at), ['2027-01-21T21:30:00.000Z', '2027-01-25T21:30:00.000Z'], 'DESK-005 three and five business days skip the weekend and the holiday on the New York calendar');
+  console.log('PASS DESK-005 public routes: P1 level-1 then level-2 escalation before the response target, private to agents, level 3 stopped by the response; awaiting-requester reminder then disclosed resolution; a reply before the due time stops both; business days on the SLA calendar');
+}

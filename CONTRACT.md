@@ -459,6 +459,29 @@ that product and marks how close the current code is (see [Status](#status)).
   its response target and see level-1 then level-2 escalation; leave a ticket
   awaiting the requester and see the reminder, then the disclosed resolution;
   a reply before the due time stops both.
+  *Today's semantic:* the owner sets escalation levels 1 to 5 on the first
+  response and resolution targets of each ticket's bound SLA policy (DESK-004).
+  A level fires at a whole-minute offset from the target's due time (negative
+  before the breach, positive after, at most one week either way) and is for the
+  ticket's assignee or a named active owner or operator: until group-lead and
+  IT-manager roles exist (ROLE-001), the owner names the member who acts as each.
+  A firing adds a private note on the ticket naming the level, the person and the
+  due or breach time, never shown to the requester; delivery to that person's
+  channel is NOTIFY-001's SLA notice, which inherits it before it ships. Each
+  level fires once, and the levels still scheduled stop when the target is met.
+  The owner's awaiting-requester rule names a reminder after R and a resolution
+  after N business days (1 ≤ R < N ≤ 30), counted from the instant the ticket was
+  paused awaiting the requester. The reminder is a public message in the ticket's
+  conversation, shown in the requester's portal (email and chat delivery are
+  NOTIFY-001's); after it, and with still no reply at N business days, the
+  ticket closes with a public message disclosing the rule, and the requester can
+  reopen it. A public message from the requester or beneficiary after the pause
+  stops both, as does the ticket leaving the paused-awaiting-requester state. A
+  business day is one working day's hours on the ticket's SLA calendar, skipping
+  non-working days and holidays, or 24 hours without a calendar. Every
+  escalation and reminder is persisted with its next due time (recomputed while
+  scheduled, as SLA pauses move a target), fires on the first scheduler tick at
+  or after it, and records why it stopped.
 
 - **DESK-006 — Ticket relationships.** Merge duplicates (keeping both
   requesters informed), split, parent/child, and links to problems, changes,
@@ -1976,8 +1999,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 34 | 51 | 30 | 115 |
-| All | 39 | 70 | 30 | 139 |
+| Target and push further | 35 | 50 | 30 | 115 |
+| All | 40 | 69 | 30 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2007,7 +2030,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-002` | Classification and priority | target | done | `src/features/work/classification.ts`, `tests/work/classification-cases.mjs`, `tests/ui/classification-journey.mjs`, `tests/adoption/classification-cases.mjs` | Local public-route/model-edge fixture proof of incident/service request/question proposals, category/subcategory, impact × urgency and reason; audited operator P1-to-P2 override, current-role/scope/CAS and late-result fencing. Native 1440/390 controls and persistence, missing-provider state, held archive restore and erasure. No live-model quality claim. |
 | `DESK-003` | Routing and assignment | target | partial | `src/features/work/core.ts`, `src/features/intelligence/intake-execution.ts` | No rules, round-robin, load, skills or CI/service support-group routing. |
 | `DESK-004` | SLA policies | target | done | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs` | Public-route proof: owner-ordered policies by priority and requester group (business and calendar hours); a P2 opened 4:30 pm Friday in `America/New_York` before Martin Luther King Jr. Day is due Tuesday 12:30 pm (first response 9:30 am); a requester pause from 10 to 11 am moves it to 1:30 pm while an internal hold does not; next-response targets start and are met; breaches show with their time on the ticket and in the period report. |
-| `DESK-005` | Escalation and supervisor rules | target | partial | `src/features/services/integrations.ts`, `src/features/intelligence/followup.ts` | No multi-level escalation or supervisor rules. |
+| `DESK-005` | Escalation and supervisor rules | target | done | `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs` | Local public-route proof through the scheduler duty: P1 level-1 then level-2 escalation before the response target as private notes, level 3 stopped by the response; awaiting-requester reminder then disclosed resolution; a requester reply before the due time stops both; business days on the New York SLA calendar. Channel delivery of escalations and reminders is NOTIFY-001's. |
 | `DESK-006` | Ticket relationships | target | done | `src/features/work/relationships.ts`, `src/ui/work-relationships.tsx`, `tests/work/relationship-cases.mjs` | Public-route proof: a duplicate printer ticket merges into the survivor (closed with a pointer, HR merge refused); both requesters see the merge notice on the surviving ticket, the merged requester reads its public messages only and cannot act on it; a split moves the monitor ask into its own ticket citing the original message, with its own SLA binding, and becomes a child (cycle refused); a laptop, a problem and an engineering-issue URL link to the ticket, and the laptop and problem each list it. |
 | `DESK-007` | Collaboration | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs`, `tests/ui/browser.mjs` | No mentions, watchers or side conversations. |
 | `DESK-008` | Responses and summaries | target | done | `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs` | Local public-route and paid-model-edge fixture proof of safe canned placeholders, generated knowledge/history citations, a complete 20-message summary, native 1440/390 unsent-draft persistence and explicit agent Send; current role/scope, provider/citation failures and changed-message/article/expiry fences. Native template restore remains inert. No live-model quality claim. |

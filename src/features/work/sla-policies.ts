@@ -130,7 +130,7 @@ function evaluate(work: WorkRecord, clock: Clock, pauses: SlaPause[], messages: 
   const policy: PolicySnapshot = JSON.parse(clock.policy_json), calendar: BusinessCalendar | null = clock.calendar_json ? JSON.parse(clock.calendar_json) : null;
   const applicable = pauses.filter((p) => p.waiting_on && policy.pauseOn.includes(p.waiting_on));
   const isRequester = (m: Message) => m.author_id === work.requester_id || m.author_id === work.beneficiary_id;
-  const conversation = messages.filter((m) => m.visibility === "public" && !m.source_key.startsWith("transition:") && !m.source_key.startsWith("interpretation:"));
+  const conversation = messages.filter((m) => m.visibility === "public" && !m.source_key.startsWith("transition:") && !m.source_key.startsWith("interpretation:") && !m.source_key.startsWith("followup:"));
   const next: SlaTargetState[] = [];
   let answered = false, waitingSince: string | null = null;
   for (const m of conversation) {
@@ -156,6 +156,11 @@ async function slaInputs(ctx: WorkContext, workId: string) {
     ctx.env.DB.prepare("SELECT author_id,visibility,source_key,created_at FROM work_messages WHERE workspace_id=? AND work_id=? ORDER BY created_at,rowid").bind(ws, workId).all<Message>(),
   ]);
   return { clock, pauses: pauses.results, messages: messages.results };
+}
+/** The ticket's evaluated targets at `at` without a role check, for callers that already hold the record. */
+export async function slaFor(ctx: WorkContext, work: WorkRecord, at: string) {
+  const { clock, pauses, messages } = await slaInputs(ctx, work.id);
+  return clock ? { ...evaluate(work, clock, pauses, messages, at), messages } : null;
 }
 export async function readWorkSla(ctx: WorkContext, workId: string, at = now()) {
   await currentWorkPrincipal(ctx);
