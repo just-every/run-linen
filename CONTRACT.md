@@ -199,8 +199,8 @@ that product and marks how close the current code is (see [Status](#status)).
   Unknown, external, shared-channel-guest and deactivated senders are quarantined
   visibly to the owner, never creating a ticket or receiving ticket detail.
   The mapped original poster is the ticket requester; the channel is its source;
-  a mapped reaction/shortcut actor is the submitter. Native fixture and real
-  adapter proof are both required before status advances to done. Every future
+  a mapped reaction/shortcut actor is the submitter. The clause status stays
+  unchanged until both native fixture and real adapter proof pass. Every future
   Slack delivery or action inherits this rule before shipping, including
   CHANNEL-006, CHANNEL-008, DESK-007, DESK-009, NOTIFY-001, NOTIFY-002, ACCESS-007,
   LIFE-002, KB-003, KB-005, API-002 and L10N-001. A display name in a Slack reply

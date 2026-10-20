@@ -82,7 +82,8 @@ shared-channel-guest and deactivated senders are owner-visible quarantine only,
 with no ticket creation or ticket-detail reply. Slack-created tickets record
 the mapped requester and channel source. Every outgoing Slack reply, including
 DMs, is a generic notice plus authenticated link only, never ticket text.
-Native fixture and real adapter proof must pass before CHANNEL-001 is done.
+CHANNEL-001's status stays unchanged until both native fixture and real
+adapter proof pass.
 CHANNEL-006/008, DESK-007/009, NOTIFY-001/002, ACCESS-007, LIFE-002, KB-003/005,
 API-002 and L10N-001 inherit before adding any Slack capability; their statuses
 are unchanged by this rule. A display-name exception requires a further ct ruling.
