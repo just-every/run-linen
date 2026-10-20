@@ -60,7 +60,7 @@ export async function stockJourney({page,api,base,out}) {
     await page.setViewportSize({width,height:1000});
     await page.goto(base+'/app#/assets');
     await action(page,'Add a stock line',{location,item:'27-inch monitor',kind:'accessory',onHand:2,threshold:0,reorderQuantity:10,unitEstimateUsd:'249.99',buyer:'CDW'},'/stock-lines','Add stock line',201);
-    const line=page.getByRole('article',{name:`27-inch monitor at ${location}`});
+    const line=page.getByRole('article',{name:`27-inch monitor at ${location}`,exact:true});
     await line.getByText('Counted on hand').waitFor();
     for (const left of [1,0]) {
       const saved=await scoped(page,line,'Allocate from stock',{personId:person.id,quantity:1,evidence:'Desk handoff signed by the employee'},'/allocate','Allocate');
