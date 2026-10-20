@@ -7,6 +7,7 @@ import { draftKey, readDraft, writeDraft } from "./drafts";
 import type { PendingPerson } from "./pending-people";
 import { ResponseTools } from './response-tools';
 import { KnowledgeSuggestions, type OfferedArticles } from "./knowledge-suggestions";
+import { useTriage } from "./work-triage";
 export function Composer({
   workId,
   onSent,
@@ -25,6 +26,7 @@ export function Composer({
     [solvedTitle, setSolvedTitle] = useState("");
   const key = useRef<string>(crypto.randomUUID()),
     fileInput = useRef<HTMLInputElement>(null),
+    field = useRef<HTMLTextAreaElement>(null),
     mutation = useMutation(),
     { session } = useSession();
   const privateAllowed = session.principal.roles.some((r) =>
@@ -75,6 +77,12 @@ export function Composer({
       catch { setDraftError(true); }
     }
   }
+  // DESK-001: r writes a shared reply and n a private note on the open ticket.
+  useTriage(workId, (action) => {
+    if (action !== "reply" && action !== "note") return;
+    updateDraft(body, action === "note" && privateAllowed ? "private" : "public");
+    field.current?.focus();
+  });
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (attachmentName && !file) return;
@@ -161,6 +169,7 @@ export function Composer({
       </label>
       <textarea
         id="conversation-message"
+        ref={field}
         value={body}
         onChange={(event) => updateDraft(event.target.value, visibility)}
         placeholder={

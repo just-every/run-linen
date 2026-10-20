@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useRemote } from "./state";
 import { useGroups } from "./work-groups";
 import { SaveView, useViews } from "./work-views";
+import { BulkUpdate } from "./work-bulk";
+import { TriageShortcuts } from "./work-triage";
 import { useSession } from "./state";
 import { Icon } from "./icons";
 import { Badge, Empty, ErrorNotice, Loading } from "./primitives";
@@ -68,6 +70,8 @@ export function Queue({ selectedId }: { selectedId?: string }) {
             </select>
           </label>
           <SaveView groups={groups.data?.items ?? []} onSaved={(v) => { views.refresh(); setSource(`view:${v.id}`); }} />
+          <BulkUpdate items={shown} onDone={() => { remote.refresh(); queue.refresh(); }} />
+          <TriageShortcuts ids={shown.map((item) => item.id)} selectedId={selectedId} />
         </div>
       )}
       <div className="chips" role="group" aria-label="Show requests">

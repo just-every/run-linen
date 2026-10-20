@@ -47,9 +47,9 @@ export function SaveView({ groups, onSaved }: { groups: AgentGroup[]; onSaved: (
         {pick("View type", "kind", [["", "Any type"], ["incident", "Incident"], ["service_request", "Service request"], ["question", "Question"], ["request", "Request"]])}
         {pick("View group", "groupId", [["", "Any group"], ...groups.map((g): [string, string] => [g.id, g.name])])}
         {pick("View sort", "sort", [["", "Recently updated"], ["oldest", "Oldest first"], ["created", "Newest first"], ["priority", "Priority"]])}
-        <label className="check-row">
+        <label className="checkbox-field">
           <input type="checkbox" name="shared" />
-          Share with every agent in this workspace
+          <span>Share with every agent in this workspace</span>
         </label>
         <ErrorNotice error={mutation.error} />
         <button className="action secondary small" disabled={mutation.pending}>Save view</button>

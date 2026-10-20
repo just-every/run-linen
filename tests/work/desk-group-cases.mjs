@@ -92,6 +92,10 @@ export async function deskGroupChecks(workspaceApi, db) {
   assert.deepEqual((await run(mine, hwAgent)).items.map(i => i.id), [dock.id]);
   check(await api(`/work-views/${saved.id}/remove`, {}, netAgent), 403);
   check(await api(`/work-views/${mine.id}/remove`, {}, hwAgent));
-  console.log("PASS DESK-001 views: saved and shared views with state, owner, priority, type and group filters and sorting, within each reader's own scope");
+  // Bulk-assign five tickets through the bulk door; a ticket whose group excludes the assignee is refused on its own.
+  const bulk = check(await api('/work/bulk-commands', { workIds: [vpn.id, wifi.id, p1a.id, p1b.id, p2.id, dock.id], command: 'assign', assigneeId: 'd1-net-agent', reason: 'Noel takes these' }, netLead));
+  assert.deepEqual([bulk.changed, bulk.refused, bulk.items.find(i => !i.ok)?.workId, bulk.items.find(i => !i.ok)?.error.code], [5, 1, dock.id, 'owner_not_in_group'], 'DESK-001 five tickets bulk-assigned; the Hardware ticket refused');
+  assert.deepEqual((await run(saved, netLead)).items, [], 'DESK-001 the bulk-assigned tickets leave the Unassigned P1 view');
+  console.log("PASS DESK-001 views: saved and shared views with state, owner, priority, type and group filters and sorting, within each reader's own scope; five tickets bulk-assigned under the group rule");
   console.log("PASS DESK-001 groups: owner-created groups with leads, one accountable group with a member owner, a lead's view of the group's non-restricted tickets");
 }

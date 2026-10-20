@@ -18,6 +18,7 @@ import { WorkClassification } from "./work-classification";
 import { WorkSla } from "./work-sla";
 import { WorkFields, type DeskSettings } from "./work-fields";
 import { WorkGroup } from "./work-groups";
+import { useTriage } from "./work-triage";
 import { WorkRelationships } from "./work-relationships";
 import { usePeopleLabels } from "./people-labels";
 import { shortRef } from "./work-queue";
@@ -279,7 +280,15 @@ function WorkCommands({ work, onChanged, operator }: { work: WorkRecord; onChang
     mutation = useMutation(),
     members = useRemote<RecordValue[]>(operator ? "/members" : null),
     desk = useRemote<DeskSettings>(operator ? "/desk-settings" : null),
-    assignees = (members.data ?? []).filter((m) => m.active && /"(owner|operator)"/.test(text(m.roles_json)));
+    assignees = (members.data ?? []).filter((m) => m.active && /"(owner|operator)"/.test(text(m.roles_json))),
+    { session } = useSession();
+  // DESK-001: a assigns the open ticket to oneself; s opens the status change and c the close.
+  useTriage(operator ? work.id : undefined, async (action) => {
+    if (action === "status") setCommand(work.state === "paused" ? "resume" : "pause");
+    if (action === "close") setCommand("close");
+    if (action === "assign-self" && await mutation.mutate(`/work/${work.id}/commands`, { command: "assign", assigneeId: session.principal.userId, reason: "Assigned to self during triage", revision: work.revision }))
+      onChanged();
+  });
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const values = Object.fromEntries(new FormData(e.currentTarget));
@@ -326,7 +335,7 @@ function WorkCommands({ work, onChanged, operator }: { work: WorkRecord; onChang
           {command === "close" && <Notice>Closing the conversation is not evidence of recovery. Keep unresolved effects and obligations open.</Notice>}
           <label>
             {command === "reopen" ? "What is happening?" : command === "close" ? "Close notes" : "Reason"}
-            <textarea name="reason" required rows={3} />
+            <textarea name="reason" required rows={3} autoFocus />
           </label>
           {command === "close" && (
             <label>
