@@ -5179,7 +5179,7 @@
       "executable": false
     },
     "tests/ui/service-notice-journey.mjs": {
-      "sha256": "c07fc36c2cfda6e57e1a3c1060e0668505c4336400bfc9a6e49c7ad78c17bddb",
+      "sha256": "83be830f3dc463c9454b8fbf49a8640e5df7c548b5d2874af0b17f2c94d14220",
       "executable": false
     },
     "tests/ui/setup-browser.mjs": {
