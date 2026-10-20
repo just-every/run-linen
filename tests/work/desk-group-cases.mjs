@@ -67,5 +67,31 @@ export async function deskGroupChecks(workspaceApi, db) {
   // The queue names each ticket's group and priority for agents only; the requester's own listing does not.
   assert.equal(check(await api('/work', undefined, netLead)).items.find(i => i.id === vpn.id).group_name, 'Network');
   assert.equal(check(await api('/work', undefined, employee)).items.find(i => i.id === vpn.id).group_name, undefined);
+  // Saved and shared views: "Unassigned P1" narrows each reader's own queue, oldest first; it never widens it.
+  const classify = async (work, priority) => {
+    const current = check(await api(`/work/${work.id}`)).work;
+    check(await api(`/work/${work.id}/classification/override`, { type: 'incident', category: 'hardware', subcategory: 'laptop', impact: 'high', urgency: 'high', priority, revision: 0, workRevision: current.revision, reason: 'Triage' }));
+  };
+  const p1a = await ticket('p1a'), p1b = await ticket('p1b'), p2 = await ticket('p2');
+  for (const w of [p1a, p1b, vpn, hwSecret]) await classify(w, 'P1');
+  await classify(p2, 'P2');
+  const unassignedP1 = { name: 'Unassigned P1', filters: { state: 'open', assignee: 'none', priority: 'P1' }, sort: 'oldest', shared: true };
+  check(await api('/work-views', unassignedP1, employee), 403);
+  check(await api('/work-views', { ...unassignedP1, filters: { priority: 'P9' } }, netLead), 422);
+  check(await api('/work-views', { ...unassignedP1, sort: 'random' }, netLead), 422);
+  const saved = check(await api('/work-views', unassignedP1, netLead), 201);
+  check(await api('/work-views', unassignedP1, netLead), 409);
+  const mine = check(await api('/work-views', { name: 'My hardware', filters: { groupId: hardware.id, assignee: 'me' }, sort: 'priority' }, hwAgent), 201);
+  const run = async (view, headers, status = 200) => check(await api(`/work-views/${view.id}/work`, undefined, headers), status);
+  assert.deepEqual((await run(saved, netLead)).items.map(i => i.id), [p1a.id, p1b.id], 'DESK-001 Unassigned P1 lists the open unassigned P1 tickets, oldest first');
+  assert.deepEqual(check(await api('/work-views', undefined, netAgent)).items.map(v => [v.name, v.shared, v.mine]), [['Unassigned P1', true, false]], "DESK-001 a shared view is offered to other agents; a private one is not");
+  assert.deepEqual((await run(saved, netAgent)).items.map(i => i.id), [p1a.id, p1b.id]);
+  await run(mine, netAgent, 404);
+  // The owner reads restricted tickets, so the same shared view shows them the restricted P1; agents never see it.
+  assert.deepEqual((await run(saved, {})).items.map(i => i.id), [hwSecret.id, p1a.id, p1b.id]);
+  assert.deepEqual((await run(mine, hwAgent)).items.map(i => i.id), [dock.id]);
+  check(await api(`/work-views/${saved.id}/remove`, {}, netAgent), 403);
+  check(await api(`/work-views/${mine.id}/remove`, {}, hwAgent));
+  console.log("PASS DESK-001 views: saved and shared views with state, owner, priority, type and group filters and sorting, within each reader's own scope");
   console.log("PASS DESK-001 groups: owner-created groups with leads, one accountable group with a member owner, a lead's view of the group's non-restricted tickets");
 }

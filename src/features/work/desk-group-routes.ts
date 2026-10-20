@@ -2,8 +2,9 @@ import type { Context, Hono } from 'hono';
 import type { AppEnv } from '../../platform/types';
 import { jsonBody } from '../../platform/http';
 import { createGroup, leadQueue, listGroups, removeGroupMember, setGroupMember, setWorkGroup } from './desk-groups';
+import { listViews, removeView, runView, saveView } from './desk-views';
 
-/** DESK-001: agent groups, a ticket's accountable group and owner, and the group-lead view. */
+/** DESK-001: agent groups, a ticket's accountable group and owner, the group-lead view, and saved and shared views. */
 export function registerDeskGroupRoutes(app: Hono<AppEnv>) {
   const ctx = (c: Context<AppEnv>) => ({ env: c.env, principal: c.get('principal') });
   app.get('/work-groups', async c => c.json(await listGroups(ctx(c))));
@@ -11,5 +12,9 @@ export function registerDeskGroupRoutes(app: Hono<AppEnv>) {
   app.post('/work-groups/:id/members', async c => c.json(await setGroupMember(ctx(c), c.req.param('id'), await jsonBody(c))));
   app.post('/work-groups/:id/members/:userId/remove', async c => c.json(await removeGroupMember(ctx(c), c.req.param('id'), c.req.param('userId'))));
   app.get('/work-groups/:id/queue', async c => c.json(await leadQueue(ctx(c), c.req.param('id'))));
+  app.get('/work-views', async c => c.json(await listViews(ctx(c))));
+  app.post('/work-views', async c => c.json(await saveView(ctx(c), await jsonBody(c)), 201));
+  app.get('/work-views/:id/work', async c => c.json(await runView(ctx(c), c.req.param('id'))));
+  app.post('/work-views/:id/remove', async c => c.json(await removeView(ctx(c), c.req.param('id'))));
   app.post('/work/:id/group', async c => c.json(await setWorkGroup(ctx(c), c.req.param('id'), await jsonBody(c))));
 }

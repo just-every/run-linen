@@ -36,8 +36,25 @@ export interface WorkRecord {
   pending_person_id?: string | null;
   group_id?: string | null;
 }
-/** DESK-001: a queue filter. A group filter lists that group's tickets; `restricted: false` leaves restricted ones out. */
-export interface WorkFilter { groupId?: string; restricted?: false }
+/** DESK-001: a queue filter within the reader's own scope. A group filter lists that group's tickets; `restricted: false`
+ * leaves restricted ones out; the rest narrow by state, owner, priority and type, and sort the result. */
+export interface WorkFilter {
+  groupId?: string; restricted?: false; state?: "open" | "closed"; assignee?: "me" | "none"; priority?: string; kind?: string;
+  sort?: "updated" | "created" | "oldest" | "priority";
+}
+const priorityOf = "(SELECT json_extract(c.current_json,'$.priority') FROM work_classifications c WHERE c.workspace_id=work_records.workspace_id AND c.work_id=work_records.id)";
+const workOrder = { updated: "updated_at DESC", created: "created_at DESC,rowid DESC", oldest: "created_at ASC,rowid ASC", priority: `COALESCE(${priorityOf},'P9') ASC,updated_at DESC` };
+function narrow(filter: WorkFilter, userId: string): [string, unknown[]] {
+  const parts: [string, unknown[]][] = [
+    [filter.groupId ? "AND group_id=?" : "", filter.groupId ? [filter.groupId] : []],
+    [filter.restricted === false ? "AND sensitivity<>'restricted'" : "", []],
+    [filter.state === "open" ? "AND state NOT IN ('closed','cancelled')" : filter.state === "closed" ? "AND state IN ('closed','cancelled')" : "", []],
+    [filter.assignee === "me" ? "AND assignee_id=?" : filter.assignee === "none" ? "AND assignee_id IS NULL" : "", filter.assignee === "me" ? [userId] : []],
+    [filter.priority ? `AND ${priorityOf}=?` : "", filter.priority ? [filter.priority] : []],
+    [filter.kind ? "AND kind=?" : "", filter.kind ? [filter.kind] : []],
+  ];
+  return [parts.map(([sql]) => sql).join(" "), parts.flatMap(([, binds]) => binds)];
+}
 export function operator(p: Principal) {
   return p.roles.some((r) => ["owner", "operator"].includes(r));
 }
@@ -82,11 +99,11 @@ export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
   await currentWorkPrincipal(ctx);
 
   const p = ctx.principal;
-  const narrowed = [filter.groupId ? "AND group_id=?" : "", filter.restricted === false ? "AND sensitivity<>'restricted'" : ""].join(" ");
+  const [narrowed, narrowBinds] = narrow(filter, p.userId);
   const rows = (
     await ctx.env.DB.prepare(
       `SELECT work_records.*,(SELECT g.name FROM work_groups g WHERE g.workspace_id=work_records.workspace_id AND g.id=work_records.group_id) group_name,
-        (SELECT json_extract(c.current_json,'$.priority') FROM work_classifications c WHERE c.workspace_id=work_records.workspace_id AND c.work_id=work_records.id) priority,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=? OR (sensitivity='normal' AND EXISTS(SELECT 1 FROM work_participants wp WHERE wp.workspace_id=work_records.workspace_id AND wp.work_id=work_records.id AND wp.user_id=?)) OR (sensitivity='normal' AND ${sharedListClause})))) ${narrowed} ORDER BY updated_at DESC LIMIT 200`,
+        ${priorityOf} priority,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=? OR (sensitivity='normal' AND EXISTS(SELECT 1 FROM work_participants wp WHERE wp.workspace_id=work_records.workspace_id AND wp.work_id=work_records.id AND wp.user_id=?)) OR (sensitivity='normal' AND ${sharedListClause})))) ${narrowed} ORDER BY ${workOrder[filter.sort ?? "updated"]} LIMIT 200`,
     )
       .bind(
         p.workspaceId,
@@ -97,7 +114,7 @@ export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
         p.userId,
         p.userId,
         p.userId,
-        ...(filter.groupId ? [filter.groupId] : []),
+        ...narrowBinds,
       )
       .all()
   ).results;

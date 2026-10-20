@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRemote } from "./state";
 import { useGroups } from "./work-groups";
+import { SaveView, useViews } from "./work-views";
 import { useSession } from "./state";
 import { Icon } from "./icons";
 import { Badge, Empty, ErrorNotice, Loading } from "./primitives";
@@ -33,7 +34,8 @@ export function Queue({ selectedId }: { selectedId?: string }) {
   const me = session.user.id;
   // DESK-001: a lead reads their group's view (its non-restricted tickets) in place of the whole queue.
   const leadOf = (groups.data?.items ?? []).filter((g) => g.members.some((m) => m.userId === me && m.lead)),
-    lead = useRemote<{ items: WorkRecord[] }>(source.startsWith("lead:") ? `/work-groups/${encodeURIComponent(source.slice(5))}/queue` : null),
+    views = useViews(operator),
+    lead = useRemote<{ items: WorkRecord[] }>(source ? (source.startsWith("lead:") ? `/work-groups/${encodeURIComponent(source.slice(5))}/queue` : `/work-views/${encodeURIComponent(source.slice(5))}/work`) : null),
     remote = source ? lead : queue;
   const filters: Filter[] = operator
     ? [
@@ -55,14 +57,18 @@ export function Queue({ selectedId }: { selectedId?: string }) {
     shown = items.filter(active[2]);
   return (
     <section className="queue" aria-label="Request queue">
-      {operator && leadOf.length > 0 && (
-        <label className="queue-view">
-          Queue view
-          <select value={source} onChange={(e) => setSource(e.target.value)}>
-            <option value="">All requests I can read</option>
-            {leadOf.map((g) => <option key={g.id} value={`lead:${g.id}`}>Lead view · {g.name}</option>)}
-          </select>
-        </label>
+      {operator && (
+        <div className="queue-view">
+          <label>
+            Queue view
+            <select value={source} onChange={(e) => setSource(e.target.value)}>
+              <option value="">All requests I can read</option>
+              {leadOf.map((g) => <option key={g.id} value={`lead:${g.id}`}>Lead view · {g.name}</option>)}
+              {(views.data?.items ?? []).map((v) => <option key={v.id} value={`view:${v.id}`}>{v.name}{v.shared ? " · shared" : ""}</option>)}
+            </select>
+          </label>
+          <SaveView groups={groups.data?.items ?? []} onSaved={(v) => { views.refresh(); setSource(`view:${v.id}`); }} />
+        </div>
       )}
       <div className="chips" role="group" aria-label="Show requests">
         {filters.map(([key, label, test]) => (

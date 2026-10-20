@@ -1,0 +1,2 @@
+-- DESK-001: agents' saved queue views (filters and sort), each private to its creator or shared with the workspace's agents.
+CREATE TABLE work_views(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,owner_id TEXT NOT NULL,name TEXT NOT NULL,filters_json TEXT NOT NULL,sort TEXT NOT NULL,shared INTEGER NOT NULL DEFAULT 0 CHECK(shared IN (0,1)),created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(workspace_id,owner_id,name));
