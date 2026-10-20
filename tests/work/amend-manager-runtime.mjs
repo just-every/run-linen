@@ -33,7 +33,22 @@ try {
   const approvalInput={...queue[0],expectedHolderId:queue[0].holderId,idempotencyKey:'decision'};
   assert.equal((await api(`/work/${work.id}/fulfilment/approve`,approvalInput,'owner')).status,403);
   const approved=await ok(`/work/${work.id}/fulfilment/approve`,approvalInput,'manager');
+  const manualAudit=await db.prepare("SELECT id,created_at FROM audit_events WHERE action='work.fulfilment_approved' AND target=?").bind(approved.id).first();
+  const approvalChanges=items=>items.filter(e=>e.changes.some(c=>c.field==='approval'));
+  const manualActivity=approvalChanges((await ok(`/work/${work.id}/activity`)).items);
+  assert.equal(manualActivity.length,1,'DESK-017 the manual manager decision appears once in the ticket history');
+  assert.equal(manualActivity[0].id,manualAudit.id);
+  assert.equal(manualActivity[0].actor,queue[0].holderName,'DESK-017 the approving person is attributed');
+  assert.equal(manualActivity[0].at,manualAudit.created_at,'DESK-017 approval history retains its event time');
+  assert.deepEqual(manualActivity[0].changes,[{field:'approval',before:null,after:{approvalId:approved.id,catalogId:catalog.id,
+    workRevision:queue[0].expectedWorkRevision,fulfilmentRevision:queue[0].expectedFulfilmentRevision,
+    catalogRevision:queue[0].expectedCatalogRevision,holderId:queue[0].holderId}}],'DESK-017 only the exact approval identity and revisions enter the history');
+  assert.equal(manualActivity[0].visibility,'private');
+  assert.equal((await api(`/work/${work.id}/activity`,undefined,'stranger')).status,404,'DESK-017 an unrelated employee cannot read approval history');
+  assert.equal((await api(`/work/${work.id}/activity`,undefined,'owner','other')).status,404,'DESK-017 approval history stays in its workspace');
+  assert.equal(approvalChanges((await ok(`/work/${work.id}/activity`,undefined,'employee')).items).length,0,'DESK-017 the requester sees no internal approval change');
   assert.deepEqual(await ok(`/work/${work.id}/fulfilment/approve`,approvalInput,'manager'),approved);
+  assert.deepEqual(approvalChanges((await ok(`/work/${work.id}/activity`)).items),manualActivity,'DESK-017 approval replay appends no second history event');
   assert.equal((await ok('/fulfilment-decisions',undefined,'manager')).items.length,0);
   assert.equal((await db.prepare("SELECT COUNT(*) n FROM audit_events WHERE action='work.fulfilment_approved'").first()).n,1);
   assert.equal((await api('/plans/granted',{workId:work.id,revision:1,steps:[{...step,expiresAt:future(7200000)}],idempotencyKey:'unapproved-extension'},'employee')).value.code,'manager_approval_required');
@@ -47,7 +62,23 @@ try {
   assert.equal((await ok(`/work/${work.id}/fulfilment`,request,'employee')).state,'blocked');
   assert.equal((await api(`/work/${work.id}/fulfilment/approve`,approvalInput,'manager')).status,403);
   // A valid new manager-issued exact standing grant avoids manufacturing a fresh approval click.
-  await makeGrant('new-manager','current-manager-add','group.add');
+  const currentManagerGrant=await makeGrant('new-manager','current-manager-add','group.add');
+  const standingApproval=await db.prepare('SELECT * FROM work_fulfilment_approvals WHERE work_id=? AND grant_id=? AND grant_version=?')
+    .bind(work.id,currentManagerGrant.id,currentManagerGrant.version).first();
+  const standingAudit=await db.prepare("SELECT id,created_at FROM audit_events WHERE action='work.fulfilment_approved' AND target=?")
+    .bind(standingApproval.id).first();
+  const standingActivity=approvalChanges((await ok(`/work/${work.id}/activity`)).items);
+  const grantActivity=standingActivity.find(e=>e.id===standingAudit.id);
+  assert.ok(grantActivity,'DESK-017 a current-manager standing grant records an approval event');
+  assert.equal(grantActivity.actor,(await db.prepare("SELECT name FROM users WHERE id='new-manager'").first()).name);
+  assert.equal(grantActivity.at,standingAudit.created_at);
+  assert.deepEqual(grantActivity.changes,[{field:'approval',before:null,after:{approvalId:standingApproval.id,catalogId:catalog.id,
+    workRevision:standingApproval.work_revision,fulfilmentRevision:standingApproval.fulfilment_revision,catalogRevision:standingApproval.catalog_revision,
+    holderId:'new-manager',grantId:currentManagerGrant.id,grantVersion:currentManagerGrant.version}}],'DESK-017 standing approval records its exact grant version');
+  assert.equal((await api('/grants',{id:currentManagerGrant.id,principalId:actor.id,action:'group.add',actionVersion:1,target:'managed',
+    beneficiaryId:'provider-employee-distinct',localBeneficiaryId:'employee',connectionId:'graph',verifierConnectionId:'probe',
+    validFrom:future(-60000),validUntil:future(86400000),maxUses:30,conditions:{workId:work.id}},'new-manager')).value.code,'grant_changed');
+  assert.deepEqual(approvalChanges((await ok(`/work/${work.id}/activity`)).items),standingActivity,'DESK-017 replaying standing-grant creation adds no approval history');
   assert.equal((await ok(`/work/${work.id}/fulfilment`,request,'employee')).state,'pending');
   const resolved=await ok('/test/standing',{workId:work.id,target:'managed',beneficiaryId:'employee',kind:'access',expiresAt:expiry},'employee');
   assert.equal(resolved.step.grantId,'current-manager-add');

@@ -148,13 +148,18 @@ export async function recordWorkManagerGrantApproval(ctx: WorkContext, grantId: 
   if(holder!==grant.issuer_id || holder===grant.local_beneficiary_id)return;
   for(const f of rows) {
     if(f.expires_at && grant.valid_until<=f.expires_at)continue;
-    await db.prepare(`INSERT OR IGNORE INTO work_fulfilment_approvals
+    const approvalId=id(),at=now();
+    await db.batch([db.prepare(`INSERT OR IGNORE INTO work_fulfilment_approvals
       SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=?)
       AND EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=? AND revision=?)
       AND EXISTS(SELECT 1 FROM work_people WHERE workspace_id=? AND id=? AND revision=? AND member_id=? AND binding_id=? AND active=1 AND merged_into IS NULL)
       AND EXISTS(SELECT 1 FROM work_catalog WHERE workspace_id=? AND id=? AND revision=?)`)
-      .bind(id(),w,workId,f.id,work.revision,f.revision,f.catalog_revision,person.revision,person.manager_id,holder,
-        f.beneficiary_id,f.purpose,grant.valid_until,`standing:${grant.id}:${version}:${f.id}`,now(),grant.id,version,person.id,person.binding_id,
-        w,workId,work.revision,w,f.id,f.revision,w,person.id,person.revision,f.beneficiary_id,person.binding_id,w,f.catalog_id,f.catalog_revision).run();
+      .bind(approvalId,w,workId,f.id,work.revision,f.revision,f.catalog_revision,person.revision,person.manager_id,holder,
+        f.beneficiary_id,f.purpose,grant.valid_until,`standing:${grant.id}:${version}:${f.id}`,at,grant.id,version,person.id,person.binding_id,
+        w,workId,work.revision,w,f.id,f.revision,w,person.id,person.revision,f.beneficiary_id,person.binding_id,w,f.catalog_id,f.catalog_revision),
+      db.prepare('INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
+        .bind(id(),w,ctx.principal.userId,'work.fulfilment_approved',approvalId,
+          JSON.stringify({workId,fulfilmentId:f.id,catalogId:f.catalog_id,workRevision:work.revision,
+            fulfilmentRevision:f.revision,catalogRevision:f.catalog_revision,holderId:holder,grantId:grant.id,grantVersion:version}),at)]);
   }
 }

@@ -26,6 +26,22 @@ export async function bundleChecks({ ok, api, db, actor, future }) {
   assert.ok(queue.every(q => q.bundleName === 'New engineer'));
   assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_fulfilment_approvals WHERE work_id=?').bind(workId).first()).n, 0, 'CATALOG-004 a refused decision records nothing');
   status = await ok(`/work/${workId}/bundle/approve`, { idempotencyKey: 'bundle-decision', approvals: decision }, holder);
+  const childApprovals=(await db.prepare('SELECT a.*,f.catalog_id FROM work_fulfilment_approvals a JOIN work_fulfilments f ON f.workspace_id=a.workspace_id AND f.id=a.fulfilment_id WHERE a.work_id=? ORDER BY a.id').bind(workId).all()).results;
+  const approvalHistory=(await ok(`/work/${workId}/activity`)).items.filter(e=>e.changes.some(c=>c.field==='approval'));
+  assert.equal(approvalHistory.length,2,'DESK-017 one bundle decision records history for both manager-gated children');
+  for(const child of childApprovals) {
+    const audit=await db.prepare("SELECT id,created_at FROM audit_events WHERE action='work.fulfilment_approved' AND target=?").bind(child.id).first();
+    const event=approvalHistory.find(e=>e.id===audit.id);
+    assert.ok(event,'DESK-017 each child approval has its own event');
+    const childDecision=decision.find(d=>d.catalogId===child.catalog_id);
+    assert.ok(childDecision);
+    assert.equal(event.actor,childDecision.holderName);
+    assert.equal(event.at,audit.created_at);
+    assert.deepEqual(event.changes,[{field:'approval',before:null,after:{approvalId:child.id,catalogId:child.catalog_id,
+      workRevision:child.work_revision,fulfilmentRevision:child.fulfilment_revision,catalogRevision:child.catalog_revision,holderId:holder}}]);
+  }
+  assert.equal((await ok(`/work/${workId}/activity`,undefined,'employee')).items.some(e=>e.changes.some(c=>c.field==='approval')),false,'DESK-017 bundle requester sees no internal approval history');
+  assert.equal((await api(`/work/${workId}/activity`,undefined,'stranger')).status,404,'DESK-017 unrelated employees cannot read bundle approval history');
   assert.equal(status.decisions, 1, 'CATALOG-004 the bundle shows one approval');
   assert.deepEqual(status.children.map(c => c.approval), ['not_required', 'not_required', 'recorded', 'recorded', 'not_required']);
   for (const [index, kind] of [[1, 'software'], [2, 'access'], [3, 'access'], [4, 'access']]) {

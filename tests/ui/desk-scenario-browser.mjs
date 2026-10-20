@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { relationshipActivityJourney } from './relationship-activity-journey.mjs';
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { apiFor, finishFirstRun, signIn } from './connected-helpers.mjs';
@@ -99,6 +100,8 @@ try {
     await publicActivity.scrollIntoViewIfNeeded();
     await captureJourney(employeePage, { path: `${out}/DESK-017-employee-activity-${width}.png`, fullPage: true });
   }
+  await relationshipActivityJourney({ agentPage: ap, ownerApi: api, employeePage, employeeApi, base, out,
+    managerId: dana.id, employeeId: erin.id, workId: own.id });
   await employeeApiContext.close();
 
   // DESK-015 starts a local project task plan; a task template fills the existing editable task form.

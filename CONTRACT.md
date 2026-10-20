@@ -162,11 +162,12 @@ that product and marks how close the current code is (see [Status](#status)).
   top-level post becomes a ticket. A ticket filed from a channel post, reaction or
   shortcut is filed for the original poster as requester, with the person who
   reacted or used the shortcut recorded as submitter, and Linen acknowledges in
-  that message's thread. Each request becomes one ticket whose public replies sync
-  both ways in its originating thread. Private notes, internal fields and internal
-  attachments never post to Slack, and a ticket in a sensitive workspace (HR,
-  security) is never discussed in a channel: Linen moves it to a DM with the
-  requester. Catalog modals list only items whose audience includes the
+  that message's thread. Each request becomes one ticket. Slack messages may
+  enter its public thread only through the authenticated intake below;
+  Linen-to-Slack replies carry a generic notice and authenticated Linen link
+  only, never ticket text. Private notes, internal fields and attachments never
+  post to Slack. Sensitive tickets (HR, security) are never discussed in Slack;
+  any DM notice also contains only a generic notice and authenticated link. Catalog modals list only items whose audience includes the
   submitting employee and re-check audience on submit. The App Home shows "my
   requests" with current status and "my approvals". Approvers approve or reject
   with buttons that re-check current authority and request revision. Unknown
@@ -177,13 +178,33 @@ that product and marks how close the current code is (see [Status](#status)).
   and the acknowledgment lands in its thread; (2) a teammate adds `:ticket:` to
   another employee's message and the ticket's requester is the original poster,
   with the teammate as submitter; (3) an operator's public reply arrives in that
-  thread while a private note and an internal attachment do not; (4) request
+  thread as a generic notice and authenticated link only, with no ticket text,
+  private note or internal attachment; (4) request
   access by DM, answer the follow-up in the thread and approve from a manager's
   DM; (5) a catalog modal opened by an employee outside an item's audience omits
   the item, and a crafted submission for it is refused; (6) the App Home lists
   the employee's open requests with current status; (7) edit the original message
   and retry delivery after a simulated Slack 503 without a second ticket; (8) a
   Slack Connect guest's post is quarantined, not filed as an employee request.
+
+  *Binding Slack intake and delivery rule (ct, 20 October 18:40Z):* setup
+  requires the app signing secret and refuses without it. Intake checks, in
+  order: constant-time HMAC verification of the raw body; a five-minute
+  timestamp window; team/app/enterprise binding; event_id replay; a live
+  owner-confirmed mapping keyed by Slack (team, enterprise, app, user) to an
+  active Linen member; then that member's current Linen rights. Mapping never
+  infers identity from email or name and never requests users:read.email.
+  Mapping changes are audited. Removal, deactivation, disconnect or unmap makes
+  a mapping dead on the next request; restore requires fresh owner confirmation.
+  Unknown, external, shared-channel-guest and deactivated senders are quarantined
+  visibly to the owner, never creating a ticket or receiving ticket detail.
+  The mapped original poster is the ticket requester; the channel is its source;
+  a mapped reaction/shortcut actor is the submitter. Native fixture and real
+  adapter proof are both required before status advances to done. Every future
+  Slack delivery or action inherits this rule before shipping, including
+  CHANNEL-006, CHANNEL-008, DESK-007, DESK-009, NOTIFY-001, NOTIFY-002, ACCESS-007,
+  LIFE-002, KB-003, KB-005, API-002 and L10N-001. A display name in a Slack reply
+  needs a further ct ruling; it is not an exception to the notice-only rule.
 
 - **CHANNEL-002 — Microsoft Teams as a primary employee channel.** A Linen Teams
   app (Teams Store and admin-deployable package, with Entra identity mapping and
@@ -774,6 +795,19 @@ that product and marks how close the current code is (see [Status](#status)).
   actor, time and before and after values; the employee's portal view shows only
   the public status change; an imported ServiceNow incident shows its audited
   priority change with the original actor and time.
+
+  *Current native ticket history:* relationship writes append typed field
+  changes for both merge pointers, the duplicate's state/closed time, both split
+  pointers, parent set/clear and record links. Repeated links or unchanged
+  parents append no event. Approval entries record addition of an exact approval
+  record (`before: null`), its catalog/work/fulfillment revisions and decision
+  holder; standing-grant decisions also name the grant version. This records a
+  business decision, not provider execution or successful fulfillment. Entry
+  values come from the original audit payload, never reconstructed from current
+  mutable authority or an erasure-cleared payload. Employee and shared views
+  retain public messages only. Other record histories, complete mutation
+  coverage, erasure-preserved field values and imported source events remain
+  gaps.
 
 ### Notifications
 
@@ -2247,7 +2281,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
 | `DESK-015` | Agent scenarios and record templates | target | done | `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/ui/desk-scenario-browser.mjs` | Watchers inherit from DESK-007 and native mobile from CHANNEL-005 before they ship. |
 | `DESK-016` | Global agent search | target | done | `src/features/work/search.ts`, `tests/work/search-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/search-journey.mjs` | Local public-route and 1440/390 browser evidence: all eight current record types, filters, typo matching, serial-linked asset/ticket/person, native ticket ID, subject/content/requester, recorded asset tags, scoped visible counts and pages. HR/private/restricted/article/current-role fences and generated-source withdrawal are asserted. |
-| `DESK-017` | Ticket activity history | target | partial | `src/features/work/activity.ts`, `src/features/work/core.ts`, `src/features/work/desk-fields.ts`, `src/ui/work-activity.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/execution/runtime.mjs`, `tests/ui/desk-scenario-browser.mjs` | Ticket timeline combines messages, existing classification/routing/scenario audits, atomic state changes, custom-field before/after and observed notification delivery states; public routes assert person/scenario/rule actors, timestamps, chronological append, stale-write fencing and public-only employee views. Gap: not every current mutation path (approvals, links, merges and splits) is covered; task/change/problem/asset unified field histories, erasure-preserved field values and original imported ServiceNow field events remain unimplemented. |
+| `DESK-017` | Ticket activity history | target | partial | `src/features/work/activity.ts`, `src/features/work/approval-activity.ts`, `src/features/work/relationships.ts`, `src/features/work/fulfilment-authority.ts`, `src/ui/work-activity.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/work/relationship-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/work/bundle-cases.mjs`, `tests/execution/runtime.mjs`, `tests/ui/relationship-activity-journey.mjs` | Ticket timeline now includes typed manual/bundle/standing approvals and both sides of merge/split, parent set/clear and record links, with replay/refusal and public-only scope asserted through public routes and native 1440/390 journeys. Gap: remaining ticket mutation paths and task/change/problem/asset unified field histories, erasure-preserved field values and original imported ServiceNow field events remain unimplemented. |
 | `NOTIFY-001` | Default notifications by role and event | target | partial | `src/features/execution/notifications.ts`, `tests/execution/runtime.mjs` | Explicit per-message only; no event-driven default set, chat or push delivery, or actionable agent notifications. |
 | `NOTIFY-002` | Admin-configured rules, templates and preferences | target | missing |  | No notification rules, templates, branding or preferences. |
 | `ACCESS-001` | Microsoft Entra ID | target | done | `src/features/execution/connectors.ts`, `src/features/execution/identity.ts`, `tests/execution/runtime.mjs`, `tests/ui/connected-lifecycle.mjs` |  |

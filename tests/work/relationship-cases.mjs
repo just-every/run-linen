@@ -54,6 +54,44 @@ export async function relationshipChecks(api) {
   assert.deepEqual((await make(`/work-links?kind=asset&targetId=${laptop.id}`, undefined, undefined, 200)).items.map(w => w.id), [survivor.id], 'DESK-006 the laptop shows the linked ticket');
   assert.deepEqual((await make(`/work-links?kind=problem&targetId=${problem.id}`, undefined, undefined, 200)).items.map(w => w.id), [survivor.id], 'DESK-006 the problem shows the linked ticket');
   await make(`/work-links?kind=asset&targetId=${laptop.id}`, undefined, employee, 403);
+  // DESK-017: relationship operations append typed field history on both sides, with no raw audit reasons.
+  const history = async (id, headers) => (await make(`/work/${id}/activity`, undefined, headers, 200)).items;
+  const expectChange = (items, field, before, after) => {
+    const entry = items.find(e => e.changes.some(c => c.field === field && JSON.stringify(c.before) === JSON.stringify(before) && JSON.stringify(c.after) === JSON.stringify(after)));
+    assert.ok(entry, `DESK-017 ${field}: ${JSON.stringify(before)} -> ${JSON.stringify(after)}`);
+    assert.equal(entry.actor, 'Owner', 'DESK-017 relationship actor');
+    assert.equal(entry.actorKind, 'person');
+    assert.ok(Number.isFinite(Date.parse(entry.at)), 'DESK-017 relationship time');
+    return entry;
+  };
+  const duplicateHistory = await history(duplicate.id), survivorHistory = await history(survivor.id);
+  expectChange(duplicateHistory, 'state', 'open', 'closed');
+  expectChange(duplicateHistory, 'merged into', null, survivor.id);
+  expectChange(survivorHistory, 'merged duplicate', null, duplicate.id);
+  expectChange(await history(mixed.id), 'split into', null, split.workId);
+  const childHistory = await history(split.workId);
+  expectChange(childHistory, 'split from', null, mixed.id);
+  expectChange(childHistory, 'parent', null, mixed.id);
+  expectChange(survivorHistory, 'asset link', null, laptop.id);
+  expectChange(survivorHistory, 'problem link', null, problem.id);
+  expectChange(survivorHistory, 'engineering issue link', null, 'https://tracker.example/issues/42');
+  assert.ok(!JSON.stringify(duplicateHistory).includes('Same printer, same fault'), 'DESK-017 raw audit reasons stay private to audit');
+  await make(`/work/${survivor.id}/links`, { kind: 'asset', targetId: laptop.id }, undefined, 200);
+  await make(`/work/${split.workId}/parent`, { parentId: mixed.id }, undefined, 200);
+  await make(`/work/${duplicate.id}/merge`, { intoId: survivor.id, reason: 'retry closed duplicate' }, undefined, 409);
+  await make(`/work/${survivor.id}/links`, { kind: 'asset', targetId: laptop.id }, employee, 403);
+  assert.deepEqual(await history(survivor.id), survivorHistory, 'DESK-017 replayed links and refused changes append nothing');
+  assert.deepEqual(await history(split.workId), childHistory, 'DESK-017 assigning the same parent is not a new field change');
+  await make(`/work/${split.workId}/parent`, { parentId: null }, undefined, 200);
+  const unparented = await history(split.workId);
+  expectChange(unparented, 'parent', mixed.id, null);
+  assert.deepEqual(unparented.filter(e => childHistory.some(old => old.id === e.id)), childHistory, 'DESK-017 later relationship edits preserve earlier entries');
+  for (const [id, who] of [[survivor.id, employee], [survivor.id, requester], [duplicate.id, requester], [split.workId, employee]]) {
+    const visible = await history(id, who);
+    assert.ok(visible.every(e => e.kind === 'message' && e.visibility === 'public' && e.changes.length === 0), 'DESK-017 requesters and merged participants never receive relationship fields');
+  }
+  await make(`/work/${survivor.id}/activity`, undefined, { 'x-workspace': 'other' }, 404);
+  console.log('PASS DESK-017 relationship history: merge state and both pointers, split on both tickets, parent set/clear, asset/problem/issue links, actor/time/before/after, append-only edits, replay/refusal and public-only requester/participant views');
   console.log('PASS DESK-006 public routes: merged duplicate closes with pointer, both requesters informed, public-only participant, HR merge refused; split with cited messages, own SLA and parent/child (cycle refused); asset/problem/engineering-issue links shown on each record');
 }
 
