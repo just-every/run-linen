@@ -38,8 +38,10 @@ try {
     classification: { type: 'incident', category: 'network', subcategory: 'vpn', impact: 'high', urgency: 'medium', priority: 'P2' },
     group: { groupId: l2.id, assigneeId: null },
     message: { visibility: 'private', body: 'Escalated to Network L2: tunnel drops after the client update.' },
-    status: { command: 'pause', reason: 'Waiting on Network L2', waitingOn: 'vendor' } } });
+    status: { command: 'pause', reason: 'Waiting on Network L2', waitingOn: 'vendor' },
+    taskPlan: { name: 'Network recovery duties', tasks: [{ title: 'Check controller inventory', ownerId: nora.id, dueDate: '2026-11-01' }] } } });
   await api('/work-templates', { name: 'New laptop setup', kind: 'service_request', title: 'Set up a new laptop', body: 'Model, start date and apps to install:', context: { deviceModel: 'MacBook Pro 14' } });
+  await api('/work-templates', { name: 'Network task template', kind: 'task', title: 'Verify the replacement controller', body: 'Local duty', context: { ownerId: nora.id, dueDate: '2026-11-02' } });
   const ticket = async (title) => api('/work', { title, body: `${title}.`, kind: 'incident', deduplicationKey: crypto.randomUUID() });
   const vpn = await ticket('VPN drops every ten minutes'), a = await ticket('Wi-Fi slow on floor 3'), b = await ticket('Wi-Fi slow on floor 4');
 
@@ -67,7 +69,29 @@ try {
   await ap.locator('#main-content').focus();
   await ap.keyboard.press('?');
   await ap.getByRole('definition').filter({ hasText: 'Run a scenario on the open ticket' }).waitFor();
-  await captureJourney(ap, { path: `${out}/DESK-015-ticket-scenario.png`, fullPage: true });
+  for (const width of [1440, 390]) {
+    await ap.setViewportSize({ width, height: 1000 });
+    await captureJourney(ap, { path: `${out}/DESK-015-ticket-scenario-${width}.png`, fullPage: true });
+  }
+  // DESK-015 starts a local project task plan; a task template fills the existing editable task form.
+  const planId = (await api(`/work/${vpn.id}/scenario-runs`)).items.at(-1).changes.find(c => c.field === 'task plan').after;
+  for (const width of [1440, 390]) {
+    await ap.setViewportSize({ width, height: 1000 });
+    await ap.goto(`${base}/app#/projects/${planId}`);
+    await ap.getByRole('heading', { name: 'Network recovery duties', exact: false }).waitFor();
+    await ap.getByLabel('Task record template', { exact: true }).selectOption({ label: 'Network task template' });
+    const taskForm = ap.locator('details').filter({ has: ap.locator('summary').getByText('Add a task', { exact: true }) });
+    await taskForm.locator('summary').click();
+    assert.equal(await taskForm.getByLabel('Task', { exact: false }).inputValue(), 'Verify the replacement controller', 'DESK-015 task title pre-filled');
+    assert.equal(await taskForm.getByLabel('Owner', { exact: false }).inputValue(), nora.id);
+    assert.equal(await taskForm.getByLabel('Due date', { exact: false }).inputValue(), '2026-11-02');
+    await taskForm.getByLabel('Task', { exact: false }).fill(`Verify controller at ${width}`);
+    await captureJourney(ap, { path: `${out}/DESK-015-task-template-${width}.png`, fullPage: true });
+    const saved = ap.waitForResponse(r => r.url().endsWith(`/projects/${planId}/tasks`) && r.request().method() === 'POST');
+    await taskForm.getByRole('button', { name: 'Save', exact: true }).click();
+    assert.equal((await saved).status(), 201);
+    assert.ok((await api(`/projects/${planId}`)).tasks.some(t => t.title === `Verify controller at ${width}`));
+  }
 
   // At phone width the bulk-update screen runs the scenario on two chosen tickets.
   await ap.setViewportSize({ width: 390, height: 844 });
@@ -90,6 +114,8 @@ try {
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'UTC' }), ep = await phone.newPage();
   ep.on('pageerror', error => errors.push(String(error)));
   await signIn(ep, base, erin.email, password);
+  for (const width of [1440, 390]) {
+  await ep.setViewportSize({ width, height: 1000 });
   await ep.goto(`${base}/app#/work`);
   await ep.getByLabel(/^Start from a template/).selectOption({ label: 'New laptop setup' });
   const field = ep.getByLabel('What would make work easier?');
@@ -99,7 +125,8 @@ try {
   await ep.waitForURL(/#\/work\/.+/);
   const created = (await apiFor(ep)(`/work/${ep.url().split('/').at(-1)}`)).work;
   assert.deepEqual([created.title, created.kind, JSON.parse(created.context_json).deviceModel], ['Set up a new laptop', 'service_request', 'MacBook Pro 14']);
-  await captureJourney(ep, { path: `${out}/DESK-015-template-390.png`, fullPage: true });
+  await captureJourney(ep, { path: `${out}/DESK-015-template-${width}.png`, fullPage: true });
+  }
   await phone.close();
   assert.deepEqual(errors, []);
   console.log('PASS DESK-015 browser: "Escalate to Network L2" run from the ticket by keyboard at 1440 with each change listed, a bulk scenario run on two tickets at 390, and a "New laptop setup" template pre-filling a new ticket at 390.');

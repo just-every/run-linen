@@ -83,5 +83,75 @@ export async function deskScenarioChecks(workspaceApi, db) {
   assert.deepEqual(draft, { kind: 'service_request', title: 'Set up a new laptop', body: 'Model, start date and apps to install:', context: { deviceModel: 'MacBook Pro 14' } });
   const created = await ticket('from-template', { ...draft, body: `${draft.body} MacBook Pro 14, Monday, Figma` });
   assert.deepEqual([created.kind, created.title, JSON.parse(created.context_json).deviceModel], ['service_request', 'Set up a new laptop', 'MacBook Pro 14']);
+  // DESK-015 fields, classification, assignment, canned public replies and all status commands.
+  const office = check(await api('/desk-fields', { name: 'Office', type: 'dropdown', options: ['Denver', 'Austin'], kinds: ['incident'] }), 201);
+  const response = check(await api('/canned-responses', { title: 'Scenario reply', body: 'Hello {{requester.name}}, we are checking {{ticket.title}}.' }, desk), 201);
+  const full = check(await api('/work-scenarios', { name: 'Assign and reply', scope: 'author', steps: {
+    classification: { type: 'incident', category: 'hardware', subcategory: 'laptop', impact: 'medium', urgency: 'high', priority: 'P2' },
+    group: { groupId: networkL2.id, assigneeId: 'd15-net' }, fields: [{ fieldId: office.id, value: 'Denver' }],
+    message: { visibility: 'public', templateId: response.id }, status: { command: 'pause', reason: 'Waiting on vendor', waitingOn: 'vendor' }
+  } }, desk), 201);
+  const fullTicket = await ticket('full-scenario');
+  const fullRun = check(await api(`/work/${fullTicket.id}/scenario-runs`, { scenarioId: full.id }, desk));
+  assert.deepEqual(check(await api(`/work/${fullTicket.id}/classification`)).current,
+    { type: 'incident', category: 'hardware', subcategory: 'laptop', impact: 'medium', urgency: 'high', priority: 'P2' });
+  assert.equal(fullRun.work.assignee_id, 'd15-net');
+  assert.deepEqual(fullRun.changes.find(c => c.field === 'Office'), { step: 'fields', field: 'Office', before: null, after: 'Denver' });
+  assert.ok(check(await api(`/work/${fullTicket.id}`, undefined, employee)).messages.some(m => m.body === 'Hello Erin Employee, we are checking DESK-015 full-scenario.'));
+  const resume = check(await api('/work-scenarios', { name: 'Resume', scope: 'workspace', steps: { status: { command: 'resume', reason: 'Vendor answered' } } }), 201);
+  assert.equal(check(await api(`/work/${fullTicket.id}/scenario-runs`, { scenarioId: resume.id }, desk)).work.state, 'open');
+  const close = check(await api('/work-scenarios', { name: 'Close with resolution', scope: 'workspace', steps: { status: { command: 'close', reason: 'Replaced the laptop adapter', resolutionCode: 'Solved (permanent fix)' } } }), 201);
+  assert.equal(check(await api(`/work/${fullTicket.id}/scenario-runs`, { scenarioId: close.id }, desk)).work.state, 'closed');
+  assert.equal(check(await api(`/work/${fullTicket.id}/desk`)).resolution.code, 'Solved (permanent fix)');
+  const stopTicket = await ticket('stopped-run');
+  const stop = check(await api('/work-scenarios', { name: 'Missing close code', scope: 'workspace', steps: {
+    classification: { type: 'incident', category: 'hardware', subcategory: 'laptop', impact: 'medium', urgency: 'high', priority: 'P2' },
+    status: { command: 'close', reason: 'Missing resolution code' }
+  } }), 201);
+  check(await api(`/work/${stopTicket.id}/scenario-runs`, { scenarioId: stop.id }, desk), 422);
+  const stopped = check(await api(`/work/${stopTicket.id}/scenario-runs`, undefined, desk)).items;
+  assert.equal(stopped.length, 1, 'DESK-015 a data refusal still leaves one honest audited run');
+  assert.ok(stopped[0].errorCode);
+  assert.ok(stopped[0].changes.some(c => c.field === 'category' && c.after === 'hardware'));
+  assert.ok(!stopped[0].changes.some(c => c.field === 'state'));
+  assert.equal(check(await api(`/work/${stopTicket.id}`)).work.state, 'open');
+  // DESK-015 task plans use the existing PROJECT-001 doors; all permission checks precede field changes.
+  const planTicket = await ticket('task-plan');
+  const plan = check(await api('/work-scenarios', { name: 'Prepare laptop duties', scope: 'author', steps: {
+    taskPlan: { name: 'Laptop preparation', tasks: [{ title: 'Install approved tools', ownerId: 'd15-net', dueDate: '2026-11-01' }] }
+  } }, desk), 201);
+  assert.ok(!check(await api('/work-scenarios', undefined, outsider)).items.some(s => s.id === plan.id), 'DESK-015 author scope');
+  const started = check(await api(`/work/${planTicket.id}/scenario-runs`, { scenarioId: plan.id }, desk));
+  const projectId = started.changes.find(c => c.field === 'task plan').after;
+  const project = check(await api(`/projects/${projectId}`, undefined, desk));
+  assert.equal(project.project.name, 'Laptop preparation');
+  assert.deepEqual(project.tasks.map(t => [t.title, t.owner_id, t.due_date]), [['Install approved tools', 'd15-net', '2026-11-01']]);
+  assert.ok(project.links.some(l => l.kind === 'ticket' && l.target_id === planTicket.id));
+  const link = check(await api('/work-scenarios', { name: 'Link laptop plan', scope: 'workspace', steps: { taskPlan: { projectId } } }), 201);
+  check(await api(`/work/${dock.id}/scenario-runs`, { scenarioId: link.id }, desk));
+  assert.ok(check(await api(`/projects/${projectId}`)).links.some(l => l.target_id === dock.id));
+  const restricted = await ticket('restricted-plan', { sensitivity: 'restricted' });
+  const restrictedBefore = check(await api(`/work/${restricted.id}`)).work;
+  check(await api(`/work/${restricted.id}/scenario-runs`, { scenarioId: link.id }), 422);
+  assert.equal(check(await api(`/work/${restricted.id}`)).work.revision, restrictedBefore.revision, 'DESK-015 project normal-ticket boundary inherited');
+  const deniedPlan = check(await api('/work-scenarios', { name: 'HR cannot start an IT plan', scope: 'workspace', steps: {
+    fields: [{ fieldId: 'not-applied', value: 'no' }], taskPlan: { projectId }
+  } }), 201);
+  check(await api(`/work/${dock.id}/scenario-runs`, { scenarioId: deniedPlan.id }, hr), 403);
+  assert.equal(check(await api(`/work/${dock.id}/scenario-runs`)).items.length, 1, 'DESK-015 a forbidden task-plan step applies no earlier steps');
+  const invalidPlan = check(await api('/work-scenarios', { name: 'Invalid duty owner', scope: 'workspace', steps: {
+    classification: { category: 'must-not-apply' }, taskPlan: { name: 'Invalid plan', tasks: [{ title: 'Duty', ownerId: 'd15-employee', dueDate: '2026-11-01' }] }
+  } }), 201);
+  const invalidTicket = await ticket('invalid-plan');
+  check(await api(`/work/${invalidTicket.id}/scenario-runs`, { scenarioId: invalidPlan.id }), 422);
+  assert.equal(check(await api(`/work/${invalidTicket.id}/classification`)).current, null, 'DESK-015 task-plan validation precedes classification');
+  // DESK-015 task templates pre-fill editable drafts submitted through the ordinary project task door.
+  const taskTemplate = check(await api('/work-templates', { name: 'Install laptop tools', kind: 'task', title: 'Install approved tools', body: 'Local duty', context: { ownerId: 'd15-net', dueDate: '2026-11-01' } }, desk), 201);
+  assert.ok(!check(await api('/work-templates', undefined, employee)).items.some(t => t.id === taskTemplate.id));
+  check(await api(`/work-templates/${taskTemplate.id}`, undefined, employee), 404);
+  check(await api(`/work-templates/${taskTemplate.id}`, undefined, { 'x-workspace': 'a' }), 404);
+  const taskDraft = check(await api(`/work-templates/${taskTemplate.id}`, undefined, desk)).draft;
+  const task = check(await api(`/projects/${projectId}/tasks`, { title: taskDraft.title + ' and verify', ...taskDraft.context }, desk), 201);
+  assert.equal(check(await api(`/projects/${projectId}`)).tasks.find(t => t.id === task.id).title, 'Install approved tools and verify');
   console.log('PASS DESK-015 public routes: group-scoped "Escalate to Network L2" offered only to its group and refused to an outsider by API, one audited run listing category, priority, group, owner, private note and status before/after with no note for the requester, a role-refused step applying nothing, bulk runs, and a "New laptop setup" ticket template draft');
 }

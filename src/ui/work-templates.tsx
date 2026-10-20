@@ -5,7 +5,7 @@ interface RecordTemplate { id: string; name: string; draft: TicketDraft }
 
 /** DESK-015: start a new ticket from a record template; the draft fills the form and stays editable before sending. */
 export function TemplatePicker({ onPick }: { onPick: (draft: TicketDraft | null) => void }) {
-  const templates = useRemote<{ items: RecordTemplate[] }>("/work-templates"), items = templates.data?.items ?? [];
+  const templates = useRemote<{ items: RecordTemplate[] }>("/work-templates"), items = (templates.data?.items ?? []).filter(t => t.draft.kind !== "task");
   if (!items.length) return null;
   return (
     <label className="composer-template">

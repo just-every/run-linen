@@ -4,6 +4,7 @@ import { appendMessage, getWork, permit, transitionWork, type WorkContext } from
 import { overrideClassification, readClassification } from './classification';
 import { readWorkDesk, setWorkField } from './desk-fields';
 import { groupMember, setWorkGroup } from './desk-groups';
+import { prepareScenarioPlan, applyScenarioPlan, type ScenarioPlan } from './desk-scenario-plans';
 import { insertCannedResponse } from './canned-responses';
 
 /** DESK-015: named scenarios, each scoped to its author, one agent group or the workspace. Running one checks every
@@ -11,6 +12,7 @@ import { insertCannedResponse } from './canned-responses';
  * owner, fields, message, status) and records one audit entry listing each change's before and after. */
 type Scope = 'author' | 'group' | 'workspace';
 interface Steps {
+  taskPlan?: ScenarioPlan;
   classification?: Record<string, unknown>;
   group?: { groupId: string; assigneeId?: string | null };
   fields?: { fieldId: string; value: string }[];
@@ -21,14 +23,14 @@ interface ScenarioRow { id: string; name: string; scope: Scope; group_id: string
 const agents = ['owner', 'operator', 'hr'];
 /** The roles each step needs: the same roles its single-ticket door permits. */
 const stepRoles: Record<keyof Steps, string[]> = {
-  classification: ['owner', 'operator'], group: ['owner', 'operator'], fields: agents, message: ['owner', 'operator'], status: agents,
+  taskPlan: ['owner', 'operator'], classification: ['owner', 'operator'], group: ['owner', 'operator'], fields: agents, message: ['owner', 'operator'], status: agents,
 };
 const scenario = (r: ScenarioRow) => ({ id: r.id, name: r.name, scope: r.scope, groupId: r.group_id, authorId: r.author_id, steps: JSON.parse(r.steps_json) as Steps, revision: r.revision });
 
 function validSteps(input: unknown): Steps {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new ApiError(422, 'scenario_steps', 'Give the scenario its steps');
   const s = input as Record<string, any>, steps: Steps = {};
-  if (Object.keys(s).some((k) => !Object.hasOwn(stepRoles, k))) throw new ApiError(422, 'scenario_steps', 'Steps are classification, group, fields, message and status');
+  if (Object.keys(s).some((k) => !Object.hasOwn(stepRoles, k))) throw new ApiError(422, 'scenario_steps', 'Steps are classification, group, fields, message, status and taskPlan');
   if (s.classification !== undefined) steps.classification = s.classification;
   if (s.group !== undefined) steps.group = { groupId: requiredString(s.group?.groupId, 'groupId'), ...(s.group.assigneeId !== undefined ? { assigneeId: s.group.assigneeId } : {}) };
   if (s.fields !== undefined) {
@@ -44,6 +46,7 @@ function validSteps(input: unknown): Steps {
     if (!['pause', 'resume', 'close'].includes(s.status?.command)) throw new ApiError(422, 'scenario_status', 'A status step pauses, resumes or closes');
     steps.status = { ...s.status, reason: requiredString(s.status.reason, 'reason', 2000) };
   }
+  if (s.taskPlan !== undefined) steps.taskPlan = s.taskPlan;
   if (!Object.keys(steps).length) throw new ApiError(422, 'scenario_steps', 'A scenario needs at least one step');
   return steps;
 }
@@ -94,7 +97,12 @@ export async function runScenario(ctx: WorkContext, workId: string, body: Record
   if (refused.length) throw new ApiError(403, 'scenario_step_forbidden', `Your role cannot ${refused.join(', ')}; nothing was applied`);
   let work = await getWork(ctx, workId);
   if (typeof body.revision === 'number' && body.revision !== work.revision) throw new ApiError(409, 'revision_conflict', 'Work changed; refresh before running a scenario');
+  const taskPlan = s.steps.taskPlan ? await prepareScenarioPlan(ctx, work, s.steps.taskPlan) : null;
   const changes: { step: string; field: string; before: unknown; after: unknown }[] = [];
+  const recordRun = async (errorCode?: string) => ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)')
+    .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, 'work.scenario_run', workId,
+      JSON.stringify({ scenarioId: s.id, name: s.name, changes, ...(errorCode ? { errorCode } : {}) }), now()).run();
+  try {
   if (s.steps.classification) {
     const current = await readClassification(ctx, workId), after = { ...(current.current ?? {}), ...s.steps.classification };
     const next = await overrideClassification(ctx, workId, { ...after, revision: current.revision, workRevision: current.workRevision, reason: `Scenario: ${s.name}` });
@@ -125,8 +133,15 @@ export async function runScenario(ctx: WorkContext, workId: string, body: Record
     const changed = await transitionWork(ctx, workId, work.revision, st.command, st.reason, undefined, st.waitingOn, { resolutionCode: st.resolutionCode, statusId: st.statusId });
     changes.push({ step: 'status', field: 'state', before: work.state, after: changed.state });
   }
-  await ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)')
-    .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, 'work.scenario_run', workId, JSON.stringify({ scenarioId: s.id, name: s.name, changes }), now()).run();
+  if (taskPlan) {
+    await applyScenarioPlan(ctx, workId, taskPlan);
+    changes.push({ step: 'taskPlan', field: 'task plan', before: null, after: taskPlan.id });
+  }
+  } catch (error) {
+    await recordRun(error instanceof ApiError ? error.code : 'scenario_failed');
+    throw error;
+  }
+  await recordRun();
   return { scenario: { id: s.id, name: s.name }, changes, work: await getWork(ctx, workId) };
 }
 

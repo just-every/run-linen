@@ -6,7 +6,7 @@ import type { WorkRecord } from "./work";
 import { useGroups } from "./work-groups";
 
 export interface Scenario { id: string; name: string; scope: "author" | "group" | "workspace" }
-interface ScenarioRun { name: string; changes: { step: string; field: string; before: unknown; after: unknown }[] }
+interface ScenarioRun { name: string; errorCode?: string; changes: { step: string; field: string; before: unknown; after: unknown }[] }
 const shown = (value: unknown) => (value === null || value === undefined || value === "" ? "none" : String(value));
 
 /** DESK-015: the scenarios offered to this agent (their own, their groups' and the workspace's). */
@@ -25,7 +25,9 @@ export function WorkScenarios({ work, onChanged }: { work: WorkRecord; onChanged
     run = runs.data?.items.at(-1),
     groups = useGroups().data?.items ?? [],
     named = (field: string, value: unknown) => (field === "group" ? groups.find((g) => g.id === value)?.name ?? value : value),
-    items = scenarios.data?.items ?? [];
+    items = scenarios.data?.items ?? [],
+    planId = run?.changes.find(c => c.field === 'task plan')?.after,
+    plan = useRemote<{ project: { name: string } }>(typeof planId === 'string' ? `/projects/${encodeURIComponent(planId)}` : null);
   useTriage(work.id, (action) => { if (action === "scenario") picker.current?.focus(); });
   if (!items.length) return null;
   async function apply(e: FormEvent) {
@@ -48,9 +50,9 @@ export function WorkScenarios({ work, onChanged }: { work: WorkRecord; onChanged
       </form>
       {run && (
         <Notice>
-          Last run: {run.name}
+          Last run: {run.name}{run.errorCode && ' · stopped; the changes below were applied'}
           <ul aria-label="Scenario changes">
-            {run.changes.map((c, i) => <li key={i}>{c.field}: {shown(named(c.field, c.before))} → {shown(named(c.field, c.after))}</li>)}
+            {run.changes.map((c, i) => <li key={i}>{c.field}: {shown(named(c.field, c.before))} → {c.field === 'task plan' && typeof c.after === 'string' ? <a href={`#/projects/${encodeURIComponent(c.after)}`}>{plan.data?.project.name ?? 'Open task plan'}</a> : shown(named(c.field, c.after))}</li>)}
           </ul>
         </Notice>
       )}

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-/** CHANGE-001 approval/catalog proof only; this harness has a fixture execution port. */
+/** DESK-015 change record templates and CHANGE-001 approval/catalog proof only; this harness has a fixture execution port. */
 export async function templateChecks(request,db) {
   const operator={'x-user':'operator','x-roles':'["operator"]'},employee={'x-user':'employee','x-roles':'["employee"]'},approver={'x-user':'approver','x-roles':'["approver"]'};
   const ok=async(method,path,body,headers)=>{const r=await request(method,path,body,headers);assert.ok(r.status<300,JSON.stringify(r));return r.json;};
@@ -24,6 +24,7 @@ export async function templateChecks(request,db) {
   assert.deepEqual(change.data.implementation,body.implementation);assert.deepEqual(change.data.services,body.services);assert.equal(change.data.testPlan,body.testPlan,'CHANGE-001 catalog scope and plans cannot be overridden');
   for(const name of ['implementationPlan','testPlan','backoutPlan'])assert.equal(change.data[name],body[name],`CHANGE-001 standard change copies ${name}`);
   assert.equal(change.data.cabBypass.version,template.data.version);
+  assert.deepEqual([change.data.title,change.data.risk,change.data.impact,change.data.cohorts], [body.title,body.risk,body.impact,body.cohorts], 'DESK-015 change record template pre-fills the new change through its public door');
   assert.equal((await request('POST',`/changes/${change.id}/authorize`,{revision:change.revision,reason:'Unneeded CAB',grantReferences:[{id:'g',version:1}]})).status,409);
   change=await ok('POST',`/changes/${change.id}/grants`,{revision:change.revision,grantReferences:[{id:'existing',version:1,phase:'canary'}]},operator);
   assert.equal(change.data.authorizations[0].kind,'grant-binding','CHANGE-001 existing grant binding does not add a CAB decision');

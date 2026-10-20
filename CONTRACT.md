@@ -718,6 +718,16 @@ that product and marks how close the current code is (see [Status](#status)).
   template holds a type, title, body and details; anyone in the workspace starts
   a new request from it and may edit the draft before sending. Watchers inherit
   from DESK-007 and native mobile from CHANNEL-005 before they ship.
+  Task plans are PROJECT-001 IT projects: a scenario links an existing project
+  or starts a named project with 1 to 30 local duties (title, active agent owner,
+  and YYYY-MM-DD due date under PROJECT-001's UTC semantics). PROJECT-001's
+  existing normal-sensitivity ticket-link boundary and owner/operator write
+  permissions apply, checked before any scenario field changes; starting a plan
+  commits its project, duties and ticket link together and grants no provider
+  authority. The run audit links to the plan. Task record templates pre-fill an
+  editable project task title, owner and due date under PROJECT-001's existing
+  read/write roles. Change record templates use CHANGE-001's exact-version
+  standard change catalog, retaining its preapproval and separate grant rules.
 
 - **DESK-016 — Global agent search.** One search across tickets (number, subject,
   content, requester), people, assets (serial, asset tag), configuration items,
@@ -2178,8 +2188,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 40 | 48 | 27 | 115 |
-| All | 45 | 67 | 27 | 139 |
+| Target and push further | 41 | 47 | 27 | 115 |
+| All | 46 | 66 | 27 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2219,7 +2229,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-012` | Time tracking and effort | target | done | `src/features/work/time.ts`, `src/features/work/effort-report.ts`, `tests/work/time-cases.mjs`, `tests/ui/time-journey.mjs`, `tests/adoption/runtime.mjs` | Local public work/task routes and real 1440/390 browser interval: manual and measured active minutes feed role/request-type effort totals with touches and failed/pending work. Visibility/focus/inactivity pauses, server-bounded sequenced heartbeats, current scope, erasure and inert restored timers are proved. REPORT-004 prices these minutes at owner-declared role rates. |
 | `DESK-013` | Scheduled and recurring work | target | done | `src/features/work/recurrence.ts`, `src/features/work/recurrence-calendar.ts`; DESK-013 public routes in `tests/work/recurrence-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/recurrence-journey.mjs` via `tests/ui/browser.mjs`, `tests/adoption/recurrence-cases.mjs` via `tests/adoption/runtime.mjs`: calendar tickets/task plans with owners, first business day/holiday, atomic occurrences, DST/month-end, pause/resume, inert restore and 1440/390 journeys. | |
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
-| `DESK-015` | Agent scenarios and record templates | target | partial | `src/features/work/desk-scenarios.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/ui/desk-scenario-browser.mjs` | Scenarios (classification, group and owner, fields, note or reply, status) scoped to author, group or workspace, refused outside scope or role with nothing applied, one audited run, ticket, keyboard and bulk doors, and ticket templates are proven. No task-plan step and no task or change record templates yet. |
+| `DESK-015` | Agent scenarios and record templates | target | done | `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/ui/desk-scenario-browser.mjs` | Watchers inherit from DESK-007 and native mobile from CHANNEL-005 before they ship. |
 | `DESK-016` | Global agent search | target | done | `src/features/work/search.ts`, `tests/work/search-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/search-journey.mjs` | Local public-route and 1440/390 browser evidence: all eight current record types, filters, typo matching, serial-linked asset/ticket/person, native ticket ID, subject/content/requester, recorded asset tags, scoped visible counts and pages. HR/private/restricted/article/current-role fences and generated-source withdrawal are asserted. |
 | `DESK-017` | Ticket activity history | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs` | State transitions only, as public messages; no field-level before/after history, actor types or imported source history. |
 | `NOTIFY-001` | Default notifications by role and event | target | partial | `src/features/execution/notifications.ts`, `tests/execution/runtime.mjs` | Explicit per-message only; no event-driven default set, chat or push delivery, or actionable agent notifications. |

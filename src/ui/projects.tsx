@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { humanize, text, type RecordValue } from "./api";
 import { ActionForm } from "./forms";
 import { useMutation, useRemote, useSession } from "./state";
@@ -37,6 +38,10 @@ export function ProjectsSpace({ selectedId }: { selectedId?: string }) {
 
 function Project({ id, team, onChanged }: { id: string; team: boolean; onChanged: () => void }) {
   const view = useRemote<ProjectView>(`/projects/${encodeURIComponent(id)}`), members = useRemote<RecordValue[]>(team ? "/members" : null), mutation = useMutation();
+  const templates = useRemote<{ items: { id: string; name: string; draft: { kind: string; title: string; context: Record<string, string> } }[] }>(team ? '/work-templates' : null);
+  const [templateId, setTemplateId] = useState('');
+  const taskTemplates = (templates.data?.items ?? []).filter(t => t.draft.kind === 'task');
+  const draft = taskTemplates.find(t => t.id === templateId)?.draft;
   const data = view.data;
   if (view.loading) return <Loading />;
   if (view.error || !data) return <ErrorNotice error={view.error} retry={view.refresh} />;
@@ -74,11 +79,13 @@ function Project({ id, team, onChanged }: { id: string; team: boolean; onChanged
     {team && <>
       <ActionForm title="Add a milestone" path={`/projects/${id}/milestones`} onSaved={changed}
         fields={[{ name: "name", label: "Milestone", required: true }, { name: "dueDate", label: "Due date", type: "date", required: true }]} />
-      <ActionForm title="Add a task" path={`/projects/${id}/tasks`} onSaved={changed}
-        fields={[{ name: "title", label: "Task", required: true },
+      {!!taskTemplates.length && <label>Task record template<select value={templateId} onChange={e => setTemplateId(e.target.value)}><option value="">No template</option>{taskTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>}
+      <ErrorNotice error={templates.error} retry={templates.refresh} />
+      <ActionForm key={templateId} title="Add a task" path={`/projects/${id}/tasks`} onSaved={changed}
+        fields={[{ name: "title", label: "Task", required: true, value: draft?.title },
           { name: "milestoneId", label: "Milestone", type: "select", options: [{ value: "", label: "No milestone" }, ...data.milestones.map((m) => ({ value: m.id, label: m.name }))] },
-          { name: "ownerId", label: "Owner", type: "select", required: true, options: agents.map((m) => ({ value: text(m.id), label: text(m.name) })) },
-          { name: "dueDate", label: "Due date", type: "date", required: true },
+          { name: "ownerId", label: "Owner", type: "select", required: true, value: draft?.context.ownerId, options: agents.map((m) => ({ value: text(m.id), label: text(m.name) })) },
+          { name: "dueDate", label: "Due date", type: "date", required: true, value: draft?.context.dueDate },
           { name: "dependsOn", label: "Depends on", type: "checkboxes", options: data.tasks.map((t) => ({ value: t.id, label: t.title })) }]} />
       <ActionForm title="Link records" path={`/projects/${id}/links`} onSaved={changed}
         transform={(v) => ({ items: (v.targetIds as string[]).map((targetId) => ({ kind: v.kind, targetId, detail: v.detail })) })}
