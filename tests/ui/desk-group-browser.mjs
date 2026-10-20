@@ -78,8 +78,8 @@ try {
   await queue.getByText('Bulk update', { exact: true }).click();
   const bulk = queue.getByRole('form', { name: 'Bulk update' });
   await bulk.getByLabel('Choose every ticket shown').check();
-  await bulk.getByLabel(/^Assign to/).selectOption(omar.id);
-  await bulk.getByLabel('Reason', { exact: true }).fill('Omar takes the VPN outage');
+  await bulk.getByLabel(/^Bulk assignee/).selectOption(omar.id);
+  await bulk.getByLabel('Bulk update reason', { exact: true }).fill('Omar takes the VPN outage');
   const applied = lp.waitForResponse(r => r.url().endsWith('/work/bulk-commands') && r.request().method() === 'POST');
   await bulk.getByRole('button', { name: 'Apply to 5 tickets', exact: true }).click();
   assert.equal((await applied).status(), 200);

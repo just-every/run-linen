@@ -55,7 +55,7 @@ export function BulkUpdate({ items, onDone }: { items: WorkRecord[]; onDone: () 
           ))}
         </fieldset>
         <label>
-          Change
+          Bulk change
           <select value={command} onChange={(e) => setCommand(e.target.value)}>
             <option value="assign">Assign to an agent</option>
             <option value="pause">Pause</option>
@@ -65,7 +65,7 @@ export function BulkUpdate({ items, onDone }: { items: WorkRecord[]; onDone: () 
         </label>
         {command === "assign" && (
           <label>
-            Assign to
+            Bulk assignee
             <select name="assigneeId" required defaultValue="">
               <option value="">Choose…</option>
               {agents.map((m) => <option key={text(m.id)} value={text(m.id)}>{text(m.name)}</option>)}
@@ -74,7 +74,7 @@ export function BulkUpdate({ items, onDone }: { items: WorkRecord[]; onDone: () 
         )}
         {command === "close" && (
           <label>
-            Resolution code
+            Bulk resolution code
             <select name="resolutionCode" defaultValue="">
               <option value="">Choose…</option>
               {(desk.data?.resolutionCodes.codes ?? []).map((c) => <option key={c} value={c}>{c}</option>)}
@@ -82,7 +82,7 @@ export function BulkUpdate({ items, onDone }: { items: WorkRecord[]; onDone: () 
           </label>
         )}
         <label>
-          {command === "close" ? "Close notes" : "Reason"}
+          {command === "close" ? "Bulk close notes" : "Bulk update reason"}
           <textarea name="reason" required rows={2} maxLength={2000} />
         </label>
         <ErrorNotice error={mutation.error} />
