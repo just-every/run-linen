@@ -1,7 +1,7 @@
 import { Lockup } from './Lockup'
-import { docsPath, licence, repository } from './links'
+import { contractPath, docsPath, licence, repository } from './links'
 
-/** The lockup, the one line, then Docs, Source and the license (desk page 12). */
+/** The lockup, the one line, then Docs, Contract, Source and the license (desk page 12). */
 export function SiteFooter() {
   return (
     <footer className="site-footer">
@@ -10,6 +10,7 @@ export function SiteFooter() {
         <p>Open source IT service desk</p>
         <nav aria-label="Footer">
           <a href={docsPath()}>Docs</a>
+          <a href={contractPath}>Contract</a>
           <a href={repository}>Source</a>
           <a href={licence}>MIT licensed</a>
         </nav>
