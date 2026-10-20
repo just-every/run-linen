@@ -88,6 +88,10 @@ export async function employeeNoticeChecks(request, db) {
   incident=await api('GET','/incidents/'+incident.id);
   const t=Date.now(),proof={evidenceId:'independent-notice',incidentId:incident.id,serviceId:service.id,cohort:'sales',observedAt:new Date(t).toISOString(),expiresAt:new Date(t+60000).toISOString(),verifierVersion:'1',independent:true,usable:true,negativeChecksPassed:true,executionId:'notice-proof',source:'probe'};
   incident=await api('POST',`/incidents/${incident.id}/recovery`,{revision:incident.revision,evidence:[proof]});assert.equal(incident.data.status,'restored');
+  // A stale stored restored status cannot manufacture a new recovery attestation.
+  await db.prepare("UPDATE svc_records SET data_json=json_set(data_json,'$.recoveries[0].expiresAt','2020-01-01T00:00:00Z') WHERE id=?").bind(incident.id).run();
+  await api('POST',`${base}/${n.id}/all-clear`,{revision:(await read()).revision,message:'Stale recovery',verification:'Expired observation'},'operator',422);
+  await db.prepare("UPDATE svc_records SET data_json=json_set(data_json,'$.recoveries[0].expiresAt',?) WHERE id=?").bind(proof.expiresAt,incident.id).run();
   published=await api('POST',`${base}/${n.id}/all-clear`,{revision:(await read()).revision,message:'Sales Console new sessions independently verified.',verification:'Recovery probe notice-proof'},'operator');
   n=published.items[0];assert.equal(n.verifiedBy,'operator');assert.equal(n.state,'all-clear');assert.equal(n.nextUpdateAt,null);
   const shown=(await api('GET','/service-notices',undefined,'employee')).items[0];assert.equal(shown.verifiedBy,'Operator');assert.equal(shown.state,'all-clear');

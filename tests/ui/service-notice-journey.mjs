@@ -6,6 +6,24 @@ import { fileURLToPath } from 'node:url';
 import { apiFor, action, createConnection, finishFirstRun, signIn } from './connected-helpers.mjs';
 import { captureJourney } from './viewport-evidence.mjs';
 
+// Full-page captures retain keyboard and overflow assertions. Add real viewport proof as well,
+// placing sticky app chrome at the viewport top instead of over a scrolled full-page stitch.
+async function captureNotice(page, options) {
+  await captureJourney(page, options);
+  const previous=page.viewportSize();
+  try {
+    for(const width of [1440,390]) {
+      await page.setViewportSize({width,height:width===1440?1000:844});
+      if(options.path.includes('controls')||options.path.includes('planned-change')) {
+        await page.getByRole('heading',{name:'Employee service notices',exact:true}).scrollIntoViewIfNeeded();
+        await page.evaluate(()=>scrollBy(0,-160));
+      } else await page.evaluate(()=>scrollTo(0,0));
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      await page.screenshot({path:options.path.replace('.png',`-${width}-viewport.png`)});
+    }
+  } finally {await page.setViewportSize(previous);}
+}
+
 /** CHANNEL-008: native owner, Sales employee and outsider; only the external deployment/probe are fixtures. */
 export async function serviceNoticeJourney({browser,page,api,base,out,errors}) {
   const stamp=Date.now(),password='synthetic-Connected-browser-2026';
@@ -21,7 +39,7 @@ export async function serviceNoticeJourney({browser,page,api,base,out,errors}) {
   await action(page,'Update this service notice',{message:'Sales Console sign-in is interrupted. Use an existing session while we investigate.'},`${path}/${notice.id}/update`);
   await action(page,'Record verified recovery and publish all-clear',{message:'Service restored',verification:'An unverified assertion'},`${path}/${notice.id}/all-clear`,'Save',422);
   await page.getByText('Independently verified source recovery is required before recording an all-clear',{exact:true}).waitFor();
-  await captureJourney(page,{path:out+'/CHANNEL-008-publisher-controls.png',fullPage:true});
+  await captureNotice(page,{path:out+'/CHANNEL-008-publisher-controls.png',fullPage:true});
   const salesContext=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}}),sp=await salesContext.newPage();
   const otherContext=await browser.newContext({timezoneId:'UTC',viewport:{width:390,height:844}}),op=await otherContext.newPage();
   const executorContext=await browser.newContext(),executor=await executorContext.newPage();
@@ -32,15 +50,15 @@ export async function serviceNoticeJourney({browser,page,api,base,out,errors}) {
     await sp.getByRole('region',{name:'Service notices',exact:true}).getByText('Sales Console sign-in is interrupted.',{exact:false}).waitFor();
     assert.equal((await apiFor(op)('/service-notices')).items.length,0,'CHANNEL-008 outsider sees no notice');
     assert.equal(await op.getByText('Sales Console sign-in is interrupted.',{exact:false}).count(),0);
-    await captureJourney(sp,{path:out+'/CHANNEL-008-sales-banner.png',fullPage:true});
-    await captureJourney(op,{path:out+'/CHANNEL-008-outside-cohort.png',fullPage:true});
+    await captureNotice(sp,{path:out+'/CHANNEL-008-sales-banner.png',fullPage:true});
+    await captureNotice(op,{path:out+'/CHANNEL-008-outside-cohort.png',fullPage:true});
     await sp.getByLabel('What would make work easier?').fill('I cannot open Sales Console to enter an order.');
     const offered=sp.waitForResponse(r=>r.url().endsWith('/service-notices/suggestions'));
     await sp.getByRole('button',{name:'Send message',exact:true}).click();
     assert.equal((await offered).status(),200);
     await sp.getByRole('region',{name:'A matching service notice'}).getByText('Sales Console sign-in is interrupted.',{exact:false}).waitFor();
     assert.ok(!sp.url().includes('/work/'),'CHANNEL-008 matching notice is offered before filing');
-    await captureJourney(sp,{path:out+'/CHANNEL-008-matching-ticket-offer.png',fullPage:true});
+    await captureNotice(sp,{path:out+'/CHANNEL-008-matching-ticket-offer.png',fullPage:true});
     await sp.getByRole('button',{name:'Send message',exact:true}).click();await sp.waitForURL(/#\/work\/.+/);
     const workId=sp.url().split('/').at(-1);assert.equal((await employeeApi('/work/'+workId)).work.state,'open');
     // Real change execution and independent provider observations establish source recovery.
@@ -70,8 +88,8 @@ export async function serviceNoticeJourney({browser,page,api,base,out,errors}) {
     await sp.getByRole('region',{name:'Service notices',exact:true}).getByText('All-clear ·',{exact:false}).waitFor();
     await sp.getByText('Recovery recorded by '+owner,{exact:false}).waitFor();
     assert.equal((await employeeApi('/work/'+workId)).work.state,'open','CHANNEL-008 all-clear never closes an individual ticket');
-    await captureJourney(sp,{path:out+'/CHANNEL-008-verified-all-clear.png',fullPage:true});
-    await captureJourney(page,{path:out+'/CHANNEL-008-retained-recovery-controls.png',fullPage:true});
+    await captureNotice(sp,{path:out+'/CHANNEL-008-verified-all-clear.png',fullPage:true});
+    await captureNotice(page,{path:out+'/CHANNEL-008-retained-recovery-controls.png',fullPage:true});
     await action(page,'Withdraw this notice',{},`${path}/${notice.id}/withdraw`,'Withdraw notice');
     await sp.reload();await sp.getByRole('heading',{name:'Requests',exact:true}).waitFor();
     assert.equal((await employeeApi('/service-notices')).items.length,0,'CHANNEL-008 named verifier withdrawal removes the banner');
@@ -81,7 +99,7 @@ export async function serviceNoticeJourney({browser,page,api,base,out,errors}) {
     await action(page,'Publish a service notice',{groupId:group.id,message:'Sales Console maintenance complete; existing sessions were preserved.',cadenceMinutes:30},changePath,'Publish notice',201);
     const changeNotice=(await api(changePath)).items[0];
     await action(page,'Record verified recovery and publish all-clear',{message:'Planned Sales Console change independently verified.',verification:'Verified rollout of notice-recovery'},`${changePath}/${changeNotice.id}/all-clear`);
-    await captureJourney(page,{path:out+'/CHANNEL-008-planned-change-notice.png',fullPage:true});
+    await captureNotice(page,{path:out+'/CHANNEL-008-planned-change-notice.png',fullPage:true});
   } finally {await salesContext.close();await otherContext.close();await executorContext.close();}
   console.log('PASS CHANNEL-008 native 1440/390/320: publisher controls, pre-recovery refusal, Sales-only banner, matching ticket offer and filing, independently admitted all-clear, individual ticket stays open, named withdrawal and planned change notice.');
 }
