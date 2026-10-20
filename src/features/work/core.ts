@@ -9,6 +9,7 @@ import { closeResolution, pauseStatus } from "./desk-fields";
 import { participantView } from "./relationships";
 import { sharedListClause, sharedReplyAllowed, sharedView } from "./sharing";
 import { currentWorkPrincipal } from "./identity";
+import { groupMember } from "./desk-groups";
 import type { Env, Principal } from "../../platform/types";
 import { ApiError, id, now } from "../../platform/http";
 export interface WorkContext {
@@ -33,7 +34,10 @@ export interface WorkRecord {
   response_at?: string | null;
   closed_at?: string | null;
   pending_person_id?: string | null;
+  group_id?: string | null;
 }
+/** DESK-001: a queue filter. A group filter lists that group's tickets; `restricted: false` leaves restricted ones out. */
+export interface WorkFilter { groupId?: string; restricted?: false }
 export function operator(p: Principal) {
   return p.roles.some((r) => ["owner", "operator"].includes(r));
 }
@@ -74,13 +78,15 @@ export async function getWork(ctx: WorkContext, id: string) {
       .run();
   return row;
 }
-export async function listWork(ctx: WorkContext) {
+export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
   await currentWorkPrincipal(ctx);
 
   const p = ctx.principal;
+  const narrowed = [filter.groupId ? "AND group_id=?" : "", filter.restricted === false ? "AND sensitivity<>'restricted'" : ""].join(" ");
   const rows = (
     await ctx.env.DB.prepare(
-      `SELECT work_records.*,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=? OR (sensitivity='normal' AND EXISTS(SELECT 1 FROM work_participants wp WHERE wp.workspace_id=work_records.workspace_id AND wp.work_id=work_records.id AND wp.user_id=?)) OR (sensitivity='normal' AND ${sharedListClause})))) ORDER BY updated_at DESC LIMIT 200`,
+      `SELECT work_records.*,(SELECT g.name FROM work_groups g WHERE g.workspace_id=work_records.workspace_id AND g.id=work_records.group_id) group_name,
+        (SELECT json_extract(c.current_json,'$.priority') FROM work_classifications c WHERE c.workspace_id=work_records.workspace_id AND c.work_id=work_records.id) priority,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=? OR (sensitivity='normal' AND EXISTS(SELECT 1 FROM work_participants wp WHERE wp.workspace_id=work_records.workspace_id AND wp.work_id=work_records.id AND wp.user_id=?)) OR (sensitivity='normal' AND ${sharedListClause})))) ${narrowed} ORDER BY updated_at DESC LIMIT 200`,
     )
       .bind(
         p.workspaceId,
@@ -91,6 +97,7 @@ export async function listWork(ctx: WorkContext) {
         p.userId,
         p.userId,
         p.userId,
+        ...(filter.groupId ? [filter.groupId] : []),
       )
       .all()
   ).results;
@@ -111,8 +118,8 @@ export async function listWork(ctx: WorkContext) {
   return Promise.all(rows.map(async (row: any) => {
     const progress = flagged.has(row.id) ? await progressFor(ctx, row) : [];
     const item = { ...row, progress, services: services.filter(s => s.work_id === row.id).map(({ name, kind }) => ({ name, kind })) };
-    // Ordinary conversation listings do not expose the operator attention packet.
-    if (!seesAttention) return item;
+    // Ordinary conversation listings do not expose the operator attention packet, the group or the priority.
+    if (!seesAttention) { const { group_id, group_name, priority, ...own } = item; return own; }
     return { ...item, attention: progress.filter(entry =>
       entry.needsAction &&
       (entry.ownerId === p.userId || (entry.ownerLabel === 'Service team (recorded owner unavailable)' && operator(p)) || (!entry.ownerId && (
@@ -433,6 +440,9 @@ export async function transitionWork(
         "assignee_unavailable",
         "Assignee must be an active service operator",
       );
+    // DESK-001: a ticket's owner is a member of its accountable group.
+    if (work.group_id && !await groupMember(ctx, work.group_id, assigneeId!))
+      throw new ApiError(422, "owner_not_in_group", "The ticket's owner must be an agent in its group");
   }
   if(work.pending_person_id && ['reopen','resume'].includes(command) && await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state='withdrawn'").bind(ctx.principal.workspaceId,work.pending_person_id).first())
     throw new ApiError(409,'pending_person_withdrawn','Withdrawn pending people cannot resume requests');

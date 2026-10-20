@@ -426,6 +426,17 @@ that product and marks how close the current code is (see [Status](#status)).
   bulk-assign five tickets, and see a group lead's view exclude another group's
   restricted ticket; triage that view keyboard-only (open next, assign to self,
   send a reply, set status) with no pointer input.
+  *Today's semantic (ct, 20 October):* the owner (acting for "admin" until that
+  role exists) creates agent groups, adds active agents (owner or operator
+  members) and names each group's leads. Each ticket has one accountable group
+  and at most one owner, its assignee, who must be an agent in that group: placing
+  a ticket in a group whose members exclude its owner, assigning it to a
+  non-member, or removing a member who still owns one of the group's open tickets
+  is refused. A group lead's view lists their group's tickets that they can read
+  and that are not restricted; it never widens visibility, and restricted tickets
+  stay visible only to the workspace owner, the requester and the person it is
+  for. Agents read each ticket's group and priority in the queue; requesters do
+  not.
 
 - **DESK-002 — Classification and priority.** Ticket types (incident, service
   request, question), categories and subcategories, and an impact × urgency
@@ -2138,7 +2149,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CATALOG-004` | Bundles and kits | target | done | `src/features/work/bundles.ts`, `src/ui/bundles.tsx`, `tests/work/bundle-cases.mjs` | Public-route proof: an owner-built hardware/software/access bundle opens one ticket with five child fulfilments; one atomic manager decision covers both gated children (partial and single-child approvals refused); per-child grants run and verify; the bundle stays in progress until the laptop handoff verifies the fifth child, then reads complete; a changed item refuses the stale bundle. Bundle builder, grouped manager decision and per-item progress inspected at 1440/390. |
 | `CATALOG-005` | Software requests installed through MDM | target | partial | `src/features/work/requests.ts`, `src/features/execution/verification.ts` | Software is a catalog kind fulfilled as an access grant; no MDM app binding, install-group assignment, installed-inventory verification, deployment failure task or lease uninstall. |
 | `CATALOG-006` | Requests for pending people | target | done | `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/pending-person-browser.mjs` | Local D1/runtime and 1440/390 browser: reviewed creation/edit, held catalog services, native email proof and password sign-in binding, normal fulfillment release, employee visibility, withdrawal/cancellation and attributed audit. Provider delivery and live SSO are not claimed. |
-| `DESK-001` | Queues, groups and views | target | partial | `src/features/work/core.ts`, `src/ui/work.tsx` | No groups, saved views, bulk actions or triage shortcuts. |
+| `DESK-001` | Queues, groups and views | target | partial | `src/features/work/desk-groups.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-groups.tsx` | No saved or shared views, bulk-update screen or keyboard triage yet. |
 | `DESK-002` | Classification and priority | target | done | `src/features/work/classification.ts`, `tests/work/classification-cases.mjs`, `tests/ui/classification-journey.mjs`, `tests/adoption/classification-cases.mjs` | Local public-route/model-edge fixture proof of incident/service request/question proposals, category/subcategory, impact × urgency and reason; audited operator P1-to-P2 override, current-role/scope/CAS and late-result fencing. Native 1440/390 controls and persistence, missing-provider state, held archive restore and erasure. No live-model quality claim. |
 | `DESK-003` | Routing and assignment | target | partial | `src/features/work/core.ts`, `src/features/intelligence/intake-execution.ts` | No rules, round-robin, load, skills or CI/service support-group routing. |
 | `DESK-004` | SLA policies | target | done | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs` | Public-route proof: owner-ordered policies by priority and requester group (business and calendar hours); a P2 opened 4:30 pm Friday in `America/New_York` before Martin Luther King Jr. Day is due Tuesday 12:30 pm (first response 9:30 am); a requester pause from 10 to 11 am moves it to 1:30 pm while an internal hold does not; next-response targets start and are met; breaches show with their time on the ticket and in the period report. |

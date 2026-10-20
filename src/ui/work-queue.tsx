@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useRemote } from "./state";
+import { useGroups } from "./work-groups";
 import { useSession } from "./state";
 import { Icon } from "./icons";
 import { Badge, Empty, ErrorNotice, Loading } from "./primitives";
@@ -25,8 +27,14 @@ export function Queue({ selectedId }: { selectedId?: string }) {
     personName = usePeopleLabels(),
     { session } = useSession(),
     operator = session.principal.roles.some((r) => ["owner", "operator", "hr"].includes(r)),
-    [filter, setFilter] = useState("all");
+    [filter, setFilter] = useState("all"),
+    [source, setSource] = useState(""),
+    groups = useGroups();
   const me = session.user.id;
+  // DESK-001: a lead reads their group's view (its non-restricted tickets) in place of the whole queue.
+  const leadOf = (groups.data?.items ?? []).filter((g) => g.members.some((m) => m.userId === me && m.lead)),
+    lead = useRemote<{ items: WorkRecord[] }>(source.startsWith("lead:") ? `/work-groups/${encodeURIComponent(source.slice(5))}/queue` : null),
+    remote = source ? lead : queue;
   const filters: Filter[] = operator
     ? [
         ["all", "All", () => true],
@@ -42,11 +50,20 @@ export function Queue({ selectedId }: { selectedId?: string }) {
         ["open", "Open", isOpen],
         ["closed", "Closed", (item) => !isOpen(item)],
       ];
-  const items = queue.data?.items ?? [],
+  const items = remote.data?.items ?? [],
     active = filters.find(([key]) => key === filter) ?? filters[0],
     shown = items.filter(active[2]);
   return (
     <section className="queue" aria-label="Request queue">
+      {operator && leadOf.length > 0 && (
+        <label className="queue-view">
+          Queue view
+          <select value={source} onChange={(e) => setSource(e.target.value)}>
+            <option value="">All requests I can read</option>
+            {leadOf.map((g) => <option key={g.id} value={`lead:${g.id}`}>Lead view · {g.name}</option>)}
+          </select>
+        </label>
+      )}
       <div className="chips" role="group" aria-label="Show requests">
         {filters.map(([key, label, test]) => (
           <button
@@ -60,14 +77,14 @@ export function Queue({ selectedId }: { selectedId?: string }) {
             <span className="chip-count">{items.filter(test).length}</span>
           </button>
         ))}
-        <button className="chip-refresh" type="button" onClick={queue.refresh} aria-label="Refresh conversations">
+        <button className="chip-refresh" type="button" onClick={remote.refresh} aria-label="Refresh conversations">
           <Icon name="refresh" size={18} />
         </button>
       </div>
-      {queue.loading ? (
+      {remote.loading ? (
         <Loading />
-      ) : queue.error ? (
-        <ErrorNotice error={queue.error} retry={queue.refresh} />
+      ) : remote.error ? (
+        <ErrorNotice error={remote.error} retry={remote.refresh} />
       ) : shown.length ? (
         <div className="queue-table" role="table" aria-label="Your conversations">
           <div className="queue-row queue-header" role="row">
@@ -95,7 +112,7 @@ export function Queue({ selectedId }: { selectedId?: string }) {
                 <span role="cell" className="q-ref">{shortRef(item.id)}</span>
                 <span role="cell" className="q-person">
                   <strong>{requestFor(item, personName)}</strong>
-                  <small>{[team, place].filter(Boolean).join(" · ") || (item.kind === "incident" ? "Incident" : "Request")}</small>
+                  <small>{[team, place, item.group_name, item.priority].filter(Boolean).join(" · ") || (item.kind === "incident" ? "Incident" : "Request")}</small>
                 </span>
                 <span role="cell" className="q-subject" title={item.title}>
                   <strong>{item.title}</strong>

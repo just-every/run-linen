@@ -33,6 +33,10 @@ export interface WorkRecord {
   /** Catalog services recorded on the request. */
   services?: { name: string; kind: string }[];
   attention?: RequestProgress[];
+  /** DESK-001: the accountable group and the classified priority, listed for agents only. */
+  group_id?: string | null;
+  group_name?: string | null;
+  priority?: string | null;
 }
 export interface RequestProgress { needsAction?: boolean; title?: string; dueAt?: string; state: string; happened: string; next: string; ownerId: string | null; ownerLabel: string; }
 export interface Conversation {

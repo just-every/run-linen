@@ -39,6 +39,21 @@
   gap: 12px;
 }
 
+/* DESK-001 queue views */
+.queue-view {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+.queue-view select {
+  min-height: 34px;
+  max-width: 100%;
+}
+
 /* Chips */
 .chips {
   display: flex;
