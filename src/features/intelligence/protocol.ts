@@ -1,3 +1,4 @@
+import { checkProtocolBinding } from './protocol-bindings';
 import { id, now } from '../../platform/http';
 import { assert, current } from './access';
 import type { IntelligenceContext } from './types';
@@ -71,7 +72,12 @@ export function replayProtocol(assumptions: Assumptions, events: ProtocolEvent[]
 }
 export async function recordProtocol(ctx: IntelligenceContext, b: any) {
     ctx = await current(ctx, ['owner', 'operator', 'auditor']);
-    const result = replayProtocol(b.assumptions, b.events, b.mutation === true), key = id();
+    const replay = replayProtocol(b.assumptions, b.events, b.mutation === true), key = id();
+    const bound = b.binding === undefined ? null : await checkProtocolBinding(ctx, b.binding);
+    const result = { ...replay, replayValid: replay.valid,
+        valid: replay.valid && (!bound || bound.invalidations.length === 0),
+        evidenceBasis: bound ? 'persisted-probe-bindings' : 'supplied-trace-only',
+        ...(bound || { checkedAt: now() }) };
     await ctx.env.DB.prepare('INSERT INTO intelligence_protocol_runs VALUES(?,?,?,?,?,?)').bind(key, ctx.principal.workspaceId, ctx.principal.userId, JSON.stringify(b), JSON.stringify(result), now()).run();
     return { id: key, ...result };
 }
