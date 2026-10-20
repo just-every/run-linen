@@ -1766,6 +1766,17 @@ that product and marks how close the current code is (see [Status](#status)).
   losing eligibility for useful upstream improvements. **Acceptance evidence:**
   upgrade an archived database and retain every prior row and migration entry;
   import with an approval that stays inert.
+  *Erasure and archives (ct, 19 October):* after an identity erasure, a
+  workspace export redacts the erased person's personal and free-text content
+  and maps each erased actor or person reference to a stable, per-installation
+  opaque archive alias; archive tombstones stay keyed digests, never raw
+  identities; typed business policy, effect and audit identities and their
+  relationships remain, and no grant is revived. Export and import reference
+  validation use the same typed table and field schema; untyped content that
+  still contains an erased identity refuses. A snapshot taken before an erasure
+  stays refused against the destination's known tombstones, and fresh imports
+  stay held and inert. No field is exempted from the tombstone check and no
+  retained business row is deleted to pass it.
 
 - **A7 — Honest operating and cost boundaries.** Declare supported commands,
   runtime, resources, provider effects and recovery targets. Record every
@@ -2121,7 +2132,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `A3` | Durable effects | published | done | `src/features/execution/engine.ts`, `tests/ui/connected-cancellation.mjs`, `tests/ui/connected-restart.mjs`, `tests/execution/runtime.mjs` |  |
 | `A4` | Verifiable outcomes | published | done | `src/features/execution/verification.ts`, `tests/ui/connected-request.mjs`, `tests/execution/runtime.mjs` |  |
 | `A5` | Legible service | published | partial | `src/ui`, `tests/ui/run.mjs`, `tests/ui/viewport-evidence.mjs` | No chat channels; bounded accessibility evidence. |
-| `A6` | Data and source custody | published | partial | `src/features/adoption`, `tests/adoption/prior-data-upgrade.mjs`, `tests/adoption/runtime.mjs` | Incumbent imports bounded to Freshservice. Legacy domain `/exports` also refuses a fresh post-erasure snapshot with `erasure_invalidated_snapshot`; this gap was observed during KB-004 checks and remains open. |
+| `A6` | Data and source custody | published | partial | `src/features/adoption`, `tests/adoption/prior-data-upgrade.mjs`, `tests/adoption/runtime.mjs` | Incumbent imports bounded to Freshservice. Legacy domain `/exports` does not yet apply the typed erasure redaction and opaque aliases above: it refuses a fresh post-erasure snapshot with `erasure_invalidated_snapshot`. |
 | `A7` | Honest operating and cost boundaries | published | done | `src/features/intelligence/measurement.ts`, `src/features/work/time.ts`, `src/features/work/effort-window.ts`, `tests/intelligence/runtime.mjs`, `tests/work/time-cases.mjs` | Public-route proof: an exhausted budget holds an employee request for the owner, a lost provider response stays an unknown reserved charge, both survive a Worker restart, and a removed model connection returns `needs_configuration` with no interpretation; human touches and minutes are recorded and reported per kind (sign-in/consent, setup gap, correction, custody, vendor/technician, takeover, recovery) beside unresolved and failed requests. Local runtime and fixture provider only. |
 | `O1` | Service graph and major incidents | published | partial | `src/features/services/graph.ts`, `tests/services/run.mjs`, `tests/services/integration.mjs` | No real monitoring/on-call. |
 | `O2` | Change, release and prevention | published | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs`, `tests/ui/connected-frontier.mjs` | No live provider or sustained prevention. |
