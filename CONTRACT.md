@@ -2132,6 +2132,22 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 - **F3 — Unfamiliar causal research.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f3-unfamiliar-causal-research).
 - **F4 — Autonomous service engineering.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f4-autonomous-service-engineering).
 - **F5 — Executable service models and experiments.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f5-executable-service-models-and-experiments).
+  *Current bounded replay semantic:* a supplied trace checks the model only.
+  A bound check names a root commitment and the exact revisions and observation
+  IDs of its complete transitive dependency graph. Each reference uses that
+  commitment's existing reader scope. The latest observation for every declared
+  spec/cohort must be verified, carry admitted probe provenance and name the
+  current active verifier connection revision. Missing, superseded, failed or
+  stale observations, inactive commitments, edited dependencies and changed or
+  removed sources invalidate the bound conclusion on recheck, even when the
+  model trace still passes. Freshness is the half-open interval from observed
+  time through observed time plus the commitment's freshness seconds; future
+  observations are invalid. Each check appends its original inputs, result,
+  checked time and earliest evidence/commitment expiry. Rechecking submits the
+  same binding to the existing check door and appends a new dated result; an
+  old stored result never claims to be current. This binds assumptions to local
+  persisted probe evidence; representative observed-provider replay and separate
+  live-effect verification remain required.
 - **F6 — Reusable capabilities from solved cases.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f6-turn-solved-cases-into-reusable-capability).
 - **F7 — Continuous service simplification.** As defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md#f7-continuously-simplify-the-service-estate).
 
@@ -2329,6 +2345,6 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `F2` | Semantic observation and help | published | partial | `src/features/intelligence/events.ts`, `tests/intelligence/runtime.mjs` | Frontier evidence gate in ACCEPTANCE.md not demonstrated on real selected events. |
 | `F3` | Unfamiliar causal research | published | partial | `src/features/intelligence/research.ts`, `tests/intelligence/frontier.mjs` | Frontier evidence gate in ACCEPTANCE.md not demonstrated on a held-out unfamiliar case. |
 | `F4` | Autonomous service engineering | published | partial | `src/features/intelligence/engineering.ts`, `tests/ui/connected-frontier.mjs` | No change authored against real owned systems and released through the change lane. |
-| `F5` | Executable service models and experiments | published | partial | `src/features/intelligence/protocol.ts` | No public-door test; frontier evidence gate in ACCEPTANCE.md not demonstrated. |
+| `F5` | Executable service models and experiments | published | partial | `src/features/intelligence/protocol.ts`, `src/features/intelligence/protocol-bindings.ts`, `src/features/intelligence/probe.ts`, `tests/intelligence/protocol-cases.mjs`, `tests/intelligence/protocol-binding-cases.mjs`, `tests/intelligence/runtime.mjs` | Authenticated public-door local replay asserts uncertainty, reconciliation, authority, mutation, explicit assumptions and restart; bound checks assert scoped dependency closure, persisted probe provenance, changed/failed/stale observations, dependency/source drift and deletion, role withdrawal and append-only dated rechecks. Gap: representative observed-provider replay and separately verified live effects remain unproven; fixture probes and supplied traces cannot certify the external service. |
 | `F6` | Reusable capabilities from solved cases | published | partial | `src/features/intelligence/capabilities.ts`, `tests/intelligence/frontier.mjs` | Frontier evidence gate in ACCEPTANCE.md not demonstrated on held-out cases. |
 | `F7` | Continuous service simplification | published | partial | `src/features/intelligence/simplification.ts`, `tests/intelligence/frontier.mjs` | No substantive redesign compared with continued repair on service outcomes. |
