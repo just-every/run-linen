@@ -69,11 +69,6 @@ export function replayProtocol(assumptions: Assumptions, events: ProtocolEvent[]
     }
     return { valid: true, trace, assumptions, version: 1, scope: 'bounded local protocol only' };
 }
-export function checkProtocolBound(assumptions: Assumptions) {
-    const good: ProtocolEvent[] = [{ kind: 'claim', actor: 'a', fence: 1 }, { kind: 'dispatch', actor: 'a', fence: 1 }, { kind: 'reconcile', actor: 'a', fence: 1, effect: 'present' }, { kind: 'admit', actor: 'a', fence: 1 }];
-    const mutation = [...good.slice(0, 3), { kind: 'revoke', actor: 'a', fence: 1 } as ProtocolEvent, good[3]];
-    return { validTrace: replayProtocol(assumptions, good), mutation: replayProtocol(assumptions, mutation, true) };
-}
 export async function recordProtocol(ctx: IntelligenceContext, b: any) {
     ctx = await current(ctx, ['owner', 'operator', 'auditor']);
     const result = replayProtocol(b.assumptions, b.events, b.mutation === true), key = id();
