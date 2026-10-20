@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { action } from './connected-helpers.mjs';
+import { action, fields } from './connected-helpers.mjs';
 // ASSET-010: audit a stock room at phone and desktop width; 18 of 20 expected devices scanned, two missing open follow-ups.
 export async function assetAuditJourney({page,api,base,out}) {
   for (const [width,location] of [[390,'Denver stock room'],[1440,'Denver IT closet']]) {
@@ -39,4 +39,47 @@ export async function assetAuditJourney({page,api,base,out}) {
     assert.deepEqual([done.expected.length,done.found.length,done.missing.length],[20,18,2],'ASSET-010 persisted reconciliation');
   }
   console.log('PASS ASSET-010 browser: Denver stock room audit at 390 and 1440, 18 of 20 scanned, two missing devices open follow-up requests');
+}
+
+// An action form inside one stock line or request, which repeats per line.
+async function scoped(page,scope,title,values,suffix,button) {
+  const form=scope.locator(`details[data-action-path$="${suffix}"]`).filter({has:page.locator('summary').getByText(title,{exact:true})}).first();
+  if (!await form.evaluate(e=>e.open)) await form.locator(':scope > summary').click();
+  await fields(form,values);
+  const wait=page.waitForResponse(r=>r.url().endsWith(suffix)&&r.request().method()==='POST');
+  await form.getByRole('button',{name:button,exact:true}).click();
+  const response=await wait,data=await response.json();
+  assert.equal(response.status(),200,JSON.stringify({suffix,data}));
+  return data;
+}
+
+// ASSET-005: allocate the last two spare monitors in a Denver stock room; the threshold raises a purchase request with quantity and USD estimate.
+export async function stockJourney({page,api,base,out}) {
+  const person=(await api('/people')).items.find(p=>p.active);
+  for (const [width,location] of [[390,'Denver stock room 390'],[1440,'Denver stock room 1440']]) {
+    await page.setViewportSize({width,height:1000});
+    await page.goto(base+'/app#/assets');
+    await action(page,'Add a stock line',{location,item:'27-inch monitor',kind:'accessory',onHand:2,threshold:0,reorderQuantity:10,unitEstimateUsd:'249.99',buyer:'CDW'},'/stock-lines','Add stock line',201);
+    const line=page.getByRole('article',{name:`27-inch monitor at ${location}`});
+    await line.getByText('Counted on hand').waitFor();
+    for (const left of [1,0]) {
+      const saved=await scoped(page,line,'Allocate from stock',{personId:person.id,quantity:1,evidence:'Desk handoff signed by the employee'},'/allocate','Allocate');
+      assert.equal(saved.line.on_hand,left,`ASSET-005 ${left} spare monitors left`);
+      assert.equal(Boolean(saved.purchaseRaised),left===0,'ASSET-005 only the allocation that reaches the threshold raises a request');
+    }
+    const request=line.getByRole('article',{name:`Purchase request for 27-inch monitor at ${location}`});
+    await request.getByText('Raised in Linen, not sent').waitFor();
+    await request.getByText('$2,499.90 (10 × $249.99)').waitFor();
+    await request.getByText('Not sent to CDW.',{exact:false}).waitFor();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`ASSET-005 stock fits ${width}`);
+    await line.screenshot({path:`${out}/ASSET-005-raised-${width}.png`});
+    await scoped(page,request,'Record the order',{orderReference:`CDW-PO-${width}`},'/order','Record order');
+    await request.getByText('Ordered by hand with the buyer').waitFor();
+    await scoped(page,request,'Receive into stock',{evidence:'CDW packing slip, 10 monitors'},'/receive','Receive');
+    await line.getByText('Received into stock').waitFor();
+    const stocked=(await api('/stock-lines')).items.find(l=>l.location===location);
+    assert.deepEqual([stocked.on_hand,stocked.purchases[0].state,stocked.purchases[0].order_reference],[10,'received',`CDW-PO-${width}`],'ASSET-005 receipt adds the order to the count');
+    await line.screenshot({path:`${out}/ASSET-005-received-${width}.png`});
+  }
+  console.log('PASS ASSET-005 browser: last two spare monitors in Denver at 390 and 1440 raise a CDW request for 10 at $2,499.90 labelled not sent; order reference recorded and received into stock');
 }

@@ -2,6 +2,7 @@ import { LinkedTickets } from './work-relationships';
 import { AssetFinancials } from './asset-financials';
 import { AssetContracts } from "./asset-contracts";
 import { AssetAudits } from "./asset-audits";
+import { StockRooms } from "./stock";
 import { usePeopleLabels } from "./people-labels";
 import { useState } from "react";
 import { date, text, humanize, type RecordValue } from "./api";
@@ -27,6 +28,7 @@ export function AssetsSpace({selectedId}:{selectedId?:string}) {
         </Notice>
       )}
       {!selectedId && <AssetAudits onChanged={list.refresh} />}
+      {!selectedId && <StockRooms people={people.data?.items ?? []} onChanged={list.refresh} />}
       {list.loading ? (
         <Loading />
       ) : list.error ? (

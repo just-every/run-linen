@@ -955,6 +955,24 @@ that product and marks how close the current code is (see [Status](#status)).
   request to Purse or the buyer's vendor (CDW, Apple Business, Dell).
   **Acceptance evidence:** allocate the last two spare monitors in Denver; the
   threshold raises a purchase request with quantity and USD estimate.
+  *Today's semantic (ct, 19 October):* an owner or operator keeps one stock line
+  per item per location (both matched ignoring case and repeated spaces): a
+  device or accessory, the counted on-hand quantity, a reorder threshold, a
+  reorder quantity, a unit estimate in whole USD cents and the buyer (Purse,
+  CDW, Apple Business or Dell). Allocating stock to an active, bound person on
+  the current revision lowers the count atomically and never below zero; when
+  the count falls to or below the threshold (inclusive) and the line has no
+  open request, the same write raises one purchase request for the reorder
+  quantity with the estimate quantity × unit cents, addressed to the buyer.
+  A line has at most one open (raised or ordered) request. Linen labels a
+  raised request "raised in Linen, not sent": no Purse or vendor connector
+  sends it yet. The owner or operator records the order placed with the buyer
+  and its reference, cancels it with a reason, or receives the ordered
+  quantity, which adds it to the count; every movement is kept with its
+  evidence. Sending to Purse through its requester intake door (Purse
+  INTAKE-004, an owner-created integration token) remains this clause's gap,
+  under the egress rule for the owner-entered Purse origin; CDW, Apple
+  Business and Dell connectors inherit transmission before they ship.
 
 - **ASSET-006 — Software license management and compliance.** SaaS and desktop
   licenses, seats, contracts and true-ups with renewal reminders at 90, 60 and 30
@@ -2077,7 +2095,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `ASSET-002` | Device actions under grant | target | missing |  | No device actions or inventory-verified app push and removal. |
 | `ASSET-003` | Discovery and reconciliation | target | partial | `src/features/connections/providers.ts`, `tests/connections/runtime.mjs` | Graph device list only; no MDM, EDR, cloud-account or network discovery. |
 | `ASSET-004` | Hardware lifecycle and custody | target | done | `src/features/work/assets.ts`, `tests/work/asset-custody-cases.mjs`, `tests/ui/asset-custody-journey.mjs` | Public-door procurement/receipt, assignment, loan, repair, return, retirement and disposal with serial history and attributed receipts. Disposal requires an ITAD partner, R2v3/e-Stewards standard and HTTPS certificate document reference, and refuses assigned devices even in repair. Browser journey at 1440/390. Partner certification is operator-attributed; remote certificate bytes are not retained. |
-| `ASSET-005` | Stock rooms and reorder | target | partial | `src/features/work/requests.ts` | No stock locations or reorder. |
+| `ASSET-005` | Stock rooms and reorder | target | partial | `src/features/work/stock.ts`, `src/features/work/stock-purchases.ts`, `tests/work/asset-custody-cases.mjs`, `tests/ui/asset-audit-journey.mjs` | Local public-route and 390/1440 browser proof: Denver stock lines, allocating the last two spare monitors raises one CDW request for 10 at $2,499.90 labelled not sent, inclusive threshold, one open request per line, order reference, cancel and receipt into stock. Gap: purchase requests sent to Purse through its intake door. |
 | `ASSET-006` | Software license management and compliance | target | partial | `src/features/services/economics.ts`, `tests/services/run.mjs` | No IdP usage feed, reclamation through connectors, desktop installation compliance or prohibited titles. |
 | `ASSET-007` | Contracts, warranties and vendors | target | partial | `src/features/work/asset-contracts.ts`, `tests/work/asset-contract-cases.mjs`, `tests/ui/asset-contract-journey.mjs`, `tests/adoption/asset-contract-cases.mjs` | Local public-route and 1440/390 browser proof: purchase, lease, warranty and support records link assets/vendors; repair tickets show recorded coverage and current expiry alerts; official manufacturer lookup doors remain separate from recorded terms. Native archives retain vendor/asset/repair links through two generations. Authorized partner-API retrieval remains unimplemented and needs customer partner access; no automated manufacturer readback or provider acceptance claimed. |
 | `ASSET-008` | Asset financials | target | done | `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs` via `tests/ui/browser.mjs`: ASSET-008 USD cost/center, both methods, month-12 value, fiscal CSV, scoped access and 1440/390 readback. | |

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {finishFirstRun} from './connected-helpers.mjs';
-import {assetAuditJourney} from './asset-audit-journey.mjs';
+import {assetAuditJourney,stockJourney} from './asset-audit-journey.mjs';
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 if(!base||!out) throw Error('Run through tests/ui/run.mjs');
 await mkdir(out,{recursive:true});
@@ -24,6 +24,8 @@ try {
     const d=await r.json();if(!r.ok)throw Error(path+' '+JSON.stringify(d));return d;
   },{path,body});
   await assetAuditJourney({page,api,base,out});
-  assert.deepEqual(errors,[],'ASSET-010 has no browser application errors');
-  console.log("PASS ASSET-010 native physical audit browser journey");
+  await api('/people',{source:'Denver HR register',sourceId:'casey-ng',name:'Casey Ng',effectiveAt:'2026-01-01T00:00:00Z',observedAt:new Date().toISOString()});
+  await stockJourney({page,api,base,out});
+  assert.deepEqual(errors,[],'ASSET-010 and ASSET-005 have no browser application errors');
+  console.log("PASS ASSET-010 physical audit and ASSET-005 stock room browser journeys");
 } finally {await context.close();await browser.close();}

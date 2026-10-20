@@ -1,6 +1,7 @@
 import { reassignSponsor, reattestAccess, sponsoredAccess } from "./contractor-sponsor";
 import { registerAssetFinancialRoutes } from './asset-financials';
 import { registerAssetAuditRoutes } from './asset-audits';
+import { registerStockRoutes } from './stock';
 import { registerAssetContractRoutes } from "./asset-contracts";
 import { assetHistory } from "./assets";
 import { lifecycleEvidencePack } from "./lifecycle-evidence";
@@ -45,6 +46,7 @@ export function registerLifecycleRoutes(app: Hono<AppEnv>) {
   registerAssetContractRoutes(app);
   registerAssetFinancialRoutes(app);
   registerAssetAuditRoutes(app);
+  registerStockRoutes(app);
   app.post('/people/:id/binding', async c => c.json(await reviewPersonBinding(
     {env:c.env,principal:c.get('principal')},c.req.param('id'),await jsonBody(c) as never)));
 
