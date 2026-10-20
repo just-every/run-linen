@@ -40,7 +40,7 @@ export async function createGroup(ctx: WorkContext, body: Record<string, unknown
   const name = requiredString(body.name, 'name', 120), groupId = id();
   try {
     await ctx.env.DB.batch([
-      ctx.env.DB.prepare('INSERT INTO work_groups VALUES(?,?,?,?,?)').bind(groupId, ctx.principal.workspaceId, name, ctx.principal.userId, now()),
+      ctx.env.DB.prepare('INSERT INTO work_groups(id,workspace_id,name,created_by,created_at) VALUES(?,?,?,?,?)').bind(groupId, ctx.principal.workspaceId, name, ctx.principal.userId, now()),
       audit(ctx, 'work.group_created', groupId, { name }),
     ]);
   } catch (error) {

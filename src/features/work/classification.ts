@@ -1,3 +1,4 @@
+import { routeUnplaced } from './desk-routing';
 import { bindSlaPolicy } from './sla-policies';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { callModel, objectSchema, textSchema } from '../intelligence/models';
@@ -48,6 +49,8 @@ async function apply(ctx: WorkContext, work: WorkRecord, expected: number, after
   ]);
   if (!result[0].meta.changes) throw new ApiError(409, 'classification_conflict', 'Work, classification or current authority changed; refresh before applying');
   await bindSlaPolicy(ctx, work, after);
+  // DESK-003: a classified ticket still without an accountable group is routed by its category.
+  await routeUnplaced(ctx, work.id, 'classified');
 }
 export async function overrideClassification(ctx: WorkContext, workId: string, input: any) {
   const work = await getWork(ctx, workId);

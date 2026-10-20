@@ -468,6 +468,28 @@ that product and marks how close the current code is (see [Status](#status)).
   VIP request routes to the executive-support group; a ticket raised against the
   "Payroll" service routes to Payroll's support group, and against a laptop CI to
   that CI's support group.
+  *Today's semantic (sx, 20 October):* the owner (acting for "admin" until that
+  role exists) orders routing rules by position, names the support group of each
+  configuration item or business service, records each agent's shift (a business
+  calendar; an agent without one is always available) and skills, and sets each
+  group's assignment method (none, round-robin or by load) and an optional cap
+  on open tickets per agent. Department, location and VIP status are requester
+  groups the owner names (DESK-004). Linen routes a ticket when it is created,
+  when it is classified while it still has no accountable group, and when an
+  agent asks it to (`POST /work/{id}/route`, at the revision read). Precedence:
+  the support group of the item the ticket names (`serviceId`) comes first;
+  otherwise the lowest-position rule whose every set condition matches
+  (category, requester, requester group) decides; otherwise nothing changes.
+  Within the group, the candidates are its active agents who are on shift at
+  that minute in their calendar's time zone, hold the rule's skill if it names
+  one, and own fewer open tickets than the group's cap. Round-robin takes the
+  first candidate after the group's last automatic assignee in join order; load
+  takes the candidate with the fewest open tickets across the workspace, ties in
+  round-robin order. With no candidate the ticket stays in the group unassigned.
+  Restricted and HR tickets are placed in the group but never handed to an agent
+  automatically. Every routing, group placement and manual assignment is kept
+  with its actor, time, before and after (`GET /work/{id}/assignments`, agents
+  only); requesters do not read groups or routing.
 
 - **DESK-004 — SLA policies.** Multiple SLA policies by priority, category and
   requester group with first-response, next-response and resolution targets on
@@ -2136,8 +2158,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 39 | 48 | 28 | 115 |
-| All | 44 | 67 | 28 | 139 |
+| Target and push further | 40 | 47 | 28 | 115 |
+| All | 45 | 66 | 28 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2165,7 +2187,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CATALOG-006` | Requests for pending people | target | done | `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/pending-person-browser.mjs` | Local D1/runtime and 1440/390 browser: reviewed creation/edit, held catalog services, native email proof and password sign-in binding, normal fulfillment release, employee visibility, withdrawal/cancellation and attributed audit. Provider delivery and live SSO are not claimed. |
 | `DESK-001` | Queues, groups and views | target | done | `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/ui/desk-group-browser.mjs` | DESK-015 adds its scenario shortcut before it ships. |
 | `DESK-002` | Classification and priority | target | done | `src/features/work/classification.ts`, `tests/work/classification-cases.mjs`, `tests/ui/classification-journey.mjs`, `tests/adoption/classification-cases.mjs` | Local public-route/model-edge fixture proof of incident/service request/question proposals, category/subcategory, impact × urgency and reason; audited operator P1-to-P2 override, current-role/scope/CAS and late-result fencing. Native 1440/390 controls and persistence, missing-provider state, held archive restore and erasure. No live-model quality claim. |
-| `DESK-003` | Routing and assignment | target | partial | `src/features/work/core.ts`, `src/features/intelligence/intake-execution.ts` | No rules, round-robin, load, skills or CI/service support-group routing. |
+| `DESK-003` | Routing and assignment | target | done | `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs` | Public-route proof: three Service Desk agents, one off shift and one at the open-ticket cap, round-robin and load-based assignment pick the available agent; a VIP requester group routes to Executive Support; tickets against the Payroll service and a laptop CI route to their support groups ahead of every rule; requester, category (on classification) and skill rules; restricted tickets placed but not auto-assigned; routing, manual reassignment and agent re-route kept in order with actor and time. |
 | `DESK-004` | SLA policies | target | done | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs` | Public-route proof: owner-ordered policies by priority and requester group (business and calendar hours); a P2 opened 4:30 pm Friday in `America/New_York` before Martin Luther King Jr. Day is due Tuesday 12:30 pm (first response 9:30 am); a requester pause from 10 to 11 am moves it to 1:30 pm while an internal hold does not; next-response targets start and are met; breaches show with their time on the ticket and in the period report. |
 | `DESK-005` | Escalation and supervisor rules | target | done | `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs` | Local public-route proof through the scheduler duty: P1 level-1 then level-2 escalation before the response target as private notes, level 3 stopped by the response; awaiting-requester reminder then disclosed resolution; a requester reply before the due time stops both; business days on the New York SLA calendar. Channel delivery of escalations and reminders is NOTIFY-001's. |
 | `DESK-006` | Ticket relationships | target | done | `src/features/work/relationships.ts`, `src/ui/work-relationships.tsx`, `tests/work/relationship-cases.mjs` | Public-route proof: a duplicate printer ticket merges into the survivor (closed with a pointer, HR merge refused); both requesters see the merge notice on the surviving ticket, the merged requester reads its public messages only and cannot act on it; a split moves the monitor ask into its own ticket citing the original message, with its own SLA binding, and becomes a child (cycle refused); a laptop, a problem and an engineering-issue URL link to the ticket, and the laptop and problem each list it. |

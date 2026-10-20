@@ -10,6 +10,7 @@ import { participantView } from "./relationships";
 import { sharedListClause, sharedReplyAllowed, sharedView } from "./sharing";
 import { currentWorkPrincipal } from "./identity";
 import { groupMember } from "./desk-groups";
+import { routeUnplaced } from "./desk-routing";
 import type { Env, Principal } from "../../platform/types";
 import { ApiError, id, now } from "../../platform/http";
 export interface WorkContext {
@@ -262,6 +263,8 @@ export async function createWork(
   )
     .bind(p.workspaceId, p.userId, input.deduplicationKey)
     .first<{ id: string }>();
+  // DESK-003: a ticket this call created is routed by support group or rule; a replayed request keeps its placement.
+  if (row!.id === workId) await routeUnplaced(ctx, workId, "created");
   return getWork(ctx, row!.id);
 }
 /** The person a request's own words name, recorded once as a fact of the request. It is never an identity or authority. */
@@ -490,6 +493,9 @@ export async function transitionWork(
       "Work changed; refresh before deciding",
     );
   if (resolution) await resolution.run();
+  if (command === "assign")
+    await ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)").bind(id(), ctx.principal.workspaceId, ctx.principal.userId,
+      "work.assigned", workId, JSON.stringify({ from: { assigneeId: work.assignee_id }, to: { assigneeId }, reason }), t).run();
   if (work.paused_at)
     await shiftCommitmentForPause(ctx, workId, work.paused_at, t);
   if (work.paused_at || command === "pause")
