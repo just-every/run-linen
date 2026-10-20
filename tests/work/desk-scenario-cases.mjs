@@ -1,0 +1,87 @@
+import assert from 'node:assert/strict';
+/** DESK-015: group-scoped scenarios offered only to the group, run as one audited action with each change's before and
+ * after, refused whole when a step is outside the runner's role, run in bulk, and a record template's ticket draft. */
+export async function deskScenarioChecks(workspaceApi, db) {
+  const api = (path, body, headers = {}) => workspaceApi(path, body, { 'x-workspace': 'desk015', ...headers });
+  const check = (r, status = 200) => { assert.equal(r.status, status, 'DESK-015 ' + JSON.stringify(r)); return r.value; };
+  const as = (user, roles) => ({ 'x-user': user, 'x-roles': JSON.stringify(roles) });
+  const employee = as('d15-employee', ['employee']), desk = as('d15-desk', ['operator']), outsider = as('d15-outsider', ['operator']), hr = as('d15-hr', ['hr']);
+  await db.exec(`INSERT INTO workspaces VALUES('desk015','Desk 015','2026-01-01'); INSERT INTO memberships VALUES('desk015','owner','["owner"]',1);
+    INSERT INTO users VALUES('d15-employee','d15-employee@test','Erin Employee','unused','2026-01-01'); INSERT INTO memberships VALUES('desk015','d15-employee','["employee"]',1);
+    INSERT INTO users VALUES('d15-desk','d15-desk@test','Dana Desk','unused','2026-01-01'); INSERT INTO memberships VALUES('desk015','d15-desk','["operator"]',1);
+    INSERT INTO users VALUES('d15-outsider','d15-outsider@test','Omar Outside','unused','2026-01-01'); INSERT INTO memberships VALUES('desk015','d15-outsider','["operator"]',1);
+    INSERT INTO users VALUES('d15-net','d15-net@test','Nora Network','unused','2026-01-01'); INSERT INTO memberships VALUES('desk015','d15-net','["operator"]',1);
+    INSERT INTO users VALUES('d15-hr','d15-hr@test','Hollis HR','unused','2026-01-01'); INSERT INTO memberships VALUES('desk015','d15-hr','["hr"]',1);`);
+  const serviceDesk = check(await api('/work-groups', { name: 'Service Desk' }), 201), networkL2 = check(await api('/work-groups', { name: 'Network L2' }), 201);
+  check(await api(`/work-groups/${serviceDesk.id}/members`, { userId: 'd15-desk' }));
+  check(await api(`/work-groups/${networkL2.id}/members`, { userId: 'd15-net', lead: true }));
+  const ticket = async (key, extra = {}) => check(await api('/work', { title: `DESK-015 ${key}`, body: `Ticket ${key}`, kind: 'incident', deduplicationKey: `desk015-${key}`, ...extra }, employee), 201);
+
+  // A Service Desk agent saves the group-scoped "Escalate to Network L2"; an outsider cannot save into that group.
+  const escalate = {
+    name: 'Escalate to Network L2', scope: 'group', groupId: serviceDesk.id,
+    steps: {
+      classification: { type: 'incident', category: 'network', subcategory: 'vpn', impact: 'high', urgency: 'medium', priority: 'P2' },
+      group: { groupId: networkL2.id, assigneeId: null },
+      message: { visibility: 'private', body: 'Escalated to Network L2: tunnel drops after the client update.' },
+      status: { command: 'pause', reason: 'Waiting on Network L2', waitingOn: 'vendor' },
+    },
+  };
+  check(await api('/work-scenarios', escalate, outsider), 403);
+  check(await api('/work-scenarios', { ...escalate, scope: 'workspace' }, desk), 403);
+  check(await api('/work-scenarios', { ...escalate, steps: { watchers: [] } }, desk), 422);
+  const scenario = check(await api('/work-scenarios', escalate, desk), 201);
+  assert.deepEqual(check(await api('/work-scenarios', undefined, desk)).items.map(s => s.name), ['Escalate to Network L2']);
+  assert.deepEqual(check(await api('/work-scenarios', undefined, outsider)).items, [], 'DESK-015 an agent outside the group is not offered it');
+  check(await api('/work-scenarios', undefined, employee), 403);
+
+  const vpn = await ticket('vpn');
+  const before = check(await api(`/work/${vpn.id}`, undefined, desk)).work;
+  check(await api(`/work/${vpn.id}/scenario-runs`, { scenarioId: scenario.id, revision: before.revision }, outsider), 404);
+  assert.equal(check(await api(`/work/${vpn.id}`, undefined, desk)).work.revision, before.revision, 'DESK-015 the refused direct call changes nothing');
+  const run = check(await api(`/work/${vpn.id}/scenario-runs`, { scenarioId: scenario.id, revision: before.revision }, desk));
+  assert.deepEqual([run.work.group_id, run.work.state], [networkL2.id, 'paused']);
+  const runs = check(await api(`/work/${vpn.id}/scenario-runs`, undefined, desk)).items;
+  assert.equal(runs.length, 1, 'DESK-015 one audit entry per run');
+  const change = (field) => runs[0].changes.find(c => c.field === field);
+  assert.deepEqual([change('category').before, change('category').after], [null, 'network']);
+  assert.deepEqual([change('priority').after, change('group').after, change('state').before, change('state').after], ['P2', networkL2.id, 'open', 'paused']);
+  assert.deepEqual([change('private note').after, runs[0].actorId, runs[0].name], ['added', 'd15-desk', 'Escalate to Network L2']);
+  const agentView = check(await api(`/work/${vpn.id}`, undefined, desk)).messages, requesterView = check(await api(`/work/${vpn.id}`, undefined, employee)).messages;
+  assert.ok(agentView.some(m => m.visibility === 'private' && m.body.includes('Network L2')));
+  assert.ok(!requesterView.some(m => m.body.includes('tunnel drops')), 'DESK-015 the requester sees no note');
+  check(await api(`/work/${vpn.id}/scenario-runs`, undefined, employee), 403);
+
+  // A workspace scenario with a classification step is offered to an HR agent, but running it applies nothing.
+  const triage = check(await api('/work-scenarios', { name: 'Hardware triage', scope: 'workspace', steps: {
+    classification: { type: 'incident', category: 'hardware', subcategory: 'laptop', impact: 'medium', urgency: 'medium' },
+    fields: [], status: { command: 'pause', reason: 'Waiting for parts' } } }), 422);
+  assert.ok(triage.error);
+  const workspaceScenario = check(await api('/work-scenarios', { name: 'Hardware triage', scope: 'workspace', steps: {
+    classification: { type: 'incident', category: 'hardware', subcategory: 'laptop', impact: 'medium', urgency: 'medium' },
+    status: { command: 'pause', reason: 'Waiting for parts' } } }), 201);
+  const dock = await ticket('dock');
+  const dockBefore = check(await api(`/work/${dock.id}`)).work;
+  assert.ok(check(await api('/work-scenarios', undefined, hr)).items.some(s => s.id === workspaceScenario.id));
+  const refused = check(await api(`/work/${dock.id}/scenario-runs`, { scenarioId: workspaceScenario.id }, hr), 403);
+  assert.match(refused.error, /nothing was applied/);
+  const dockAfter = check(await api(`/work/${dock.id}`)).work;
+  assert.deepEqual([dockAfter.state, dockAfter.revision], [dockBefore.state, dockBefore.revision], 'DESK-015 a step outside the role applies nothing');
+  assert.equal(check(await api(`/work/${dock.id}/classification`)).current, null);
+
+  // The bulk-update door runs the scenario on each chosen ticket under the single-ticket rules.
+  const a = await ticket('bulk-a'), b = await ticket('bulk-b');
+  const bulk = check(await api('/work/bulk-commands', { workIds: [a.id, b.id], command: 'scenario', scenarioId: workspaceScenario.id, reason: 'Bulk triage' }, desk));
+  assert.deepEqual([bulk.changed, bulk.refused], [2, 0]);
+  assert.equal(check(await api(`/work/${a.id}`)).work.state, 'paused');
+  assert.equal(check(await api('/work/bulk-commands', { workIds: [a.id], command: 'scenario', scenarioId: scenario.id, reason: 'Not offered' }, outsider)).refused, 1);
+
+  // A "New laptop setup" record template pre-fills a new ticket's fields.
+  check(await api('/work-templates', { name: 'New laptop setup', kind: 'service_request', title: 'Set up a new laptop', body: 'Model, start date and apps to install:' }, employee), 403);
+  const laptop = check(await api('/work-templates', { name: 'New laptop setup', kind: 'service_request', title: 'Set up a new laptop', body: 'Model, start date and apps to install:', context: { deviceModel: 'MacBook Pro 14' } }, desk), 201);
+  const { draft } = check(await api(`/work-templates/${laptop.id}`, undefined, employee));
+  assert.deepEqual(draft, { kind: 'service_request', title: 'Set up a new laptop', body: 'Model, start date and apps to install:', context: { deviceModel: 'MacBook Pro 14' } });
+  const created = await ticket('from-template', { ...draft, body: `${draft.body} MacBook Pro 14, Monday, Figma` });
+  assert.deepEqual([created.kind, created.title, JSON.parse(created.context_json).deviceModel], ['service_request', 'Set up a new laptop', 'MacBook Pro 14']);
+  console.log('PASS DESK-015 public routes: group-scoped "Escalate to Network L2" offered only to its group and refused to an outsider by API, one audited run listing category, priority, group, owner, private note and status before/after with no note for the requester, a role-refused step applying nothing, bulk runs, and a "New laptop setup" ticket template draft');
+}

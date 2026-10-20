@@ -8,6 +8,7 @@ import type { PendingPerson } from "./pending-people";
 import { ResponseTools } from './response-tools';
 import { KnowledgeSuggestions, type OfferedArticles } from "./knowledge-suggestions";
 import { useTriage } from "./work-triage";
+import { TemplatePicker, type TicketDraft } from "./work-templates";
 export function Composer({
   workId,
   onSent,
@@ -23,7 +24,9 @@ export function Composer({
     [uploading, setUploading] = useState(false),
     // KB-003: articles offered for exactly this text, or null when none were asked for yet.
     [offer, setOffer] = useState<{ body: string; value: OfferedArticles | null } | null>(null),
-    [solvedTitle, setSolvedTitle] = useState("");
+    [solvedTitle, setSolvedTitle] = useState(""),
+    // DESK-015: the record template a new ticket started from; its title, type and details go with the request.
+    [template, setTemplate] = useState<TicketDraft | null>(null);
   const key = useRef<string>(crypto.randomUUID()),
     fileInput = useRef<HTMLInputElement>(null),
     field = useRef<HTMLTextAreaElement>(null),
@@ -104,9 +107,10 @@ export function Composer({
       workId
         ? { body, visibility, sourceMessageId: key.current }
         : {
-            title: body.trim().split("\n")[0].slice(0, 150),
+            title: template?.title ?? body.trim().split("\n")[0].slice(0, 150),
             body,
             deduplicationKey: key.current,
+            ...(template ? { kind: template.kind, context: template.context } : {}),
             ...(pendingId ? { pendingPersonId: pendingId, catalogIds } : forId ? { beneficiaryId: forId } : {}),
             ...(suggestionId ? { suggestionId } : {}),
           },
@@ -146,6 +150,7 @@ export function Composer({
       }
     }
     updateDraft("", visibility, "");
+    setTemplate(null);
     setOffer(null);
     setForId("");
     setCatalogIds([]);
@@ -159,6 +164,7 @@ export function Composer({
       onSubmit={submit}
     >
       {workId && session.principal.roles.some(r => ['owner','operator'].includes(r)) && <ResponseTools key={workId} workId={workId} onInsert={value => updateDraft(body ? `${body}\n\n${value}` : value, visibility)} />}
+      {!workId && <TemplatePicker onPick={(draft) => { setTemplate(draft); if (draft) updateDraft(draft.body, visibility); }} />}
       <label className="composer-label" htmlFor="conversation-message">
         {visibility === "private" && <Icon name="lock" />}
         {visibility === "private"

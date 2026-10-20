@@ -3,6 +3,7 @@ import type { AppEnv } from '../../platform/types';
 import { ApiError, jsonBody, requiredString } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { getWork, permit, transitionWork, type WorkContext } from './core';
+import { runScenario } from './desk-scenarios';
 import { deskSettings, readWorkDesk, saveCustomField, saveCustomStatus, saveResolutionCodes, setWorkField } from './desk-fields';
 
 /** DESK-010 (bulk door shared with DESK-001): one command applied to each chosen ticket at its current revision,
@@ -18,6 +19,12 @@ async function bulkCommand(ctx: WorkContext, b: Record<string, unknown>) {
   for (const workId of ids as string[]) {
     try {
       const work = await getWork(ctx, workId);
+      // DESK-015: a bulk scenario run applies the chosen scenario to each ticket under the single-ticket rules.
+      if (command === 'scenario') {
+        const run = await runScenario(ctx, workId, { scenarioId: b.scenarioId, revision: work.revision });
+        items.push({ workId, ok: true, state: run.work.state, revision: run.work.revision });
+        continue;
+      }
       const changed = await transitionWork(ctx, workId, work.revision, command, reason,
         typeof b.assigneeId === 'string' ? b.assigneeId : undefined, b.waitingOn, { resolutionCode: b.resolutionCode, statusId: b.statusId });
       items.push({ workId, ok: true, state: changed.state, revision: changed.revision });

@@ -5,6 +5,7 @@ import { ErrorNotice, Notice } from "./primitives";
 import { shortRef } from "./work-queue";
 import type { DeskSettings } from "./work-fields";
 import type { WorkRecord } from "./work";
+import { useScenarios } from "./work-scenarios";
 
 interface BulkResult { command: string; changed: number; refused: number; items: { workId: string; ok: boolean; error?: { message: string } }[] }
 
@@ -18,6 +19,7 @@ export function BulkUpdate({ items, onDone }: { items: WorkRecord[]; onDone: () 
     mutation = useMutation(),
     members = useRemote<RecordValue[]>(open ? "/members" : null),
     desk = useRemote<DeskSettings>(open && command === "close" ? "/desk-settings" : null),
+    scenarios = useScenarios(open && command === "scenario"),
     agents = (members.data ?? []).filter((m) => m.active && /"(owner|operator)"/.test(text(m.roles_json))),
     visible = chosen.filter((id) => items.some((item) => item.id === id));
   async function apply(e: FormEvent<HTMLFormElement>) {
@@ -27,6 +29,7 @@ export function BulkUpdate({ items, onDone }: { items: WorkRecord[]; onDone: () 
       workIds: visible, command, reason: v.reason,
       ...(command === "assign" ? { assigneeId: v.assigneeId } : {}),
       ...(command === "close" && v.resolutionCode ? { resolutionCode: v.resolutionCode } : {}),
+      ...(command === "scenario" ? { scenarioId: v.scenarioId } : {}),
     });
     if (done) {
       setResult(done);
@@ -61,8 +64,18 @@ export function BulkUpdate({ items, onDone }: { items: WorkRecord[]; onDone: () 
             <option value="pause">Pause</option>
             <option value="resume">Resume</option>
             <option value="close">Close</option>
+            <option value="scenario">Run a scenario</option>
           </select>
         </label>
+        {command === "scenario" && (
+          <label>
+            Bulk scenario
+            <select name="scenarioId" required defaultValue="">
+              <option value="">Choose…</option>
+              {(scenarios.data?.items ?? []).map((sc) => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
+            </select>
+          </label>
+        )}
         {command === "assign" && (
           <label>
             Bulk assignee

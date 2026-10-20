@@ -18,6 +18,7 @@ import { WorkClassification } from "./work-classification";
 import { WorkSla } from "./work-sla";
 import { WorkFields, type DeskSettings } from "./work-fields";
 import { WorkGroup } from "./work-groups";
+import { WorkScenarios } from "./work-scenarios";
 import { useTriage } from "./work-triage";
 import { WorkRelationships } from "./work-relationships";
 import { usePeopleLabels } from "./people-labels";
@@ -134,6 +135,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       </dl>
       {operator && <WorkClassification workId={work.id} onChanged={changed} />}
       {!access && session.principal.roles.some(r => ["owner", "operator"].includes(r)) && <WorkGroup key={`${work.id}:${work.revision}`} work={work} onChanged={changed} />}
+      {!access && session.principal.roles.some(r => ["owner", "operator", "hr"].includes(r)) && <WorkScenarios work={work} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkSla workId={work.id} />}
       {!access && <WorkFields workId={work.id} canEdit={operator} version={`${work.revision}:${work.updated_at ?? ""}`} />}
       {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkRelationships workId={work.id} messages={(detail.data?.messages ?? []) as never} onChanged={changed} />}

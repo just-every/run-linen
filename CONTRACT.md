@@ -449,8 +449,8 @@ that product and marks how close the current code is (see [Status](#status)).
   view, `a` assigns the open ticket to oneself, `r` writes a shared reply, `n` a
   private note, `s` pauses or resumes it, `c` closes it, Ctrl/⌘+Enter sends the
   field's form, Escape leaves a field and `?` shows the shortcut reference. Done
-  for every triage action that exists today; DESK-015 adds its "run a scenario"
-  shortcut to this reference before it ships.
+  for every triage action that exists today; `x` runs a DESK-015 scenario on
+  the open ticket.
 
 - **DESK-002 — Classification and priority.** Ticket types (incident, service
   request, question), categories and subcategories, and an impact × urgency
@@ -698,6 +698,26 @@ that product and marks how close the current code is (see [Status](#status)).
   scenario and a direct API call to run it is refused; a scenario with a step
   outside the runner's role applies nothing; a "New laptop setup" template
   pre-fills a new ticket's fields.
+  *Today's semantic (sx, 20 October):* agents (owner or operator) save a
+  scenario for themselves or for an agent group they belong to; only the owner
+  (acting for "admin" until that role exists) saves workspace scenarios. A
+  scenario is offered to its author, to the members of its group or to every
+  agent, and a run of a scenario not offered to the runner is refused. Steps are
+  classification (type, category, subcategory, impact, urgency, priority), group
+  and owner (DESK-001 rules), custom field values (DESK-010), one public reply or
+  private note from its own text or a canned response (DESK-008), and pause,
+  resume or close with its reason (DESK-010 resolution rules apply). Before any
+  change Linen checks every step against the runner's roles (classification,
+  group and messages need owner or operator; fields and status also allow HR);
+  if one is outside them, nothing is applied. Steps then apply in that fixed
+  order through each step's own door; a step refused while applying (a
+  concurrent edit, a missing resolution code) stops the run and the run's one
+  audit entry lists only the changes made, each with its before and after. Runs
+  start from the ticket (keyboard `x`), from the bulk-update screen (one run per
+  chosen ticket) and from the same console at phone width. A ticket record
+  template holds a type, title, body and details; anyone in the workspace starts
+  a new request from it and may edit the draft before sending. Watchers inherit
+  from DESK-007 and native mobile from CHANNEL-005 before they ship.
 
 - **DESK-016 — Global agent search.** One search across tickets (number, subject,
   content, requester), people, assets (serial, asset tag), configuration items,
@@ -2158,8 +2178,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 40 | 47 | 28 | 115 |
-| All | 45 | 66 | 28 | 139 |
+| Target and push further | 40 | 48 | 27 | 115 |
+| All | 45 | 67 | 27 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2185,7 +2205,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CATALOG-004` | Bundles and kits | target | done | `src/features/work/bundles.ts`, `src/ui/bundles.tsx`, `tests/work/bundle-cases.mjs` | Public-route proof: an owner-built hardware/software/access bundle opens one ticket with five child fulfilments; one atomic manager decision covers both gated children (partial and single-child approvals refused); per-child grants run and verify; the bundle stays in progress until the laptop handoff verifies the fifth child, then reads complete; a changed item refuses the stale bundle. Bundle builder, grouped manager decision and per-item progress inspected at 1440/390. |
 | `CATALOG-005` | Software requests installed through MDM | target | partial | `src/features/work/requests.ts`, `src/features/execution/verification.ts` | Software is a catalog kind fulfilled as an access grant; no MDM app binding, install-group assignment, installed-inventory verification, deployment failure task or lease uninstall. |
 | `CATALOG-006` | Requests for pending people | target | done | `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/pending-person-browser.mjs` | Local D1/runtime and 1440/390 browser: reviewed creation/edit, held catalog services, native email proof and password sign-in binding, normal fulfillment release, employee visibility, withdrawal/cancellation and attributed audit. Provider delivery and live SSO are not claimed. |
-| `DESK-001` | Queues, groups and views | target | done | `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/ui/desk-group-browser.mjs` | DESK-015 adds its scenario shortcut before it ships. |
+| `DESK-001` | Queues, groups and views | target | done | `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/ui/desk-group-browser.mjs`, `tests/ui/desk-scenario-browser.mjs` | The DESK-015 scenario shortcut (`x`) is in the reference. |
 | `DESK-002` | Classification and priority | target | done | `src/features/work/classification.ts`, `tests/work/classification-cases.mjs`, `tests/ui/classification-journey.mjs`, `tests/adoption/classification-cases.mjs` | Local public-route/model-edge fixture proof of incident/service request/question proposals, category/subcategory, impact × urgency and reason; audited operator P1-to-P2 override, current-role/scope/CAS and late-result fencing. Native 1440/390 controls and persistence, missing-provider state, held archive restore and erasure. No live-model quality claim. |
 | `DESK-003` | Routing and assignment | target | done | `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs` | Public-route proof: three Service Desk agents, one off shift and one at the open-ticket cap, round-robin and load-based assignment pick the available agent; a VIP requester group routes to Executive Support; tickets against the Payroll service and a laptop CI route to their support groups ahead of every rule; requester, category (on classification) and skill rules; restricted tickets placed but not auto-assigned; routing, manual reassignment and agent re-route kept in order with actor and time. |
 | `DESK-004` | SLA policies | target | done | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs` | Public-route proof: owner-ordered policies by priority and requester group (business and calendar hours); a P2 opened 4:30 pm Friday in `America/New_York` before Martin Luther King Jr. Day is due Tuesday 12:30 pm (first response 9:30 am); a requester pause from 10 to 11 am moves it to 1:30 pm while an internal hold does not; next-response targets start and are met; breaches show with their time on the ticket and in the period report. |
@@ -2199,7 +2219,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-012` | Time tracking and effort | target | done | `src/features/work/time.ts`, `src/features/work/effort-report.ts`, `tests/work/time-cases.mjs`, `tests/ui/time-journey.mjs`, `tests/adoption/runtime.mjs` | Local public work/task routes and real 1440/390 browser interval: manual and measured active minutes feed role/request-type effort totals with touches and failed/pending work. Visibility/focus/inactivity pauses, server-bounded sequenced heartbeats, current scope, erasure and inert restored timers are proved. REPORT-004 prices these minutes at owner-declared role rates. |
 | `DESK-013` | Scheduled and recurring work | target | done | `src/features/work/recurrence.ts`, `src/features/work/recurrence-calendar.ts`; DESK-013 public routes in `tests/work/recurrence-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/recurrence-journey.mjs` via `tests/ui/browser.mjs`, `tests/adoption/recurrence-cases.mjs` via `tests/adoption/runtime.mjs`: calendar tickets/task plans with owners, first business day/holiday, atomic occurrences, DST/month-end, pause/resume, inert restore and 1440/390 journeys. | |
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
-| `DESK-015` | Agent scenarios and record templates | target | missing |  | No agent scenarios or record templates. |
+| `DESK-015` | Agent scenarios and record templates | target | partial | `src/features/work/desk-scenarios.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/ui/desk-scenario-browser.mjs` | Scenarios (classification, group and owner, fields, note or reply, status) scoped to author, group or workspace, refused outside scope or role with nothing applied, one audited run, ticket, keyboard and bulk doors, and ticket templates are proven. No task-plan step and no task or change record templates yet. |
 | `DESK-016` | Global agent search | target | done | `src/features/work/search.ts`, `tests/work/search-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/search-journey.mjs` | Local public-route and 1440/390 browser evidence: all eight current record types, filters, typo matching, serial-linked asset/ticket/person, native ticket ID, subject/content/requester, recorded asset tags, scoped visible counts and pages. HR/private/restricted/article/current-role fences and generated-source withdrawal are asserted. |
 | `DESK-017` | Ticket activity history | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs` | State transitions only, as public messages; no field-level before/after history, actor types or imported source history. |
 | `NOTIFY-001` | Default notifications by role and event | target | partial | `src/features/execution/notifications.ts`, `tests/execution/runtime.mjs` | Explicit per-message only; no event-driven default set, chat or push delivery, or actionable agent notifications. |

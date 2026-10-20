@@ -1,0 +1,3 @@
+-- DESK-015: agent scenarios scoped to their author, one agent group or the workspace, and record templates that pre-fill new tickets.
+CREATE TABLE work_scenarios(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,name TEXT NOT NULL,scope TEXT NOT NULL CHECK(scope IN ('author','group','workspace')),group_id TEXT,author_id TEXT NOT NULL,steps_json TEXT NOT NULL,revision INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL);
+CREATE TABLE work_record_templates(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,name TEXT NOT NULL,kind TEXT NOT NULL,title TEXT NOT NULL,body TEXT NOT NULL,context_json TEXT NOT NULL DEFAULT '{}',created_by TEXT NOT NULL,created_at TEXT NOT NULL,UNIQUE(workspace_id,name));

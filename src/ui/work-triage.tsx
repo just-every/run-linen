@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 
 /** DESK-001: keyboard triage. Outside a text field, j and k open the next and previous ticket of the current view;
- * a, r, n, s and c act on the open ticket; ? opens this reference; Escape leaves a field; Ctrl or ⌘ + Enter sends the
+ * a, r, n, s, c and x act on the open ticket; ? opens this reference; Escape leaves a field; Ctrl or ⌘ + Enter sends the
  * field's form. The open ticket's controls listen for `triageEvent` and act through their own doors. */
 export const triageEvent = "linen:triage";
-export type TriageAction = "assign-self" | "reply" | "note" | "status" | "close";
-const actions: Record<string, TriageAction> = { a: "assign-self", r: "reply", n: "note", s: "status", c: "close" };
+export type TriageAction = "assign-self" | "reply" | "note" | "status" | "close" | "scenario";
+const actions: Record<string, TriageAction> = { a: "assign-self", r: "reply", n: "note", s: "status", c: "close", x: "scenario" };
 const shortcuts: [string, string][] = [
   ["j", "Open the next ticket in this view"],
   ["k", "Open the previous ticket in this view"],
@@ -14,6 +14,7 @@ const shortcuts: [string, string][] = [
   ["n", "Write a private note"],
   ["s", "Set status: pause, or resume a paused ticket"],
   ["c", "Close the open ticket"],
+  ["x", "Run a scenario on the open ticket"],
   ["Ctrl/⌘ + Enter", "Send the reply, note or status change"],
   ["Escape", "Leave the field you are typing in"],
   ["?", "Show or hide these shortcuts"],
