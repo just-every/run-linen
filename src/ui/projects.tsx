@@ -79,7 +79,7 @@ function Project({ id, team, onChanged }: { id: string; team: boolean; onChanged
     {team && <>
       <ActionForm title="Add a milestone" path={`/projects/${id}/milestones`} onSaved={changed}
         fields={[{ name: "name", label: "Milestone", required: true }, { name: "dueDate", label: "Due date", type: "date", required: true }]} />
-      {!!taskTemplates.length && <label>Task record template<select value={templateId} onChange={e => setTemplateId(e.target.value)}><option value="">No template</option>{taskTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>}
+      {!!taskTemplates.length && <label>Task record template<select aria-label="Task record template" value={templateId} onChange={e => setTemplateId(e.target.value)}><option value="">No template</option>{taskTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>}
       <ErrorNotice error={templates.error} retry={templates.refresh} />
       <ActionForm key={templateId} title="Add a task" path={`/projects/${id}/tasks`} onSaved={changed}
         fields={[{ name: "title", label: "Task", required: true, value: draft?.title },

@@ -96,6 +96,10 @@ export async function deskScenarioChecks(workspaceApi, db) {
   assert.deepEqual(check(await api(`/work/${fullTicket.id}/classification`)).current,
     { type: 'incident', category: 'hardware', subcategory: 'laptop', impact: 'medium', urgency: 'high', priority: 'P2' });
   assert.equal(fullRun.work.assignee_id, 'd15-net');
+  for (const [field, after] of Object.entries({ type: 'incident', category: 'hardware', subcategory: 'laptop', impact: 'medium', urgency: 'high', priority: 'P2', owner: 'd15-net' })) {
+    const change = fullRun.changes.find(c => c.field === field);
+    assert.deepEqual([change.before, change.after], [null, after], `DESK-015 audited ${field} before and after`);
+  }
   assert.deepEqual(fullRun.changes.find(c => c.field === 'Office'), { step: 'fields', field: 'Office', before: null, after: 'Denver' });
   assert.ok(check(await api(`/work/${fullTicket.id}`, undefined, employee)).messages.some(m => m.body === 'Hello Erin Employee, we are checking DESK-015 full-scenario.'));
   const resume = check(await api('/work-scenarios', { name: 'Resume', scope: 'workspace', steps: { status: { command: 'resume', reason: 'Vendor answered' } } }), 201);

@@ -130,4 +130,7 @@ try {
   await phone.close();
   assert.deepEqual(errors, []);
   console.log('PASS DESK-015 browser: "Escalate to Network L2" run from the ticket by keyboard at 1440 with each change listed, a bulk scenario run on two tickets at 390, and a "New laptop setup" template pre-filling a new ticket at 390.');
+} catch (error) {
+  for (const [i, context] of browser.contexts().entries()) for (const [j, page] of context.pages().entries()) await page.screenshot({ path: `${out}/DESK-015-failure-${i}-${j}.png`, fullPage: true }).catch(() => {});
+  throw error;
 } finally { await browser.close(); }

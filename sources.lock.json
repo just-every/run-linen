@@ -2202,6 +2202,10 @@
       "sha256": "0d23688f1daa03b5b7f9400de0eee2a9da03ae107380a0017d81c0e8e69cae28",
       "executable": false
     },
+    "src/features/work/desk-scenario-plans.ts": {
+      "sha256": "0a180981c3afc06277c812c297d8b7e20d26164a84893ac8ccf6a7f12134e19c",
+      "executable": false
+    },
     "src/features/work/desk-scenario-routes.ts": {
       "sha256": "2796e9698bbc69904fa124dd092845de534d3316e640f13a6b8871614917635d",
       "executable": false
@@ -4423,7 +4427,7 @@
       "executable": false
     },
     "src/ui/projects.tsx": {
-      "sha256": "aa26871f9da8e5c72987ab25ef2eba9c428402551f59859fbc648ef9cf469458",
+      "sha256": "3539b1f251243d86abc93897ef76979e68a4ef0bcdf0a1d48f1411e25c590fd8",
       "executable": false
     },
     "src/ui/queue.tsx": {
@@ -5051,7 +5055,7 @@
       "executable": false
     },
     "tests/ui/desk-scenario-browser.mjs": {
-      "sha256": "4305b89dff4ebf9faa8bbed600b83de391ccfb13ac49c40b1da1c35f1bc8fcae",
+      "sha256": "24ea26a73c728602b2454fbe9306d211bb26c1c163c451b855222bc1a33806d0",
       "executable": false
     },
     "tests/ui/drafts.mjs": {
@@ -5235,7 +5239,7 @@
       "executable": false
     },
     "tests/work/desk-scenario-cases.mjs": {
-      "sha256": "c1fa86c2ed76c45a1d71ea89592acad73c704c492b898395832d77166b133948",
+      "sha256": "b31bc38b398b95f197ccf5602c0f2394e47fced31a7f4ace322696a9618d5113",
       "executable": false
     },
     "tests/work/fulfilment-link-runtime.mjs": {
