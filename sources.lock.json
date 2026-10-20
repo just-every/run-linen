@@ -1995,7 +1995,7 @@
       "executable": false
     },
     "src/features/services/employee-notices.ts": {
-      "sha256": "28fefb4edee42c724bd42173f8425c23faf951ddc58c9a46de24547052b35a79",
+      "sha256": "cd886397d6de517b067056592ff2d83c41e753f34911a9e514bdfb31c62aa568",
       "executable": false
     },
     "src/features/services/graph.ts": {
@@ -4947,7 +4947,7 @@
       "executable": false
     },
     "tests/services/employee-notice-cases.mjs": {
-      "sha256": "c637900b18769fd8186a0a4f2e95491f1061cc5f6d3456f5c293438bbaec235c",
+      "sha256": "54187e7f21d75f9fc197ed97c7c2b908d4bd7b655fc432e85e6e8d2c9e7d420b",
       "executable": false
     },
     "tests/services/integration-worker.ts": {

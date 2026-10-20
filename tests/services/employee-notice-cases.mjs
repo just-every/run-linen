@@ -74,6 +74,7 @@ export async function employeeNoticeChecks(request, db) {
   await db.prepare("UPDATE memberships SET active=1 WHERE user_id='employee' AND workspace_id='w1'").run();
   // Revoking the original publisher also fences queued sends even when another operator runs the scheduler.
   await update('Before publisher revocation','operator');
+  assert.equal((await read()).items[0].publishedBy,'operator','CHANNEL-008 an explicit republish records the current publisher for future cadence');
   await db.prepare("UPDATE memberships SET roles_json='[\"employee\"]' WHERE user_id='operator' AND workspace_id='w1'").run();
   await api('POST','/services/process-due',{});assert.equal((await api('GET','/fixture/notice-mail')).calls.length,2);
   await db.prepare("UPDATE memberships SET roles_json='[\"operator\"]' WHERE user_id='operator' AND workspace_id='w1'").run();
@@ -100,7 +101,11 @@ export async function employeeNoticeChecks(request, db) {
   await db.prepare("UPDATE svc_records SET data_json=json_set(data_json,'$.recoveries[0].expiresAt','2020-01-01T00:00:00Z') WHERE id=?").bind(incident.id).run();
   assert.equal((await api('GET','/service-notices',undefined,'employee')).items[0].state,'all-clear','CHANNEL-008 recorded all-clear retained until named verifier withdraws');
   await api('POST',`${base}/${n.id}/update`,{revision:published.revision,message:'Replace retained recovery'},'operator',409);
+  // Provider outage and a removed cohort cannot prevent the named verifier from withdrawing portal guidance.
+  await db.prepare("UPDATE connections SET status='disconnected' WHERE id='notice-mail'").run();
+  await db.prepare("DELETE FROM work_requester_groups WHERE id='sales'").run();
   await api('POST',`${base}/${n.id}/withdraw`,{revision:published.revision},'operator');
+  await db.prepare('INSERT INTO work_requester_groups VALUES(?,?,?,?,?)').bind('sales','w1','Sales','["employee"]',new Date().toISOString()).run();
   assert.equal((await api('GET','/service-notices',undefined,'employee')).items.length,0);
   // Concurrent publication through the same source revision has one winner and no losing mail intent.
   const revision=(await read()).revision, body={revision,groupId:'sales',message:'Another interruption',cadenceMinutes:30};

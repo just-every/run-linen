@@ -98,7 +98,8 @@ export async function publishNotice(env: Env, principal: Principal, sourceId: st
     throw new ApiError(409, 'notice_terminal', 'A retained all-clear can only be withdrawn; publish a new notice for a new interruption');
   if (command === 'withdraw' && prior?.verifiedBy && prior.verifiedBy !== p.userId)
     throw new ApiError(403, 'notice_verifier', 'Only the person who recorded this recovery may withdraw its all-clear');
-  const groupId = prior?.groupId ?? requiredString(b.groupId, 'groupId'), g = await cohort(env, p, groupId);
+  const groupId = prior?.groupId ?? requiredString(b.groupId, 'groupId');
+  const g = command === 'withdraw' ? { memberIds: [] as string[] } : await cohort(env, p, groupId);
   const audience = [];
   if (command !== 'withdraw') for (const userId of g.memberIds) {
     const m = await env.DB.prepare('SELECT roles_json FROM memberships WHERE workspace_id=? AND user_id=? AND active=1')
@@ -118,14 +119,14 @@ export async function publishNotice(env: Env, principal: Principal, sourceId: st
   }
   const t = now(), state = command === 'withdraw' ? 'withdrawn' : command === 'all-clear' ? 'all-clear' : 'open';
   const emailConnectionId = prior?.emailConnectionId ?? (b.emailConnectionId ? requiredString(b.emailConnectionId, 'emailConnectionId') : null);
-  if (emailConnectionId) {
+  if (emailConnectionId && !prior) {
     const c = await env.DB.prepare("SELECT id FROM connections WHERE workspace_id=? AND id=? AND provider='sendgrid' AND status='active'")
       .bind(p.workspaceId, emailConnectionId).first();
     if (!c) throw new ApiError(422, 'notice_mail', 'Choose a currently active SendGrid connection or leave email off');
   }
   return commit(env, p, r, { id: prior?.id ?? id(), groupId, message: command === 'withdraw' ? prior!.message : requiredString(b.message, 'message', 4000),
     state, cadenceMinutes: cadence, nextUpdateAt: state === 'open' ? new Date(Date.now() + cadence * 60000).toISOString() : null,
-    publishedBy: prior?.publishedBy ?? p.userId, publishedAt: prior?.publishedAt ?? t, updatedAt: t,
+    publishedBy: p.userId, publishedAt: prior?.publishedAt ?? t, updatedAt: t,
     version: (prior?.version ?? 0) + 1, eventKey: id(), emailConnectionId, verification,
     verifiedBy: command === 'all-clear' ? p.userId : prior?.verifiedBy ?? null, verifiedAt: command === 'all-clear' ? t : prior?.verifiedAt ?? null,
   }, audience, `employee-notice-${command}`);
