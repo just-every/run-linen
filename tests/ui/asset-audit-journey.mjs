@@ -66,6 +66,8 @@ export async function stockJourney({page,api,base,out}) {
       const saved=await scoped(page,line,'Allocate from stock',{personId:person.id,quantity:1,evidence:'Desk handoff signed by the employee'},'/allocate','Allocate');
       assert.equal(saved.line.on_hand,left,`ASSET-005 ${left} spare monitors left`);
       assert.equal(Boolean(saved.purchaseRaised),left===0,'ASSET-005 only the allocation that reaches the threshold raises a request');
+      // Each allocation refreshes and remounts the line; wait for the new count before the next form.
+      await line.locator('.facts > div').filter({hasText:'Counted on hand'}).locator('dd').getByText(String(left),{exact:true}).waitFor();
     }
     const request=line.getByRole('article',{name:`Purchase request for 27-inch monitor at ${location}`});
     await request.getByText('Raised in Linen, not sent').waitFor();
