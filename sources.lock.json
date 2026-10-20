@@ -1039,11 +1039,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "1ad5678941773123dab835206d94024737f53569edd142d0e0025508ef1e794b",
+      "sha256": "b2dd3709b0b450c18cb143f4268149b2d489803c45e244b9f494d822e4b1fc1b",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "481d796c42d74e9a4583a1d04cd6bb13d49641e81d3f733a6293f0055a04f9dd",
+      "sha256": "f75332a4d64c59a9298c1bea6be1463e9e66283a0b90693673f77877d0a3af99",
       "executable": false
     },
     "public/apple-touch-icon.png": {
