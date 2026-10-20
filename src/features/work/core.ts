@@ -469,7 +469,7 @@ export async function transitionWork(
   const t = now();
   // DESK-010: the close notes are this close's reason; an incident also needs a resolution code.
   const resolution = command === "close" ? await closeResolution(ctx, work, desk.resolutionCode, reason, t) : null;
-  const result = await ctx.env.DB.prepare(
+  const [result] = await ctx.env.DB.batch([ctx.env.DB.prepare(
     `UPDATE work_records SET state=?,revision=revision+1,updated_at=?,closed_at=?,paused_at=?,paused_ms=paused_ms+?,assignee_id=COALESCE(?,assignee_id) WHERE workspace_id=? AND id=? AND revision=?`,
   )
     .bind(
@@ -484,8 +484,13 @@ export async function transitionWork(
       ctx.principal.workspaceId,
       workId,
       revision,
-    )
-    .run();
+    ),
+    ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0")
+      .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, command === 'assign' ? 'work.assigned' : 'work.transitioned', workId,
+        JSON.stringify(command === 'assign'
+          ? { from: { assigneeId: work.assignee_id }, to: { assigneeId }, reason }
+          : { before: { state: work.state }, after: { state }, reason }), t),
+  ]);
   if (!result.meta.changes)
     throw new ApiError(
       409,
@@ -493,9 +498,6 @@ export async function transitionWork(
       "Work changed; refresh before deciding",
     );
   if (resolution) await resolution.run();
-  if (command === "assign")
-    await ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)").bind(id(), ctx.principal.workspaceId, ctx.principal.userId,
-      "work.assigned", workId, JSON.stringify({ from: { assigneeId: work.assignee_id }, to: { assigneeId }, reason }), t).run();
   if (work.paused_at)
     await shiftCommitmentForPause(ctx, workId, work.paused_at, t);
   if (work.paused_at || command === "pause")

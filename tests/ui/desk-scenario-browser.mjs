@@ -73,6 +73,34 @@ try {
     await ap.setViewportSize({ width, height: 1000 });
     await captureJourney(ap, { path: `${out}/DESK-015-ticket-scenario-${width}.png`, fullPage: true });
   }
+  // DESK-017: the native ticket timeline shows the scenario's actor and category change beside its messages.
+  const activity = ap.getByRole('list', { name: 'Ticket activity', exact: true });
+  await activity.getByText('Scenario · Escalate to Network L2 · Scenario run', { exact: true }).waitFor();
+  await activity.getByText('Category: none → network', { exact: true }).waitFor();
+  assert.ok((await activity.innerText()).includes('Internal activity'), 'DESK-017 internal history is labelled');
+  for (const width of [1440, 390]) {
+    await ap.setViewportSize({ width, height: 1000 });
+    await activity.scrollIntoViewIfNeeded();
+    await captureJourney(ap, { path: `${out}/DESK-017-agent-activity-${width}.png`, fullPage: true });
+  }
+  // The owner sees internal events; an employee request verifies the public-only timeline in the same native UI.
+  const employeeApiContext = await browser.newContext(), employeePage = await employeeApiContext.newPage();
+  await signIn(employeePage, base, erin.email, password);
+  const employeeApi = apiFor(employeePage);
+  const own = await employeeApi('/work', { title: 'Laptop loses VPN connection', body: 'Disconnected during a call', kind: 'incident', deduplicationKey: 'desk017-browser' });
+  await api(`/work/${own.id}/messages`, { visibility: 'private', body: 'Internal certificate diagnostic', sourceMessageId: 'desk017-private' });
+  await api(`/work/${own.id}/commands`, { revision: own.revision, command: 'pause', reason: 'Waiting for the vendor', waitingOn: 'vendor' });
+  await employeePage.goto(`${base}/app#/work/${own.id}`);
+  const publicActivity = employeePage.getByRole('list', { name: 'Ticket activity', exact: true });
+  await publicActivity.getByText('Paused: Waiting for the vendor', { exact: true }).waitFor();
+  assert.ok(!(await publicActivity.innerText()).includes('Internal'), 'DESK-017 employee sees no internal entries');
+  for (const width of [1440, 390]) {
+    await employeePage.setViewportSize({ width, height: 1000 });
+    await publicActivity.scrollIntoViewIfNeeded();
+    await captureJourney(employeePage, { path: `${out}/DESK-017-employee-activity-${width}.png`, fullPage: true });
+  }
+  await employeeApiContext.close();
+
   // DESK-015 starts a local project task plan; a task template fills the existing editable task form.
   const planId = (await api(`/work/${vpn.id}/scenario-runs`)).items.at(-1).changes.find(c => c.field === 'task plan').after;
   for (const width of [1440, 390]) {

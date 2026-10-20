@@ -1,3 +1,4 @@
+import { WorkActivity } from './work-activity';
 import { SponsorReattest } from "./sponsor-reattest";
 import { WorkShares } from "./work-shares";
 import { RecurringTasks } from './recurring-work';
@@ -245,22 +246,7 @@ function ConversationHistory({ conversation }: { conversation: Conversation }) {
   return (
     <section className="history">
       <h3>What happened</h3>
-      <ol className="events conversation">
-        {conversation.messages.map((message) => (
-          <li data-message-id={message.id} className={`event ${message.visibility === "private" ? "private-message" : ""}`} key={message.id}>
-            <span className="event-icon">
-              <Icon name={message.visibility === "private" ? "lock" : "user"} size={18} />
-            </span>
-            <div className="event-copy">
-              <div className="message-meta">
-                <time dateTime={message.created_at}>{date(message.created_at)}</time>
-                {message.visibility === "private" && <span className="private-label">Private service note</span>}
-              </div>
-              <p className="message-body">{message.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <WorkActivity conversation={conversation} />
       {Boolean(conversation.attachments?.length) && (
         <div className="attachments">
           <h3>Attachments</h3>

@@ -1,3 +1,4 @@
+import { registerWorkRoutes } from '../../src/features/work';
 import { providerFetch } from "../../src/features/execution/transport";
 import { Hono } from "hono";
 import {
@@ -206,6 +207,7 @@ app.post("/fixture/native-fetch", async (c) => {
   return c.json({ status: r.status });
 });
 registerExecutionRoutes(app);
+registerWorkRoutes(app);
 app.onError((e, c) =>
   c.json(
     {
