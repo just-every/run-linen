@@ -15,7 +15,8 @@ const insert = (table: string, columns: string[], row: any) => sql(`INSERT INTO 
 export const freshserviceTargets: D1TargetAdapter = {
   async read(db, destination, kind, id) {
     if (kind !== 'work') throw new Error('UNSUPPORTED_FRESHSERVICE_TARGET');
-    const work = await db.prepare('SELECT * FROM work_records WHERE workspace_id=? AND id=?').bind(destination,id).first();
+    // Only the columns an import writes: native columns added later (DESK-001's group) are not import state.
+    const work = await db.prepare(`SELECT ${workColumns.join(',')} FROM work_records WHERE workspace_id=? AND id=?`).bind(destination,id).first();
     const marker = await db.prepare('SELECT * FROM freshservice_import_items WHERE workspace_id=? AND work_id=?').bind(destination,id).first();
     if (!work && !marker) return undefined;
     if (!work || !marker) throw new Error('FRESHSERVICE_NATIVE_INTEGRITY');
