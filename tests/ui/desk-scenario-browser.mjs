@@ -76,7 +76,7 @@ try {
   // DESK-017: the native ticket timeline shows the scenario's actor and category change beside its messages.
   const activity = ap.getByRole('list', { name: 'Ticket activity', exact: true });
   await activity.getByText('Scenario · Escalate to Network L2 · Scenario run', { exact: true }).waitFor();
-  await activity.getByText('Category: none → network', { exact: true }).waitFor();
+  await activity.locator(':scope > li').filter({ hasText: 'Scenario · Escalate to Network L2 · Scenario run' }).getByText('Category: none → network', { exact: true }).waitFor();
   assert.ok((await activity.innerText()).includes('Internal activity'), 'DESK-017 internal history is labelled');
   for (const width of [1440, 390]) {
     await ap.setViewportSize({ width, height: 1000 });
