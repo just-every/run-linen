@@ -120,7 +120,7 @@ try {
   });
   await page.reload();
   await page.getByText("Or choose a known service", { exact: true }).click();
-  await page.getByLabel(/^Service/).selectOption(catalog.id);
+  await page.getByRole('combobox', { name: /^Service/ }).selectOption(catalog.id);
   await page
     .getByLabel(/What do you need it for/)
     .fill("A time-limited design review");
