@@ -1291,7 +1291,8 @@ that product and marks how close the current code is (see [Status](#status)).
   dependencies and status, link to tickets, changes, assets and lifecycle plans,
   and show as a board and a timeline; each agent's workload shows project tasks
   beside ticket load. Software delivery projects stay in Vector or Jira, and
-  cross-functional business projects stay in the buyer's work-management tool.
+  cross-functional business projects stay in the buyer's work-management tool
+  (see also [Pegboard](https://github.com/just-every/run-pegboard)).
   **Acceptance evidence:** create "Denver office move" with 12 tasks across two
   milestones, link 30 asset relocations and two changes, see a blocked dependency
   flagged on the timeline, and see an agent's workload combine project tasks and
@@ -2174,7 +2175,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No automatic incident linking, health-check gate on success or PIR. |
 | `CHANGE-006` | Development-tool context | target | partial | `src/features/intelligence/engineering.ts` | No GitHub/Jira/Vector links or deployment-raised changes. |
 | `CHANGE-007` | Release management | target | partial | `src/features/services/changes.ts`, `src/features/execution/deployment.ts`, `tests/ui/connected-change.mjs` | No release records, go/no-go or release notes. |
-| `PROJECT-001` | IT team projects | target | done | `src/features/work/projects.ts`, `src/ui/projects.tsx`, `tests/work/project-cases.mjs` | Public-route proof: "Denver office move" with 12 owned tasks across two milestones as a board and due-date timeline; a dependency due after its dependent task is flagged blocked and done is refused until it closes; 30 asset relocations, two changes and a ticket link (an HR ticket is refused); employees are denied; the agent's workload shows assigned tickets beside six project tasks. |
+| `PROJECT-001` | IT team projects | target | done | `src/features/work/projects.ts`, `src/ui/projects.tsx`, `tests/work/project-cases.mjs` | Public-route proof: "Denver office move" with 12 owned tasks across two milestones as a board and due-date timeline; a dependency due after its dependent task is flagged blocked and done is refused until it closes; 30 asset relocations, two changes and a ticket link (an HR ticket is refused); an employee is refused every project route and the workload API, changing nothing; the agent's workload shows assigned tickets beside six project tasks. |
 | `KB-001` | Knowledge base | target | done | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs` |  |
 | `KB-002` | Federated knowledge sources | target | missing |  | No federated sources (Confluence, Slate, Google Drive, SharePoint, Notion). |
 | `KB-003` | Deflection with verified outcome | target | done | `src/features/work/deflection.ts`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/knowledge-draft-journey.mjs` | Local public-route and inspected 1440/390 browser proof: a VPN question is answered by the readable reviewed article before filing (never an HR-only one); the asker's confirmation is the only deflection; a second employee who files anyway, and a confirmation followed by filing, are not counted; asker-only confirmation and aggregate report counts. Slack/Teams suggestions are inherited by CHANNEL-001/002. |

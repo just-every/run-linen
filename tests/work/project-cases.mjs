@@ -56,9 +56,19 @@ export async function projectChecks(api) {
   assert.equal(read.links.filter(l => l.kind === 'asset' && l.detail.includes('5th floor')).length, 30, 'PROJECT-001 thirty asset relocations link to the project');
   assert.deepEqual(read.links.filter(l => l.kind === 'change').map(l => l.label).sort(), ['Cut over Denver switches', 'Move Denver Wi-Fi SSID']);
   assert.ok(read.links.some(l => l.kind === 'ticket' && l.target_id === ticket.id));
-  assert.equal((await api(`/projects/${projectId}`, undefined, employee)).status, 403);
+  // Audience: an employee is refused every project route and API, reads and writes alike, and changes nothing.
+  const before = await make(`/projects/${projectId}`, undefined, undefined, 200);
+  for (const [path, body] of [['/projects'], ['/projects', { name: 'Employee project' }], [`/projects/${projectId}`], ['/workload'],
+    [`/projects/${projectId}/status`, { revision: before.project.revision, status: 'on_hold' }], [`/projects/${projectId}/milestones`, { name: 'Employee milestone', dueDate: '2030-04-01' }],
+    [`/projects/${projectId}/tasks`, { title: 'Employee task', ownerId: 'owner', dueDate: '2030-04-01' }], [`/projects/${projectId}/tasks/${tasks[1]}`, { revision: 1, status: 'done' }],
+    [`/projects/${projectId}/links`, { items: [{ kind: 'ticket', targetId: ticket.id }] }]]) {
+    const r = await api(path, body, employee);
+    assert.equal(r.status, 403, `PROJECT-001 an employee is refused ${body ? 'POST' : 'GET'} ${path}`);
+  }
+  const after = await make(`/projects/${projectId}`, undefined, undefined, 200);
+  assert.deepEqual([after.project.status, after.milestones.length, after.tasks.length, after.links.length], [before.project.status, before.milestones.length, before.tasks.length, before.links.length], 'PROJECT-001 refused employee calls change nothing');
 
   const load = (await make('/workload', undefined, undefined, 200)).items.find(r => r.userId === 'search-agent');
   assert.ok(load.openTickets >= 1 && load.openProjectTasks === 6 && load.total === load.openTickets + 6, 'PROJECT-001 workload combines project tasks and tickets');
-  console.log('PASS PROJECT-001 public routes: two milestones and 12 owned tasks, dependency waiting/blocked timeline flags and done refusal, board, 30 asset relocations + 2 changes + ticket links (HR ticket refused), employee denied, agent workload with tickets and project tasks');
+  console.log('PASS PROJECT-001 public routes: two milestones and 12 owned tasks, dependency waiting/blocked timeline flags and done refusal, board, 30 asset relocations + 2 changes + ticket links (HR ticket refused), an employee refused every project route and the workload API with nothing changed, agent workload with tickets and project tasks');
 }
