@@ -1,3 +1,4 @@
+import { approvalActivity } from './approval-activity';
 import { conversation, getWork, operator, type WorkContext } from './core';
 
 export interface ActivityEntry {
@@ -14,10 +15,11 @@ export interface ActivityEntry {
 }
 type Audit = { id: string; actor_id: string; actor_name: string; action: string; detail_json: string; created_at: string };
 const actions = ['work.classification_overridden', 'work.classification_proposed', 'work.routed', 'work.group_set',
-  'work.assigned', 'work.scenario_run', 'work.field_set', 'work.transitioned'];
+  'work.assigned', 'work.scenario_run', 'work.field_set', 'work.transitioned',
+  'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked'];
 
 function changes(event: Audit, detail: Record<string, any>): ActivityEntry['changes'] {
-  if (event.action === 'work.scenario_run') return (detail.changes ?? []).map(({ field, before, after }: any) => ({ field, before, after }));
+  if (['work.scenario_run', 'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked'].includes(event.action)) return (detail.changes ?? []).map(({ field, before, after }: any) => ({ field, before, after }));
   if (event.action === 'work.field_set') return Object.hasOwn(detail, 'before')
     ? [{ field: detail.field, before: detail.before, after: detail.value }] : [];
   if (event.action === 'work.group_set') return Object.hasOwn(detail, 'to') ? [{ field: 'group', before: detail.from, after: detail.to }] : [];
@@ -53,6 +55,7 @@ export async function ticketActivity(ctx: WorkContext, workId: string) {
         ...(actorKind === 'scenario' && detail.name ? { body: detail.name } : {}),
       });
     }
+    items.push(...await approvalActivity(ctx, workId));
     const deliveries = (await ctx.env.DB.prepare(`SELECT o.id,o.created_at,o.state,o.actor_id,e.id event_id,e.event,e.created_at event_at
       FROM execution_outbox o LEFT JOIN execution_delivery_events e ON e.workspace_id=o.workspace_id AND e.outbox_id=o.id
       WHERE o.workspace_id=? AND o.work_id=? ORDER BY COALESCE(e.created_at,o.created_at),o.rowid,e.rowid`)

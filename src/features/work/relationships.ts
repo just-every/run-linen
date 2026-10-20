@@ -10,13 +10,14 @@ const linkKinds = ["asset", "problem", "change", "engineering_issue"] as const;
 type LinkKind = (typeof linkKinds)[number];
 const ref = (workId: string) => workId.slice(0, 6).toUpperCase();
 const agentOnly = (ctx: WorkContext) => permit(ctx, ["owner", "operator"]);
-function publicNote(ctx: WorkContext, workId: string, key: string, body: string, at: string) {
-  return ctx.env.DB.prepare("INSERT OR IGNORE INTO work_messages(id,workspace_id,work_id,author_id,visibility,body,source_key,created_at) VALUES(?,?,?,?,'public',?,?,?)")
-    .bind(id(), ctx.principal.workspaceId, workId, ctx.principal.userId, body, key, at);
+function publicNote(ctx: WorkContext, workId: string, key: string, body: string, at: string, eventId?: string) {
+  return ctx.env.DB.prepare("INSERT OR IGNORE INTO work_messages(id,workspace_id,work_id,author_id,visibility,body,source_key,created_at) SELECT ?,?,?,?,'public',?,?,? WHERE (? IS NULL OR EXISTS(SELECT 1 FROM audit_events WHERE id=?))")
+    .bind(id(), ctx.principal.workspaceId, workId, ctx.principal.userId, body, key, at, eventId ?? null, eventId ?? null);
 }
 function audit(ctx: WorkContext, action: string, target: string, detail: unknown, at: string) {
   return ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)").bind(id(), ctx.principal.workspaceId, ctx.principal.userId, action, target, JSON.stringify(detail), at);
 }
+const change = (field: string, before: unknown, after: unknown) => ({ field, before, after });
 const open = (w: WorkRecord & { merged_into?: string | null }) => !["closed", "cancelled"].includes(w.state) && !w.merged_into;
 
 /** The duplicate closes with a pointer; its requester (and beneficiary) follow the surviving ticket's public conversation. */
@@ -34,14 +35,19 @@ export async function mergeWork(ctx: WorkContext, duplicateId: string, input: { 
   const closedLine = `This ticket was merged into ticket ${ref(into.id)} as a duplicate. Updates continue there; this conversation is closed.`;
   const resolution = await closeResolution(ctx, duplicate, "Duplicate", closedLine, at);
   const followers = [...new Set([duplicate.requester_id, duplicate.beneficiary_id])].filter((u) => u !== into.requester_id && u !== into.beneficiary_id);
+  const eventId = id();
   const [moved] = await db.batch([
     db.prepare("UPDATE work_records SET state='closed',closed_at=?,merged_into=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND merged_into IS NULL").bind(at, into.id, at, ws, duplicate.id, duplicate.revision),
-    ...followers.map((u) => db.prepare("INSERT OR IGNORE INTO work_participants(workspace_id,work_id,user_id,reason,created_at) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND merged_into=?)")
-      .bind(ws, into.id, u, `merged duplicate ${duplicate.id}`, at, ws, duplicate.id, into.id)),
-    publicNote(ctx, into.id, `merge:${duplicate.id}`, `Ticket ${ref(duplicate.id)} ("${duplicate.title}") was merged into this ticket as a duplicate. Both requesters follow updates here.`, at),
-    publicNote(ctx, duplicate.id, `merged-into:${into.id}`, closedLine, at),
+    db.prepare("INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0").bind(eventId, ws, ctx.principal.userId, "work.merged", duplicate.id,
+      JSON.stringify({ into: into.id, reason, followers, changes: [change('state', duplicate.state, 'closed'), change('merged into', null, into.id), change('closed at', duplicate.closed_at ?? null, at)] }), at),
+    ...followers.map((u) => db.prepare("INSERT OR IGNORE INTO work_participants(workspace_id,work_id,user_id,reason,created_at) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM audit_events WHERE id=?)")
+      .bind(ws, into.id, u, `merged duplicate ${duplicate.id}`, at, eventId)),
+    publicNote(ctx, into.id, `merge:${duplicate.id}`, `Ticket ${ref(duplicate.id)} ("${duplicate.title}") was merged into this ticket as a duplicate. Both requesters follow updates here.`, at, eventId),
+    publicNote(ctx, duplicate.id, `merged-into:${into.id}`, closedLine, at, eventId),
     resolution,
-    audit(ctx, "work.merged", duplicate.id, { into: into.id, reason, followers }, at),
+    db.prepare("INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM audit_events WHERE id=?)")
+      .bind(id(), ws, ctx.principal.userId, "work.duplicate_merged", into.id,
+        JSON.stringify({ changes: [change('merged duplicate', null, duplicate.id)] }), at, eventId),
   ]);
   if (!moved.meta.changes) throw new ApiError(409, "merge_conflict", "The duplicate changed; refresh before merging");
   return readRelationships(ctx, into.id);
@@ -69,7 +75,8 @@ export async function splitWork(ctx: WorkContext, workId: string, input: { title
     publicNote(ctx, source.id, `split-to:${newId}`, `Part of this request continues as ticket ${ref(newId)} ("${title}").`, at),
     db.prepare("INSERT INTO work_classifications(workspace_id,work_id,revision,state,current_json,reason,updated_at) SELECT workspace_id,?,1,'overridden',current_json,?,? FROM work_classifications WHERE workspace_id=? AND work_id=? AND current_json IS NOT NULL")
       .bind(newId, `Split from ${source.id}: ${reason}`, at, ws, source.id),
-    audit(ctx, "work.split", source.id, { newWorkId: newId, messageIds: ids, reason }, at),
+    audit(ctx, "work.split", source.id, { newWorkId: newId, messageIds: ids, reason, changes: [change('split into', null, newId)] }, at),
+    audit(ctx, "work.split_created", newId, { changes: [change('split from', null, source.id)] }, at),
   ]);
   const classification = await db.prepare("SELECT current_json FROM work_classifications WHERE workspace_id=? AND work_id=?").bind(ws, newId).first<{ current_json: string }>();
   const created = await getWork(ctx, newId);
@@ -88,7 +95,16 @@ export async function setParent(ctx: WorkContext, childId: string, input: { pare
       .bind(parentId, ctx.principal.workspaceId, childId).first())
       throw new ApiError(422, "parent_cycle", "A ticket cannot be its own ancestor");
   }
-  await ctx.env.DB.prepare("UPDATE work_records SET parent_id=?,updated_at=? WHERE workspace_id=? AND id=?").bind(parentId, now(), ctx.principal.workspaceId, child.id).run();
+  const previous = (child as WorkRecord & { parent_id: string | null }).parent_id;
+  if (parentId === previous) return readRelationships(ctx, childId);
+  const at = now(), ws = ctx.principal.workspaceId;
+  const [updated] = await ctx.env.DB.batch([
+    ctx.env.DB.prepare("UPDATE work_records SET parent_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?")
+      .bind(parentId, at, ws, child.id, child.revision),
+    ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0")
+      .bind(id(), ws, ctx.principal.userId, "work.parent_set", child.id, JSON.stringify({ changes: [change('parent', previous, parentId)] }), at),
+  ]);
+  if (!updated.meta.changes) throw new ApiError(409, "parent_conflict", "The ticket changed; refresh before setting its parent");
   return readRelationships(ctx, childId);
 }
 
@@ -109,8 +125,14 @@ export async function linkWork(ctx: WorkContext, workId: string, input: { kind?:
     if (!url || url.protocol !== "https:" || input.targetId.length > 500) throw new ApiError(422, "engineering_issue_url", "An engineering issue is an https URL");
   } else if (!(await ctx.env.DB.prepare(targetQueries[kind]).bind(ctx.principal.workspaceId, input.targetId).first()))
     throw new ApiError(422, "work_link_target", `No ${kind} ${input.targetId} in this workspace`);
-  await ctx.env.DB.prepare("INSERT OR IGNORE INTO work_links(id,workspace_id,work_id,kind,target_id,created_by,created_at) VALUES(?,?,?,?,?,?,?)")
-    .bind(id(), ctx.principal.workspaceId, work.id, kind, input.targetId, ctx.principal.userId, now()).run();
+  const at = now(), ws = ctx.principal.workspaceId;
+  await ctx.env.DB.batch([
+    ctx.env.DB.prepare("INSERT OR IGNORE INTO work_links(id,workspace_id,work_id,kind,target_id,created_by,created_at) VALUES(?,?,?,?,?,?,?)")
+      .bind(id(), ws, work.id, kind, input.targetId, ctx.principal.userId, at),
+    ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0")
+      .bind(id(), ws, ctx.principal.userId, "work.linked", work.id,
+        JSON.stringify({ changes: [change(`${kind.replaceAll('_', ' ')} link`, null, input.targetId)] }), at),
+  ]);
   return readRelationships(ctx, work.id);
 }
 
