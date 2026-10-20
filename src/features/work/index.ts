@@ -3,6 +3,7 @@ import { registerSearchRoutes } from './search';
 import { registerRetentionRoutes } from './retention-routes';
 import { registerBundleRoutes } from './bundle-routes';
 import { registerSlaRoutes } from './sla-routes';
+import { registerDeskFieldRoutes } from './desk-field-routes';
 import { registerProjectRoutes } from './project-routes';
 import { registerRelationshipRoutes } from './relationship-routes';
 import { registerRecurrenceRoutes } from './recurrence-routes';
@@ -35,6 +36,7 @@ export function registerWorkRoutes(app: Hono<AppEnv>) {
   registerRetentionRoutes(app);
   registerBundleRoutes(app);
   registerSlaRoutes(app);
+  registerDeskFieldRoutes(app);
   registerProjectRoutes(app);
   registerRelationshipRoutes(app);
   registerApplicationRoutes(app);

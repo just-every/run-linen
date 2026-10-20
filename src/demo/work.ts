@@ -50,7 +50,7 @@ export async function seedDemoWork(ctx: WorkContext, requests: string[][], now: 
         outcomeState: resolved.has(index) ? 'resolved' : 'routed',
       } });
     }
-    if (resolved.has(index) && work.state !== 'closed') await transitionWork(ctx, work.id, work.revision, 'close', replies[index]);
+    if (resolved.has(index) && work.state !== 'closed') await transitionWork(ctx, work.id, work.revision, 'close', replies[index], undefined, undefined, { resolutionCode: 'Solved (permanent fix)' });
     // Backdate only this fictional history; all state transitions above use Work.
     const opened = new Date(now.getTime() - (resolved.has(index) ? 5 + index % 3 : 1 + index % 4) * 86400000).toISOString();
     const updated = new Date(now.getTime() - (index + 1) * 3600000).toISOString();

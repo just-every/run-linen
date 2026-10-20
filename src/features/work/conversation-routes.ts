@@ -143,6 +143,7 @@ export function registerConversationRoutes(app: Hono<AppEnv>) {
         requiredString(b.reason, "reason"),
         typeof b.assigneeId === "string" ? b.assigneeId : undefined,
         b.waitingOn,
+        { resolutionCode: b.resolutionCode, statusId: b.statusId },
       ),
     );
   });

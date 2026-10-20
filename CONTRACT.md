@@ -574,6 +574,29 @@ that product and marks how close the current code is (see [Status](#status)).
   incident without a resolution code from the console, a bulk update and the API
   and see each refused; resolve it with a code and close notes and see both on
   the record and resolutions counted by code in REPORT-001.
+  **Rules as built (20 Oct):** the owner acts for "admin" until an admin role
+  exists. A field is text or a dropdown and shows on the ticket types its
+  definition names (incident, service request, which includes the older
+  "request" kind, and question); that set is the type's form. A custom status is
+  a named pause that waits on the requester, a vendor or nobody outside the desk;
+  whether it stops the SLA clock is the bound policy's pause rule (DESK-004),
+  never an override, so "Awaiting parts" is a vendor wait. A field can be required
+  on closed (resolving) or on a named status. Close notes are the close's reason,
+  kept on the ticket and posted as its public closing line. Field values, the
+  status and the resolution are read by whoever can read the ticket and written by
+  the roles that move its state (owner, operator, HR); people a ticket is shared
+  with see its public thread only. The code list is the owner's (by default
+  "Solved (workaround)", "Solved (permanent fix)" and "Not reproducible") plus
+  "Duplicate" and "No response", which automatic closures record: a merge
+  (DESK-006) closes the duplicate with "Duplicate" and its closing line as notes,
+  and the awaiting-requester rule (DESK-005) closes with "No response" and its
+  disclosure as notes. Every door that closes a ticket today holds the rule: the
+  console, the API, the bulk update (each ticket changed or refused on its own),
+  merge and the automatic close (a merge is refused, and the automatic close
+  waits, while a required field is empty). DESK-015 scenarios and the
+  CHANNEL-001/CHANNEL-002 chat actions inherit the rule before they ship.
+  REPORT-001 counts closed normal-sensitivity tickets opened in the period by the
+  code recorded at their latest close.
 
 - **DESK-011 — Department workspaces.** IT, HR service, Facilities, Finance and
   Legal run separate workspaces with their own catalog, queues, SLAs, knowledge
@@ -2088,8 +2111,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 37 | 49 | 29 | 115 |
-| All | 42 | 68 | 29 | 139 |
+| Target and push further | 38 | 49 | 28 | 115 |
+| All | 43 | 68 | 28 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2124,7 +2147,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-007` | Collaboration | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs`, `tests/ui/browser.mjs` | No mentions, watchers or side conversations. |
 | `DESK-008` | Responses and summaries | target | done | `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs` | Local public-route and paid-model-edge fixture proof of safe canned placeholders, generated knowledge/history citations, a complete 20-message summary, native 1440/390 unsent-draft persistence and explicit agent Send; current role/scope, provider/citation failures and changed-message/article/expiry fences. Native template restore remains inert. No live-model quality claim. |
 | `DESK-009` | Satisfaction surveys | target | missing |  | No CSAT. |
-| `DESK-010` | Custom fields, forms and statuses | target | missing |  | No custom fields, forms, statuses or required-on-status resolution code and close notes. |
+| `DESK-010` | Custom fields, forms and statuses | target | done | `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs` | Public-route proof: the owner adds an Office dropdown for incidents and service requests and an "Awaiting parts" vendor-wait status; the requester reads the field and cannot write it; Awaiting parts stops the clock under a vendor-pausing policy and not under a requester-only one; an incident is refused without a resolution code from the API and a bulk update (a service request in the same bulk closes with close notes); fields required on closed or on a named status are enforced; a merge records Duplicate and the no-reply close No response; the owner edits the code list; REPORT-001 counts resolutions by code. Browser proof at 1440/390: the console sets Office and Awaiting parts, refuses the close without a code, then shows the code and close notes, and the report counts it. |
 | `DESK-011` | Department workspaces | target | partial | `src/platform/auth.ts`, `src/features/work/core.ts`, `tests/platform/runtime.mjs` | No department workspaces under one portal. |
 | `DESK-012` | Time tracking and effort | target | done | `src/features/work/time.ts`, `src/features/work/effort-report.ts`, `tests/work/time-cases.mjs`, `tests/ui/time-journey.mjs`, `tests/adoption/runtime.mjs` | Local public work/task routes and real 1440/390 browser interval: manual and measured active minutes feed role/request-type effort totals with touches and failed/pending work. Visibility/focus/inactivity pauses, server-bounded sequenced heartbeats, current scope, erasure and inert restored timers are proved. REPORT-004 prices these minutes at owner-declared role rates. |
 | `DESK-013` | Scheduled and recurring work | target | done | `src/features/work/recurrence.ts`, `src/features/work/recurrence-calendar.ts`; DESK-013 public routes in `tests/work/recurrence-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/recurrence-journey.mjs` via `tests/ui/browser.mjs`, `tests/adoption/recurrence-cases.mjs` via `tests/adoption/runtime.mjs`: calendar tickets/task plans with owners, first business day/holiday, atomic occurrences, DST/month-end, pause/resume, inert restore and 1440/390 journeys. | |

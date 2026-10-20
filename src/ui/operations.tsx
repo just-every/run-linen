@@ -363,6 +363,7 @@ export function ReportSpace() {
             {saved.error ? <ErrorNotice error={saved.error} retry={saved.refresh} /> : saved.data && <WorkSavedReport value={saved.data} />}
             {report.data.effort && <EffortReport value={report.data.effort as unknown as EffortReportData} />}
             {report.data.sla && <SlaReport value={report.data.sla as unknown as Parameters<typeof SlaReport>[0]["value"]} />}
+            {report.data.resolutions && <ResolutionReport value={report.data.resolutions as unknown as ResolutionCounts} />}
             <Evidence
               value={report.data.rows}
               title="Underlying records and elapsed ages"
@@ -372,4 +373,17 @@ export function ReportSpace() {
       )}
     </>
   );
+}
+
+interface ResolutionCounts { definition: string; denominator: number; counts: { code: string | null; count: number }[] }
+/** REPORT-001 with DESK-010: closed tickets counted by the resolution code recorded at close. */
+function ResolutionReport({ value }: { value: ResolutionCounts }) {
+  return <section aria-label="Resolutions by code">
+    <h3>Resolutions by code</h3>
+    <p>{value.definition} Closed tickets: {value.denominator}.</p>
+    <div style={{ overflowX: "auto" }}><table>
+      <thead><tr><th scope="col">Resolution code</th><th scope="col">Tickets</th></tr></thead>
+      <tbody>{value.counts.map((c) => <tr key={c.code ?? ""}><th scope="row">{c.code ?? "No code recorded"}</th><td>{c.count}</td></tr>)}</tbody>
+    </table></div>
+  </section>;
 }

@@ -5,6 +5,7 @@ import { hashToken } from "../../platform/crypto";
 import { cancelWorkExecution } from "./execution";
 import { shiftCommitmentForPause } from "./calendar";
 import { slaPauseStatements, validWaitingOn } from "./sla-policies";
+import { closeResolution, pauseStatus } from "./desk-fields";
 import { participantView } from "./relationships";
 import { sharedListClause, sharedReplyAllowed, sharedView } from "./sharing";
 import { currentWorkPrincipal } from "./identity";
@@ -395,11 +396,15 @@ export async function transitionWork(
   reason: string,
   assigneeId?: string,
   waitingOn?: unknown,
+  desk: { resolutionCode?: unknown; statusId?: unknown } = {},
 ) {
   await currentWorkPrincipal(ctx);
 
   const work = await getWork(ctx, workId);
-  const waiting = validWaitingOn(command, waitingOn);
+  // DESK-010: a named status is a pause that waits on whom the status names.
+  const { statusId, waiting } = await pauseStatus(ctx, work, command, desk.statusId, validWaitingOn(command, waitingOn));
+  if (desk.resolutionCode !== undefined && command !== "close")
+    throw new ApiError(422, "resolution_code", "Only a close records a resolution code");
   if (!reason?.trim())
     throw new ApiError(422, "reason_required", "Explain this transition");
   const state = (
@@ -432,6 +437,8 @@ export async function transitionWork(
   if(work.pending_person_id && ['reopen','resume'].includes(command) && await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state='withdrawn'").bind(ctx.principal.workspaceId,work.pending_person_id).first())
     throw new ApiError(409,'pending_person_withdrawn','Withdrawn pending people cannot resume requests');
   const t = now();
+  // DESK-010: the close notes are this close's reason; an incident also needs a resolution code.
+  const resolution = command === "close" ? await closeResolution(ctx, work, desk.resolutionCode, reason, t) : null;
   const result = await ctx.env.DB.prepare(
     `UPDATE work_records SET state=?,revision=revision+1,updated_at=?,closed_at=?,paused_at=?,paused_ms=paused_ms+?,assignee_id=COALESCE(?,assignee_id) WHERE workspace_id=? AND id=? AND revision=?`,
   )
@@ -455,10 +462,11 @@ export async function transitionWork(
       "revision_conflict",
       "Work changed; refresh before deciding",
     );
+  if (resolution) await resolution.run();
   if (work.paused_at)
     await shiftCommitmentForPause(ctx, workId, work.paused_at, t);
   if (work.paused_at || command === "pause")
-    await ctx.env.DB.batch(slaPauseStatements(ctx, workId, command, waiting, t));
+    await ctx.env.DB.batch(slaPauseStatements(ctx, workId, command, waiting, t, statusId));
   let pendingCancellation = 0;
   if (command === "cancel") {
     await ctx.env.DB.batch([

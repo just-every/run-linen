@@ -170,6 +170,9 @@ export async function escalationChecks(workspaceApi, db) {
   const closed = check(await api(`/work/${quiet.id}`, undefined, employee));
   assert.equal(closed.work.state, 'closed', 'DESK-005 the ticket resolves after 5 business days without a reply');
   assert.ok(closed.messages.some(m => m.visibility === 'public' && m.body.startsWith('Closed: Resolved without a reply: no reply arrived within 5 business days')), 'DESK-005 the resolution is disclosed to the requester');
+  const resolution = check(await api(`/work/${quiet.id}/desk`, undefined, employee)).resolution;
+  assert.equal(resolution.code, 'No response', 'DESK-010 the automatic close records the No response code');
+  assert.ok(resolution.closeNotes.startsWith('Resolved without a reply'), 'DESK-010 the automatic close records its disclosure as close notes');
 
   let answered = await ticket('answered', 'P3', 'medium');
   answered = await pauseFor(answered, 'answered');

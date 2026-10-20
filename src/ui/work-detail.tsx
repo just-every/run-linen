@@ -16,6 +16,7 @@ import { BundleProgress } from "./bundles";
 import { HeldServices } from "./pending-people";
 import { WorkClassification } from "./work-classification";
 import { WorkSla } from "./work-sla";
+import { WorkFields, type DeskSettings } from "./work-fields";
 import { WorkRelationships } from "./work-relationships";
 import { usePeopleLabels } from "./people-labels";
 import { shortRef } from "./work-queue";
@@ -131,6 +132,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       </dl>
       {operator && <WorkClassification workId={work.id} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkSla workId={work.id} />}
+      {!access && <WorkFields workId={work.id} canEdit={operator} version={`${work.revision}:${work.updated_at ?? ""}`} />}
       {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkRelationships workId={work.id} messages={(detail.data?.messages ?? []) as never} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner","operator"].includes(r)) && <RepairCoverage workId={work.id} />}
       {!access && work.sensitivity === "normal" && (mine || operator) && <WorkShares workId={work.id} canShare={mine} canRevoke />}
@@ -274,11 +276,14 @@ function WorkCommands({ work, onChanged, operator }: { work: WorkRecord; onChang
   const [command, setCommand] = useState(""),
     mutation = useMutation(),
     members = useRemote<RecordValue[]>(operator ? "/members" : null),
+    desk = useRemote<DeskSettings>(operator ? "/desk-settings" : null),
     assignees = (members.data ?? []).filter((m) => m.active && /"(owner|operator)"/.test(text(m.roles_json)));
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const values = Object.fromEntries(new FormData(e.currentTarget));
     if (!values.waitingOn) delete values.waitingOn;
+    if (!values.statusId) delete values.statusId;
+    if (!values.resolutionCode) delete values.resolutionCode;
     const result = await mutation.mutate(`/work/${work.id}/commands`, { ...values, command, revision: work.revision });
     if (result) {
       setCommand("");
@@ -318,9 +323,27 @@ function WorkCommands({ work, onChanged, operator }: { work: WorkRecord; onChang
           )}
           {command === "close" && <Notice>Closing the conversation is not evidence of recovery. Keep unresolved effects and obligations open.</Notice>}
           <label>
-            {command === "reopen" ? "What is happening?" : "Reason"}
+            {command === "reopen" ? "What is happening?" : command === "close" ? "Close notes" : "Reason"}
             <textarea name="reason" required rows={3} />
           </label>
+          {command === "close" && (
+            <label>
+              Resolution code{work.kind === "incident" ? " (required for an incident)" : ""}
+              <select name="resolutionCode" defaultValue="">
+                <option value="">Choose…</option>
+                {(desk.data?.resolutionCodes.codes ?? []).map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+          )}
+          {command === "pause" && Boolean(desk.data?.statuses.length) && (
+            <label>
+              Status
+              <select name="statusId" defaultValue="">
+                <option value="">No named status</option>
+                {desk.data!.statuses.map((s) => <option key={s.id} value={s.id}>{s.name}{s.waitingOn ? ` · waits on the ${s.waitingOn}` : ""}</option>)}
+              </select>
+            </label>
+          )}
           {command === "pause" && (
             <label>
               Waiting on

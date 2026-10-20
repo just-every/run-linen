@@ -2,6 +2,7 @@ import { ApiError, id, now, requiredString } from "../../platform/http";
 import { currentWorkPrincipal } from "./identity";
 import { getWork, permit, transitionWork, type WorkContext, type WorkRecord } from "./core";
 import { slaFor } from "./sla-policies";
+import { closeResolution } from "./desk-fields";
 import { slaDue, type SlaTargetState } from "./sla-clock";
 import type { BusinessCalendar } from "./calendar";
 
@@ -133,9 +134,12 @@ async function remindRequester(ctx: WorkContext, work: WorkRecord, rule: { remin
   if (reminder?.state === "scheduled" && reminder.next_due_at! <= at && await claim(ctx, reminder, at))
     await note(ctx, work.id, `followup:${reminder.id}`, "public",
       `Reminder: we are waiting for your reply. If we do not hear from you by ${zoneTime(resolveAt, calendar)}, this request will be resolved; you can reply or reopen it at any time.`, at);
-  if (resolve?.state === "scheduled" && resolve.next_due_at! <= at && reminder?.state !== "scheduled" && await claim(ctx, resolve, at))
-    await transitionWork(ctx, work.id, work.revision, "close",
-      `Resolved without a reply: no reply arrived within ${rule.resolve_business_days} business days of our question on ${zoneTime(pause.paused_at, calendar)}, after a reminder. Reply or reopen to continue.`);
+  if (resolve?.state !== "scheduled" || resolve.next_due_at! > at || reminder?.state === "scheduled") return;
+  const notes = `Resolved without a reply: no reply arrived within ${rule.resolve_business_days} business days of our question on ${zoneTime(pause.paused_at, calendar)}, after a reminder. Reply or reopen to continue.`;
+  // DESK-010: the automatic close meets the same resolution rule before it is claimed, with the No response code.
+  await closeResolution(ctx, work, "No response", notes, at);
+  if (await claim(ctx, resolve, at))
+    await transitionWork(ctx, work.id, work.revision, "close", notes, undefined, undefined, { resolutionCode: "No response" });
 }
 
 /** Scheduler duty: plan, fire and stop escalations and requester reminders on open and paused tickets. */

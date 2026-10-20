@@ -4,6 +4,7 @@ import { problemDetectionChecks } from './problem-detection-cases.mjs';
 import { responseChecks } from './response-cases.mjs';
 import { recurrenceChecks } from './recurrence-cases.mjs';
 import { slaPolicyChecks, escalationChecks } from './sla-policy-cases.mjs';
+import { deskFieldChecks } from './desk-field-cases.mjs';
 import { projectChecks } from './project-cases.mjs';
 import { relationshipChecks, sharingChecks } from './relationship-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
@@ -90,6 +91,7 @@ try {
   await recurrenceChecks(api,db);
   await slaPolicyChecks(api,db);
   await escalationChecks(api,db);
+  await deskFieldChecks(api,db);
   const cal = {
     timezone: "America/New_York",
     weekdays: [1, 2, 3, 4, 5],

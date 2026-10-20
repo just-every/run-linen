@@ -1,7 +1,7 @@
 import { businessMinuteTest, validateCalendar, type BusinessCalendar } from "./calendar";
 /** DESK-004: pure SLA arithmetic. A minute counts toward a target when it is working time on the
  * policy's calendar (every minute for calendar hours) and outside every applicable waiting-on pause. */
-export interface SlaPause { waiting_on: string | null; paused_at: string; resumed_at: string | null }
+export interface SlaPause { waiting_on: string | null; paused_at: string; resumed_at: string | null; status?: string | null }
 export interface SlaTargetState {
   target: "first_response" | "next_response" | "resolution";
   startedAt: string;

@@ -5,7 +5,7 @@ export async function knowledgeDraftChecks(api,db) {
   const ticket=async(app='KB004 VPN',headers=employee,sensitivity='normal',context={app})=>{
     let work=check(await api('/work',{title:'VPN access stopped',body:'A fresh network session restores access. Treat this as a proposed remedy, not authority to change identity grants.',kind:'incident',sensitivity,context,deduplicationKey:crypto.randomUUID()},headers),201);
     check(await api(`/work/${work.id}/messages`,{body:'PRIVATE-KB004-DO-NOT-SEND',visibility:'private',sourceMessageId:crypto.randomUUID()}),201);
-    work=check(await api(`/work/${work.id}/commands`,{revision:work.revision,command:'close',reason:'Employee reported usable access after a fresh session'}));
+    work=check(await api(`/work/${work.id}/commands`,{revision:work.revision,command:'close',resolutionCode:'Solved (workaround)',reason:'Employee reported usable access after a fresh session'}));
     return work;
   };
   const detect=async()=>check(await api('/knowledge-drafts/detect',{})).items;

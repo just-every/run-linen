@@ -1,3 +1,4 @@
+import { resolutionReport } from "./desk-fields";
 import { slaReport } from "./sla-policies";
 import { effortReport } from "./effort-report";
 import { deflectionReport } from "./deflection";
@@ -159,6 +160,7 @@ export async function workReport(
     calendars,
     effort: await effortReport(ctx, from, to),
     sla: await slaReport(ctx, from, to),
+    resolutions: await resolutionReport(ctx, from, to),
     deflection: await deflectionReport(ctx, from, to),
     denominator: rows.length,
     definition:

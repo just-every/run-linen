@@ -108,11 +108,11 @@ export async function bindSlaPolicy(ctx: WorkContext, work: WorkRecord, classifi
 }
 
 /** Waiting-on pauses: a pause names who the ticket waits for; any transition out of paused ends it. */
-export function slaPauseStatements(ctx: WorkContext, workId: string, command: string, waiting: string | undefined, at: string) {
+export function slaPauseStatements(ctx: WorkContext, workId: string, command: string, waiting: string | undefined, at: string, statusId: string | null = null) {
   const db = ctx.env.DB, ws = ctx.principal.workspaceId;
   const statements = [db.prepare("UPDATE work_sla_pauses SET resumed_at=? WHERE workspace_id=? AND work_id=? AND resumed_at IS NULL").bind(at, ws, workId)];
   if (command === "pause")
-    statements.push(db.prepare("INSERT INTO work_sla_pauses(id,workspace_id,work_id,waiting_on,paused_at) VALUES(?,?,?,?,?)").bind(id(), ws, workId, waiting ?? null, at));
+    statements.push(db.prepare("INSERT INTO work_sla_pauses(id,workspace_id,work_id,waiting_on,paused_at,status_id) VALUES(?,?,?,?,?,?)").bind(id(), ws, workId, waiting ?? null, at, statusId));
   return statements;
 }
 export function validWaitingOn(command: string, waiting: unknown) {
@@ -152,7 +152,7 @@ async function slaInputs(ctx: WorkContext, workId: string) {
   const ws = ctx.principal.workspaceId;
   const [clock, pauses, messages] = await Promise.all([
     ctx.env.DB.prepare("SELECT * FROM work_sla_clocks WHERE workspace_id=? AND work_id=?").bind(ws, workId).first<Clock>(),
-    ctx.env.DB.prepare("SELECT waiting_on,paused_at,resumed_at FROM work_sla_pauses WHERE workspace_id=? AND work_id=? ORDER BY paused_at").bind(ws, workId).all<SlaPause>(),
+    ctx.env.DB.prepare("SELECT p.waiting_on,p.paused_at,p.resumed_at,s.name status FROM work_sla_pauses p LEFT JOIN work_custom_statuses s ON s.workspace_id=p.workspace_id AND s.id=p.status_id WHERE p.workspace_id=? AND p.work_id=? ORDER BY p.paused_at").bind(ws, workId).all<SlaPause>(),
     ctx.env.DB.prepare("SELECT author_id,visibility,source_key,created_at FROM work_messages WHERE workspace_id=? AND work_id=? ORDER BY created_at,rowid").bind(ws, workId).all<Message>(),
   ]);
   return { clock, pauses: pauses.results, messages: messages.results };

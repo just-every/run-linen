@@ -8,6 +8,7 @@ import { recurrenceJourney } from './recurrence-journey.mjs';
 import { assetFinancialJourney } from './asset-financial-journey.mjs';
 import { assetAuditJourney, stockJourney } from './asset-audit-journey.mjs';
 import { sharingJourney } from './sharing-journey.mjs';
+import { deskFieldJourney } from './desk-field-journey.mjs';
 import { problemJourney } from "./problem-journey.mjs";
 import { classificationJourney } from "./classification-journey.mjs";
 import { timeJourney } from './time-journey.mjs';
@@ -572,6 +573,8 @@ try {
   await assetAuditJourney({page,api,base,out});
   await stockJourney({page,api,base,out});
   await sharingJourney({browser,api,base,out,errors});
+  await deskFieldJourney({page,api,base,out});
+  checks.push("DESK-010 console field, Awaiting parts status, close refused without a resolution code, resolution on the record and counted by code");
   await timeJourney({page,base,api,workId,out});
   checks.push("DESK-012 manual and measured active effort reaches the role-scoped report at desktop and mobile widths");
   await problemJourney({page,api,base,out});

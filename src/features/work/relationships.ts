@@ -1,4 +1,5 @@
 import { currentWorkPrincipal } from "./identity";
+import { closeResolution } from "./desk-fields";
 import { ApiError, id, now, requiredString } from "../../platform/http";
 import { getWork, permit, type WorkContext, type WorkRecord } from "./core";
 import { workReadable } from "./scope";
@@ -29,13 +30,17 @@ export async function mergeWork(ctx: WorkContext, duplicateId: string, input: { 
     throw new ApiError(422, "merge_sensitivity", "HR and restricted tickets are never merged");
   if (!open(duplicate) || !open(into)) throw new ApiError(409, "merge_state", "Both tickets must be open and not already merged");
   const at = now(), db = ctx.env.DB, ws = ctx.principal.workspaceId;
+  // DESK-010: the merge is an automatic close, recorded with the Duplicate code and its public closing line as close notes.
+  const closedLine = `This ticket was merged into ticket ${ref(into.id)} as a duplicate. Updates continue there; this conversation is closed.`;
+  const resolution = await closeResolution(ctx, duplicate, "Duplicate", closedLine, at);
   const followers = [...new Set([duplicate.requester_id, duplicate.beneficiary_id])].filter((u) => u !== into.requester_id && u !== into.beneficiary_id);
   const [moved] = await db.batch([
     db.prepare("UPDATE work_records SET state='closed',closed_at=?,merged_into=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND merged_into IS NULL").bind(at, into.id, at, ws, duplicate.id, duplicate.revision),
     ...followers.map((u) => db.prepare("INSERT OR IGNORE INTO work_participants(workspace_id,work_id,user_id,reason,created_at) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND merged_into=?)")
       .bind(ws, into.id, u, `merged duplicate ${duplicate.id}`, at, ws, duplicate.id, into.id)),
     publicNote(ctx, into.id, `merge:${duplicate.id}`, `Ticket ${ref(duplicate.id)} ("${duplicate.title}") was merged into this ticket as a duplicate. Both requesters follow updates here.`, at),
-    publicNote(ctx, duplicate.id, `merged-into:${into.id}`, `This ticket was merged into ticket ${ref(into.id)} as a duplicate. Updates continue there; this conversation is closed.`, at),
+    publicNote(ctx, duplicate.id, `merged-into:${into.id}`, closedLine, at),
+    resolution,
     audit(ctx, "work.merged", duplicate.id, { into: into.id, reason, followers }, at),
   ]);
   if (!moved.meta.changes) throw new ApiError(409, "merge_conflict", "The duplicate changed; refresh before merging");

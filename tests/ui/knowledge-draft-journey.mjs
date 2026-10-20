@@ -6,7 +6,7 @@ export async function knowledgeDraftJourney({page,api,base,out,model}) {
   const tickets=[];
   for(let i=0;i<3;i++) {
     const work=await api('/work',{title:'Knowledge journey network access',body:'The network session expired. A fresh network session restored access.',kind:'incident',context:{app:'Knowledge journey network'},deduplicationKey:crypto.randomUUID()});
-    tickets.push(await api(`/work/${work.id}/commands`,{revision:work.revision,command:'close',reason:'Employee reports usable network access after a fresh session'}));
+    tickets.push(await api(`/work/${work.id}/commands`,{revision:work.revision,command:'close',resolutionCode:'Solved (workaround)',reason:'Employee reports usable network access after a fresh session'}));
   }
   const discovered=page.waitForResponse(r=>r.url().endsWith('/knowledge-drafts/detect')&&r.request().method()==='POST');
   await page.goto(base+'/app#/knowledge');

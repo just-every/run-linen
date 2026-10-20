@@ -12,7 +12,7 @@ export async function knowledgeDraftArchiveChecks(ok,request,auth,sourceAuth) {
   const tickets=[];
   for(let i=0;i<3;i++) {
     const work=await ok('/work','POST',{title:'Portable knowledge session',body:'Knowledge Archive Person recovered access with a fresh session.',beneficiaryId:member.id,kind:'incident',context:{app:'Portable knowledge app'},deduplicationKey:crypto.randomUUID()},source,201);
-    tickets.push(await ok(`/work/${work.id}/commands`,'POST',{revision:work.revision,command:'close',reason:'Fresh session restored the reported access'},source));
+    tickets.push(await ok(`/work/${work.id}/commands`,'POST',{revision:work.revision,command:'close',resolutionCode:'Solved (workaround)',reason:'Fresh session restored the reported access'},source));
   }
   let candidate=(await ok('/knowledge-drafts/detect','POST',{},source)).items.find(d=>d.group.value==='portable knowledge app');assert.ok(candidate);
   candidate=await ok(`/knowledge-drafts/${candidate.id}/generate`,'POST',{revision:candidate.revision,connectionId:model.id,generate:true},source);
@@ -20,7 +20,7 @@ export async function knowledgeDraftArchiveChecks(ok,request,auth,sourceAuth) {
   const publishedTickets=[];
   for(let i=0;i<3;i++){
     const work=await ok('/work','POST',{title:'Portable published network guidance',body:'Knowledge Archive Person reported a fresh session restored access.',beneficiaryId:member.id,context:{app:'Portable published guidance'},deduplicationKey:crypto.randomUUID()},source,201);
-    publishedTickets.push(await ok(`/work/${work.id}/commands`,'POST',{revision:work.revision,command:'close',reason:'Employee reported recovery'},source));
+    publishedTickets.push(await ok(`/work/${work.id}/commands`,'POST',{revision:work.revision,command:'close',resolutionCode:'Solved (workaround)',reason:'Employee reported recovery'},source));
   }
   let published=(await ok('/knowledge-drafts/detect','POST',{},source)).items.find(d=>d.group.value==='portable published guidance');assert.ok(published);
   published=await ok(`/knowledge-drafts/${published.id}/generate`,'POST',{revision:published.revision,connectionId:model.id,generate:true},source);
