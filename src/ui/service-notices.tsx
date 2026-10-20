@@ -20,15 +20,16 @@ export function ServiceNotices() {
 }
 export function NoticeControls({ record, section }: { record: DomainRecord; section: string }) {
   const { session } = useSession(), base = `/${section}/${record.id}/notices`;
-  const remote = useRemote<{revision:number;items:EmployeeNotice[];groups:{id:string;name:string}[]}>(base, 10000);
+  const remote = useRemote<{revision:number;items:EmployeeNotice[];groups:{id:string;name:string}[]}>(base);
   const connections = useRemote<RecordValue[]>('/connections');
   const defaults = { revision: remote.data?.revision ?? record.revision };
   return <section aria-label="Employee service notices">
     <h2>Employee service notices</h2>
+    <button className="text-button" type="button" onClick={remote.refresh}>Refresh notices</button>
     <p>Only current members of the chosen requester group who can read this source and its services receive the notice.</p>
     <ErrorNotice error={remote.error ?? remote.backgroundError} retry={remote.refresh} />
     {remote.data && <>
-      <ActionForm title="Publish a service notice" path={base} defaults={defaults} submit="Publish notice" onOpen={remote.refresh} onSaved={remote.refresh}
+      <ActionForm title="Publish a service notice" path={base} defaults={defaults} submit="Publish notice" onSaved={remote.refresh}
         explanation="The portal shows the message. Optional email carries only a generic notice and a sign-in link. Slack and Teams delivery are not available."
         fields={[
           {name:'groupId',label:'Requester group',type:'select',required:true,options:remote.data.groups.map(g=>({value:g.id,label:g.name}))},

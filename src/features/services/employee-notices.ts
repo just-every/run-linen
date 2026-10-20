@@ -54,9 +54,9 @@ export async function employeeNotices(env: Env, principal: Principal, question?:
         if (question !== undefined) {
           if (n.state !== 'open' || r.kind !== 'incident' || ['restored', 'closed'].includes(r.data.status)) continue;
           const service = await getService(env.DB, p, r.data.serviceId, 'service');
-          const name = String(service.data.name).normalize('NFKC').toLowerCase().trim();
-          const words = question.normalize('NFKC').toLowerCase();
-          if (!name || !(` ${words.replace(/[^\p{L}\p{N}]+/gu, ' ')} `).includes(` ${name.replace(/[^\p{L}\p{N}]+/gu, ' ')} `)) continue;
+          const name = String(service.data.name).normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+          const words = question.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+          if (!name || !(` ${words} `).includes(` ${name} `)) continue;
         }
         items.push(await recipientNotice(env, p, r.id, n.id));
       } catch (error) { if (!(error instanceof ApiError) || ![403,404].includes(error.status)) throw error; }

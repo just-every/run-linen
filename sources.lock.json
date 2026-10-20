@@ -1995,7 +1995,7 @@
       "executable": false
     },
     "src/features/services/employee-notices.ts": {
-      "sha256": "fec802a0951af9350bfa8e8d63f79f34163f970adfba47a7fe18a14691652b94",
+      "sha256": "28fefb4edee42c724bd42173f8425c23faf951ddc58c9a46de24547052b35a79",
       "executable": false
     },
     "src/features/services/graph.ts": {
@@ -4491,7 +4491,7 @@
       "executable": false
     },
     "src/ui/service-notices.tsx": {
-      "sha256": "a30f58fe01d3b7363f81b1bc7f9b5fa830b1582368227676ff5a95772b18634d",
+      "sha256": "85cc97845a3277f052b7f33be3c85e8a8180b8cf8d1aa60d1068ab15151477b1",
       "executable": false
     },
     "src/ui/service-space.tsx": {
