@@ -14,13 +14,28 @@ export async function timeJourney({page,base,api,workId,out}) {
   await page.getByText('Time & effort',{exact:true}).click();
   await page.getByLabel('Minutes',{exact:true}).fill('15');
   await page.getByLabel('Work performed',{exact:true}).fill('Investigated the request and checked the remaining task.');
+  const manualSaved = page.waitForResponse(response=>response.url().endsWith(`/work/${workId}/time`)&&response.request().method()==='POST'&&response.status()===201);
   await page.getByRole('button',{name:'Save time entry',exact:true}).click();
+  await manualSaved;
+  const started = page.waitForResponse(response=>response.url().endsWith(`/work/${workId}/time`)&&response.request().method()==='POST'&&response.status()===201);
+  await page.getByRole('button',{name:'Measure active work',exact:true}).click();
+  await started;
+  // The heartbeat deadline begins after the measured entry exists, rather than
+  // including the preceding manual-save refresh and the start-button action.
   const measured = page.waitForResponse(async response=>{
     if(!response.url().includes(`/work/${workId}/time/`)||response.request().method()!=='POST'||response.status()!==200)return false;
     return (await response.json()).active_ms>0;
   },{timeout:25000});
-  await page.getByRole('button',{name:'Measure active work',exact:true}).click();
-  await measured;
+  await page.bringToFront();
+  await page.waitForFunction(() => document.hasFocus() && document.visibilityState === 'visible');
+  // Exercise actual focused keyboard activity while the product records its
+  // heartbeat. A headless page left idle after other contexts close can lose
+  // browser focus even though CDP previously reported it as focused.
+  let recorded = false;
+  await Promise.all([
+    measured.finally(() => { recorded = true; }),
+    (async () => { while (!recorded) { await page.keyboard.press('Shift'); await page.waitForTimeout(1000); } })(),
+  ]);
   await page.getByRole('button',{name:'Finish measurement',exact:true}).click();
   const entries=(await api(`/work/${workId}/time`)).items;
   assert.ok(entries.some(row=>row.source==='manual'&&row.active_ms===900000));
