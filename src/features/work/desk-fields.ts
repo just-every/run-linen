@@ -136,12 +136,14 @@ export async function setWorkField(ctx: WorkContext, workId: string, input: Reco
   if (value && target.type === "dropdown" && !target.options.includes(value)) throw new ApiError(422, "field_value", `Choose one of the ${target.name} options`);
   const at = now(), ws = ctx.principal.workspaceId;
   await ctx.env.DB.batch([
+    ctx.env.DB.prepare(`INSERT INTO audit_events SELECT ?,?,?,'work.field_set',?,
+      json_object('field',?,'before',(SELECT value FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?),'value',?),?`)
+      .bind(id(), ws, ctx.principal.userId, workId, target.name, ws, workId, target.id, value || null, at),
     value
       ? ctx.env.DB.prepare("INSERT INTO work_field_values(workspace_id,work_id,field_id,value,updated_by,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(workspace_id,work_id,field_id) DO UPDATE SET value=excluded.value,updated_by=excluded.updated_by,updated_at=excluded.updated_at")
         .bind(ws, workId, target.id, value, ctx.principal.userId, at)
       : ctx.env.DB.prepare("DELETE FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?").bind(ws, workId, target.id),
     ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(at, ws, workId),
-    audit(ctx, "work.field_set", workId, { field: target.name, value: value || null }, at),
   ]);
   return readWorkDesk(ctx, workId);
 }

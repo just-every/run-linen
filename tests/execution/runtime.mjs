@@ -815,6 +815,12 @@ try {
     ).state,
     "delivered",
   );
+  const activity = await call('/work/work/activity');
+  assert.equal(activity.status, 200, 'DESK-017 notification timeline public door');
+  const notifications = activity.body.items.filter(e => e.kind === 'notification');
+  assert.ok(notifications.some(e => e.body === 'Delivery state: unknown'), 'DESK-017 lost receipt remains unknown');
+  assert.ok(notifications.some(e => e.body === 'Delivery state: delivered'), 'DESK-017 signed delivery observation appears beside message');
+  assert.ok(activity.body.items.some(e => e.kind === 'message' && e.body === 'Fixture public update'));
   const forged = await call("/fixture/webhook/mail", []);
   assert.equal(forged.status, 403, "forged delivery rejected");
 

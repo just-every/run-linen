@@ -7,7 +7,7 @@ import { slaPolicyChecks, escalationChecks } from './sla-policy-cases.mjs';
 import { deskFieldChecks } from './desk-field-cases.mjs';
 import { deskGroupChecks } from './desk-group-cases.mjs';
 import { deskRoutingChecks } from './desk-routing-cases.mjs';
-import { deskScenarioChecks } from './desk-scenario-cases.mjs';
+import { deskScenarioChecks, deskActivityChecks } from './desk-scenario-cases.mjs';
 import { projectChecks } from './project-cases.mjs';
 import { relationshipChecks, sharingChecks } from './relationship-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
@@ -98,6 +98,7 @@ try {
   await deskGroupChecks(api,db);
   await deskRoutingChecks(api,db);
   await deskScenarioChecks(api,db);
+  await deskActivityChecks(api);
   const cal = {
     timezone: "America/New_York",
     weekdays: [1, 2, 3, 4, 5],

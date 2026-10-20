@@ -159,3 +159,60 @@ export async function deskScenarioChecks(workspaceApi, db) {
   assert.equal(check(await api(`/projects/${projectId}`)).tasks.find(t => t.id === task.id).title, 'Install approved tools and verify');
   console.log('PASS DESK-015 public routes: group-scoped "Escalate to Network L2" offered only to its group and refused to an outsider by API, one audited run listing category, priority, group, owner, private note and status before/after with no note for the requester, a role-refused step applying nothing, bulk runs, and a "New laptop setup" ticket template draft');
 }
+
+/** DESK-017 ticket-history slice: public commands supply every change; no audit rows are manufactured. */
+export async function deskActivityChecks(workspaceApi) {
+  const api = (path, body, headers = {}) => workspaceApi(path, body, { 'x-workspace': 'desk015', ...headers });
+  const check = (r, status = 200) => { assert.equal(r.status, status, 'DESK-017 ' + JSON.stringify(r)); return r.value; };
+  const employee = { 'x-user': 'd15-employee', 'x-roles': '["employee"]' };
+  const work = check(await api('/work', { title: 'DESK-017 VPN reconnects', body: 'VPN drops during payroll upload', kind: 'incident', deduplicationKey: 'desk017-history' }, employee), 201);
+  const classify = async (priority) => {
+    const c = check(await api(`/work/${work.id}/classification`));
+    return check(await api(`/work/${work.id}/classification/override`, { type: 'incident', category: 'general', subcategory: 'other', impact: 'low', urgency: 'medium', priority,
+      reason: 'Business impact confirmed', revision: c.revision, workRevision: c.workRevision }));
+  };
+  await classify('P3'); await classify('P2');
+  const scenario = check(await api('/work-scenarios', { name: 'Hardware escalation', scope: 'workspace', steps: {
+    classification: { category: 'hardware', subcategory: 'laptop' },
+    message: { visibility: 'private', body: 'Internal hardware diagnostic' },
+    status: { command: 'pause', reason: 'Waiting for vendor diagnosis', waitingOn: 'vendor' },
+  } }), 201);
+  check(await api(`/work/${work.id}/scenario-runs`, { scenarioId: scenario.id }));
+  const group = check(await api('/work-groups', { name: 'DESK-017 Device Support' }), 201);
+  check(await api(`/work-groups/${group.id}/members`, { userId: 'd15-net' }));
+  check(await api(`/work-groups/${group.id}/assignment`, { mode: 'round_robin' }));
+  const rule = check(await api('/work-routing/rules', { name: 'Hardware history route', position: 1, category: 'hardware', groupId: group.id }), 201);
+  const beforeRoute = check(await api(`/work/${work.id}`)).work;
+  check(await api(`/work/${work.id}/route`, { revision: beforeRoute.revision }));
+  const field = check(await api('/desk-fields', { name: 'Diagnostic code', type: 'text', kinds: ['incident'], requiredOn: [] }), 201);
+  check(await api(`/work/${work.id}/fields`, { fieldId: field.id, value: 'VPN-42' }));
+  check(await api(`/work/${work.id}/fields`, { fieldId: field.id, value: 'VPN-43' }));
+  check(await api(`/work/${work.id}/messages`, { body: 'We are investigating your laptop', visibility: 'public', sourceMessageId: 'history-public' }), 201);
+  const history = check(await api(`/work/${work.id}/activity`)).items;
+  const priority = history.find(e => e.changes.some(c => c.field === 'priority' && c.before === 'P3' && c.after === 'P2'));
+  assert.equal(priority.actor, 'Owner', 'DESK-017 human priority actor');
+  assert.equal(priority.actorKind, 'person');
+  const run = history.find(e => e.actorKind === 'scenario');
+  assert.ok(run.changes.some(c => c.field === 'category' && c.before === 'general' && c.after === 'hardware'), 'DESK-017 scenario category before/after');
+  const route = history.find(e => e.actorKind === 'rule');
+  assert.ok(route.changes.some(c => c.field === 'assigneeId' && c.before === null && c.after === 'd15-net'), 'DESK-017 routing owner before/after');
+  assert.ok(history.some(e => e.changes.some(c => c.field === 'Diagnostic code' && c.before === 'VPN-42' && c.after === 'VPN-43')), 'DESK-017 custom field before/after');
+  assert.ok(history.some(e => e.changes.some(c => c.field === 'state' && c.before === 'open' && c.after === 'paused')), 'DESK-017 state before/after');
+  assert.ok(history.every(e => Number.isFinite(Date.parse(e.at))), 'DESK-017 attributed timestamps');
+  assert.deepEqual(history.map(e => e.at), history.map(e => e.at).sort(), 'DESK-017 chronological timeline');
+  const publicHistory = check(await api(`/work/${work.id}/activity`, undefined, employee)).items;
+  assert.ok(publicHistory.every(e => e.kind === 'message' && e.visibility === 'public'), 'DESK-017 employee public events only');
+  assert.ok(publicHistory.some(e => e.body.includes('Paused:')), 'DESK-017 employee public status');
+  assert.ok(!JSON.stringify(publicHistory).includes('Internal hardware') && !JSON.stringify(publicHistory).includes('VPN-43'), 'DESK-017 no internal fields or notes');
+  check(await api(`/work/${work.id}/activity`, undefined, { 'x-workspace': 'a' }), 404);
+  const beforeStale = history.map(e => e.id);
+  check(await api(`/work/${work.id}/commands`, { revision: 1, command: 'resume', reason: 'Stale revision' }), 409);
+  assert.deepEqual(check(await api(`/work/${work.id}/activity`)).items.map(e => e.id), beforeStale, 'DESK-017 rejected write adds no history');
+  // Later writes append and retain the prior entries verbatim.
+  const current = check(await api(`/work/${work.id}`)).work;
+  check(await api(`/work/${work.id}/commands`, { revision: current.revision, command: 'resume', reason: 'Vendor responded' }));
+  const later = check(await api(`/work/${work.id}/activity`)).items;
+  assert.deepEqual(later.filter(e => beforeStale.includes(e.id)), history, 'DESK-017 later writes preserve prior entries');
+  check(await api(`/work-routing/rules/${rule.id}/remove`, {}));
+  console.log('PASS DESK-017 ticket activity: person/scenario/rule actor, time and before/after, custom fields, chronological append, stale-write fencing, employee public-only and cross-workspace denial');
+}
