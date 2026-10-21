@@ -4583,7 +4583,7 @@
       "executable": false
     },
     "src/ui/releases.tsx": {
-      "sha256": "94fd9ab94cb4d681d48a8e3b38c9a52d3d9048cd03d03ba5ceac278752fa0810",
+      "sha256": "6624d9ac5f1d929017b455b8463ff4b82543f9c0ba0db0812985a5c805c2b098",
       "executable": false
     },
     "src/ui/request-facts.ts": {
@@ -4987,7 +4987,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "fbb47e08ba7ceaa1a875a82abf5c1b782fb20e1b22574b48c03401244ed2c6d1",
+      "sha256": "789e728ce618ca3bbb4eda21e8bbba2f6e8ac14ca9cc48e30b42c9c34baa4038",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
@@ -5283,7 +5283,7 @@
       "executable": false
     },
     "tests/ui/release-journey.mjs": {
-      "sha256": "5217e95d2ecbb44002eb4ba67fd9d535c950430b4b17230b9b06d8178f2ded9e",
+      "sha256": "283074826a15f9342d9a6e527cd944eb0dda1244a6e3a63cb87ce9475ae45359",
       "executable": false
     },
     "tests/ui/remote-response-runtime.mjs": {

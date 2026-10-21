@@ -92,7 +92,7 @@ try{
   env.DB.prepare('UPDATE work_catalog SET audience_json=? WHERE id=?').bind(JSON.stringify({department:['dept-sales'],location:[],employmentType:[]}),'catalog-monitor'),
  ]);
  const releaseData={title:'Retained release',plan:'Reviewed release candidate',state:'go',changeIds:['retained-change'],services:['retained-ci'],problemIds:[],affectedGroupIds:['retained-cohort'],approverIds:['owner'],phases:{build:{outcome:'passed',reference:'Build 1',recordedBy:'owner'},test:{outcome:'passed',reference:'Test 1',recordedBy:'owner'}},decisions:[{id:'retained-decision',actor:'owner',decision:'go',reason:'Reviewed',revisions:{'retained-change':1},at:stamp}],priorDecisions:[]};
- await env.DB.prepare('INSERT INTO work_requester_groups VALUES(?,?,?,?,?)').bind('retained-cohort','workspace','Release pilot','["owner"]',stamp).run();
+ await env.DB.prepare('INSERT INTO work_requester_groups(id,workspace_id,name,members_json,created_at) VALUES(?,?,?,?,?)').bind('retained-cohort','workspace','Release pilot','["owner"]',stamp).run();
  const retainedChange={title:'Retained member',state:'draft',services:['retained-ci'],window:{start:stamp,end:new Date(Date.now()+3600000).toISOString()},implementationRevision:1,invocations:[]};
  for(const [recordId,kind,data]of [['retained-ci','service',{name:'Retained CI'}],['retained-change','change',retainedChange]])
   await env.DB.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,1,?,?)').bind(recordId,'workspace',kind,'owner','operators','[]',JSON.stringify(data),stamp,stamp).run();

@@ -37,10 +37,11 @@ export function NewRelease({ onSaved }: { onSaved: (id: string) => void }) {
 export function ReleaseDetails({ record, refresh }: { record: DomainRecord; refresh: () => void }) {
   const problems = useRemote<{ items: DomainRecord[] }>('/problems'), services = useRemote<{ items: DomainRecord[] }>('/services');
   const d = record.data, { session } = useSession(), personName = usePeopleLabels(), me = session.principal.userId;
-  const staff = session.principal.roles.some(r => ['owner', 'operator'].includes(r)), open = d.state !== 'completed';
+  const staff = session.principal.roles.some(r => ['owner', 'operator'].includes(r)), open = !['completed','imported-review','privacy-review'].includes(d.state);
   const phase = (p: Phase) => p ? `${p.outcome} · ${p.reference} · recorded by ${personName(p.recordedBy)}` : 'Not recorded';
   const defaults = { revision: record.revision };
   return <>
+    {['imported-review','privacy-review'].includes(d.state) && <Notice>This release is held for review. Previous decisions do not authorize deployment.</Notice>}
     <Facts entries={[
       ['Go/no-go', d.goNoGo === 'go' ? 'Go from every named approver' : d.goNoGo === 'no-go' ? 'No-go: deployment held' : 'Awaiting every named approver'],
       ['Deployment', deployLabels[d.deploy] ?? d.deploy],
@@ -60,7 +61,7 @@ export function ReleaseDetails({ record, refresh }: { record: DomainRecord; refr
         return <li key={id}>{service ? <a href={`#/services/${id}`}>{text(service.data.name)}</a> : 'A configuration item you cannot read'}</li>;
       })}</ul>
     </section>
-    {staff && <section aria-label="Changes in this release"><h3>Changes in this release</h3>
+    {d.members.length > 0 && <section aria-label="Changes in this release"><h3>Changes in this release</h3>
       <ul>{(d.members as Member[]).map(m => <li key={m.id}>
         <a href={`#/changes/${m.id}`}>{m.title ? text(m.title) : 'A change you cannot read'}</a> <Badge value={m.state} />
         {m.phases.length > 0 && <small> {m.phases.map(p => `${p.phase} ${p.state}`).join(' · ')}</small>}
