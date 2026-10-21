@@ -25,7 +25,7 @@ export async function effortWindow(ctx: WorkContext, from: string, to: string, r
   const cohort = (await db.prepare(`SELECT w.id,w.kind,w.state,
     COALESCE((SELECT c.name FROM work_fulfilments f JOIN work_catalog c ON c.workspace_id=f.workspace_id AND c.id=f.catalog_id WHERE f.workspace_id=w.workspace_id AND f.work_id=w.id ORDER BY c.id LIMIT 1),w.kind) requestType,
     EXISTS(SELECT 1 FROM work_obligations o WHERE o.workspace_id=w.workspace_id AND o.work_id=w.id AND o.state='failed') failed,
-    (EXISTS(SELECT 1 FROM work_obligations o WHERE o.workspace_id=w.workspace_id AND o.work_id=w.id) AND NOT EXISTS(SELECT 1 FROM work_obligations o WHERE o.workspace_id=w.workspace_id AND o.work_id=w.id AND o.state<>'verified')) verified
+    (EXISTS(SELECT 1 FROM work_obligations o WHERE o.workspace_id=w.workspace_id AND o.work_id=w.id) AND NOT EXISTS(SELECT 1 FROM work_obligations o WHERE o.workspace_id=w.workspace_id AND o.work_id=w.id AND o.state NOT IN ('verified','done'))) verified
     FROM work_records w WHERE w.workspace_id=? AND w.sensitivity='normal' AND ((w.created_at>=? AND w.created_at<?)
       OR EXISTS(SELECT 1 FROM work_time_entries e WHERE e.workspace_id=w.workspace_id AND e.work_id=w.id AND e.created_at>=? AND e.created_at<?)
       OR EXISTS(SELECT 1 FROM intelligence_attempts a WHERE a.workspace_id=w.workspace_id AND a.work_id=w.id AND a.created_at>=? AND a.created_at<?)

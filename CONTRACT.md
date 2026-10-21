@@ -491,6 +491,27 @@ that product and marks how close the current code is (see [Status](#status)).
   **Acceptance evidence:** a software request creates an approval, an automated
   license assignment and a manual configuration task; the automated step fails
   and the request stays open with the failure owned.
+  *Today's semantic:* the owner saves a task plan on a catalog item: up to 20
+  tasks, each with a title, the agent group (team) that does it, a due offset in
+  whole elapsed hours (1 to 8760) from the moment the request is recorded, and
+  the earlier tasks or the item's own automated step (`automated`) it follows;
+  tasks that follow nothing in common run in parallel. A request copies the plan
+  into obligations beside the item's automated step, so a later edit of the plan
+  changes only later requests. The item's owner is accountable for every
+  obligation; a member of the named team (or the workspace owner, who acts for
+  "admin") marks a task done. No team works a request before its manager
+  approval and capacity are in place, and a task cannot be marked done while
+  anything it follows is neither verified, done nor waived. A done task is the
+  team's recorded completion, never labelled verified. Only the obligation's
+  owner or the workspace owner waives a responsibility, with a reason, which is
+  audited; an automated step with an applied or uncertain effect must be
+  reconciled instead. A waived step is shown as waived, never as verified, and
+  releases what follows it. A request closes only when every catalog
+  responsibility (automated step and tasks) is verified, done or waived;
+  cancelling the request cancels the open ones. Today every item's automated
+  step is the connector step its kind already has (access grant, licence or
+  device delivery); the MDM install of CATALOG-005 joins as such a step when it
+  ships and inherits this ordering, ownership, waiver and close rule.
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
@@ -2621,15 +2642,15 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 
 ## Status
 
-Judged from the code and tests at commit `01c9b205f71aff2104fa45cde5eef08c43c650c5` (21 October 2026).
+Judged from the code and tests at commit `3c73523af8b459ca063ca913a2098381a4c4f378` (22 October 2026).
 
 The commit is the landing-main baseline for this judgement; this candidate also carries the code and public-door checks cited below. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 44 | 45 | 26 | 115 |
-| All | 49 | 64 | 26 | 139 |
+| Target and push further | 45 | 44 | 26 | 115 |
+| All | 50 | 63 | 26 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2651,7 +2672,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `CHANNEL-009` | Request sharing and manager visibility | target | done | `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs` | |
 | `CATALOG-001` | Catalog items with forms | target | partial | `src/features/work/catalog-items.ts`; `src/features/work/catalog-form-schema.ts`; `src/features/work/catalog-audience.ts`; `src/features/work/catalog-audience-routes.ts`; `tests/work/application-cases.mjs`; `tests/ui/application-journey.mjs`; `tests/platform/base-auth-transfer.mjs` | Typed forms, USD cost/delivery and immutable snapshots; stable dimension lists, owner/HR reviewed person attributes, scoped discovery and atomic single-item audience admission are implemented. Gap: required quote attachments and exact readers/custody, accounts/general-service items, audience editor, atomic eligible bundle/pending-person and amendment journeys, and complete receiver acceptance. |
 | `CATALOG-002` | Approval chains | target | partial | `src/features/work/fulfilment-decisions.ts`, `src/features/work/delegation.ts`, `tests/ui/fulfilment-decision-journey.mjs`, `tests/execution/authority-manager-cases.mjs` | Single manager approval; no multi-level, finance threshold, approval SLA or email-reply approval. |
-| `CATALOG-003` | Fulfillment task plans | target | partial | `src/features/work/requests.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No team task templates. |
+| `CATALOG-003` | Fulfillment task plans | target | done | `src/features/work/catalog-task-plan.ts`, `src/features/work/catalog-tasks.ts`, `src/features/work/requests.ts`, `src/features/work/progress.ts`, `src/ui/catalog-task-plan-editor.tsx`, `src/ui/obligation-actions.tsx`, `tests/work/catalog-task-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/ui/catalog-task-journey.mjs`, `tests/ui/catalog-task-browser.mjs`, `tests/platform/base-auth-transfer.mjs` | Public-route and 1440/390 browser proof: an owner-edited team task plan beside the automated step; manager approval before any team works; ordered and parallel tasks with elapsed-hour due dates; team-only completion; a failed automated step owned with the request open; owner waiver with a reason; close only when every responsibility is verified, done or waived; in-flight copies unchanged by plan edits; cancel, erasure and native archive retention. A done task is a recorded completion, not device or provider verification; the MDM install step is CATALOG-005's and inherits this rule. |
 | `CATALOG-004` | Bundles and kits | target | done | `src/features/work/bundles.ts`, `src/ui/bundles.tsx`, `tests/work/bundle-cases.mjs` | Public-route proof: an owner-built hardware/software/access bundle opens one ticket with five child fulfilments; one atomic manager decision covers both gated children (partial and single-child approvals refused); per-child grants run and verify; the bundle stays in progress until the laptop handoff verifies the fifth child, then reads complete; a changed item refuses the stale bundle. Bundle builder, grouped manager decision and per-item progress inspected at 1440/390. |
 | `CATALOG-005` | Software requests installed through MDM | target | partial | `src/features/work/requests.ts`, `src/features/execution/verification.ts` | Software is a catalog kind fulfilled as an access grant; no MDM app binding, install-group assignment, installed-inventory verification, deployment failure task or lease uninstall. |
 | `CATALOG-006` | Requests for pending people | target | done | `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/pending-person-browser.mjs` | Local D1/runtime and 1440/390 browser: reviewed creation/edit, held catalog services, native email proof and password sign-in binding, normal fulfillment release, employee visibility, withdrawal/cancellation and attributed audit. Provider delivery and live SSO are not claimed. |

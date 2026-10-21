@@ -1,3 +1,4 @@
+import { checkTaskPlan } from './catalog-task-plan';
 import { attributeDimensions, normalizeAudience, normalizeAttributes } from './catalog-audience';
 import { prepareApplicationWorkRestore } from './application-restore';
 import { validateRecurrence, type RecurrenceRule } from './recurrence-calendar';
@@ -131,7 +132,8 @@ export async function restoreAdoptionRecord(
     // Activity evidence is portable; a source browser's live timer authority is not.
     row.state='completed'; row.last_seen_at=null; row.sequence=Number(row.sequence||0)+1;
   }
-  if (input.table === "work_obligations" && row.state !== "verified") {
+  // A team task has no source operation to reconcile; its done or waived record travels with the request.
+  if (input.table === "work_obligations" && !["verified", "done", "waived"].includes(String(row.state)) && row.kind !== "task.manual") {
     row.state = "blocked";
     row.last_error = `Restored held obligation; reconcile source operation ${row.operation_id || "none"} before resuming`;
     row.operation_id = null;
@@ -148,6 +150,7 @@ export async function restoreAdoptionRecord(
   if(input.table==='work_catalog_values' && (!attributeDimensions.includes(row.dimension as never) || typeof row.label!=='string' || !row.label.trim() || ![0,1].includes(Number(row.active))))
     throw new ApiError(422,'restore_catalog_value','Known dimension, label and state required');
   if(input.table==='work_catalog')row.audience_json=JSON.stringify(normalizeAudience(JSON.parse(String(row.audience_json??'{}'))));
+  if(input.table==='work_catalog')row.tasks_json=JSON.stringify(checkTaskPlan(JSON.parse(String(row.tasks_json??'[]'))));
   if (input.table === "work_people") {
     row.attributes_json=JSON.stringify(normalizeAttributes(JSON.parse(String(row.attributes_json??'{}'))));
     row.member_id = null;

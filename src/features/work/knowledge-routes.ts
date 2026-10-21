@@ -1,4 +1,5 @@
 import { editCatalogForm } from './catalog-items';
+import { editTaskPlan, completeTask, waiveObligation } from './catalog-tasks';
 import { catalogItems } from './application-routes';
 import { suggestWorkarounds } from './workaround-suggestions';
 import { suggestArticles, confirmSuggestion } from './deflection';
@@ -46,6 +47,9 @@ export function registerKnowledgeRoutes(app: Hono<AppEnv>) {
     }),
   );
   app.post('/catalog/:id/form',async c=>c.json(await editCatalogForm({env:c.env,principal:c.get('principal')},c.req.param('id'),await jsonBody(c))));
+  app.post('/catalog/:id/tasks',async c=>c.json(await editTaskPlan({env:c.env,principal:c.get('principal')},c.req.param('id'),await jsonBody(c))));
+  app.post('/work/:id/tasks/:obligationId/complete',async c=>c.json(await completeTask({env:c.env,principal:c.get('principal')},c.req.param('id'),c.req.param('obligationId'),await jsonBody(c))));
+  app.post('/work/:id/obligations/:obligationId/waive',async c=>c.json(await waiveObligation({env:c.env,principal:c.get('principal')},c.req.param('id'),c.req.param('obligationId'),await jsonBody(c))));
   app.post("/catalog", async (c) =>
     c.json(
       await createCatalogItem(

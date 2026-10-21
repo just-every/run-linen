@@ -54,6 +54,7 @@ try{
 
  let env=await open();const stamp=new Date().toISOString()
  const catalogForm={fields:[{id:'mount',label:'Monitor mounting',type:'select',required:true,options:['Desk','Wall']}],costCents:30000,deliveryHours:72};
+ const taskPlan=[{key:'mount',title:'Mount the monitor',groupId:'retained-team',after:[],dueHours:24}];
  const catalogSnapshot={catalogId:'catalog-monitor',revision:1,name:'Monitor for training',form:{...catalogForm,costCents:25000,deliveryHours:48},answers:{mount:'Wall'}};
 
  await env.DB.batch([
@@ -89,7 +90,8 @@ try{
  await env.DB.batch([
   env.DB.prepare('INSERT INTO work_catalog_values(id,workspace_id,dimension,label) VALUES(?,?,?,?)').bind('dept-sales','workspace','department','Sales'),
   env.DB.prepare('UPDATE work_people SET attributes_json=? WHERE id=?').bind(JSON.stringify({department:'dept-sales'}),'owner-person'),
-  env.DB.prepare('UPDATE work_catalog SET audience_json=? WHERE id=?').bind(JSON.stringify({department:['dept-sales'],location:[],employmentType:[]}),'catalog-monitor'),
+  env.DB.prepare('UPDATE work_catalog SET audience_json=?,tasks_json=? WHERE id=?').bind(JSON.stringify({department:['dept-sales'],location:[],employmentType:[]}),JSON.stringify(taskPlan),'catalog-monitor'),
+  env.DB.prepare("INSERT INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,title,group_id,catalog_id,after_json,completed_by,completed_at) VALUES('task-obligation','workspace','work','task.manual','mount','owner',?,'done','owner','Mount the monitor','retained-team','catalog-monitor','[]','owner',?)").bind(stamp,stamp),
  ]);
  const releaseData={title:'Retained release',plan:'Reviewed release candidate',state:'go',changeIds:['retained-change'],services:['retained-ci'],problemIds:[],affectedGroupIds:['retained-cohort'],approverIds:['owner'],phases:{build:{outcome:'passed',reference:'Build 1',recordedBy:'owner'},test:{outcome:'passed',reference:'Test 1',recordedBy:'owner'}},decisions:[{id:'retained-decision',actor:'owner',decision:'go',reason:'Reviewed',revisions:{'retained-change':1},at:stamp}],priorDecisions:[]};
  await env.DB.prepare('INSERT INTO work_requester_groups(id,workspace_id,name,members_json,created_at) VALUES(?,?,?,?,?)').bind('retained-cohort','workspace','Release pilot','["owner"]',stamp).run();
@@ -126,6 +128,7 @@ try{
  assert.equal((await env.DB.prepare("SELECT label FROM work_catalog_values WHERE id='dept-sales'").first()).label,'Sales','CATALOG-001 native archive retains stable audience values');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT attributes_json FROM work_people WHERE id='owner-person'").first()).attributes_json),{department:'dept-sales'},'CATALOG-001 native archive retains reviewed attributes with the unbound person');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT audience_json FROM work_catalog WHERE id='catalog-monitor'").first()).audience_json),{department:['dept-sales'],location:[],employmentType:[]},'CATALOG-001 native archive retains versioned audience references');
+ assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT tasks_json FROM work_catalog WHERE id='catalog-monitor'").first()).tasks_json),taskPlan,'CATALOG-003 native archive retains the item task plan');
  const restoredRelease=JSON.parse((await env.DB.prepare("SELECT data_json FROM svc_records WHERE id='retained-release'").first()).data_json);
  assert.equal(restoredRelease.state,'imported-review','CHANGE-007 actual rer archive puts releases into review');
  assert.deepEqual(restoredRelease.decisions,[],'CHANGE-007 no live go decision survives native restore');
@@ -160,6 +163,8 @@ try{
  const holds=await(await request('/api/v1/adoption/holds',{cookie})).json();assert.equal(holds.length,1)
  const hold=holds[0],records=await(await request('/api/v1/imports/'+hold.import_id+'/records',{cookie})).json()
  assert.equal(records.data.length,1);assert.equal(JSON.parse(records.data[0].row_json).state,'unknown')
+ const restoredTask=(await(await request('/api/v1/work/work/obligations',{cookie})).json()).items.find(o=>o.kind==='task.manual');
+ assert.deepEqual([restoredTask.title,restoredTask.state,restoredTask.completed_by,restoredTask.can_complete],['Mount the monitor','done','owner',false],'CATALOG-003 restored owner reads the completed team task through the native route');
  const restoredForms=await(await request('/api/v1/work/work/catalog-requests',{cookie})).json();
  assert.deepEqual(restoredForms.items[0].catalogSnapshot,catalogSnapshot,'CATALOG-001 restored owner reads the same original submitted form through the native route');
  const authHeaders={'X-Linen-CSRF':session.csrfToken}

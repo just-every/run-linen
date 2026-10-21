@@ -45,7 +45,7 @@ export async function processDueWork(
   // it never asks the model or requester to repeat consent.
   await Promise.allSettled(prepared.results.map(row => resumeFulfilmentAmendment(ctx,row)));
   const rows = await ctx.env.DB.prepare(
-    `SELECT o.* FROM work_obligations o WHERE o.workspace_id=? AND o.due_at<=? AND o.state IN ('pending','blocked','executing','unknown') AND COALESCE(o.last_error,'') NOT LIKE 'Restored held obligation%' AND (o.depends_on IS NULL OR EXISTS(SELECT 1 FROM work_obligations d WHERE d.id=o.depends_on AND d.workspace_id=o.workspace_id AND d.state='verified')) ORDER BY o.due_at LIMIT 100`,
+    `SELECT o.* FROM work_obligations o WHERE o.workspace_id=? AND o.kind<>'task.manual' AND o.due_at<=? AND o.state IN ('pending','blocked','executing','unknown') AND COALESCE(o.last_error,'') NOT LIKE 'Restored held obligation%' AND (o.depends_on IS NULL OR EXISTS(SELECT 1 FROM work_obligations d WHERE d.id=o.depends_on AND d.workspace_id=o.workspace_id AND d.state='verified')) ORDER BY o.due_at LIMIT 100`,
   )
     .bind(ctx.principal.workspaceId, at)
     .all<Obligation>();

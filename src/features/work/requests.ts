@@ -1,5 +1,6 @@
 import { requireCatalogAudience } from './catalog-audience';
 import { catalogRequestSnapshot } from './catalog-items';
+import { taskStatements, describeObligations } from './catalog-tasks';
 import { applicationForRequest, applicationProjection } from './application-catalog';
 import { bindingErasureGuard, personForMember } from './person-binding';
 import { fulfilmentManagerApproval } from "./fulfilment-authority";
@@ -53,7 +54,7 @@ export async function requestFulfilment(
   )
     .bind(ctx.principal.workspaceId, input.catalogId)
     .first<{
-      id: string; name: string; revision: number; form_json: string; audience_json: string;
+      id: string; name: string; revision: number; form_json: string; audience_json: string; tasks_json: string;
       application_id: string | null;
       entitlement_id: string | null;
       kind: string;
@@ -110,7 +111,7 @@ export async function requestFulfilment(
   if(audience)Object.assign(catalogSnapshot,{audience:audience.audience,audiencePeople:audience.people});
   const admissionGuard=id(),w=ctx.principal.workspaceId;
   const roles=JSON.stringify(ctx.principal.roles);
-  const fid = id(), catalogGuard = id();
+  const fid = id(), catalogGuard = id(), automatedId = id();
   const kind = catalog.kind === "device" ? "device.deliver" : "access.grant";
   try { await ctx.env.DB.batch([
     ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
@@ -154,7 +155,7 @@ export async function requestFulfilment(
     ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,last_error) VALUES(?,?,?,?,?,?,?,?,?,?)",
     ).bind(
-      id(),
+      automatedId,
       ctx.principal.workspaceId,
       work.id,
       kind,
@@ -165,6 +166,7 @@ export async function requestFulfilment(
       catalog.owner_id,
       blocked,
     ),
+    ...taskStatements(ctx, work.id, {...catalog, id: input.catalogId}, input.beneficiaryId, automatedId),
     ...(catalog.capacity!==null ? [ctx.env.DB.prepare(`UPDATE work_obligations SET state='blocked',last_error=?
       WHERE workspace_id=? AND work_id=? AND kind=? AND target=? AND state='pending'
       AND NOT EXISTS(SELECT 1 FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND work_id=? AND released_at IS NULL)`)
@@ -210,13 +212,13 @@ export async function requestFulfilment(
 export async function listObligations(ctx: WorkContext, workId: string) {
   await currentWorkPrincipal(ctx);
   await getWork(ctx, workId);
-  return (
+  return describeObligations(ctx, workId, (
     await ctx.env.DB.prepare(
-      "SELECT id,kind,target,beneficiary_id,due_at,state,owner_id,operation_id,last_error,revision FROM work_obligations WHERE workspace_id=? AND work_id=? ORDER BY due_at",
+      "SELECT id,kind,target,beneficiary_id,due_at,state,owner_id,operation_id,last_error,revision,title,group_id,catalog_id,after_json,lifecycle_id,completed_by,completed_at,waived_by,waived_at FROM work_obligations WHERE workspace_id=? AND work_id=? ORDER BY due_at,id",
     )
       .bind(ctx.principal.workspaceId, workId)
       .all()
-  ).results;
+  ).results);
 }
 export async function recordPhysicalHandoff(
   ctx: WorkContext,

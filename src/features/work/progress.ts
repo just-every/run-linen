@@ -38,11 +38,17 @@ export async function progressFor(ctx: WorkContext, work: Pick<WorkRecord, 'id' 
       items.push({needsAction: !['pending','interpreting'].includes(state),state,happened,next,ownerId,ownerLabel:await ownerLabel(ownerId,fallback)});
     }
   }
-  const duties = (await db.prepare('SELECT kind,state,owner_id,target,due_at FROM work_obligations WHERE workspace_id=? AND work_id=? ORDER BY due_at,id').bind(w,workId).all<any>()).results;
+  const duties = (await db.prepare('SELECT kind,state,owner_id,target,due_at,title FROM work_obligations WHERE workspace_id=? AND work_id=? ORDER BY due_at,id').bind(w,workId).all<any>()).results;
   for (const duty of duties) {
     let ownerId = duty.owner_id, state = duty.state, unowned = 'Service team — assignment needed';
     let happened = state === 'verified' ? 'Independent evidence verifies this responsibility.' : state === 'blocked' ? 'This responsibility is blocked.' : state === 'failed' ? 'This responsibility failed.' : state === 'cancelled' ? 'This responsibility is cancelled; existing effects remain recorded.' : 'This responsibility remains open.';
     let next = state === 'verified' ? 'No acknowledgement is needed. Other responsibilities remain separate.' : state === 'cancelled' ? 'The service team must retain and reconcile any existing or uncertain effects.' : duty.kind === 'access.revoke' && duty.due_at > new Date().toISOString() ? 'Removal is scheduled for the recorded expiry and must be verified separately.' : duty.kind.startsWith('device.') ? 'The named owner must arrange the physical handoff and record custody evidence.' : 'The named owner must review current authority and any uncertain effects in Operations & recovery before continuing.';
+    // CATALOG-003: a done task is the team's recorded completion and a waiver is its owner's decision; neither is independent evidence.
+    if (state === 'waived') { happened = 'This responsibility was waived by its owner; no effect was made for it.'; next = 'No acknowledgement is needed. Other responsibilities remain separate.'; }
+    if (duty.kind === 'task.manual') {
+      if (state === 'done') { happened = 'The named team recorded this task as done. That is a recorded completion, not independent verification.'; next = 'No acknowledgement is needed. Other responsibilities remain separate.'; }
+      else if (!['waived','cancelled'].includes(state)) { happened = 'This team task is open.'; next = 'A member of the named team completes it in this request once the request is ready and its earlier steps are settled, or its owner waives it with a reason.'; }
+    }
     if (['access.grant','device.deliver'].includes(duty.kind) && !['verified','cancelled','failed'].includes(state)) {
       const catalog = await db.prepare('SELECT id FROM work_catalog WHERE workspace_id=? AND target=? ORDER BY id LIMIT 2').bind(w,duty.target).all<{id:string}>();
       if (catalog.results.length === 1) {
@@ -91,8 +97,8 @@ export async function progressFor(ctx: WorkContext, work: Pick<WorkRecord, 'id' 
         next = 'The fulfillment owner must review the supported setup. Your request is retained; you do not need to resend.';
       }
     }
-    const needsAction = !['verified','cancelled'].includes(state) && !(duty.kind === 'access.revoke' && duty.due_at > new Date().toISOString() && state === 'pending');
-    items.push({needsAction,title:titles[duty.kind] || 'Service responsibility',dueAt:duty.due_at,state,happened,next,ownerId,ownerLabel:await ownerLabel(ownerId,unowned)});
+    const needsAction = !['verified','cancelled','done','waived'].includes(state) && !(duty.kind === 'access.revoke' && duty.due_at > new Date().toISOString() && state === 'pending');
+    items.push({needsAction,title:duty.kind === 'task.manual' ? duty.title : titles[duty.kind] || 'Service responsibility',dueAt:duty.due_at,state,happened,next,ownerId,ownerLabel:await ownerLabel(ownerId,unowned)});
   }
   return items;
 }

@@ -3,7 +3,7 @@ import { RequestedApplications } from './applications';
 import { useState } from "react";
 import { usePeopleLabels } from "./people-labels";
 import { date, text, type RecordValue } from "./api";
-import { kindLabel } from "./labels";
+import { ObligationActions, obligationTitle } from "./obligation-actions";
 import { useRemote, useSession } from "./state";
 import { Badge, ErrorNotice, Facts, Loading, Notice } from "./primitives";
 import { namedOther } from "./request-facts";
@@ -42,7 +42,7 @@ export function WorkOutcome({ work, onChanged, pendingPerson }: { work: WorkReco
               <details className="obligation" key={text(item.id)}>
                 <summary>
                   <span>
-                    {kindLabel(item.kind)}
+                    {obligationTitle(item)}
                     <small>{date(item.due_at)}</small>
                   </span>
                   <Badge value={item.state} />
@@ -50,11 +50,13 @@ export function WorkOutcome({ work, onChanged, pendingPerson }: { work: WorkReco
                 <Facts
                   entries={[
                     ["Next owner", personName(item.owner_id)],
+                    ...([["Team", item.group_name], ["Waiting for", Array.isArray(item.waiting_for) ? item.waiting_for.join(", ") : ""], ["Recorded done by", item.completed_by ? personName(item.completed_by) : null], ["Waived by", item.waived_by ? personName(item.waived_by) : null]] as [string, unknown][]).filter(([, value]) => Boolean(value)),
                     ["Target", catalog.data?.items.find((c) => c.target === item.target)?.name ?? item.target],
                     ["Remaining issue", item.last_error],
                     ...(operator ? [["Effect identity", item.operation_id] as [string, unknown]] : []),
                   ]}
                 />
+                <ObligationActions workId={workId} item={item} onChanged={() => { obligations.refresh(); onChanged?.(); }} />
               </details>
             ))}
           </>

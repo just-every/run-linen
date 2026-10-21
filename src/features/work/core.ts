@@ -9,6 +9,7 @@ import { closeResolution, pauseStatus } from "./desk-fields";
 import { participantView } from "./relationships";
 import { sharedListClause, sharedReplyAllowed, sharedView } from "./sharing";
 import { currentWorkPrincipal } from "./identity";
+import { assertCloseable } from "./catalog-tasks";
 import { groupMember } from "./desk-groups";
 import { routeUnplaced } from "./desk-routing";
 import type { Env, Principal } from "../../platform/types";
@@ -466,6 +467,7 @@ export async function transitionWork(
   }
   if(work.pending_person_id && ['reopen','resume'].includes(command) && await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state='withdrawn'").bind(ctx.principal.workspaceId,work.pending_person_id).first())
     throw new ApiError(409,'pending_person_withdrawn','Withdrawn pending people cannot resume requests');
+  if (command === "close") await assertCloseable(ctx, workId);
   const t = now();
   // DESK-010: the close notes are this close's reason; an incident also needs a resolution code.
   const resolution = command === "close" ? await closeResolution(ctx, work, desk.resolutionCode, reason, t) : null;
@@ -508,7 +510,7 @@ export async function transitionWork(
       ctx.env.DB.prepare(`INSERT INTO audit_events SELECT ?||':'||catalog_id,workspace_id,?,'work.pending_service_cancelled',work_id,json_object('catalogId',catalog_id,'personId',person_id),? FROM work_pending_services WHERE workspace_id=? AND work_id=? AND state='held'`).bind(id(),ctx.principal.userId,now(),ctx.principal.workspaceId,workId),
       ctx.env.DB.prepare("UPDATE work_pending_services SET state='cancelled',reason='Request cancelled' WHERE workspace_id=? AND work_id=? AND state='held'").bind(ctx.principal.workspaceId,workId),
       ctx.env.DB.prepare(
-        "UPDATE work_obligations SET state=CASE WHEN operation_id IS NULL THEN 'cancelled' ELSE 'unknown' END,last_error='Cancellation requested; reconcile every applied or uncertain effect',revision=revision+1 WHERE workspace_id=? AND work_id=? AND kind IN ('access.grant','device.deliver','identity.create') AND state<>'verified'",
+        "UPDATE work_obligations SET state=CASE WHEN operation_id IS NULL THEN 'cancelled' ELSE 'unknown' END,last_error='Cancellation requested; reconcile every applied or uncertain effect',revision=revision+1 WHERE workspace_id=? AND work_id=? AND kind IN ('access.grant','device.deliver','identity.create','task.manual') AND state NOT IN ('verified','done','waived')",
       ).bind(ctx.principal.workspaceId, workId),
       ctx.env.DB.prepare(
         "UPDATE work_catalog_reservations SET released_at=? WHERE workspace_id=? AND work_id=?",

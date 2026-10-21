@@ -438,6 +438,33 @@
   font-weight: 400;
   white-space: nowrap;
 }
+.obligation > .obligation-actions {
+  display: grid;
+  gap: 10px;
+  padding: 0 16px 14px;
+  min-width: 0;
+}
+.obligation-actions form {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.obligation-actions label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.obligation-actions input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.obligation-actions .action {
+  max-width: 100%;
+  height: auto;
+  white-space: normal;
+  text-align: left;
+}
 .obligation > .facts {
   padding: 0 16px 8px;
 }
