@@ -7,7 +7,7 @@ export interface ActivityEntry {
   kind: 'message' | 'change' | 'notification';
   actor: string;
   initiatedBy?: string;
-  actorKind: 'person' | 'rule' | 'scenario' | 'agent';
+  actorKind: 'person' | 'rule' | 'scenario' | 'agent' | 'automation';
   action: string;
   visibility: string;
   body?: string;
@@ -33,8 +33,14 @@ function changes(event: Audit, detail: Record<string, any>): ActivityEntry['chan
  * No raw audit payload or imported-source custody is exposed through this read model. */
 export async function ticketActivity(ctx: WorkContext, workId: string) {
   const view = await conversation(ctx, workId);
+  const automation = (await ctx.env.DB.prepare(`SELECT a.user_id,CASE WHEN EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=a.workspace_id AND e.person_id=a.user_id)
+    OR EXISTS(SELECT 1 FROM platform_identity_erasures e WHERE e.workspace_id=a.workspace_id AND e.user_id=a.user_id)
+    THEN 'Erased automation principal' ELSE a.name END name FROM execution_automation_principals a
+    WHERE a.workspace_id=? AND a.user_id IN(SELECT value FROM json_each(?))`)
+    .bind(ctx.principal.workspaceId,JSON.stringify(view.messages.map((m: any) => m.author_id))).all<{user_id:string;name:string}>()).results;
+  const authors = new Map(automation.map(a => [a.user_id,a.name]));
   const items: ActivityEntry[] = view.messages.map((message: any) => ({
-    id: message.id, at: message.created_at, kind: 'message', actor: message.author_id, actorKind: 'person',
+    id: message.id, at: message.created_at, kind: 'message', actor: authors.get(message.author_id) ?? message.author_id, actorKind: authors.has(message.author_id) ? 'automation' : 'person',
     action: message.source_key?.startsWith('transition:') ? 'Public status update' : 'Message',
     visibility: message.visibility, body: message.body, changes: [],
   }));

@@ -136,6 +136,8 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const ownerView=await value(ownerApi('/work/'+normal.id))
  const ownMessage=ownerView.messages.find(m=>m.body===ownBody)
  check(ownMessage,'native conversation contains committed MCP comment')
+ const nativeActivity=await value(ownerApi('/work/'+normal.id+'/activity'))
+ check(nativeActivity.items.some(e=>e.body===ownBody&&e.actorKind==='automation'&&e.actor==='Desk bot'),'native activity labels the actual automation author independently of comment text')
  equal({author:ownMessage.author_id,visibility:ownMessage.visibility},{author:bot.id,visibility:'private'},'comment is internal and attributed to integration principal')
  check(!(await value(employeeSession.api('/work/'+normal.id))).messages.some(m=>m.body===ownBody),'employee receives no requester reply from MCP internal comment')
  check((await tool(full.secret,'work.get',{workId:normal.id})).messages.some(m=>m.body===ownBody),'principal reads its own internal comment')

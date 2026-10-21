@@ -27,7 +27,7 @@ export function ActivityTimeline({ entries, label }: { entries: ActivityEntry[];
         <span className="event-icon"><Icon name={event.visibility === 'private' ? 'lock' : 'user'} size={18} /></span>
         <div className="event-copy">
           <div className="message-meta"><time dateTime={event.at}>{date(event.at)}</time>
-            {event.kind !== 'message' && <span>{humanize(event.actorKind)} · {event.actor} · {humanize(event.action)}</span>}
+            {(event.kind !== 'message' || event.actorKind === 'automation') && <span>{humanize(event.actorKind)} · {event.actor} · {humanize(event.action)}</span>}
             {event.visibility === 'private' && <span className="private-label">{event.kind === 'message' ? 'Private service note' : 'Internal activity'}</span>}
           </div>
           {event.initiatedBy && <p>Initiated by {event.initiatedBy}</p>}

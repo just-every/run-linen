@@ -21,16 +21,18 @@ try {
  const rpc=async(name,args={})=>{const r=await fetch(base+'/api/mcp',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential.secret},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}})});const v=await r.json();assert.ok(!v.error,JSON.stringify(v.error));return v.result.structuredContent;};
  const listed=await rpc('work.list');assert.deepEqual(listed.items.map(w=>w.id),[work.id],'API-003 client sees Hardware employee ticket');
  const read=await rpc('work.get',{workId:work.id});
- await rpc('work.comment',{workId:work.id,revision:read.revision,body:'Desk bot: the display team is checking the USB-C connection.',deduplicationKey:'API-003-internal-note'});
+ await rpc('work.comment',{workId:work.id,revision:read.revision,body:'The display team is checking the USB-C connection.',deduplicationKey:'API-003-internal-note'});
  const ec=await browser.newContext({viewport:{width:1440,height:1000}}),ep=await ec.newPage();await signIn(ep,base,'erin@northstar.example',password);
  for(const width of [1440,390]){
-  await page.setViewportSize({width,height:1000});await page.goto(base+'/app#/work/'+work.id);
+  await page.setViewportSize({width,height:1000});await page.goto(base+'/app#/work/'+work.id);await page.reload();
   await page.getByRole('heading',{level:2,name:'Monitor flickers during design reviews',exact:true}).waitFor();
-  await page.getByText('Desk bot: the display team is checking the USB-C connection.',{exact:true}).waitFor();
+  await page.getByText('The display team is checking the USB-C connection.',{exact:true}).waitFor();
+  await page.getByText('Automation · Desk bot · Message',{exact:true}).waitFor();
   await page.screenshot({path:out+'/API-003-owner-'+width+'.png',fullPage:true});
   await ep.setViewportSize({width,height:1000});await ep.goto(base+'/app#/work/'+work.id);
   await ep.getByRole('heading',{level:2,name:'Monitor flickers during design reviews',exact:true}).waitFor();
-  assert.equal(await ep.getByText('Desk bot: the display team is checking the USB-C connection.',{exact:true}).count(),0,'API-003 internal comment never reaches employee');
+  await ep.getByText('The display goes dark when sharing a design review.',{exact:true}).waitFor();
+  assert.equal(await ep.getByText('The display team is checking the USB-C connection.',{exact:true}).count(),0,'API-003 internal comment never reaches employee');
   await ep.screenshot({path:out+'/API-003-employee-'+width+'.png',fullPage:true});
  }
  console.log('PASS API-003 native owner/employee internal comment at 1440/390 and real MCP client queue/get/comment');
