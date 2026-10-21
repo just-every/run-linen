@@ -4911,7 +4911,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "8e27beb2275f7b5563ad0ca93e3bce86ce1987b167836149bef132578dbe4da6",
+      "sha256": "10986334a16a35785892ddb7e8c56c5b4571912b1fc9b675ab8bc7a2711ba783",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {

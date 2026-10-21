@@ -53,6 +53,9 @@ try{
  await run(['exec','wrangler','d1','migrations','apply','linen','--local','--persist-to','.wrangler/state','--config','wrangler.jsonc']);
 
  let env=await open();const stamp=new Date().toISOString()
+ const catalogForm={fields:[{id:'mount',label:'Monitor mounting',type:'select',required:true,options:['Desk','Wall']}],costCents:30000,deliveryHours:72};
+ const catalogSnapshot={catalogId:'catalog-monitor',revision:1,name:'Monitor for training',form:{...catalogForm,costCents:25000,deliveryHours:48},answers:{mount:'Wall'}};
+
  await env.DB.batch([
   env.DB.prepare('INSERT INTO bootstrap_lock VALUES(1)'),
   env.DB.prepare('INSERT INTO workspaces VALUES(?,?,?)').bind('workspace','Transfer',stamp),
@@ -71,6 +74,9 @@ try{
   env.DB.prepare('INSERT INTO intelligence_engineering_grants VALUES(?,?,?,?,?,?,?,?,?)').bind('grant','workspace',1,'owner','synthetic-bearer','{}','2099-01-01',null,stamp),
   env.DB.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind('connection','workspace','sendgrid','Fixture','{}','synthetic-encrypted-secret','verified',stamp,stamp),
   env.DB.prepare('INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,created_at,updated_at,dedup_key) VALUES(?,?,?,?,?,?,?,?,?)').bind('work','workspace','owner','owner','request','Retained real record',stamp,stamp,'transfer'),
+  env.DB.prepare('INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,revision,form_json) VALUES(?,?,?,?,?,?,?,?)').bind('catalog-monitor','workspace','Monitor for training','device','training-monitor','owner',2,JSON.stringify(catalogForm)),
+  env.DB.prepare('INSERT INTO work_fulfilments(id,workspace_id,work_id,catalog_id,beneficiary_id,purpose,revision,catalog_snapshot_json) VALUES(?,?,?,?,?,?,?,?)').bind('catalog-request','workspace','work','catalog-monitor','owner','Training room display',1,JSON.stringify(catalogSnapshot)),
+
   env.DB.prepare('INSERT INTO execution_plans(id,workspace_id,work_id,work_revision,actor_id,steps_json,idempotency_key,created_at) VALUES(?,?,?,?,?,?,?,?)').bind('plan','workspace','work',1,'owner','[]','transfer',stamp),
   env.DB.prepare('INSERT INTO execution_operations(id,workspace_id,plan_id,step_json,state,resource,actor_id,created_at) VALUES(?,?,?,?,?,?,?,?)').bind('operation','workspace','plan','{}','unknown','retained-resource','owner',stamp),
  ])
@@ -98,6 +104,9 @@ try{
  assert.ok((await env.DB.prepare('SELECT revoked_at FROM intelligence_engineering_grants').first()).revoked_at)
  const restoredMcp=await env.DB.prepare('SELECT name,secret_hash,state,invalidated_at FROM mcp_credentials WHERE id="mcp-grant"').first();
  assert.equal(restoredMcp.name,'Desk bot','API-003 archive retains metadata');assert.equal(restoredMcp.secret_hash,null,'API-003 archive excludes credential hash');assert.equal(restoredMcp.state,'revoked');assert.ok(restoredMcp.invalidated_at,'API-003 restore leaves credential revoked and inert');
+ assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT catalog_snapshot_json FROM work_fulfilments WHERE id='catalog-request'").first()).catalog_snapshot_json),catalogSnapshot,'CATALOG-001 actual rer archive retains submitted questions, answers, original cost/delivery and old item revision');
+ assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT form_json FROM work_catalog WHERE id='catalog-monitor'").first()).form_json),catalogForm,'CATALOG-001 actual rer archive separately retains current catalog metadata');
+
  assert.equal((await env.DB.prepare('SELECT COUNT(*) n FROM sessions').first()).n,0)
  const person=await env.DB.prepare("SELECT member_id,binding_id,manager_id FROM work_people WHERE id='owner-person'").first()
  assert.deepEqual(person,{member_id:null,binding_id:null,manager_id:null},'Native restore retains the person but requires fresh binding and manager review')
@@ -128,6 +137,8 @@ try{
  const holds=await(await request('/api/v1/adoption/holds',{cookie})).json();assert.equal(holds.length,1)
  const hold=holds[0],records=await(await request('/api/v1/imports/'+hold.import_id+'/records',{cookie})).json()
  assert.equal(records.data.length,1);assert.equal(JSON.parse(records.data[0].row_json).state,'unknown')
+ const restoredForms=await(await request('/api/v1/work/work/catalog-requests',{cookie})).json();
+ assert.deepEqual(restoredForms.items[0].catalogSnapshot,catalogSnapshot,'CATALOG-001 restored owner reads the same original submitted form through the native route');
  const authHeaders={'X-Linen-CSRF':session.csrfToken}
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/release',{cookie,body:{revision:hold.revision},headers:authHeaders})).status,409,'Unreconciled retained operation blocks ordinary release')
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/reconcile',{cookie,body:{historyId:records.data[0].id,evidence:'Fixture owner reviewed retained unknown operation before explicitly releasing execution'},headers:authHeaders})).status,200)
