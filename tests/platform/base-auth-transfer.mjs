@@ -50,6 +50,7 @@ try{
  assert.equal((await upgraded.DB.prepare('SELECT count(*) n FROM mcp_credentials').first()).n,0,'API-003 old archive introduces no credential authority');
  await close();await run(['exec','rer','reset','--yes']);
  await rm(join(root,'pre-mcp-migrations'),{recursive:true,force:true});await rm(join(root,'pre-mcp-wrangler.json'));
+ await run(['exec','wrangler','d1','migrations','apply','linen','--local','--persist-to','.wrangler/state','--config','wrangler.jsonc']);
 
  let env=await open();const stamp=new Date().toISOString()
  await env.DB.batch([

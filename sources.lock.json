@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "59a1f8eb285550a80a7b146f06d11abecaff70e7cc7c932fb1ccaec5f6a5dc60",
+      "sha256": "5990436616da7eeb4d35a23dad1c48eac5a4f20912c90c7f1c0fff20a63446d4",
       "executable": false
     },
     "ADOPTION.md": {
@@ -4891,7 +4891,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "eeaee6c2c7b6c3c615123a7c233c1d5d686589b667761b742d68852be23aaa78",
+      "sha256": "f7766ee6eb5aa2f685103ed6392fecf229ef3e903179386331edadd2a57eed8d",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
