@@ -64,7 +64,7 @@ export async function connectedLifecycle(env) {
   await page.goto(base+'/app#/lifecycle');
   for(const [name,match,target] of [['Everyone',{},'slack-users'],['Sales apps',{department:[sales.id]},'salesforce-users'],['Marketing apps',{department:[marketing.id]},'hubspot-users']])
     await action(page,'Add an access baseline',{name,match,grants:[{kind:'group',target}]},'/access-policies',undefined,201);
-  const move=(source,from,to)=>api('/lifecycle',{personId:person.id,kind:'move',effectiveAt:later(-60000),timezone:'UTC',source,sourceRevision:1,ownerId:uid,identityTarget:'provider-colleague',baseline:{from:{department:from},to:{department:to}}});
+  const move=(source,from,to)=>api('/lifecycle',{personId:person.id,kind:'move',effectiveAt:later(-60000),timezone:'UTC',source,sourceRevision:1,ownerId:uid,identityTarget:'provider-colleague',retained:[],added:[],removed:[],deviceIds:[],baseline:{from:{department:from},to:{department:to}}});
   const accessDuties=async lifecycleId=>(await api('/lifecycle/'+lifecycleId)).obligations.filter(o=>o.kind.startsWith('access.'));
   async function standing(duty){
     const step={action:duty.kind==='access.grant'?'group.add':'group.remove',actionVersion:1,target:duty.target,beneficiaryId:person.id,connectionId:graph.id,connectionRevision:graph.revision,verifierConnectionId:probe.id,verifierConnectionRevision:probe.revision,cohort:[person.id]};
