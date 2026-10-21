@@ -1,3 +1,4 @@
+import { expireMcpCredentials } from './features/mcp/credentials'
 import type { Env, Principal, Role } from './platform/types'
 import { ApiError, id, now } from './platform/http'
 import { processDueWork, processDueRetention, executionPort } from './features/work'
@@ -58,6 +59,7 @@ export async function processScheduledWork(env: Env) {
   })
   return Promise.allSettled([
     ...work,
+    runLane(env, 'mcp-credentials', null, () => expireMcpCredentials(env)),
     runLane(env, 'intelligence', null, () => processDueIntelligence(env)),
     runLane(env, 'retention', null, () => processDueRetention(env)),
     runLane(env, 'adoption', null, () => processDueAdoption(env)),
