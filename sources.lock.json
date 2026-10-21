@@ -4351,11 +4351,11 @@
       "executable": false
     },
     "src/ui/catalog-form-editor.tsx": {
-      "sha256": "d948504a69ef98d8df7d7f6af45e0f81d20f90f3c38b07c88f29ac58f60ad1fa",
+      "sha256": "d294379698cbf86d54eb342e42fd454567018a54ac3905157182cf69777b261b",
       "executable": false
     },
     "src/ui/catalog-request-form.tsx": {
-      "sha256": "7c522af52b596eb93bb68ca5c998fae8b9f44a19aa31758162bcf70ad837761b",
+      "sha256": "27d4f000b55081985c6b038aceab5a1c5cbffa3343abe7c9c3fd3cf162cb6ea9",
       "executable": false
     },
     "src/ui/change-authority.tsx": {
