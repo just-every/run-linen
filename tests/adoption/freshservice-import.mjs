@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {importHarness} from './freshservice-import-harness.mjs';
+import {snipeitImportChecks} from './snipeit-import-cases.mjs';
 const h=await importHarness(),base='/adoption/freshservice-imports',origin='http://localhost';
 async function request(path,method='GET',body,auth={},extra={}){return h.fetch(origin+'/api/v1'+path,{method,headers:{Origin:origin,'Content-Type':'application/json',...auth,...extra},body:body===undefined?undefined:JSON.stringify(body)});}
 async function ok(path,method,body,auth,status=200,extra={}){const r=await request(path,method,body,auth,extra);assert.equal(r.status,status,`${path}: ${await r.clone().text()}`);return r.json();}
@@ -101,4 +102,5 @@ try{
  console.log('PASS tenant/mapped-identity denial and native adoption erasure removes retained custody, withdraws originals and rejects unsanitized replay');
  console.log('PASS unrelated saved-ticket JSON job retains exact original through erasure, resumes into native work and remains undoable');
  console.log('PASS unproved legacy session denied; freshly authenticated owner resumes, reads retained bytes and undoes');
+ await snipeitImportChecks({ok,request,login,owner,snapshot});
 }finally{await h.close();}

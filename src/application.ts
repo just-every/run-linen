@@ -12,6 +12,7 @@ import { registerEngineeringAgentRoutes } from './features/intelligence/engineer
 import { registerFreshserviceImportRoutes, freshserviceErasurePort } from './features/adoption/freshservice-import'
 import { registerAdoptionErasurePort } from './features/adoption'
 import { registerAdoptionRoutes } from './features/adoption'
+import { registerSnipeitImportRoutes } from './features/adoption/snipeit-import'
 import { registerConnectionRoutes } from './features/connections'
 
 registerAdoptionErasurePort(freshserviceErasurePort)
@@ -53,6 +54,7 @@ export function createApplication() {
   registerIntelligenceRoutes(authenticated)
   registerAdoptionRoutes(authenticated)
   registerFreshserviceImportRoutes(authenticated)
+  registerSnipeitImportRoutes(authenticated)
   registerConnectionRoutes(authenticated)
   authenticated.get('/runtime-status', async c => {
     const principal = requireRole(c, 'owner', 'operator', 'auditor')

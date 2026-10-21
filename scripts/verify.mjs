@@ -46,7 +46,7 @@ const checks = [
   ['intelligence runtime', process.execPath, ['tests/intelligence/runtime.mjs']],
   ['connected frontier journey', process.execPath, ['tests/intelligence/frontier.mjs']],
   ['ordinary intake and independent evidence', process.execPath, ['tests/intelligence/repair-runtime.mjs']],
-  ['Freshservice native migration', process.execPath, ['tests/adoption/freshservice-import.mjs']],
+  ['Freshservice and Snipe-IT native migration', process.execPath, ['tests/adoption/freshservice-import.mjs']],
   ['adoption and recovery', process.execPath, ['tests/adoption/runtime.mjs']],
   ['coexistence and imported erasure', process.execPath, ['tests/adoption/runtime.mjs'], { LINEN_ADOPTION_HISTORIC: '1' }],
   ['run site', process.execPath, ['--test', 'tests/site/site.test.mjs']],

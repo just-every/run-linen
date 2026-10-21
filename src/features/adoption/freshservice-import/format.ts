@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 import { canonicalJson, sha256, type SourceBundle, type Json } from '../../../modules/import-kit/src/d1/index';
 import { parseJson } from '../../../modules/import-kit/src/readers/json';
 import { ApiError } from '../../../platform/http';
+import { readCsv } from '../csv';
 
 export const requireInput: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new ApiError(422, 'freshservice_input', message); };
 export interface SavedFile { name: string; format: 'tickets-csv' | 'ticket-json' | 'conversations-json'; base64: string; ticketId?: string }
@@ -10,22 +11,7 @@ export interface Ticket { id: string; title: string; description: string; status
 export interface ParsedExport { source: SourceBundle; tickets: Map<string, Ticket>; identities: Record<string, string> }
 export const stableId = (...parts: string[]) => 'fs_' + sha256(canonicalJson(parts)).slice(0, 40);
 
-/** RFC 4180 quoting, including embedded newlines. Ambiguous/malformed files fail closed. */
-function csv(text: string): Record<string, string>[] {
-  const rows: string[][] = []; let row: string[] = [], cell = '', quoted = false, closed = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else { quoted = false; closed = true; } } else cell += c; continue; }
-    if (c === '"') { requireInput(!cell && !closed, 'Invalid CSV quote'); quoted = true; }
-    else if (c === ',') { row.push(cell); cell = ''; closed = false; }
-    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; closed = false; }
-    else { requireInput(!closed, 'Unexpected text after CSV quote'); cell += c; }
-  }
-  requireInput(!quoted, 'Unclosed CSV quote'); if (row.length || cell || closed) { row.push(cell); rows.push(row); }
-  const headers = rows.shift(); requireInput(headers?.length && new Set(headers).size === headers.length, 'Unique CSV headers required');
-  for (const h of ['Ticket Id', 'Subject', 'Description', 'Status', 'Requester Email', 'Created Time', 'Last Updated Time']) requireInput(headers.includes(h), `Missing CSV field: ${h}`);
-  return rows.map(values => { requireInput(values.length === headers.length, 'CSV field count mismatch'); return Object.fromEntries(headers.map((h, i) => [h, values[i]])); });
-}
+const csv = (text: string) => readCsv(text, ['Ticket Id', 'Subject', 'Description', 'Status', 'Requester Email', 'Created Time', 'Last Updated Time'], requireInput);
 function timestamp(value: unknown): string {
   requireInput(typeof value === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(value) && Number.isFinite(Date.parse(value)), 'Explicit ISO 8601 timestamp with timezone required; review/convert ambiguous source dates before import');
   return new Date(value).toISOString();

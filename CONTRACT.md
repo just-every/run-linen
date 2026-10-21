@@ -2298,6 +2298,26 @@ that product and marks how close the current code is (see [Status](#status)).
   of 500 assets; serial conflicts are reported in the dry run and resolved
   before apply.
 
+  *Snipe-IT export semantic (21 October):* the owner supplies one Snipe-IT asset
+  CSV export (Custom Asset Report or asset list) with `Asset Tag` and `Serial`
+  columns, as UTF-8 of at most 2 MiB and 1,000 rows. The dry run changes nothing
+  and lists counts, rows rejected for having no importable serial (empty, or not
+  1–200 printable ASCII characters), the columns and custody it does not import,
+  and each serial conflict: two or more rows with one serial, or a serial already
+  on a Linen device, compared after trimming surrounding spaces and ignoring ASCII
+  letter case. Every row needs an asset tag, unique in the file. The owner
+  resolves each conflict by naming the asset tag of the one row to import, or
+  `skip`; a serial already on a Linen device can only be skipped, so Linen's
+  device and custody history are never overwritten or merged. Apply needs the dry
+  run's fingerprint for exactly that file and those resolutions, explicit
+  acceptance of the omissions and no unresolved conflict; a device recorded since
+  the review refuses the whole apply. Apply records every remaining row in one
+  write as observed stock with a `record` custody event, as Record a device does,
+  with its serial, asset tag and location, and quotes the Snipe-IT status in that
+  event's evidence. Check-outs, assignees, models, purchase and warranty fields
+  are not imported and the export file is not retained, so importing the same
+  export again finds every serial already in Linen.
+
 - **MIGRATE-005 — Coexistence and cutover.** Linen runs alongside Freshservice,
   Jira Service Management or ServiceNow while the desk keeps working in the
   incumbent:
@@ -2642,15 +2662,15 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 
 ## Status
 
-Judged from the code and tests at commit `3c73523af8b459ca063ca913a2098381a4c4f378` (22 October 2026).
+Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026).
 
 The commit is the landing-main baseline for this judgement; this candidate also carries the code and public-door checks cited below. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 45 | 44 | 26 | 115 |
-| All | 50 | 63 | 26 | 139 |
+| Target and push further | 45 | 45 | 25 | 115 |
+| All | 50 | 64 | 25 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2764,7 +2784,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `MIGRATE-001` | Freshservice migration | target | partial | `src/features/adoption/freshservice-import`, `src/features/adoption/freshservice.ts`, `tests/adoption/freshservice-import.mjs`, `tests/adoption/runtime.mjs` | Tickets and conversations only, 100 per job; no assets, catalog, KB, SLA, attachment bytes or 50,000-ticket scale run. |
 | `MIGRATE-002` | Jira Service Management migration | target | missing |  | No JSM, Assets or Confluence importer or delta passes. |
 | `MIGRATE-003` | ServiceNow migration | target | missing |  | No ServiceNow Table/Attachment API importer or delta passes. |
-| `MIGRATE-004` | Spreadsheet and lightweight-tool move-in | target | missing |  | No CSV, Zendesk or Snipe-IT importer. |
+| `MIGRATE-004` | Spreadsheet and lightweight-tool move-in | target | partial | `src/features/adoption/snipeit-import.ts`, `src/features/adoption/csv.ts`, `tests/adoption/snipeit-import-cases.mjs`, `tests/adoption/freshservice-import.mjs` | Snipe-IT asset exports import as above: 500 devices, serial conflicts reported in the read-only dry run and resolved before an atomic apply. Gap: CSV imports for tickets, people and assets and the Zendesk importer are unbuilt; Snipe-IT custody, models, purchase and warranty fields are listed omissions, not imported. |
 | `MIGRATE-005` | Coexistence and cutover | target | partial | `src/features/adoption/coexistence.ts`, `tests/adoption/runtime.mjs` | Freshservice delta checkpoint and fenced cutover only; no ServiceNow or JSM deltas and no post-cutover source watch for late arrivals. |
 | `A1` | Identity and privacy | published | done | `src/platform/auth.ts`, `src/features/work/privacy.ts`, `tests/ui/browser.mjs`, `tests/platform/privacy-runtime.mjs`, `tests/work/person-binding-runtime.mjs` |  |
 | `A2` | Granted action | published | done | `src/features/execution/authority.ts`, `src/features/execution/grants.ts`, `tests/execution/authority-runtime.mjs`, `tests/ui/connected-request.mjs` |  |
