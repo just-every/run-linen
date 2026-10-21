@@ -104,5 +104,19 @@ try{
  const namedView=await ok('/work/'+named.id,'GET',undefined,employee.auth);
  assert.equal(JSON.parse(namedView.work.context_json).requestedFor,'Wes Calloway');
  assert.ok(namedView.messages.some(m=>m.body.includes('names Wes Calloway')&&m.body.includes('no service was recorded')));
+ // CATALOG-001 / CHANNEL-006: the assistant sees only items its employee may request and never submits without the required quote.
+ const quoted=await ok('/catalog','POST',{name:'Quoted purchase',kind:'software',target:'quoted-purchase',ownerId:uid,form:{quoteRequired:true}},owner);
+ const dimension=await ok('/catalog-values','POST',{dimension:'department',label:'Assistant Legal'},owner);
+ const restricted=await ok('/catalog','POST',{name:'Legal purchase',kind:'software',target:'legal-purchase',ownerId:uid,audience:{department:[dimension.id]}},owner);
+ await fixture('config',{catalogId:quoted.id,probeMode:'negative'});
+ const quotedWork=await ok('/work','POST',{title:'Quoted purchase access',body:'I need the quoted purchase for design work',deduplicationKey:'quoted-purchase'},employee.auth);
+ startClock();await until(()=>one("SELECT * FROM intelligence_pending_fulfilments WHERE work_id=? AND state='blocked'",quotedWork.id),'assistant refused without the quote');await stopClock();
+ assert.equal((await one('SELECT error_code FROM intelligence_pending_fulfilments WHERE work_id=?',quotedWork.id)).error_code,'catalog_quote_required','CATALOG-001 the assistant never submits a quote-required item without its quote');
+ assert.equal((await one('SELECT COUNT(*) n FROM work_fulfilments WHERE work_id=?',quotedWork.id)).n,0);
+ await fixture('config',{catalogId:restricted.id,probeMode:'negative'});
+ const hiddenWork=await ok('/work','POST',{title:'Legal purchase access',body:'I need the legal purchase',deduplicationKey:'legal-purchase'},employee.auth);
+ startClock();await until(()=>one("SELECT * FROM work_intake_events WHERE work_id=? AND state='failed'",hiddenWork.id),'assistant refused an item outside the audience');await stopClock();
+ assert.equal((await one("SELECT error FROM work_intake_events WHERE work_id=? AND state='failed'",hiddenWork.id)).error,'unknown_model_catalog','CHANNEL-006 the assistant context holds only eligible items, so a hidden item cannot be chosen');
+ assert.equal((await one('SELECT COUNT(*) n FROM work_fulfilments WHERE work_id=?',hiddenWork.id)).n,0);
  console.log('PASS repair: a request naming someone else records no service for its requester; native D1/session/CSRF; 11 invalid probe variants remain uncertain with attempts; valid negative separate; repeated invalid evidence cannot reuse capability; automatic ordinary classification/service routing/shared incident/rival research; same conversation findings; private-context exclusion/current policy withdrawal/injection; restart and dedup; ordinary standing granted fulfilment -> amendment -> scheduled verified expiry without duplicate access or client interpret/run. Providers and model fixtures only.');
 }catch(e){console.error('REPAIR FAILURE',e);console.error('LAST TICK',JSON.stringify(scheduled.at(-1)));console.error('ROUTES',await all('SELECT * FROM intelligence_investigations').catch(()=>[]));console.error('INTAKE',await all('SELECT state,error FROM work_intake_events').catch(()=>[]));throw e}finally{await stopClock();await h.close()}

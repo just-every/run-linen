@@ -22,6 +22,8 @@ export interface WorkIntakePort {
         kind: string;
         target: string;
         owner_id: string;
+        /** The item revision the assistant saw; the submission is refused if it moved. */
+        revision: number;
     }>>;
 }
 let port: WorkIntakePort | undefined = workService;

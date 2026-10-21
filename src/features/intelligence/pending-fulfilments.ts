@@ -9,7 +9,7 @@ import { workIntakePort } from './intake-port';
 import type { IntelligenceContext } from './types';
 
 export async function queueFulfilment(ctx: IntelligenceContext, eventId: string, workId: string, input: {
-  catalogId:string;beneficiaryId:string;purpose:string;expiresAt?:string;
+  catalogId:string;catalogRevision?:number;beneficiaryId:string;purpose:string;expiresAt?:string;
 }) {
   const work = await getWork(ctx,workId);
   assert(work.requester_id===ctx.principal.userId,'intake_requester_required',403);

@@ -53,7 +53,7 @@ export async function processIntakeEvent(ctx: IntelligenceContext, event: Intake
                     ? 'Your access expiry is now '+amended.expiresAt+'. The existing access remains linked to its independent verification and scheduled removal.'
                     : 'Your correction needs a decision from its fulfillment owner. '+amended.reason;
             } else {
-                const queued = await queueFulfilment(ctx,event.id,work.id,{catalogId:v.catalogId,beneficiaryId:work.beneficiary_id,purpose:v.purpose,expiresAt:v.expiresAt||undefined});
+                const queued = await queueFulfilment(ctx,event.id,work.id,{catalogId:v.catalogId,catalogRevision:catalog.find(c => c.id === v.catalogId)!.revision,beneficiaryId:work.beneficiary_id,purpose:v.purpose,expiresAt:v.expiresAt||undefined});
                 effect=queued;state=queued.state;body=queued.message;
             }
         }
