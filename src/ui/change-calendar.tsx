@@ -39,15 +39,15 @@ export function ChangeCalendar() {
   const start=new Date();start.setDate(1);start.setHours(0,0,0,0);const end=new Date(start);end.setMonth(end.getMonth()+1);
   const [range,setRange]=useState({from:start.toISOString(),to:end.toISOString(),timezone:Intl.DateTimeFormat().resolvedOptions().timeZone}),[error,setError]=useState<unknown>(null);
   const query=new URLSearchParams(range).toString(),{session}=useSession(),owner=session.principal.roles.includes('owner');
-  const calendar=useRemote<{changes:DomainRecord[];windows:DomainRecord[];conflicts:{changeId:string;otherId:string;kind:string}[];warnings:{changeId:string;message:string}[]}>(`/change-calendar?${query}`),
+  const calendar=useRemote<{changes:DomainRecord[];windows:DomainRecord[];releases:DomainRecord[];conflicts:{changeId:string;otherId:string;kind:string}[];warnings:{changeId:string;message:string}[]}>(`/change-calendar?${query}`),
     services=useRemote<{items:DomainRecord[]}>('/services');
   const fields:Field[]=[{name:'from',label:'Calendar from',type:'datetime-local',required:true,value:wall(range.from)},
     {name:'to',label:'Calendar until',type:'datetime-local',required:true,value:wall(range.to)},
     {name:'timezone',label:'Calendar display timezone',required:true,value:range.timezone}];
   function display(value:string) {return new Intl.DateTimeFormat('en-US',{timeZone:range.timezone,dateStyle:'medium',timeStyle:'short'}).format(new Date(value));}
-  const events=calendar.data?[...calendar.data.changes.map(r=>({...r,calendarKind:'change'})),...calendar.data.windows.map(r=>({...r,calendarKind:r.data.kind}))].sort((a,b)=>a.data.window.start.localeCompare(b.data.window.start)||a.id.localeCompare(b.id)):[];
+  const events=calendar.data?[...calendar.data.changes.map(r=>({...r,calendarKind:'change'})),...calendar.data.releases.map(r=>({...r,calendarKind:'release'})),...calendar.data.windows.map(r=>({...r,calendarKind:r.data.kind}))].sort((a,b)=>a.data.window.start.localeCompare(b.data.window.start)||a.id.localeCompare(b.id)):[];
   return <section className="connection-record" aria-label="Change calendar">
-    <h2>Change calendar</h2><p>Scheduled changes, maintenance and freeze windows. Times below use {range.timezone}.</p>
+    <h2>Change calendar</h2><p>Scheduled changes, releases, maintenance and freeze windows. Times below use {range.timezone}.</p>
     <form className="inline-form" onSubmit={e=>{e.preventDefault();setError(null);try{const v=readFields(e.currentTarget,fields);new Intl.DateTimeFormat('en',{timeZone:String(v.timezone)});if(String(v.from)>=String(v.to))throw Error('The calendar end must follow its start.');setRange(v as typeof range);}catch(e){setError(e);}}}>
       <Fields fields={fields}/><button className="action secondary">Show calendar</button>
     </form>
@@ -57,7 +57,7 @@ export function ChangeCalendar() {
       {!events.length&&<Empty title="No scheduled changes in this range.">Choose another range or add a planned change.</Empty>}
       {events.map(r=><article className="connection-record" key={`${r.kind}:${r.id}`} aria-label={`${r.data.title} calendar entry`}>
         <p className="eyebrow">{r.calendarKind}{r.kind==='calendar-window'&&!r.data.active?' · inactive':''}</p>
-        <h3>{r.kind==='change'?<a href={`#/changes/${r.id}`}>{text(r.data.title)}</a>:text(r.data.title)}</h3>
+        <h3>{r.kind==='change'?<a href={`#/changes/${r.id}`}>{text(r.data.title)}</a>:r.kind==='release'?<a href={`#/releases/${r.id}`}>{text(r.data.title)}</a>:text(r.data.title)}</h3>
         <p>{display(r.data.window.start)} – {display(r.data.window.end)}</p>
         <p>{r.data.services.length?r.data.services.map((id:string)=>services.data?.items.find(s=>s.id===id)?.data.name||'Configuration item').join(' · '):'All configuration items'}</p>
         {calendar.data!.conflicts.filter(c=>c.changeId===r.id).map(c=><Notice key={`${c.kind}:${c.otherId}`} tone="error">{c.kind==='change'?'Conflicting change on the same configuration item.':c.kind==='freeze'?'Overlaps an active freeze.':'Overlaps a maintenance window.'}</Notice>)}
