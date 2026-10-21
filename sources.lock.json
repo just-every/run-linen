@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "99f35c0d2ee8af64f3998edd29c0bb0dd6fb8a7a9402997cae500dcc02e15405",
+      "sha256": "417f07bc89397349e81d7438dcb6023866fa4d1f3ebb0dff1b3eb5a4cc4e7457",
       "executable": false
     },
     "DEMO.md": {
@@ -1048,6 +1048,10 @@
     },
     "migrations/0774_access_policies.sql": {
       "sha256": "5a3e810d3d29c0f62d3f1627479a8af209a9a301ab7376b51bd101f3a108139d",
+      "executable": false
+    },
+    "migrations/0775_release_admission.sql": {
+      "sha256": "0c094234595cd5e83c937cce56ef09a13e7f760cea7831e7ea06e5c42e93d487",
       "executable": false
     },
     "ONBOARDING.md": {
@@ -4983,7 +4987,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "6ba17497386b17bbb7f4bc3d5ea68f6a8b911c0aa54ed2a2174873cd9b1515ad",
+      "sha256": "fbb47e08ba7ceaa1a875a82abf5c1b782fb20e1b22574b48c03401244ed2c6d1",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
@@ -5276,6 +5280,10 @@
     },
     "tests/ui/relationship-activity-journey.mjs": {
       "sha256": "3f2b73dd6968899abdc6f770b760eaca0466c2d49b9cfdec9b994d52f23f61b0",
+      "executable": false
+    },
+    "tests/ui/release-journey.mjs": {
+      "sha256": "0b93f4260ac8ff487fcb108a0885deffce85e0e0cc99462e7730928455bcad1f",
       "executable": false
     },
     "tests/ui/remote-response-runtime.mjs": {

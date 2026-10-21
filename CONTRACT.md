@@ -2621,7 +2621,7 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 
 ## Status
 
-Judged from the code and tests carried from landing main `a9669cb13312f50a7336bbec10fdee5f4d13f15f` (21 October 2026), including the CHANGE-007 candidate changes below.
+Judged from the code and tests at commit `a9669cb13312f50a7336bbec10fdee5f4d13f15f` (21 October 2026).
 
 The commit is the code this branch carries unchanged; the code audit at `7ce9dae` was the starting point. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
 
