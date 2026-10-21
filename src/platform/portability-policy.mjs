@@ -7,7 +7,16 @@ export const portabilityPolicy={
  secretColumns:{connections:['secret_ciphertext'],intelligence_engineering_jobs:['claim_token_hash']},
  requiredConfiguration:['OWNER_EMAIL','SESSION_SECRET','SETUP_TOKEN','AUTH_ORIGIN','ENCRYPTION_KEY','MAIL_PROVIDER','MAIL_FROM'],
  buckets:{ATTACHMENTS:{}},
+ // Keep the existing archive secret inventory compatible with pre-MCP archives.
+ // Export removes the hash below; staged validation refuses any active/hash-bearing
+ // credential before native restore can write objects or records.
+ async validateStaged({db,tables}){
+  const table=tables.mcp_credentials;
+  if(!table)return true;
+  return !await db.prepare(`SELECT 1 FROM "${table.replaceAll('"','""')}" WHERE secret_hash IS NOT NULL OR state<>'revoked' LIMIT 1`).first();
+ },
  exportRow(table,row){
+  if(table==='mcp_credentials')return {...row,secret_hash:null,state:'revoked',invalidated_at:row.invalidated_at||row.created_at}
   if(table==='work_time_entries')return {...row,state:'completed',last_seen_at:null,sequence:Number(row.sequence||0)+1}
   if(table==='work_people')return {...row,member_id:null,binding_id:null,manager_id:null}
   if(table==='work_fulfilment_approvals')return {...row,person_id:null,binding_id:null}

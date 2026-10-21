@@ -1734,8 +1734,20 @@ that product and marks how close the current code is (see [Status](#status)).
   connect an MCP client as an automation principal; it lists its permitted queue
   and is refused an out-of-grant action.
 
-  *MCP credential semantic (ct, 20 October):* this approved rule is unbuilt;
-  API-003 remains missing and there is no MCP authority today. An MCP grant has
+  *Current MCP foundation:* native owner routes at `/api/v1/mcp-credentials`
+  mint, list and revoke separate-audience grants for existing integration-only
+  automation principals. `/api/mcp` authenticates before protocol discovery and
+  checks current membership and automation-principal status on every request.
+  Initialize, ping and empty tool/resource discovery work; every tool call is
+  refused, including selected tools, until scoped ticket execution is built.
+  Selected scopes and tools are limits on a future implementation, not current
+  authority. Secrets appear once, hashes never appear in management or exports,
+  and native restore retains revoked metadata only; legacy workspace import
+  retains metadata as history without materializing credentials.
+
+  *MCP credential semantic (ct, 20 October):* credential lifecycle and
+  authenticated protocol discovery are implemented; API-003 remains partial.
+  No ticket tool authority is available today. An MCP grant has
   its own audience: a REST token is refused at MCP and an MCP credential is
   refused on `/api/v1/*`; no secret serves both. Only an owner mints one for an
   existing active automation principal holding only the integration role,
@@ -2341,8 +2353,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 41 | 47 | 27 | 115 |
-| All | 46 | 66 | 27 | 139 |
+| Target and push further | 41 | 48 | 26 | 115 |
+| All | 46 | 67 | 26 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2444,7 +2456,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `AUDIT-001` | Audit log | target | done | `src/platform/privacy.ts`, `tests/platform/privacy-runtime.mjs`, `tests/platform/config-runtime.mjs` |  |
 | `API-001` | REST API and webhooks | target | partial | `src/features/work/index.ts`, `src/features/execution/index.ts`, `tests/work/runtime.mjs` | Scoped automation REST tokens and outbound signed event webhooks are unbuilt; session-authenticated REST routes do not prove token authentication. |
 | `API-002` | No-code workflow automator | target | partial | `src/features/execution/automation.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No no-code builder. |
-| `API-003` | Agent access by MCP | target | missing |  | No MCP server. |
+| `API-003` | Agent access by MCP | target | partial | `src/features/mcp/credentials.ts`; `src/features/mcp/protocol.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/base-auth-transfer.mjs` | Owner-only separate-audience credentials, live integration-only membership, one-time SHA-256 secret, expiry/revocation, erasure hash clearing, empty authenticated MCP discovery and inert archive restore are implemented. Gap: all ticket tools and current scope/grant/revision enforcement, filtered discovery and the complete Desk bot journey; no ticket tool authority is exposed. |
 | `PORT-001` | Portable native archive | target | done | `src/features/adoption/export.ts`, `src/features/adoption/import.ts`, `tests/adoption/runtime.mjs` |  |
 | `ERASURE-001` | Authorized erasure | target | done | `src/features/adoption/core.ts`, `src/features/work/privacy.ts`, `tests/adoption/runtime.mjs`, `tests/work/person-binding-runtime.mjs`, `tests/platform/privacy-runtime.mjs` |  |
 | `RETENTION-001` | Retention policies | target | done | `src/features/adoption/retention.ts`, `src/features/work/retention.ts`, `tests/adoption/retention-cases.mjs`, `tests/ui/connected-setup.mjs` | Public-route proof: no hidden default; a 365-day closed-ticket policy is previewed and needs the owner to confirm the exact counts; the run deletes a ticket closed 400 days ago and its attachment bytes with a content-free receipt the owner and auditor read, keeping tickets closed 300 days ago and open tickets. Owner preview/confirm form inspected at 1440/390. |

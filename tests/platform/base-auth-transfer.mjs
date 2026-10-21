@@ -1,8 +1,9 @@
+import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {mailEdge} from './mail-edge.mjs'
 // Public rer archive/reset/import flow on disposable actual D1/R2 state.
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
-import {cp,mkdtemp,symlink,rm,writeFile,readFile,mkdir} from 'node:fs/promises'
+import {cp,mkdtemp,symlink,rm,writeFile,readFile,mkdir,readdir} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join,resolve} from 'node:path'
 import {createHash} from 'node:crypto'
@@ -23,7 +24,34 @@ async function close(){await proxy?.dispose();proxy=null}
 try{
  await cp(source,root,{recursive:true,filter:p=>{const rel=p.slice(source.length+1);return !rel||!['.git','node_modules','.wrangler','.rer','.seed','dist','exports','.dev.vars','.dev.vars.previous'].some(x=>rel===x||rel.startsWith(x+'/'))}})
  await symlink(resolve('node_modules'),join(root,'node_modules'),'dir')
+ // API-003 restore compatibility: produce an actual pre-MCP archive through rer,
+ // then apply the additive migration and import it without inventing credentials.
+ await mkdir(join(root,'pre-mcp-migrations'));
+ for(const name of (await readdir(join(root,'migrations'))).filter(name=>name.endsWith('.sql')&&name<'0769_mcp_credentials.sql'))await cp(join(root,'migrations',name),join(root,'pre-mcp-migrations',name));
+ const priorConfig=JSON.parse(await readFile(join(root,'wrangler.jsonc'),'utf8'));
+ priorConfig.d1_databases[0].migrations_dir='pre-mcp-migrations';
+ await writeFile(join(root,'pre-mcp-wrangler.json'),JSON.stringify(priorConfig));
+ await run(['exec','wrangler','d1','migrations','apply','linen','--local','--persist-to','.wrangler/state','--config','pre-mcp-wrangler.json']);
+ const oldEnv=await open();
+ await oldEnv.DB.batch([
+  oldEnv.DB.prepare("INSERT INTO workspaces VALUES('pre-mcp','Prior','2026')"),
+  oldEnv.DB.prepare("INSERT INTO users VALUES('pre-owner','pre-owner@example.test','Prior owner','unused','2026')"),
+  oldEnv.DB.prepare("INSERT INTO memberships VALUES('pre-mcp','pre-owner','[\"owner\"]',1)"),
+  oldEnv.DB.prepare("INSERT INTO workspace_settings(workspace_id) VALUES('pre-mcp')"),
+  oldEnv.DB.prepare("INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,created_at,updated_at,dedup_key) VALUES('pre-work','pre-mcp','pre-owner','pre-owner','request','Pre-MCP retained ticket','2026','2026','pre-mcp')"),
+ ]);await close();
+ const preMcpArchive=join(dir,'pre-mcp.rer');
+ await run(['exec','rer','export','--output',preMcpArchive]);
  await run(['exec','wrangler','d1','migrations','apply','linen','--local','--persist-to','.wrangler/state','--config','wrangler.jsonc'])
+ await run(['exec','rer','reset','--yes']);
+ await run(['exec','rer','import','--input',preMcpArchive,'--yes']);
+ const upgraded=await open();
+ assert.equal((await upgraded.DB.prepare("SELECT title FROM work_records WHERE id='pre-work'").first()).title,'Pre-MCP retained ticket','API-003 pre-MCP archive still restores after additive migration');
+ assert.equal((await upgraded.DB.prepare('SELECT count(*) n FROM mcp_credentials').first()).n,0,'API-003 old archive introduces no credential authority');
+ await close();await run(['exec','rer','reset','--yes']);
+ await rm(join(root,'pre-mcp-migrations'),{recursive:true,force:true});await rm(join(root,'pre-mcp-wrangler.json'));
+ await run(['exec','wrangler','d1','migrations','apply','linen','--local','--persist-to','.wrangler/state','--config','wrangler.jsonc']);
+
  let env=await open();const stamp=new Date().toISOString()
  await env.DB.batch([
   env.DB.prepare('INSERT INTO bootstrap_lock VALUES(1)'),
@@ -36,6 +64,10 @@ try{
   env.DB.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('workspace','owner','["owner"]'),
   env.DB.prepare('INSERT INTO workspace_settings(workspace_id) VALUES(?)').bind('workspace'),
   env.DB.prepare('INSERT INTO platform_first_run VALUES(1,?,?)').bind('owner',Date.now()),
+  env.DB.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind('desk-bot','urn:linen:automation:desk-bot','Desk bot','!non-interactive-automation',stamp),
+  env.DB.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('workspace','desk-bot','["integration"]'),
+  env.DB.prepare('INSERT INTO execution_automation_principals VALUES(?,?,?,?,?,NULL)').bind('workspace','desk-bot','Desk bot','API-003-transfer',stamp),
+  env.DB.prepare("INSERT INTO mcp_credentials VALUES(?,?,?,?,?,?,?,?, 'active',?,?,NULL,NULL)").bind('mcp-grant','workspace','desk-bot','Desk bot','["work.read"]','["work.list"]',new Date(Date.now()+30*86400000).toISOString(),createHash('sha256').update('linen_mcp_'+('1'.repeat(36))+('2'.repeat(36))).digest('hex'),'owner',stamp),
   env.DB.prepare('INSERT INTO intelligence_engineering_grants VALUES(?,?,?,?,?,?,?,?,?)').bind('grant','workspace',1,'owner','test-only-bearer','{}','2099-01-01',null,stamp),
   env.DB.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind('connection','workspace','sendgrid','Fixture','{}','test-only-encrypted-secret','verified',stamp,stamp),
   env.DB.prepare('INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,created_at,updated_at,dedup_key) VALUES(?,?,?,?,?,?,?,?,?)').bind('work','workspace','owner','owner','request','Retained real record',stamp,stamp,'transfer'),
@@ -50,6 +82,11 @@ try{
  await env.ATTACHMENTS.put('workspace/private-file','Private retained attachment')
  await close()
  await run(['exec','rer','export','--output',archive])
+ const mcpRows=[];
+ for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='mcp_credentials')mcpRows.push(item.row);
+ assert.equal(mcpRows.length,1,'API-003 actual archive carries credential metadata');
+ assert.equal(mcpRows[0].name,'Desk bot');assert.equal(mcpRows[0].secret_hash,null,'API-003 no hash is exported');assert.equal(mcpRows[0].state,'revoked');
+
  await run(['exec','rer','reset','--yes'])
  await run(['exec','rer','import','--input',archive,'--yes'])
  env=await open()
@@ -59,6 +96,8 @@ try{
  assert.equal((await env.DB.prepare('SELECT password_hash FROM users WHERE id="owner"').first()).password_hash,'!restored-email-link')
  assert.equal((await env.DB.prepare('SELECT secret_ciphertext FROM connections').first()).secret_ciphertext,null)
  assert.ok((await env.DB.prepare('SELECT revoked_at FROM intelligence_engineering_grants').first()).revoked_at)
+ const restoredMcp=await env.DB.prepare('SELECT name,secret_hash,state,invalidated_at FROM mcp_credentials WHERE id="mcp-grant"').first();
+ assert.equal(restoredMcp.name,'Desk bot','API-003 archive retains metadata');assert.equal(restoredMcp.secret_hash,null,'API-003 archive excludes credential hash');assert.equal(restoredMcp.state,'revoked');assert.ok(restoredMcp.invalidated_at,'API-003 restore leaves credential revoked and inert');
  assert.equal((await env.DB.prepare('SELECT COUNT(*) n FROM sessions').first()).n,0)
  const person=await env.DB.prepare("SELECT member_id,binding_id,manager_id FROM work_people WHERE id='owner-person'").first()
  assert.deepEqual(person,{member_id:null,binding_id:null,manager_id:null},'Native restore retains the person but requires fresh binding and manager review')
@@ -76,6 +115,7 @@ try{
  mf=new Miniflare({...convertV4MiniflareOptions({port,host:'127.0.0.1',modules:true,script:await readFile(output,'utf8'),compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'local-linen'},r2Buckets:{ATTACHMENTS:'linen-attachments'},bindings:{AUTH_ORIGIN:origin,AUTH_LOCAL:'true',MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-provider-key',MAIL_FROM:'auth@localhost.test',OWNER_EMAIL:'owner@example.test',RER_DEV_KEY:'test-only-development-entry-key-long-enough',SESSION_SECRET:'test-only-session-secret-long-enough',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}),resourcePersistencePath:join(root,'.wrangler/state/v3'),isolatedResourcePersistencePath:join(dir,'isolated')})
  await mf.ready
  const request=(path,{body,cookie,headers={}}={})=>fetch(origin+path,{redirect:'manual',method:body?'POST':'GET',headers:{Host:new URL(origin).host,Origin:origin,...(body?{'content-type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...headers},...(body?{body:JSON.stringify(body)}:{})})
+ assert.equal((await request('/api/mcp',{body:{jsonrpc:'2.0',id:1,method:'tools/list'},headers:{Authorization:'Bearer linen_mcp_'+('1'.repeat(36))+('2'.repeat(36))}})).status,401,'API-003 credential is refused after actual rer export/reset/import');
  assert.equal((await request('/auth/magic-link',{body:{email:'owner@example.test',returnTo:'/app'}})).status,202)
  const detail=await(await request('/fixtures/mail')).text()
  const proof=/[?&](?:amp;)?token=([^"&<>\s]+)/.exec(detail)?.[1];assert.ok(proof)
