@@ -167,6 +167,10 @@ try{
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/reconcile',{cookie,body:{historyId:records.data[0].id,evidence:'Fixture owner reviewed retained unknown operation before explicitly releasing execution'},headers:authHeaders})).status,200)
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/release',{cookie,body:{revision:hold.revision},headers:authHeaders})).status,200)
  assert.equal(JSON.parse((await db.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id="workspace"').first()).settings_json).executionHeld,false,'Only explicit native reconciliation and release clears hold')
+ const releaseView=await(await request('/api/v1/releases/retained-release',{cookie})).json();
+ assert.equal(releaseView.data.state,'imported-review','CHANGE-007 native owner reads the restored release as inert history');
+ const restoredGo=await request('/api/v1/releases/retained-release/decisions',{cookie,headers:authHeaders,body:{revision:releaseView.revision,decision:'go',reason:'Attempt to reuse archived authority'}});
+ assert.equal(restoredGo.status,409);assert.equal((await restoredGo.json()).error.code,'release_closed','CHANGE-007 even after the global recovery hold is released, an archived release cannot mint live go authority');
  assert.equal((await db.prepare('SELECT COUNT(*) n FROM execution_provider_attempts').first()).n,0)
  await mf.dispose();mf=null
  env=await open()
