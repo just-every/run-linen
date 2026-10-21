@@ -4807,7 +4807,7 @@
       "executable": false
     },
     "tests/connections/runtime.mjs": {
-      "sha256": "debc02f23ee3602861ee11edd42b5bd25995e27e6f64874af6f9b8710f685768",
+      "sha256": "a9d0dec76ec9944ebb2306900d6fdaf83152f516b8a9b12807bc0716aae6b7a4",
       "executable": false
     },
     "tests/connections/sendgrid-runtime.mjs": {
