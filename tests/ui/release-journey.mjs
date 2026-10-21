@@ -18,7 +18,9 @@ try {
   await finishFirstRun(page,base);
   const api=apiFor(page),owner=(await api('/session')).principal.userId;
   const member=async(name,roles)=>({...await api('/members',{name,email:`release-${name.toLowerCase()}@example.test`,password:'synthetic-Connected-browser-2026',roles}),email:`release-${name.toLowerCase()}@example.test`});
-  const sales=await member('Sales',['employee']),other=await member('Engineering',['employee']),approver=await member('Reviewer',['approver']);
+  const sales=await member('Sales',['employee']),other=await member('Engineering',['employee']),approver=await member('Reviewer',['approver']),executor=await member('Executor',['operator']);
+  const ec=await browser.newContext(),ep=await ec.newPage();ep.on('pageerror',e=>errors.push(String(e)));
+  await signIn(ep,base,executor.email);const execute=apiFor(ep);
   const group=await api('/requester-groups',{name:'MFA pilot',memberIds:[sales.id]});
   const cis=[];for(const name of ['Sign-in','VPN','MFA policy'])cis.push(await api('/services',{name,description:'MFA release surface',businessImpact:'Sign-in interrupted',source:'Reviewed register',observedAt:new Date().toISOString(),visibility:'workspace'}));
   const incident=await api('/incidents',{title:'Legacy MFA prompts',serviceId:cis[0].id,impact:'Repeated prompts',cohorts:[sales.id]});
@@ -29,7 +31,7 @@ try {
   const window={start:new Date(Date.now()-60000).toISOString(),end:new Date(Date.now()+3600000).toISOString()},refs=[];
   for(const phase of ['canary','rollout','compensate']) {
     const payload={...(phase==='compensate'?{release:'prior'}:implementation.payload),phase,cohorts,implementationRevision:1};
-    const g=await api('/grants',{principalId:owner,beneficiaryId:sales.id,action:'deployment.'+phase,actionVersion:1,target:'orders',connectionId:deployment.id,validFrom:window.start,validUntil:window.end,maxUses:10,conditions:{payloadHash:createHash('sha256').update(JSON.stringify(payload)).digest('hex')}});
+    const g=await api('/grants',{principalId:executor.id,beneficiaryId:sales.id,action:'deployment.'+phase,actionVersion:1,target:'orders',connectionId:deployment.id,validFrom:window.start,validUntil:window.end,maxUses:10,conditions:{payloadHash:createHash('sha256').update(JSON.stringify(payload)).digest('hex')}});
     refs.push({id:g.id,version:g.version,phase});
   }
   const changes=[];
@@ -76,12 +78,12 @@ try {
   await captureJourney(sp,{path:out+'/CHANGE-007-cohort-notes.png',fullPage:true});
   for(const [n,initial] of changes.entries()) {
     await fetch(base+'/__fixture/state',{method:'POST',body:JSON.stringify({failDeployment:n===2})});
-    let c=await api(`/changes/${initial.id}/dispatch`,{revision:initial.revision,phase:'canary',idempotencyKey:`browser-${n}-canary`});
-    c=await api(`/changes/${c.id}/verify`,{revision:c.revision,invocationId:c.data.invocations.at(-1).id});
+    let c=await execute(`/changes/${initial.id}/dispatch`,{revision:initial.revision,phase:'canary',idempotencyKey:`browser-${n}-canary`});
+    c=await execute(`/changes/${c.id}/verify`,{revision:c.revision,invocationId:c.data.invocations.at(-1).id});
     if(n<2) {
       assert.equal(c.data.state,'canary-verified');
-      c=await api(`/changes/${c.id}/dispatch`,{revision:c.revision,phase:'rollout',idempotencyKey:`browser-${n}-rollout`});
-      c=await api(`/changes/${c.id}/verify`,{revision:c.revision,invocationId:c.data.invocations.at(-1).id});assert.equal(c.data.state,'verified');
+      c=await execute(`/changes/${c.id}/dispatch`,{revision:c.revision,phase:'rollout',idempotencyKey:`browser-${n}-rollout`});
+      c=await execute(`/changes/${c.id}/verify`,{revision:c.revision,invocationId:c.data.invocations.at(-1).id});assert.equal(c.data.state,'verified');
     } else assert.equal(c.data.state,'failed');
     changes[n]=c;
   }
@@ -89,8 +91,8 @@ try {
   await action(page,'Complete this release',{},'/complete','Complete release',409);
   await captureJourney(page,{path:out+'/CHANGE-007-failed-member.png',fullPage:true});
   await fetch(base+'/__fixture/state',{method:'POST',body:JSON.stringify({failDeployment:false})});
-  let failed=await api(`/changes/${changes[2].id}/dispatch`,{revision:changes[2].revision,phase:'compensate',idempotencyKey:'browser-backout'});
-  failed=await api(`/changes/${failed.id}/verify`,{revision:failed.revision,invocationId:failed.data.invocations.at(-1).id});assert.equal(failed.data.state,'compensated');
+  let failed=await execute(`/changes/${changes[2].id}/dispatch`,{revision:changes[2].revision,phase:'compensate',idempotencyKey:'browser-backout'});
+  failed=await execute(`/changes/${failed.id}/verify`,{revision:failed.revision,invocationId:failed.data.invocations.at(-1).id});assert.equal(failed.data.state,'compensated');
   await page.reload();release=await action(page,'Complete this release',{},'/complete','Complete release');assert.equal(release.data.state,'completed');
   await page.getByText('Every change successful or backed out',{exact:true}).waitFor();
   await captureJourney(page,{path:out+'/CHANGE-007-completed.png',fullPage:true});

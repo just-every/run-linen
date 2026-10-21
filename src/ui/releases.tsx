@@ -35,6 +35,7 @@ export function NewRelease({ onSaved }: { onSaved: (id: string) => void }) {
 }
 
 export function ReleaseDetails({ record, refresh }: { record: DomainRecord; refresh: () => void }) {
+  const problems = useRemote<{ items: DomainRecord[] }>('/problems'), services = useRemote<{ items: DomainRecord[] }>('/services');
   const d = record.data, { session } = useSession(), personName = usePeopleLabels(), me = session.principal.userId;
   const staff = session.principal.roles.some(r => ['owner', 'operator'].includes(r)), open = d.state !== 'completed';
   const phase = (p: Phase) => p ? `${p.outcome} · ${p.reference} · recorded by ${personName(p.recordedBy)}` : 'Not recorded';
@@ -50,6 +51,15 @@ export function ReleaseDetails({ record, refresh }: { record: DomainRecord; refr
       ['Completed', d.completedAt ? date(d.completedAt) : 'Open'],
     ]} />
     <section><h3>Release plan</h3><p>{text(d.plan)}</p></section>
+    <section aria-label="Linked problems and configuration items"><h3>Linked problems and configuration items</h3>
+      <ul>{(d.problemIds as string[]).map(id => {
+        const problem = problems.data?.items.find(p => p.id === id);
+        return <li key={id}>{problem ? <a href={`#/problems/${id}`}>{text(problem.data.title)}</a> : 'A linked problem you cannot read'}</li>;
+      })}{(d.services as string[]).map(id => {
+        const service = services.data?.items.find(s => s.id === id);
+        return <li key={id}>{service ? <a href={`#/services/${id}`}>{text(service.data.name)}</a> : 'A configuration item you cannot read'}</li>;
+      })}</ul>
+    </section>
     {staff && <section aria-label="Changes in this release"><h3>Changes in this release</h3>
       <ul>{(d.members as Member[]).map(m => <li key={m.id}>
         <a href={`#/changes/${m.id}`}>{m.title ? text(m.title) : 'A change you cannot read'}</a> <Badge value={m.state} />

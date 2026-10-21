@@ -4583,7 +4583,7 @@
       "executable": false
     },
     "src/ui/releases.tsx": {
-      "sha256": "c867bce5fa062c8890a7e95133fff17ad63393bef07b0dc311fd544512cbdcf6",
+      "sha256": "94fd9ab94cb4d681d48a8e3b38c9a52d3d9048cd03d03ba5ceac278752fa0810",
       "executable": false
     },
     "src/ui/request-facts.ts": {
@@ -5283,7 +5283,7 @@
       "executable": false
     },
     "tests/ui/release-journey.mjs": {
-      "sha256": "0b93f4260ac8ff487fcb108a0885deffce85e0e0cc99462e7730928455bcad1f",
+      "sha256": "5217e95d2ecbb44002eb4ba67fd9d535c950430b4b17230b9b06d8178f2ded9e",
       "executable": false
     },
     "tests/ui/remote-response-runtime.mjs": {
