@@ -1,4 +1,5 @@
 import { applicationChecks, catalogAudienceChecks } from './application-cases.mjs';
+import { catalogQuoteChecks } from './catalog-quote-cases.mjs';
 import { searchChecks } from './search-cases.mjs';
 import { problemDetectionChecks } from './problem-detection-cases.mjs';
 import { responseChecks } from './response-cases.mjs';
@@ -76,8 +77,12 @@ async function api(path, body, headers = {}) {
     headers: { "content-type": "application/json", ...headers },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  const value = await response.json();
-  return { status: response.status, value };
+  const value = (response.headers.get("content-type") || "").includes("json") ? await response.json() : await response.text();
+  return { status: response.status, value, headers: response.headers };
+}
+async function uploadBytes(path, bytes, headers = {}) {
+  const response = await mf.dispatchFetch(`http://localhost${path}`, { method: "POST", headers, body: bytes });
+  return { status: response.status, value: await response.json() };
 }
 try {
   const db = await mf.getD1Database("DB");
@@ -91,6 +96,7 @@ try {
     `INSERT INTO workspaces VALUES('a','A','2026-01-01'); INSERT INTO users VALUES('owner','owner@test','Owner','unused','2026-01-01'); INSERT INTO users VALUES('employee','employee@test','Employee','unused','2026-01-01'); INSERT INTO users VALUES('stranger','stranger@test','Stranger','unused','2026-01-01'); INSERT INTO memberships VALUES('a','owner','["owner"]',1); INSERT INTO memberships VALUES('a','employee','["employee"]',1); INSERT INTO memberships VALUES('a','stranger','["employee"]',1);`,
   );
   await catalogAudienceChecks(api,db);
+  await catalogQuoteChecks(api,db,uploadBytes,await mf.getR2Bucket('ATTACHMENTS'));
   await applicationChecks(api,db);
   const proposalProof=await problemDetectionChecks(api,db);
   await recurrenceChecks(api,db);
