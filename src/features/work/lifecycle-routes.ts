@@ -130,8 +130,12 @@ export function registerLifecycleRoutes(app: Hono<AppEnv>) {
     )
       .bind(ctx.principal.workspaceId, c.req.param("id"))
       .first<{ work_id: string }>();
+    // LIFE-003: the reviewed access baseline (retained, added, removed and its policies) is part of the admitted record.
+    const record = item && await c.env.DB.prepare("SELECT context_json FROM work_records WHERE workspace_id=? AND id=?")
+      .bind(ctx.principal.workspaceId, item.work_id).first<{ context_json: string }>();
     return c.json({
       lifecycle: item,
+      baseline: record ? JSON.parse(record.context_json || "{}").baseline ?? null : null,
       obligations: item ? await listObligations(ctx, item.work_id) : [],
     });
   });

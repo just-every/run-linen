@@ -4,6 +4,9 @@ import { permit, type WorkContext } from './core';
 
 export const dimensions = ['department', 'location', 'employmentType'] as const;
 export type Dimension = typeof dimensions[number];
+/** Reviewed person facts also carry a title; an item audience never does (CATALOG-001). */
+export const attributeDimensions = [...dimensions, 'title'] as const;
+export type AttributeDimension = typeof attributeDimensions[number];
 export type Audience = Record<Dimension, string[]>;
 export function normalizeAudience(input: unknown = {}): Audience {
   if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(k => !dimensions.includes(k as Dimension)))
@@ -18,28 +21,28 @@ export function normalizeAudience(input: unknown = {}): Audience {
 }
 export const catalogAudience = (catalog: {audience_json?: string}) => normalizeAudience(JSON.parse(catalog.audience_json ?? '{}'));
 export const restrictedAudience = (catalog: {audience_json?: string}) => dimensions.some(d => catalogAudience(catalog)[d].length > 0);
-export function normalizeAttributes(input: unknown): Partial<Record<Dimension, string>> {
-  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(k => !dimensions.includes(k as Dimension)))
+export function normalizeAttributes(input: unknown): Partial<Record<AttributeDimension, string>> {
+  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(k => !attributeDimensions.includes(k as AttributeDimension)))
     throw new ApiError(422,'person_attributes','Review known dimensions with a stable value id, or null for unknown');
-  const result: Partial<Record<Dimension, string>> = {};
+  const result: Partial<Record<AttributeDimension, string>> = {};
   for (const [key,value] of Object.entries(input)) {
     if (value === null) continue;
     if (typeof value !== 'string' || !value || value.length > 200)
       throw new ApiError(422,'person_attributes','One stable value id per dimension is required');
-    result[key as Dimension] = value;
+    result[key as AttributeDimension] = value;
   }
   return result;
 }
 /** The same reference check is used at review and inside the committing batch. */
-export function valuePredicate(workspaceId: string, values: Partial<Record<Dimension,string[]>>) {
+export function valuePredicate(workspaceId: string, values: Partial<Record<AttributeDimension,string[]>>) {
   const clauses: string[] = [], bindings: string[] = [];
-  for (const d of dimensions) for (const value of values[d] ?? []) {
+  for (const d of attributeDimensions) for (const value of values[d] ?? []) {
     clauses.push('EXISTS(SELECT 1 FROM work_catalog_values WHERE workspace_id=? AND dimension=? AND id=? AND active=1)');
     bindings.push(workspaceId,d,value);
   }
   return {sql:clauses.join(' AND ') || '1',bindings};
 }
-export async function validateValues(ctx: WorkContext, values: Partial<Record<Dimension,string[]>>) {
+export async function validateValues(ctx: WorkContext, values: Partial<Record<AttributeDimension,string[]>>) {
   const guard=valuePredicate(ctx.principal.workspaceId,values);
   if (!await ctx.env.DB.prepare('SELECT 1 WHERE '+guard.sql).bind(...guard.bindings).first())
     throw new ApiError(422,'catalog_value_invalid','Choose active values from this workspace and the matching dimension');

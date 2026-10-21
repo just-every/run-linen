@@ -3,7 +3,7 @@ import type { AppEnv } from '../../platform/types';
 import { ApiError, id, jsonBody, now, requiredString } from '../../platform/http';
 import { permit } from './core';
 import { currentWorkPrincipal } from './identity';
-import { dimensions, normalizeAudience, validateValues } from './catalog-audience';
+import { attributeDimensions, normalizeAudience, validateValues } from './catalog-audience';
 
 export function registerCatalogAudienceRoutes(app:Hono<AppEnv>) {
   app.get('/catalog-values',async c=>{
@@ -13,7 +13,7 @@ export function registerCatalogAudienceRoutes(app:Hono<AppEnv>) {
   app.post('/catalog-values',async c=>{
     const ctx={env:c.env,principal:c.get('principal')};await currentWorkPrincipal(ctx);permit(ctx,['owner']);
     const b=await jsonBody(c),label=requiredString(b.label,'label',120),dimension=requiredString(b.dimension,'dimension');
-    if(!dimensions.includes(dimension as never))throw new ApiError(422,'catalog_value_invalid','Choose a known dimension');
+    if(!attributeDimensions.includes(dimension as never))throw new ApiError(422,'catalog_value_invalid','Choose a known dimension');
     const valueId=id();
     await c.env.DB.batch([
       c.env.DB.prepare(`INSERT INTO work_catalog_values(id,workspace_id,dimension,label) SELECT ?,?,?,? WHERE EXISTS(

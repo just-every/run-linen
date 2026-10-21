@@ -15,13 +15,14 @@ import {
 } from "./primitives";
 import { Icon } from "./icons";
 import { PendingPeople } from "./pending-people";
+import { AccessPolicies } from "./access-policies";
 export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
   const [reviewPersonId, setReviewPersonId] = useState('');
   const personName = usePeopleLabels();
   const list = useRemote<{ items: RecordValue[] }>("/lifecycle"),
     people = useRemote<{ items: RecordValue[] }>("/people"),
     members = useRemote<RecordValue[]>("/members"),
-    detail = useRemote<{ lifecycle: RecordValue; obligations: RecordValue[] }>(
+    detail = useRemote<{ lifecycle: RecordValue; baseline: RecordValue | null; obligations: RecordValue[] }>(
       selectedId ? `/lifecycle/${selectedId}` : null,
     ),
     { session } = useSession();
@@ -97,6 +98,12 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
       type: "list",
       hint: "Existing device identifiers, one per line.",
     },
+    {
+      name: "baseline",
+      label: "Reviewed values before and after (access baseline)",
+      type: "json",
+      hint: 'Optional. {"from":{"department":"…"},"to":{"department":"…"}} with defined value ids: a join names "to", a move both, a leave "from". The access policies add their differences to the lists above.',
+    },
     { name: "identityTarget", label: "Immutable provider account or UPN", hint: "Required to bind identity duties to the selected provider account." },
     { name: "expiresAt", label: "Contractor access expires", type: "datetime-local" },
     {
@@ -138,6 +145,17 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
             <p><a href={`/api/v1/lifecycle/${encodeURIComponent(selectedId)}/evidence`} download>
               Download lifecycle evidence (JSON)
             </a></p>
+            {detail.data.baseline && (
+              <section aria-label="Access baseline review">
+                <h2>Access baseline review</h2>
+                <Facts entries={[
+                  ["Retained", (detail.data.baseline.retained as string[]).join(", ") || "None"],
+                  ["Added", (detail.data.baseline.added as string[]).join(", ") || "None"],
+                  ["Removed", (detail.data.baseline.removed as string[]).join(", ") || "None"],
+                  ["Policies applied", (detail.data.baseline.policies as RecordValue[]).map((p) => `${text(p.name)} (revision ${text(p.revision)})`).join(", ") || "None"],
+                ]} />
+              </section>
+            )}
             <h2>Outstanding and completed responsibilities</h2>
             {detail.data.obligations.map((o) => (
               <section className="connection-record" key={text(o.id)}>
@@ -254,6 +272,7 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
               never establishes a hire or departure.
             </Empty>
           )}
+          <AccessPolicies />
           <ActionForm
             title="Record an authoritative HR change"
             path="/lifecycle"

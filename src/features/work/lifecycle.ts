@@ -3,6 +3,7 @@ import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { createWork, getWork, permit, type WorkContext } from "./core";
 import { assertSponsor } from "./contractor-sponsor";
+import { computeBaseline, policyFingerprint, policyGuardSql, type Baseline } from "./access-policies";
 export interface LifecycleInput {
   personId: string;
   kind: "join" | "move" | "leave";
@@ -20,6 +21,8 @@ export interface LifecycleInput {
   ownerId: string;
   urgent?: boolean;
   identityTarget?: string;
+  /** LIFE-003: reviewed values before/after; the active access policies compute retained/added/removed. */
+  baseline?: Baseline;
 }
 export function effectiveInstant(value: string, timezone: string) {
   try {
@@ -162,7 +165,7 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
     throw new ApiError(409,'pending_person_unbound','Pending person services are held until normal account authentication');
   // Source identity is workspace-wide, independent of which admitted HR actor
   // delivered it. Every effect-bearing input belongs to its immutable revision.
-  const material = {
+  const supplied = {
     personId: input.personId, kind: input.kind, effectiveAt, timezone: input.timezone,
     source: input.source, sourceRevision: input.sourceRevision, ownerId: input.ownerId,
     retained: [...new Set(input.retained)].sort(), added: [...new Set(input.added)].sort(),
@@ -170,7 +173,8 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
     expiresAt: expiry, urgent: Boolean(input.urgent), identityTarget: input.identityTarget || input.personId,
     ...(expiry ? { sponsorId: input.sponsorId } : {}),
   };
-  const fingerprint = await hashToken(JSON.stringify(material));
+  // A baseline fingerprints the reviewed values it was given, so a replay after a later policy edit is still read-only.
+  const fingerprint = await hashToken(JSON.stringify(input.baseline === undefined ? supplied : { ...supplied, baseline: input.baseline }));
   const prior = await ctx.env.DB.prepare(
     "SELECT id,work_id,source_hash FROM work_lifecycle WHERE workspace_id=? AND source=? AND person_id=? AND source_revision=?",
   ).bind(ctx.principal.workspaceId, input.source, input.personId, input.sourceRevision)
@@ -183,10 +187,19 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
   }
   // A new admission with an end date names a sponsor (LIFE-006); replays above are read-only.
   const sponsorId = expiry ? await assertSponsor(ctx, input.sponsorId, input.personId) : null;
+  const computed = input.baseline === undefined ? null : await computeBaseline(ctx, input.kind, input.baseline),
+    diff = computed?.diff ?? null, snapshot = computed?.snapshot ?? [];
+  const material = diff ? {
+    ...supplied, retained: [...new Set([...supplied.retained, ...diff.retained])].sort(),
+    added: [...new Set([...supplied.added, ...diff.added])].sort(), removed: [...new Set([...supplied.removed, ...diff.removed])].sort(),
+    baseline: diff,
+  } : supplied;
+  if (material.added.some((x) => material.removed.includes(x) || material.retained.includes(x)) || material.removed.some((x) => material.retained.includes(x)))
+    throw new ApiError(422, "overlapping_access", "Retained, added and removed rights must be disjoint; the access policies and the supplied rights disagree");
   const lifecycleId = id();
   const obligations = [
-    ...input.added.map((target) => ({ kind: "access.grant", target })),
-    ...input.removed.map((target) => ({ kind: "access.revoke", target })),
+    ...material.added.map((target) => ({ kind: "access.grant", target })),
+    ...material.removed.map((target) => ({ kind: "access.revoke", target })),
     ...input.deviceIds.map((target) => ({
       kind: input.kind === "leave" ? "device.return" : "device.deliver",
       target,
@@ -237,11 +250,15 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
         "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,depends_on,owner_id,is_expiry) VALUES(?,?,?,?,?,?,?,?,?,?,1)",
       ).bind(dutyId, ctx.principal.workspaceId, workId, lifecycleId, kind, material.identityTarget,
         input.personId, expiry, dependsOn, input.ownerId)) : []),
-      ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id=?").bind(lifecycleId),
+      ...(diff ? [ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN ${policyGuardSql} THEN 1 ELSE 0 END)`)
+        .bind(`${lifecycleId}:policies`, ctx.principal.workspaceId, policyFingerprint(snapshot))] : []),
+      ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id IN (?,?)").bind(lifecycleId, `${lifecycleId}:policies`),
     ],
   }); } catch (error) {
     if (String(error).includes("UNIQUE constraint failed: work_lifecycle"))
       throw new ApiError(409, "hr_revision_conflict", "The HR source revision was concurrently admitted; reload its existing record before replay");
+    if (diff && /CHECK constraint failed/.test(String(error)))
+      throw new ApiError(409, "access_policy_changed", "An access policy or a newer HR revision changed while this was recorded; review the baseline again");
     throw error;
   }
   return { work, lifecycleId };

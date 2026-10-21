@@ -1,4 +1,4 @@
-import { dimensions, normalizeAudience, normalizeAttributes } from './catalog-audience';
+import { attributeDimensions, normalizeAudience, normalizeAttributes } from './catalog-audience';
 import { prepareApplicationWorkRestore } from './application-restore';
 import { validateRecurrence, type RecurrenceRule } from './recurrence-calendar';
 import type { BusinessCalendar } from './calendar';
@@ -145,7 +145,7 @@ export async function restoreAdoptionRecord(
       "restore_blob_scope",
       "Attachment bytes must first be restored under current workspace R2 prefix",
     );
-  if(input.table==='work_catalog_values' && (!dimensions.includes(row.dimension as never) || typeof row.label!=='string' || !row.label.trim() || ![0,1].includes(Number(row.active))))
+  if(input.table==='work_catalog_values' && (!attributeDimensions.includes(row.dimension as never) || typeof row.label!=='string' || !row.label.trim() || ![0,1].includes(Number(row.active))))
     throw new ApiError(422,'restore_catalog_value','Known dimension, label and state required');
   if(input.table==='work_catalog')row.audience_json=JSON.stringify(normalizeAudience(JSON.parse(String(row.audience_json??'{}'))));
   if (input.table === "work_people") {

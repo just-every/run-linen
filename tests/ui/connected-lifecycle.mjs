@@ -58,4 +58,39 @@ export async function connectedLifecycle(env) {
   await page.goto(base+'/app#/lifecycle/'+lapsed);await page.reload();
   await page.getByText('Existing sessions were invalidated.',{exact:false}).waitFor();
   await captureJourney(page,{path:out+'/LIFE-006-expired-verified.png',fullPage:true});
+  // LIFE-003: owner access policies compute a Sales-to-Marketing move; standing grants execute it at the provider with independent readback.
+  await fixture({disabled:false,sessionsRevokedAt:null});
+  const sales=await api('/catalog-values',{dimension:'department',label:'Sales'}),marketing=await api('/catalog-values',{dimension:'department',label:'Marketing'}),legal=await api('/catalog-values',{dimension:'department',label:'Legal'});
+  await page.goto(base+'/app#/lifecycle');
+  for(const [name,match,target] of [['Everyone',{},'slack-users'],['Sales apps',{department:[sales.id]},'salesforce-users'],['Marketing apps',{department:[marketing.id]},'hubspot-users']])
+    await action(page,'Add an access baseline',{name,match,grants:[{kind:'group',target}]},'/access-policies',undefined,201);
+  const move=(source,from,to)=>api('/lifecycle',{personId:person.id,kind:'move',effectiveAt:later(-60000),timezone:'UTC',source,sourceRevision:1,ownerId:uid,identityTarget:'provider-colleague',baseline:{from:{department:from},to:{department:to}}});
+  const accessDuties=async lifecycleId=>(await api('/lifecycle/'+lifecycleId)).obligations.filter(o=>o.kind.startsWith('access.'));
+  async function standing(duty){
+    const step={action:duty.kind==='access.grant'?'group.add':'group.remove',actionVersion:1,target:duty.target,beneficiaryId:person.id,connectionId:graph.id,connectionRevision:graph.revision,verifierConnectionId:probe.id,verifierConnectionRevision:probe.revision,cohort:[person.id]};
+    const grant=await issuerApi('/grants',{principalId:uid,beneficiaryId:person.id,action:step.action,actionVersion:1,target:duty.target,connectionId:graph.id,validFrom:later(-60000),validUntil:later(3600000),maxUses:5,conditions:{},verifierConnectionId:probe.id});
+    await api('/obligations/'+duty.id+'/execution',{...step,grantId:grant.id,grantVersion:grant.version});
+  }
+  const settled=async lifecycleId=>until(async()=>(await accessDuties(lifecycleId)).every(o=>o.state==='verified'),'LIFE-003 policy-derived duties verified');
+  const first=(await move('LIFE-003 Legal to Sales',legal.id,sales.id)).lifecycleId;
+  assert.deepEqual((await accessDuties(first)).map(o=>o.kind+':'+o.target),['access.grant:salesforce-users']);
+  for(const duty of await accessDuties(first))await standing(duty);
+  await settled(first);
+  const second=(await move('LIFE-003 Sales to Marketing',sales.id,marketing.id)).lifecycleId;
+  const review=(await api('/lifecycle/'+second)).baseline;
+  assert.deepEqual([review.retained,review.added,review.removed],[['slack-users'],['hubspot-users'],['salesforce-users']],'LIFE-003 Salesforce removed, HubSpot added, Slack retained');
+  await page.goto(base+'/app#/lifecycle/'+second);await page.getByRole('region',{name:'Access baseline review'}).waitFor();
+  await captureJourney(page,{path:out+'/LIFE-003-baseline-review.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});await page.reload();await page.getByRole('region',{name:'Access baseline review'}).waitFor();
+  await captureJourney(page,{path:out+'/LIFE-003-baseline-review-390.png',fullPage:true});
+  await page.setViewportSize({width:1440,height:1000});
+  const before=(await (await fetch(base+'/__fixture/evidence')).json()).calls.filter(c=>c.kind==='entitlement-write').length;
+  for(const duty of await accessDuties(second))await standing(duty);
+  await settled(second);
+  const provider=await (await fetch(base+'/__fixture/evidence')).json(),writes=provider.calls.filter(c=>c.kind==='entitlement-write').slice(before);
+  assert.deepEqual(writes.map(c=>c.data.method+':'+c.data.target).sort(),['DELETE:salesforce-users','POST:hubspot-users'],'LIFE-003 only the added and removed access reach the provider; Slack is retained untouched');
+  assert.ok(provider.presence.some(p=>p.target==='hubspot-users')&&!provider.presence.some(p=>p.target==='salesforce-users'),'LIFE-003 provider readback shows HubSpot present and Salesforce removed');
+  assert.ok(provider.calls.some(c=>c.kind==='workflow-observation'&&c.data.target==='salesforce-users'&&c.data.desired==='denied'),'LIFE-003 independent negative workflow check after removal');
+  const operations=await api('/operations');
+  for(const duty of await accessDuties(second))assert.ok(operations.find(o=>o.id===duty.operation_id),'LIFE-003 each duty ran as one operation under its standing grant');
 }

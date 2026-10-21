@@ -1,4 +1,4 @@
-import { normalizeAttributes, validateValues, dimensions } from './catalog-audience';
+import { normalizeAttributes, validateValues, attributeDimensions } from './catalog-audience';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
@@ -38,7 +38,7 @@ export async function upsertPerson(
   const reviewsAttributes = Object.hasOwn(input,'attributes');
   const attributes = reviewsAttributes ? normalizeAttributes(input.attributes) : {};
   if (reviewsAttributes) permit(ctx,['owner','hr']);
-  const values = await validateValues(ctx,Object.fromEntries(dimensions.map(d=>[d,attributes[d]?[attributes[d]]:[]])));
+  const values = await validateValues(ctx,Object.fromEntries(attributeDimensions.map(d=>[d,attributes[d]?[attributes[d]]:[]])));
   const previous = reviewsAttributes ? await ctx.env.DB.prepare('SELECT revision,effective_at FROM work_people WHERE workspace_id=? AND source=? AND source_id=?')
     .bind(ctx.principal.workspaceId,input.source,input.sourceId).first<{revision:number;effective_at:string}>() : null;
   if (reviewsAttributes && previous && (input.expectedRevision!==previous.revision || Date.parse(input.effectiveAt)<=Date.parse(previous.effective_at)))
