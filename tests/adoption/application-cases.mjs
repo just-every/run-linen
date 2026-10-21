@@ -9,10 +9,9 @@ export async function attachArchiveApplications(ok,auth,raw) {
   await ok(`/work/${work.id}/fulfilment`,'POST',{catalogId:catalog.id,beneficiaryId:session.user.id,purpose:'Configure Salesforce'},auth,201);
   // CATALOG-001: a submitted vendor quote travels in the owner's native archive with its bytes.
   const item=await ok('/catalog','POST',{name:'Portable service purchase',kind:'service',target:'archive-quote-service',ownerId:session.user.id,form:{quoteRequired:true}},auth,201);
-  const quoteWork=await ok('/work','POST',{title:'Portable quote request',body:'Vendor purchase',deduplicationKey:'archive-quote'},auth,201);
-  const upload=await raw(`/work/${quoteWork.id}/catalog-quote`,{method:'POST',headers:{'Content-Type':'application/pdf','X-Filename':'synthetic-linen-archive-quote.pdf','X-Catalog-Id':item.id,'X-Linen-CSRF':auth.csrf,Cookie:auth.cookie},body:archivedQuote});
+  const upload=await raw(`/work/${work.id}/catalog-quote`,{method:'POST',headers:{'Content-Type':'application/pdf','X-Filename':'synthetic-linen-archive-quote.pdf','X-Catalog-Id':item.id,'X-Linen-CSRF':auth.csrf,Cookie:auth.cookie},body:archivedQuote});
   assert.equal(upload.status,201);
-  await ok(`/work/${quoteWork.id}/fulfilment`,'POST',{catalogId:item.id,catalogRevision:1,beneficiaryId:session.user.id,purpose:'Vendor purchase'},auth,201);
+  await ok(`/work/${work.id}/fulfilment`,'POST',{catalogId:item.id,catalogRevision:1,beneficiaryId:session.user.id,purpose:'Vendor purchase'},auth,201);
 }
 export async function checkArchiveApplications(ok,request,auth) {
   const app=(await ok('/applications','GET',undefined,auth)).items.find(a=>a.data.name==='Portable Salesforce');
@@ -31,9 +30,8 @@ export async function checkArchiveApplications(ok,request,auth) {
   assert.notEqual(snapshot.ownerId,session.user.id,'ACCESS-008 native restore never turns an old app owner into the destination owner');
   assert.equal((await request('/catalog','POST',{name:'Must review restored ownership',kind:'access',applicationId:app.id,entitlementId:app.data.entitlements[0].id},auth)).status,409,'ACCESS-008 restored historical owners have no live membership authority');
   assert.equal((await request('/fixtures/effect','POST',{},auth)).status,409,'ACCESS-008 restored application metadata cannot lift the execution hold');
-  const quoteWork=records.work.find(w=>w.title==='Portable quote request');
-  assert.ok(quoteWork,'CATALOG-001 the quote-backed request survives native restore');
-  const quote=(await ok(`/work/${quoteWork.id}`,'GET',undefined,auth)).quotes[0];
+  const quote=(await ok(`/work/${work.id}`,'GET',undefined,auth)).quotes[0];
+  assert.ok(quote,'CATALOG-001 the quote-backed request survives native restore');
   assert.equal(quote.name,'synthetic-linen-archive-quote.pdf');assert.equal(quote.submitted,true,'CATALOG-001 the restored quote stays bound to its submission');
   const file=await request(`/catalog-quotes/${quote.id}`,'GET',undefined,auth);
   assert.equal(file.status,200,'CATALOG-001 the destination owner reads the restored quote');

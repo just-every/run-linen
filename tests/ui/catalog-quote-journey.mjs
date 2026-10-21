@@ -12,9 +12,10 @@ export async function catalogQuoteJourney({browser,page,api,base,out}) {
   const {apiFor,signIn}=await import('./connected-helpers.mjs');
   const password='synthetic-Connected-browser-2026', suffix=crypto.randomUUID().slice(0,8);
   const owner=await api('/session');
-  const member=(name,role)=>api('/members',{name,email:`quote-${name.toLowerCase().replace(/\W+/g,'-')}-${suffix}@example.test`,password,roles:[role],isPerson:true});
+  const emails=new Map();
+  const member=async(name,role)=>{const email=`quote-${name.toLowerCase().replace(/\W+/g,'-')}-${suffix}@example.test`;const m=await api('/members',{name,email,password,roles:[role],isPerson:true});emails.set(m.id,email);return m;};
   const [approver,employee,colleague]=[await member('Quote approver','approver'),await member('Quote employee','employee'),await member('Quote colleague','employee')];
-  const emailOf=m=>`quote-${m.name.toLowerCase().replace(/\W+/g,'-')}-${suffix}@example.test`;
+  const emailOf=m=>emails.get(m.id);
 
   // Owner: a value, an item of the new software kind, its quote requirement and question, then its audience.
   await page.goto(base+'/app#/connections');
