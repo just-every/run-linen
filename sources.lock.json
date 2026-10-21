@@ -4775,7 +4775,7 @@
       "executable": false
     },
     "tests/adoption/application-cases.mjs": {
-      "sha256": "1c99ffe3ee54853c43785ba48c541b963392ea0bcf5641f60746666f89fc6ff6",
+      "sha256": "16dff579c30e97ea54206559276736262be9c2a23ad49b2109fb8bd98fa24617",
       "executable": false
     },
     "tests/adoption/asset-contract-cases.mjs": {
@@ -5171,7 +5171,7 @@
       "executable": false
     },
     "tests/ui/application-journey.mjs": {
-      "sha256": "92bdf7ec96dfb41afad8809e34b9e0e8ba470a1a66723f78136d2aea8f509bc0",
+      "sha256": "e9a0516149c19c9977bcc0d1538a3742712ce748822ecd9b6dc0f2b5275a5c9c",
       "executable": false
     },
     "tests/ui/asset-audit-browser.mjs": {
@@ -5207,7 +5207,7 @@
       "executable": false
     },
     "tests/ui/catalog-quote-journey.mjs": {
-      "sha256": "c0b93268db66da40b0e6789aea32bb740446b74101e06f1369c217fe2032d229",
+      "sha256": "9999162103a54678a0f396e3f4017362dddeb3fc0ede217b4d2b0629949bbc0b",
       "executable": false
     },
     "tests/ui/catalog-task-browser.mjs": {
@@ -5503,7 +5503,7 @@
       "executable": false
     },
     "tests/work/historical-runtime.mjs": {
-      "sha256": "300427003332d3f3c69de16d569509bc5048a7be259a05682468249aa203651e",
+      "sha256": "a5c76f2cd209b5c8962bdf646f23b0cdcf7261ae426f0e6d781f2db722b41ac6",
       "executable": false
     },
     "tests/work/integration-regressions-cases.mjs": {
