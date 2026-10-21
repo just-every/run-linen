@@ -84,13 +84,13 @@ export async function connectedLifecycle(env) {
   await page.setViewportSize({width:390,height:844});await page.reload();await page.getByRole('region',{name:'Access baseline review'}).waitFor();
   await captureJourney(page,{path:out+'/LIFE-003-baseline-review-390.png',fullPage:true});
   await page.setViewportSize({width:1440,height:1000});
-  const before=(await (await fetch(base+'/__fixture/evidence')).json()).calls.filter(c=>c.kind==='entitlement-write').length;
+  const writesBefore=(await (await fetch(base+'/__fixture/evidence')).json()).calls.filter(c=>c.kind==='entitlement-write').length;
   for(const duty of await accessDuties(second))await standing(duty);
   await settled(second);
-  const provider=await (await fetch(base+'/__fixture/evidence')).json(),writes=provider.calls.filter(c=>c.kind==='entitlement-write').slice(before);
+  const seen=await (await fetch(base+'/__fixture/evidence')).json(),writes=seen.calls.filter(c=>c.kind==='entitlement-write').slice(writesBefore);
   assert.deepEqual(writes.map(c=>c.data.method+':'+c.data.target).sort(),['DELETE:salesforce-users','POST:hubspot-users'],'LIFE-003 only the added and removed access reach the provider; Slack is retained untouched');
-  assert.ok(provider.presence.some(p=>p.target==='hubspot-users')&&!provider.presence.some(p=>p.target==='salesforce-users'),'LIFE-003 provider readback shows HubSpot present and Salesforce removed');
-  assert.ok(provider.calls.some(c=>c.kind==='workflow-observation'&&c.data.target==='salesforce-users'&&c.data.desired==='denied'),'LIFE-003 independent negative workflow check after removal');
-  const operations=await api('/operations');
-  for(const duty of await accessDuties(second))assert.ok(operations.find(o=>o.id===duty.operation_id),'LIFE-003 each duty ran as one operation under its standing grant');
+  assert.ok(seen.presence.some(p=>p.target==='hubspot-users')&&!seen.presence.some(p=>p.target==='salesforce-users'),'LIFE-003 provider readback shows HubSpot present and Salesforce removed');
+  assert.ok(seen.calls.some(c=>c.kind==='workflow-observation'&&c.data.target==='salesforce-users'&&c.data.desired==='denied'),'LIFE-003 independent negative workflow check after removal');
+  const ran=await api('/operations');
+  for(const duty of await accessDuties(second))assert.ok(ran.find(o=>o.id===duty.operation_id),'LIFE-003 each duty ran as one operation under its standing grant');
 }

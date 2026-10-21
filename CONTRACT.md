@@ -1207,6 +1207,29 @@ that product and marks how close the current code is (see [Status](#status)).
   or standing approval. **Acceptance evidence:** move an employee from Sales to
   Marketing; see Salesforce removed, HubSpot added and Slack retained, executed
   under standing authority with readback.
+  Only the current owner writes access policies; owner and HR read them. A policy
+  names reviewed value ids (the owner's department, title, location and
+  employment-type lists) and the entitlements it grants, each a `group`, `app` or
+  `license` with the provider's own target id. A person matches a policy when,
+  in every dimension the policy names, their value is one of the policy's values
+  for that dimension; a policy that names none applies to everyone. The baseline
+  is the union of every active policy that matches, and an inactive policy
+  grants nothing. A join grants the baseline for the values it names; a move
+  names the values before and after and records retained, added and removed
+  access; a leave removes the baseline for the values before. The lifecycle
+  admission authority is unchanged: the same owner, HR and authorised HR source
+  that admit a join, move or leave supply those values, and the record keeps the
+  retained, added and removed access and the name and revision of each policy
+  behind it, so editing a policy later never rewrites an admitted record or its
+  replay. Access the admission also lists explicitly is added to the policy
+  result and must not contradict it. Policy edits are versioned and audited with
+  before and after. Each added or removed entitlement is an access duty that
+  runs through the ordinary execution binding under its own standing grant
+  and verifier (group and license actions of ACCESS-001); an app with no native
+  connector runs as the provider's app-assignment group until ACCESS-005, and
+  retained access creates no duty and no provider call. A native archive
+  retains policies as history only; a restored workspace re-enters them under
+  its own owner.
 
 - **LIFE-004 — Joiner device readiness.** A device is allocated from stock or
   ordered, enrolled zero-touch (Apple Business Manager with Jamf or Kandji;
@@ -2576,8 +2599,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 42 | 47 | 26 | 115 |
-| All | 47 | 66 | 26 | 139 |
+| Target and push further | 43 | 46 | 26 | 115 |
+| All | 48 | 65 | 26 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2634,7 +2657,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `ACCESS-010` | On-premises Active Directory (hybrid identity) | target | missing |  | No on-premises AD relay, source-of-authority routing or domain-controller readback. |
 | `LIFE-001` | HRIS-triggered lifecycle | target | missing |  | No Rippling, Gusto, BambooHR, Workday or Willow connector; lifecycle accepts HR facts through the API only. |
 | `LIFE-002` | Dated task plans across teams | target | partial | `src/features/work/lifecycle.ts`, `tests/work/runtime.mjs` | No templates by role, location or employment type. |
-| `LIFE-003` | Birthright access baselines | target | partial | `src/features/work/lifecycle.ts`, `tests/ui/connected-lifecycle.mjs` | No access policies. |
+| `LIFE-003` | Birthright access baselines | target | done | `src/features/work/access-policies.ts`, `src/features/work/access-policy-routes.ts`, `src/features/work/lifecycle.ts`, `src/ui/access-policies.tsx`, `tests/work/access-policy-cases.mjs`, `tests/ui/connected-lifecycle.mjs` | Public-route proof: owner-only versioned and audited policies over department, title, location and employment type; a join grants the matching baseline, a 1099 omits benefits, Sales to Marketing records retained Slack, added HubSpot and removed Salesforce with the policies behind each, replay stays read-only after a policy edit and a deactivated policy grants nothing. Native fixture journey: standing grants execute only the added and removed access, readback shows HubSpot present and Salesforce removed, and the review screen is inspected at 1440/390. Provider proof is fixture-only; native app connectors remain ACCESS-005. |
 | `LIFE-004` | Joiner device readiness | target | partial | `src/features/work/resources.ts`, `tests/ui/custody-journey.mjs` | No zero-touch enrollment or shipping. |
 | `LIFE-005` | Leaver revocation everywhere | target | partial | `src/features/execution/identity.ts`, `src/features/work/lifecycle.ts`, `tests/ui/connected-lifecycle.mjs` | Entra only; no Okta, Google, SaaS or on-premises AD revocation, data transfer or device actions. |
 | `LIFE-006` | Contractors and temporary staff | target | done | `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs` | Local public-route and inspected 1440/390 connected-fixture proof: an end date requires an active sponsor; a 72-hour reminder reaches the sponsor's requests; only the sponsor re-attests (owner once the sponsor has left, with reassignment); without re-attestation the Graph-fixture disable and session revocation start at the end instant and are independently verified. No live HRIS or IdP claim. |
