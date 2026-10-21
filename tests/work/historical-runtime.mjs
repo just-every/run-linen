@@ -12,7 +12,7 @@ try {
   const r2=await h.mf.getR2Bucket('ATTACHMENTS');
   await r2.put('private/ghost','Historical private bytes');await r2.put('private/other','Other workspace bytes');
   for(const [aid,wid,w,key] of [['ghost-attachment',work.id,'w','private/ghost'],['other-attachment',other.value.id,'other','private/other']])
-    await db.prepare('INSERT INTO work_attachments VALUES(?,?,?,?,?,?,?,?,?,?)')
+    await db.prepare('INSERT INTO work_attachments(id,workspace_id,work_id,visibility,blob_key,name,content_type,size,sha256,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)')
       .bind(aid,w,wid,'private',key,'Historical name.txt','text/plain',24,'fixture','2026-01-01').run();
   assert.equal((await api('/people/ghost/erase',{revision:0,reason:'Historical erasure'})).status,404,'no tombstone is not authority');
   const hash=createHash('sha256').update('ghost').digest('hex');

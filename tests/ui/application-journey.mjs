@@ -72,7 +72,7 @@ export async function catalogFormJourney({page,api,base,out}) {
   await page.goto(base+'/app#/connections');
   const registry=page.getByRole('region',{name:'Application registry',exact:true});
   await registry.getByText('Manage catalog forms',{exact:true}).click();
-  const card=registry.locator('details').filter({has:page.locator('summary').getByText('New monitor form',{exact:true})}).last();
+  const card=registry.locator('details').filter({has:page.locator('summary').getByText('Manage catalog forms',{exact:true})}).locator('details').filter({has:page.locator('summary').getByText('New monitor form',{exact:true})}).last();
   await card.locator(':scope > summary').click();
   const editor=card.locator('form');
   await editor.getByLabel('Request cost in USD',{exact:true}).fill('250');
