@@ -91,6 +91,12 @@ try{
   env.DB.prepare('UPDATE work_people SET attributes_json=? WHERE id=?').bind(JSON.stringify({department:'dept-sales'}),'owner-person'),
   env.DB.prepare('UPDATE work_catalog SET audience_json=? WHERE id=?').bind(JSON.stringify({department:['dept-sales'],location:[],employmentType:[]}),'catalog-monitor'),
  ]);
+ const releaseData={title:'Retained release',plan:'Reviewed release candidate',state:'go',changeIds:['retained-change'],services:['retained-ci'],problemIds:[],affectedGroupIds:['retained-cohort'],approverIds:['owner'],phases:{build:{outcome:'passed',reference:'Build 1',recordedBy:'owner'},test:{outcome:'passed',reference:'Test 1',recordedBy:'owner'}},decisions:[{id:'retained-decision',actor:'owner',decision:'go',reason:'Reviewed',revisions:{'retained-change':1},at:stamp}],priorDecisions:[]};
+ await env.DB.prepare('INSERT INTO work_requester_groups VALUES(?,?,?,?,?)').bind('retained-cohort','workspace','Release pilot','["owner"]',stamp).run();
+ const retainedChange={title:'Retained member',state:'draft',services:['retained-ci'],window:{start:stamp,end:new Date(Date.now()+3600000).toISOString()},implementationRevision:1,invocations:[]};
+ for(const [recordId,kind,data]of [['retained-ci','service',{name:'Retained CI'}],['retained-change','change',retainedChange]])
+  await env.DB.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,1,?,?)').bind(recordId,'workspace',kind,'owner','operators','[]',JSON.stringify(data),stamp,stamp).run();
+ await env.DB.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,1,?,?)').bind('retained-release','workspace','release','owner','operators','[]',JSON.stringify(releaseData),stamp,stamp).run();
  await env.ATTACHMENTS.put('workspace/private-file','Private retained attachment')
  await close()
  await run(['exec','rer','export','--output',archive])
@@ -120,6 +126,10 @@ try{
  assert.equal((await env.DB.prepare("SELECT label FROM work_catalog_values WHERE id='dept-sales'").first()).label,'Sales','CATALOG-001 native archive retains stable audience values');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT attributes_json FROM work_people WHERE id='owner-person'").first()).attributes_json),{department:'dept-sales'},'CATALOG-001 native archive retains reviewed attributes with the unbound person');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT audience_json FROM work_catalog WHERE id='catalog-monitor'").first()).audience_json),{department:['dept-sales'],location:[],employmentType:[]},'CATALOG-001 native archive retains versioned audience references');
+ const restoredRelease=JSON.parse((await env.DB.prepare("SELECT data_json FROM svc_records WHERE id='retained-release'").first()).data_json);
+ assert.equal(restoredRelease.state,'imported-review','CHANGE-007 actual rer archive puts releases into review');
+ assert.deepEqual(restoredRelease.decisions,[],'CHANGE-007 no live go decision survives native restore');
+ assert.equal(restoredRelease.priorDecisions[0].decision,'go');assert.equal(restoredRelease.priorDecisions[0].inert,true,'CHANGE-007 decisions remain inert history');
  assert.equal((await env.DB.prepare('SELECT COUNT(*) n FROM sessions').first()).n,0)
  const person=await env.DB.prepare("SELECT member_id,binding_id,manager_id FROM work_people WHERE id='owner-person'").first()
  assert.deepEqual(person,{member_id:null,binding_id:null,manager_id:null},'Native restore retains the person but requires fresh binding and manager review')

@@ -1647,7 +1647,10 @@ that product and marks how close the current code is (see [Status](#status)).
   changes, record go/no-go approval, deploy canary then rollout, post release
   notes to the affected cohort only, and see a failed change hold the release
   open until it is backed out.
-  *Today's semantic:* an owner or operator creates a release naming one or more
+  *Release semantic:* release creation and records use the existing service
+  operator/readership rules; go/no-go uses CHANGE-001's existing owner/approver
+  roles and independent-approver boundary, without granting execution rights.
+  An owner or operator creates a release naming one or more
   current changes that have dispatched no effect (a change belongs to at most one
   open release), the problems it addresses, its CIs (every member change's CIs
   plus any named), its affected employees as existing requester groups and one
@@ -1660,7 +1663,8 @@ that product and marks how close the current code is (see [Status](#status)).
   passed build and test, and a release owner without the owner role cannot
   decide their own release. Until every named approver's current decision is go,
   no member change dispatches its canary or rollout; go covers each member's
-  exact implementation revision, and every approver's role is rechecked at
+  exact implementation revision; changing any member holds the whole release
+  until fresh decisions cover it. Every approver's role is rechecked at
   dispatch. Backout never waits for go/no-go. The deploy phase is each member
   change's own canary then rollout under its own approval, grants, window and
   freeze checks. The release spans its member changes' windows on CHANGE-004's
@@ -1670,7 +1674,7 @@ that product and marks how close the current code is (see [Status](#status)).
   CHANNEL-008 adds Slack or Teams delivery, release notes carry that obligation
   before it ships. A release completes only when every member change is verified
   (successful) or compensated (explicitly backed out), recording each outcome.
-  Restore keeps go/no-go decisions as inert history and puts the release in
+  Native and domain restore keep go/no-go decisions as inert history and puts the release in
   review; erasing a person in a release withdraws its decisions.
 
 ### IT projects
@@ -2617,7 +2621,7 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 
 ## Status
 
-Judged from the code and tests at commit `9af14410a127c58bffe7935207f6524c6620157d` (16 October 2026).
+Judged from the code and tests carried from landing main `a9669cb13312f50a7336bbec10fdee5f4d13f15f` (21 October 2026), including the CHANGE-007 candidate changes below.
 
 The commit is the code this branch carries unchanged; the code audit at `7ce9dae` was the starting point. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
 

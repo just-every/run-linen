@@ -17,7 +17,7 @@ export async function noticePublisher(env: Env, principal: Principal) {
 }
 async function source(env: Env, p: Principal, sourceId: string) {
   const r = await getService(env.DB, p, sourceId);
-  if (!['incident', 'change', 'release'].includes(r.kind) || r.data.adoption?.historical)
+  if (!['incident', 'change', 'release'].includes(r.kind) || r.data.adoption?.historical || (r.kind === 'release' && ['imported-review', 'privacy-review'].includes(r.data.state)))
     throw new ApiError(404, 'not_found', 'Current incident, change or release required');
   if (r.kind === 'incident') await getService(env.DB, p, r.data.serviceId, 'service');
   else for (const serviceId of r.data.services || []) await getService(env.DB, p, serviceId, 'service');

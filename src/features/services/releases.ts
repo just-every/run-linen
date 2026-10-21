@@ -51,7 +51,9 @@ export async function presentRelease(db: D1Database, p: Principal, r: ServiceRec
   const insider = staff(p) || p.roles.includes('auditor') || r.data.approverIds.includes(p.userId);
   // Cohort notes are read only through CHANNEL-008's membership and source gates.
   const { employeeNotices: _notices, ...data } = r.data;
-  return { ...r, data: { ...data, window: await releaseWindow(db, p.workspaceId, r), goNoGo: goNoGo(r.data), deploy,
+  const recorded = goNoGo(r.data);
+  const current = recorded === 'go' && await releaseApprovalIssue(db, p.workspaceId, r) ? 'awaiting-decision' : recorded;
+  return { ...r, data: { ...data, window: await releaseWindow(db, p.workspaceId, r), goNoGo: current, deploy,
     // Member detail is for release staff and named approvers; titles stay within each change's own readership.
     members: insider ? members.map(c => ({ id: c.id, title: readable(p, c) ? c.data.title : null, state: c.data.state,
       phases: (c.data.invocations || []).map((i: any) => ({ phase: i.phase, state: i.state })) })) : [],
@@ -83,10 +85,15 @@ export async function newRelease(env: Env, principal: Principal, b: Record<strin
     if (!await env.DB.prepare('SELECT 1 FROM work_requester_groups WHERE workspace_id=? AND id=?').bind(p.workspaceId, groupId).first())
       throw new ApiError(422, 'release_cohort', 'Affected employees are named by existing requester groups');
   const participants = [...new Set([...(Array.isArray(b.participants) ? b.participants : []), ...approverIds])];
-  return create(env.DB, p, 'release', { title: requiredString(b.title, 'title'), plan: requiredString(b.plan, 'plan', 8000),
+  try { return await create(env.DB, p, 'release', { title: requiredString(b.title, 'title'), plan: requiredString(b.plan, 'plan', 8000),
     changeIds, services: [...services], problemIds, approverIds, affectedGroupIds,
     phases: { build: null, test: null }, decisions: [], priorDecisions: [], state: 'planning', completedAt: null, outcomes: null },
-    { visibility: b.visibility, participants });
+    { visibility: b.visibility, participants }); }
+  catch (error) {
+    if (String(error).includes('release_change_grouped')) throw new ApiError(409, 'release_change_grouped', 'A change belongs to at most one open release');
+    if (String(error).includes('release_change_started')) throw new ApiError(409, 'release_change_started', 'A member change started or changed during release creation; reload it');
+    throw error;
+  }
 }
 
 /** Build and test results are recorded references, never claimed as runs Linen performed. */
@@ -122,18 +129,27 @@ export async function decideRelease(env: Env, principal: Principal, r: ServiceRe
     'release-decision', true);
 }
 
+/** A go covers the whole candidate, not just the member about to deploy. */
+async function releaseApprovalIssue(db: D1Database, workspaceId: string, release: ServiceRecord) {
+  if (closed.includes(release.data.state) || goNoGo(release.data) !== 'go'
+    || release.data.phases.build?.outcome !== 'passed' || release.data.phases.test?.outcome !== 'passed')
+    return 'Its release needs a go decision from every named approver before deployment';
+  const members = await memberRows(db, workspaceId, release.data.changeIds);
+  if (members.length !== release.data.changeIds.length || release.data.decisions.some((d: Decision) =>
+    members.some(c => d.revisions[c.id] !== c.data.implementationRevision)))
+    return 'A member implementation changed; review the whole release and record fresh go decisions';
+  for (const approver of release.data.approverIds)
+    if (!await approvalAuthority(db, workspaceId, approver)) return 'A named approver no longer holds approval authority';
+  return null;
+}
+
 /** Dispatch gate for member changes. Backout never waits for go/no-go. */
 export async function assertReleaseGo(db: D1Database, p: Principal, change: ServiceRecord, phase: string) {
   if (phase === 'compensate') return;
   const release = await releaseOf(db, p.workspaceId, change.id);
   if (!release) return;
-  if (goNoGo(release.data) !== 'go' || closed.includes(release.data.state))
-    throw new ApiError(409, 'release_go', 'Its release needs a go decision from every named approver before deployment');
-  if (release.data.decisions.some((d: Decision) => d.revisions[change.id] !== change.data.implementationRevision))
-    throw new ApiError(409, 'release_go', 'The release go decision covers an earlier implementation of this change');
-  for (const approver of release.data.approverIds)
-    if (!await approvalAuthority(db, p.workspaceId, approver))
-      throw new ApiError(409, 'release_go', 'A named approver no longer holds approval authority');
+  const issue = await releaseApprovalIssue(db, p.workspaceId, release);
+  if (issue) throw new ApiError(409, 'release_go', issue);
 }
 
 /** Completes only when every change is successful (verified) or explicitly backed out (compensated). */

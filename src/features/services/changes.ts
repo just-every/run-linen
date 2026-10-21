@@ -78,6 +78,7 @@ export async function newChange(db: D1Database, p: Principal, b: Record<string, 
     catch(error) { throw calendarError(error); }
 }
 function calendarError(error:unknown) {
+    if(String(error).includes('release_go'))return new ApiError(409,'release_go','The release candidate or its go/no-go authority changed; review the release again');
     if(String(error).includes('calendar_frozen'))return new ApiError(409,'calendar_frozen','Scheduling is blocked by calendar policy; current owner emergency authority and a reason are required');
     if(String(error).includes('calendar_schedule_invalid'))return new ApiError(422,'calendar_schedule_invalid','A valid scheduled window and configuration items are required');
     return error;
@@ -158,7 +159,7 @@ export async function dispatchChange(env: Env, p: Principal, r: ServiceRecord, b
     let next:ServiceRecord;
     try {next=await mutate(env.DB,p,r,b.revision,{...r.data,state:'dispatching',invocations:[...r.data.invocations,{...invocation,state:'dispatching'}]},'execution-intent');}
     catch(error) {
-        if(String(error).includes('calendar_frozen'))await env.DB.prepare(`DELETE FROM svc_change_locks WHERE workspace_id=? AND change_id=?
+        if(/calendar_frozen|release_go/.test(String(error)))await env.DB.prepare(`DELETE FROM svc_change_locks WHERE workspace_id=? AND change_id=?
           AND EXISTS(SELECT 1 FROM svc_records r WHERE r.workspace_id=svc_change_locks.workspace_id AND r.id=svc_change_locks.change_id
             AND json_array_length(r.data_json,'$.invocations')=0)`)
           .bind(p.workspaceId,r.id).run();

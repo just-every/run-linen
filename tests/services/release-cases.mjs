@@ -29,7 +29,9 @@ export async function releaseChecks({ok,call,db,implementation}) {
   }
   const body={title:'Okta MFA rollout',plan:'Build the policy bundle, test it with the pilot, then canary and roll out each change.',changeIds:changes.map(c=>c.id),problemIds:[problem.id],approverIds:['owner','approver'],affectedGroupIds:['mfa-pilot'],visibility:'workspace'};
   assert.equal((await call('POST','/releases',{...body,approverIds:['operator']})).body.error.code,'release_approver','CHANGE-007 go/no-go approvers currently hold approval authority');
-  let release=await ok('POST','/releases',body);
+  const grouped=await Promise.all([call('POST','/releases',body),call('POST','/releases',{...body,title:'Concurrent grouping'})]);
+  assert.deepEqual(grouped.map(r=>r.status).sort(),[201,409],'Concurrent public grouping admits each change to exactly one open release');
+  let release=grouped.find(r=>r.status===201).body;
   assert.equal((await call('POST','/releases',{...body,title:'Second grouping'})).body.error.code,'release_change_grouped','CHANGE-007 a change belongs to one open release');
   assert.deepEqual([...release.data.services].sort(),cis.map(c=>c.id).sort(),'CHANGE-007 the release carries the CIs of its changes');
   assert.deepEqual(release.data.problemIds,[problem.id]);
@@ -48,6 +50,9 @@ export async function releaseChecks({ok,call,db,implementation}) {
   assert.equal((await dispatch(changes[0],'canary','release-held')).body.error.code,'release_go');
   release=(await decide('go','approver','Help desk briefed')).body;
   assert.equal(release.data.goNoGo,'go','CHANGE-007 go/no-go approval recorded by every named approver');
+  await db.prepare("UPDATE memberships SET active=0 WHERE workspace_id='w' AND user_id='approver'").run();
+  assert.equal((await dispatch(changes[0],'canary','release-inactive-approver')).body.error.code,'release_go','A withdrawn approver holds member deployment');
+  await db.prepare("UPDATE memberships SET active=1 WHERE workspace_id='w' AND user_id='approver'").run();
   for(const [n,initial] of changes.entries()){
     await ok('POST','/fixture/state',{failDeployment:n===2});
     let change=await ok('POST',`/changes/${initial.id}/dispatch`,{revision:initial.revision,phase:'canary',idempotencyKey:`release-${n}-canary`},'operator');
@@ -77,6 +82,25 @@ export async function releaseChecks({ok,call,db,implementation}) {
   release=await ok('POST',`/releases/${release.id}/complete`,{revision:(await ok('GET',`/releases/${release.id}`)).revision});
   assert.equal(release.data.state,'completed');
   assert.deepEqual(release.data.outcomes.map(o=>o.outcome),['successful','successful','backed-out'],'CHANGE-007 completes once every change is successful or backed out');
+  // The whole candidate is invalidated when any member changes, including a different member.
+  const regression=[];
+  for(let n=0;n<2;n++) {
+    let c=await ok('POST','/changes',{title:`Release boundary ${n}`,risk:'Bounded',impact:'Pilot',services:[cis[n].id],window,cohorts:['a','b'],canaryCohorts:['a','b'],implementation,compensation:{...implementation,payload:{release:'r1'}}});
+    c=await ok('POST',`/changes/${c.id}/authorize`,{revision:c.revision,reason:'Reviewed exact candidate',grantReferences});regression.push(c);
+  }
+  let boundary=await ok('POST','/releases',{...body,title:'Release candidate boundary',changeIds:regression.map(c=>c.id)});
+  for(const phase of ['build','test'])boundary=await ok('POST',`/releases/${boundary.id}/phases`,{revision:boundary.revision,phase,outcome:'passed',reference:'Reviewed candidate'});
+  const approve=async()=>{for(const actor of ['owner','approver'])boundary=await ok('POST',`/releases/${boundary.id}/decisions`,{revision:boundary.revision,decision:'go',reason:'Reviewed all member implementations'},actor);};
+  await approve();
+  regression[1]=await ok('PATCH',`/changes/${regression[1].id}`,{revision:regression[1].revision,title:'Materially amended member'});
+  assert.equal((await dispatch(regression[0],'canary','old-candidate')).body.error.code,'release_go','Amending one member holds every member');
+  assert.equal((await ok('GET',`/releases/${boundary.id}`)).data.goNoGo,'awaiting-decision','The reader sees the stale candidate needs new decisions');
+  await approve();
+  const writesBefore=(await ok('POST','/fixture/state',{})).writes;
+  await ok('POST','/fixture/state',{noGoOnRead:{id:boundary.id,revision:boundary.revision}});
+  const blocked=await ok('POST',`/changes/${regression[0].id}/dispatch`,{revision:regression[0].revision,phase:'canary',idempotencyKey:'withdraw-before-effect'},'operator');
+  assert.equal(blocked.data.state,'blocked','A no-go between provider preflight and effect blocks the actual execution');
+  assert.equal((await ok('POST','/fixture/state',{})).writes,writesBefore,'No provider write occurs after decision withdrawal');
   console.log('PASS CHANGE-007 public routes: three-change Okta MFA release on the shared calendar, named go/no-go held by one no-go, canary then rollout, cohort-only release notes, a failed change holding the release until backout, then completion');
   return {releaseId:release.id};
 }
