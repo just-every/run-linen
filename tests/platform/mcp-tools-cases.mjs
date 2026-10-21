@@ -141,7 +141,7 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  equal({author:ownMessage.author_id,visibility:ownMessage.visibility},{author:bot.id,visibility:'private'},'comment is internal and attributed to integration principal')
  check(!(await value(employeeSession.api('/work/'+normal.id))).messages.some(m=>m.body===ownBody),'employee receives no requester reply from MCP internal comment')
  check((await tool(full.secret,'work.get',{workId:normal.id})).messages.some(m=>m.body===ownBody),'principal reads its own internal comment')
- check((await tool(full.secret,'work.history',{workId:normal.id})).items.some(e=>e.body===ownBody&&e.actor===bot.id),'filtered history retains own comment with principal identity')
+ check((await tool(full.secret,'work.history',{workId:normal.id})).items.some(e=>e.body===ownBody&&e.actor===bot.id&&e.actorKind==='automation'),'filtered history retains own comment with principal identity')
  equal((await tool(full.secret,'work.search',{query:ownBody})).items.map(w=>w.id),[normal.id],'search includes only the principal own private comment')
 
  const own=await tool(full.secret,'work.create',{title:'Desk bot diagnostic cable request',body:'Please obtain a spare display cable.',kind:'request',deduplicationKey:'API-003-own-create'})

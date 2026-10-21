@@ -180,7 +180,7 @@ export async function projectHistory(env: Env, credential: Reader, row: any) {
     };
   });
   const messageEntries = thread.map(message => ({ id: message.id, at: message.created_at, kind: 'message' as const,
-    actor: message.author_id ?? 'Erased person', actorKind: 'person', action: 'Message',
+    actor: message.author_id ?? 'Erased person', actorKind: message.author_id === credential.principal_id ? 'automation' : 'person', action: 'Message',
     visibility: message.visibility, body: message.body, changes: [] as SafeChange[] }));
   return { items: [...changes, ...messageEntries].sort((a, b) => a.at.localeCompare(b.at)) };
 }
