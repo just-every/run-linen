@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { humanize, text, type RecordValue } from "./api";
 import { ActionForm } from "./forms";
 import { useMutation, useRemote, useSession } from "./state";
 import { Badge, Empty, ErrorNotice, Hero, Loading } from "./primitives";
+
+import { ActivityTimeline } from './work-activity';
+import type { ActivityEntry } from '../features/work/activity';
 
 interface Task { id: string; title: string; milestone_id: string | null; owner_name: string | null; due_date: string; status: string; revision: number; dependsOn: string[]; dependency: { state: string; blockedBy: string[] }; overdue: boolean }
 interface ProjectView {
@@ -70,6 +73,9 @@ function Project({ id, team, onChanged }: { id: string; team: boolean; onChanged
           <td>{t.dependency.state === "clear" ? "None open" : <><Badge value={t.dependency.state === "blocked" ? "blocked" : "pending"} /> {t.dependency.state === "blocked" ? "Blocked by" : "Waiting on"} {t.dependency.blockedBy.map((d) => byId.get(d)?.title).join(", ")}</>}</td>
         </tr>)}</tbody></table></div>;
     })}
+    {!!data.tasks.length && <section aria-label="Project task histories"><h3>Task history</h3>
+      <ul className="record-stack">{data.tasks.map(task => <li key={task.id}><TaskActivity projectId={id} task={task} /></li>)}</ul>
+    </section>}
     <h3>Linked records ({data.links.length})</h3>
     {["asset", "change", "ticket", "lifecycle"].map((kind) => {
       const links = data.links.filter((l) => l.kind === kind);
@@ -94,4 +100,17 @@ function Project({ id, team, onChanged }: { id: string; team: boolean; onChanged
           { name: "detail", label: "Note, such as a relocation from and to", type: "text" }]} />
     </>}
   </section>;
+}
+
+/** The same scoped timeline as ticket activity, opened only when the reader asks for a task's evidence. */
+function TaskActivity({ projectId, task }: { projectId: string; task: Task }) {
+  const [open, setOpen] = useState(false);
+  const remote = useRemote<{ items: ActivityEntry[] }>(open ? `/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(task.id)}/activity` : null);
+  useEffect(() => { if (open) remote.refresh(); }, [task.revision]);
+  return <details className="evidence" onToggle={event => setOpen(event.currentTarget.open)}>
+    <summary>History: {task.title}</summary>
+    {open && <><ErrorNotice error={remote.error} retry={remote.refresh} />
+      {remote.data ? remote.data.items.length ? <ActivityTimeline entries={remote.data.items} label={`Task activity: ${task.title}`} /> :
+        <p>No recorded changes. Earlier history is not reconstructed from the current task.</p> : !remote.error && <Loading />}</>}
+  </details>;
 }

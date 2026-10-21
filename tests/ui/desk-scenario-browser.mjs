@@ -121,7 +121,27 @@ try {
     const saved = ap.waitForResponse(r => r.url().endsWith(`/projects/${planId}/tasks`) && r.request().method() === 'POST');
     await taskForm.getByRole('button', { name: 'Save', exact: true }).click();
     assert.equal((await saved).status(), 201);
-    assert.ok((await api(`/projects/${planId}`)).tasks.some(t => t.title === `Verify controller at ${width}`));
+    const task = (await api(`/projects/${planId}`)).tasks.find(t => t.title === `Verify controller at ${width}`);
+    assert.ok(task);
+    await ap.reload();
+    const status = ap.getByLabel(`Status of ${task.title}`, { exact: true });
+    await status.waitFor();
+    const updated = ap.waitForResponse(r => r.url().endsWith(`/projects/${planId}/tasks/${task.id}`) && r.request().method() === 'POST');
+    await status.selectOption('in_progress');
+    assert.equal((await updated).status(), 200, 'DESK-017 task status changed through the native control');
+    const history = ap.locator('details').filter({ has: ap.locator(':scope > summary').getByText(`History: ${task.title}`, { exact: true }) });
+    await history.locator(':scope > summary').click();
+    const timeline = history.getByRole('list', { name: `Task activity: ${task.title}`, exact: true });
+    await timeline.getByText('State: todo → in_progress', { exact: true }).waitFor();
+    await timeline.getByText(`Title: none → ${task.title}`, { exact: true }).waitFor();
+    assert.ok((await timeline.innerText()).includes('Dana Reyes'), 'DESK-017 task history shows the actor');
+    const native = (await api(`/projects/${planId}/tasks/${task.id}/activity`)).items;
+    assert.ok(native.every(e => Number.isFinite(Date.parse(e.at))));
+    await captureJourney(ap, { path: `${out}/DESK-017-project-task-history-${width}.png`, fullPage: true });
+    const scenarioHistory = ap.locator('details').filter({ has: ap.locator(':scope > summary').getByText('History: Check controller inventory', { exact: true }) });
+    await scenarioHistory.locator(':scope > summary').click();
+    await scenarioHistory.getByText('Scenario · Escalate to Network L2', { exact: false }).waitFor();
+    await captureJourney(ap, { path: `${out}/DESK-017-scenario-task-history-${width}.png`, fullPage: true });
   }
 
   // At phone width the bulk-update screen runs the scenario on two chosen tickets.

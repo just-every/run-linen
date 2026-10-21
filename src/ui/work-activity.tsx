@@ -16,7 +16,12 @@ export function WorkActivity({ conversation }: { conversation: Conversation }) {
   if (!entries) return remote.error ? <ErrorNotice error={remote.error} retry={remote.refresh} /> : <Loading />;
   return <>
     <ErrorNotice error={remote.error} retry={remote.refresh} />
-    <ol className="events conversation" aria-label="Ticket activity">
+    <ActivityTimeline entries={entries} label="Ticket activity" />
+  </>;
+}
+
+export function ActivityTimeline({ entries, label }: { entries: ActivityEntry[]; label: string }) {
+  return <ol className="events conversation" aria-label={label}>
       {entries.map(event => <li data-message-id={event.kind === 'message' ? event.id : undefined}
         className={`event ${event.visibility === 'private' ? 'private-message' : ''}`} key={event.id}>
         <span className="event-icon"><Icon name={event.visibility === 'private' ? 'lock' : 'user'} size={18} /></span>
@@ -30,6 +35,5 @@ export function WorkActivity({ conversation }: { conversation: Conversation }) {
           {event.changes.length > 0 && <ul className="message-body">{event.changes.map((change, i) => <li key={i}>{humanize(change.field)}: {value(change.before)} → {value(change.after)}</li>)}</ul>}
         </div>
       </li>)}
-    </ol>
-  </>;
+    </ol>;
 }

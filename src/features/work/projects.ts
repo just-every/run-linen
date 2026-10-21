@@ -1,3 +1,4 @@
+import { taskChanges, taskEvent, taskSnapshot } from './project-activity';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now, requiredString } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
@@ -63,8 +64,12 @@ export async function addTask(ctx: WorkContext, projectId: string, input: Record
   if (milestoneId && !(await ctx.env.DB.prepare("SELECT 1 FROM work_project_milestones WHERE workspace_id=? AND project_id=? AND id=?").bind(ctx.principal.workspaceId, projectId, milestoneId).first()))
     throw new ApiError(422, "milestone_missing", "Choose a milestone of this project");
   const deps = await validDependencies(ctx, projectId, null, input.dependsOn), taskId = id(), t = now();
-  await ctx.env.DB.prepare("INSERT INTO work_project_tasks(id,workspace_id,project_id,milestone_id,title,owner_id,due_date,depends_on_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)")
-    .bind(taskId, ctx.principal.workspaceId, projectId, milestoneId, requiredString(input.title, "title", 300), await agent(ctx, input.ownerId, "Task owner"), input.dueDate, JSON.stringify(deps), t, t).run();
+  const snapshot = taskSnapshot({ title: requiredString(input.title, "title", 300), ownerId: await agent(ctx, input.ownerId, "Task owner"), dueDate: input.dueDate as string, milestoneId, dependsOn: deps });
+  await ctx.env.DB.batch([
+    ctx.env.DB.prepare("INSERT INTO work_project_tasks(id,workspace_id,project_id,milestone_id,title,owner_id,due_date,depends_on_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)")
+      .bind(taskId, ctx.principal.workspaceId, projectId, milestoneId, snapshot.title, snapshot.owner, snapshot.dueDate, JSON.stringify(deps), t, t),
+    taskEvent(ctx, taskId, 'created', taskChanges(null, snapshot), t),
+  ]);
   return { id: taskId };
 }
 /** A task cannot be done while a task it depends on is open. */
@@ -83,9 +88,14 @@ export async function updateTask(ctx: WorkContext, projectId: string, taskId: st
   const ownerId = input.ownerId === undefined ? task.owner_id : await agent(ctx, input.ownerId, "Task owner");
   const dueDate = input.dueDate === undefined ? task.due_date : input.dueDate;
   if (!isDate(dueDate)) throw new ApiError(422, "task_date", "Task due date must be YYYY-MM-DD");
-  const changed = await ctx.env.DB.prepare("UPDATE work_project_tasks SET status=?,owner_id=?,due_date=?,depends_on_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?")
-    .bind(status, ownerId, dueDate, JSON.stringify(deps), now(), ctx.principal.workspaceId, taskId, task.revision).run();
-  if (!changed.meta.changes) throw new ApiError(409, "task_changed", "Task changed; refresh before updating");
+  const changes = taskChanges({ state: task.status, owner: task.owner_id, dueDate: task.due_date, dependencies: JSON.parse(task.depends_on_json) },
+    { state: status, owner: ownerId, dueDate, dependencies: deps }), t = now();
+  const changed = await ctx.env.DB.batch([
+    ctx.env.DB.prepare("UPDATE work_project_tasks SET status=?,owner_id=?,due_date=?,depends_on_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?")
+      .bind(status, ownerId, dueDate, JSON.stringify(deps), t, ctx.principal.workspaceId, taskId, task.revision),
+    ...(changes.length ? [taskEvent(ctx, taskId, 'updated', changes, t)] : []),
+  ]);
+  if (!changed[0].meta.changes) throw new ApiError(409, "task_changed", "Task changed; refresh before updating");
   return readProject(ctx, projectId);
 }
 export async function setProjectStatus(ctx: WorkContext, projectId: string, input: Record<string, unknown>) {
@@ -123,6 +133,7 @@ export async function linkProject(ctx: WorkContext, projectId: string, input: { 
       throw new ApiError(422, "task_missing", "Choose a task of this project");
     statements.push(ctx.env.DB.prepare("INSERT OR IGNORE INTO work_project_links(workspace_id,project_id,kind,target_id,task_id,detail,created_by,created_at) VALUES(?,?,?,?,?,?,?,?)")
       .bind(ctx.principal.workspaceId, projectId, kind, raw.targetId, (raw.taskId as string) ?? null, typeof raw.detail === "string" ? raw.detail.slice(0, 300) : "", ctx.principal.userId, now()));
+    if (raw.taskId) statements.push(taskEvent(ctx, raw.taskId as string, 'linked', [{ field: kind + ' link', before: null, after: raw.targetId }], now()));
   }
   await ctx.env.DB.batch(statements);
   return readProject(ctx, projectId);

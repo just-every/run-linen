@@ -129,6 +129,11 @@ export async function deskScenarioChecks(workspaceApi, db) {
   const projectId = started.changes.find(c => c.field === 'task plan').after;
   const project = check(await api(`/projects/${projectId}`, undefined, desk));
   assert.equal(project.project.name, 'Laptop preparation');
+  const taskHistory = check(await api(`/projects/${projectId}/tasks/${project.tasks[0].id}/activity`, undefined, desk)).items;
+  assert.equal(taskHistory.length, 1, 'DESK-017 scenario task creation is recorded once');
+  assert.equal(taskHistory[0].actorKind, 'scenario');
+  assert.ok(taskHistory[0].initiatedBy && taskHistory[0].at);
+  assert.ok(taskHistory[0].changes.some(c => c.field === 'title' && c.before === null && c.after === 'Install approved tools'), 'DESK-017 scenario task keeps original field values');
   assert.deepEqual(project.tasks.map(t => [t.title, t.owner_id, t.due_date]), [['Install approved tools', 'd15-net', '2026-11-01']]);
   assert.ok(project.links.some(l => l.kind === 'ticket' && l.target_id === planTicket.id));
   const link = check(await api('/work-scenarios', { name: 'Link laptop plan', scope: 'workspace', steps: { taskPlan: { projectId } } }), 201);

@@ -830,6 +830,51 @@ that product and marks how close the current code is (see [Status](#status)).
   coverage, erasure-preserved field values and imported source events remain
   gaps.
 
+  *Current project-task history:* project task creation (including DESK-015
+  scenarios), state, owner, due date, dependency edits and task-specific record
+  links append original before/after values with actor and time atomically with
+  the mutation. The project shows each task's history to its current owners,
+  operators and auditors; employees have no project history view. Rejected,
+  repeated-link and unchanged-field commands add no field event. The reader
+  never builds missing historical values from current task fields. These new
+  audit payloads remain untyped for erasure, so the existing full-clearing
+  fallback applies, retaining entries without values. Other task kinds and
+  change, problem and asset histories remain gaps.
+
+  *Erasure semantic (ct, 20 October):* the following approved retained-value rule
+  is an implementation obligation, not a claim that value preservation exists
+  today. Until it is built and proven, the existing blanket clearing stays.
+  (a) Retention requires one shared typed schema registry mapping audit actions
+  and fields to value classes, used by export, import, erasure and history;
+  unregistered actions or fields keep full clearing.
+  (b) The closed allowlist is built-in state, type, priority, impact/urgency,
+  SLA pause with an enum reason, resolution code, and approval outcome with
+  revision numbers and grant version; category, service and group by id and
+  configured label (scrub a group with exactly one member at change time or a
+  label matching an erased identity); dropdown, multi-select, number, boolean
+  and date custom fields only after audited owner/admin classification as
+  nonpersonal, default personal (text, user, email, URL, phone and attachment
+  fields can never be nonpersonal); and links to tickets, tasks, changes,
+  problems and assets as ids only, with titles read live under current scope.
+  (c) Keep each scrubbed entry marked `redacted: erasure`. Erased-person
+  references show "Erased person" without a link across entries (archives use
+  A6 opaque aliases). Always scrub free text, values matching existing erased
+  identity tombstone digests and asset values tying the asset to that person.
+  (d) If an HR or restricted record's subject is erased, scrub category, type,
+  service and all custom values too: only state, priority, SLA and timing remain.
+  (e) For registered actions, touch only entries where that person is actor,
+  requester/beneficiary or a value; leave unrelated people's history unchanged.
+  (f) Already-cleared entries remain cleared, showing "values removed by an
+  erasure on <date>"; never rebuild them from records, archives, imports or replay.
+  (g) One redacted history serves agent, auditor, REST, MCP, search,
+  notifications, export, restore and replay; no raw payload is exposed and
+  scrubbed values leave search. Employee history remains public-only. Older
+  archives receive the same scrub or are refused under A6; ServiceNow history
+  inherits the same classification on import.
+  (h) Erasure receipts report counts per class without content. Kept work facts
+  may still point to a person when combined with outside knowledge; this is
+  not a legal certification of anonymization.
+
 ### Notifications
 
 - **NOTIFY-001 — Default notifications by role and event.** Out of the box:
@@ -1665,12 +1710,15 @@ that product and marks how close the current code is (see [Status](#status)).
   auditors and exportable; erasure anonymizes without breaking the record.
   **Acceptance evidence:** change a grant and export data; the auditor reads both
   entries; erase the actor's personal data and the entries remain anonymized.
+  History-value retention inherits DESK-017's *Erasure semantic (ct, 20 October)*;
+  until that rule is implemented and proven, untyped payloads keep full clearing.
 
 - **API-001 — REST API and webhooks.** A versioned REST API with scoped tokens for
   automation principals and outbound signed webhooks for ticket, approval, asset
   and change events, with retries and delivery logs. **Acceptance evidence:**
   create a ticket through the API with a scoped token; a subscribed webhook
   receives the signed event; a failing endpoint is retried and logged.
+  REST tokens authorize `/api/v1/*` only and are refused by API-003.
 
 - **API-002 — No-code workflow automator.** Triggers (ticket created/updated,
   time, approval, HR event, alert), conditions and actions (assign, notify, set
@@ -1686,6 +1734,36 @@ that product and marks how close the current code is (see [Status](#status)).
   connect an MCP client as an automation principal; it lists its permitted queue
   and is refused an out-of-grant action.
 
+  *MCP credential semantic (ct, 20 October):* this approved rule is unbuilt;
+  API-003 remains missing and there is no MCP authority today. An MCP grant has
+  its own audience: a REST token is refused at MCP and an MCP credential is
+  refused on `/api/v1/*`; no secret serves both. Only an owner mints one for an
+  existing active automation principal holding only the integration role,
+  refusing owner, approver, HR, auditor or operator roles. It binds one workspace,
+  expires within at most 365 days, shows its secret once and stores SHA-256 only.
+  The owner revokes it immediately; its list shows last use. Minting, revocation
+  and expiry are audited.
+  The closed tool list maps `work.read` to permitted queue listing, ticket get,
+  search and DESK-017 redacted history, `work.create` to ticket creation and
+  `work.comment` to comment addition. New tools need a ct contract change and
+  tested release. Every call checks live active membership intersected with
+  roles, scopes, the tool allowlist, current A1 scope and ticket access/grants;
+  recheck at commit with revision checks. Exclude HR and restricted records.
+  Ticket text is data, never authority. Launch refuses approval/decisions,
+  credential minting, grants, role/configuration changes, export, restore,
+  erasure, connectors/provider/external effects, task plans and bulk changes.
+  Future external-effect tools need A2 grants with human approvals. Minting
+  never grants agent approval rights or changes existing approvals/grants.
+  Unauthenticated discovery returns only a protocol auth error, without tool
+  or resource names; authenticated lists expose only currently usable tools
+  and resources. No OAuth dynamic client registration ships at launch.
+  Deactivation, removal or erasure refuses the next call; erasure revokes the
+  credential and clears its hash. Export carries credential metadata without
+  its hash; restore leaves it revoked and inert until freshly minted.
+  Each call audits credential id, principal, tool, target ids, outcome/refusal
+  code and time, never secrets, request bodies or argument free text. MCP may
+  reuse API-001's future principal/scope checker, never its secret or audience.
+
 - **PORT-001 — Portable native archive.** Owner export of every record,
   attachment and policy as a verified archive, and restore under an execution
   hold that never re-dispatches effects or reactivates grants (A6). **Acceptance
@@ -1696,7 +1774,9 @@ that product and marks how close the current code is (see [Status](#status)).
   content and attachments while keeping anonymized work, effect and audit
   identities, and replay or restore never brings the content back (A1).
   **Acceptance evidence:** erase a person, restore an older archive, and see the
-  content still absent.
+  content still absent. History-value handling inherits DESK-017's *Erasure
+  semantic (ct, 20 October)*, including every read/export/restore surface and
+  the prohibition on rebuilding already-cleared values.
 
 - **RETENTION-001 — Retention policies.** Configurable retention for archives,
   closed tickets and attachments, with no hidden default; due deletion is durable
@@ -2006,7 +2086,9 @@ that product and marks how close the current code is (see [Status](#status)).
   still contains an erased identity refuses. A snapshot taken before an erasure
   stays refused against the destination's known tombstones, and fresh imports
   stay held and inert. No field is exempted from the tombstone check and no
-  retained business row is deleted to pass it.
+  retained business row is deleted to pass it. Audit-history values also
+  inherit DESK-017's *Erasure semantic (ct, 20 October)*, including redacted
+  history on restore/replay and never reconstructing earlier cleared values.
 
 - **A7 — Honest operating and cost boundaries.** Declare supported commands,
   runtime, resources, provider effects and recovery targets. Record every
@@ -2302,7 +2384,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
 | `DESK-015` | Agent scenarios and record templates | target | done | `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/ui/desk-scenario-browser.mjs` | Watchers inherit from DESK-007 and native mobile from CHANNEL-005 before they ship. |
 | `DESK-016` | Global agent search | target | done | `src/features/work/search.ts`, `tests/work/search-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/search-journey.mjs` | Local public-route and 1440/390 browser evidence: all eight current record types, filters, typo matching, serial-linked asset/ticket/person, native ticket ID, subject/content/requester, recorded asset tags, scoped visible counts and pages. HR/private/restricted/article/current-role fences and generated-source withdrawal are asserted. |
-| `DESK-017` | Ticket activity history | target | partial | `src/features/work/activity.ts`, `src/features/work/approval-activity.ts`, `src/features/work/relationships.ts`, `src/features/work/fulfilment-authority.ts`, `src/ui/work-activity.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/work/relationship-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/work/bundle-cases.mjs`, `tests/execution/runtime.mjs`, `tests/ui/relationship-activity-journey.mjs` | Ticket timeline now includes typed manual/bundle/standing approvals and both sides of merge/split, parent set/clear and record links, with replay/refusal and public-only scope asserted through public routes and native 1440/390 journeys. Gap: remaining ticket mutation paths and task/change/problem/asset unified field histories, erasure-preserved field values and original imported ServiceNow field events remain unimplemented. |
+| `DESK-017` | Ticket activity history | target | partial | `src/features/work/activity.ts`, `src/features/work/approval-activity.ts`, `src/features/work/relationships.ts`, `src/features/work/fulfilment-authority.ts`, `src/ui/work-activity.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/work/relationship-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/work/bundle-cases.mjs`, `tests/execution/runtime.mjs`, `tests/ui/relationship-activity-journey.mjs`, `src/features/work/project-activity.ts`, `tests/work/project-cases.mjs` | Project-task creation, edits and task-specific links now keep atomic original-value history (including scenario-created tasks), with current project scope, restart and untyped erasure clearing. Remaining: other task kinds, change/problem/asset histories, remaining ticket mutations, approved erasure-preserved values and imported ServiceNow field events. |
 | `NOTIFY-001` | Default notifications by role and event | target | partial | `src/features/execution/notifications.ts`, `tests/execution/runtime.mjs` | Explicit per-message only; no event-driven default set, chat or push delivery, or actionable agent notifications. |
 | `NOTIFY-002` | Admin-configured rules, templates and preferences | target | missing |  | No notification rules, templates, branding or preferences. |
 | `ACCESS-001` | Microsoft Entra ID | target | done | `src/features/execution/connectors.ts`, `src/features/execution/identity.ts`, `tests/execution/runtime.mjs`, `tests/ui/connected-lifecycle.mjs` |  |
@@ -2360,7 +2442,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `ROLE-001` | Roles and permissions | target | partial | `src/platform/auth.ts`, `tests/ui/browser.mjs`, `tests/platform/runtime.mjs` | Fixed roles; no custom roles. |
 | `SSO-001` | Sign-in, SSO and SCIM | target | partial | `src/platform/sso.ts`, `src/platform/base-auth`, `tests/platform/runtime.mjs`, `tests/platform/base-auth-runtime.mjs` | No SAML/OIDC with named IdPs, SCIM or MFA enforcement. |
 | `AUDIT-001` | Audit log | target | done | `src/platform/privacy.ts`, `tests/platform/privacy-runtime.mjs`, `tests/platform/config-runtime.mjs` |  |
-| `API-001` | REST API and webhooks | target | partial | `src/features/work/index.ts`, `src/features/execution/index.ts`, `tests/work/runtime.mjs` | No outbound event webhooks. |
+| `API-001` | REST API and webhooks | target | partial | `src/features/work/index.ts`, `src/features/execution/index.ts`, `tests/work/runtime.mjs` | Scoped automation REST tokens and outbound signed event webhooks are unbuilt; session-authenticated REST routes do not prove token authentication. |
 | `API-002` | No-code workflow automator | target | partial | `src/features/execution/automation.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No no-code builder. |
 | `API-003` | Agent access by MCP | target | missing |  | No MCP server. |
 | `PORT-001` | Portable native archive | target | done | `src/features/adoption/export.ts`, `src/features/adoption/import.ts`, `tests/adoption/runtime.mjs` |  |

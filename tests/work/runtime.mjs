@@ -697,7 +697,7 @@ try {
     .bind("employee")
     .run();
   await searchChecks(api,db);
-  await projectChecks(api);
+  const taskHistoryProof = await projectChecks(api, db);
   await relationshipChecks(api);
   await sharingChecks(api, db);
   await mf.dispose();
@@ -705,6 +705,7 @@ try {
     ...convertV4MiniflareOptions({ ...options, port: Number(process.env.LINEN_TEST_WORKER_PORT || 0) }),
     resourcePersistencePath: dir,
   });
+  assert.deepEqual((await api(taskHistoryProof.historyPath)).value.items, taskHistoryProof.items, 'DESK-017 original project-task history survives a Worker restart');
   assert.equal((await api(`/work/${w}`, undefined, employee)).value.work.id, w);
   const restartedProposals=(await api('/problem-proposals/detect',{})).value.items;
   assert.equal(restartedProposals.filter(p=>p.id===proposalProof.rejectedId).length,1,'PROB-002 rejected semantic cluster survives Worker restart');
@@ -716,6 +717,9 @@ try {
   });
   assert.equal(erased.status, 200, JSON.stringify(erased));
   assert.equal(erased.value.state, "erased");
+  const erasedTaskHistory = (await api(taskHistoryProof.historyPath)).value.items;
+  assert.deepEqual(erasedTaskHistory.map(e => e.id), taskHistoryProof.items.map(e => e.id), 'DESK-017 erasure retains every project-task event');
+  assert.ok(erasedTaskHistory.every(e => !e.changes.length && e.body.includes('removed by erasure')), 'DESK-017 untyped task values use blanket clearing and are never rebuilt');
   const erasedClassification=(await api(`/work/${classifiedId}/classification`)).value;
   assert.equal(erasedClassification.current,null,"DESK-002 authorized erasure clears classification content");
   assert.deepEqual(erasedClassification.history,[],"DESK-002 redacted audit details cannot disclose content or break history rendering");
@@ -740,6 +744,12 @@ try {
     ).status,
     409,
   );
+  const erasedTaskActor = await api('/people/search-agent/erase', { revision: 0, reason: 'DESK-017 fixture actor erasure' });
+  assert.equal(erasedTaskActor.status, 200, JSON.stringify(erasedTaskActor));
+  const anonymizedTaskHistory = (await api(taskHistoryProof.historyPath)).value.items;
+  assert.ok(anonymizedTaskHistory.some(e => e.actor === '[erased]'), 'DESK-017 erased task actor is anonymized');
+  assert.deepEqual(anonymizedTaskHistory.map(e => e.id), taskHistoryProof.items.map(e => e.id));
+  assert.ok(anonymizedTaskHistory.every(e => !e.changes.length), 'DESK-017 erased payload values remain absent');
   console.log(
     "WORK runtime passed: D1/R2 restart, scoped/revoked membership, restricted/HR/private data, dedup/CAS, custody, DST/holidays, JML dependencies/cancellation, identity and distinct mapped-subject intents, knowledge/escalation, leased intake, native held restore and member erasure/replay denial",
   );

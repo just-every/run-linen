@@ -122,6 +122,9 @@ async function eraseSinglePerson(
       ctx.env.DB.prepare("UPDATE work_pending_people SET email=?,start_date='',team='[erased]',state='withdrawn',withdrawn_at=? WHERE workspace_id=? AND id=?").bind(`erased-${p}@invalid.local`,t,w,p),
       ctx.env.DB.prepare("UPDATE work_pending_services SET purpose='[erased]',reason='Identity erased',state=CASE WHEN state='held' THEN 'cancelled' ELSE state END WHERE workspace_id=? AND person_id=?").bind(w,p),
     ]:[]),
+    // New task audit payloads are untyped for erasure: keep the approved full-clearing fallback.
+    // Do not reconstruct any removed value from the task or a later event.
+    ctx.env.DB.prepare("UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action IN ('work.project_task_created','work.project_task_updated','work.project_task_linked')").bind(w),
     // Tombstone every current identity in this same transaction. A reviewer may
     // unbind an erased record, but cannot rebind either side during cleanup.
     ...[...new Set([p,...aliases,...people.map(p=>`${p.source}:${p.source_id}`)])].map(value =>

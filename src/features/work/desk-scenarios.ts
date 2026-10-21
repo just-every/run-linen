@@ -134,7 +134,7 @@ export async function runScenario(ctx: WorkContext, workId: string, body: Record
     changes.push({ step: 'status', field: 'state', before: work.state, after: changed.state });
   }
   if (taskPlan) {
-    await applyScenarioPlan(ctx, workId, taskPlan);
+    await applyScenarioPlan(ctx, workId, taskPlan, { scenarioId: s.id, name: s.name });
     changes.push({ step: 'taskPlan', field: 'task plan', before: null, after: taskPlan.id });
   }
   } catch (error) {

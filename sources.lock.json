@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "feb7b1156114b2202ebe3959ea5dbb8b898546e71b30da0378a45e0cd8bc1c5a",
+      "sha256": "1ebc20bfc72f287fe0c8ffc380f9cadd97cd5c54d944854b1c96b3241a7e0464",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "d8d1aad5bed7c9bfe4b163431bb2bef8ca5e6fc3b265ebb1e34e634c43a1dc4b",
+      "sha256": "995902e2e6098d13539ef3191782e32e2a124b44cade55ed1bc24ae90f132b77",
       "executable": false
     },
     "DEMO.md": {
@@ -2227,7 +2227,7 @@
       "executable": false
     },
     "src/features/work/desk-scenario-plans.ts": {
-      "sha256": "0a180981c3afc06277c812c297d8b7e20d26164a84893ac8ccf6a7f12134e19c",
+      "sha256": "19d1f6c71e4bebead6f8a0770113de7656b855ac39e7e4a35f9353b60440088f",
       "executable": false
     },
     "src/features/work/desk-scenario-routes.ts": {
@@ -2235,7 +2235,7 @@
       "executable": false
     },
     "src/features/work/desk-scenarios.ts": {
-      "sha256": "bd2f74bc9e2f67434688eacce8906e61171a2c2ff82bd4b8fa339df6d9725df3",
+      "sha256": "377b6af41ce615da88b5483a81ada395933645dee94c69dda4955cc8bf160f06",
       "executable": false
     },
     "src/features/work/desk-templates.ts": {
@@ -2391,7 +2391,7 @@
       "executable": false
     },
     "src/features/work/privacy.ts": {
-      "sha256": "f61f0936fc00bebb0bbb84a2e3db09977c800b608ecb5021fd4f1f03f5257d3f",
+      "sha256": "a29704d33f7577c4d54447ea9bd44d2bb7cf00dc2e275296fd7e37a8d6c61b89",
       "executable": false
     },
     "src/features/work/processor.ts": {
@@ -2402,12 +2402,16 @@
       "sha256": "d81b4c29d40ece2ef53fd5c756042b0ee4da9af08d422b5acd6dd96404c708b9",
       "executable": false
     },
+    "src/features/work/project-activity.ts": {
+      "sha256": "51733b4cbf8182593829efabde07c4132b5bb46ad57046386e194488861a0cdd",
+      "executable": false
+    },
     "src/features/work/project-routes.ts": {
-      "sha256": "428fc728d018491bc182a1d4620a83d6eb4fec4eb06c27285d7df5da311364be",
+      "sha256": "3c400f9fa96445efbe291caf694405a2880b227487f8359ac93bb61f52522301",
       "executable": false
     },
     "src/features/work/projects.ts": {
-      "sha256": "f2fd5046d84c6ce76ff0044b0846467797d7a55827b2ca98b341ecc88a9defed",
+      "sha256": "b165220dca00f8e76be440ca53412fe8b29e5852579ca34232059dca4842720b",
       "executable": false
     },
     "src/features/work/PROVENANCE.md": {
@@ -4451,7 +4455,7 @@
       "executable": false
     },
     "src/ui/projects.tsx": {
-      "sha256": "3539b1f251243d86abc93897ef76979e68a4ef0bcdf0a1d48f1411e25c590fd8",
+      "sha256": "556092d590f11f1e70f2e57ac5ff31e8a6aad0d6100ad669bf772a71c832548e",
       "executable": false
     },
     "src/ui/queue.tsx": {
@@ -4531,7 +4535,7 @@
       "executable": false
     },
     "src/ui/work-activity.tsx": {
-      "sha256": "c06bfb1e93c63342f1e79ff84c5cde98d31f54f59ef4eff924b4ceee2c5b4efc",
+      "sha256": "431ec54ebc9619e6f5f9f603ced26365ceaf55de7ab052848c82f864c37650e6",
       "executable": false
     },
     "src/ui/work-bulk.tsx": {
@@ -5099,7 +5103,7 @@
       "executable": false
     },
     "tests/ui/desk-scenario-browser.mjs": {
-      "sha256": "b2c61b25b413565353bcb10332ea8fd04c4663e805ada1cc21f05b27c12e0a27",
+      "sha256": "ff7ec81a96f3051ac21cef3e54405e23a0c8866cbca95ff773559fc2ce51da5b",
       "executable": false
     },
     "tests/ui/drafts.mjs": {
@@ -5291,7 +5295,7 @@
       "executable": false
     },
     "tests/work/desk-scenario-cases.mjs": {
-      "sha256": "09675cbce70624a269a8d31263e56078c357ea88228a6244108c683e8f7cec16",
+      "sha256": "5c199a37611280bc741f3f26f5c45a6a2df270c7de99577fe0e86cd91ac31420",
       "executable": false
     },
     "tests/work/fulfilment-link-runtime.mjs": {
@@ -5363,7 +5367,7 @@
       "executable": false
     },
     "tests/work/project-cases.mjs": {
-      "sha256": "201c2c9659ddac0774be24ad67ccf6552df3b5bbb7878cb665f08d763bf2a2be",
+      "sha256": "164c8a5ce087a37d88e0ffc65a8a4d7a45b8fc40bc63135db2cdde352e24acf2",
       "executable": false
     },
     "tests/work/recurrence-cases.mjs": {
@@ -5383,7 +5387,7 @@
       "executable": false
     },
     "tests/work/runtime.mjs": {
-      "sha256": "bcfa2ef8f90da9d25539a5165fa8fe938779170c4697b23145cbff76da4f45f5",
+      "sha256": "e660b3e0e3659c261c56a8c2af5de6b9ece7871021fb3a2cc1b59c6e3e711e10",
       "executable": false
     },
     "tests/work/search-cases.mjs": {

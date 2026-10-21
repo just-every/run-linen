@@ -1,5 +1,6 @@
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { permit, type WorkContext, type WorkRecord } from './core';
+import { taskChanges, taskEvent, taskSnapshot, type TaskOrigin } from './project-activity';
 import { readProject } from './projects';
 
 /** DESK-015 task plans use PROJECT-001's IT projects, local duties and normal-ticket link boundary.
@@ -32,13 +33,17 @@ export async function prepareScenarioPlan(ctx: WorkContext, work: WorkRecord, va
 }
 
 /** The local project, all its duties and its ticket link are one D1 batch. No provider effect or grant is created. */
-export async function applyScenarioPlan(ctx: WorkContext, workId: string, plan: PreparedPlan) {
+export async function applyScenarioPlan(ctx: WorkContext, workId: string, plan: PreparedPlan, origin: TaskOrigin) {
   const ws = ctx.principal.workspaceId, t = now(), writes: D1PreparedStatement[] = [];
   if (plan.name) {
     writes.push(ctx.env.DB.prepare("INSERT INTO work_projects(id,workspace_id,name,description,owner_id,status,created_at,updated_at) VALUES(?,?,?,'',?,'active',?,?)")
       .bind(plan.id, ws, plan.name, ctx.principal.userId, t, t));
-    for (const task of plan.tasks) writes.push(ctx.env.DB.prepare("INSERT INTO work_project_tasks(id,workspace_id,project_id,title,owner_id,due_date,depends_on_json,created_at,updated_at) VALUES(?,?,?,?,?,?,'[]',?,?)")
-      .bind(id(), ws, plan.id, task.title, task.ownerId, task.dueDate, t, t));
+    for (const task of plan.tasks) {
+      const taskId = id();
+      writes.push(ctx.env.DB.prepare("INSERT INTO work_project_tasks(id,workspace_id,project_id,title,owner_id,due_date,depends_on_json,created_at,updated_at) VALUES(?,?,?,?,?,?,'[]',?,?)")
+        .bind(taskId, ws, plan.id, task.title, task.ownerId, task.dueDate, t, t),
+        taskEvent(ctx, taskId, 'created', taskChanges(null, taskSnapshot(task)), t, origin));
+    }
   }
   writes.push(ctx.env.DB.prepare("INSERT OR IGNORE INTO work_project_links(workspace_id,project_id,kind,target_id,task_id,detail,created_by,created_at) VALUES(?,?,'ticket',?,NULL,'',?,?)")
     .bind(ws, plan.id, workId, ctx.principal.userId, t));
