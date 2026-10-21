@@ -159,6 +159,8 @@ export async function catalogAudienceChecks(api,db) {
   assert.equal((await api(`/catalog/${config.id}/audience`,{revision:1,audience})).status,409,'CATALOG-001 stale audience edits refuse');
   const item=await ok('/catalog',{name:'Audience monitor',kind:'device',target:'aud-monitor',ownerId:'owner',capacity:20,audience,
     form:{costCents:25000,deliveryHours:48,fields:[]}});
+  assert.deepEqual((await ok('/catalog')).items.find(c=>c.id===item.id).audience,audience,'CATALOG-001 owner reads the current audience for revisioned management');
+  assert.ok(!Object.hasOwn((await ok('/catalog',undefined,as('aud-sales'))).items.find(c=>c.id===item.id),'audience'),'CATALOG-001 employee projection does not expose audience configuration');
   const request=async(user,key='aud-'+crypto.randomUUID())=>ok('/work',{title:'Audience monitor request',body:'A replacement monitor',deduplicationKey:key},as(user));
   const submit=(work,user,patch={},headers=as(user))=>api(`/work/${work.id}/fulfilment`,{catalogId:item.id,catalogRevision:1,beneficiaryId:user,purpose:'Desk setup',...patch},headers);
   for(const user of ['aud-sales','aud-support'])assert.ok((await ok('/catalog',undefined,as(user))).items.some(i=>i.id===item.id),'CATALOG-001 OR within department admits each approved department');

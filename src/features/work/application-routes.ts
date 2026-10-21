@@ -26,7 +26,7 @@ export async function catalogItems(ctx: {env: AppEnv['Bindings'];principal: AppE
   }
   return Promise.all(visible.map(async item=>{
     const {application_id,entitlement_id,form_json,audience_json,...base}=item;
-    const publicItem={...base,form:JSON.parse(form_json)};
+    const publicItem={...base,form:JSON.parse(form_json),...(ctx.principal.roles.includes('owner')?{audience:JSON.parse(audience_json)}:{})};
     if(!application_id || !entitlement_id)return publicItem;
     try {return {...publicItem,application:applicationProjection(ctx,await resolveApplication(ctx,application_id,entitlement_id))};}
     catch(error) {if(!(error instanceof ApiError)||![404,409].includes(error.status))throw error;return {...publicItem,applicationUnavailable:true};}

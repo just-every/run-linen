@@ -2163,7 +2163,7 @@
       "executable": false
     },
     "src/features/work/application-routes.ts": {
-      "sha256": "5acc312f6359e8b3cd2c3496999f874e5a2116a783240eaa0d8ff6193e71a368",
+      "sha256": "87a470bdc67a6b79d81b3ad45233acd3e2f716fcdfe0c8be47eb125bea453f42",
       "executable": false
     },
     "src/features/work/application-schema.ts": {
@@ -5339,7 +5339,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "ee8f2c8fe8945d246351ebdedfd07efbbb6791fc93bf682e02047b81b1b74054",
+      "sha256": "83d56f01a82b691afa5f95bd8e9a1d052f79086422cae4ba715c711927a7e779",
       "executable": false
     },
     "tests/work/asset-contract-cases.mjs": {
