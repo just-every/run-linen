@@ -1,6 +1,6 @@
 import { resolveApplication } from './application-catalog';
 import { currentWorkPrincipal } from './identity';
-import { ApiError, id, requiredString } from '../../platform/http';
+import { ApiError, id, now, requiredString } from '../../platform/http';
 import { permit, type WorkContext } from './core';
 import { normalizeCatalogForm, validateCatalogAnswers } from './catalog-form-schema';
 
@@ -41,7 +41,7 @@ export async function createCatalogItem(
       "Name, target, owner, kind and nonnegative capacity required",
     );
   const itemId = id(), form = normalizeCatalogForm(input.form);
-  await ctx.env.DB.prepare("INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,requires_manager,capacity,revision,application_id,entitlement_id,form_json) VALUES(?,?,?,?,?,?,?,?,1,?,?,?)")
+  await ctx.env.DB.batch([ctx.env.DB.prepare("INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,requires_manager,capacity,revision,application_id,entitlement_id,form_json) VALUES(?,?,?,?,?,?,?,?,1,?,?,?)")
     .bind(
       itemId,
       ctx.principal.workspaceId,
@@ -54,8 +54,10 @@ export async function createCatalogItem(
       input.applicationId || null,
       input.entitlementId || null,
       JSON.stringify(form),
-    )
-    .run();
+    ),
+    ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)")
+      .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,'catalog.created',itemId,JSON.stringify({revision:1}),now()),
+  ]);
   return { id: itemId };
 }
 
@@ -64,9 +66,12 @@ export async function editCatalogForm(ctx: WorkContext, catalogId: string, input
   await currentWorkPrincipal(ctx); permit(ctx, ['owner']);
   if (!Number.isInteger(input.revision)) throw new ApiError(422,'catalog_revision','Current item revision required');
   const form = normalizeCatalogForm(input.form), name = requiredString(input.name,'name',200);
-  const result = await ctx.env.DB.prepare(`UPDATE work_catalog SET name=?,form_json=?,revision=revision+1
-    WHERE workspace_id=? AND id=? AND revision=?`).bind(name,JSON.stringify(form),ctx.principal.workspaceId,catalogId,input.revision).run();
-  if (!result.meta.changes) throw new ApiError(409,'catalog_changed','Catalog item changed; refresh before editing');
+  const results = await ctx.env.DB.batch([ctx.env.DB.prepare(`UPDATE work_catalog SET name=?,form_json=?,revision=revision+1
+    WHERE workspace_id=? AND id=? AND revision=?`).bind(name,JSON.stringify(form),ctx.principal.workspaceId,catalogId,input.revision),
+    ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'catalog.form_edited',?,?,? WHERE changes()=1")
+      .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,catalogId,JSON.stringify({fromRevision:input.revision,toRevision:Number(input.revision)+1}),now()),
+  ]);
+  if (!results[0].meta.changes) throw new ApiError(409,'catalog_changed','Catalog item changed; refresh before editing');
   return {id:catalogId,revision:Number(input.revision)+1};
 }
 export async function catalogRequestSnapshot(ctx: WorkContext, workId: string, catalog: any,

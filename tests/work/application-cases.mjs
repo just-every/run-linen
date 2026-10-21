@@ -95,6 +95,7 @@ export async function applicationChecks(api, db) {
   assert.deepEqual(requested.catalogSnapshot.answers,answers,'CATALOG-001 normalized answers are preserved');
   assert.equal((await api(`/catalog/${monitor.id}/form`,{name:'No authority',revision:1,form},formEmployee)).status,403,'CATALOG-001 employees cannot edit forms');
   const revised=await ok(`/catalog/${monitor.id}/form`,{name:'New display',revision:formItem.revision,form:{...form,costCents:30000,deliveryHours:72}},undefined,200);
+  assert.equal((await db.prepare("SELECT count(*) n FROM audit_events WHERE action='catalog.form_edited' AND target=?").bind(monitor.id).first()).n,1,'CATALOG-001 versioned configuration edits are audited');
   assert.equal((await api(`/catalog/${monitor.id}/form`,{name:'Stale overwrite',revision:formItem.revision,form})).status,409,'CATALOG-001 stale owner edits refuse');
   const persisted=(await ok(`/work/${monitorWork.id}/catalog-requests`,undefined,formEmployee)).items[0].catalogSnapshot;
   assert.deepEqual(persisted,requested.catalogSnapshot,'CATALOG-001 in-flight questions, cost, delivery and answers retain their submitted revision');
