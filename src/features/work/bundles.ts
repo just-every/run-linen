@@ -1,3 +1,4 @@
+import { normalizeCatalogForm, validateCatalogAnswers } from './catalog-form-schema';
 /**
  * CATALOG-004: a bundle names existing catalog items pinned at their revisions. Requesting it opens one
  * ticket with one child fulfilment per item; one manager decision records every manager-gated child's
@@ -45,16 +46,18 @@ export async function requestBundle(ctx: WorkContext, bundleId: string, input: R
   await currentWorkPrincipal(ctx);
   const bundle = project(await bundleRow(ctx, bundleId));
   if (Number(input.expectedRevision) !== bundle.revision) throw new ApiError(409, 'bundle_changed', 'This bundle changed; review it again before requesting');
-  const current = (await ctx.env.DB.prepare('SELECT id,revision FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))')
-    .bind(ctx.principal.workspaceId, JSON.stringify(bundle.items.map(i => i.catalogId))).all<{ id: string; revision: number }>()).results;
+  const current = (await ctx.env.DB.prepare('SELECT id,revision,form_json FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))')
+    .bind(ctx.principal.workspaceId, JSON.stringify(bundle.items.map(i => i.catalogId))).all<{ id: string; revision: number; form_json: string }>()).results;
   if (bundle.items.some(i => current.find(c => c.id === i.catalogId)?.revision !== i.revision))
     throw new ApiError(409, 'bundle_changed', 'A bundled item changed after the bundle was built; the owner must rebuild the bundle');
+  // Validate every child before opening any work. Bundle input has no form answers.
+  for(const row of current)validateCatalogAnswers(normalizeCatalogForm(JSON.parse(row.form_json)),{});
   const beneficiaryId = typeof input.beneficiaryId === 'string' ? input.beneficiaryId : ctx.principal.userId;
   if (beneficiaryId !== ctx.principal.userId) permit(ctx, ['owner', 'operator', 'hr']);
   const purpose = requiredString(input.purpose, 'purpose', 2000), expiresAt = typeof input.expiresAt === 'string' ? input.expiresAt : undefined;
   const work = await createWork(ctx, { title: `${bundle.name} bundle`, body: purpose, deduplicationKey: requiredString(input.deduplicationKey, 'deduplicationKey'), kind: 'request', beneficiaryId: beneficiaryId === ctx.principal.userId ? undefined : beneficiaryId }) as { id: string };
   await ctx.env.DB.prepare('INSERT OR IGNORE INTO work_bundle_requests VALUES(?,?,?,?,?,?)').bind(ctx.principal.workspaceId, work.id, bundle.id, bundle.revision, JSON.stringify(bundle.items), now()).run();
-  for (const item of bundle.items) await requestFulfilment(ctx, work.id, { catalogId: item.catalogId, beneficiaryId, purpose, expiresAt });
+  for (const item of bundle.items) await requestFulfilment(ctx, work.id, { catalogId: item.catalogId, catalogRevision:item.revision, beneficiaryId, purpose, expiresAt });
   return bundleStatus(ctx, work.id);
 }
 

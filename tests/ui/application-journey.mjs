@@ -64,3 +64,62 @@ export async function applicationJourney({page,api,base,out}) {
   await captureJourney(page,{path:out+'/ACCESS-008-retained-request.png',fullPage:true});
 
 }
+
+/** CATALOG-001: the owner edits a real form; a submitted request keeps that revision. */
+export async function catalogFormJourney({page,api,base,out}) {
+  const session=await api('/session');
+  const item=await api('/catalog',{name:'New monitor form',kind:'device',target:'monitor-form-'+crypto.randomUUID(),ownerId:session.user.id});
+  await page.goto(base+'/app#/connections');
+  const registry=page.getByRole('region',{name:'Application registry',exact:true});
+  await registry.getByText('Manage catalog forms',{exact:true}).click();
+  const card=registry.locator('details').filter({has:page.locator('summary').getByText('New monitor form',{exact:true})}).last();
+  await card.locator(':scope > summary').click();
+  const editor=card.locator('form');
+  await editor.getByLabel('Request cost in USD',{exact:true}).fill('250');
+  await editor.getByLabel('Expected delivery in elapsed hours',{exact:true}).fill('48');
+  await editor.getByRole('button',{name:'Add question',exact:true}).click();
+  await editor.getByLabel('Question label 1',{exact:true}).fill('Monitor mounting');
+  await editor.getByLabel('Answer type 1',{exact:true}).selectOption('select');
+  await editor.getByLabel('Choices 1',{exact:true}).fill('Desk\nWall');
+  await editor.getByLabel('Required question 1',{exact:true}).check();
+  await editor.getByRole('button',{name:'Add question',exact:true}).click();
+  await editor.getByLabel('Question label 2',{exact:true}).fill('Wall type');
+  await editor.getByLabel('Required question 2',{exact:true}).check();
+  const firstId=(await editor.getByLabel('Show question 2 when',{exact:true}).locator('option').all()).at(-1);
+  await editor.getByLabel('Show question 2 when',{exact:true}).selectOption(await firstId.getAttribute('value'));
+  await editor.getByLabel('Matching answer 2',{exact:true}).fill('Wall');
+  await captureJourney(page,{path:out+'/CATALOG-001-editor.png',fullPage:true});
+  const saving=page.waitForResponse(r=>r.url().endsWith(`/catalog/${item.id}/form`)&&r.request().method()==='POST');
+  await editor.getByRole('button',{name:'Save catalog form',exact:true}).click();
+  assert.equal((await saving).status(),200,'CATALOG-001 owner edits conditional form, cost and delivery estimate');
+  const current=(await api('/catalog')).items.find(c=>c.id===item.id);
+  assert.equal(current.form.costCents,25000);assert.equal(current.form.fields.length,2);
+  const work=await api('/work',{title:'Monitor for the training room',body:'Replace the old display for training',deduplicationKey:crypto.randomUUID()});
+  await page.goto(base+'/app#/work/'+work.id);
+  const chooser=page.locator('details[data-action-path$="/fulfilment"]');
+  await chooser.locator(':scope > summary').click();
+  await chooser.getByLabel('Service',{exact:true}).selectOption(item.id);
+  await chooser.getByLabel('Monitor mounting',{exact:false}).selectOption('Desk');
+  assert.equal(await chooser.getByLabel('Wall type',{exact:false}).count(),0,'CATALOG-001 hidden conditional question is absent');
+  await chooser.getByLabel('Monitor mounting',{exact:false}).selectOption('Wall');
+  await chooser.getByLabel('Wall type',{exact:false}).fill('Concrete');
+  await chooser.getByLabel('What do you need it for?',{exact:true}).fill('A shared display for training');
+  await captureJourney(page,{path:out+'/CATALOG-001-request-form.png',fullPage:true});
+  const sending=page.waitForResponse(r=>r.url().endsWith(`/work/${work.id}/fulfilment`)&&r.request().method()==='POST');
+  await chooser.getByRole('button',{name:'Save',exact:true}).click();assert.equal((await sending).status(),201,'CATALOG-001 native request submits validated form');
+  const submitted=page.getByRole('region',{name:'Submitted catalog forms',exact:true});
+  await submitted.getByText('$250.00',{exact:true}).waitFor();
+  await submitted.getByText('Concrete',{exact:true}).waitFor();
+  await captureJourney(page,{path:out+'/CATALOG-001-submitted.png',fullPage:true});
+  await page.goto(base+'/app#/connections');
+  await registry.getByText('Manage catalog forms',{exact:true}).click();await card.locator(':scope > summary').click();
+  await editor.getByLabel('Request cost in USD',{exact:true}).fill('300');
+  const updating=page.waitForResponse(r=>r.url().endsWith(`/catalog/${item.id}/form`)&&r.request().method()==='POST');
+  await editor.getByRole('button',{name:'Save catalog form',exact:true}).click();assert.equal((await updating).status(),200);
+  await page.goto(base+'/app#/work/'+work.id);
+  await submitted.getByText('$250.00',{exact:true}).waitFor();
+  await submitted.getByText('Concrete',{exact:true}).waitFor();
+  assert.equal((await api(`/work/${work.id}/catalog-requests`)).items[0].catalogSnapshot.revision,current.revision,'CATALOG-001 in-flight form retains original revision after owner edits');
+  await captureJourney(page,{path:out+'/CATALOG-001-retained.png',fullPage:true});
+  console.log('PASS CATALOG-001 native form editor, conditional request, cost/delivery and immutable submitted revision at 1440/390');
+}

@@ -2171,7 +2171,7 @@
       "executable": false
     },
     "src/features/work/bundles.ts": {
-      "sha256": "14b6e71c462943eb2406664c27d948944d04856914e6d8cad25fb558195548d3",
+      "sha256": "975aedbe4416c679eaf123c6d8ff5d143462d47000f2b38d71386dc756a37268",
       "executable": false
     },
     "src/features/work/calendar.ts": {
@@ -2187,7 +2187,7 @@
       "executable": false
     },
     "src/features/work/catalog-items.ts": {
-      "sha256": "c217ee02eb7cb0e41000561679552db6d625b5433d63da0bb843dbeed6e81634",
+      "sha256": "50e07516cca4d61a9e9688bd41998b75c04a17e439ecbc541f0b4d4313eea855",
       "executable": false
     },
     "src/features/work/classification-policy.ts": {
@@ -4351,7 +4351,7 @@
       "executable": false
     },
     "src/ui/catalog-form-editor.tsx": {
-      "sha256": "416d62e96620811fb7a0958c249d4622c17b12bc0f6e2342cc025ea601c23a4e",
+      "sha256": "d948504a69ef98d8df7d7f6af45e0f81d20f90f3c38b07c88f29ac58f60ad1fa",
       "executable": false
     },
     "src/ui/catalog-request-form.tsx": {
@@ -5043,7 +5043,7 @@
       "executable": false
     },
     "tests/ui/application-journey.mjs": {
-      "sha256": "89d8bdb485622a1e1e1ea4eec8791408093d39540e8c6e35d14805bf146b3c0a",
+      "sha256": "cad4e6f667be89fd3b4e115170fc788729acb53cb0172a06694711ad49f01764",
       "executable": false
     },
     "tests/ui/asset-audit-browser.mjs": {
@@ -5067,7 +5067,7 @@
       "executable": false
     },
     "tests/ui/browser.mjs": {
-      "sha256": "e19d66936c93acad65fc0e1357e7703e52e476c1af2ad56ffeff2720df0302a1",
+      "sha256": "90d516ad0b1c74dd0977e0e1f5a828a45bddec6fe6ea2121263ac1ede2bc4b65",
       "executable": false
     },
     "tests/ui/calendar-browser.mjs": {

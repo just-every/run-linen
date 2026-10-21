@@ -1,6 +1,6 @@
 import { resolveApplication } from './application-catalog';
 import { currentWorkPrincipal } from './identity';
-import { ApiError, id, now, requiredString } from '../../platform/http';
+import { ApiError, id, requiredString } from '../../platform/http';
 import { permit, type WorkContext } from './core';
 import { normalizeCatalogForm, validateCatalogAnswers } from './catalog-form-schema';
 

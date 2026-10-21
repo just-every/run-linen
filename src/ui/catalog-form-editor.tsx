@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { request, type RecordValue } from './api';
+import { request } from './api';
 import { useSession } from './state';
 import { ErrorNotice, Notice } from './primitives';
 import type { CatalogField, CatalogForm } from '../features/work/catalog-form-schema';
