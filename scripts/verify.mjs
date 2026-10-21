@@ -49,7 +49,6 @@ const checks = [
   ['Freshservice native migration', process.execPath, ['tests/adoption/freshservice-import.mjs']],
   ['adoption and recovery', process.execPath, ['tests/adoption/runtime.mjs']],
   ['coexistence and imported erasure', process.execPath, ['tests/adoption/runtime.mjs'], { LINEN_ADOPTION_HISTORIC: '1' }],
-  ['MCP native conversation', process.execPath, ['tests/ui/run.mjs', 'tests/ui/mcp-journey.mjs']],
   ['browser journeys', process.execPath, ['tests/ui/run.mjs']],
   ['pending person browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/pending-person-browser.mjs']],
   ['desk groups and views browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/desk-group-browser.mjs']],
@@ -58,6 +57,7 @@ const checks = [
   ['connection and authority setup', process.execPath, ['tests/ui/setup-run.mjs']],
   ['service notice browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/service-notice-journey.mjs']],
   ['operations KPI browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/kpi-journey.mjs']],
+  ['MCP native conversation', process.execPath, ['tests/ui/run.mjs', 'tests/ui/mcp-journey.mjs']],
 ]
 const shardValue = process.env.LINEN_VERIFY_SHARD
 let shard
