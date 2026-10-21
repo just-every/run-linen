@@ -78,8 +78,13 @@ try {
   const workId=await requestWork(page,base,'Track the MFA rollout for my pilot team');
   await page.getByText('Related tickets and records',{exact:true}).click();
   await action(page,'Link a record',{kind:'release',targetId:release.id},'/links','Link',200);
+  // Linking refreshes the parent ticket and remounts its disclosures. Read the
+  // committed relationship after a reload before opening it, rather than racing
+  // that refresh with a summary click.
+  await page.reload();
   const related=page.locator('details').filter({has:page.locator('summary').getByText('Related tickets and records',{exact:true})});
-  if(!await related.evaluate(e=>e.open))await related.locator(':scope > summary').click();
+  await related.getByRole('link',{name:'Okta MFA rollout',exact:true,includeHidden:true}).waitFor({state:'attached'});
+  await related.locator(':scope > summary').click();
   await related.getByRole('link',{name:'Okta MFA rollout',exact:true}).waitFor();
   await captureRelease(page,{path:out+'/CHANGE-007-ticket-link.png',fullPage:true});
   await page.goto(base+'/app#/releases/'+release.id);

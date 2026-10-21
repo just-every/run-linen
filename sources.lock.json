@@ -5283,7 +5283,7 @@
       "executable": false
     },
     "tests/ui/release-journey.mjs": {
-      "sha256": "f392b1582dacf2df4a954b3e8b4f9519acf26dcb9fb8ac64cabfe5f50242c1ee",
+      "sha256": "401990b359b983e8545d4d5b02e569b7a1451812fb35e770512f924cd706423c",
       "executable": false
     },
     "tests/ui/remote-response-runtime.mjs": {
