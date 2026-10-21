@@ -1,5 +1,6 @@
 import {mailEdge} from './mail-edge.mjs'
 import assert from 'node:assert/strict'
+import {createHash} from 'node:crypto'
 import {spawn,spawnSync} from 'node:child_process'
 import {mkdtemp,writeFile,readFile,readdir,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
@@ -8,9 +9,9 @@ import {createServer} from 'node:net'
 const dir=await mkdtemp(join(tmpdir(),'linen-base-auth-'))
 const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r))
 const origin=`http://127.0.0.1:${port}`,config=join(dir,'wrangler.json'),entry=join(dir,'worker.ts')
-const key='test-only-dev-key-000000000000000000000000000000000000',secret='test-only-session-secret-0000000000000000000000000000'
+const key='synthetic-dev-key-000000000000000000000000000000000000',secret='synthetic-session-secret-0000000000000000000000000000'
 await writeFile(entry,`${mailEdge}import {baseAuthResponse} from ${JSON.stringify(resolve('src/platform/base-auth/http.ts'))};import {createApplication} from ${JSON.stringify(resolve('src/application.ts'))};import {originBindings} from ${JSON.stringify(resolve('src/platform/base-auth/service.ts'))};import {withNativeDevIdentity} from ${JSON.stringify(resolve('src/platform/base-auth/dev.ts'))};const app=createApplication();const production={async fetch(r,e,c){const fixture=mailFixture(r);if(fixture)return fixture;e=originBindings(e);return await baseAuthResponse(r,e)??app.fetch(r,e,c)}};const development=withNativeDevIdentity(production);export default {fetch(r,e,c){return r.headers.get('x-test-production')==='yes'?production.fetch(r,{...e,AUTH_LOCAL:'false'},c):development.fetch(r,e,c)}}`)
-await writeFile(config,JSON.stringify({name:'linen-base-auth-test',main:entry,compatibility_date:'2026-09-08',compatibility_flags:['nodejs_compat'],d1_databases:[{binding:'DB',database_name:'linen',database_id:'local-linen'}],r2_buckets:[{binding:'ATTACHMENTS',bucket_name:'linen-base-auth-fixture'}],vars:{SESSION_SECRET:secret,SETUP_TOKEN:secret,ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64'),OWNER_EMAIL:'owner@example.test',AUTH_ORIGIN:origin,APP_ORIGIN:'http://localhost:1',AUTH_LOCAL:'true',MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-provider-key',MAIL_FROM:'auth@localhost.test',RER_DEV_KEY:key}}))
+await writeFile(config,JSON.stringify({name:'linen-base-auth-test',main:entry,compatibility_date:'2026-09-08',compatibility_flags:['nodejs_compat'],d1_databases:[{binding:'DB',database_name:'linen',database_id:'local-linen'}],r2_buckets:[{binding:'ATTACHMENTS',bucket_name:'linen-base-auth-fixture'}],vars:{SESSION_SECRET:secret,SETUP_TOKEN:secret,ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64'),OWNER_EMAIL:'owner@example.test',AUTH_ORIGIN:origin,APP_ORIGIN:'http://localhost:1',AUTH_LOCAL:'true',MAIL_PROVIDER:'resend',MAIL_API_KEY:'synthetic-provider-key',MAIL_FROM:'auth@localhost.test',RER_DEV_KEY:key}}))
 const file=join(dir,'schema.sql');await writeFile(file,(await Promise.all((await readdir('migrations')).filter(f=>f.endsWith('.sql')).sort().map(f=>readFile('migrations/'+f,'utf8')))).join('\n'))
 const migrate=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--config',config,'--local','--persist-to',dir,'--file',file],{encoding:'utf8'});assert.equal(migrate.status,0,migrate.stdout+migrate.stderr)
 let worker,output=''
@@ -22,7 +23,7 @@ try{
  let ready=false;for(let i=0;i<240;i++){try{if((await request('/health')).ok){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,250))}assert.ok(ready,'Worker became ready')
  assert.deepEqual(await read(await request('/setup/state')),{state:'unclaimed'})
  assert.equal((await read(await request('/api/v1/setup'))).bootstrapTokenRequired,true)
- assert.equal((await request('/api/v1/setup',{method:'POST',body:{email:'intruder@example.test',name:'Intruder',workspaceName:'Bypass',password:'test-only-native-password'}})).status,403,'Legacy setup cannot bypass the configured Base claim token')
+ assert.equal((await request('/api/v1/setup',{method:'POST',body:{email:'intruder@example.test',name:'Intruder',workspaceName:'Bypass',password:'synthetic-native-password'}})).status,403,'Legacy setup cannot bypass the configured Base claim token')
  assert.match(await(await request('/')).text(),/Finish setup/)
  assert.equal((await request('/auth/bootstrap',{method:'POST',body:{token:secret,displayName:'Owner'},headers:{Origin:'https://foreign.invalid'}})).status,403)
  const claims=await Promise.all([1,2].map(()=>request('/auth/bootstrap',{method:'POST',body:{token:secret,displayName:'Owner',returnTo:'/setup'}})))
@@ -71,6 +72,113 @@ try{
  assert.equal((await request('/auth/confirm',{method:'POST',cookie:ownerCookie,body:{token:decodeURIComponent(stepProof)}})).status,400,'Step-up binds the asking session')
  const step=await request('/auth/confirm',{method:'POST',cookie:nativeCookie,body:{token:decodeURIComponent(stepProof)}});assert.equal(step.status,303);assert.equal(step.headers.get('set-cookie'),null,'Step-up upgrades existing session without new authority')
  assert.equal((await request('/auth/confirm',{method:'POST',cookie:nativeCookie,body:{token:decodeURIComponent(stepProof)}})).status,400)
+ // API-003 credential/protocol slice through real native session and MCP doors.
+ const ownerApi=async(path,body,method=body===undefined?'GET':'POST',cookie=ownerCookie)=>{
+  const response=await request('/api/v1'+path,{method,body,cookie,headers:{'X-Linen-CSRF':session.csrfToken}});
+  return {status:response.status,value:await response.json()};
+ };
+ const rpc=async(bearer,method='tools/list',params={},extra={})=>{
+  const response=await request('/api/mcp',{method:'POST',body:{jsonrpc:'2.0',id:1,method,params},headers:{...(bearer?{Authorization:'Bearer '+bearer}:{}),...extra}});
+  return {status:response.status,value:await response.json()};
+ };
+ for(const bearer of [undefined,'linen_rest_synthetic-other-audience','linen_mcp_wrong']) {
+  const denied=await rpc(bearer);
+  assert.equal(denied.status,401,'API-003 unauthenticated discovery is refused');
+  assert.deepEqual(denied.value,{jsonrpc:'2.0',id:null,error:{code:-32001,message:'Authentication required'}},'API-003 auth error discloses no resource or tool names');
+ }
+ assert.equal((await request('/api/mcp',{cookie:ownerCookie})).status,401,'API-003 an owner session is not an MCP grant');
+ const bot=(await ownerApi('/automation-principals',{name:'Desk bot',idempotencyKey:'synthetic-API-003-desk-bot'})).value;
+ assert.ok(bot.id,'API-003 use an existing automation principal');
+ const grant={principalId:bot.id,name:'Desk bot',scopes:['work.read','work.comment'],tools:['work.list','work.get','work.comment'],expiresAt:new Date(Date.now()+30*86400000).toISOString()};
+ for(const patch of [{principalId:member.id},{principalId:session.principal.userId},{principalId:'absent'},{tools:['approve']},{scopes:['owner']},{scopes:['work.read']},{tools:['work.get','work.get']},{expiresAt:'invalid'},{expiresAt:new Date(Date.now()-1000).toISOString()},{expiresAt:new Date(Date.now()+366*86400000).toISOString()}])
+  assert.ok((await ownerApi('/mcp-credentials',{...grant,...patch})).status>=400,'API-003 closed selections, expiry and automation-only minting');
+ const noCsrf=await request('/api/v1/mcp-credentials',{method:'POST',cookie:ownerCookie,body:grant});
+ assert.equal(noCsrf.status,403,'API-003 native CSRF protects mint');
+ const created=await ownerApi('/mcp-credentials',grant);
+ assert.equal(created.status,201,'API-003 owner mints for an integration-only principal');
+ const credential=created.value;assert.match(credential.secret,/^linen_mcp_/);assert.equal(credential.toolsAvailable,false,'API-003 no unbuilt tool authority is claimed');
+ const listed=(await ownerApi('/mcp-credentials')).value.items;
+ const first=listed.find(row=>row.id===credential.id);
+ assert.equal(first.last_used_at,null);assert.deepEqual(JSON.parse(first.tools_json),grant.tools);assert.equal(first.expires_at,grant.expiresAt);
+ assert.ok(!JSON.stringify(listed).includes(credential.secret) && !JSON.stringify(listed).includes('secret_hash'),'API-003 secret shown once, hash not in management projection');
+ assert.equal((await rpc(credential.secret,'initialize')).value.result.serverInfo.name,'Linen','API-003 authenticated MCP initialize');
+ assert.deepEqual((await rpc(credential.secret)).value.result,{tools:[]},'API-003 no tools are currently usable');
+ assert.deepEqual((await rpc(credential.secret,'resources/list')).value.result,{resources:[]});
+ assert.deepEqual((await rpc(credential.secret,'resources/templates/list')).value.result,{resourceTemplates:[]});
+ assert.ok((await ownerApi('/mcp-credentials')).value.items.find(row=>row.id===credential.id).last_used_at,'API-003 last use is visible');
+ for(const method of ['work.create','approve','credentials.mint','grants.create','export','restore','erase','connector.dispatch','task.plan','bulk','tools/call']) {
+  const refusal=await rpc(credential.secret,method,{name:'approve-PRIVATE-ARGUMENT',arguments:{text:'PRIVATE-ARGUMENT',secret:credential.secret}});
+  assert.equal(refusal.value.error.code,-32601,'API-003 no tool, approval, configuration, archive or external effects are available');
+ }
+ for(const path of ['/session','/work','/mcp-credentials'])
+  assert.equal((await request('/api/v1'+path,{cookie:ownerCookie,headers:{Authorization:'Bearer '+credential.secret}})).status,401,'API-003 MCP audience is refused at REST even with a session cookie');
+ const sql=command=>{
+  const result=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--config',config,'--local','--persist-to',dir,'--json','--command',command],{encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr);return JSON.parse(result.stdout).flatMap(x=>x.results);
+ };
+ // A second authenticated owner cannot see, mint for, or revoke another workspace's grant.
+ sql("INSERT INTO workspaces VALUES('mcp-other-workspace','Other','2026-01-01')");
+ const second=(await ownerApi('/members',{email:'mcp-other@example.test',name:'Other owner',password:'API-003-other-owner-password',roles:['owner']})).value;
+ sql("UPDATE memberships SET workspace_id='mcp-other-workspace' WHERE user_id='"+second.id+"'");
+ const secondLogin=await request('/api/v1/login',{method:'POST',body:{email:'mcp-other@example.test',password:'API-003-other-owner-password'}});
+ const secondCookie=cookieOf(secondLogin),secondSession=await read(await request('/api/v1/session',{cookie:secondCookie}));
+ const foreign=async(path,body)=>request('/api/v1'+path,{method:body===undefined?'GET':'POST',body,cookie:secondCookie,headers:{'X-Linen-CSRF':secondSession.csrfToken}});
+ assert.deepEqual(await read(await foreign('/mcp-credentials')),{items:[]},'API-003 workspace isolation');
+ assert.equal((await foreign('/mcp-credentials/'+credential.id+'/revoke',{})).status,404);
+ assert.equal((await foreign('/mcp-credentials',grant)).status,403);
+ // Commit-time owner guard and audit-failure rollback exercise the real mint route.
+ const beforeFailure=(await ownerApi('/mcp-credentials')).value.items.length;
+ sql("CREATE TRIGGER test_mcp_owner_race BEFORE INSERT ON mcp_credentials BEGIN UPDATE memberships SET active=0 WHERE user_id=NEW.created_by; END");
+ assert.equal((await ownerApi('/mcp-credentials',grant)).status,403,'API-003 owner withdrawn at mint commit is refused');
+ sql('DROP TRIGGER test_mcp_owner_race');
+ sql("CREATE TRIGGER test_mcp_audit_failure BEFORE INSERT ON audit_events WHEN NEW.action='mcp.credential_minted' BEGIN SELECT RAISE(ABORT,'test_audit_unavailable'); END");
+ assert.equal((await ownerApi('/mcp-credentials',grant)).status,500,'API-003 failed mint audit rolls back credential');
+ sql('DROP TRIGGER test_mcp_audit_failure');
+ assert.equal((await ownerApi('/mcp-credentials')).value.items.length,beforeFailure,'API-003 neither failed mint persists a credential');
+ const stored=sql("SELECT secret_hash FROM mcp_credentials WHERE id='"+credential.id+"'")[0];
+ assert.equal(stored.secret_hash,createHash('sha256').update(credential.secret).digest('hex'),'API-003 stores only SHA-256');
+ const audits=sql("SELECT * FROM audit_events WHERE action LIKE 'mcp.%'");
+ assert.ok(audits.some(row=>row.action==='mcp.credential_minted'),'API-003 mint audited atomically');
+ const calls=audits.filter(row=>row.action==='mcp.call');assert.ok(calls.length>=15);
+ for(const row of calls){const detail=JSON.parse(row.detail_json);assert.equal(row.actor_id,bot.id);assert.equal(detail.credentialId,credential.id);assert.equal(detail.principalId,bot.id);assert.deepEqual(detail.targetIds,[]);assert.ok(row.created_at);}
+ assert.ok(!JSON.stringify(audits).includes(credential.secret)&&!JSON.stringify(audits).includes('PRIVATE-ARGUMENT'),'API-003 audits have no secret, body or untrusted tool name');
+ for(const roles of [['owner'],['integration','owner'],['integration','operator'],['integration','approver'],['integration','hr'],['integration','auditor']]) {
+  assert.equal((await ownerApi('/members/'+bot.id,{roles,active:true},'PATCH')).status,200);
+  assert.equal((await ownerApi('/mcp-credentials',grant)).status,403,'API-003 mixed or privileged roles refuse mint');
+  assert.equal((await rpc(credential.secret)).status,401,'API-003 every call checks current roles');
+ }
+ assert.equal((await ownerApi('/members/'+bot.id,{roles:['integration'],active:false},'PATCH')).status,200);
+ assert.equal((await rpc(credential.secret)).status,401,'API-003 inactive membership refuses next call');
+ assert.equal((await ownerApi('/mcp-credentials',grant)).status,403);
+ assert.equal((await ownerApi('/members/'+bot.id,{roles:['integration'],active:true},'PATCH')).status,200);
+ assert.equal((await rpc(credential.secret,'ping')).status,200);
+ assert.equal((await ownerApi('/mcp-credentials/'+credential.id+'/revoke',{})).status,200);
+ assert.equal((await rpc(credential.secret)).status,401,'API-003 owner revocation immediately refuses calls');
+ const revoked=sql("SELECT state,secret_hash FROM mcp_credentials WHERE id='"+credential.id+"'")[0];assert.deepEqual(revoked,{state:'revoked',secret_hash:null});
+ assert.equal(sql("SELECT count(*) n FROM audit_events WHERE action='mcp.credential_revoked' AND target='"+credential.id+"'")[0].n,1);
+ await ownerApi('/mcp-credentials/'+credential.id+'/revoke',{});
+ assert.equal(sql("SELECT count(*) n FROM audit_events WHERE action='mcp.credential_revoked' AND target='"+credential.id+"'")[0].n,1,'API-003 repeat revocation is inert');
+ const short=(await ownerApi('/mcp-credentials',{...grant,expiresAt:new Date(Date.now()+5000).toISOString()})).value;
+ assert.ok(short.secret);await new Promise(resolve=>setTimeout(resolve,5100));
+ assert.equal((await rpc(short.secret)).status,401,'API-003 expiry refuses next call');
+ assert.equal(sql("SELECT count(*) n FROM audit_events WHERE action='mcp.credential_expired' AND target='"+short.id+"'")[0].n,1,'API-003 expiry audited once');
+ await rpc(short.secret);assert.equal(sql("SELECT count(*) n FROM audit_events WHERE action='mcp.credential_expired' AND target='"+short.id+"'")[0].n,1);
+ const retiredBot=(await ownerApi('/automation-principals',{name:'Retired bot',idempotencyKey:'synthetic-API-003-retired-bot'})).value;
+ const retiredGrant={...grant,principalId:retiredBot.id};const retiredCredential=(await ownerApi('/mcp-credentials',retiredGrant)).value;
+ assert.ok(retiredCredential.secret);assert.equal((await ownerApi('/automation-principals/'+retiredBot.id+'/revoke',{})).status,200);
+ assert.equal((await rpc(retiredCredential.secret)).status,401,'API-003 automation-principal revocation refuses next call');
+ const platformBot=(await ownerApi('/automation-principals',{name:'Platform erased bot',idempotencyKey:'synthetic-API-003-platform-erased-bot'})).value;
+ const platformCredential=(await ownerApi('/mcp-credentials',{...grant,principalId:platformBot.id})).value;assert.ok(platformCredential.secret);
+ const platformErasure=await ownerApi('/adoption/erase',{identity:platformBot.id});assert.equal(platformErasure.status,200);
+ assert.equal(platformErasure.value.state,'completed','API-003 full adoption/platform erasure completes');
+ assert.equal((await rpc(platformCredential.secret)).status,401,'API-003 platform erasure refuses next call');
+ assert.deepEqual(sql("SELECT state,secret_hash FROM mcp_credentials WHERE id='"+platformCredential.id+"'")[0],{state:'revoked',secret_hash:null},'API-003 platform erasure atomically revokes and clears hash');
+ const erasing=(await ownerApi('/mcp-credentials',grant)).value;assert.ok(erasing.secret);
+ assert.equal((await ownerApi('/people/'+bot.id+'/erase',{revision:0,reason:'API-003 authorized automation erasure'})).status,200);
+ assert.equal((await rpc(erasing.secret)).status,401,'API-003 erasure invalidates next call');
+ assert.equal((await ownerApi('/mcp-credentials',grant)).status,403,'API-003 erased principal cannot mint another grant');
+ assert.ok(sql("SELECT state,secret_hash FROM mcp_credentials WHERE principal_id='"+bot.id+"'").every(row=>row.state==='revoked'&&row.secret_hash===null),'API-003 erasure clears all principal credential hashes');
+ console.log('PASS API-003 native owner mint/list/revoke; SHA-256 one-time secret; closed scopes/tools and expiry; separate audiences; authenticated empty discovery and fail-closed tool calls; live roles/membership; audit without bodies or secret; principal erasure/hash removal');
  console.log('PASS Base native claim race, Lobby/setup, ordinary provider email-link replay, native membership/password/session retention and revocation, bound step-up proof, CSRF/origin, dev gate and production denial')
 }finally{
  if(worker){worker.kill('SIGTERM');await Promise.race([new Promise(r=>worker.once('exit',r)),new Promise(r=>setTimeout(r,5000))]);if(worker.exitCode===null)worker.kill('SIGKILL')}

@@ -4,8 +4,8 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 139 clauses (132 in the contract plus F1–F7), 46 done, 66
-partial and 27 missing.
+Current count: 139 clauses (132 in the contract plus F1–F7), 46 done, 67
+partial and 26 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
 checks, connected journeys, setup checks, emitted HTTP checks and intelligence
@@ -242,7 +242,7 @@ are unchanged by this rule. A display-name exception requires a further ct rulin
 | **AUDIT-001 Audit log** | Change a grant and export data; the auditor reads both entries; erase the actor's personal data and the entries remain anonymized. Inherit DESK-017’s approved history-value checks below: every surface uses redaction and earlier cleared values are never rebuilt. | `src/platform/privacy.ts`; `tests/platform/privacy-runtime.mjs`; `tests/platform/config-runtime.mjs`. | done |
 | **API-001 REST API and webhooks** | Create a ticket through the API with a scoped token; refuse REST tokens at MCP and MCP credentials on `/api/v1/*`; a subscribed webhook receives the signed event; a failing endpoint is retried and logged. | `src/features/work/index.ts`; `src/features/execution/index.ts`; `tests/work/runtime.mjs`. Scoped automation REST tokens and outbound signed event webhooks are unbuilt; session-authenticated routes do not prove token authentication. | partial |
 | **API-002 No-code workflow automator** | Build "if category is Hardware and VIP, assign to Exec Support and notify in Slack", test it on a sample, publish version 2 and see version 1 tickets unaffected. | `src/features/execution/automation.ts`; `src/features/execution/plans.ts`; `tests/ui/connected-request.mjs`. No no-code builder. | partial |
-| **API-003 Agent access by MCP** | Connect an MCP client as an automation principal; it lists its permitted queue and is refused an out-of-grant action. | No MCP server. | missing |
+| **API-003 Agent access by MCP** | Connect an MCP client as an automation principal; it lists its permitted queue and is refused an out-of-grant action. | `tests/platform/base-auth-runtime.mjs` asserts native owner-only mint/list/revoke, integration-only roles, closed scopes/tools, expiry bounds, separate audiences, SHA-256 and one-time secret, commit-time authority/audit rollback, workspace isolation, live membership, empty discovery, tool refusals, last use, expiry audit and erasure/hash clearing. `tests/platform/base-auth-transfer.mjs` asserts hash-free exported metadata, revoked restore and credential refusal after real `rer export/reset/import`, including import of a pre-MCP archive after the additive migration. Gap: ticket tools with current A1/grant/revision checks, filtered discovery and the full Desk bot journey below. No ticket tool authority is exposed. | partial |
 | **PORT-001 Portable native archive** | Export, restore into a fresh workspace, compare counts and hashes, and see the execution hold and inert grants. | `src/features/adoption/export.ts`; `src/features/adoption/import.ts`; `tests/adoption/runtime.mjs`. | done |
 | **ERASURE-001 Authorized erasure** | Erase a person, restore an older archive, and see the content still absent. Inherit DESK-017’s approved history-value checks below: every surface uses redaction and earlier cleared values are never rebuilt. | `src/features/adoption/core.ts`; `src/features/work/privacy.ts`; `tests/adoption/runtime.mjs`; `tests/work/person-binding-runtime.mjs`; `tests/platform/privacy-runtime.mjs`. | done |
 | **RETENTION-001 Retention policies** | Set ticket retention to 365 days; a ticket closed 400 days ago and its attachment are deleted with a receipt. | `src/features/work/retention.ts`; `tests/adoption/retention-cases.mjs` (previewed + confirmed 365-day policy, ticket closed 400 days ago and its attachment bytes deleted, receipt read by owner and auditor, 300-day and open tickets kept); `tests/ui/connected-setup.mjs` (owner preview and confirm). Archive retention: `src/features/adoption/retention.ts`. | done |
@@ -297,9 +297,10 @@ success only from A4 evidence.
 
 ## Approved history and MCP journeys still to build
 
-The following ct journeys (20 October) remain requirements, not passing evidence.
-DESK-017 stays partial, API-001 partial and API-003 missing. Existing blanket
-clearing and absence of MCP authority remain the default until the approved rules
+The following full ct journeys (20 October) remain unfinished; the credential
+foundation assertions cited above do not prove the complete MCP journey.
+DESK-017 stays partial, API-001 partial and API-003 partial. Existing blanket
+clearing and absence of MCP ticket tool authority remain the default until the approved rules
 in CONTRACT.md are implemented and every point below is asserted.
 
 - **DESK-017:** Alice works Bob's ticket, changes priority P3 to P2, category
