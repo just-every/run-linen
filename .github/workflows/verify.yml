@@ -15,9 +15,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5]
     env:
-      LINEN_VERIFY_SHARD: '${{ matrix.shard }}/4'
+      LINEN_VERIFY_SHARD: '${{ matrix.shard }}/5'
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
