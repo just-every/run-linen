@@ -2623,7 +2623,7 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 
 Judged from the code and tests at commit `01c9b205f71aff2104fa45cde5eef08c43c650c5` (21 October 2026).
 
-The commit is the code this branch carries unchanged; the code audit at `7ce9dae` was the starting point. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
+The commit is the landing-main baseline for this judgement; this candidate also carries the code and public-door checks cited below. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
