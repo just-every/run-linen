@@ -240,5 +240,11 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  for(const excluded of [credential.secret,full.secret,readonly.secret,issued.secret,hidden,ownBody,'MCP-ROLLBACK-COMMENT','MCP-STALE-COMMENT','MCP-REFUSED-DANGEROUS-BODY','mcp-private-contact@example.test'])
   check(!auditText.includes(excluded),'MCP audit excludes secrets, free text and personal values')
  check(sql(`SELECT secret_hash FROM mcp_credentials WHERE id=${quoted(issued.id)}`)[0].secret_hash===null,'issuer revocation clears stored hash')
+
+ await value(ownerApi('/people/'+employee.id+'/erase',{revision:0,reason:'API-003 authorized subject erasure'}))
+ await refused(credential.secret,'work.get',{workId:normal.id},'not_found')
+ await refused(full.secret,'work.history',{workId:normal.id},'not_found')
+ check(!(await tool(credential.secret,'work.list')).items.some(w=>w.id===normal.id),'subject erasure removes the ticket from queue reads')
+ equal((await tool(full.secret,'work.search',{query:'Monitor flickers'})).items,[],'subject erasure removes content from MCP search')
  return {normalId:normal.id,employeeId:employee.id,ownId:own.id,hardwareId:hardware,networkId:network.id}
 }
