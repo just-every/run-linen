@@ -206,6 +206,10 @@ that product and marks how close the current code is (see [Status](#status)).
   LIFE-002, KB-003, KB-005, API-002 and L10N-001. A display name in a Slack reply
   needs a further ct ruling; it is not an exception to the notice-only rule.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 - **CHANNEL-002 — Microsoft Teams as a primary employee channel.** A Linen Teams
   app (Teams Store and admin-deployable package, with Entra identity mapping and
   tenant admin consent) gives employees personal chat with the app; monitored team
@@ -229,6 +233,10 @@ that product and marks how close the current code is (see [Status](#status)).
   shows the employee's open requests; (6) an operator's public reply arrives in
   the reply chain and a private note does not; (7) a guest user's message is
   quarantined.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **CHANNEL-003 — Email mailboxes.** Support addresses on Google Workspace (Gmail)
   and Microsoft 365 (Exchange Online) are connected by OAuth or forwarding.
@@ -282,6 +290,10 @@ that product and marks how close the current code is (see [Status](#status)).
   11 am, ask for a person: an available agent accepts and replies in the same
   chat with the transcript in view; at 9 pm the same request files a ticket with
   the transcript and states the expected response time.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **CHANNEL-007 — Phone and walk-up intake.** Calls to the IT line on the buyer's
   phone system (RingCentral, Dialpad, Zoom Phone, Aircall) create or update
@@ -382,6 +394,48 @@ that product and marks how close the current code is (see [Status](#status)).
   Department/location/employment audiences, required quote files and the
   remaining item types are still unbuilt; CATALOG-001 stays partial.
 
+  *Approved audience and quote semantic (ct, 21 October; unbuilt):* only the
+  owner configures versioned catalog audience and quote requirements. Reviewed
+  people have department, location and employment-type stable IDs from
+  owner-maintained lists; referenced values may be retired, not deleted.
+  Owner or HR reviews these attributes through the existing source-attributed,
+  effective-dated people API; no inference or integration-principal writes.
+  LIFE-001 later uses an owner-reviewed source mapping. Unbound, inactive,
+  merged, erased, absent or unmapped facts are unknown, without age expiry.
+  Matching is OR within each dimension, AND across dimensions, empty means
+  unrestricted and unknown fails a restricted dimension. Every filer, including
+  the owner, must satisfy the beneficiary audience. Employee-capacity filing
+  also checks the requester; staff on behalf do not apply requester audience.
+  Employees and assistant context see eligible items only.
+  Submission atomically rechecks current filer membership/role, evaluated person
+  revision, item revision, audience, conditional required answers and a quote
+  revision/hash. Audience gates submission, not later approval or fulfillment;
+  an amendment is a fresh submission and invalidates prior approvals. Freeze
+  item/form/answers, cost/delivery, audience/person revisions and quote id/hash.
+  Quote attachments are a separate `catalog_quote` kind, PDF up to 20 MiB,
+  immutable after submission; replacement is an amendment. Readers are the
+  requester, beneficiary, owner, current approver for the current revision,
+  an approver who recorded a decision on that quote revision, and the current
+  item fulfillment owner. A replaced undecided approver loses access. All other
+  operators, shares, team managers, auditors, integrations and MCP get 404.
+  Non-readers see only that a quote is attached, never name/content; serve it
+  as a download, not inline. Exclude quote contents from search, history,
+  notifications and AI context; include them in owner export, erasure and
+  retention. Audit privileged reads except requester/beneficiary, uploads and
+  replacement, item/value-list edits, dimension-only attribute reviews and
+  audience refusals, with no attribute values. No PDF amount extraction: the
+  requester enters a separate USD field when price-based routing needs it.
+  Bundles refuse atomically with every failing child named. Pending people
+  use their reviewed attributes at hold and release; failed services remain
+  held with a visible reason. Assistant choices recheck eligibility and refuse
+  missing required fields/quotes. Credentials, quotes and forms grant no
+  provider or approval authority. API-003 remains credential-only.
+  Refusals use `catalog_audience` (403, staff see failed dimensions but no
+  values), `catalog_changed` (409), `catalog_quote_required` and
+  `catalog_quote_type` (422), `catalog_field_required` (422, named question),
+  and `bundle_child_refused` (one line per failed child). This complete rule
+  remains a requirement, not passing evidence for the form slice above.
+
 - **CATALOG-002 — Approval chains.** Per item: manager, application owner, cost
   center or finance above a USD threshold, and named groups, in serial or
   parallel, any-of or all-of, with delegation, out-of-office substitution,
@@ -398,6 +452,10 @@ that product and marks how close the current code is (see [Status](#status)).
   forwarded and sent from another address, or a reply to an earlier revision, is
   refused; an edited request invalidates the earlier approval.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 - **CATALOG-003 — Fulfillment task plans.** Each item expands into ordered and
   parallel tasks for teams, automated steps through connectors, and child tasks
   with dependencies and due dates; the request completes only when every
@@ -406,6 +464,10 @@ that product and marks how close the current code is (see [Status](#status)).
   **Acceptance evidence:** a software request creates an approval, an automated
   license assignment and a manual configuration task; the automated step fails
   and the request stays open with the failure owned.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **CATALOG-004 — Bundles and kits.** A bundle such as "New engineer" combines
   hardware, software and access items with shared approval and individual
@@ -424,6 +486,10 @@ that product and marks how close the current code is (see [Status](#status)).
   reads complete only when every child's delivery obligation (device delivery
   or access grant) is verified; pending, held, failed or unknown children keep
   it in progress, shown per child. Approved by ct on 19 October (17:42Z).
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **CATALOG-005 — Software requests installed through MDM.** Admins bind a
   software catalog item to an MDM application:
@@ -474,6 +540,10 @@ that product and marks how close the current code is (see [Status](#status)).
   with its reason; bind the account and see it released into fulfillment; edit
   an unbound pending person; withdraw one and see its request canceled; a
   person without review cannot be named.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 ### Agent workspace and ticket operations
 
@@ -713,6 +783,10 @@ that product and marks how close the current code is (see [Status](#status)).
   Facilities request handed to IT keeps its history; the employee portal shows
   both catalogs.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 - **DESK-012 — Time tracking and effort.** Agents log time on tickets and tasks,
   automatically measured active minutes are recorded, and both feed the human
   work measure in REPORT-004. **Acceptance evidence:** log 15 minutes manually,
@@ -818,6 +892,10 @@ that product and marks how close the current code is (see [Status](#status)).
   the selected type, ordered by match rank, type, title and ID. No hidden rows or
   source-list truncation affect that count.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 - **DESK-017 — Ticket activity history.** Every ticket, task, change, problem
   and asset shows a chronological, append-only history of each field change
   (state, type, category, priority, group, assignee, custom fields, SLA pauses,
@@ -892,6 +970,10 @@ that product and marks how close the current code is (see [Status](#status)).
   may still point to a person when combined with outside knowledge; this is
   not a legal certification of anonymization.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 ### Notifications
 
 - **NOTIFY-001 — Default notifications by role and event.** Out of the box:
@@ -917,6 +999,10 @@ that product and marks how close the current code is (see [Status](#status)).
   notification is refused, showing the current assignee; a person outside the
   group who is forwarded the message cannot act on it.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 - **NOTIFY-002 — Admin-configured rules, templates and preferences.** Admins edit
   and add notifications per workspace: when to send (event and conditions), who
   receives (roles, groups, record fields, named people) and what it says
@@ -932,6 +1018,10 @@ that product and marks how close the current code is (see [Status](#status)).
   Facilities lead for P1 Facilities tickets and see it fire; a user who opts out
   of "public update" stops receiving it but still receives a mandatory approval
   request; the template change appears in the audit log with before and after.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 ### Identity and SaaS access
 
@@ -1068,6 +1158,10 @@ that product and marks how close the current code is (see [Status](#status)).
   plans; repeat the hire and termination paths for Rippling, Gusto, a Workday
   implementation tenant (Workers and Staffing events) and a local Willow
   instance, and see a manager change in each re-point the employee's approvals.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **LIFE-002 — Dated task plans across teams.** Templates by department,
   location, role and employment type (W-2 employee, 1099 contractor, intern)
@@ -1712,6 +1806,10 @@ that product and marks how close the current code is (see [Status](#status)).
   **Acceptance evidence:** a custom "Facilities agent" role reads Facilities
   tickets only; an approver approves without agent access.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 - **SSO-001 — Sign-in, SSO and SCIM.** Base email sign-in, SAML 2.0 and OIDC SSO
   with Okta, Entra, Google and Auth, SCIM provisioning of requesters and agents,
   and MFA enforcement (Linen's own second factor for email sign-in, and a
@@ -1722,6 +1820,10 @@ that product and marks how close the current code is (see [Status](#status)).
   challenged for a second factor, and an SSO assertion without an MFA
   authentication-method claim is refused for the agent role.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 - **AUDIT-001 — Audit log.** Privileged reads, exports, configuration, grant,
   role and executor actions are recorded durably with actor and time, readable by
   auditors and exportable; erasure anonymizes without breaking the record.
@@ -1730,12 +1832,20 @@ that product and marks how close the current code is (see [Status](#status)).
   History-value retention inherits DESK-017's *Erasure semantic (ct, 20 October)*;
   until that rule is implemented and proven, untyped payloads keep full clearing.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 - **API-001 — REST API and webhooks.** A versioned REST API with scoped tokens for
   automation principals and outbound signed webhooks for ticket, approval, asset
   and change events, with retries and delivery logs. **Acceptance evidence:**
   create a ticket through the API with a scoped token; a subscribed webhook
   receives the signed event; a failing endpoint is retried and logged.
   REST tokens authorize `/api/v1/*` only and are refused by API-003.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **API-002 — No-code workflow automator.** Triggers (ticket created/updated,
   time, approval, HR event, alert), conditions and actions (assign, notify, set
@@ -1744,6 +1854,10 @@ that product and marks how close the current code is (see [Status](#status)).
   **Acceptance evidence:** build "if category is Hardware and VIP, assign to
   Exec Support and notify in Slack", test it on a sample, publish version 2 and
   see version 1 tickets unaffected.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **API-003 — Agent access by MCP.** A Model Context Protocol server lets the
   buyer's own agents (Claude, ChatGPT, Copilot) read tickets and act within the
@@ -1793,11 +1907,19 @@ that product and marks how close the current code is (see [Status](#status)).
   code and time, never secrets, request bodies or argument free text. MCP may
   reuse API-001's future principal/scope checker, never its secret or audience.
 
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
+
 - **PORT-001 — Portable native archive.** Owner export of every record,
   attachment and policy as a verified archive, and restore under an execution
   hold that never re-dispatches effects or reactivates grants (A6). **Acceptance
   evidence:** export, restore into a fresh workspace, compare counts and hashes,
   and see the execution hold and inert grants.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **ERASURE-001 — Authorized erasure.** Owner/HR erasure removes a person's
   content and attachments while keeping anonymized work, effect and audit
@@ -1806,6 +1928,10 @@ that product and marks how close the current code is (see [Status](#status)).
   content still absent. History-value handling inherits DESK-017's *Erasure
   semantic (ct, 20 October)*, including every read/export/restore surface and
   the prohibition on rebuilding already-cleared values.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **RETENTION-001 — Retention policies.** Configurable retention for archives,
   closed tickets and attachments, with no hidden default; due deletion is durable
@@ -1836,6 +1962,10 @@ that product and marks how close the current code is (see [Status](#status)).
   new ticket-owned record kind, inherits this rule (holds block deletion; new
   ticket content is deleted with the ticket) before it ships. Approved by ct on
   19 October (15:09Z), with the preview and owner confirmation.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **BASE-001 — Base platform replacements.** Linen uses Base's lobby, owner
   claim, operator sign-in, mail and dependency modules rather than private
@@ -2059,6 +2189,10 @@ that product and marks how close the current code is (see [Status](#status)).
   changes. **Acceptance evidence:** an employee is denied a private note,
   attachment and HR record across every read surface; revoked membership and
   erasure prevent later access and replay.
+
+  Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
+  *Approved audience and quote semantic (ct, 21 October)* before they ship;
+  existing done status does not claim that unbuilt catalog quote journey.
 
 - **A2 — Granted action.** Versioned grants bind action, target, beneficiary,
   conditions, limits and time. Standing low-risk authority avoids repeated human

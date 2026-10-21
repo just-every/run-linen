@@ -103,7 +103,7 @@ export async function catalogFormJourney({page,api,base,out}) {
   assert.equal(await chooser.getByLabel('Wall type',{exact:false}).count(),0,'CATALOG-001 hidden conditional question is absent');
   await chooser.getByLabel('Monitor mounting',{exact:false}).selectOption('Wall');
   await chooser.getByLabel('Wall type',{exact:false}).fill('Concrete');
-  await chooser.getByLabel('What do you need it for?',{exact:true}).fill('A shared display for training');
+  await chooser.getByLabel(/What do you need it for/).fill('A shared display for training');
   await captureJourney(page,{path:out+'/CATALOG-001-request-form.png',fullPage:true});
   const sending=page.waitForResponse(r=>r.url().endsWith(`/work/${work.id}/fulfilment`)&&r.request().method()==='POST');
   await chooser.getByRole('button',{name:'Save',exact:true}).click();assert.equal((await sending).status(),201,'CATALOG-001 native request submits validated form');

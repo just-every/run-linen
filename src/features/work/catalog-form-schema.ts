@@ -136,12 +136,12 @@ export function validateCatalogAnswers(form: CatalogForm, value: unknown): Recor
       continue
     }
     if (!supplied) {
-      if (field.required) return invalidAnswers(`${field.label} is required`)
+      if (field.required) throw new ApiError(422,'catalog_field_required',`${field.label} is required`)
       continue
     }
     const answer = input[field.id]
     if (!answerMatches(field, answer)) return invalidAnswers(`${field.label} must contain a valid ${field.type} value`)
-    if (field.required && typeof answer === 'string' && !answer.trim()) return invalidAnswers(`${field.label} is required`)
+    if (field.required && typeof answer === 'string' && !answer.trim()) throw new ApiError(422,'catalog_field_required',`${field.label} is required`)
     answers[field.id] = answer
   }
   return answers

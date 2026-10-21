@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "dce1afa48defe9705831126b389ff722870b2a20c808f6051d39d5672c5f996e",
+      "sha256": "b943b24549d68875d53c1b5572e9f3df64849c24974063cadc0ac09121b97cc7",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4f822a7ae9dc9950221b9be86e6bf7a1762eb6628c1e6b222d729a10650baf2e",
+      "sha256": "140e1b8d0c720c70da45dbd041d124dd64c695823c829c2bd4ecc913b6212237",
       "executable": false
     },
     "DEMO.md": {
@@ -2183,7 +2183,7 @@
       "executable": false
     },
     "src/features/work/catalog-form-schema.ts": {
-      "sha256": "902666f98375c242e4b67d9a90269b630af95828843950de082fa5cbb8e7cfaa",
+      "sha256": "f54e710ee45a86e607bf8feff8ed5d2e4d0bd887640df57aae8360d93ca93347",
       "executable": false
     },
     "src/features/work/catalog-items.ts": {
@@ -5043,7 +5043,7 @@
       "executable": false
     },
     "tests/ui/application-journey.mjs": {
-      "sha256": "cad4e6f667be89fd3b4e115170fc788729acb53cb0172a06694711ad49f01764",
+      "sha256": "1c9d109bc6d4820a92b6200e88a93f21b5601a582e6d34c0c0aff93cdbfe60a9",
       "executable": false
     },
     "tests/ui/asset-audit-browser.mjs": {
