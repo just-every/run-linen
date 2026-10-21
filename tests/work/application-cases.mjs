@@ -67,6 +67,11 @@ export async function applicationChecks(api, db) {
   assert.equal(unavailable.value.state,'blocked','ACCESS-008 erased ownership never bypasses the existing manager gate');
   assert.equal((await api('/catalog',{name:'Erased owner service',kind:'access',applicationId:registered.id,entitlementId:admin.id})).status,409,'ACCESS-008 erased owner cannot receive a new catalog request');
   // CATALOG-001: typed conditional forms through the same catalog/fulfilment routes.
+  for(const user of ['catalog-user','catalog-outsider']) {
+    await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind(user,user+'@example.test',user,'unused','2026-01-01').run();
+    await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('a',user,'["employee"]').run();
+  }
+  const formEmployee={'x-user':'catalog-user','x-roles':'["employee"]'};
   const form={costCents:25000,deliveryHours:48,fields:[
     {id:'mount',label:'Monitor mounting',type:'select',required:true,options:['Desk','Wall']},
     {id:'wall',label:'Wall type',type:'text',required:true,when:{fieldId:'mount',equals:'Wall'}},
@@ -79,29 +84,29 @@ export async function applicationChecks(api, db) {
   const formItem=(await ok('/catalog')).items.find(i=>i.id===monitor.id);
   assert.equal(formItem.form.costCents,25000,'CATALOG-001 recorded USD request cost');
   assert.equal(formItem.form.deliveryHours,48,'CATALOG-001 recorded delivery estimate');
-  const monitorWork=await ok('/work',{title:'Monitor for desk',body:'Replace our old monitor',deduplicationKey:'catalog-monitor'},employee);
+  const monitorWork=await ok('/work',{title:'Monitor for desk',body:'Replace our old monitor',deduplicationKey:'catalog-monitor'},formEmployee);
   const answers={mount:'Desk',count:1,returning:false,needed:'2028-02-29',notes:'Deliver by reception'};
-  const submission={catalogId:monitor.id,catalogRevision:formItem.revision,beneficiaryId:'employee',purpose:'Desk setup',answers};
+  const submission={catalogId:monitor.id,catalogRevision:formItem.revision,beneficiaryId:'catalog-user',purpose:'Desk setup',answers};
   for(const patch of [{catalogRevision:0},{answers:{...answers,wall:'Concrete'}},{answers:{...answers,mount:'Wall'}},{answers:{...answers,count:'1'}},{answers:{...answers,needed:'2027-02-29'}},{answers:{...answers,unexpected:'discard me'}}])
-    assert.ok((await api(`/work/${monitorWork.id}/fulfilment`,{...submission,...patch},employee)).status>=400,'CATALOG-001 stale form, hidden/unknown fields, missing conditional answers and wrong types refuse');
+    assert.ok((await api(`/work/${monitorWork.id}/fulfilment`,{...submission,...patch},formEmployee)).status>=400,'CATALOG-001 stale form, hidden/unknown fields, missing conditional answers and wrong types refuse');
   assert.equal((await db.prepare('SELECT count(*) n FROM work_fulfilments WHERE work_id=?').bind(monitorWork.id).first()).n,0,'CATALOG-001 invalid answers store no fulfilment');
-  const requested=await ok(`/work/${monitorWork.id}/fulfilment`,submission,employee);
+  const requested=await ok(`/work/${monitorWork.id}/fulfilment`,submission,formEmployee);
   assert.equal(requested.catalogSnapshot.answers.returning,false,'CATALOG-001 a required no answer is valid');
   assert.deepEqual(requested.catalogSnapshot.answers,answers,'CATALOG-001 normalized answers are preserved');
-  assert.equal((await api(`/catalog/${monitor.id}/form`,{name:'No authority',revision:1,form},employee)).status,403,'CATALOG-001 employees cannot edit forms');
+  assert.equal((await api(`/catalog/${monitor.id}/form`,{name:'No authority',revision:1,form},formEmployee)).status,403,'CATALOG-001 employees cannot edit forms');
   const revised=await ok(`/catalog/${monitor.id}/form`,{name:'New display',revision:formItem.revision,form:{...form,costCents:30000,deliveryHours:72}},undefined,200);
   assert.equal((await api(`/catalog/${monitor.id}/form`,{name:'Stale overwrite',revision:formItem.revision,form})).status,409,'CATALOG-001 stale owner edits refuse');
-  const persisted=(await ok(`/work/${monitorWork.id}/catalog-requests`,undefined,employee)).items[0].catalogSnapshot;
+  const persisted=(await ok(`/work/${monitorWork.id}/catalog-requests`,undefined,formEmployee)).items[0].catalogSnapshot;
   assert.deepEqual(persisted,requested.catalogSnapshot,'CATALOG-001 in-flight questions, cost, delivery and answers retain their submitted revision');
-  assert.deepEqual((await ok(`/work/${monitorWork.id}/fulfilment`,submission,employee)).catalogSnapshot,persisted,'CATALOG-001 retry after item edit retains the original snapshot');
-  const nextMonitor=await ok('/work',{title:'Monitor for wall',body:'Wall mounted monitor',deduplicationKey:'catalog-wall'},employee);
-  assert.equal((await api(`/work/${nextMonitor.id}/fulfilment`,submission,employee)).status,409,'CATALOG-001 old revision cannot start another request');
-  const wall=await ok(`/work/${nextMonitor.id}/fulfilment`,{...submission,catalogRevision:revised.revision,answers:{...answers,mount:'Wall',wall:'Concrete'}},employee);
+  assert.deepEqual((await ok(`/work/${monitorWork.id}/fulfilment`,submission,formEmployee)).catalogSnapshot,persisted,'CATALOG-001 retry after item edit retains the original snapshot');
+  const nextMonitor=await ok('/work',{title:'Monitor for wall',body:'Wall mounted monitor',deduplicationKey:'catalog-wall'},formEmployee);
+  assert.equal((await api(`/work/${nextMonitor.id}/fulfilment`,submission,formEmployee)).status,409,'CATALOG-001 old revision cannot start another request');
+  const wall=await ok(`/work/${nextMonitor.id}/fulfilment`,{...submission,catalogRevision:revised.revision,answers:{...answers,mount:'Wall',wall:'Concrete'}},formEmployee);
   assert.equal(wall.catalogSnapshot.form.costCents,30000,'CATALOG-001 new submissions use revised cost');
   assert.equal(wall.catalogSnapshot.answers.wall,'Concrete','CATALOG-001 visible conditional answer is required and retained');
-  const unrelated={'x-user':'app-steward','x-roles':'["employee"]'};
+  const unrelated={'x-user':'catalog-outsider','x-roles':'["employee"]'};
   assert.equal((await api(`/work/${monitorWork.id}/catalog-requests`,undefined,unrelated)).status,404,'CATALOG-001 answers inherit the ticket readership boundary');
-  await ok('/people/employee/erase',{revision:0,reason:'CATALOG-001 erase submitted personal answers'},undefined,200);
+  await ok('/people/catalog-user/erase',{revision:0,reason:'CATALOG-001 erase submitted personal answers'},undefined,200);
   assert.equal((await db.prepare('SELECT catalog_snapshot_json FROM work_fulfilments WHERE work_id=?').bind(monitorWork.id).first()).catalog_snapshot_json,null,'CATALOG-001 authorized subject erasure clears form content');
   console.log('PASS CATALOG-001 public typed/conditional forms, strict answers, cost/delivery, item edits, immutable submitted snapshots, existing ticket access and erasure');
   await db.prepare("UPDATE memberships SET roles_json='[\"employee\"]' WHERE workspace_id='a' AND user_id='owner'").run();

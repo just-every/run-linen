@@ -5287,7 +5287,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "903e9731bfa4963687f0902aaa279581d88c46793c3821b0bb5b7548b64f913d",
+      "sha256": "66f2c965accda5f1c6d528e66b3dbe3085b7274c65a20a56817fff6d663d8368",
       "executable": false
     },
     "tests/work/asset-contract-cases.mjs": {
