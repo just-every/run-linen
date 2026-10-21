@@ -89,7 +89,7 @@ export async function requireCatalogAudience(ctx: WorkContext, catalog: {id:stri
     guards.push(`EXISTS(SELECT 1 FROM work_people p JOIN memberships m ON m.workspace_id=p.workspace_id AND m.user_id=p.member_id
       WHERE p.workspace_id=? AND p.id=? AND p.revision=? AND p.member_id=? AND p.binding_id=?
       AND p.active=1 AND p.merged_into IS NULL AND m.active=1
-      AND julianday(p.effective_at)<=julianday('now')
+      AND (julianday(p.effective_at)<=julianday('now') OR (p.source='pending-reviewed' AND julianday(p.observed_at)<=julianday('now')))
       AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=p.workspace_id AND e.person_id IN (p.id,p.source||':'||p.source_id,p.member_id,'member:'||p.member_id))
       AND ${erasure.sql})`);
     bindings.push(ctx.principal.workspaceId,person.id,person.revision,person.member_id,person.binding_id,...erasure.bindings);

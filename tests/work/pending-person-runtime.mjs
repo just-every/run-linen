@@ -157,6 +157,33 @@ try {
   assert.equal(await count('work_catalog_reservations', work.id), 2);
   assert.equal((await api(`/work/${work.id}`, undefined, employee)).status, 404);
 
+  // CATALOG-001: an audience-controlled service is held on the reviewed pending attributes and checked again at release;
+  // a service that no longer qualifies stays held with a visible reason, and is released once it does.
+  const design = (await ok('/catalog-values', { dimension: 'department', label: 'Pending Design' }, owner)).value;
+  const finance = (await ok('/catalog-values', { dimension: 'department', label: 'Pending Finance' }, owner)).value;
+  const gated = (await ok('/catalog', { name: 'Design software', kind: 'software', target: 'pending-design-software',
+    ownerId: ownerPrincipal.userId, audience: { department: [design.id] } }, owner)).value;
+  const gail = (await ok('/pending-people', { ...draft, name: 'Gail Gated', email: 'gail@pending.test', attributes: { department: design.id } }, owner)).value;
+  const gatedWork = (await ok('/work', { title: 'Prepare Gail', body: 'Design software for the first week', pendingPersonId: gail.id,
+    catalogIds: [gated.id], deduplicationKey: 'pending-gail' }, owner)).value;
+  assert.deepEqual((await ok(`/work/${gatedWork.id}`, undefined, owner)).value.heldServices.map(s => s.state), ['held'],
+    'a reviewed eligible pending person holds the audience-controlled service');
+  const gatedItem = (await ok('/catalog', undefined, owner)).value.items.find(i => i.id === gated.id);
+  await ok(`/catalog/${gated.id}/audience`, { revision: gatedItem.revision, audience: { department: [finance.id] } }, owner);
+  await addMember('Gail Gated', 'gail@pending.test');
+  const gailAuth = await verifiedEmailSignIn('gail@pending.test');
+  let gatedDetail = (await ok(`/work/${gatedWork.id}`, undefined, gailAuth)).value;
+  assert.equal(gatedDetail.pendingPerson.state, 'bound');
+  assert.deepEqual(gatedDetail.heldServices.map(s => s.state), ['held'], 'a service outside the audience at release stays held');
+  assert.match(gatedDetail.heldServices[0].reason, /department/, 'the held service shows the failing dimension');
+  assert.ok(!JSON.stringify(gatedDetail.heldServices).includes(design.id), 'the visible reason never shows an attribute value');
+  assert.equal(await count('work_fulfilments', gatedWork.id), 0, 'a refused release records no fulfilment, reservation or duty');
+  const narrowed = (await ok('/catalog', undefined, owner)).value.items.find(i => i.id === gated.id);
+  await ok(`/catalog/${gated.id}/audience`, { revision: narrowed.revision, audience: { department: [design.id] } }, owner);
+  await login('gail@pending.test');
+  gatedDetail = (await ok(`/work/${gatedWork.id}`, undefined, gailAuth)).value;
+  assert.deepEqual(gatedDetail.heldServices.map(s => s.state), ['released'], 'the held service releases once its audience matches again');
+  assert.equal(await count('work_fulfilments', gatedWork.id), 1);
   // Withdrawal cancels every held request and remains final after real sign-in.
   let withdrawn = (await ok('/pending-people', { ...draft,
     name: 'Cancelled hire', email: 'cancelled@pending.test' }, owner)).value;

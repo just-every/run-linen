@@ -75,7 +75,7 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  }
  // CATALOG-001: a submitted catalog request and its vendor quote are not ticket-tool payloads.
  const quoteItem=await value(ownerApi('/catalog',{name:'MCP quote item',kind:'service',target:'mcp-quote-item',ownerId:session.principal.userId,form:{quoteRequired:true}}),201)
- const quoteUpload=await employeeSession.raw('/work/'+normal.id+'/catalog-quote',{method:'POST',body:'%PDF-1.7 MCP-HIDDEN-QUOTE-BODY',headers:{'Content-Type':'application/pdf','X-Filename':'MCP-HIDDEN-QUOTE-NAME.pdf','X-Catalog-Id':quoteItem.id}})
+ const quoteUpload=await employeeSession.raw('/work/'+normal.id+'/catalog-quote',{method:'POST',body:'%PDF-1.7 MCP-HIDDEN-QUOTE-BODY',headers:{'content-type':'application/pdf','X-Filename':'MCP-HIDDEN-QUOTE-NAME.pdf','X-Catalog-Id':quoteItem.id}})
  equal(quoteUpload.status,201,'real catalog quote fixture')
  await value(employeeSession.api('/work/'+normal.id+'/fulfilment',{catalogId:quoteItem.id,catalogRevision:1,beneficiaryId:employee.id,purpose:'MCP-HIDDEN-SUBMISSION-PURPOSE'}),201)
  const field=async(name,type,options=[])=>value(ownerApi('/desk-fields',{name,type,options,kinds:['incident']}),201)

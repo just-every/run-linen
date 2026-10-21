@@ -189,7 +189,7 @@ export async function catalogAudienceJourney({browser,page,api,base,out}) {
     await api(`/catalog/${item.id}/audience`,{revision:1,audience:{department:[legal.id]}});
     const sending=ep.waitForResponse(r=>r.url().endsWith('/fulfilment')&&r.request().method()==='POST');
     await chooser.getByRole('button',{name:'Save',exact:true}).focus();await ep.keyboard.press('Enter');assert.equal((await sending).status(),409,'CATALOG-001 native stale catalog revision is refused');
-    for(const width of [1440,390]){await ep.setViewportSize({width,height:1000});await ep.getByText('Review the current catalog form and price before requesting',{exact:false}).waitFor();await ep.screenshot({path:out+`/CATALOG-001-audience-changed-${width}.png`,fullPage:true});}
+    for(const width of [1440,390]){await ep.setViewportSize({width,height:1000});await ep.getByText('This item changed while you were filling it in',{exact:false}).waitFor();await ep.screenshot({path:out+`/CATALOG-001-audience-changed-${width}.png`,fullPage:true});}
     console.log('PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440/390');
   } finally {for(const user of users)await user.context.close();}
 }

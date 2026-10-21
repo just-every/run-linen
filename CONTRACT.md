@@ -391,8 +391,9 @@ that product and marks how close the current code is (see [Status](#status)).
   and ERASURE-001's content removal; bundle submission validates every child's
   empty answers before opening work. Future CHANNEL-001/002/005 and API-001/003
   doors must enforce the same form revision and validation before shipping.
-  Required quote files and the remaining item types are still unbuilt;
-  audience support is the bounded slice below. CATALOG-001 stays partial.
+  Item kinds are access, software, hardware (`device`), account and general
+  service; an account or general-service item is a task its owner completes,
+  never a provider action. Quote files and audiences are described below.
 
   *Approved audience and quote semantic (ct, 21 October):* only the
   owner configures versioned catalog audience and quote requirements. Reviewed
@@ -435,7 +436,7 @@ that product and marks how close the current code is (see [Status](#status)).
   values), `catalog_changed` (409), `catalog_quote_required` and
   `catalog_quote_type` (422), `catalog_field_required` (422, named question),
   and `bundle_child_refused` (one line per failed child). This complete rule
-  remains a requirement, not passing evidence for the form slice above.
+  is built; the slices below state the exact semantic the code uses.
 
   *Current audience slice (sx, 21 October):* owner-only native REST routes
   maintain stable department, location and employment-type values and version
@@ -453,15 +454,52 @@ that product and marks how close the current code is (see [Status](#status)).
   and evaluated person revisions beside their existing form snapshot; later
   changes do not rewrite or re-gate in-flight requests. Review audits carry
   dimension names only; erasure clears attributes, and native restore retains
-  facts without a live binding. Audience management currently uses REST rather
-  than an audience editor. Restricted bundle submissions and new pending-person
-  holds are refused before opening work until their atomic audience support is
-  implemented; restricted amendments require fresh submission rather than
-  reusing old approval. Existing held services whose item becomes restricted
-  stay held with their refusal reason at release. These refusals are a partial
-  boundary, not passing evidence for the required bundle/pending/amendment
-  journeys. Required quote files, remaining item types, full audience editor
-  and receiver journeys remain open.
+  facts without a live binding.
+
+  Audience management is owner REST and a native editor (value lists, item
+  audience, item creation) on the Applications screen; person attributes are
+  reviewed through the people API by owner or HR, and pending-person attributes
+  through the pending-person review by owner or HR. Existing held services whose
+  item becomes restricted stay held with their refusal reason at release.
+
+  *Built quote and carrier semantic (sx, 22 October):* an item's form carries
+  `quoteRequired`. The requester or beneficiary attaches the PDF
+  (`POST /work/:id/catalog-quote`, PDF magic bytes, `application/pdf`, at most
+  20 MiB; a later upload replaces an unsubmitted one) before submitting. The
+  submission refuses without it (`catalog_quote_required`), binds the file once
+  to the fulfilment in the same write that records the request (its id, hash and
+  size are frozen in the snapshot; a drifted hash refuses with `catalog_changed`)
+  and the quote never changes again: replacing it, like any amendment of an
+  audience-controlled or quote-backed item, is a fresh submission with no earlier
+  approval. The file is a `work_attachments` row of visibility `catalog_quote`
+  (so export, erasure and retention reach it) served only by
+  `GET /catalog-quotes/:id`, as a download; the generic attachment door, the
+  conversation attachment list, search, history, notifications and AI context
+  never carry it, and a non-reader sees `quote attached` only. Readers: the
+  requester, the beneficiary and the owner; once submitted also the current
+  approver (the beneficiary's manager or current delegate, while the request is
+  open), an approver who recorded a decision on that fulfilment, and the current
+  fulfilment owner (the item's or application's owner holding the operator or
+  owner role). Unsubmitted quotes are readable by the requester, beneficiary and
+  owner. Every read by someone other than the requester or beneficiary is audited
+  by relation and id; uploads, replacement and attachment are audited by id and
+  size; no file name or content enters any audit. Linen never reads an amount:
+  the price is a form question. Quotes grant no approval and no provider
+  authority. The approval view carries the frozen quote for the current
+  approver. Bundles evaluate every child (audience, form, quote) before opening
+  work and refuse all with one line per failing child; a bundle child cannot
+  carry answers or a quote, so a child that needs them is refused. The ticket
+  and every child are one atomic write that rechecks item, person and
+  membership revisions. A pending person's reviewed attributes are checked
+  when the service is held (at the person revision the hold's write rechecks)
+  and the bound person is checked again at release against the item as it is
+  then; a refused release keeps the service held with its reason. The
+  assistant's catalog holds eligible items only and its submission carries the
+  item revision it saw, so a changed item, a missing required answer or a
+  missing quote refuses it. API-003 ticket tools expose no quote or catalog
+  submission payload. Later clauses (CATALOG-002, CATALOG-003, API-001,
+  API-002, API-003, LIFE-001, SSO-001, DESK-011, ROLE-001, NOTIFY-001/002 and
+  CHANNEL-001/002) keep the duties their own clauses name.
 
 - **CATALOG-002 — Approval chains.** Per item: manager, application owner, cost
   center or finance above a USD threshold, and named groups, in serial or

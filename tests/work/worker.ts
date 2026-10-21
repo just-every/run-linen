@@ -31,6 +31,7 @@ for(const seam of ['/work/:id/fulfilment','/catalog-bundles/:id/request'])app.us
         if(kind==='person')await db.prepare("UPDATE work_people SET attributes_json='{}',revision=revision+1 WHERE workspace_id=? AND id=?").bind(w,target).run();
         else if(kind==='catalog')await db.prepare('UPDATE work_catalog SET revision=revision+1 WHERE workspace_id=? AND id=?').bind(w,target).run();
         else if(kind==='member')await db.prepare('UPDATE memberships SET active=0 WHERE workspace_id=? AND user_id=?').bind(w,target).run();
+        else if(kind==='quote')await db.prepare("UPDATE work_attachments SET sha256='drifted' WHERE workspace_id=? AND id=?").bind(w,target).run();
       }
       return db.batch(statements);
     };

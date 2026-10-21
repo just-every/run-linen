@@ -56,6 +56,15 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
   assert.equal(await r2.head(`a/${work.id}/${first.value.id}`), null, 'CATALOG-001 the replaced quote bytes are deleted');
   assert.equal(replaced.value.sha256, sha(quoteBytes), 'CATALOG-001 the quote is fingerprinted by SHA-256');
 
+  // The submit write rechecks the quote hash, the required questions and the item revision; nothing is recorded when any drifts.
+  const noPrice = await submit(work, software, 'q-req', { answers: {} });
+  assert.equal(noPrice.status, 422); assert.equal(noPrice.value.error, 'Quoted price in USD is required.', 'CATALOG-001 a required question is named in the refusal');
+  const drifted = await api(`/work/${work.id}/fulfilment`, { catalogId: software.id, catalogRevision: 1, beneficiaryId: 'q-req', purpose: 'Studio licences', answers: { price: 1800 } },
+    { ...as('q-req'), 'x-catalog-race': 'quote', 'x-catalog-target': replaced.value.id });
+  assert.equal(drifted.status, 409); assert.equal(drifted.value.error, 'This item changed while you were filling it in. Review it and submit again.', 'CATALOG-001 a quote that changes at the commit refuses the submission');
+  assert.equal((await db.prepare('SELECT count(*) n FROM work_fulfilments WHERE work_id=?').bind(work.id).first()).n, 0, 'CATALOG-001 a drifted quote records no fulfilment');
+  await db.prepare("UPDATE work_attachments SET sha256=? WHERE id=?").bind(sha(quoteBytes), replaced.value.id).run();
+
   // Submission freezes id and hash, binds the file once, and the quote is immutable afterwards.
   const submitted = await submit(work, software);
   assert.equal(submitted.status, 201, JSON.stringify(submitted.value));
@@ -158,6 +167,14 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
   const refused = await put(outWork, restricted, 'q-out');
   assert.equal(refused.status, 403); assert.equal(refused.value.error, "This item isn't available for you. If you think that's wrong, ask the service desk.", 'CATALOG-001 an ineligible employee cannot attach a quote to the item');
   assert.equal((await db.prepare('SELECT count(*) n FROM work_attachments WHERE work_id=?').bind(outWork.id).first()).n, 0);
+
+  // Configuration edits and audience refusals are audited without attribute values.
+  const itemEdit = await ok(`/catalog/${software.id}/form`, { name: 'Software purchase', revision: 1, form: { quoteRequired: true, costCents: 180000, fields: [{ id: 'price', label: 'Quoted price in USD', type: 'number', required: true }] } }, {}, 200);
+  assert.equal(itemEdit.revision, 2, 'CATALOG-001 requiring a quote is a versioned item edit');
+  const audited = (await db.prepare("SELECT action,detail_json FROM audit_events WHERE action IN ('catalog.form_edited','catalog.value_created','catalog.audience_refused') AND (target IN (?,?) OR action='catalog.value_created')").bind(software.id, restricted.id).all()).results;
+  assert.deepEqual([...new Set(audited.map(a => a.action))].sort(), ['catalog.audience_refused', 'catalog.form_edited', 'catalog.value_created'], 'CATALOG-001 item edits, value-list edits and audience refusals are audited');
+  assert.ok(audited.every(a => !a.detail_json.includes(sales.id)), 'CATALOG-001 audience audits carry no attribute values');
+  assert.equal((await submit(await newWork('q-req', 'q-stale'), software, 'q-req')).status, 409, 'CATALOG-001 the old item revision cannot start a request after the edit');
 
   // Erasure removes the quote record and its bytes with the request's content.
   const erasedKey = `a/${second.id}/${secondQuote.value.id}`;

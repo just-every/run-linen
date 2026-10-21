@@ -67,7 +67,9 @@ async function releaseBoundServices(env:Env,w:string,memberId:string) {
   }
   const ctx={env,principal:{workspaceId:w,userId:row.requester_id,roles}};
   try {
-   const result=await requestFulfilment(ctx,row.work_id,{catalogId:row.catalog_id,beneficiaryId:memberId,purpose:row.purpose});
+   // Release rechecks the item as it is now (audience, form, quote): a service that no longer qualifies stays held with its reason.
+   const current=await db.prepare('SELECT revision FROM work_catalog WHERE workspace_id=? AND id=?').bind(w,row.catalog_id).first<{revision:number}>();
+   const result=await requestFulfilment(ctx,row.work_id,{catalogId:row.catalog_id,catalogRevision:current?.revision,beneficiaryId:memberId,purpose:row.purpose});
    await db.batch([
     db.prepare(`UPDATE work_pending_services SET state='released',reason=?,released_at=? WHERE workspace_id=? AND work_id=? AND catalog_id=? AND state='held'`).bind(result.reason||'Account verified; normal service fulfilment checks apply',now(),w,row.work_id,row.catalog_id),
     db.prepare(`INSERT INTO audit_events SELECT ?,?,?,'work.pending_service_released',?,?,? WHERE changes()=1`).bind(id(),w,memberId,row.work_id,JSON.stringify({personId:row.person_id,catalogId:row.catalog_id,requesterId:row.requester_id,state:result.state}),now()),

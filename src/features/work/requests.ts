@@ -88,7 +88,7 @@ export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord
   const audience = previous ? null : await requireCatalogAudience(ctx,catalog,input.beneficiaryId);
   const catalogSnapshot = await catalogRequestSnapshot(ctx,workId,catalog,input,fresh);
   if(audience)Object.assign(catalogSnapshot,{audience:audience.audience,audiencePeople:audience.people});
-  const application = fresh ? null : await applicationForRequest(ctx,workId,catalog);
+  const application = await applicationForRequest(ctx,workId,catalog);
   if(application)catalog.owner_id=application.ownerId;
   const person = await personForMember(ctx, input.beneficiaryId);
   let blocked: string | null = null;
