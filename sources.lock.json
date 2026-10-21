@@ -2187,7 +2187,7 @@
       "executable": false
     },
     "src/features/work/catalog-items.ts": {
-      "sha256": "50e07516cca4d61a9e9688bd41998b75c04a17e439ecbc541f0b4d4313eea855",
+      "sha256": "7291737f0af6b9ea938a6c9ad3a0181e1d14a4e952e6f360a8ea88dc496fc653",
       "executable": false
     },
     "src/features/work/classification-policy.ts": {
@@ -2419,7 +2419,7 @@
       "executable": false
     },
     "src/features/work/privacy.ts": {
-      "sha256": "3c9f5d0844833d6eb2c90f1547b1091df3a1de0a8322e89d33efcb9867e8a999",
+      "sha256": "40eda7396c2a23aa447e501ad511f29e3f6fc394ad3c5d7d337eccb87ddce6d0",
       "executable": false
     },
     "src/features/work/processor.ts": {
@@ -5287,7 +5287,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "66f2c965accda5f1c6d528e66b3dbe3085b7274c65a20a56817fff6d663d8368",
+      "sha256": "90f98d33f78ceafe7565a2199d831c4b20be40978c83110cda2a7d959616a49c",
       "executable": false
     },
     "tests/work/asset-contract-cases.mjs": {

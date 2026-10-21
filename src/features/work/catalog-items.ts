@@ -82,5 +82,5 @@ export async function catalogRequestSnapshot(ctx: WorkContext, workId: string, c
   const form=normalizeCatalogForm(JSON.parse(catalog.form_json));
   if ((form.fields.length || form.costCents!==null || form.deliveryHours!==null || input.catalogRevision!==undefined) && input.catalogRevision!==catalog.revision)
     throw new ApiError(409,'catalog_changed','Review the current catalog form and price before requesting');
-  return {catalogId:catalog.id,revision:catalog.revision,name:catalog.name,form,answers:validateCatalogAnswers(form,input.answers??{})};
+  return {catalogId:catalog.id,revision:catalog.revision,name:catalog.name,submittedBy:ctx.principal.userId,form,answers:validateCatalogAnswers(form,input.answers??{})};
 }

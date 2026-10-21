@@ -106,6 +106,13 @@ export async function applicationChecks(api, db) {
   assert.equal(wall.catalogSnapshot.answers.wall,'Concrete','CATALOG-001 visible conditional answer is required and retained');
   const unrelated={'x-user':'catalog-outsider','x-roles':'["employee"]'};
   assert.equal((await api(`/work/${monitorWork.id}/catalog-requests`,undefined,unrelated)).status,404,'CATALOG-001 answers inherit the ticket readership boundary');
+  await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind('catalog-staff','staff@example.test','Catalog staff','unused','2026-01-01').run();
+  await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('a','catalog-staff','["operator"]').run();
+  const staffWork=await ok('/work',{title:'Staff-filed monitor request',body:'For the training room',beneficiaryId:'catalog-user',deduplicationKey:'catalog-staff-filed'});
+  await ok(`/work/${staffWork.id}/fulfilment`,{...submission,catalogRevision:revised.revision,answers}, {'x-user':'catalog-staff','x-roles':'["operator"]'});
+  await ok('/people/catalog-staff/erase',{revision:0,reason:'CATALOG-001 erase the staff author of form content'},undefined,200);
+  assert.equal((await db.prepare('SELECT catalog_snapshot_json FROM work_fulfilments WHERE work_id=?').bind(staffWork.id).first()).catalog_snapshot_json,null,'CATALOG-001 erasing a staff filer clears their form content on another person’s request');
+  assert.equal((await db.prepare('SELECT purpose FROM work_fulfilments WHERE work_id=?').bind(staffWork.id).first()).purpose,'[erased]','CATALOG-001 staff filer purpose is removed with their form content');
   await ok('/people/catalog-user/erase',{revision:0,reason:'CATALOG-001 erase submitted personal answers'},undefined,200);
   assert.equal((await db.prepare('SELECT catalog_snapshot_json FROM work_fulfilments WHERE work_id=?').bind(monitorWork.id).first()).catalog_snapshot_json,null,'CATALOG-001 authorized subject erasure clears form content');
   console.log('PASS CATALOG-001 public typed/conditional forms, strict answers, cost/delivery, item edits, immutable submitted snapshots, existing ticket access and erasure');
