@@ -4051,7 +4051,7 @@
       "executable": false
     },
     "src/platform/portability-policy.mjs": {
-      "sha256": "b434108d67e87f9c34ef118d045ac259630e328cdf71e26dda03c6ad89ee7c40",
+      "sha256": "1ce8bea1e392a3789e66b74e2b32a1ef3d3d2111ebe5deabac80c80cce9e138a",
       "executable": false
     },
     "src/platform/privacy.ts": {
@@ -4891,7 +4891,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "28686729ed509acda8a4c152de1489693da418fd203a612fe8987e57a2d6f394",
+      "sha256": "eeaee6c2c7b6c3c615123a7c233c1d5d686589b667761b742d68852be23aaa78",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {

@@ -1,8 +1,9 @@
+import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {mailEdge} from './mail-edge.mjs'
 // Public rer archive/reset/import flow on disposable actual D1/R2 state.
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
-import {cp,mkdtemp,symlink,rm,writeFile,readFile,mkdir} from 'node:fs/promises'
+import {cp,mkdtemp,symlink,rm,writeFile,readFile,mkdir,readdir} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join,resolve} from 'node:path'
 import {createHash} from 'node:crypto'
@@ -23,7 +24,33 @@ async function close(){await proxy?.dispose();proxy=null}
 try{
  await cp(source,root,{recursive:true,filter:p=>{const rel=p.slice(source.length+1);return !rel||!['.git','node_modules','.wrangler','.rer','.seed','dist','exports','.dev.vars','.dev.vars.previous'].some(x=>rel===x||rel.startsWith(x+'/'))}})
  await symlink(resolve('node_modules'),join(root,'node_modules'),'dir')
+ // API-003 restore compatibility: produce an actual pre-MCP archive through rer,
+ // then apply the additive migration and import it without inventing credentials.
+ await mkdir(join(root,'pre-mcp-migrations'));
+ for(const name of (await readdir(join(root,'migrations'))).filter(name=>name.endsWith('.sql')&&name<'0769_mcp_credentials.sql'))await cp(join(root,'migrations',name),join(root,'pre-mcp-migrations',name));
+ const priorConfig=JSON.parse(await readFile(join(root,'wrangler.jsonc'),'utf8'));
+ priorConfig.d1_databases[0].migrations_dir='pre-mcp-migrations';
+ await writeFile(join(root,'pre-mcp-wrangler.json'),JSON.stringify(priorConfig));
+ await run(['exec','wrangler','d1','migrations','apply','linen','--local','--persist-to','.wrangler/state','--config','pre-mcp-wrangler.json']);
+ const oldEnv=await open();
+ await oldEnv.DB.batch([
+  oldEnv.DB.prepare("INSERT INTO workspaces VALUES('pre-mcp','Prior','2026')"),
+  oldEnv.DB.prepare("INSERT INTO users VALUES('pre-owner','pre-owner@example.test','Prior owner','unused','2026')"),
+  oldEnv.DB.prepare("INSERT INTO memberships VALUES('pre-mcp','pre-owner','[\"owner\"]',1)"),
+  oldEnv.DB.prepare("INSERT INTO workspace_settings(workspace_id) VALUES('pre-mcp')"),
+  oldEnv.DB.prepare("INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,created_at,updated_at,dedup_key) VALUES('pre-work','pre-mcp','pre-owner','pre-owner','request','Pre-MCP retained ticket','2026','2026','pre-mcp')"),
+ ]);await close();
+ const preMcpArchive=join(dir,'pre-mcp.rer');
+ await run(['exec','rer','export','--output',preMcpArchive]);
  await run(['exec','wrangler','d1','migrations','apply','linen','--local','--persist-to','.wrangler/state','--config','wrangler.jsonc'])
+ await run(['exec','rer','reset','--yes']);
+ await run(['exec','rer','import','--input',preMcpArchive,'--yes']);
+ const upgraded=await open();
+ assert.equal((await upgraded.DB.prepare("SELECT title FROM work_records WHERE id='pre-work'").first()).title,'Pre-MCP retained ticket','API-003 pre-MCP archive still restores after additive migration');
+ assert.equal((await upgraded.DB.prepare('SELECT count(*) n FROM mcp_credentials').first()).n,0,'API-003 old archive introduces no credential authority');
+ await close();await run(['exec','rer','reset','--yes']);
+ await rm(join(root,'pre-mcp-migrations'),{recursive:true,force:true});await rm(join(root,'pre-mcp-wrangler.json'));
+
  let env=await open();const stamp=new Date().toISOString()
  await env.DB.batch([
   env.DB.prepare('INSERT INTO bootstrap_lock VALUES(1)'),
@@ -54,6 +81,11 @@ try{
  await env.ATTACHMENTS.put('workspace/private-file','Private retained attachment')
  await close()
  await run(['exec','rer','export','--output',archive])
+ const mcpRows=[];
+ for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='mcp_credentials')mcpRows.push(item.row);
+ assert.equal(mcpRows.length,1,'API-003 actual archive carries credential metadata');
+ assert.equal(mcpRows[0].name,'Desk bot');assert.equal(mcpRows[0].secret_hash,null,'API-003 no hash is exported');assert.equal(mcpRows[0].state,'revoked');
+
  await run(['exec','rer','reset','--yes'])
  await run(['exec','rer','import','--input',archive,'--yes'])
  env=await open()
