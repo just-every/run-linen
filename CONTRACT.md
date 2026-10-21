@@ -581,6 +581,9 @@ that product and marks how close the current code is (see [Status](#status)).
   for every triage action that exists today; `x` runs a DESK-015 scenario on
   the open ticket.
 
+  An API-003 queue grant is not group membership; an integration principal is
+  never a group member, lead or assignee.
+
 - **DESK-002 — Classification and priority.** Ticket types (incident, service
   request, question), categories and subcategories, and an impact × urgency
   priority matrix; Linen proposes classification and priority with the reason,
@@ -1911,6 +1914,39 @@ that product and marks how close the current code is (see [Status](#status)).
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
   existing done status does not claim that unbuilt catalog quote journey.
 
+  *MCP queue readership (ct, 21 October; unbuilt):* at mint the owner selects
+  one or more existing workspace agent groups on this credential, shown in its
+  metadata and mint audit; work.read/work.comment without a grant, unknown
+  groups and other-workspace groups are refused. An owner may narrow a grant
+  immediately with an audited version increase; widening requires a new
+  credential. It never makes the principal a group member, lead, assignee,
+  owner or approver, and no requester, beneficiary, share, participant, manager
+  or REST readership is inferred into MCP. Recheck every call and at commit:
+  current group in the grant, normal sensitivity, not erased/withheld, active
+  integration-only membership and automation principal, scopes, tool list,
+  credential state/expiry and issuing owner still active as owner. Losing that
+  issuer returns `mcp_issuer_inactive`, revokes the credential and audits it;
+  another owner re-mints. Own normal work.create tickets are additionally
+  readable by get/search, but list only includes them when in a granted group.
+  Moving a ticket out removes it on the next call.
+  Read core id/number/title/state/type/priority/impact/urgency, category/service/
+  group ids and labels, SLA, timestamps and revision; requester/beneficiary id
+  and display name only; the public thread and the principal's own comments;
+  owner-classified nonpersonal dropdown/multi/number/boolean/date fields; and
+  DESK-017's redacted history with these same limits. Search uses only that set
+  and those fields. No other private notes, attachment names/counts/content,
+  personal fields, email/phone/HR facts, manager line, shares or team view.
+  Missing, out-of-grant, HR and restricted tickets all return `not_found`,
+  audited with a refusal code. Wider reads need a new ct-approved scope/tool.
+  work.comment is internal, attributed to the principal, uses its read revision
+  rechecked at commit, and sends no notification, requester reply or provider
+  effect. work.create is normal-only, with no principal-chosen group placement.
+  No assign/claim/group/state/priority/field/pause/close/merge/bulk/scenario/
+  approve/share action is allowed. Restore keeps grants/credentials revoked
+  and inert. Audit mint group ids, versioned `mcp.queue_grant_narrowed`, issuer
+  loss and calls with ids only; AUDIT-001 inherits these events. These rules
+  remain unbuilt beyond the credential foundation; API-003 stays partial.
+
 - **PORT-001 — Portable native archive.** Owner export of every record,
   attachment and policy as a verified archive, and restore under an execution
   hold that never re-dispatches effects or reactivates grants (A6). **Acceptance
@@ -2607,7 +2643,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `AUDIT-001` | Audit log | target | done | `src/platform/privacy.ts`, `tests/platform/privacy-runtime.mjs`, `tests/platform/config-runtime.mjs` |  |
 | `API-001` | REST API and webhooks | target | partial | `src/features/work/index.ts`, `src/features/execution/index.ts`, `tests/work/runtime.mjs` | Scoped automation REST tokens and outbound signed event webhooks are unbuilt; session-authenticated REST routes do not prove token authentication. |
 | `API-002` | No-code workflow automator | target | partial | `src/features/execution/automation.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No no-code builder. |
-| `API-003` | Agent access by MCP | target | partial | `src/features/mcp/credentials.ts`; `src/features/mcp/protocol.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/base-auth-transfer.mjs` | Owner-only separate-audience credentials, live integration-only membership, one-time SHA-256 secret, expiry/revocation, erasure hash clearing, empty authenticated MCP discovery and inert archive restore are implemented. Gap: all ticket tools and current scope/grant/revision enforcement, filtered discovery and the complete Desk bot journey; no ticket tool authority is exposed. |
+| `API-003` | Agent access by MCP | target | partial | `src/features/mcp/credentials.ts`; `src/features/mcp/protocol.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/base-auth-transfer.mjs` | Owner-only separate-audience credentials, live integration-only membership, one-time SHA-256 secret, expiry/revocation, erasure hash clearing, empty authenticated MCP discovery and inert archive restore are implemented. Gap: explicit versioned credential queue grants, issuer-owner invalidation/audit, filtered reads and internal revision-checked comments; all ticket tools and current scope/grant/revision enforcement, filtered discovery and the complete Desk bot journey; no ticket tool authority is exposed. |
 | `PORT-001` | Portable native archive | target | done | `src/features/adoption/export.ts`, `src/features/adoption/import.ts`, `tests/adoption/runtime.mjs` |  |
 | `ERASURE-001` | Authorized erasure | target | done | `src/features/adoption/core.ts`, `src/features/work/privacy.ts`, `tests/adoption/runtime.mjs`, `tests/work/person-binding-runtime.mjs`, `tests/platform/privacy-runtime.mjs` |  |
 | `RETENTION-001` | Retention policies | target | done | `src/features/adoption/retention.ts`, `src/features/work/retention.ts`, `tests/adoption/retention-cases.mjs`, `tests/ui/connected-setup.mjs` | Public-route proof: no hidden default; a 365-day closed-ticket policy is previewed and needs the owner to confirm the exact counts; the run deletes a ticket closed 400 days ago and its attachment bytes with a content-free receipt the owner and auditor read, keeping tickets closed 300 days ago and open tickets. Owner preview/confirm form inspected at 1440/390. |
