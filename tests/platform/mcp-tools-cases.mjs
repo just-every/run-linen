@@ -73,6 +73,11 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
   const upload=await issuerSession.raw('/work/'+normal.id+'/attachments',{method:'POST',body:'MCP-HIDDEN-ATTACHMENT-CONTENT',headers:{'Content-Type':'text/plain','X-Filename':'MCP-HIDDEN-'+visibility+'-attachment.txt','X-Visibility':visibility}})
   equal(upload.status,201,'real '+visibility+' attachment fixture')
  }
+ // CATALOG-001: a submitted catalog request and its vendor quote are not ticket-tool payloads.
+ const quoteItem=await value(ownerApi('/catalog',{name:'MCP quote item',kind:'service',target:'mcp-quote-item',ownerId:session.principal.userId,form:{quoteRequired:true}}),201)
+ const quoteUpload=await employeeSession.raw('/work/'+normal.id+'/catalog-quote',{method:'POST',body:'%PDF-1.7 MCP-HIDDEN-QUOTE-BODY',headers:{'Content-Type':'application/pdf','X-Filename':'MCP-HIDDEN-QUOTE-NAME.pdf','X-Catalog-Id':quoteItem.id}})
+ equal(quoteUpload.status,201,'real catalog quote fixture')
+ await value(employeeSession.api('/work/'+normal.id+'/fulfilment',{catalogId:quoteItem.id,catalogRevision:1,beneficiaryId:employee.id,purpose:'MCP-HIDDEN-SUBMISSION-PURPOSE'}),201)
  const field=async(name,type,options=[])=>value(ownerApi('/desk-fields',{name,type,options,kinds:['incident']}),201)
  const [safeField,textField,personalField]=await Promise.all([
   field('Display connector','dropdown',['USB-C','DisplayPort']),field('priority','text'),field('Contact preference','dropdown',['mcp-private-contact@example.test']),
@@ -109,10 +114,10 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  check(history.items.some(e=>e.changes.some(c=>c.field==='custom_field'&&c.field_id===safeField.id&&c.before==='USB-C'&&c.after==='DisplayPort')),'history retains typed nonpersonal before/after')
  check(history.items.some(e=>e.changes.some(c=>c.field==='priority'&&c.after==='P4')),'history retains bounded native classification changes')
  check(!history.items.some(e=>e.changes.some(c=>c.after==='P1'||c.field_id===textField.id||c.field_id===personalField.id)),'personal field named priority cannot impersonate core history')
- const hiddenValues=[hidden,'MCP-HIDDEN-ATTACHMENT','mcp-context-private@example.test','mcp-private-contact@example.test','MCP-HIDDEN-MANAGER','MCP-HIDDEN-HR','MCP-HIDDEN-CLASSIFICATION-REASON']
+ const hiddenValues=[hidden,'MCP-HIDDEN-ATTACHMENT','MCP-HIDDEN-QUOTE','MCP-HIDDEN-SUBMISSION-PURPOSE','mcp-context-private@example.test','mcp-private-contact@example.test','MCP-HIDDEN-MANAGER','MCP-HIDDEN-HR','MCP-HIDDEN-CLASSIFICATION-REASON']
  for(const payload of [listed,projected,history])for(const secret of hiddenValues)
   check(!JSON.stringify(payload).includes(secret),'reads and history exclude private notes, attachment metadata, personal and HR facts')
- check(!Object.hasOwn(projected,'attachments')&&!Object.hasOwn(projected,'context_json'),'attachment counts and native context are excluded')
+ check(!Object.hasOwn(projected,'attachments')&&!Object.hasOwn(projected,'context_json')&&!Object.hasOwn(projected,'quotes')&&!Object.hasOwn(projected,'catalogSnapshot'),'attachment counts, quotes, catalog submissions and native context are excluded')
  for(const query of [...hiddenValues,'mcp-queue-employee@example.test','Network queue confidential marker','Restricted investigation marker','HR accommodation marker'])
   equal((await tool(full.secret,'work.search',{query})).items,[],'search never matches excluded content')
  check((await tool(full.secret,'work.search',{query:'Monitor flickers'})).items.some(w=>w.id===normal.id),'search matches permitted normal ticket text')
