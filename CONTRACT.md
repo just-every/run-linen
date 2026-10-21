@@ -429,7 +429,8 @@ that product and marks how close the current code is (see [Status](#status)).
   use their reviewed attributes at hold and release; failed services remain
   held with a visible reason. Assistant choices recheck eligibility and refuse
   missing required fields/quotes. Credentials, quotes and forms grant no
-  provider or approval authority. API-003 remains credential-only.
+  provider or approval authority. API-003 ticket tools expose no catalog quote
+  or catalog submission payloads.
   Refusals use `catalog_audience` (403, staff see failed dimensions but no
   values), `catalog_changed` (409), `catalog_quote_required` and
   `catalog_quote_type` (422), `catalog_field_required` (422, named question),
@@ -1872,16 +1873,15 @@ that product and marks how close the current code is (see [Status](#status)).
   mint, list and revoke separate-audience grants for existing integration-only
   automation principals. `/api/mcp` authenticates before protocol discovery and
   checks current membership and automation-principal status on every request.
-  Initialize, ping and empty tool/resource discovery work; every tool call is
-  refused, including selected tools, until scoped ticket execution is built.
-  Selected scopes and tools are limits on a future implementation, not current
-  authority. Secrets appear once, hashes never appear in management or exports,
+  Initialize and ping work; tool discovery intersects current scopes, selected
+  tools and queue/own-created readership. Resources remain empty. Six closed
+  ticket tools enforce the queue, projection and commit rules below. Secrets appear once, hashes never appear in management or exports,
   and native restore retains revoked metadata only; legacy workspace import
   retains metadata as history without materializing credentials.
 
   *MCP credential semantic (ct, 20 October):* credential lifecycle and
-  authenticated protocol discovery are implemented; API-003 remains partial.
-  No ticket tool authority is available today. An MCP grant has
+  authenticated protocol discovery and the six scoped ticket tools are
+  implemented. An MCP grant has
   its own audience: a REST token is refused at MCP and an MCP credential is
   refused on `/api/v1/*`; no secret serves both. Only an owner mints one for an
   existing active automation principal holding only the integration role,
@@ -1914,7 +1914,7 @@ that product and marks how close the current code is (see [Status](#status)).
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
   existing done status does not claim that unbuilt catalog quote journey.
 
-  *MCP queue readership (ct, 21 October; unbuilt):* at mint the owner selects
+  *MCP queue readership (ct, 21 October):* at mint the owner selects
   one or more existing workspace agent groups on this credential, shown in its
   metadata and mint audit; work.read/work.comment without a grant, unknown
   groups and other-workspace groups are refused. An owner may narrow a grant
@@ -1944,8 +1944,18 @@ that product and marks how close the current code is (see [Status](#status)).
   No assign/claim/group/state/priority/field/pause/close/merge/bulk/scenario/
   approve/share action is allowed. Restore keeps grants/credentials revoked
   and inert. Audit mint group ids, versioned `mcp.queue_grant_narrowed`, issuer
-  loss and calls with ids only; AUDIT-001 inherits these events. These rules
-  remain unbuilt beyond the credential foundation; API-003 stays partial.
+  loss and calls with ids only; AUDIT-001 inherits these events. Existing
+  custom fields support text and dropdowns; only dropdowns can be owner-classified
+  nonpersonal through `/api/v1/mcp-fields/:id/classification`. DESK-010 inherits
+  this classification and projection boundary before adding further field types.
+  Queue grants narrow through `/api/v1/mcp-credentials/:id/narrow`, using the
+  current grant revision; widening requires re-minting.
+  `tests/platform/base-auth-runtime.mjs` and its `mcp-tools-cases.mjs` journey
+  assert the full native owner/Desk bot boundary. `tests/platform/base-auth-transfer.mjs`
+  asserts actual native archive compatibility and inert restored grants;
+  `tests/ui/mcp-journey.mjs` asserts the internal-comment owner/employee views at
+  1440 and 390. These are local protocol and native-UI results, with no claim
+  that an external agent service or provider has accepted an integration.
 
 - **PORT-001 — Portable native archive.** Owner export of every record,
   attachment and policy as a verified archive, and restore under an execution
@@ -2540,8 +2550,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 41 | 48 | 26 | 115 |
-| All | 46 | 67 | 26 | 139 |
+| Target and push further | 42 | 47 | 26 | 115 |
+| All | 47 | 66 | 26 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2643,7 +2653,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `AUDIT-001` | Audit log | target | done | `src/platform/privacy.ts`, `tests/platform/privacy-runtime.mjs`, `tests/platform/config-runtime.mjs` |  |
 | `API-001` | REST API and webhooks | target | partial | `src/features/work/index.ts`, `src/features/execution/index.ts`, `tests/work/runtime.mjs` | Scoped automation REST tokens and outbound signed event webhooks are unbuilt; session-authenticated REST routes do not prove token authentication. |
 | `API-002` | No-code workflow automator | target | partial | `src/features/execution/automation.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No no-code builder. |
-| `API-003` | Agent access by MCP | target | partial | `src/features/mcp/credentials.ts`; `src/features/mcp/protocol.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/base-auth-transfer.mjs` | Owner-only separate-audience credentials, live integration-only membership, one-time SHA-256 secret, expiry/revocation, erasure hash clearing, empty authenticated MCP discovery and inert archive restore are implemented. Gap: explicit versioned credential queue grants, issuer-owner invalidation/audit, filtered reads and internal revision-checked comments; all ticket tools and current scope/grant/revision enforcement, filtered discovery and the complete Desk bot journey; no ticket tool authority is exposed. |
+| `API-003` | Agent access by MCP | target | done | `src/features/mcp/credentials.ts`; `src/features/mcp/authority.ts`; `src/features/mcp/tools.ts`; `src/features/mcp/projection.ts`; `src/features/mcp/writes.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/mcp-tools-cases.mjs`; `tests/platform/base-auth-transfer.mjs`; `tests/ui/mcp-journey.mjs` | Native owner and MCP public-door assertions cover six closed tools, explicit versioned queue grants, narrowing/remint, live issuer/principal/scope checks, filtered reads/search/history, normal own-ticket creation, internal revision-checked comments without effects, content-free auditing, erasure and actual inert archive restore. Native 1440/390 views retain the internal-comment employee boundary. No external agent/provider acceptance claim. |
 | `PORT-001` | Portable native archive | target | done | `src/features/adoption/export.ts`, `src/features/adoption/import.ts`, `tests/adoption/runtime.mjs` |  |
 | `ERASURE-001` | Authorized erasure | target | done | `src/features/adoption/core.ts`, `src/features/work/privacy.ts`, `tests/adoption/runtime.mjs`, `tests/work/person-binding-runtime.mjs`, `tests/platform/privacy-runtime.mjs` |  |
 | `RETENTION-001` | Retention policies | target | done | `src/features/adoption/retention.ts`, `src/features/work/retention.ts`, `tests/adoption/retention-cases.mjs`, `tests/ui/connected-setup.mjs` | Public-route proof: no hidden default; a 365-day closed-ticket policy is previewed and needs the owner to confirm the exact counts; the run deletes a ticket closed 400 days ago and its attachment bytes with a content-free receipt the owner and auditor read, keeping tickets closed 300 days ago and open tickets. Owner preview/confirm form inspected at 1440/390. |

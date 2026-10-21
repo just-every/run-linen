@@ -4,7 +4,7 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 139 clauses (132 in the contract plus F1–F7), 46 done, 67
+Current count: 139 clauses (132 in the contract plus F1–F7), 47 done, 66
 partial and 26 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
@@ -242,7 +242,7 @@ are unchanged by this rule. A display-name exception requires a further ct rulin
 | **AUDIT-001 Audit log** | Change a grant and export data; the auditor reads both entries; erase the actor's personal data and the entries remain anonymized. Inherit DESK-017’s approved history-value checks below: every surface uses redaction and earlier cleared values are never rebuilt.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); the unbuilt quote journey is not existing evidence. | `src/platform/privacy.ts`; `tests/platform/privacy-runtime.mjs`; `tests/platform/config-runtime.mjs`. | done |
 | **API-001 REST API and webhooks** | Create a ticket through the API with a scoped token; refuse REST tokens at MCP and MCP credentials on `/api/v1/*`; a subscribed webhook receives the signed event; a failing endpoint is retried and logged.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); the unbuilt quote journey is not existing evidence. | `src/features/work/index.ts`; `src/features/execution/index.ts`; `tests/work/runtime.mjs`. Scoped automation REST tokens and outbound signed event webhooks are unbuilt; session-authenticated routes do not prove token authentication. | partial |
 | **API-002 No-code workflow automator** | Build "if category is Hardware and VIP, assign to Exec Support and notify in Slack", test it on a sample, publish version 2 and see version 1 tickets unaffected.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); the unbuilt quote journey is not existing evidence. | `src/features/execution/automation.ts`; `src/features/execution/plans.ts`; `tests/ui/connected-request.mjs`. No no-code builder. | partial |
-| **API-003 Agent access by MCP** | Connect an MCP client as an automation principal; it lists its permitted queue and is refused an out-of-grant action.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); the unbuilt quote journey is not existing evidence. | `tests/platform/base-auth-runtime.mjs` asserts native owner-only mint/list/revoke, integration-only roles, closed scopes/tools, expiry bounds, separate audiences, SHA-256 and one-time secret, commit-time authority/audit rollback, workspace isolation, live membership, empty discovery, tool refusals, last use, expiry audit and erasure/hash clearing. `tests/platform/base-auth-transfer.mjs` asserts hash-free exported metadata, revoked restore and credential refusal after real `rer export/reset/import`, including import of a pre-MCP archive after the additive migration. Gap: explicit credential queue grants, narrowing/remint, issuer-owner invalidation and audit, filtered reads and internal comment boundary; ticket tools with current A1/grant/revision checks, filtered discovery and the full Desk bot journey below. No ticket tool authority is exposed. | partial |
+| **API-003 Agent access by MCP** | Connect an MCP client as an automation principal; it lists its permitted queue and is refused an out-of-grant action.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); the unbuilt quote journey is not existing evidence. | `tests/platform/base-auth-runtime.mjs` with `tests/platform/mcp-tools-cases.mjs` asserts every credential, queue, live authority, tool, read/redaction/history, revision, no-effect and id-only audit point in the journeys below. `tests/platform/base-auth-transfer.mjs` proves old native archive compatibility, hash-free metadata and revoked/inert queue grants after actual export/reset/import. `tests/ui/mcp-journey.mjs` asserts native owner/employee internal-comment views at 1440/390. Local protocol/native-UI proof; no external client-service or provider acceptance claim. | done |
 | **PORT-001 Portable native archive** | Export, restore into a fresh workspace, compare counts and hashes, and see the execution hold and inert grants.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); the unbuilt quote journey is not existing evidence. | `src/features/adoption/export.ts`; `src/features/adoption/import.ts`; `tests/adoption/runtime.mjs`. | done |
 | **ERASURE-001 Authorized erasure** | Erase a person, restore an older archive, and see the content still absent. Inherit DESK-017’s approved history-value checks below: every surface uses redaction and earlier cleared values are never rebuilt.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); the unbuilt quote journey is not existing evidence. | `src/features/adoption/core.ts`; `src/features/work/privacy.ts`; `tests/adoption/runtime.mjs`; `tests/work/person-binding-runtime.mjs`; `tests/platform/privacy-runtime.mjs`. | done |
 | **RETENTION-001 Retention policies** | Set ticket retention to 365 days; a ticket closed 400 days ago and its attachment are deleted with a receipt.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); the unbuilt quote journey is not existing evidence. | `src/features/work/retention.ts`; `tests/adoption/retention-cases.mjs` (previewed + confirmed 365-day policy, ticket closed 400 days ago and its attachment bytes deleted, receipt read by owner and auditor, 300-day and open tickets kept); `tests/ui/connected-setup.mjs` (owner preview and confirm). Archive retention: `src/features/adoption/retention.ts`. | done |
@@ -295,13 +295,13 @@ success only from A4 evidence.
 | **AGENT-009 Carry service commitments across tickets** | A commitment survives ticket closure and restart and flags a hire whose GitHub access never verified. | `src/features/intelligence/commitments.ts`; `tests/intelligence/frontier.mjs`. No live provider observations (such as GitHub access readback) behind commitments. | partial |
 | **AGENT-010 Prevent recurrence and simplify** | A preventive change with recurrence observed over a declared window, and one simplification compared with continued repair on total work. | `src/features/intelligence/simplification.ts`; `tests/intelligence/frontier.mjs`. No recurrence window measured on a real provider or simplification compared with continued repair. | partial |
 
-## Approved history and MCP journeys still to build
+## Approved history and MCP journeys
 
-The following full ct journeys (20 October) remain unfinished; the credential
-foundation assertions cited above do not prove the complete MCP journey.
-DESK-017 stays partial, API-001 partial and API-003 partial. Existing blanket
-clearing and absence of MCP ticket tool authority remain the default until the approved rules
-in CONTRACT.md are implemented and every point below is asserted.
+The ct journeys (20 October) retain their full scope. DESK-017 and API-001
+remain partial. API-003 is asserted through the native session, MCP, archive
+and browser journeys cited in its row. Existing blanket history clearing
+remains in place until DESK-017 implements its remaining approved erasure rules;
+MCP never reconstructs earlier cleared values.
 
 - **DESK-017:** Alice works Bob's ticket, changes priority P3 to P2, category
   Hardware to Laptop and owner-classified nonpersonal Office dropdown Austin
@@ -444,13 +444,14 @@ replaced undecided approver refusal; other readers get 404 without a file name.
 Prove exclusion from AI/search/history/notifications, owner export, erasure,
 retention and content-free auditing. Re-prove bundles (CATALOG-004) atomically,
 pending people (CATALOG-006) held/released with reasons and assistant eligibility
-(CHANNEL-006), plus all current/future carrier rows above. API-003 stays
-credential-only. These are requirements, not evidence or status promotions.
+(CHANNEL-006), plus all current/future carrier rows above. API-003 ticket
+tools expose no catalog submission or quote payloads. These are requirements, not evidence or status promotions.
 
-## Approved MCP queue journey still to build
+## Approved MCP queue journey
 
-API-003 remains partial and exposes no ticket tools. The ct 21 October queue
-ruling additionally requires a public-route MCP journey proving every point:
+API-003 public-route assertions in `tests/platform/base-auth-runtime.mjs` and
+`tests/platform/mcp-tools-cases.mjs` exercise every point of the ct 21 October
+queue ruling:
 
 - Mint refuses no grant or an unknown/foreign group; mint Desk bot for Hardware
   only. It never appears as a group member or assignee and assignment is refused.
@@ -468,4 +469,6 @@ ruling additionally requires a public-route MCP journey proving every point:
 
 DESK-001 keeps owner/operator-only group membership; queue grants never make
 an integration principal a member, lead or assignee. Restore carries no live grant.
-These are unbuilt acceptance requirements, not current passing evidence.
+The native archive journey additionally proves restored credential and queue
+metadata stays revoked, hash-free and inert. These assertions establish the
+local protocol boundary, without an external agent-service integration claim.

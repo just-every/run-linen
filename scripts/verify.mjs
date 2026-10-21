@@ -49,6 +49,7 @@ const checks = [
   ['Freshservice native migration', process.execPath, ['tests/adoption/freshservice-import.mjs']],
   ['adoption and recovery', process.execPath, ['tests/adoption/runtime.mjs']],
   ['coexistence and imported erasure', process.execPath, ['tests/adoption/runtime.mjs'], { LINEN_ADOPTION_HISTORIC: '1' }],
+  ['MCP native conversation', process.execPath, ['tests/ui/run.mjs', 'tests/ui/mcp-journey.mjs']],
   ['browser journeys', process.execPath, ['tests/ui/run.mjs']],
   ['pending person browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/pending-person-browser.mjs']],
   ['desk groups and views browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/desk-group-browser.mjs']],

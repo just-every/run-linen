@@ -70,7 +70,8 @@ try{
   env.DB.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind('desk-bot','urn:linen:automation:desk-bot','Desk bot','!non-interactive-automation',stamp),
   env.DB.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('workspace','desk-bot','["integration"]'),
   env.DB.prepare('INSERT INTO execution_automation_principals VALUES(?,?,?,?,?,NULL)').bind('workspace','desk-bot','Desk bot','API-003-transfer',stamp),
-  env.DB.prepare("INSERT INTO mcp_credentials VALUES(?,?,?,?,?,?,?,?, 'active',?,?,NULL,NULL)").bind('mcp-grant','workspace','desk-bot','Desk bot','["work.read"]','["work.list"]',new Date(Date.now()+30*86400000).toISOString(),createHash('sha256').update('linen_mcp_'+('1'.repeat(36))+('2'.repeat(36))).digest('hex'),'owner',stamp),
+  env.DB.prepare('INSERT INTO work_groups(id,workspace_id,name,created_by,created_at) VALUES(?,?,?,?,?)').bind('hardware','workspace','Hardware','owner',stamp),
+  env.DB.prepare("INSERT INTO mcp_credentials(id,workspace_id,principal_id,name,scopes_json,tools_json,expires_at,secret_hash,state,created_by,created_at,queue_groups_json,grant_version,grant_updated_by) VALUES(?,?,?,?,?,?,?,?, 'active',?,?,?,1,?)").bind('mcp-grant','workspace','desk-bot','Desk bot','["work.read"]','["work.list"]',new Date(Date.now()+30*86400000).toISOString(),createHash('sha256').update('linen_mcp_'+('1'.repeat(36))+('2'.repeat(36))).digest('hex'),'owner',stamp,'["hardware"]','owner'),
   env.DB.prepare('INSERT INTO intelligence_engineering_grants VALUES(?,?,?,?,?,?,?,?,?)').bind('grant','workspace',1,'owner','synthetic-bearer','{}','2099-01-01',null,stamp),
   env.DB.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind('connection','workspace','sendgrid','Fixture','{}','synthetic-encrypted-secret','verified',stamp,stamp),
   env.DB.prepare('INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,created_at,updated_at,dedup_key) VALUES(?,?,?,?,?,?,?,?,?)').bind('work','workspace','owner','owner','request','Retained real record',stamp,stamp,'transfer'),
@@ -91,6 +92,8 @@ try{
  const mcpRows=[];
  for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='mcp_credentials')mcpRows.push(item.row);
  assert.equal(mcpRows.length,1,'API-003 actual archive carries credential metadata');
+ assert.deepEqual(JSON.parse(mcpRows[0].queue_groups_json),['hardware'],'API-003 export retains the explicit credential queue grant');
+ assert.equal(mcpRows[0].grant_version,1);
  assert.equal(mcpRows[0].name,'Desk bot');assert.equal(mcpRows[0].secret_hash,null,'API-003 no hash is exported');assert.equal(mcpRows[0].state,'revoked');
 
  await run(['exec','rer','reset','--yes'])
@@ -102,7 +105,9 @@ try{
  assert.equal((await env.DB.prepare('SELECT password_hash FROM users WHERE id="owner"').first()).password_hash,'!restored-email-link')
  assert.equal((await env.DB.prepare('SELECT secret_ciphertext FROM connections').first()).secret_ciphertext,null)
  assert.ok((await env.DB.prepare('SELECT revoked_at FROM intelligence_engineering_grants').first()).revoked_at)
- const restoredMcp=await env.DB.prepare('SELECT name,secret_hash,state,invalidated_at FROM mcp_credentials WHERE id="mcp-grant"').first();
+ const restoredMcp=await env.DB.prepare('SELECT name,secret_hash,state,invalidated_at,queue_groups_json,grant_version FROM mcp_credentials WHERE id="mcp-grant"').first();
+ assert.deepEqual(JSON.parse(restoredMcp.queue_groups_json),['hardware'],'API-003 restore retains inert queue metadata');
+ assert.equal(restoredMcp.grant_version,1);
  assert.equal(restoredMcp.name,'Desk bot','API-003 archive retains metadata');assert.equal(restoredMcp.secret_hash,null,'API-003 archive excludes credential hash');assert.equal(restoredMcp.state,'revoked');assert.ok(restoredMcp.invalidated_at,'API-003 restore leaves credential revoked and inert');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT catalog_snapshot_json FROM work_fulfilments WHERE id='catalog-request'").first()).catalog_snapshot_json),catalogSnapshot,'CATALOG-001 actual rer archive retains submitted questions, answers, original cost/delivery and old item revision');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT form_json FROM work_catalog WHERE id='catalog-monitor'").first()).form_json),catalogForm,'CATALOG-001 actual rer archive separately retains current catalog metadata');

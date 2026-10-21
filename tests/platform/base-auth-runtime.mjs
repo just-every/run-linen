@@ -1,3 +1,4 @@
+import {mcpToolCases} from './mcp-tools-cases.mjs'
 import {mailEdge} from './mail-edge.mjs'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
@@ -89,24 +90,25 @@ try{
  assert.equal((await request('/api/mcp',{cookie:ownerCookie})).status,401,'API-003 an owner session is not an MCP grant');
  const bot=(await ownerApi('/automation-principals',{name:'Desk bot',idempotencyKey:'synthetic-API-003-desk-bot'})).value;
  assert.ok(bot.id,'API-003 use an existing automation principal');
- const grant={principalId:bot.id,name:'Desk bot',scopes:['work.read','work.comment'],tools:['work.list','work.get','work.comment'],expiresAt:new Date(Date.now()+30*86400000).toISOString()};
+ const hardware=(await ownerApi('/work-groups',{name:'Hardware'})).value;assert.ok(hardware.id,'API-003 real Hardware queue');
+ const grant={groupIds:[hardware.id],principalId:bot.id,name:'Desk bot',scopes:['work.read','work.comment'],tools:['work.list','work.get','work.comment'],expiresAt:new Date(Date.now()+30*86400000).toISOString()};
  for(const patch of [{principalId:member.id},{principalId:session.principal.userId},{principalId:'absent'},{tools:['approve']},{scopes:['owner']},{scopes:['work.read']},{tools:['work.get','work.get']},{expiresAt:'invalid'},{expiresAt:new Date(Date.now()-1000).toISOString()},{expiresAt:new Date(Date.now()+366*86400000).toISOString()}])
   assert.ok((await ownerApi('/mcp-credentials',{...grant,...patch})).status>=400,'API-003 closed selections, expiry and automation-only minting');
  const noCsrf=await request('/api/v1/mcp-credentials',{method:'POST',cookie:ownerCookie,body:grant});
  assert.equal(noCsrf.status,403,'API-003 native CSRF protects mint');
  const created=await ownerApi('/mcp-credentials',grant);
  assert.equal(created.status,201,'API-003 owner mints for an integration-only principal');
- const credential=created.value;assert.match(credential.secret,/^linen_mcp_/);assert.equal(credential.toolsAvailable,false,'API-003 no unbuilt tool authority is claimed');
+ const credential=created.value;assert.match(credential.secret,/^linen_mcp_/);assert.equal(credential.toolsAvailable,true,'API-003 scoped tools are available');
  const listed=(await ownerApi('/mcp-credentials')).value.items;
  const first=listed.find(row=>row.id===credential.id);
  assert.equal(first.last_used_at,null);assert.deepEqual(JSON.parse(first.tools_json),grant.tools);assert.equal(first.expires_at,grant.expiresAt);
  assert.ok(!JSON.stringify(listed).includes(credential.secret) && !JSON.stringify(listed).includes('secret_hash'),'API-003 secret shown once, hash not in management projection');
  assert.equal((await rpc(credential.secret,'initialize')).value.result.serverInfo.name,'Linen','API-003 authenticated MCP initialize');
- assert.deepEqual((await rpc(credential.secret)).value.result,{tools:[]},'API-003 no tools are currently usable');
+ assert.deepEqual((await rpc(credential.secret)).value.result.tools.map(t=>t.name).sort(),[...grant.tools].sort(),'API-003 discovery lists exactly the three currently permitted tools');
  assert.deepEqual((await rpc(credential.secret,'resources/list')).value.result,{resources:[]});
  assert.deepEqual((await rpc(credential.secret,'resources/templates/list')).value.result,{resourceTemplates:[]});
  assert.ok((await ownerApi('/mcp-credentials')).value.items.find(row=>row.id===credential.id).last_used_at,'API-003 last use is visible');
- for(const method of ['work.create','approve','credentials.mint','grants.create','export','restore','erase','connector.dispatch','task.plan','bulk','tools/call']) {
+ for(const method of ['work.create','approve','credentials.mint','grants.create','export','restore','erase','connector.dispatch','task.plan','bulk']) {
   const refusal=await rpc(credential.secret,method,{name:'approve-PRIVATE-ARGUMENT',arguments:{text:'PRIVATE-ARGUMENT',secret:credential.secret}});
   assert.equal(refusal.value.error.code,-32601,'API-003 no tool, approval, configuration, archive or external effects are available');
  }
@@ -114,8 +116,9 @@ try{
   assert.equal((await request('/api/v1'+path,{cookie:ownerCookie,headers:{Authorization:'Bearer '+credential.secret}})).status,401,'API-003 MCP audience is refused at REST even with a session cookie');
  const sql=command=>{
   const result=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--config',config,'--local','--persist-to',dir,'--json','--command',command],{encoding:'utf8'});
-  assert.equal(result.status,0,result.stderr);return JSON.parse(result.stdout).flatMap(x=>x.results);
+  assert.equal(result.status,0,result.stdout+result.stderr);return JSON.parse(result.stdout).flatMap(x=>x.results);
  };
+ await mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,session,member,request});
  // A second authenticated owner cannot see, mint for, or revoke another workspace's grant.
  sql("INSERT INTO workspaces VALUES('mcp-other-workspace','Other','2026-01-01')");
  const second=(await ownerApi('/members',{email:'mcp-other@example.test',name:'Other owner',password:'API-003-other-owner-password',roles:['owner']})).value;
@@ -125,7 +128,7 @@ try{
  const foreign=async(path,body)=>request('/api/v1'+path,{method:body===undefined?'GET':'POST',body,cookie:secondCookie,headers:{'X-Linen-CSRF':secondSession.csrfToken}});
  assert.deepEqual(await read(await foreign('/mcp-credentials')),{items:[]},'API-003 workspace isolation');
  assert.equal((await foreign('/mcp-credentials/'+credential.id+'/revoke',{})).status,404);
- assert.equal((await foreign('/mcp-credentials',grant)).status,403);
+ assert.ok((await foreign('/mcp-credentials',grant)).status>=400,'API-003 foreign principal and group are refused');
  // Commit-time owner guard and audit-failure rollback exercise the real mint route.
  const beforeFailure=(await ownerApi('/mcp-credentials')).value.items.length;
  sql("CREATE TRIGGER test_mcp_owner_race BEFORE INSERT ON mcp_credentials BEGIN UPDATE memberships SET active=0 WHERE user_id=NEW.created_by; END");
@@ -139,8 +142,8 @@ try{
  assert.equal(stored.secret_hash,createHash('sha256').update(credential.secret).digest('hex'),'API-003 stores only SHA-256');
  const audits=sql("SELECT * FROM audit_events WHERE action LIKE 'mcp.%'");
  assert.ok(audits.some(row=>row.action==='mcp.credential_minted'),'API-003 mint audited atomically');
- const calls=audits.filter(row=>row.action==='mcp.call');assert.ok(calls.length>=15);
- for(const row of calls){const detail=JSON.parse(row.detail_json);assert.equal(row.actor_id,bot.id);assert.equal(detail.credentialId,credential.id);assert.equal(detail.principalId,bot.id);assert.deepEqual(detail.targetIds,[]);assert.ok(row.created_at);}
+ const calls=audits.filter(row=>row.action==='mcp.call' && row.target===credential.id);assert.ok(calls.length>=15);
+ for(const row of calls){const detail=JSON.parse(row.detail_json);assert.equal(row.actor_id,bot.id);assert.equal(detail.credentialId,credential.id);assert.equal(detail.principalId,bot.id);assert.ok(Array.isArray(detail.targetIds));assert.ok(row.created_at);}
  assert.ok(!JSON.stringify(audits).includes(credential.secret)&&!JSON.stringify(audits).includes('PRIVATE-ARGUMENT'),'API-003 audits have no secret, body or untrusted tool name');
  for(const roles of [['owner'],['integration','owner'],['integration','operator'],['integration','approver'],['integration','hr'],['integration','auditor']]) {
   assert.equal((await ownerApi('/members/'+bot.id,{roles,active:true},'PATCH')).status,200);
@@ -178,7 +181,7 @@ try{
  assert.equal((await rpc(erasing.secret)).status,401,'API-003 erasure invalidates next call');
  assert.equal((await ownerApi('/mcp-credentials',grant)).status,403,'API-003 erased principal cannot mint another grant');
  assert.ok(sql("SELECT state,secret_hash FROM mcp_credentials WHERE principal_id='"+bot.id+"'").every(row=>row.state==='revoked'&&row.secret_hash===null),'API-003 erasure clears all principal credential hashes');
- console.log('PASS API-003 native owner mint/list/revoke; SHA-256 one-time secret; closed scopes/tools and expiry; separate audiences; authenticated empty discovery and fail-closed tool calls; live roles/membership; audit without bodies or secret; principal erasure/hash removal');
+ console.log('PASS API-003 native owner mint/list/revoke; SHA-256 one-time secret; closed scopes/tools and expiry; separate audiences; filtered discovery and scoped ticket tools; live roles/membership; audit without bodies or secret; principal erasure/hash removal');
  console.log('PASS Base native claim race, Lobby/setup, ordinary provider email-link replay, native membership/password/session retention and revocation, bound step-up proof, CSRF/origin, dev gate and production denial')
 }finally{
  if(worker){worker.kill('SIGTERM');await Promise.race([new Promise(r=>worker.once('exit',r)),new Promise(r=>setTimeout(r,5000))]);if(worker.exitCode===null)worker.kill('SIGKILL')}
