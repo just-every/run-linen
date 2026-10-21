@@ -365,6 +365,23 @@ that product and marks how close the current code is (see [Status](#status)).
   submission without it, and the attached quote is visible to its approvers but
   not to other employees; edit the item and see an in-flight request unchanged.
 
+  *Current form slice (sx, 21 October):* the owner acts for admin and edits
+  forms on existing access, software and device catalog items. Supported fields
+  are short text, long text, finite numbers, yes/no, single-choice lists and
+  calendar dates. A condition equals an earlier answer exactly; only visible
+  questions are required, and hidden or unknown answers are refused. A required
+  yes/no question accepts either yes or no. Cost is nonnegative whole USD cents;
+  delivery is a positive whole number of elapsed hours, an estimate rather than
+  a promised completion time. Empty cost or delivery means unknown. Saving
+  form metadata creates a new catalog revision; a request records its original
+  form, answers, cost and delivery estimate and never silently adopts later
+  edits. A stale new submission is refused. Answers inherit A1's ticket scopes
+  and ERASURE-001's content removal; bundle submission validates every child's
+  empty answers before opening work. Future CHANNEL-001/002/005 and API-001/003
+  doors must enforce the same form revision and validation before shipping.
+  Department/location/employment audiences, required quote files and the
+  remaining item types are still unbuilt; CATALOG-001 stays partial.
+
 - **CATALOG-002 — Approval chains.** Per item: manager, application owner, cost
   center or finance above a USD threshold, and named groups, in serial or
   parallel, any-of or all-of, with delegation, out-of-office substitution,
@@ -2374,7 +2391,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CHANNEL-007` | Phone and walk-up intake | target | missing |  | No phone-system or walk-up intake. |
 | `CHANNEL-008` | Service notices to employees | target | partial | `src/features/services/employee-notices.ts`, `src/features/services/employee-notice-mail.ts`, `src/ui/service-notices.tsx`, `tests/services/employee-notice-cases.mjs`, `tests/services/run.mjs`, `tests/ui/service-notice-journey.mjs` | Portal cohort notices, matching-ticket offers, cadence, generic SendGrid mail, named verified all-clear and withdrawal implemented. Gap: Slack and Teams delivery/adapter acceptance under CHANNEL-001/002. |
 | `CHANNEL-009` | Request sharing and manager visibility | target | done | `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs` | |
-| `CATALOG-001` | Catalog items with forms | target | partial | `src/features/work/requests.ts`, `tests/ui/connected-request.mjs` | No form builder, conditional fields, required attachments, audience or cost. |
+| `CATALOG-001` | Catalog items with forms | target | partial | `src/features/work/catalog-items.ts`; `src/features/work/catalog-form-schema.ts`; `tests/work/application-cases.mjs`; `tests/ui/application-journey.mjs` | Conditional typed forms, USD cost, elapsed-hour delivery estimates and immutable submitted form metadata are implemented for existing item kinds. Gap: department/location/employment-type audience controls, required quote attachments, accounts/general-service items and the complete two-department/quote journey. |
 | `CATALOG-002` | Approval chains | target | partial | `src/features/work/fulfilment-decisions.ts`, `src/features/work/delegation.ts`, `tests/ui/fulfilment-decision-journey.mjs`, `tests/execution/authority-manager-cases.mjs` | Single manager approval; no multi-level, finance threshold, approval SLA or email-reply approval. |
 | `CATALOG-003` | Fulfillment task plans | target | partial | `src/features/work/requests.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No team task templates. |
 | `CATALOG-004` | Bundles and kits | target | done | `src/features/work/bundles.ts`, `src/ui/bundles.tsx`, `tests/work/bundle-cases.mjs` | Public-route proof: an owner-built hardware/software/access bundle opens one ticket with five child fulfilments; one atomic manager decision covers both gated children (partial and single-child approvals refused); per-child grants run and verify; the bundle stays in progress until the laptop handoff verifies the fifth child, then reads complete; a changed item refuses the stale bundle. Bundle builder, grouped manager decision and per-item progress inspected at 1440/390. |
