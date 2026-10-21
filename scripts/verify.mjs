@@ -73,10 +73,32 @@ if (shardValue !== undefined) {
   }
   shard = { number, count }
 }
+// Seconds each check took on CI (Verify 39658205193); unlisted checks count as 10.
+// Heaviest first onto the lightest shard keeps every shard inside its job limit.
+const measuredSeconds = {
+  'Native archive transfer': 447, 'browser journeys': 249, 'native connected provider journeys': 246,
+  'identity erasure': 143, 'operations KPI browser': 100, 'Base native auth': 78,
+  'desk scenarios and templates browser': 74, 'connection and authority setup': 69, 'release browser': 56,
+  'pending person browser': 55, 'MCP native conversation': 51, 'desk groups and views browser': 49,
+  'Legacy session retirement': 46, 'service integration': 37, 'adoption and recovery': 36,
+  'pending person services': 35, 'migration order and retained history': 33, 'catalog team tasks browser': 33,
+  'work and lifecycle': 32, 'service notice browser': 32, 'emitted Worker': 30,
+  'ordinary intake and independent evidence': 29, 'work integration regressions': 28,
+  'Freshservice and Snipe-IT native migration': 26,
+}
+function shardChecks(count) {
+  const loads = Array(count).fill(0), shards = Array.from({ length: count }, () => [])
+  const order = checks.slice(1).map((check, index) => ({ check, index, seconds: measuredSeconds[check[0]] ?? 10 }))
+    .sort((a, b) => b.seconds - a.seconds || a.index - b.index)
+  for (const item of order) {
+    const lightest = loads.indexOf(Math.min(...loads))
+    loads[lightest] += item.seconds
+    shards[lightest].push(item)
+  }
+  return shards.map(items => items.sort((a, b) => a.index - b.index).map(item => item.check))
+}
 // Every shard builds its own emitted Worker before its assigned checks.
-const selectedChecks = shard
-  ? [checks[0], ...checks.slice(1).filter((_, index) => index % shard.count === shard.number - 1)]
-  : checks
+const selectedChecks = shard ? [checks[0], ...shardChecks(shard.count)[shard.number - 1]] : checks
 const shardLabel = shard ? ` (shard ${shard.number}/${shard.count})` : ''
 await mkdir(output, { recursive: true })
 const results = []
