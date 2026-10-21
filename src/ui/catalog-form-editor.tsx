@@ -1,0 +1,41 @@
+import { useState, type FormEvent } from 'react';
+import { request, type RecordValue } from './api';
+import { useSession } from './state';
+import { ErrorNotice, Notice } from './primitives';
+import type { CatalogField, CatalogForm } from '../features/work/catalog-form-schema';
+
+type Item = {id:string;name:string;revision:number;form:CatalogForm};
+export function CatalogFormEditor({item,onSaved}:{item:Item;onSaved:()=>void}) {
+  const {session}=useSession(),[fields,setFields]=useState<CatalogField[]>(item.form.fields);
+  const [error,setError]=useState<unknown>(null),[saving,setSaving]=useState(false),[saved,setSaved]=useState(false);
+  function edit(index:number,patch:Partial<CatalogField>) {setFields(fields.map((f,i)=>i===index?{...f,...patch}:f));}
+  async function save(e:FormEvent<HTMLFormElement>) {
+    e.preventDefault();setError(null);setSaved(false);setSaving(true);
+    const data=new FormData(e.currentTarget),price=String(data.get('price')),hours=String(data.get('hours'));
+    try {
+      if(price && !/^\d+(\.\d{1,2})?$/.test(price))throw Error('Use USD with at most two decimal places.');
+      await request(`/catalog/${item.id}/form`,{method:'POST',csrf:session.csrfToken,body:{name:data.get('name'),revision:item.revision,
+        form:{fields:fields.map(f=>({...f,...(f.type==='select'?{options:f.options??[]}:{} )})),costCents:price?Math.round(Number(price)*100):null,deliveryHours:hours?Number(hours):null}}});
+      setSaved(true);onSaved();
+    }catch(error){setError(error);}finally{setSaving(false);}
+  }
+  return <form className="inline-form" onSubmit={save}>
+    <label>Catalog item name<input name="name" required defaultValue={item.name}/></label>
+    <label>Request cost in USD<input name="price" type="number" min="0" step="0.01" defaultValue={item.form.costCents===null?'':item.form.costCents/100}/></label>
+    <label>Expected delivery in elapsed hours<input name="hours" type="number" min="1" step="1" defaultValue={item.form.deliveryHours??''}/></label>
+    <p>Leave cost or delivery empty when unknown. These are recorded estimates.</p>
+    {fields.map((field,index)=><fieldset key={field.id}><legend>Question {index+1}</legend>
+      <label>Question label {index+1}<input value={field.label} required maxLength={120} onChange={e=>edit(index,{label:e.target.value})}/></label>
+      <label>Answer type {index+1}<select value={field.type} onChange={e=>{const {options,...rest}=field;setFields(fields.map((f,i)=>i===index?{...rest,type:e.target.value as CatalogField['type'],...(e.target.value==='select'?{options:[]}: {})}:f));}}>{['text','textarea','number','checkbox','select','date'].map(t=><option key={t} value={t}>{({text:'Short text',textarea:'Long text',number:'Number',checkbox:'Yes or no',select:'Choose one',date:'Date'})[t]}</option>)}</select></label>
+      <label className="checkbox-field"><input type="checkbox" checked={field.required} onChange={e=>edit(index,{required:e.target.checked})}/>Required question {index+1}</label>
+      {field.type==='select'&&<label>Choices {index+1}<textarea value={(field.options??[]).join('\n')} onChange={e=>edit(index,{options:e.target.value.split('\n')})}/><small>One choice per line.</small></label>}
+      {index>0&&<><label>Show question {index+1} when<select value={field.when?.fieldId??''} onChange={e=>edit(index,{when:e.target.value?{fieldId:e.target.value,equals:''}:undefined})}><option value="">Always</option>{fields.slice(0,index).map(f=><option key={f.id} value={f.id}>{f.label||'Untitled question'}</option>)}</select></label>
+      {field.when&&<label>Matching answer {index+1}<input required value={String(field.when.equals)} onChange={e=>{const parent=fields.find(f=>f.id===field.when!.fieldId)!;const value=e.target.value;edit(index,{when:{fieldId:parent.id,equals:parent.type==='number'?Number(value):parent.type==='checkbox'?value==='true':value}});}}/><small>For yes or no, use true or false. Other answers must match exactly.</small></label>}</>}
+      <button type="button" className="action secondary" onClick={()=>setFields(fields.filter((_,i)=>i!==index))}>Remove question {index+1}</button>
+    </fieldset>)}
+    <button type="button" className="action secondary" disabled={fields.length>=20} onClick={()=>setFields([...fields,{id:'f_'+crypto.randomUUID().replaceAll('-',''),label:'',type:'text',required:false}])}>Add question</button>
+    <Notice>Saving makes a new item revision. Submitted forms keep their original questions, answers, cost and delivery estimate. Audience restrictions and required quote files are not available yet.</Notice>
+    <ErrorNotice error={error}/>{saved&&<Notice>Catalog form saved.</Notice>}
+    <button className="action primary" disabled={saving}>Save catalog form</button>
+  </form>;
+}

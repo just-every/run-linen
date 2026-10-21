@@ -1,4 +1,5 @@
-import { resolveApplication, applicationForRequest, applicationProjection } from './application-catalog';
+import { catalogRequestSnapshot } from './catalog-items';
+import { applicationForRequest, applicationProjection } from './application-catalog';
 import { bindingErasureGuard, personForMember } from './person-binding';
 import { fulfilmentManagerApproval } from "./fulfilment-authority";
 import { amendFulfilment } from "./fulfilment-amend";
@@ -6,63 +7,14 @@ import { resolveManager } from "./delegation";
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { getWork, permit, type WorkContext } from "./core";
-export async function createCatalogItem(
-  ctx: WorkContext,
-  input: {
-    name: string;
-    kind: "access" | "software" | "device";
-    target?: string;
-    ownerId?: string;
-    applicationId?: string;
-    entitlementId?: string;
-    requiresManager?: boolean;
-    capacity?: number;
-  },
-) {
-  await currentWorkPrincipal(ctx);
-  permit(ctx, ["owner"]);
-  const application = input.applicationId && input.entitlementId ? await resolveApplication(ctx,input.applicationId,input.entitlementId) : null;
-  if(Boolean(input.applicationId)!==Boolean(input.entitlementId))throw new ApiError(422,'application_link','Application and entitlement must be selected together');
-  if(application) {
-    if(input.kind==='device' || (input.target && input.target!==application.target) || (input.ownerId && input.ownerId!==application.ownerId))
-      throw new ApiError(422,'application_link','Linked catalog target and owner come from the application');
-    input={...input,target:application.target,ownerId:application.ownerId};
-  }
-  if (
-    !input.name ||
-    !input.target ||
-    !input.ownerId ||
-    !["access", "software", "device"].includes(input.kind) ||
-    (input.capacity !== undefined &&
-      (!Number.isInteger(input.capacity) || input.capacity < 0))
-  )
-    throw new ApiError(
-      422,
-      "catalog_invalid",
-      "Name, target, owner, kind and nonnegative capacity required",
-    );
-  const itemId = id();
-  await ctx.env.DB.prepare("INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,requires_manager,capacity,revision,application_id,entitlement_id) VALUES(?,?,?,?,?,?,?,?,1,?,?)")
-    .bind(
-      itemId,
-      ctx.principal.workspaceId,
-      input.name,
-      input.kind,
-      input.target,
-      input.ownerId,
-      Number(input.requiresManager || false),
-      input.capacity ?? null,
-      input.applicationId || null,
-      input.entitlementId || null,
-    )
-    .run();
-  return { id: itemId };
-}
+export { createCatalogItem } from './catalog-items';
 export async function requestFulfilment(
   ctx: WorkContext,
   workId: string,
   input: {
     catalogId: string;
+    catalogRevision?: number;
+    answers?: unknown;
     beneficiaryId: string;
     purpose: string;
     expiresAt?: string;
@@ -100,7 +52,7 @@ export async function requestFulfilment(
   )
     .bind(ctx.principal.workspaceId, input.catalogId)
     .first<{
-      id: string;
+      id: string; name: string; revision: number; form_json: string;
       application_id: string | null;
       entitlement_id: string | null;
       kind: string;
@@ -110,6 +62,7 @@ export async function requestFulfilment(
       capacity: number | null;
     }>();
   if (!catalog) throw new ApiError(404, "not_found", "Catalog item not found");
+  const catalogSnapshot = await catalogRequestSnapshot(ctx,workId,catalog,input);
   const application = await applicationForRequest(ctx,workId,catalog);
   if(application)catalog.owner_id=application.ownerId;
   const person = await personForMember(ctx, input.beneficiaryId);
@@ -178,11 +131,15 @@ export async function requestFulfilment(
           ? "No stock; acquisition owner required"
           : "No license capacity; license owner required";
   }
-  const fid = id();
+  const fid = id(), catalogGuard = id();
   const kind = catalog.kind === "device" ? "device.deliver" : "access.grant";
-  await ctx.env.DB.batch([
+  try { await ctx.env.DB.batch([
+    ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
+      EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?) OR
+      EXISTS(SELECT 1 FROM work_catalog WHERE workspace_id=? AND id=? AND revision=? AND form_json=?) THEN 1 ELSE 0 END)`)
+      .bind(catalogGuard,ctx.principal.workspaceId,work.id,input.catalogId,ctx.principal.workspaceId,input.catalogId,catalogSnapshot.revision,JSON.stringify(catalogSnapshot.form)),
     ctx.env.DB.prepare(
-      "INSERT OR IGNORE INTO work_fulfilments(id,workspace_id,work_id,catalog_id,beneficiary_id,purpose,expires_at,revision,application_json) VALUES(?,?,?,?,?,?,?,1,?)",
+      "INSERT OR IGNORE INTO work_fulfilments(id,workspace_id,work_id,catalog_id,beneficiary_id,purpose,expires_at,revision,application_json,catalog_snapshot_json) VALUES(?,?,?,?,?,?,?,1,?,?)",
     ).bind(
       fid,
       ctx.principal.workspaceId,
@@ -192,6 +149,7 @@ export async function requestFulfilment(
       input.purpose,
       input.expiresAt || null,
       application ? JSON.stringify(application) : null,
+      JSON.stringify(catalogSnapshot),
     ),
     ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,last_error) VALUES(?,?,?,?,?,?,?,?,?,?)",
@@ -209,7 +167,11 @@ export async function requestFulfilment(
     ),
     // A newly recorded responsibility is a change to the request: its queue row and "Last changed" move.
     ...(previous ? [] : [ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(now(), ctx.principal.workspaceId, work.id)]),
-  ]);
+    ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id=?").bind(catalogGuard),
+  ]); } catch(error) {
+    if(String(error).includes('CHECK constraint failed'))throw new ApiError(409,'catalog_changed','Catalog form changed before submission; review it again');
+    throw error;
+  }
   if (input.expiresAt && catalog.kind !== "device")
     await ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,owner_id) VALUES(?,?,?,?,?,?,?,?)",
@@ -232,6 +194,7 @@ export async function requestFulfilment(
     ownerId: catalog.owner_id,
     decisionOwner,
     application: application ? applicationProjection(ctx,application) : null,
+    catalogSnapshot,
     authority:
       "Execution must independently check current action grant; manager identity is not a grant",
   };

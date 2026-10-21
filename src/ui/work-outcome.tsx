@@ -1,3 +1,4 @@
+import { CatalogRequestForm, SubmittedCatalogForms } from './catalog-request-form';
 import { RequestedApplications } from './applications';
 import { useState } from "react";
 import { usePeopleLabels } from "./people-labels";
@@ -5,7 +6,6 @@ import { date, text, type RecordValue } from "./api";
 import { kindLabel } from "./labels";
 import { useRemote, useSession } from "./state";
 import { Badge, ErrorNotice, Facts, Loading, Notice } from "./primitives";
-import { ActionForm } from "./forms";
 import { namedOther } from "./request-facts";
 import type { WorkRecord } from "./work";
 import type { PendingPerson } from "./pending-people";
@@ -28,6 +28,7 @@ export function WorkOutcome({ work, onChanged, pendingPerson }: { work: WorkReco
     );
   return (
     <section className="work-outcome">
+      <SubmittedCatalogForms key={saved ? JSON.stringify(saved) : workId} workId={workId}/>
       <RequestedApplications key={saved ? JSON.stringify(saved) : workId} workId={workId}/>
       {obligations.loading ? (
         <Loading label="Reading the remaining responsibilities…" />
@@ -69,37 +70,8 @@ export function WorkOutcome({ work, onChanged, pendingPerson }: { work: WorkReco
         </Notice>
       )}
       {Boolean(catalog.data?.items.length) && !closed && !named && pendingPerson?.state !== "pending" && (
-        <ActionForm
-          title="Or choose a known service"
-          path={`/work/${workId}/fulfilment`}
-          defaults={{ beneficiaryId: work.beneficiary_id }}
-          fields={[
-            {
-              name: "catalogId",
-              label: "Service",
-              type: "select",
-              required: true,
-              options: catalog.data!.items.map((c) => ({
-                value: text(c.id),
-                label: text(c.name)+(c.application ? ` · $${(Number((c.application as RecordValue).costCents)/100).toFixed(2)} / ${text((c.application as RecordValue).billingPeriod)}` : c.applicationUnavailable ? ' · registration needs review' : ''),
-              })),
-            },
-            {
-              name: "purpose",
-              label: "What do you need it for?",
-              type: "textarea",
-              required: true,
-            },
-            {
-              name: "expiresAt",
-              label: "Needed until",
-              type: "datetime-local",
-              hint: "Leave empty only when access does not have an expiry.",
-            },
-          ]}
-          explanation="You can also ask in the conversation. This optional selection preserves the same request."
-          onSaved={(result) => { setSaved(result); obligations.refresh(); onChanged?.(); }}
-        />
+        <CatalogRequestForm items={catalog.data!.items} workId={workId} beneficiaryId={work.beneficiary_id}
+          onSaved={result=>{setSaved(result);obligations.refresh();onChanged?.();}}/>
       )}
     </section>
   );

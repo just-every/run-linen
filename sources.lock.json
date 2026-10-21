@@ -1030,6 +1030,10 @@
       "sha256": "c9db221578907b83f974e734d56ee24168432f1bc0b9a34d6ac0949145bc7510",
       "executable": false
     },
+    "migrations/0770_catalog_forms.sql": {
+      "sha256": "d4c7b53cc5b94c9fecbab4ded64fd99f3b46dc2cc3aa5138ed1bf7e7134555b4",
+      "executable": false
+    },
     "ONBOARDING.md": {
       "sha256": "bb2638772c83081938fe706542d4c7a884e8b928717abf3a371c52208e80d82c",
       "executable": false
@@ -2123,7 +2127,7 @@
       "executable": false
     },
     "src/features/work/application-routes.ts": {
-      "sha256": "b3963c65c926dd8d6774f417f294669026b7492f9c382c85b31177186167c88e",
+      "sha256": "093f0ea26eb587c97fd2e4a4d0fe838a3a1a06d18372b672770fd45c15790b89",
       "executable": false
     },
     "src/features/work/application-schema.ts": {
@@ -2176,6 +2180,14 @@
     },
     "src/features/work/canned-responses.ts": {
       "sha256": "dec5755e57d35b4a8fa75f2c397c12f5fbca120451f7097a10d45ad593623949",
+      "executable": false
+    },
+    "src/features/work/catalog-form-schema.ts": {
+      "sha256": "902666f98375c242e4b67d9a90269b630af95828843950de082fa5cbb8e7cfaa",
+      "executable": false
+    },
+    "src/features/work/catalog-items.ts": {
+      "sha256": "c217ee02eb7cb0e41000561679552db6d625b5433d63da0bb843dbeed6e81634",
       "executable": false
     },
     "src/features/work/classification-policy.ts": {
@@ -2283,7 +2295,7 @@
       "executable": false
     },
     "src/features/work/fulfilment-amend.ts": {
-      "sha256": "ea843390e8d6b2725cb412058d4d5e4b6f6028695434b377aaf1a156237d1dbd",
+      "sha256": "36ddb1c7f045b2dad9fbfa9b723d8446fecf9250b2bc59bb053c46120985ee09",
       "executable": false
     },
     "src/features/work/fulfilment-authority.ts": {
@@ -2351,7 +2363,7 @@
       "executable": false
     },
     "src/features/work/knowledge-routes.ts": {
-      "sha256": "af0ccd48cdd910f50c362ba1d654a8e4b6a7f443d328a5e67038df2031539b27",
+      "sha256": "49bcab5eb64a3dc9be60d05ed2324d86dcd79eeaae3d06df5d8a2c03b297d52f",
       "executable": false
     },
     "src/features/work/knowledge.ts": {
@@ -2407,7 +2419,7 @@
       "executable": false
     },
     "src/features/work/privacy.ts": {
-      "sha256": "a29704d33f7577c4d54447ea9bd44d2bb7cf00dc2e275296fd7e37a8d6c61b89",
+      "sha256": "3c9f5d0844833d6eb2c90f1547b1091df3a1de0a8322e89d33efcb9867e8a999",
       "executable": false
     },
     "src/features/work/processor.ts": {
@@ -2455,7 +2467,7 @@
       "executable": false
     },
     "src/features/work/requests.ts": {
-      "sha256": "92015df97b2854e8793ad90457cc08d2f9c3a1502d6dd340ab6bf826f802b095",
+      "sha256": "99cfb4a1b30a3e9cd897dea639029e21d037b7a3e5ee25c3dec4b8a6cb6c64cf",
       "executable": false
     },
     "src/features/work/resources.ts": {
@@ -4311,7 +4323,7 @@
       "executable": false
     },
     "src/ui/applications.tsx": {
-      "sha256": "42acf6a942b25b613a7c164d789442411128c8f020d0a4f95c788bb204c481b0",
+      "sha256": "d00b27877aab2ebf2f97eec1a5aae53c46b3287c557af1cc5931dd3c1f46e910",
       "executable": false
     },
     "src/ui/asset-audits.tsx": {
@@ -4336,6 +4348,14 @@
     },
     "src/ui/bundles.tsx": {
       "sha256": "ec182137b602bf71ab61a63d4fcd934b2ca7f7790c2a7e504881dfa2832a3a70",
+      "executable": false
+    },
+    "src/ui/catalog-form-editor.tsx": {
+      "sha256": "416d62e96620811fb7a0958c249d4622c17b12bc0f6e2342cc025ea601c23a4e",
+      "executable": false
+    },
+    "src/ui/catalog-request-form.tsx": {
+      "sha256": "7c522af52b596eb93bb68ca5c998fae8b9f44a19aa31758162bcf70ad837761b",
       "executable": false
     },
     "src/ui/change-authority.tsx": {
@@ -4579,7 +4599,7 @@
       "executable": false
     },
     "src/ui/work-outcome.tsx": {
-      "sha256": "7ccfd36f9a4e1997309674d35f0fe1322f55ec0ebfd45b50e063bb1255e6f6b4",
+      "sha256": "03269af1c3bd13a3ba60b58f910de1b3a98b10e0d1135f9dd12406e0650a19b6",
       "executable": false
     },
     "src/ui/work-queue.tsx": {
@@ -5267,7 +5287,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "b59fbeb29f24e148d2d0d46a43625d7f2454f43d4d6715b11db9afe3726df44c",
+      "sha256": "903e9731bfa4963687f0902aaa279581d88c46793c3821b0bb5b7548b64f913d",
       "executable": false
     },
     "tests/work/asset-contract-cases.mjs": {

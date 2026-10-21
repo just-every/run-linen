@@ -8,7 +8,7 @@ import { resumeFulfilmentAmendment } from './fulfilment-amend-execution';
 
 export interface FulfilmentSnapshot {
   id: string; workId: string; workRevision: number; catalogId: string; revision: number;
-  beneficiaryId: string; purpose: string; expiresAt: string | null;
+  beneficiaryId: string; purpose: string; expiresAt: string | null; catalogSnapshot: unknown;
 }
 export interface FulfilmentAmendInput {
   catalogId: string; expectedWorkRevision: number; expectedFulfilmentRevision: number;
@@ -23,7 +23,7 @@ export async function getFulfilment(ctx: WorkContext, workId: string, catalogId:
   const f = await ctx.env.DB.prepare('SELECT * FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?')
     .bind(ctx.principal.workspaceId, workId, catalogId).first<any>();
   return f ? { id: f.id, workId, workRevision: work.revision, catalogId, revision: f.revision,
-    beneficiaryId: f.beneficiary_id, purpose: f.purpose, expiresAt: f.expires_at } : null;
+    beneficiaryId: f.beneficiary_id, purpose: f.purpose, expiresAt: f.expires_at, catalogSnapshot: f.catalog_snapshot_json ? JSON.parse(f.catalog_snapshot_json) : null } : null;
 }
 export async function amendFulfilment(ctx: WorkContext, workId: string, input: FulfilmentAmendInput): Promise<FulfilmentAmendResult> {
   const work = await getWork(ctx, workId), db = ctx.env.DB, w = ctx.principal.workspaceId;

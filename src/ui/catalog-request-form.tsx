@@ -1,0 +1,43 @@
+import { useState, type FormEvent } from 'react';
+import type { CatalogForm } from '../features/work/catalog-form-schema';
+import { fieldVisible } from '../features/work/catalog-form-schema';
+import { request, text, type RecordValue } from './api';
+import { useRemote, useSession } from './state';
+import { Fields } from './forms';
+import { localInstant } from './local-time';
+import { ErrorNotice, Facts, Notice } from './primitives';
+type Item=RecordValue & {id:string;name:string;revision:number;form:CatalogForm};
+export function CatalogRequestForm({items,workId,beneficiaryId,onSaved}:{items:RecordValue[];workId:string;beneficiaryId:string;onSaved:(r:RecordValue)=>void}) {
+  const {session}=useSession(),[selected,setSelected]=useState(''),[answers,setAnswers]=useState<Record<string,string|number|boolean>>({});
+  const [error,setError]=useState<unknown>(null),[pending,setPending]=useState(false);
+  const item=items.find(c=>c.id===selected) as Item|undefined;
+  const visible:Record<string,string|number|boolean>={};
+  for(const field of item?.form.fields??[])if(fieldVisible(field,visible)&&answers[field.id]!==undefined)visible[field.id]=answers[field.id];
+  async function submit(e:FormEvent<HTMLFormElement>) {
+    e.preventDefault();if(!item)return;setError(null);setPending(true);const data=new FormData(e.currentTarget),expiry=String(data.get('expiresAt')??'');
+    try{const result=await request<RecordValue>(`/work/${workId}/fulfilment`,{method:'POST',csrf:session.csrfToken,body:{catalogId:item.id,catalogRevision:item.revision,beneficiaryId,purpose:data.get('purpose'),...(expiry?{expiresAt:localInstant(expiry).instant}:{}),answers:visible}});onSaved(result);}
+    catch(error){setError(error);}finally{setPending(false);}
+  }
+  return <details className="action-disclosure" data-action-path={`/work/${workId}/fulfilment`}><summary>Or choose a known service</summary>
+    <form className="inline-form" onSubmit={submit}>
+      <p>You can also ask in the conversation. This optional selection preserves the same request.</p>
+      <label>Service<select required name="catalogId" value={selected} onChange={e=>{setSelected(e.target.value);setAnswers({});}}><option value="">Choose…</option>{items.map(c=><option key={text(c.id)} value={text(c.id)}>{text(c.name)}{c.application?` · $${(Number((c.application as RecordValue).costCents)/100).toFixed(2)} / ${text((c.application as RecordValue).billingPeriod)}`:c.applicationUnavailable?' · registration needs review':''}</option>)}</select></label>
+      {item&&<><Facts entries={[["Recorded request cost",item.form.costCents===null?'Unknown':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.form.costCents/100)],["Expected delivery",item.form.deliveryHours===null?'Unknown':`${item.form.deliveryHours} elapsed hours`]]}/>
+      {item.form.fields.filter(f=>fieldVisible(f,visible)).map(f=><label key={f.id} className={f.type==='checkbox'?'checkbox-field':''}>
+        <span>{f.label}{f.required?' *':''}</span>
+        {f.type==='select'?<select required={f.required} value={String(answers[f.id]??'')} onChange={e=>setAnswers({...answers,[f.id]:e.target.value})}><option value="">Choose…</option>{f.options?.map(v=><option key={v} value={v}>{v}</option>)}</select>
+        :f.type==='textarea'?<textarea required={f.required} maxLength={4000} value={String(answers[f.id]??'')} onChange={e=>setAnswers({...answers,[f.id]:e.target.value})}/>
+        :f.type==='checkbox'?<select required={f.required} value={answers[f.id]===undefined?'':String(answers[f.id])} onChange={e=>setAnswers(e.target.value===''?Object.fromEntries(Object.entries(answers).filter(([key])=>key!==f.id)):{...answers,[f.id]:e.target.value==='true'})}><option value="">Choose…</option><option value="true">Yes</option><option value="false">No</option></select>
+        :<input type={f.type==='number'?'number':f.type==='date'?'date':'text'} step={f.type==='number'?'any':undefined} required={f.required} maxLength={4000} value={String(answers[f.id]??'')} onChange={e=>{const value=e.target.value;setAnswers(value===''?Object.fromEntries(Object.entries(answers).filter(([key])=>key!==f.id)):{...answers,[f.id]:f.type==='number'?Number(value):value});}}/>}
+      </label>)}</>}
+      <Fields fields={[{name:'purpose',label:'What do you need it for?',type:'textarea',required:true},{name:'expiresAt',label:'Needed until',type:'datetime-local',hint:'Leave empty only when access does not have an expiry.'}]}/>
+      <ErrorNotice error={error}/><button className="action primary" disabled={pending}>{pending?'Saving…':'Save'}</button>
+    </form>
+  </details>;
+}
+export function SubmittedCatalogForms({workId}:{workId:string}) {
+  const saved=useRemote<{items:{id:string;catalogSnapshot:{name:string;revision:number;form:CatalogForm;answers:Record<string,string|number|boolean>}}[]}>(`/work/${workId}/catalog-requests`,5000);
+  if(saved.error)return <ErrorNotice error={saved.error} retry={saved.refresh}/>;
+  if(!saved.data?.items.length)return null;
+  return <section role="region" aria-label="Submitted catalog forms"><h2>Submitted catalog forms</h2>{saved.data.items.map(({id,catalogSnapshot:s})=><article className="connection-record" key={id}><h3>{s.name}</h3><Facts entries={[["Catalog revision",s.revision],["Request cost",s.form.costCents===null?'Unknown':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(s.form.costCents/100)],["Expected delivery",s.form.deliveryHours===null?'Unknown':`${s.form.deliveryHours} elapsed hours`],...s.form.fields.filter(f=>s.answers[f.id]!==undefined).map(f=>[f.label,String(s.answers[f.id])] as [string,unknown])]}/><p>Recorded at submission. This is an estimate, with fulfillment and verification shown separately.</p></article>)}</section>;
+}

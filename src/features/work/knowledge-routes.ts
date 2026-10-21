@@ -1,3 +1,4 @@
+import { editCatalogForm } from './catalog-items';
 import { catalogItems } from './application-routes';
 import { suggestWorkarounds } from './workaround-suggestions';
 import { suggestArticles, confirmSuggestion } from './deflection';
@@ -6,6 +7,7 @@ import type { AppEnv } from "../../platform/types";
 import { jsonBody, requiredString } from "../../platform/http";
 import {
   permit,
+  getWork,
   listWork,
   createWork,
   conversation,
@@ -43,6 +45,7 @@ export function registerKnowledgeRoutes(app: Hono<AppEnv>) {
       items: await catalogItems({env:c.env,principal:c.get('principal')}),
     }),
   );
+  app.post('/catalog/:id/form',async c=>c.json(await editCatalogForm({env:c.env,principal:c.get('principal')},c.req.param('id'),await jsonBody(c))));
   app.post("/catalog", async (c) =>
     c.json(
       await createCatalogItem(
@@ -52,6 +55,12 @@ export function registerKnowledgeRoutes(app: Hono<AppEnv>) {
       201,
     ),
   );
+  app.get('/work/:id/catalog-requests',async c=>{
+    const ctx={env:c.env,principal:c.get('principal')};
+    await getWork(ctx,c.req.param('id'));
+    const rows=(await c.env.DB.prepare('SELECT id,catalog_snapshot_json FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_snapshot_json IS NOT NULL').bind(ctx.principal.workspaceId,c.req.param('id')).all<{id:string;catalog_snapshot_json:string}>()).results;
+    return c.json({items:rows.map(r=>({id:r.id,catalogSnapshot:JSON.parse(r.catalog_snapshot_json)}))});
+  });
   app.post("/work/:id/fulfilment", async (c) =>
     c.json(
       await requestFulfilment(

@@ -17,9 +17,10 @@ export function registerApplicationRoutes(app: Hono<AppEnv>) {
 }
 export async function catalogItems(ctx: {env: AppEnv['Bindings'];principal: AppEnv['Variables']['principal']}) {
   await currentWorkPrincipal(ctx);
-  const items=(await ctx.env.DB.prepare('SELECT id,name,kind,target,owner_id,capacity,revision,application_id,entitlement_id FROM work_catalog WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<any>()).results;
+  const items=(await ctx.env.DB.prepare('SELECT id,name,kind,target,owner_id,capacity,revision,form_json,application_id,entitlement_id FROM work_catalog WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<any>()).results;
   return Promise.all(items.map(async item=>{
-    const {application_id,entitlement_id,...publicItem}=item;
+    const {application_id,entitlement_id,form_json,...base}=item;
+    const publicItem={...base,form:JSON.parse(form_json)};
     if(!application_id || !entitlement_id)return publicItem;
     try {return {...publicItem,application:applicationProjection(ctx,await resolveApplication(ctx,application_id,entitlement_id))};}
     catch(error) {if(!(error instanceof ApiError)||![404,409].includes(error.status))throw error;return {...publicItem,applicationUnavailable:true};}
