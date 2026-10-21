@@ -125,7 +125,9 @@ export async function decideRelease(env: Env, principal: Principal, r: ServiceRe
   const decisions = [{ id: id(), actor: p.userId, decision: b.decision, reason: requiredString(b.reason, 'reason', 2000), revisions, at: now() },
     ...r.data.decisions.filter((d: Decision) => d.actor !== p.userId)];
   const outcome = goNoGo({ ...r.data, decisions });
-  return mutate(env.DB, p, r, b.revision, { ...r.data, decisions, state: outcome === 'awaiting-decision' ? 'planning' : outcome },
+  return mutate(env.DB, p, r, b.revision, { ...r.data, decisions,
+    priorDecisions: [...r.data.priorDecisions, ...r.data.decisions.filter((d: Decision) => d.actor === p.userId)],
+    state: outcome === 'awaiting-decision' ? 'planning' : outcome },
     'release-decision', true);
 }
 

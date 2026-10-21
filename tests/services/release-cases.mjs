@@ -50,6 +50,7 @@ export async function releaseChecks({ok,call,db,implementation}) {
   assert.equal((await dispatch(changes[0],'canary','release-held')).body.error.code,'release_go');
   release=(await decide('go','approver','Help desk briefed')).body;
   assert.equal(release.data.goNoGo,'go','CHANGE-007 go/no-go approval recorded by every named approver');
+  assert.ok(release.data.priorDecisions.some(d=>d.actor==='approver' && d.decision==='no-go' && d.reason==='Help desk not briefed'),'Changing a decision retains its attributed earlier outcome and reason');
   await db.prepare("UPDATE memberships SET active=0 WHERE workspace_id='w' AND user_id='approver'").run();
   assert.equal((await dispatch(changes[0],'canary','release-inactive-approver')).body.error.code,'release_go','A withdrawn approver holds member deployment');
   await db.prepare("UPDATE memberships SET active=1 WHERE workspace_id='w' AND user_id='approver'").run();

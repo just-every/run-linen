@@ -2139,7 +2139,7 @@
       "executable": false
     },
     "src/features/services/releases.ts": {
-      "sha256": "80b68509560003f57758f00a66ba4d0344e392c3e7758cbdb2dc01a6a9724453",
+      "sha256": "02bd1392c5cd0b4d0512f844cb02249d8caf6bb397303f23df1e1100372c7d00",
       "executable": false
     },
     "src/features/services/store.ts": {
@@ -5083,7 +5083,7 @@
       "executable": false
     },
     "tests/services/release-cases.mjs": {
-      "sha256": "9050d625eb1ba8a4f3c946cfa6b419568d679a07eaf958c9b168c77dba216296",
+      "sha256": "f47e6c18268b6d6b5eb57ac678d6c2793ce3ee03ddfc8197b742e836db30471b",
       "executable": false
     },
     "tests/services/risk-cases.mjs": {
