@@ -1674,7 +1674,7 @@ that product and marks how close the current code is (see [Status](#status)).
   CHANNEL-008 adds Slack or Teams delivery, release notes carry that obligation
   before it ships. A release completes only when every member change is verified
   (successful) or compensated (explicitly backed out), recording each outcome.
-  Native and domain restore keep go/no-go decisions as inert history and puts the release in
+  Native and domain restore keep go/no-go decisions as inert history and put the release in
   review; erasing a person in a release withdraws its decisions.
 
 ### IT projects
@@ -2621,7 +2621,7 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 
 ## Status
 
-Judged from the code and tests at commit `a9669cb13312f50a7336bbec10fdee5f4d13f15f` (21 October 2026).
+Judged from the code and tests at commit `01c9b205f71aff2104fa45cde5eef08c43c650c5` (21 October 2026).
 
 The commit is the code this branch carries unchanged; the code audit at `7ce9dae` was the starting point. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
 
@@ -2714,7 +2714,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CHANGE-004` | Change calendar and freeze windows | target | done | `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs` | Public routes and connected execution prove scoped calendar/maintenance/freeze/ICS, half-open CI/workspace bounds, schedule/edit/later-dispatch refusal, owner emergency scheduling with separate effect grants, current role and generic hidden conflicts. Native archive preserves links with windows inactive until owner review; native 1440/390 calendar, editor, emergency and inactive states are inspected. Local evidence only. |
 | `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No automatic incident linking, health-check gate on success or PIR. |
 | `CHANGE-006` | Development-tool context | target | partial | `src/features/intelligence/engineering.ts` | No GitHub/Jira/Vector links or deployment-raised changes. |
-| `CHANGE-007` | Release management | target | done | `src/features/services/releases.ts`, `src/features/services/release-routes.ts`, `src/features/services/employee-notices.ts`, `src/ui/releases.tsx`, `tests/services/release-cases.mjs` via `tests/services/integration.mjs` | Local public-route proof over the actual change engine with a fixture deployment provider: a three-change Okta MFA release on the shared change calendar, named go/no-go held by one no-go, canary then rollout per change, release notes read only by the affected requester group, a failed change holding the release open until its backout reads back, completion with each outcome, and inert restore. No live provider, hosted or owner acceptance. |
+| `CHANGE-007` | Release management | target | done | `src/features/services/releases.ts`, `src/features/services/release-routes.ts`, `src/features/services/employee-notices.ts`, `src/platform/portability-policy.mjs`, `src/ui/releases.tsx`, `tests/services/release-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/release-journey.mjs`, `tests/platform/base-auth-transfer.mjs` | Local public-route and native 1440/390 proof: three related changes, plan/build/test references, shared calendar/ICS, ticket/problem/CI links, named go/no-go, canary then rollout, cohort-only release notes, failure holding completion until verified backout. Concurrent grouping, whole-candidate revision and live approver/effect fences are asserted; actual rer archive restore keeps decisions inert. No live provider, hosted or owner acceptance. |
 | `PROJECT-001` | IT team projects | target | done | `src/features/work/projects.ts`, `src/ui/projects.tsx`, `tests/work/project-cases.mjs` | Public-route proof: "Denver office move" with 12 owned tasks across two milestones as a board and due-date timeline; a dependency due after its dependent task is flagged blocked and done is refused until it closes; 30 asset relocations, two changes and a ticket link (an HR ticket is refused); an employee is refused every project route and the workload API, changing nothing; the agent's workload shows assigned tickets beside six project tasks. |
 | `KB-001` | Knowledge base | target | done | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs` |  |
 | `KB-002` | Federated knowledge sources | target | missing |  | No federated sources (Confluence, Slate, Google Drive, SharePoint, Notion). |

@@ -80,7 +80,7 @@ export async function releaseChecks({ok,call,db,implementation}) {
   failed=await ok('POST',`/changes/${failed.id}/verify`,{revision:failed.revision,invocationId:failed.data.invocations.at(-1).id},'operator');
   assert.equal(failed.data.state,'compensated','CHANGE-007 the failed change is explicitly backed out and read back');
   release=await ok('POST',`/releases/${release.id}/complete`,{revision:(await ok('GET',`/releases/${release.id}`)).revision});
-  assert.equal(release.data.state,'completed');
+  assert.equal(release.data.state,'completed');assert.equal(release.data.goNoGo,'go','Completed release retains its recorded decision');
   assert.deepEqual(release.data.outcomes.map(o=>o.outcome),['successful','successful','backed-out'],'CHANGE-007 completes once every change is successful or backed out');
   // The whole candidate is invalidated when any member changes, including a different member.
   const regression=[];

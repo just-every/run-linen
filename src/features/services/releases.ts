@@ -52,7 +52,7 @@ export async function presentRelease(db: D1Database, p: Principal, r: ServiceRec
   // Cohort notes are read only through CHANNEL-008's membership and source gates.
   const { employeeNotices: _notices, ...data } = r.data;
   const recorded = goNoGo(r.data);
-  const current = recorded === 'go' && await releaseApprovalIssue(db, p.workspaceId, r) ? 'awaiting-decision' : recorded;
+  const current = recorded === 'go' && r.data.state !== 'completed' && await releaseApprovalIssue(db, p.workspaceId, r) ? 'awaiting-decision' : recorded;
   return { ...r, data: { ...data, window: await releaseWindow(db, p.workspaceId, r), goNoGo: current, deploy,
     // Member detail is for release staff and named approvers; titles stay within each change's own readership.
     members: insider ? members.map(c => ({ id: c.id, title: readable(p, c) ? c.data.title : null, state: c.data.state,

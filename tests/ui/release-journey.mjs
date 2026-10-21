@@ -109,7 +109,7 @@ try {
   await fetch(base+'/__fixture/state',{method:'POST',body:JSON.stringify({failDeployment:false})});
   let failed=await execute(`/changes/${changes[2].id}/dispatch`,{revision:changes[2].revision,phase:'compensate',idempotencyKey:'browser-backout'});
   failed=await execute(`/changes/${failed.id}/verify`,{revision:failed.revision,invocationId:failed.data.invocations.at(-1).id});assert.equal(failed.data.state,'compensated');
-  await page.reload();release=await action(page,'Complete this release',{},'/complete','Complete release');assert.equal(release.data.state,'completed');
+  await page.reload();release=await action(page,'Complete this release',{},'/complete','Complete release');assert.equal(release.data.state,'completed');assert.equal(release.data.goNoGo,'go','Completion retains the recorded approval instead of asking for another');
   await page.getByText('Every change successful or backed out',{exact:true}).waitFor();
   await captureRelease(page,{path:out+'/CHANGE-007-completed.png',fullPage:true});
   assert.deepEqual(errors,[]);console.log('PASS CHANGE-007 native 1440/390/320 creation, phase refusal, named no-go/go, calendar/ICS, ticket link, cohort-only notes, actual canary/rollout, failed member and verified backout/completion.');

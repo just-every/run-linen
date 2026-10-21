@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "f65d8da47fb1c6b10871cdc3edd2cff567c912efd9732e2338847d1ced69034b",
+      "sha256": "23a4f7ec19dbd64767d7fc195de5fb634c1812b33339c397b53179d2c61a70dc",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "417f07bc89397349e81d7438dcb6023866fa4d1f3ebb0dff1b3eb5a4cc4e7457",
+      "sha256": "5bc8db0b55ae9276cdb931aad299ff1fa6bdb9b47263167fbdaf6f49aab75d10",
       "executable": false
     },
     "DEMO.md": {
@@ -2139,7 +2139,7 @@
       "executable": false
     },
     "src/features/services/releases.ts": {
-      "sha256": "18c714ade078669c5957afd54b209a32cbd298a2def4ab142cf8c6ac852a221f",
+      "sha256": "80b68509560003f57758f00a66ba4d0344e392c3e7758cbdb2dc01a6a9724453",
       "executable": false
     },
     "src/features/services/store.ts": {
@@ -5083,7 +5083,7 @@
       "executable": false
     },
     "tests/services/release-cases.mjs": {
-      "sha256": "140c28b76c27e5881082e23129c87fb7db77b67f452e0a19b66c70f552953a50",
+      "sha256": "9050d625eb1ba8a4f3c946cfa6b419568d679a07eaf958c9b168c77dba216296",
       "executable": false
     },
     "tests/services/risk-cases.mjs": {
@@ -5283,7 +5283,7 @@
       "executable": false
     },
     "tests/ui/release-journey.mjs": {
-      "sha256": "283074826a15f9342d9a6e527cd944eb0dda1244a6e3a63cb87ce9475ae45359",
+      "sha256": "f392b1582dacf2df4a954b3e8b4f9519acf26dcb9fb8ac64cabfe5f50242c1ee",
       "executable": false
     },
     "tests/ui/remote-response-runtime.mjs": {
