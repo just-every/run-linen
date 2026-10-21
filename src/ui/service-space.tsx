@@ -1,4 +1,5 @@
 import { NoticeControls } from './service-notices';
+import { NewRelease, ReleaseDetails } from './releases';
 import { LinkedTickets } from "./work-relationships";
 import { ChangeTemplates } from './change-templates';
 import { ChangeCalendar } from './change-calendar';
@@ -30,6 +31,7 @@ const labels: Record<string, [string, string]> = {
   services: ["Service ownership", "Keep the work behind the service in view."],
   incidents: ["Incidents", "Shared interruptions: recovery, person by person."],
   changes: ["Changes", "Changes and releases, made with care."],
+  releases: ["Releases", "Related changes released together, held by go/no-go."],
   suppliers: ["Suppliers & commitments", "Keep the handoff accountable."],
   problems: ["Causes & prevention", "Learn what keeps coming back."],
   "software-assets": ["Software", "Software and entitlements: useful access, accountable cost."],
@@ -203,7 +205,7 @@ export function ServiceSpace({
           <Badge value={d.state ?? d.status ?? d.lifecycle ?? "recorded"} />
         )}
       </Hero>
-      {section === "changes" && !selectedId && <><ChangeCalendar/><ChangeTemplates/></>}
+      {section === "changes" && !selectedId && <><p><a href="#/releases">Releases that group these changes →</a></p><ChangeCalendar/><ChangeTemplates/></>}
       {selectedId ? (
         detail.loading ? (
           <Loading />
@@ -324,7 +326,8 @@ export function ServiceSpace({
                 />
               )}
               {section === "problems" && <ProblemDetails record={record} incidents={incidents.data?.items} />}
-              {canEdit && ["incidents", "changes"].includes(section) && <NoticeControls record={record} section={section} />}
+              {section === "releases" && <ReleaseDetails record={record} refresh={detail.refresh} />}
+              {canEdit && ["incidents", "changes", "releases"].includes(section) && <NoticeControls record={record} section={section} />}
               <ServiceActions
                 section={section}
                 record={record}
@@ -393,6 +396,7 @@ export function ServiceSpace({
             )
           )}
           {canEdit && section === "changes" && <NewChange onSaved={result => { list.refresh(); location.hash = `/changes/${result.id}`; }} />}
+          {canEdit && section === "releases" && <NewRelease onSaved={id => { list.refresh(); location.hash = `/releases/${id}`; }} />}
           {canEdit && fields[section] && (
             <ActionForm
               title={`Add ${section === "software-assets" ? "software context" : section.replace(/s$/, "")}`}

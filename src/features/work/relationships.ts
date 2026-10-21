@@ -6,7 +6,7 @@ import { workReadable } from "./scope";
 import { bindSlaPolicy } from "./sla-policies";
 
 /** DESK-006: merge, split, parent/child and links. Agents act; requesters follow through public messages. */
-const linkKinds = ["asset", "problem", "change", "engineering_issue"] as const;
+const linkKinds = ["asset", "problem", "change", "release", "engineering_issue"] as const;
 type LinkKind = (typeof linkKinds)[number];
 const ref = (workId: string) => workId.slice(0, 6).toUpperCase();
 const agentOnly = (ctx: WorkContext) => permit(ctx, ["owner", "operator"]);
@@ -112,13 +112,14 @@ const targetQueries: Record<Exclude<LinkKind, "engineering_issue">, string> = {
   asset: "SELECT COALESCE(asset_tag,serial) label FROM work_assets WHERE workspace_id=? AND id=?",
   problem: "SELECT json_extract(data_json,'$.title') label FROM svc_records WHERE workspace_id=? AND id=? AND kind='problem'",
   change: "SELECT json_extract(data_json,'$.title') label FROM svc_records WHERE workspace_id=? AND id=? AND kind='change'",
+  release: "SELECT json_extract(data_json,'$.title') label FROM svc_records WHERE workspace_id=? AND id=? AND kind='release'",
 };
 /** An engineering issue is an https URL kept as a reference; Linen does not sync it. */
 export async function linkWork(ctx: WorkContext, workId: string, input: { kind?: unknown; targetId?: unknown }) {
   await currentWorkPrincipal(ctx);
   agentOnly(ctx);
   const work = await getWork(ctx, workId), kind = input.kind as LinkKind;
-  if (!linkKinds.includes(kind) || typeof input.targetId !== "string" || !input.targetId) throw new ApiError(422, "work_link", "Link an asset, problem, change or engineering-issue URL");
+  if (!linkKinds.includes(kind) || typeof input.targetId !== "string" || !input.targetId) throw new ApiError(422, "work_link", "Link an asset, problem, change, release or engineering-issue URL");
   if (kind === "engineering_issue") {
     let url: URL | null = null;
     try { url = new URL(input.targetId); } catch { /* refused below */ }
@@ -163,11 +164,11 @@ export async function readRelationships(ctx: WorkContext, workId: string) {
       : (await db.prepare(targetQueries[l.kind as keyof typeof targetQueries]).bind(ws, l.target_id).first<{ label: string }>())?.label ?? null }))),
   };
 }
-/** Tickets linked to an asset, problem or change, limited to tickets the reader can already read. */
+/** Tickets linked to an asset, problem, change or release, limited to tickets the reader can already read. */
 export async function linkedWork(ctx: WorkContext, kind: string, targetId: string) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "operator", "auditor"]);
-  if (!linkKinds.includes(kind as LinkKind)) throw new ApiError(422, "work_link", "Choose an asset, problem, change or engineering issue");
+  if (!linkKinds.includes(kind as LinkKind)) throw new ApiError(422, "work_link", "Choose an asset, problem, change, release or engineering issue");
   const rows = (await ctx.env.DB.prepare("SELECT w.id,w.title,w.state,w.sensitivity,w.requester_id,w.beneficiary_id FROM work_links l JOIN work_records w ON w.workspace_id=l.workspace_id AND w.id=l.work_id WHERE l.workspace_id=? AND l.kind=? AND l.target_id=? ORDER BY l.created_at")
     .bind(ctx.principal.workspaceId, kind, targetId).all<any>()).results;
   return rows.filter((w) => workReadable(ctx.principal, w)).map((w) => ({ id: w.id, title: w.title, state: w.state }));

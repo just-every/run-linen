@@ -1,6 +1,7 @@
 import { operationsKpiChecks } from './kpi-cases.mjs';
 import { templateIntegration, templateErasureCheck } from './template-integration.mjs';
 import { changeRiskChecks } from './risk-cases.mjs';
+import { releaseChecks } from './release-cases.mjs';
 import { applyMigrations } from '../sql-migrations.mjs';
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
@@ -23,6 +24,8 @@ async function call(method,path,body,user='owner'){const response=await mf.dispa
 async function ok(method,path,body,user){const r=await call(method,path,body,user);assert.ok(r.status<300,JSON.stringify(r));return r.body}
 for(const [id,provider,config] of [['deploy','controlled-deployment',{url:'https://deployment.fixture.test/change',allowedHosts:['deployment.fixture.test'],targets:['orders']}],['probe','workflow-probe',{url:'https://probe.fixture.test/check',allowedHosts:['probe.fixture.test']}]]){const secret=(await ok('POST','/fixture/secret',{token:'fixture'})).secret;await db.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind(id,'w',provider,id,JSON.stringify(config),secret,'active',now,now).run()}
 await operationsKpiChecks({ok,call,implementation:{connectionId:'deploy',connectionRevision:1,verifierConnectionRevision:1,target:'orders',beneficiaryId:'sales',verifierConnectionId:'probe',payload:{release:'kpi-proof'}}});
+await ok('POST','/fixture/state',{reset:true});
+const {releaseId}=await releaseChecks({ok,call,db,implementation:{connectionId:'deploy',connectionRevision:1,verifierConnectionRevision:1,target:'orders',beneficiaryId:'sales',verifierConnectionId:'probe',payload:{release:'r2'}}});
 await ok('POST','/fixture/state',{reset:true});
 const service=await ok('POST','/services',{name:'Orders',description:'Usable order preparation',businessImpact:'Sales interrupted',source:'fixture',observedAt:now})
 const automaticIncident=await ok('POST','/incidents',{title:'Automatic cohort recovery',serviceId:service.id,impact:'Sales cannot work',cohorts:['a','b']});
@@ -63,6 +66,8 @@ await db.prepare("UPDATE workspace_settings SET settings_json='{\"executionHeld\
 const exported=await db.prepare('SELECT * FROM svc_records WHERE id=?').bind(change.id).first();
 const restored=await ok('POST','/fixture/restore',{table:'svc_records',row:{...exported,id:'restored-change'},sourceId:'archive',sourceKey:change.id});assert.equal(restored.inert,true);
 const imported=await ok('GET','/changes/restored-change');assert.equal(imported.data.state,'imported-review');assert.equal(imported.data.authorizations.length,0);assert.ok(imported.data.priorAuthorizations.length);
+const releaseRow=await db.prepare('SELECT * FROM svc_records WHERE id=?').bind(releaseId).first();await ok('POST','/fixture/restore',{table:'svc_records',row:{...releaseRow,id:'restored-release'},sourceId:'archive',sourceKey:releaseId});
+const restoredRelease=await ok('GET','/releases/restored-release');assert.equal(restoredRelease.data.state,'imported-review');assert.equal(restoredRelease.data.decisions.length,0,'CHANGE-007 a restored go/no-go is history, never live deployment authority');
 const erased=await ok('POST','/fixture/erase',{userId:'operator',reason:'Authorised fixture erasure'});assert.ok(erased.erasedRecords>0);
 const afterErasure=await ok('GET',`/decisions/${decision.id}`);assert.equal(afterErasure.data.executorId,erased.subject);assert.equal(afterErasure.participants.includes('operator'),false);
 await templateErasureCheck(ok,personalTemplateId);

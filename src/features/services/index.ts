@@ -3,6 +3,8 @@ import { operationsKpis } from './operations-kpis';
 import { recordOperationsObservation } from './operations-observations';
 import { registerTemplateRoutes, bindChangeGrants, assertCatalogApproval } from './change-templates';
 import { registerCalendarRoutes } from './calendar-routes';
+import { registerReleaseRoutes } from './release-routes';
+import { presentRelease } from './releases';
 import { recurrenceContext } from './recurrence-context';
 import { publishWorkaround, presentProblem } from './problem-knowledge';
 import type { Hono } from 'hono';
@@ -44,6 +46,7 @@ async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
         try {await assertCatalogApproval(env.DB,p,r);return {...r,data:{...r.data,catalogApprovalStatus:'retained'}};}
         catch(error) {if(!(error instanceof ApiError)||![403,404,409].includes(error.status))throw error;return {...r,data:{...r.data,catalogApprovalStatus:'unavailable'}};}
     }
+    if(r.kind==='release')return presentRelease(env.DB,p,r);
     if(r.kind==='problem') { const shown=await presentProblem(env,p,r); return r.data.sourceProposalId ? {...shown,data:{...shown.data,recurrenceSources:await problemEvidence({env,principal:p},r.data.evidence)}} : shown; }
     if(r.kind==='supplier')return {...r,data:{...r.data,breaches:supplierBreaches(r)}};
     if (r.kind !== 'incident' || staff(p) || p.roles.includes('auditor'))
@@ -58,13 +61,14 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     registerEmployeeNotices(app);
     registerCalendarRoutes(app);
     registerTemplateRoutes(app);
+    registerReleaseRoutes(app);
     setChangeExecutionPort(changeExecutionPort);
     setServiceWorkPort(serviceWorkPort);
     app.get('/problem-proposals', async c => c.json(await listProblemProposals(c.env,c.get('principal'))));
     app.get('/problem-proposals/:id', async c => c.json(await getProblemProposal(c.env,c.get('principal'),c.req.param('id'))));
     app.post('/problem-proposals/detect', async c => c.json(await detectProblemProposals(c.env,c.get('principal'),await jsonBody(c))));
     for (const decision of ['accept','reject'] as const) app.post(`/problem-proposals/:id/${decision}`, async c => c.json(await decideProblemProposal(c.env,c.get('principal'),c.req.param('id'),await jsonBody(c) as any,decision)));
-    const paths: Record<string, Kind> = { 'service-people': 'person', decisions: 'decision', services: 'service', incidents: 'incident', problems: 'problem', changes: 'change', suppliers: 'supplier', 'software-assets': 'asset', monitors: 'monitor', 'oncall-rotations': 'oncall' };
+    const paths: Record<string, Kind> = { 'service-people': 'person', decisions: 'decision', services: 'service', incidents: 'incident', problems: 'problem', changes: 'change', releases: 'release', suppliers: 'supplier', 'software-assets': 'asset', monitors: 'monitor', 'oncall-rotations': 'oncall' };
     for (const [path, kind] of Object.entries(paths)) {
         app.get(`/${path}`, async (c) => { const items = await Promise.all((await list(c.env.DB, c.get('principal'), kind)).map(r => presentRecord(c.env, c.get('principal'), r))); return c.json({ items: items.map(r => kind === 'supplier' ? { ...r, breaches: supplierBreaches(r) } : r) }); });
         app.get(`/${path}/:id`, async (c) => {

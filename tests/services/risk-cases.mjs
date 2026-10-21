@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 /** CHANGE-002: the scored band selects the approval path through public change doors. */
 export async function changeRiskChecks({ ok, call, db, implementation, references }) {
   const now = new Date().toISOString();
-  await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind('approver', 'approver@fixture.test', 'approver', 'fixture', now).run();
-  await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('w', 'approver', '["approver"]').run();
+  await db.prepare('INSERT OR IGNORE INTO users VALUES(?,?,?,?,?)').bind('approver', 'approver@fixture.test', 'approver', 'fixture', now).run();
+  await db.prepare('INSERT OR IGNORE INTO memberships VALUES(?,?,?,1)').bind('w', 'approver', '["approver"]').run();
   const ci = (name, environment) => ok('POST', '/services', { name, environment, description: `${name} sign-in`, businessImpact: 'Nobody can sign in', source: 'fixture', observedAt: now });
   const sso = await ci('SSO', 'production'), ssoTest = await ci('SSO test tenant', 'test');
   assert.equal((await call('POST', '/services', { name: 'Bad env', environment: 'staging', description: 'x', businessImpact: 'x', source: 'fixture', observedAt: now })).status, 400);

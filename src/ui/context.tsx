@@ -24,6 +24,7 @@ export function ContextSpace({
       "services",
       "incidents",
       "changes",
+      "releases",
       "suppliers",
       "problems",
       "software-assets",

@@ -17,8 +17,8 @@ export async function noticePublisher(env: Env, principal: Principal) {
 }
 async function source(env: Env, p: Principal, sourceId: string) {
   const r = await getService(env.DB, p, sourceId);
-  if (!['incident', 'change'].includes(r.kind) || r.data.adoption?.historical)
-    throw new ApiError(404, 'not_found', 'Current incident or change required');
+  if (!['incident', 'change', 'release'].includes(r.kind) || r.data.adoption?.historical)
+    throw new ApiError(404, 'not_found', 'Current incident, change or release required');
   if (r.kind === 'incident') await getService(env.DB, p, r.data.serviceId, 'service');
   else for (const serviceId of r.data.services || []) await getService(env.DB, p, serviceId, 'service');
   return r;
@@ -47,7 +47,7 @@ export async function recipientNotice(env: Env, principal: Principal, sourceId: 
 }
 export async function employeeNotices(env: Env, principal: Principal, question?: string) {
   const p = await currentPrincipal(env.DB, principal), items = [];
-  const records = [...await list(env.DB, p, 'incident'), ...await list(env.DB, p, 'change')];
+  const records = [...await list(env.DB, p, 'incident'), ...await list(env.DB, p, 'change'), ...await list(env.DB, p, 'release')];
   for (const r of records) {
     for (const n of notices(r)) {
       try {
@@ -99,6 +99,9 @@ export async function publishNotice(env: Env, principal: Principal, sourceId: st
   if (command === 'withdraw' && prior?.verifiedBy && prior.verifiedBy !== p.userId)
     throw new ApiError(403, 'notice_verifier', 'Only the person who recorded this recovery may withdraw its all-clear');
   const groupId = prior?.groupId ?? requiredString(b.groupId, 'groupId');
+  // CHANGE-007: release notes reach only the release's named affected cohorts.
+  if (r.kind === 'release' && !r.data.affectedGroupIds.includes(groupId))
+    throw new ApiError(422, 'release_cohort', 'Release notes go only to the release’s affected cohorts');
   const g = command === 'withdraw' ? { memberIds: [] as string[] } : await cohort(env, p, groupId);
   const audience = [];
   if (command !== 'withdraw') for (const userId of g.memberIds) {
@@ -113,7 +116,7 @@ export async function publishNotice(env: Env, principal: Principal, sourceId: st
   if (!Number.isInteger(cadence) || cadence < 1 || cadence > 10080) throw new ApiError(422, 'notice_cadence', 'Update cadence must be whole minutes from 1 to 10080');
   let verification = prior?.verification ?? null;
   if (command === 'all-clear') {
-    if (r.kind === 'incident' ? r.data.status !== 'restored' || !r.data.cohorts.every((cohort: string) => (r.data.recoveries || []).some((e: any) => e.cohort === cohort && e.independent && e.usable && e.negativeChecksPassed && Number.isFinite(Date.parse(e.observedAt)) && Date.parse(e.observedAt) <= Date.now() && Date.parse(e.expiresAt) > Date.now())) : r.data.state !== 'verified')
+    if (r.kind === 'incident' ? r.data.status !== 'restored' || !r.data.cohorts.every((cohort: string) => (r.data.recoveries || []).some((e: any) => e.cohort === cohort && e.independent && e.usable && e.negativeChecksPassed && Number.isFinite(Date.parse(e.observedAt)) && Date.parse(e.observedAt) <= Date.now() && Date.parse(e.expiresAt) > Date.now())) : r.data.state !== (r.kind === 'release' ? 'completed' : 'verified'))
       throw new ApiError(422, 'notice_recovery', 'Independently verified source recovery is required before recording an all-clear');
     verification = requiredString(b.verification, 'verification', 2000);
   }
@@ -135,7 +138,7 @@ export async function publishNotice(env: Env, principal: Principal, sourceId: st
 /** Repeat only a generic link at the chosen cadence; never invent a fresh progress or recovery report. */
 export async function queueNoticeCadence(env: Env, principal: Principal) {
   const p = await noticePublisher(env, principal);
-  for (const initial of [...await list(env.DB, p, 'incident'), ...await list(env.DB, p, 'change')]) {
+  for (const initial of [...await list(env.DB, p, 'incident'), ...await list(env.DB, p, 'change'), ...await list(env.DB, p, 'release')]) {
     for (const due of notices(initial).filter(n => n.state === 'open' && n.emailConnectionId && n.nextUpdateAt && n.nextUpdateAt <= now())) {
       const r = await source(env, p, initial.id), n = notices(r).find(n => n.id === due.id)!;
       if (n.eventKey !== due.eventKey) continue;

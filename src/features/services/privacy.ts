@@ -64,6 +64,11 @@ export async function eraseServicePerson(ctx: {
             data.authorizations = [];
             data.state = 'privacy-review';
         }
+        if (r.kind === 'release') {
+            data.priorDecisions = [];
+            data.decisions = [];
+            data.state = 'privacy-review';
+        }
         if (r.kind === 'decision' && data.holderId === pseudonym) {
             data.state = 'needs-owner';
             data.nextDueAt = null;

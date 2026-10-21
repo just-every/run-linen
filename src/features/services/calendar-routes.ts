@@ -9,9 +9,9 @@ export function registerCalendarRoutes(app:Hono<AppEnv>) {
     c.header('Cache-Control','private, no-store');c.header('Vary','Cookie');
     await audit(c,path.endsWith('.ics')?'change-calendar.export':'change-calendar.read','global-calendar');
     if(!path.endsWith('.ics'))return c.json(data);
-    const events:CalendarEvent[]=[...data.changes,...data.windows.filter(r=>r.data.active===true)].map(r=>({
+    const events:CalendarEvent[]=[...data.changes,...data.releases,...data.windows.filter(r=>r.data.active===true)].map(r=>({
       id:r.id,title:r.data.title,start:r.data.window.start,end:r.data.window.end,updatedAt:r.updatedAt,
-      description:r.kind==='change'?`Planned change. Recorded state: ${r.data.state}.`:`${r.data.kind==='freeze'?'Freeze / blackout':'Maintenance'} window.`,
+      description:r.kind==='change'?`Planned change. Recorded state: ${r.data.state}.`:r.kind==='release'?`Release of ${r.data.changeIds.length} changes. Recorded state: ${r.data.state}.`:`${r.data.kind==='freeze'?'Freeze / blackout':'Maintenance'} window.`,
       status:r.kind==='change'&&r.data.state==='cancelled'?'CANCELLED':'TENTATIVE',sequence:r.revision,
     }));
     c.header('Content-Type','text/calendar; charset=utf-8');

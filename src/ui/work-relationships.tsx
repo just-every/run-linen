@@ -12,7 +12,7 @@ interface Relationships {
   links: { kind: string; target_id: string; label: string | null }[];
 }
 const ticket = (w: Ref) => <a key={w.id} href={`#/work/${encodeURIComponent(w.id)}`}>{shortRef(w.id)} · {w.title}</a>;
-const recordHref: Record<string, string> = { asset: "#/assets/", problem: "#/problems/", change: "#/changes/" };
+const recordHref: Record<string, string> = { asset: "#/assets/", problem: "#/problems/", change: "#/changes/", release: "#/releases/" };
 
 /** DESK-006: merges, splits, parent/child and record links on a ticket, for agents and auditors. */
 export function WorkRelationships({ workId, messages, onChanged }: { workId: string; messages: { id: string; body: string; visibility: string }[]; onChanged: () => void }) {
@@ -41,7 +41,7 @@ export function WorkRelationships({ workId, messages, onChanged }: { workId: str
           { name: "messageIds", label: "Messages to move", type: "checkboxes", required: true, options: messages.filter((m) => m.visibility === "public").map((m, i) => ({ value: m.id, label: `Message ${i + 1}: ${m.body.slice(0, 80)}` })) },
           { name: "reason", label: "Why this is a separate ask", type: "textarea", required: true }]} />
       <ActionForm title="Link a record" path={`/work/${workId}/links`} onSaved={changed} submit="Link"
-        fields={[{ name: "kind", label: "Record type", type: "select", required: true, options: ["asset", "problem", "change", "engineering_issue"].map((k) => ({ value: k, label: humanize(k) })) },
+        fields={[{ name: "kind", label: "Record type", type: "select", required: true, options: ["asset", "problem", "change", "release", "engineering_issue"].map((k) => ({ value: k, label: humanize(k) })) },
           { name: "targetId", label: "Record ID, or the engineering issue's https URL", required: true }]} />
       <ActionForm title="Set a parent ticket" path={`/work/${workId}/parent`} onSaved={changed} submit="Set parent"
         fields={[{ name: "parentId", label: "Parent ticket ID", required: true }]} />

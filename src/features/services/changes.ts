@@ -2,6 +2,7 @@ import { scoreChange } from './change-risk';
 import { catalogSnapshot, approvedTemplate, assertCatalogApproval, grantReferences } from './change-templates';
 import { currentPrincipal } from '../work/identity';
 import { assertCalendarSchedule, emergencySchedulingActor } from './calendar';
+import { assertReleaseGo } from './releases';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { create, date, getService, list, mutate, strings, type ServiceRecord, dto, type RecordRow } from './store';
@@ -106,6 +107,7 @@ export async function changeGate(db: D1Database, p: Principal, r: ServiceRecord,
     const d = r.data;
     if(d.changeType==='standard')await assertCatalogApproval(db,p,r);
     if(phase!=='compensate')await assertCalendarSchedule(db,p,d);
+    await assertReleaseGo(db,p,r,phase);
     if (!d.authorizations?.some((a: any) => a.implementationRevision === d.implementationRevision))
         throw new ApiError(409, 'authorization', 'Current implementation requires a decision and versioned execution grants');
     if (phase !== 'compensate' && (at < Date.parse(d.window.start) || at >= Date.parse(d.window.end)))

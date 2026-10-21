@@ -2,7 +2,7 @@ import { applicationData, type ApplicationData } from '../work/application-schem
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
 import { type Kind } from './store';
-const kinds: Kind[] = ['application','change-template','calendar-window','problem-proposal', 'service', 'edge', 'incident', 'problem', 'change', 'supplier', 'asset', 'monitor', 'oncall', 'decision', 'person'];
+const kinds: Kind[] = ['application','change-template','calendar-window','problem-proposal', 'service', 'edge', 'incident', 'problem', 'change', 'release', 'supplier', 'asset', 'monitor', 'oncall', 'decision', 'person'];
 export async function restoreAdoptionRecord(ctx: {
     env: Env;
     principal: Principal;
@@ -75,6 +75,13 @@ export async function restoreAdoptionRecord(ctx: {
         data.importedState = data.state;
         data.state = 'imported-review';
         data.invocations = (data.invocations || []).map((i: any) => ({ ...i, imported: true }));
+    }
+    if (row.kind === 'release') {
+        // A restored go/no-go is history, never live deployment authority.
+        data.priorDecisions = [...(data.priorDecisions || []), ...(data.decisions || [])].map((d: any) => ({ ...d, inert: true }));
+        data.decisions = [];
+        data.importedState = data.state;
+        data.state = 'imported-review';
     }
     if (row.kind === 'monitor') {
         data.status = 'unknown';

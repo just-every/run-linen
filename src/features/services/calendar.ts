@@ -2,6 +2,7 @@ import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentPrincipal } from '../work/identity';
 import { dto, getService, readable, type Kind, type RecordRow, type ServiceRecord } from './store';
+import { releaseWindow } from './releases';
 
 const calendarWindowKind: Kind = 'calendar-window';
 type Window = { start: string; end: string };
@@ -139,5 +140,13 @@ export async function changeCalendar(env: Env, principal: Principal, from: unkno
     }
     if (blocked) warnings.push({ changeId: change.id, code: 'calendar_blocked', message: 'This change has a calendar conflict requiring an authorized operator.' });
   }
-  return { from: range.start, to: range.end, timezone: zone, changes, windows, conflicts, warnings };
+  // CHANGE-007: releases share this calendar, spanning their member changes' windows.
+  const releaseRows = await env.DB.prepare("SELECT * FROM svc_records WHERE workspace_id=? AND kind='release' ORDER BY created_at,id")
+    .bind(p.workspaceId).all<RecordRow>();
+  const releases: ServiceRecord[] = [];
+  for (const release of releaseRows.results.map(dto).filter(r => !inert(r) && readable(p, r))) {
+    const span = await releaseWindow(env.DB, p.workspaceId, release), { employeeNotices: _notices, ...data } = release.data;
+    if (span && overlaps(span, range)) releases.push({ ...release, data: { ...data, window: span } });
+  }
+  return { from: range.start, to: range.end, timezone: zone, changes, windows, releases, conflicts, warnings };
 }

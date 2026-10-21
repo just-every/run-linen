@@ -1647,6 +1647,31 @@ that product and marks how close the current code is (see [Status](#status)).
   changes, record go/no-go approval, deploy canary then rollout, post release
   notes to the affected cohort only, and see a failed change hold the release
   open until it is backed out.
+  *Today's semantic:* an owner or operator creates a release naming one or more
+  current changes that have dispatched no effect (a change belongs to at most one
+  open release), the problems it addresses, its CIs (every member change's CIs
+  plus any named), its affected employees as existing requester groups and one
+  or more go/no-go approvers who each currently hold the owner or approver role.
+  Tickets link to a release through DESK-006's ticket links. Build and test are
+  results an owner or operator records with a reference; Linen does not run
+  them. A test needs a passed build, and recording either result withdraws
+  earlier decisions. Each named approver records go or no-go with a reason; the
+  latest decision per approver counts, one no-go holds the release, go needs
+  passed build and test, and a release owner without the owner role cannot
+  decide their own release. Until every named approver's current decision is go,
+  no member change dispatches its canary or rollout; go covers each member's
+  exact implementation revision, and every approver's role is rechecked at
+  dispatch. Backout never waits for go/no-go. The deploy phase is each member
+  change's own canary then rollout under its own approval, grants, window and
+  freeze checks. The release spans its member changes' windows on CHANGE-004's
+  calendar and ICS feed. Release notes are CHANNEL-008 notices published from
+  the release to one of its named affected requester groups only; an all-clear
+  needs a completed release. Release notes inherit CHANNEL-008's channels: when
+  CHANNEL-008 adds Slack or Teams delivery, release notes carry that obligation
+  before it ships. A release completes only when every member change is verified
+  (successful) or compensated (explicitly backed out), recording each outcome.
+  Restore keeps go/no-go decisions as inert history and puts the release in
+  review; erasing a person in a release withdraws its decisions.
 
 ### IT projects
 
@@ -2599,8 +2624,8 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 43 | 46 | 26 | 115 |
-| All | 48 | 65 | 26 | 139 |
+| Target and push further | 44 | 45 | 26 | 115 |
+| All | 49 | 64 | 26 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2685,7 +2710,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CHANGE-004` | Change calendar and freeze windows | target | done | `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs` | Public routes and connected execution prove scoped calendar/maintenance/freeze/ICS, half-open CI/workspace bounds, schedule/edit/later-dispatch refusal, owner emergency scheduling with separate effect grants, current role and generic hidden conflicts. Native archive preserves links with windows inactive until owner review; native 1440/390 calendar, editor, emergency and inactive states are inspected. Local evidence only. |
 | `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | No automatic incident linking, health-check gate on success or PIR. |
 | `CHANGE-006` | Development-tool context | target | partial | `src/features/intelligence/engineering.ts` | No GitHub/Jira/Vector links or deployment-raised changes. |
-| `CHANGE-007` | Release management | target | partial | `src/features/services/changes.ts`, `src/features/execution/deployment.ts`, `tests/ui/connected-change.mjs` | No release records, go/no-go or release notes. |
+| `CHANGE-007` | Release management | target | done | `src/features/services/releases.ts`, `src/features/services/release-routes.ts`, `src/features/services/employee-notices.ts`, `src/ui/releases.tsx`, `tests/services/release-cases.mjs` via `tests/services/integration.mjs` | Local public-route proof over the actual change engine with a fixture deployment provider: a three-change Okta MFA release on the shared change calendar, named go/no-go held by one no-go, canary then rollout per change, release notes read only by the affected requester group, a failed change holding the release open until its backout reads back, completion with each outcome, and inert restore. No live provider, hosted or owner acceptance. |
 | `PROJECT-001` | IT team projects | target | done | `src/features/work/projects.ts`, `src/ui/projects.tsx`, `tests/work/project-cases.mjs` | Public-route proof: "Denver office move" with 12 owned tasks across two milestones as a board and due-date timeline; a dependency due after its dependent task is flagged blocked and done is refused until it closes; 30 asset relocations, two changes and a ticket link (an HR ticket is refused); an employee is refused every project route and the workload API, changing nothing; the agent's workload shows assigned tickets beside six project tasks. |
 | `KB-001` | Knowledge base | target | done | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs` |  |
 | `KB-002` | Federated knowledge sources | target | missing |  | No federated sources (Confluence, Slate, Google Drive, SharePoint, Notion). |
