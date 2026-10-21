@@ -106,7 +106,7 @@ async function eraseSinglePerson(
     privacyBindingFence(ctx, people, bindingGuard, aliases),
     person
       ? ctx.env.DB.prepare(
-          "UPDATE work_people SET name=?,manager_id=NULL,active=0,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=?",
+          "UPDATE work_people SET name=?,attributes_json='{}',manager_id=NULL,active=0,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=?",
         ).bind("[erased]", w, p, input.revision)
       : historical ? ctx.env.DB.prepare(
           "INSERT OR REPLACE INTO work_erasure SELECT ?,?,? WHERE EXISTS(SELECT 1 FROM adoption_tombstones WHERE workspace_id=? AND identity_hash=?)")

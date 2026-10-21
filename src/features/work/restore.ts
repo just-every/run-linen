@@ -1,3 +1,4 @@
+import { dimensions, normalizeAudience, normalizeAttributes } from './catalog-audience';
 import { prepareApplicationWorkRestore } from './application-restore';
 import { validateRecurrence, type RecurrenceRule } from './recurrence-calendar';
 import type { BusinessCalendar } from './calendar';
@@ -30,6 +31,7 @@ const tables = new Set([
   "work_obligations",
   "work_knowledge",
   "work_article_versions",
+  "work_catalog_values",
   "work_catalog",
   "work_fulfilments",
   "work_calendars",
@@ -143,7 +145,11 @@ export async function restoreAdoptionRecord(
       "restore_blob_scope",
       "Attachment bytes must first be restored under current workspace R2 prefix",
     );
+  if(input.table==='work_catalog_values' && (!dimensions.includes(row.dimension as never) || typeof row.label!=='string' || !row.label.trim() || ![0,1].includes(Number(row.active))))
+    throw new ApiError(422,'restore_catalog_value','Known dimension, label and state required');
+  if(input.table==='work_catalog')row.audience_json=JSON.stringify(normalizeAudience(JSON.parse(String(row.audience_json??'{}'))));
   if (input.table === "work_people") {
+    row.attributes_json=JSON.stringify(normalizeAttributes(JSON.parse(String(row.attributes_json??'{}'))));
     row.member_id = null;
     row.binding_id = null;
     row.manager_id = null; // Imported identity facts never activate account authority.

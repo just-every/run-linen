@@ -1,3 +1,4 @@
+import { normalizeAudience, validateValues, restrictedAudience } from './catalog-audience';
 import { resolveApplication } from './application-catalog';
 import { currentWorkPrincipal } from './identity';
 import { ApiError, id, now, requiredString } from '../../platform/http';
@@ -16,6 +17,7 @@ export async function createCatalogItem(
     requiresManager?: boolean;
     capacity?: number;
     form?: unknown;
+    audience?: unknown;
   },
 ) {
   await currentWorkPrincipal(ctx);
@@ -40,8 +42,12 @@ export async function createCatalogItem(
       "catalog_invalid",
       "Name, target, owner, kind and nonnegative capacity required",
     );
-  const itemId = id(), form = normalizeCatalogForm(input.form);
-  await ctx.env.DB.batch([ctx.env.DB.prepare("INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,requires_manager,capacity,revision,application_id,entitlement_id,form_json) VALUES(?,?,?,?,?,?,?,?,1,?,?,?)")
+  const itemId = id(), form = normalizeCatalogForm(input.form), audience=normalizeAudience(input.audience), values=await validateValues(ctx,audience), guard=id();
+  await ctx.env.DB.batch([
+    ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN ${values.sql}
+      AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value='owner') THEN 1 ELSE 0 END)`)
+      .bind(guard,...values.bindings,ctx.principal.workspaceId,ctx.principal.userId),
+    ctx.env.DB.prepare("INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,requires_manager,capacity,revision,application_id,entitlement_id,form_json,audience_json) VALUES(?,?,?,?,?,?,?,?,1,?,?,?,?)")
     .bind(
       itemId,
       ctx.principal.workspaceId,
@@ -54,9 +60,11 @@ export async function createCatalogItem(
       input.applicationId || null,
       input.entitlementId || null,
       JSON.stringify(form),
+      JSON.stringify(audience),
     ),
     ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)")
       .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,'catalog.created',itemId,JSON.stringify({revision:1}),now()),
+    ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),
   ]);
   return { id: itemId };
 }
@@ -85,7 +93,7 @@ export async function catalogRequestSnapshot(ctx: WorkContext, workId: string, c
     return saved;
   }
   const form=normalizeCatalogForm(JSON.parse(catalog.form_json));
-  if ((form.fields.length || form.costCents!==null || form.deliveryHours!==null || input.catalogRevision!==undefined) && input.catalogRevision!==catalog.revision)
+  if ((restrictedAudience(catalog) || form.fields.length || form.costCents!==null || form.deliveryHours!==null || input.catalogRevision!==undefined) && input.catalogRevision!==catalog.revision)
     throw new ApiError(409,'catalog_changed','Review the current catalog form and price before requesting');
   return {catalogId:catalog.id,revision:catalog.revision,name:catalog.name,submittedBy:ctx.principal.userId,form,answers:validateCatalogAnswers(form,input.answers??{})};
 }

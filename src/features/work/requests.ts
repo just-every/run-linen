@@ -1,3 +1,4 @@
+import { requireCatalogAudience } from './catalog-audience';
 import { catalogRequestSnapshot } from './catalog-items';
 import { applicationForRequest, applicationProjection } from './application-catalog';
 import { bindingErasureGuard, personForMember } from './person-binding';
@@ -52,7 +53,7 @@ export async function requestFulfilment(
   )
     .bind(ctx.principal.workspaceId, input.catalogId)
     .first<{
-      id: string; name: string; revision: number; form_json: string;
+      id: string; name: string; revision: number; form_json: string; audience_json: string;
       application_id: string | null;
       entitlement_id: string | null;
       kind: string;
@@ -105,8 +106,21 @@ export async function requestFulfilment(
       ? "Current scoped manager approval required; manager identity alone does not approve this request"
       : "Missing authoritative manager; owner must resolve authority";
   }
-  if (catalog.capacity !== null) {
-    await ctx.env.DB.prepare(
+  const audience = previous ? null : await requireCatalogAudience(ctx,catalog,input.beneficiaryId);
+  if(audience)Object.assign(catalogSnapshot,{audience:audience.audience,audiencePeople:audience.people});
+  const admissionGuard=id(),w=ctx.principal.workspaceId;
+  const roles=JSON.stringify(ctx.principal.roles);
+  const fid = id(), catalogGuard = id();
+  const kind = catalog.kind === "device" ? "device.deliver" : "access.grant";
+  try { await ctx.env.DB.batch([
+    ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
+      EXISTS(SELECT 1 FROM memberships m WHERE m.workspace_id=? AND m.user_id=? AND m.active=1
+        AND json_array_length(?)>0 AND NOT EXISTS(SELECT 1 FROM json_each(?) required WHERE required.value NOT IN (SELECT value FROM json_each(m.roles_json))))
+      AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1)
+      AND EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=? AND state NOT IN ('closed','cancelled'))
+      AND (${audience?.sql??'1'}) THEN 1 ELSE 0 END)`)
+      .bind(admissionGuard,w,ctx.principal.userId,roles,roles,w,input.beneficiaryId,w,work.id,work.revision,...(audience?.bindings??[])),
+    ...(catalog.capacity!==null ? [    ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_catalog_reservations SELECT ?,?,?,?,?,NULL WHERE (SELECT COUNT(*) FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND released_at IS NULL)<?",
     )
       .bind(
@@ -118,22 +132,8 @@ export async function requestFulfilment(
         ctx.principal.workspaceId,
         input.catalogId,
         catalog.capacity,
-      )
-      .run();
-    const reserved = await ctx.env.DB.prepare(
-      "SELECT 1 FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND work_id=? AND released_at IS NULL",
-    )
-      .bind(ctx.principal.workspaceId, input.catalogId, workId)
-      .first();
-    if (!reserved)
-      blocked =
-        catalog.kind === "device"
-          ? "No stock; acquisition owner required"
-          : "No license capacity; license owner required";
-  }
-  const fid = id(), catalogGuard = id();
-  const kind = catalog.kind === "device" ? "device.deliver" : "access.grant";
-  try { await ctx.env.DB.batch([
+      )] : []),
+
     ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
       EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?) OR
       EXISTS(SELECT 1 FROM work_catalog WHERE workspace_id=? AND id=? AND revision=? AND form_json=?) THEN 1 ELSE 0 END)`)
@@ -165,12 +165,20 @@ export async function requestFulfilment(
       catalog.owner_id,
       blocked,
     ),
+    ...(catalog.capacity!==null ? [ctx.env.DB.prepare(`UPDATE work_obligations SET state='blocked',last_error=?
+      WHERE workspace_id=? AND work_id=? AND kind=? AND target=? AND state='pending'
+      AND NOT EXISTS(SELECT 1 FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND work_id=? AND released_at IS NULL)`)
+      .bind(catalog.kind==='device'?'No stock; acquisition owner required':'No license capacity; license owner required',w,workId,kind,catalog.target,w,input.catalogId,workId)] : []),
     // A newly recorded responsibility is a change to the request: its queue row and "Last changed" move.
     ...(previous ? [] : [ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(now(), ctx.principal.workspaceId, work.id)]),
-    ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id=?").bind(catalogGuard),
+    ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id IN (?,?)").bind(catalogGuard,admissionGuard),
   ]); } catch(error) {
     if(String(error).includes('CHECK constraint failed'))throw new ApiError(409,'catalog_changed','Catalog form changed before submission; review it again');
     throw error;
+  }
+  if(catalog.capacity!==null && !await ctx.env.DB.prepare('SELECT 1 FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND work_id=? AND released_at IS NULL')
+    .bind(w,input.catalogId,workId).first()) {
+    blocked=catalog.kind==='device'?'No stock; acquisition owner required':'No license capacity; license owner required';
   }
   if (input.expiresAt && catalog.kind !== "device")
     await ctx.env.DB.prepare(

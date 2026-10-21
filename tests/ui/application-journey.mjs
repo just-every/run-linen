@@ -123,3 +123,86 @@ export async function catalogFormJourney({page,api,base,out}) {
   await captureJourney(page,{path:out+'/CATALOG-001-retained.png',fullPage:true});
   console.log('PASS CATALOG-001 native form editor, conditional request, cost/delivery and immutable submitted revision at 1440/390');
 }
+
+/** CATALOG-001: native employee selection and refusal use live reviewed audience facts. */
+export async function catalogAudienceJourney({browser,page,api,base,out}) {
+  const {apiFor,signIn}=await import('./connected-helpers.mjs');
+  const password='synthetic-Connected-browser-2026', suffix=crypto.randomUUID();
+  const sales=await api('/catalog-values',{dimension:'department',label:'Sales '+suffix});
+  const support=await api('/catalog-values',{dimension:'department',label:'Support '+suffix});
+  const legal=await api('/catalog-values',{dimension:'department',label:'Legal '+suffix});
+  const users=[];
+  for(const [label,value] of [['sales',sales],['support',support],['outside',legal]]) {
+    const email=`catalog-${label}-${suffix}@example.test`;
+    const member=await api('/members',{name:'Catalog '+label,email,password,roles:['employee'],isPerson:true});
+    const person=(await api('/people')).items.find(p=>p.id===member.personId);
+    await api('/people',{source:person.source,sourceId:person.source_id,name:person.name,
+      effectiveAt:new Date(Date.now()+1).toISOString(),observedAt:new Date().toISOString(),expectedRevision:person.revision,attributes:{department:value.id}});
+    const context=await browser.newContext({viewport:{width:1440,height:1000}}),ep=await context.newPage();
+    await signIn(ep,base,email,password);users.push({label,member,context,page:ep,api:apiFor(ep)});
+  }
+  const owner=await api('/session');
+  const item=await api('/catalog',{name:'Audience monitor '+suffix,kind:'device',target:'monitor-'+suffix,ownerId:owner.user.id,
+    audience:{department:[sales.id,support.id]},form:{costCents:25000,deliveryHours:48,fields:[
+      {id:'mount',label:'Monitor mounting',type:'select',required:true,options:['Desk','Wall']},
+      {id:'wall',label:'Wall type',type:'text',required:true,when:{fieldId:'mount',equals:'Wall'}},
+    ]}});
+  try {
+    for(const width of [1440,390])for(const user of users){
+      const ep=user.page;await ep.setViewportSize({width,height:1000});
+      const work=await user.api('/work',{title:'A monitor for '+user.label,body:'Replace the training display',deduplicationKey:crypto.randomUUID()});
+      await ep.goto(base+'/app#/work/'+work.id);
+      const chooser=ep.locator('details[data-action-path$="/fulfilment"]');
+      await chooser.locator(':scope > summary').focus();await ep.keyboard.press('Enter');
+      const service=chooser.getByLabel('Service',{exact:true});await service.waitFor();
+      if(user.label==='outside') {
+        const catalog=await user.api('/catalog');assert.ok(!catalog.items.some(c=>c.id===item.id),'CATALOG-001 native outsider discovery omits the item');
+        assert.equal(await service.locator(`option[value="${item.id}"]`).count(),0,'CATALOG-001 ineligible employee has no catalog choice');
+        const refused=await ep.evaluate(async({workId,catalogId,userId})=>{
+          const session=await(await fetch('/api/v1/session')).json();
+          const r=await fetch('/api/v1/work/'+workId+'/fulfilment',{method:'POST',headers:{'Content-Type':'application/json','X-Linen-CSRF':session.csrfToken},
+            body:JSON.stringify({catalogId,catalogRevision:1,beneficiaryId:userId,purpose:'Forged choice',answers:{mount:'Desk'}})});
+          return {status:r.status,value:await r.json()};
+        },{workId:work.id,catalogId:item.id,userId:user.member.id});
+        assert.equal(refused.status,403);assert.equal(refused.value.error.code,'catalog_audience','CATALOG-001 native session cannot bypass audience via direct API');
+      } else {
+        await service.locator(`option[value="${item.id}"]`).waitFor({state:'attached'});await service.selectOption(item.id);
+        await chooser.getByLabel('Monitor mounting',{exact:true}).focus();await ep.keyboard.press('End');await ep.keyboard.press('Tab');
+        await chooser.getByLabel('Wall type',{exact:false}).fill('Concrete');
+        await chooser.getByLabel(/What do you need it for/).fill('Training room display');
+        await ep.screenshot({path:out+`/CATALOG-001-audience-${user.label}-form-${width}.png`,fullPage:true});
+        const sending=ep.waitForResponse(r=>r.url().endsWith('/fulfilment')&&r.request().method()==='POST');
+        await chooser.getByRole('button',{name:'Save',exact:true}).focus();await ep.keyboard.press('Enter');
+        assert.equal((await sending).status(),201,'CATALOG-001 both eligible departments submit the native form');
+        const submitted=ep.getByRole('region',{name:'Submitted catalog forms'});await submitted.getByText('$250.00',{exact:true}).waitFor();
+        await submitted.getByText('Concrete',{exact:true}).waitFor();
+      }
+      assert.equal(await ep.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'CATALOG-001 audience screen fits the viewport');
+      await ep.screenshot({path:out+`/CATALOG-001-audience-${user.label}-${width}.png`,fullPage:true});
+    }
+    // The item can move while an eligible employee has the old form open.
+    const user=users[0],ep=user.page,work=await user.api('/work',{title:'Review changed monitor',body:'Changed availability',deduplicationKey:crypto.randomUUID()});
+    await ep.goto(base+'/app#/work/'+work.id);const chooser=ep.locator('details[data-action-path$="/fulfilment"]');
+    await chooser.locator(':scope > summary').click();await chooser.getByLabel('Service',{exact:true}).selectOption(item.id);
+    await chooser.getByLabel('Monitor mounting',{exact:true}).selectOption('Desk');await chooser.getByLabel(/What do you need it for/).fill('Desk setup');
+    await api(`/catalog/${item.id}/audience`,{revision:1,audience:{department:[legal.id]}});
+    const sending=ep.waitForResponse(r=>r.url().endsWith('/fulfilment')&&r.request().method()==='POST');
+    await chooser.getByRole('button',{name:'Save',exact:true}).focus();await ep.keyboard.press('Enter');assert.equal((await sending).status(),409,'CATALOG-001 native stale catalog revision is refused');
+    for(const width of [1440,390]){await ep.setViewportSize({width,height:1000});await ep.getByText('Review the current catalog form and price before requesting',{exact:false}).waitFor();await ep.screenshot({path:out+`/CATALOG-001-audience-changed-${width}.png`,fullPage:true});}
+    console.log('PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440/390');
+  } finally {for(const user of users)await user.context.close();}
+}
+
+// Developer-only focused entry point; the ordinary browser suite also runs this journey.
+if(process.argv[1] && import.meta.url===new URL('file://'+process.argv[1]).href) {
+  const {chromium}=await import('playwright');const {apiFor,finishFirstRun}=await import('./connected-helpers.mjs');
+  const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;if(!base||!out)throw Error('Use tests/ui/run.mjs');
+  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+  try {
+    const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
+    await page.goto(base+'/app');await page.getByLabel('Your name').fill('Catalog owner');await page.getByLabel('Workspace name').fill('Audience proof');
+    await page.getByLabel('Work email').fill('catalog-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic-Connected-browser-2026');
+    await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();await finishFirstRun(page,base);
+    await catalogAudienceJourney({browser,page,api:apiFor(page),base,out});
+  } finally {await browser.close();}
+}

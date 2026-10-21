@@ -86,6 +86,11 @@ try{
  env.DB.prepare('INSERT INTO work_messages VALUES(?,?,?,?,?,?,?,?)').bind('message','workspace','work','owner','public','Retained notification','transfer',stamp),
  env.DB.prepare('INSERT INTO execution_outbox VALUES(?,?,?,?,?,?,?,?,?,?,?,?)').bind('delivery','workspace','work','message','owner','connection','owner','queued',null,'transfer',stamp,stamp),
  ])
+ await env.DB.batch([
+  env.DB.prepare('INSERT INTO work_catalog_values(id,workspace_id,dimension,label) VALUES(?,?,?,?)').bind('dept-sales','workspace','department','Sales'),
+  env.DB.prepare('UPDATE work_people SET attributes_json=? WHERE id=?').bind(JSON.stringify({department:'dept-sales'}),'owner-person'),
+  env.DB.prepare('UPDATE work_catalog SET audience_json=? WHERE id=?').bind(JSON.stringify({department:['dept-sales'],location:[],employmentType:[]}),'catalog-monitor'),
+ ]);
  await env.ATTACHMENTS.put('workspace/private-file','Private retained attachment')
  await close()
  await run(['exec','rer','export','--output',archive])
@@ -112,6 +117,9 @@ try{
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT catalog_snapshot_json FROM work_fulfilments WHERE id='catalog-request'").first()).catalog_snapshot_json),catalogSnapshot,'CATALOG-001 actual rer archive retains submitted questions, answers, original cost/delivery and old item revision');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT form_json FROM work_catalog WHERE id='catalog-monitor'").first()).form_json),catalogForm,'CATALOG-001 actual rer archive separately retains current catalog metadata');
 
+ assert.equal((await env.DB.prepare("SELECT label FROM work_catalog_values WHERE id='dept-sales'").first()).label,'Sales','CATALOG-001 native archive retains stable audience values');
+ assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT attributes_json FROM work_people WHERE id='owner-person'").first()).attributes_json),{department:'dept-sales'},'CATALOG-001 native archive retains reviewed attributes with the unbound person');
+ assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT audience_json FROM work_catalog WHERE id='catalog-monitor'").first()).audience_json),{department:['dept-sales'],location:[],employmentType:[]},'CATALOG-001 native archive retains versioned audience references');
  assert.equal((await env.DB.prepare('SELECT COUNT(*) n FROM sessions').first()).n,0)
  const person=await env.DB.prepare("SELECT member_id,binding_id,manager_id FROM work_people WHERE id='owner-person'").first()
  assert.deepEqual(person,{member_id:null,binding_id:null,manager_id:null},'Native restore retains the person but requires fresh binding and manager review')

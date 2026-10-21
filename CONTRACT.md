@@ -391,10 +391,10 @@ that product and marks how close the current code is (see [Status](#status)).
   and ERASURE-001's content removal; bundle submission validates every child's
   empty answers before opening work. Future CHANNEL-001/002/005 and API-001/003
   doors must enforce the same form revision and validation before shipping.
-  Department/location/employment audiences, required quote files and the
-  remaining item types are still unbuilt; CATALOG-001 stays partial.
+  Required quote files and the remaining item types are still unbuilt;
+  audience support is the bounded slice below. CATALOG-001 stays partial.
 
-  *Approved audience and quote semantic (ct, 21 October; unbuilt):* only the
+  *Approved audience and quote semantic (ct, 21 October):* only the
   owner configures versioned catalog audience and quote requirements. Reviewed
   people have department, location and employment-type stable IDs from
   owner-maintained lists; referenced values may be retired, not deleted.
@@ -436,6 +436,32 @@ that product and marks how close the current code is (see [Status](#status)).
   `catalog_quote_type` (422), `catalog_field_required` (422, named question),
   and `bundle_child_refused` (one line per failed child). This complete rule
   remains a requirement, not passing evidence for the form slice above.
+
+  *Current audience slice (sx, 21 October):* owner-only native REST routes
+  maintain stable department, location and employment-type values and version
+  item audiences. Values can be renamed or retired, never deleted by these
+  routes; retiring preserves existing references. Owner/HR review a person's
+  attributes through the existing dated people API with its current revision;
+  integrations cannot supply them. Employee catalog discovery and assistant
+  context filter against current reviewed bindings: OR within dimensions, AND
+  across them, empty unrestricted, unknown/unbound/inactive/merged/erased or
+  not-yet-effective facts fail a restricted dimension. Single-item submissions
+  recheck the item, person/binding revisions, filer roles and membership, work
+  revision and beneficiary membership in the same D1 batch as the fulfillment,
+  stock reservation and delivery obligation. Owners have no beneficiary bypass;
+  staff on behalf do not apply staff requester audience. Requests freeze audience
+  and evaluated person revisions beside their existing form snapshot; later
+  changes do not rewrite or re-gate in-flight requests. Review audits carry
+  dimension names only; erasure clears attributes, and native restore retains
+  facts without a live binding. Audience management currently uses REST rather
+  than an audience editor. Restricted bundle submissions and new pending-person
+  holds are refused before opening work until their atomic audience support is
+  implemented; restricted amendments require fresh submission rather than
+  reusing old approval. Existing held services whose item becomes restricted
+  stay held with their refusal reason at release. These refusals are a partial
+  boundary, not passing evidence for the required bundle/pending/amendment
+  journeys. Required quote files, remaining item types, full audience editor
+  and receiver journeys remain open.
 
 - **CATALOG-002 — Approval chains.** Per item: manager, application owner, cost
   center or finance above a USD threshold, and named groups, in serial or
@@ -2571,7 +2597,7 @@ The commit is the code this branch carries unchanged; the code audit at `7ce9dae
 | `CHANNEL-007` | Phone and walk-up intake | target | missing |  | No phone-system or walk-up intake. |
 | `CHANNEL-008` | Service notices to employees | target | partial | `src/features/services/employee-notices.ts`, `src/features/services/employee-notice-mail.ts`, `src/ui/service-notices.tsx`, `tests/services/employee-notice-cases.mjs`, `tests/services/run.mjs`, `tests/ui/service-notice-journey.mjs` | Portal cohort notices, matching-ticket offers, cadence, generic SendGrid mail, named verified all-clear and withdrawal implemented. Gap: Slack and Teams delivery/adapter acceptance under CHANNEL-001/002. |
 | `CHANNEL-009` | Request sharing and manager visibility | target | done | `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs` | |
-| `CATALOG-001` | Catalog items with forms | target | partial | `src/features/work/catalog-items.ts`; `src/features/work/catalog-form-schema.ts`; `tests/work/application-cases.mjs`; `tests/ui/application-journey.mjs` | Conditional typed forms, USD cost, elapsed-hour delivery estimates and immutable submitted form metadata are implemented for existing item kinds. Gap: department/location/employment-type audience controls, required quote attachments, accounts/general-service items and the complete two-department/quote journey. |
+| `CATALOG-001` | Catalog items with forms | target | partial | `src/features/work/catalog-items.ts`; `src/features/work/catalog-form-schema.ts`; `src/features/work/catalog-audience.ts`; `src/features/work/catalog-audience-routes.ts`; `tests/work/application-cases.mjs`; `tests/ui/application-journey.mjs`; `tests/platform/base-auth-transfer.mjs` | Typed forms, USD cost/delivery and immutable snapshots; stable dimension lists, owner/HR reviewed person attributes, scoped discovery and atomic single-item audience admission are implemented. Gap: required quote attachments and exact readers/custody, accounts/general-service items, audience editor, atomic eligible bundle/pending-person and amendment journeys, and complete receiver acceptance. |
 | `CATALOG-002` | Approval chains | target | partial | `src/features/work/fulfilment-decisions.ts`, `src/features/work/delegation.ts`, `tests/ui/fulfilment-decision-journey.mjs`, `tests/execution/authority-manager-cases.mjs` | Single manager approval; no multi-level, finance threshold, approval SLA or email-reply approval. |
 | `CATALOG-003` | Fulfillment task plans | target | partial | `src/features/work/requests.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No team task templates. |
 | `CATALOG-004` | Bundles and kits | target | done | `src/features/work/bundles.ts`, `src/ui/bundles.tsx`, `tests/work/bundle-cases.mjs` | Public-route proof: an owner-built hardware/software/access bundle opens one ticket with five child fulfilments; one atomic manager decision covers both gated children (partial and single-child approvals refused); per-child grants run and verify; the bundle stays in progress until the laptop handoff verifies the fifth child, then reads complete; a changed item refuses the stale bundle. Bundle builder, grouped manager decision and per-item progress inspected at 1440/390. |

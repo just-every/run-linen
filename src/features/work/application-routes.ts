@@ -1,3 +1,4 @@
+import { audienceEvaluation } from './catalog-audience';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../../platform/types';
 import { ApiError, jsonBody } from '../../platform/http';
@@ -17,9 +18,14 @@ export function registerApplicationRoutes(app: Hono<AppEnv>) {
 }
 export async function catalogItems(ctx: {env: AppEnv['Bindings'];principal: AppEnv['Variables']['principal']}) {
   await currentWorkPrincipal(ctx);
-  const items=(await ctx.env.DB.prepare('SELECT id,name,kind,target,owner_id,capacity,revision,form_json,application_id,entitlement_id FROM work_catalog WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<any>()).results;
-  return Promise.all(items.map(async item=>{
-    const {application_id,entitlement_id,form_json,...base}=item;
+  const items=(await ctx.env.DB.prepare('SELECT id,name,kind,target,owner_id,capacity,revision,form_json,audience_json,application_id,entitlement_id FROM work_catalog WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<any>()).results;
+  const visible=[];
+  for(const item of items) {
+    if(!ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r)) && !(await audienceEvaluation(ctx,item,ctx.principal.userId)).allowed)continue;
+    visible.push(item);
+  }
+  return Promise.all(visible.map(async item=>{
+    const {application_id,entitlement_id,form_json,audience_json,...base}=item;
     const publicItem={...base,form:JSON.parse(form_json)};
     if(!application_id || !entitlement_id)return publicItem;
     try {return {...publicItem,application:applicationProjection(ctx,await resolveApplication(ctx,application_id,entitlement_id))};}

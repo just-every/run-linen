@@ -1,4 +1,4 @@
-import { applicationJourney, catalogFormJourney } from './application-journey.mjs';
+import { applicationJourney, catalogFormJourney, catalogAudienceJourney } from './application-journey.mjs';
 import { calendarJourney } from './calendar-journey.mjs';
 import { searchJourney } from './search-journey.mjs';
 import { unsentReplyJourney } from './response-journey.mjs';
@@ -565,6 +565,7 @@ try {
   }
   await applicationJourney({page,api,base,out});
   await catalogFormJourney({page,api,base,out});
+  await catalogAudienceJourney({browser,page,api,base,out});
   await dependencyJourney({page,api,base,out});
   await searchJourney({page,api,base,out});
   await calendarJourney({page,api,base,out});

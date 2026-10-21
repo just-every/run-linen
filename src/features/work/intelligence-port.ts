@@ -1,3 +1,4 @@
+import { audienceEvaluation } from './catalog-audience';
 import { ApiError, id, now } from "../../platform/http";
 import type { WorkIntakePort, IntakeEvent } from "../intelligence/intake-port";
 import { getWork, operator, type WorkContext } from "./core";
@@ -105,9 +106,9 @@ export const workIntakePort: WorkIntakePort = {
   },
   async catalog(ctx) {
     await currentWorkPrincipal(ctx);
-    return (
+    const rows = (
       await ctx.env.DB.prepare(
-        "SELECT id,name,kind,target,owner_id FROM work_catalog WHERE workspace_id=? ORDER BY name",
+        "SELECT id,name,kind,target,owner_id,audience_json FROM work_catalog WHERE workspace_id=? ORDER BY name",
       )
         .bind(ctx.principal.workspaceId)
         .all<{
@@ -116,7 +117,13 @@ export const workIntakePort: WorkIntakePort = {
           kind: string;
           target: string;
           owner_id: string;
+          audience_json: string;
         }>()
     ).results;
+    const eligible=[];
+    for(const row of rows)if((await audienceEvaluation(ctx,row,ctx.principal.userId)).allowed){
+      const {audience_json,...item}=row;eligible.push(item);
+    }
+    return eligible;
   },
 };

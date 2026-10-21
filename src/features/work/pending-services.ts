@@ -1,3 +1,4 @@
+import { restrictedAudience } from './catalog-audience';
 import { ApiError, id, now } from '../../platform/http';
 import { permit, type WorkContext, type WorkRecord } from './core';
 import { pendingPerson } from './pending-people';
@@ -13,8 +14,9 @@ export async function preparePendingRequest(ctx:WorkContext,input:{pendingPerson
  const person=await pendingPerson(ctx,input.pendingPersonId);
  if(!person || person.state!=='pending' || !person.active || person.merged_into || person.member_id)
  throw new ApiError(409,'pending_person_unavailable','Current unbound pending person required');
- const db=ctx.env.DB,w=ctx.principal.workspaceId,items=(await db.prepare('SELECT id,revision FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify(input.catalogIds)).all<{id:string;revision:number}>()).results;
+ const db=ctx.env.DB,w=ctx.principal.workspaceId,items=(await db.prepare('SELECT id,revision,audience_json FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify(input.catalogIds)).all<{id:string;revision:number;audience_json:string}>()).results;
  if(items.length!==input.catalogIds.length)throw new ApiError(404,'catalog_unavailable','Selected catalogue service is unavailable');
+ if(items.some(restrictedAudience))throw new ApiError(422,'catalog_pending_audience_unavailable','Audience-controlled pending-person holds require reviewed pending attributes and atomic hold/release support');
  return {person,statements:(workId:string)=> {
   const t=now(),guard=id();
   return [

@@ -1,3 +1,4 @@
+import { registerCatalogAudienceRoutes } from './catalog-audience-routes';
 import { registerApplicationRoutes } from './application-routes';
 import { registerSearchRoutes } from './search';
 import { registerRetentionRoutes } from './retention-routes';
@@ -45,6 +46,7 @@ export function registerWorkRoutes(app: Hono<AppEnv>) {
   registerDeskScenarioRoutes(app);
   registerProjectRoutes(app);
   registerRelationshipRoutes(app);
+  registerCatalogAudienceRoutes(app);
   registerApplicationRoutes(app);
   registerSearchRoutes(app);
   registerConversationRoutes(app);

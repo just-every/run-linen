@@ -19,6 +19,25 @@ app.use("*", async (c, next) => {
   });
   await next();
 });
+// Test-only scheduling seam: change real D1 state after route evaluation, before its batch commits.
+app.use('/work/:id/fulfilment',async(c,next)=>{
+  const kind=c.req.header('x-catalog-race'), target=c.req.header('x-catalog-target');
+  if(!kind || !target)return next();
+  const db=c.env.DB,w=c.get('principal').workspaceId;
+  let changed=false;
+  c.env={...c.env,DB:new Proxy(db,{get(targetDb,key){
+    if(key==='batch')return async(statements:D1PreparedStatement[])=>{
+      if(!changed){changed=true;
+        if(kind==='person')await db.prepare("UPDATE work_people SET attributes_json='{}',revision=revision+1 WHERE workspace_id=? AND id=?").bind(w,target).run();
+        else if(kind==='catalog')await db.prepare('UPDATE work_catalog SET revision=revision+1 WHERE workspace_id=? AND id=?').bind(w,target).run();
+        else if(kind==='member')await db.prepare('UPDATE memberships SET active=0 WHERE workspace_id=? AND user_id=?').bind(w,target).run();
+      }
+      return db.batch(statements);
+    };
+    const value=Reflect.get(targetDb,key);return typeof value==='function'?value.bind(targetDb):value;
+  }})};
+  await next();
+});
 app.onError((e, c) =>
   c.json({ error: e.message }, e instanceof ApiError ? (e.status as 400) : 500),
 );

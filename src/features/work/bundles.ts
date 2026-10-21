@@ -1,3 +1,4 @@
+import { restrictedAudience, audienceEvaluation } from './catalog-audience';
 import { normalizeCatalogForm, validateCatalogAnswers } from './catalog-form-schema';
 /**
  * CATALOG-004: a bundle names existing catalog items pinned at their revisions. Requesting it opens one
@@ -38,7 +39,21 @@ export async function createBundle(ctx: WorkContext, input: Record<string, unkno
 }
 export async function listBundles(ctx: WorkContext) {
   await currentWorkPrincipal(ctx);
-  return { items: (await ctx.env.DB.prepare('SELECT * FROM work_catalog_bundles WHERE workspace_id=? ORDER BY name').bind(ctx.principal.workspaceId).all<BundleRow>()).results.map(project) };
+  const rows=(await ctx.env.DB.prepare('SELECT * FROM work_catalog_bundles WHERE workspace_id=? ORDER BY name').bind(ctx.principal.workspaceId).all<BundleRow>()).results;
+  const items=[];
+  for(const row of rows) {
+    const bundle=project(row);
+    if(!ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r))) {
+      let allowed=true;
+      for(const item of bundle.items) {
+        const catalog=await ctx.env.DB.prepare('SELECT audience_json FROM work_catalog WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,item.catalogId).first<{audience_json:string}>();
+        if(!catalog || !(await audienceEvaluation(ctx,catalog,ctx.principal.userId)).allowed){allowed=false;break;}
+      }
+      if(!allowed)continue;
+    }
+    items.push(bundle);
+  }
+  return {items};
 }
 
 /** Opens one ticket for the bundle snapshot; a changed bundle or item refuses the old snapshot. */
@@ -46,10 +61,19 @@ export async function requestBundle(ctx: WorkContext, bundleId: string, input: R
   await currentWorkPrincipal(ctx);
   const bundle = project(await bundleRow(ctx, bundleId));
   if (Number(input.expectedRevision) !== bundle.revision) throw new ApiError(409, 'bundle_changed', 'This bundle changed; review it again before requesting');
-  const current = (await ctx.env.DB.prepare('SELECT id,revision,form_json FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))')
-    .bind(ctx.principal.workspaceId, JSON.stringify(bundle.items.map(i => i.catalogId))).all<{ id: string; revision: number; form_json: string }>()).results;
+  const current = (await ctx.env.DB.prepare('SELECT id,revision,form_json,audience_json FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))')
+    .bind(ctx.principal.workspaceId, JSON.stringify(bundle.items.map(i => i.catalogId))).all<{ id: string; revision: number; form_json: string; audience_json:string }>()).results;
   if (bundle.items.some(i => current.find(c => c.id === i.catalogId)?.revision !== i.revision))
     throw new ApiError(409, 'bundle_changed', 'A bundled item changed after the bundle was built; the owner must rebuild the bundle');
+  const restricted=current.filter(restrictedAudience);
+  if(restricted.length){
+    const lines=[];
+    for(const row of restricted){
+      const visible=ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r)) || (await audienceEvaluation(ctx,row,ctx.principal.userId)).allowed;
+      lines.push(`${visible?bundle.items.find(i=>i.catalogId===row.id)!.name:'Unavailable item'}: audience-controlled bundles require atomic audience support before submission`);
+    }
+    throw new ApiError(422,'bundle_child_refused',lines.join('\n'));
+  }
   // Validate every child before opening any work. Bundle input has no form answers.
   for(const row of current)validateCatalogAnswers(normalizeCatalogForm(JSON.parse(row.form_json)),{});
   const beneficiaryId = typeof input.beneficiaryId === 'string' ? input.beneficiaryId : ctx.principal.userId;

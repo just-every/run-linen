@@ -1,3 +1,4 @@
+import { normalizeAttributes, validateValues, dimensions } from './catalog-audience';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
@@ -10,6 +11,8 @@ export async function upsertPerson(
     managerId?: string;
     effectiveAt: string;
     observedAt: string;
+    attributes?: unknown;
+    expectedRevision?: number;
   },
 ) {
   await currentWorkPrincipal(ctx);
@@ -32,6 +35,14 @@ export async function upsertPerson(
       "Stable source identity, name and valid source timestamps required",
     );
   if(input.source==='pending-reviewed')throw new ApiError(422,'reserved_person_source','Use the reviewed pending-person route');
+  const reviewsAttributes = Object.hasOwn(input,'attributes');
+  const attributes = reviewsAttributes ? normalizeAttributes(input.attributes) : {};
+  if (reviewsAttributes) permit(ctx,['owner','hr']);
+  const values = await validateValues(ctx,Object.fromEntries(dimensions.map(d=>[d,attributes[d]?[attributes[d]]:[]])));
+  const previous = reviewsAttributes ? await ctx.env.DB.prepare('SELECT revision,effective_at FROM work_people WHERE workspace_id=? AND source=? AND source_id=?')
+    .bind(ctx.principal.workspaceId,input.source,input.sourceId).first<{revision:number;effective_at:string}>() : null;
+  if (reviewsAttributes && previous && (input.expectedRevision!==previous.revision || Date.parse(input.effectiveAt)<=Date.parse(previous.effective_at)))
+    throw new ApiError(409,'revision_conflict','Current person revision and a later effective source time required');
   const reviewsManager = Object.hasOwn(input, 'managerId');
   if (reviewsManager) permit(ctx, ['owner','hr']);
   if (input.managerId && !(await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId,input.managerId).first()))
@@ -52,17 +63,19 @@ export async function upsertPerson(
     db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
       EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value IN ('owner','hr','integration'))
       AND (?=0 OR EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value IN ('owner','hr')))
-      AND (? IS NULL OR EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1)) THEN 1 ELSE 0 END)`)
-      .bind(guard,w,ctx.principal.userId,Number(reviewsManager),w,ctx.principal.userId,input.managerId||null,w,input.managerId||null),
-    db.prepare(`INSERT INTO work_people(id,workspace_id,source,source_id,name,manager_id,effective_at,observed_at)
-      VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(workspace_id,source,source_id) DO UPDATE SET name=excluded.name,
+      AND (? IS NULL OR EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1))
+      AND (?=0 OR (EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value IN ('owner','hr'))
+        AND COALESCE((SELECT revision FROM work_people WHERE workspace_id=? AND source=? AND source_id=?),0)=? AND ${values.sql})) THEN 1 ELSE 0 END)`)
+      .bind(guard,w,ctx.principal.userId,Number(reviewsManager),w,ctx.principal.userId,input.managerId||null,w,input.managerId||null,Number(reviewsAttributes),w,ctx.principal.userId,w,input.source,input.sourceId,previous?.revision??0,...values.bindings),
+    db.prepare(`INSERT INTO work_people(id,workspace_id,source,source_id,name,manager_id,effective_at,observed_at,attributes_json)
+      VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(workspace_id,source,source_id) DO UPDATE SET name=excluded.name,
       manager_id=CASE WHEN ?=1 THEN excluded.manager_id ELSE work_people.manager_id END,
-      effective_at=excluded.effective_at,observed_at=excluded.observed_at,revision=work_people.revision+1
+      effective_at=excluded.effective_at,observed_at=excluded.observed_at,attributes_json=CASE WHEN ?=1 THEN excluded.attributes_json ELSE work_people.attributes_json END,revision=work_people.revision+1
       WHERE excluded.effective_at>work_people.effective_at AND work_people.active=1 AND work_people.merged_into IS NULL`)
-      .bind(personId,w,input.source,input.sourceId,input.name,input.managerId||null,input.effectiveAt,input.observedAt,Number(reviewsManager)),
+      .bind(personId,w,input.source,input.sourceId,input.name,input.managerId||null,input.effectiveAt,input.observedAt,JSON.stringify(attributes),Number(reviewsManager),Number(reviewsAttributes)),
     db.prepare(`INSERT INTO audit_events SELECT ?,?,?,?,id,?,? FROM work_people
       WHERE workspace_id=? AND source=? AND source_id=? AND changes()>0`)
-      .bind(id(),w,ctx.principal.userId,'work.person_source_reviewed',JSON.stringify({managerReviewed:reviewsManager}),now(),w,input.source,input.sourceId),
+      .bind(id(),w,ctx.principal.userId,'work.person_source_reviewed',JSON.stringify({managerReviewed:reviewsManager,...(reviewsAttributes?{attributeDimensions:Object.keys(input.attributes as object)}:{})}),now(),w,input.source,input.sourceId),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),
   ]);
   return ctx.env.DB.prepare(

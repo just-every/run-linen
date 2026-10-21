@@ -1,3 +1,4 @@
+import { restrictedAudience } from './catalog-audience';
 import { fulfilmentManagerApproval } from "./fulfilment-authority";
 import { ApiError, id, now } from '../../platform/http';
 import { getWork, permit, type WorkContext } from './core';
@@ -49,6 +50,7 @@ export async function amendFulfilment(ctx: WorkContext, workId: string, input: F
     throw new ApiError(409, 'revision_conflict', 'Work or fulfilment changed; refresh before correction');
   const catalog = await db.prepare('SELECT * FROM work_catalog WHERE workspace_id=? AND id=?')
     .bind(w, input.catalogId).first<any>();
+  if(restrictedAudience(catalog))throw new ApiError(409,'catalog_amendment_requires_resubmission','Audience-controlled amendments require a fresh catalog submission and renewed approval');
   const initial = await db.prepare(`SELECT o.* FROM work_fulfilment_execution l JOIN execution_operations o
     ON o.workspace_id=l.workspace_id AND o.id=l.operation_id WHERE l.workspace_id=? AND l.fulfilment_id=? AND l.phase='initial'`)
     .bind(w, f.id).first<Operation>();
