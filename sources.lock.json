@@ -5091,7 +5091,7 @@
       "executable": false
     },
     "tests/ui/application-journey.mjs": {
-      "sha256": "1e8f4e9b2de8de0a5bf9899602cc711a37c09680f0e05894727ec84e0165184e",
+      "sha256": "a5972083180e8b0f8f6f8ca156a73cce292895f8f438833de15bac4ac40fd9ce",
       "executable": false
     },
     "tests/ui/asset-audit-browser.mjs": {

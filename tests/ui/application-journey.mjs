@@ -142,6 +142,7 @@ export async function catalogAudienceJourney({browser,page,api,base,out}) {
     await signIn(ep,base,email,password);users.push({label,member,context,page:ep,api:apiFor(ep)});
   }
   const owner=await api('/session');
+  await api('/catalog',{name:'Unrestricted help '+suffix,kind:'access',target:'help-'+suffix,ownerId:owner.user.id});
   const item=await api('/catalog',{name:'Audience monitor '+suffix,kind:'device',target:'monitor-'+suffix,ownerId:owner.user.id,
     audience:{department:[sales.id,support.id]},form:{costCents:25000,deliveryHours:48,fields:[
       {id:'mount',label:'Monitor mounting',type:'select',required:true,options:['Desk','Wall']},
