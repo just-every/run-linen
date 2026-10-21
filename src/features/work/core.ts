@@ -10,6 +10,7 @@ import { participantView } from "./relationships";
 import { sharedListClause, sharedReplyAllowed, sharedView } from "./sharing";
 import { currentWorkPrincipal } from "./identity";
 import { assertCloseable } from "./catalog-tasks";
+import { quotesForRequest } from "./catalog-quotes";
 import { groupMember } from "./desk-groups";
 import { routeUnplaced } from "./desk-routing";
 import type { Env, Principal } from "../../platform/types";
@@ -160,7 +161,7 @@ export async function createWork(
     sensitivity?: string;
     context?: unknown;
   },
-  internal?: { admittedLifecycleBeneficiary: string; statements: (workId: string) => D1PreparedStatement[] },
+  internal?: { admittedLifecycleBeneficiary?: string; statements: (workId: string) => D1PreparedStatement[] },
 ) {
   await currentWorkPrincipal(ctx);
 
@@ -399,7 +400,7 @@ export async function conversation(ctx: WorkContext, workId: string) {
     operator(ctx.principal) ||
     (work.sensitivity === "hr" && ctx.principal.roles.includes("hr"));
   const attachments = await ctx.env.DB.prepare(
-    "SELECT id,name,content_type,size,sha256,visibility,created_at FROM work_attachments WHERE workspace_id=? AND work_id=? AND (visibility='public' OR ?=1)",
+    "SELECT id,name,content_type,size,sha256,visibility,created_at FROM work_attachments WHERE workspace_id=? AND work_id=? AND (visibility='public' OR (visibility='private' AND ?=1))",
   )
     .bind(ctx.principal.workspaceId, workId, Number(privateAllowed))
     .all();
@@ -412,7 +413,7 @@ export async function conversation(ctx: WorkContext, workId: string) {
     (SELECT name FROM users WHERE id=?) requester_name,
     (SELECT name FROM users WHERE id=?) assignee_name`)
     .bind(work.requester_id, work.assignee_id).first();
-  return { work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, progress: await requestProgress(ctx, workId) };
+  return { work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, quotes: await quotesForRequest(ctx, workId), progress: await requestProgress(ctx, workId) };
 }
 // The public line each conversation command records, in words people read.
 const transitionLabels: Record<string, string> = { reopen: "Reopened", cancel: "Cancelled", close: "Closed", pause: "Paused", resume: "Resumed", assign: "Assigned" };

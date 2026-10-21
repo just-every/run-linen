@@ -105,7 +105,7 @@ export async function restoreAdoptionRecord(
     );
   if (
     ["work_messages", "work_attachments"].includes(input.table) &&
-    !["public", "private"].includes(String(row.visibility))
+    !["public", "private", ...(input.table === "work_attachments" ? ["catalog_quote"] : [])].includes(String(row.visibility))
   )
     throw new ApiError(
       422,

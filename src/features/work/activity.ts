@@ -16,7 +16,7 @@ export interface ActivityEntry {
 type Audit = { id: string; actor_id: string; actor_name: string; action: string; detail_json: string; created_at: string };
 const actions = ['work.classification_overridden', 'work.classification_proposed', 'work.routed', 'work.group_set',
   'work.assigned', 'work.scenario_run', 'work.field_set', 'work.transitioned',
-  'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked'];
+  'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked', 'catalog.quote_attached'];
 
 function changes(event: Audit, detail: Record<string, any>): ActivityEntry['changes'] {
   if (['work.scenario_run', 'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked'].includes(event.action)) return (detail.changes ?? []).map(({ field, before, after }: any) => ({ field, before, after }));
@@ -57,7 +57,7 @@ export async function ticketActivity(ctx: WorkContext, workId: string) {
         : event.action === 'work.classification_proposed' ? 'agent' : 'person';
       items.push({ id: event.id, at: event.created_at, kind: 'change', actor: actorKind === 'scenario' ? detail.name ?? 'Scenario' : actorKind === 'rule' ? detail.ruleId ?? 'Support group routing' : actorKind === 'agent' ? 'Linen' : event.actor_name, actorKind,
         ...(actorKind !== 'person' ? { initiatedBy: event.actor_name } : {}),
-        action: event.action.replace('work.', '').replaceAll('_', ' '), visibility: 'private', changes: changes(event, detail),
+        action: event.action === 'catalog.quote_attached' ? 'Quote attached' : event.action.replace('work.', '').replaceAll('_', ' '), visibility: 'private', changes: changes(event, detail),
         ...(actorKind === 'scenario' && detail.name ? { body: detail.name } : {}),
       });
     }

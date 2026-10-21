@@ -1,6 +1,7 @@
 import { currentWorkPrincipal } from "./identity";
 import { safeFileName, safeContentType, sha256Hex } from "./mail-attachment";
 import { ApiError, id, now } from "../../platform/http";
+import { QUOTE_VISIBILITY, readCatalogQuote } from "./catalog-quotes";
 import { getWork, operator, type WorkContext } from "./core";
 export async function storeAttachment(
   ctx: WorkContext,
@@ -34,7 +35,7 @@ export async function storeAttachment(
   });
   try {
     await ctx.env.DB.prepare(
-      "INSERT INTO work_attachments VALUES(?,?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO work_attachments(id,workspace_id,work_id,visibility,blob_key,name,content_type,size,sha256,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
     )
       .bind(
         attachmentId,
@@ -68,6 +69,8 @@ export async function readAttachment(ctx: WorkContext, attachmentId: string) {
       name: string;
     }>();
   if (!row) throw new ApiError(404, "not_found", "Attachment not found");
+  // A catalog quote has its own exact readers; this generic door never serves one.
+  if (row.visibility === QUOTE_VISIBILITY) return readCatalogQuote(ctx, attachmentId);
   const work = await getWork(ctx, row.work_id);
   if (
     row.visibility === "private" &&

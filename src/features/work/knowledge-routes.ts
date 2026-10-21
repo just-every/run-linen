@@ -1,4 +1,5 @@
 import { editCatalogForm } from './catalog-items';
+import { projectSnapshot } from './catalog-quotes';
 import { editTaskPlan, completeTask, waiveObligation } from './catalog-tasks';
 import { catalogItems } from './application-routes';
 import { suggestWorkarounds } from './workaround-suggestions';
@@ -63,7 +64,7 @@ export function registerKnowledgeRoutes(app: Hono<AppEnv>) {
     const ctx={env:c.env,principal:c.get('principal')};
     await getWork(ctx,c.req.param('id'));
     const rows=(await c.env.DB.prepare('SELECT id,catalog_snapshot_json FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_snapshot_json IS NOT NULL').bind(ctx.principal.workspaceId,c.req.param('id')).all<{id:string;catalog_snapshot_json:string}>()).results;
-    return c.json({items:rows.map(r=>({id:r.id,catalogSnapshot:JSON.parse(r.catalog_snapshot_json)}))});
+    return c.json({items:await Promise.all(rows.map(async r=>({id:r.id,catalogSnapshot:await projectSnapshot(ctx,JSON.parse(r.catalog_snapshot_json))})))});
   });
   app.post("/work/:id/fulfilment", async (c) =>
     c.json(

@@ -49,20 +49,24 @@ export async function validateValues(ctx: WorkContext, values: Partial<Record<At
   return guard;
 }
 
-export async function audienceEvaluation(ctx: WorkContext, catalog: {audience_json?:string}, memberId: string) {
+/** A reviewed pending person's facts count from review; any other person's count from their effective date. */
+const factsKnown = (person: any) => person && (person.source === 'pending-reviewed' ? Date.parse(person.observed_at) : Date.parse(person.effective_at)) <= Date.now();
+export async function evaluateAttributes(ctx: WorkContext, catalog: {audience_json?:string}, person: any) {
   const audience=catalogAudience(catalog), needed=dimensions.filter(d=>audience[d].length);
-  const person=needed.length ? await personForMember(ctx,memberId) : null;
-  const known=person && Date.parse(person.effective_at)<=Date.now();
-  const attributes=known ? normalizeAttributes(JSON.parse(person.attributes_json)) : {};
-  const failed:Dimension[]=[];
+  const attributes=needed.length && factsKnown(person) ? normalizeAttributes(JSON.parse(person.attributes_json)) : {};
+  const failed:Dimension[]=[], unknown:Dimension[]=[];
   for(const d of needed) {
-    if(!attributes[d] || !audience[d].includes(attributes[d]!) || !await ctx.env.DB.prepare(
-      'SELECT 1 FROM work_catalog_values WHERE workspace_id=? AND dimension=? AND id=?')
-      .bind(ctx.principal.workspaceId,d,attributes[d]??'').first())failed.push(d);
+    if(!attributes[d] || !await ctx.env.DB.prepare('SELECT 1 FROM work_catalog_values WHERE workspace_id=? AND dimension=? AND id=?')
+      .bind(ctx.principal.workspaceId,d,attributes[d]??'').first()){failed.push(d);unknown.push(d);}
+    else if(!audience[d].includes(attributes[d]!))failed.push(d);
   }
-  return {audience,person,failed,allowed:failed.length===0};
+  return {audience,person,failed,unknown,allowed:failed.length===0};
 }
-export async function requireCatalogAudience(ctx: WorkContext, catalog: {id:string;audience_json?:string}, beneficiaryId:string) {
+export async function audienceEvaluation(ctx: WorkContext, catalog: {audience_json?:string}, memberId: string) {
+  const needed=restrictedAudience(catalog);
+  return evaluateAttributes(ctx,catalog,needed ? await personForMember(ctx,memberId) : null);
+}
+export async function requireCatalogAudience(ctx: WorkContext, catalog: {id:string;name?:string;audience_json?:string}, beneficiaryId:string) {
   // Staff filing on behalf checks the beneficiary only. Employee capacity also checks the filer.
   const staff=ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r));
   const members=[...new Set([beneficiaryId,...(staff?[]:[ctx.principal.userId])])];
@@ -72,8 +76,11 @@ export async function requireCatalogAudience(ctx: WorkContext, catalog: {id:stri
     await ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)')
       .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,'catalog.audience_refused',catalog.id,
         JSON.stringify({dimensions:failed}),now()).run();
+    const unknown=[...new Set(evaluations.flatMap(e=>e.unknown))], name=(catalog as {name?:string}).name??'This item';
+    // Staff see the failing dimension, never an attribute value; employees see only that it is unavailable.
     throw new ApiError(403,'catalog_audience',staff
-      ? `This item isn't available for the beneficiary. Review ${failed.join(', ')} with the owner or HR; missing reviewed facts count as unknown.`
+      ? unknown.length ? `${name} has no reviewed ${unknown.join(', ')}; the owner or HR must record it.`
+        : `${name} isn't available for the beneficiary: ${failed.join(', ')} does not match.`
       : "This item isn't available for you. If you think that's wrong, ask the service desk.");
   }
   const guards: string[] = [], bindings: (string|number)[] = [];

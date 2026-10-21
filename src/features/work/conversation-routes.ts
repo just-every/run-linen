@@ -29,6 +29,7 @@ import {
   workReport,
 } from "./knowledge";
 import { storeAttachment, readAttachment } from "./attachments";
+import { storeCatalogQuote, readCatalogQuote } from "./catalog-quotes";
 import { erasePerson } from "./privacy";
 import { mapMailSender, receiveMail } from "./intake";
 import {
@@ -166,6 +167,33 @@ export function registerConversationRoutes(app: Hono<AppEnv>) {
       201,
     ),
   );
+  // CATALOG-001: a vendor quote PDF for a catalog item, attached before the item is submitted.
+  app.post("/work/:id/catalog-quote", async (c) =>
+    c.json(
+      await storeCatalogQuote(
+        { env: c.env, principal: c.get("principal") },
+        c.req.param("id"),
+        {
+          catalogId: requiredString(c.req.header("X-Catalog-Id"), "X-Catalog-Id"),
+          name: requiredString(c.req.header("X-Filename"), "X-Filename"),
+          contentType: c.req.header("Content-Type") || "application/octet-stream",
+          bytes: await c.req.arrayBuffer(),
+        },
+      ),
+      201,
+    ),
+  );
+  app.get("/catalog-quotes/:id", async (c) => {
+    const result = await readCatalogQuote({ env: c.env, principal: c.get("principal") }, c.req.param("id"));
+    return new Response(result.blob.body, {
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(result.name)}`,
+        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "private, no-store",
+      },
+    });
+  });
   app.get("/attachments/:id", async (c) => {
     const result = await readAttachment(
       { env: c.env, principal: c.get("principal") },

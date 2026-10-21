@@ -8,28 +8,38 @@ import { amendFulfilment } from "./fulfilment-amend";
 import { resolveManager } from "./delegation";
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
-import { getWork, permit, type WorkContext } from "./core";
+import { getWork, permit, type WorkContext, type WorkRecord } from "./core";
 export { createCatalogItem } from './catalog-items';
-export async function requestFulfilment(
-  ctx: WorkContext,
-  workId: string,
-  input: {
-    catalogId: string;
-    catalogRevision?: number;
-    answers?: unknown;
-    beneficiaryId: string;
-    purpose: string;
-    expiresAt?: string;
-    expectedWorkRevision?: number;
-    expectedFulfilmentRevision?: number;
-    idempotencyKey?: string;
-  },
-) {
+export interface FulfilmentInput {
+  catalogId: string;
+  catalogRevision?: number;
+  answers?: unknown;
+  beneficiaryId: string;
+  purpose: string;
+  expiresAt?: string;
+  expectedWorkRevision?: number;
+  expectedFulfilmentRevision?: number;
+  idempotencyKey?: string;
+}
+/** Items whose delivery is a provider effect; account and general-service items are owner-done team tasks (CATALOG-001). */
+export const manualKinds = ['account', 'service'];
+export async function requestFulfilment(ctx: WorkContext, workId: string, input: FulfilmentInput) {
   await currentWorkPrincipal(ctx);
   if (input.expectedWorkRevision !== undefined && input.expectedFulfilmentRevision !== undefined && input.idempotencyKey)
     return amendFulfilment(ctx,workId,{...input,expectedWorkRevision:input.expectedWorkRevision,
       expectedFulfilmentRevision:input.expectedFulfilmentRevision,idempotencyKey:input.idempotencyKey});
   const work = await getWork(ctx, workId);
+  const evaluation = await evaluateFulfilment(ctx, work, input);
+  try { await ctx.env.DB.batch(fulfilmentStatements(ctx, evaluation, work.id, work.revision)); } catch(error) {
+    if(String(error).includes('CHECK constraint failed'))throw new ApiError(409,'catalog_changed','This item changed while you were filling it in. Review it and submit again.');
+    throw error;
+  }
+  return finishFulfilment(ctx, evaluation, work.id);
+}
+export type Evaluation = Awaited<ReturnType<typeof evaluateFulfilment>>;
+/** Every read and refusal for one catalog request. A request that does not exist yet passes `fresh` (bundles). */
+export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord,'id'|'revision'|'state'> & {pending_person_id?:string|null}, input: FulfilmentInput, fresh=false) {
+  const workId = work.id;
   if(await ctx.env.DB.prepare(`SELECT 1 FROM work_pending_people h WHERE h.workspace_id=? AND (h.id=? OR (h.state<>'bound' AND h.email=(SELECT lower(trim(email)) FROM users WHERE id=?)))`).bind(ctx.principal.workspaceId,input.beneficiaryId,input.beneficiaryId).first())
     throw new ApiError(409,'pending_person_unbound','Use the held pending-person request until normal account authentication binds this person');
   if(work.pending_person_id && !await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=? AND state='bound'").bind(ctx.principal.workspaceId,work.pending_person_id).first())
@@ -64,8 +74,21 @@ export async function requestFulfilment(
       capacity: number | null;
     }>();
   if (!catalog) throw new ApiError(404, "not_found", "Catalog item not found");
-  const catalogSnapshot = await catalogRequestSnapshot(ctx,workId,catalog,input);
-  const application = await applicationForRequest(ctx,workId,catalog);
+  const previous = fresh ? null : await ctx.env.DB.prepare(
+    "SELECT id,revision,beneficiary_id,purpose,expires_at FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?",
+  )
+    .bind(ctx.principal.workspaceId, workId, input.catalogId)
+    .first<{
+      id: string; revision: number;
+      beneficiary_id: string;
+      purpose: string;
+      expires_at: string | null;
+    }>();
+  // Audience gates a new submission, before the form or quote is described to someone who may not request it.
+  const audience = previous ? null : await requireCatalogAudience(ctx,catalog,input.beneficiaryId);
+  const catalogSnapshot = await catalogRequestSnapshot(ctx,workId,catalog,input,fresh);
+  if(audience)Object.assign(catalogSnapshot,{audience:audience.audience,audiencePeople:audience.people});
+  const application = fresh ? null : await applicationForRequest(ctx,workId,catalog);
   if(application)catalog.owner_id=application.ownerId;
   const person = await personForMember(ctx, input.beneficiaryId);
   let blocked: string | null = null;
@@ -77,16 +100,6 @@ export async function requestFulfilment(
       catalog.kind === "device"
         ? "No stock; acquisition owner required"
         : "No license capacity; license owner required";
-  const previous = await ctx.env.DB.prepare(
-    "SELECT id,revision,beneficiary_id,purpose,expires_at FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?",
-  )
-    .bind(ctx.principal.workspaceId, workId, input.catalogId)
-    .first<{
-      id: string; revision: number;
-      beneficiary_id: string;
-      purpose: string;
-      expires_at: string | null;
-    }>();
   if (
     previous &&
     (previous.beneficiary_id !== input.beneficiaryId ||
@@ -99,38 +112,41 @@ export async function requestFulfilment(
       "Material beneficiary, purpose or expiry edit requires revised work and renewed authority",
     );
   if (catalog.requires_manager) {
-    const approval = await fulfilmentManagerApproval(ctx,work,{...catalog,id:input.catalogId,
-      revision:(await ctx.env.DB.prepare("SELECT revision FROM work_catalog WHERE workspace_id=? AND id=?")
-        .bind(ctx.principal.workspaceId,input.catalogId).first<{revision:number}>())!.revision},
+    const approval = await fulfilmentManagerApproval(ctx,{id:workId,revision:work.revision} as WorkRecord,{...catalog,id:input.catalogId,revision:catalog.revision},
       previous || {beneficiary_id:input.beneficiaryId,purpose:input.purpose,expires_at:input.expiresAt||null});
     if(!approval.allowed) blocked = approval.holderId
       ? "Current scoped manager approval required; manager identity alone does not approve this request"
       : "Missing authoritative manager; owner must resolve authority";
   }
-  const audience = previous ? null : await requireCatalogAudience(ctx,catalog,input.beneficiaryId);
-  if(audience)Object.assign(catalogSnapshot,{audience:audience.audience,audiencePeople:audience.people});
-  const admissionGuard=id(),w=ctx.principal.workspaceId;
-  const roles=JSON.stringify(ctx.principal.roles);
-  const fid = id(), catalogGuard = id(), automatedId = id();
+  return {input,catalog,previous,audience,catalogSnapshot,application,blocked,decisionOwner};
+}
+/** The single atomic write that records one request: guards, reservation, snapshot, quote binding and every duty. */
+export function fulfilmentStatements(ctx: WorkContext, e: Evaluation, workId: string, workRevision: number) {
+  const {input,catalog,previous,audience,catalogSnapshot,application,blocked} = e;
+  const w=ctx.principal.workspaceId,admissionGuard=id(),roles=JSON.stringify(ctx.principal.roles);
+  const fid = id(), catalogGuard = id(), automatedId = id(), quote = catalogSnapshot.quote as {id:string;sha256:string}|null|undefined;
+  const manual = manualKinds.includes(catalog.kind);
   const kind = catalog.kind === "device" ? "device.deliver" : "access.grant";
-  try { await ctx.env.DB.batch([
+  return [
     ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
       EXISTS(SELECT 1 FROM memberships m WHERE m.workspace_id=? AND m.user_id=? AND m.active=1
         AND json_array_length(?)>0 AND NOT EXISTS(SELECT 1 FROM json_each(?) required WHERE required.value NOT IN (SELECT value FROM json_each(m.roles_json))))
       AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1)
       AND EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=? AND state NOT IN ('closed','cancelled'))
-      AND (${audience?.sql??'1'}) THEN 1 ELSE 0 END)`)
-      .bind(admissionGuard,w,ctx.principal.userId,roles,roles,w,input.beneficiaryId,w,work.id,work.revision,...(audience?.bindings??[])),
+      AND (${audience?.sql??'1'})
+      AND (?=0 OR EXISTS(SELECT 1 FROM work_attachments WHERE workspace_id=? AND id=? AND work_id=? AND catalog_id=? AND visibility='catalog_quote' AND fulfilment_id IS NULL AND sha256=?)) THEN 1 ELSE 0 END)`)
+      .bind(admissionGuard,w,ctx.principal.userId,roles,roles,w,input.beneficiaryId,w,workId,workRevision,...(audience?.bindings??[]),
+        Number(!previous&&!!quote),w,quote?.id??'',workId,catalog.id,quote?.sha256??''),
     ...(catalog.capacity!==null ? [    ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_catalog_reservations SELECT ?,?,?,?,?,NULL WHERE (SELECT COUNT(*) FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND released_at IS NULL)<?",
     )
       .bind(
-        ctx.principal.workspaceId,
+        w,
         input.catalogId,
         workId,
         input.beneficiaryId,
         now(),
-        ctx.principal.workspaceId,
+        w,
         input.catalogId,
         catalog.capacity,
       )] : []),
@@ -138,13 +154,13 @@ export async function requestFulfilment(
     ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
       EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?) OR
       EXISTS(SELECT 1 FROM work_catalog WHERE workspace_id=? AND id=? AND revision=? AND form_json=?) THEN 1 ELSE 0 END)`)
-      .bind(catalogGuard,ctx.principal.workspaceId,work.id,input.catalogId,ctx.principal.workspaceId,input.catalogId,catalogSnapshot.revision,JSON.stringify(catalogSnapshot.form)),
+      .bind(catalogGuard,w,workId,input.catalogId,w,input.catalogId,catalogSnapshot.revision,catalog.form_json),
     ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_fulfilments(id,workspace_id,work_id,catalog_id,beneficiary_id,purpose,expires_at,revision,application_json,catalog_snapshot_json) VALUES(?,?,?,?,?,?,?,1,?,?)",
     ).bind(
       fid,
-      ctx.principal.workspaceId,
-      work.id,
+      w,
+      workId,
       input.catalogId,
       input.beneficiaryId,
       input.purpose,
@@ -152,12 +168,22 @@ export async function requestFulfilment(
       application ? JSON.stringify(application) : null,
       JSON.stringify(catalogSnapshot),
     ),
-    ctx.env.DB.prepare(
+    ...(quote && !previous ? [
+      ctx.env.DB.prepare("UPDATE work_attachments SET fulfilment_id=? WHERE workspace_id=? AND id=? AND fulfilment_id IS NULL AND EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=?)")
+        .bind(fid,w,quote.id,w,fid),
+      // History says only that a quote is attached, never its name.
+      ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'catalog.quote_attached',?,?,? WHERE changes()=1")
+        .bind(id(),w,ctx.principal.userId,workId,JSON.stringify({catalogId:input.catalogId,attachmentId:quote.id}),now()),
+    ] : []),
+    manual ? ctx.env.DB.prepare(
+      "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,last_error,title,catalog_id) VALUES(?,?,?,'task.manual',?,?,?,?,?,?,?,?)",
+    ).bind(automatedId,w,workId,catalog.target,input.beneficiaryId,now(),blocked?'blocked':'pending',catalog.owner_id,blocked,catalog.name,catalog.id)
+    : ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,last_error) VALUES(?,?,?,?,?,?,?,?,?,?)",
     ).bind(
       automatedId,
-      ctx.principal.workspaceId,
-      work.id,
+      w,
+      workId,
       kind,
       catalog.target,
       input.beneficiaryId,
@@ -166,30 +192,32 @@ export async function requestFulfilment(
       catalog.owner_id,
       blocked,
     ),
-    ...taskStatements(ctx, work.id, {...catalog, id: input.catalogId}, input.beneficiaryId, automatedId),
+    ...taskStatements(ctx, workId, {...catalog, id: input.catalogId}, input.beneficiaryId, automatedId),
     ...(catalog.capacity!==null ? [ctx.env.DB.prepare(`UPDATE work_obligations SET state='blocked',last_error=?
       WHERE workspace_id=? AND work_id=? AND kind=? AND target=? AND state='pending'
       AND NOT EXISTS(SELECT 1 FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND work_id=? AND released_at IS NULL)`)
-      .bind(catalog.kind==='device'?'No stock; acquisition owner required':'No license capacity; license owner required',w,workId,kind,catalog.target,w,input.catalogId,workId)] : []),
+      .bind(catalog.kind==='device'?'No stock; acquisition owner required':'No license capacity; license owner required',w,workId,manual?'task.manual':kind,catalog.target,w,input.catalogId,workId)] : []),
     // A newly recorded responsibility is a change to the request: its queue row and "Last changed" move.
-    ...(previous ? [] : [ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(now(), ctx.principal.workspaceId, work.id)]),
+    ...(previous ? [] : [ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(now(), w, workId)]),
     ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id IN (?,?)").bind(catalogGuard,admissionGuard),
-  ]); } catch(error) {
-    if(String(error).includes('CHECK constraint failed'))throw new ApiError(409,'catalog_changed','Catalog form changed before submission; review it again');
-    throw error;
-  }
+  ];
+}
+/** After the atomic write: the expiry duty for provider access and the stock reading the caller sees. */
+export async function finishFulfilment(ctx: WorkContext, e: Evaluation, workId: string) {
+  const {input,catalog,application,catalogSnapshot,decisionOwner} = e, w = ctx.principal.workspaceId;
+  let blocked = e.blocked;
   if(catalog.capacity!==null && !await ctx.env.DB.prepare('SELECT 1 FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND work_id=? AND released_at IS NULL')
     .bind(w,input.catalogId,workId).first()) {
     blocked=catalog.kind==='device'?'No stock; acquisition owner required':'No license capacity; license owner required';
   }
-  if (input.expiresAt && catalog.kind !== "device")
+  if (input.expiresAt && catalog.kind !== "device" && !manualKinds.includes(catalog.kind))
     await ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,owner_id) VALUES(?,?,?,?,?,?,?,?)",
     )
       .bind(
         id(),
-        ctx.principal.workspaceId,
-        work.id,
+        w,
+        workId,
         "access.revoke",
         catalog.target,
         input.beneficiaryId,
@@ -198,7 +226,7 @@ export async function requestFulfilment(
       )
       .run();
   return {
-    workId: work.id,
+    workId,
     state: blocked ? "blocked" : "pending",
     reason: blocked,
     ownerId: catalog.owner_id,

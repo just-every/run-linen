@@ -5,12 +5,16 @@ import { ApiError, id, now, requiredString } from '../../platform/http';
 import { permit, type WorkContext } from './core';
 import { normalizeCatalogForm, validateCatalogAnswers } from './catalog-form-schema';
 import { normalizeTaskPlan } from './catalog-task-plan';
+import { QUOTE_VISIBILITY, quoteRequiredMessage } from './catalog-quotes';
+
+export const catalogKinds = ['access', 'software', 'device', 'account', 'service'];
+export const catalogChanged = 'This item changed while you were filling it in. Review it and submit again.';
 
 export async function createCatalogItem(
   ctx: WorkContext,
   input: {
     name: string;
-    kind: "access" | "software" | "device";
+    kind: "access" | "software" | "device" | "account" | "service";
     target?: string;
     ownerId?: string;
     applicationId?: string;
@@ -27,7 +31,7 @@ export async function createCatalogItem(
   const application = input.applicationId && input.entitlementId ? await resolveApplication(ctx,input.applicationId,input.entitlementId) : null;
   if(Boolean(input.applicationId)!==Boolean(input.entitlementId))throw new ApiError(422,'application_link','Application and entitlement must be selected together');
   if(application) {
-    if(input.kind==='device' || (input.target && input.target!==application.target) || (input.ownerId && input.ownerId!==application.ownerId))
+    if(input.kind==='device' || input.kind==='account' || input.kind==='service' || (input.target && input.target!==application.target) || (input.ownerId && input.ownerId!==application.ownerId))
       throw new ApiError(422,'application_link','Linked catalog target and owner come from the application');
     input={...input,target:application.target,ownerId:application.ownerId};
   }
@@ -35,7 +39,7 @@ export async function createCatalogItem(
     !input.name ||
     !input.target ||
     !input.ownerId ||
-    !["access", "software", "device"].includes(input.kind) ||
+    !catalogKinds.includes(input.kind) ||
     (input.capacity !== undefined &&
       (!Number.isInteger(input.capacity) || input.capacity < 0))
   )
@@ -87,8 +91,8 @@ export async function editCatalogForm(ctx: WorkContext, catalogId: string, input
   return {id:catalogId,revision:Number(input.revision)+1};
 }
 export async function catalogRequestSnapshot(ctx: WorkContext, workId: string, catalog: any,
-  input: {catalogRevision?: number; answers?: unknown}) {
-  const prior = await ctx.env.DB.prepare('SELECT catalog_snapshot_json FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?')
+  input: {catalogRevision?: number; answers?: unknown}, fresh=false) {
+  const prior = fresh ? null : await ctx.env.DB.prepare('SELECT catalog_snapshot_json FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?')
     .bind(ctx.principal.workspaceId,workId,catalog.id).first<{catalog_snapshot_json:string|null}>();
   if (prior?.catalog_snapshot_json) {
     const saved=JSON.parse(prior.catalog_snapshot_json);
@@ -97,7 +101,12 @@ export async function catalogRequestSnapshot(ctx: WorkContext, workId: string, c
     return saved;
   }
   const form=normalizeCatalogForm(JSON.parse(catalog.form_json));
-  if ((restrictedAudience(catalog) || form.fields.length || form.costCents!==null || form.deliveryHours!==null || input.catalogRevision!==undefined) && input.catalogRevision!==catalog.revision)
-    throw new ApiError(409,'catalog_changed','Review the current catalog form and price before requesting');
-  return {catalogId:catalog.id,revision:catalog.revision,name:catalog.name,submittedBy:ctx.principal.userId,form,answers:validateCatalogAnswers(form,input.answers??{})};
+  if ((restrictedAudience(catalog) || form.fields.length || form.costCents!==null || form.deliveryHours!==null || form.quoteRequired || input.catalogRevision!==undefined) && input.catalogRevision!==catalog.revision)
+    throw new ApiError(409,'catalog_changed',catalogChanged);
+  const answers=validateCatalogAnswers(form,input.answers??{});
+  // The quote the requester attached for this item is frozen by id and hash; Linen never reads its amount.
+  const quote=form.quoteRequired ? await ctx.env.DB.prepare(`SELECT id,sha256,size FROM work_attachments WHERE workspace_id=? AND work_id=? AND catalog_id=?
+    AND visibility=? AND fulfilment_id IS NULL ORDER BY created_at DESC,id LIMIT 1`).bind(ctx.principal.workspaceId,workId,catalog.id,QUOTE_VISIBILITY).first<{id:string;sha256:string;size:number}>() : null;
+  if(form.quoteRequired && !quote)throw new ApiError(422,'catalog_quote_required',quoteRequiredMessage);
+  return {catalogId:catalog.id,revision:catalog.revision,name:catalog.name,submittedBy:ctx.principal.userId,form,answers,...(quote?{quote}:{})};
 }

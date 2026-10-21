@@ -55,7 +55,9 @@ export async function completeTask(ctx: WorkContext, workId: string, obligationI
   const row = await openRow(ctx, workId, obligationId);
   if (row.kind !== 'task.manual') throw new ApiError(404, 'not_found', 'Team task not found');
   permit(ctx, ['owner', 'operator']);
-  if (!ctx.principal.roles.includes('owner') && !await groupMember(ctx, row.group_id, ctx.principal.userId))
+  // An account or service item has no team: its owner does it (CATALOG-001).
+  const team = row.group_id ? await groupMember(ctx, row.group_id, ctx.principal.userId) : row.owner_id === ctx.principal.userId;
+  if (!ctx.principal.roles.includes('owner') && !team)
     throw new ApiError(403, 'task_team_only', "Only a member of the task's team, or the workspace owner, completes it");
   if (!Number.isInteger(input.revision)) throw new ApiError(422, 'revision', 'Current task revision required');
   if (row.state !== 'pending') throw new ApiError(409, 'task_not_open', 'This task is already done, waived or cancelled');
@@ -109,7 +111,7 @@ export async function describeObligations(ctx: WorkContext, workId: string, rows
     if (row.kind !== 'task.manual') return { ...visible, can_waive: mayWaive(ctx, row) && waivable(row) };
     const waitingFor = (JSON.parse(after_json || '[]') as string[]).filter(dep => !['verified', 'done', 'waived'].includes(state.get(dep) ?? '')).map(dep => titles.get(dep) ?? 'An earlier step');
     const member = row.state === 'pending' && ctx.principal.roles.some(r => ['owner', 'operator'].includes(r))
-      && (ctx.principal.roles.includes('owner') || await groupMember(ctx, row.group_id, ctx.principal.userId));
+      && (ctx.principal.roles.includes('owner') || (row.group_id ? await groupMember(ctx, row.group_id, ctx.principal.userId) : row.owner_id === ctx.principal.userId));
     return { ...visible, group_name: staff ? groups.get(row.group_id) ?? null : undefined, waiting_for: waitingFor,
       can_complete: Boolean(member) && !waitingFor.length && ready.get(catalog_id) === true, can_waive: mayWaive(ctx, row) && waivable(row) };
   }));

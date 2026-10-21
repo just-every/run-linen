@@ -1,4 +1,4 @@
-import { restrictedAudience } from './catalog-audience';
+import { evaluateAttributes } from './catalog-audience';
 import { ApiError, id, now } from '../../platform/http';
 import { permit, type WorkContext, type WorkRecord } from './core';
 import { pendingPerson } from './pending-people';
@@ -14,9 +14,15 @@ export async function preparePendingRequest(ctx:WorkContext,input:{pendingPerson
  const person=await pendingPerson(ctx,input.pendingPersonId);
  if(!person || person.state!=='pending' || !person.active || person.merged_into || person.member_id)
  throw new ApiError(409,'pending_person_unavailable','Current unbound pending person required');
- const db=ctx.env.DB,w=ctx.principal.workspaceId,items=(await db.prepare('SELECT id,revision,audience_json FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify(input.catalogIds)).all<{id:string;revision:number;audience_json:string}>()).results;
+ const db=ctx.env.DB,w=ctx.principal.workspaceId,items=(await db.prepare('SELECT id,name,revision,audience_json FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify(input.catalogIds)).all<{id:string;name:string;revision:number;audience_json:string}>()).results;
  if(items.length!==input.catalogIds.length)throw new ApiError(404,'catalog_unavailable','Selected catalogue service is unavailable');
- if(items.some(restrictedAudience))throw new ApiError(422,'catalog_pending_audience_unavailable','Audience-controlled pending-person holds require reviewed pending attributes and atomic hold/release support');
+ // The reviewed pending record's attributes gate each hold, at the person revision the guard below rechecks; release checks the bound person again.
+ const refused:string[]=[],refusedIds:string[]=[];
+ for(const item of items){const e=await evaluateAttributes(ctx,item,person);if(!e.allowed)refusedIds.push(item.id),refused.push(`${item.name}: ${e.unknown.length?`has no reviewed ${e.unknown.join(', ')} for this pending person; the owner or HR must record it.`:`isn't available for this pending person: ${e.failed.join(', ')} does not match.`}`);}
+ if(refused.length){
+  await db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),w,ctx.principal.userId,'catalog.audience_refused',person.id,JSON.stringify({catalogIds:refusedIds}),now()).run();
+  throw new ApiError(403,'catalog_audience',refused.join('\n'));
+ }
  return {person,statements:(workId:string)=> {
   const t=now(),guard=id();
   return [

@@ -136,7 +136,7 @@ async function reasonFor(ctx: AdoptionContext, r: NativeRecord) {
             return 'unknown_schema';
     }
     if (r.table === 'work_messages' || r.table === 'work_attachments') {
-        if (!['public', 'private'].includes(String(r.row.visibility)))
+        if (!['public', 'private', ...(r.table === 'work_attachments' ? ['catalog_quote'] : [])].includes(String(r.row.visibility)))
             return 'unknown_privacy';
     }
     if (r.table === 'work_pending_people' && !['pending', 'bound', 'withdrawn'].includes(String(r.row.state)))

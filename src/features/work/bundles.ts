@@ -1,5 +1,4 @@
-import { restrictedAudience, audienceEvaluation } from './catalog-audience';
-import { normalizeCatalogForm, validateCatalogAnswers } from './catalog-form-schema';
+import { audienceEvaluation } from './catalog-audience';
 /**
  * CATALOG-004: a bundle names existing catalog items pinned at their revisions. Requesting it opens one
  * ticket with one child fulfilment per item; one manager decision records every manager-gated child's
@@ -9,7 +8,7 @@ import { normalizeCatalogForm, validateCatalogAnswers } from './catalog-form-sch
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { createWork, getWork, permit, type WorkContext } from './core';
 import { currentWorkPrincipal } from './identity';
-import { requestFulfilment } from './requests';
+import { requestFulfilment, evaluateFulfilment, fulfilmentStatements, finishFulfilment, type Evaluation } from './requests';
 import { prepareFulfilmentApproval, type FulfilmentApprovalInput } from './fulfilment-authority';
 
 interface BundleItem { catalogId: string; revision: number; name: string; kind: string; requiresManager: boolean }
@@ -56,32 +55,56 @@ export async function listBundles(ctx: WorkContext) {
   return {items};
 }
 
-/** Opens one ticket for the bundle snapshot; a changed bundle or item refuses the old snapshot. */
+/**
+ * Opens one ticket for the bundle snapshot, all or nothing (ct, 21 October): every child is evaluated (audience,
+ * form, quote) before any work opens, a refusal names each failing child, and the ticket and every child's
+ * fulfilment are one atomic write that rechecks the evaluated item, person and membership revisions.
+ */
 export async function requestBundle(ctx: WorkContext, bundleId: string, input: Record<string, unknown>) {
   await currentWorkPrincipal(ctx);
   const bundle = project(await bundleRow(ctx, bundleId));
   if (Number(input.expectedRevision) !== bundle.revision) throw new ApiError(409, 'bundle_changed', 'This bundle changed; review it again before requesting');
-  const current = (await ctx.env.DB.prepare('SELECT id,revision,form_json,audience_json FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))')
-    .bind(ctx.principal.workspaceId, JSON.stringify(bundle.items.map(i => i.catalogId))).all<{ id: string; revision: number; form_json: string; audience_json:string }>()).results;
+  const current = (await ctx.env.DB.prepare('SELECT id,revision FROM work_catalog WHERE workspace_id=? AND id IN (SELECT value FROM json_each(?))')
+    .bind(ctx.principal.workspaceId, JSON.stringify(bundle.items.map(i => i.catalogId))).all<{ id: string; revision: number }>()).results;
   if (bundle.items.some(i => current.find(c => c.id === i.catalogId)?.revision !== i.revision))
     throw new ApiError(409, 'bundle_changed', 'A bundled item changed after the bundle was built; the owner must rebuild the bundle');
-  const restricted=current.filter(restrictedAudience);
-  if(restricted.length){
-    const lines=[];
-    for(const row of restricted){
-      const visible=ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r)) || (await audienceEvaluation(ctx,row,ctx.principal.userId)).allowed;
-      lines.push(`${visible?bundle.items.find(i=>i.catalogId===row.id)!.name:'Unavailable item'}: audience-controlled bundles require atomic audience support before submission`);
-    }
-    throw new ApiError(422,'bundle_child_refused',lines.join('\n'));
-  }
-  // Validate every child before opening any work. Bundle input has no form answers.
-  for(const row of current)validateCatalogAnswers(normalizeCatalogForm(JSON.parse(row.form_json)),{});
   const beneficiaryId = typeof input.beneficiaryId === 'string' ? input.beneficiaryId : ctx.principal.userId;
   if (beneficiaryId !== ctx.principal.userId) permit(ctx, ['owner', 'operator', 'hr']);
   const purpose = requiredString(input.purpose, 'purpose', 2000), expiresAt = typeof input.expiresAt === 'string' ? input.expiresAt : undefined;
-  const work = await createWork(ctx, { title: `${bundle.name} bundle`, body: purpose, deduplicationKey: requiredString(input.deduplicationKey, 'deduplicationKey'), kind: 'request', beneficiaryId: beneficiaryId === ctx.principal.userId ? undefined : beneficiaryId }) as { id: string };
-  await ctx.env.DB.prepare('INSERT OR IGNORE INTO work_bundle_requests VALUES(?,?,?,?,?,?)').bind(ctx.principal.workspaceId, work.id, bundle.id, bundle.revision, JSON.stringify(bundle.items), now()).run();
-  for (const item of bundle.items) await requestFulfilment(ctx, work.id, { catalogId: item.catalogId, catalogRevision:item.revision, beneficiaryId, purpose, expiresAt });
+  const key = requiredString(input.deduplicationKey, 'deduplicationKey');
+  const workInput = { title: `${bundle.name} bundle`, body: purpose, deduplicationKey: key, kind: 'request', beneficiaryId: beneficiaryId === ctx.principal.userId ? undefined : beneficiaryId };
+  const replay = await ctx.env.DB.prepare('SELECT id FROM work_records WHERE workspace_id=? AND requester_id=? AND dedup_key=?').bind(ctx.principal.workspaceId, ctx.principal.userId, key).first();
+  const children = bundle.items.map(item => ({ catalogId: item.catalogId, catalogRevision: item.revision, beneficiaryId, purpose, expiresAt }));
+  if (replay) {
+    // The same request again: createWork refuses a different one, and each child is recorded once.
+    const work = await createWork(ctx, workInput) as { id: string };
+    for (const child of children) await requestFulfilment(ctx, work.id, child);
+    return bundleStatus(ctx, work.id);
+  }
+  const staff = ctx.principal.roles.some(r => ['owner', 'operator', 'hr'].includes(r)), lines: string[] = [], evaluations: Evaluation[] = [];
+  for (const [index, child] of children.entries()) {
+    try { evaluations.push(await evaluateFulfilment(ctx, { id: 'new-bundle-request', revision: 1, state: 'open' }, child, true)); }
+    catch (error) {
+      if (!(error instanceof ApiError) || error.status >= 500) throw error;
+      const row = await ctx.env.DB.prepare('SELECT audience_json FROM work_catalog WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, child.catalogId).first<{ audience_json: string }>();
+      // An item the filer cannot see is not named; the others are.
+      const visible = staff || !row || (await audienceEvaluation(ctx, row, ctx.principal.userId)).allowed;
+      lines.push(`${visible ? bundle.items[index].name : 'Unavailable item'}: ${error.message}`);
+    }
+  }
+  if (lines.length) throw new ApiError(422, 'bundle_child_refused', lines.join('\n'));
+  let work: { id: string };
+  try {
+    work = await createWork(ctx, workInput, { statements: workId => [
+      ctx.env.DB.prepare('INSERT OR IGNORE INTO work_bundle_requests VALUES(?,?,?,?,?,?)').bind(ctx.principal.workspaceId, workId, bundle.id, bundle.revision, JSON.stringify(bundle.items), now()),
+      ...evaluations.flatMap(e => fulfilmentStatements(ctx, e, workId, 1)),
+    ] }) as { id: string };
+  } catch (error) {
+    // Nothing was written: an item, person or membership changed between evaluation and the atomic write.
+    if (error instanceof ApiError && error.code === 'idempotency_conflict') throw new ApiError(409, 'catalog_changed', 'A bundled item or person changed while you were filling it in. Review the bundle and submit again.');
+    throw error;
+  }
+  for (const e of evaluations) await finishFulfilment(ctx, e, work.id);
   return bundleStatus(ctx, work.id);
 }
 

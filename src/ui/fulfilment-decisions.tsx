@@ -224,6 +224,7 @@ export function FulfilmentDecisions({
                     ["Access ends", item.expiresAt ? date(item.expiresAt) : "No expiry recorded"],
                   ]}
                 />
+                {item.quote && <p>Vendor quote: <a href={`/api/v1/catalog-quotes/${item.quote.id}`}>Download the quote ({Math.ceil(item.quote.size / 1024)} KiB)</a></p>}
               </div>
               {item.serviceForOtherPerson && (
                 <Notice tone="warning">

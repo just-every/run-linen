@@ -20,7 +20,7 @@ app.use("*", async (c, next) => {
   await next();
 });
 // Test-only scheduling seam: change real D1 state after route evaluation, before its batch commits.
-app.use('/work/:id/fulfilment',async(c,next)=>{
+for(const seam of ['/work/:id/fulfilment','/catalog-bundles/:id/request'])app.use(seam,async(c,next)=>{
   const kind=c.req.header('x-catalog-race'), target=c.req.header('x-catalog-target');
   if(!kind || !target)return next();
   const db=c.env.DB,w=c.get('principal').workspaceId;

@@ -121,7 +121,8 @@ export async function prepareFulfilmentApproval(ctx: WorkContext, workId: string
     db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),w,ctx.principal.userId,'work.fulfilment_approved',approvalId,
       JSON.stringify({workId,fulfilmentId:f.id,catalogId:catalog.id,workRevision:work.revision,fulfilmentRevision:f.revision,
         catalogRevision:catalog.revision,personRevision:person.revision,managerId:person.manager_id,holderId:holder,
-        beneficiaryId:f.beneficiary_id,expiresAt:f.expires_at}),now()),
+        beneficiaryId:f.beneficiary_id,expiresAt:f.expires_at,
+        ...(f.catalog_snapshot_json&&JSON.parse(f.catalog_snapshot_json).quote?{quoteSha256:JSON.parse(f.catalog_snapshot_json).quote.sha256}:{})}),now()),
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(now(),w,workId),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)]};
 }

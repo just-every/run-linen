@@ -13,6 +13,8 @@ export type CatalogForm = {
   fields: CatalogField[]
   costCents: number | null
   deliveryHours: number | null
+  /** A vendor quote PDF is required to submit (CATALOG-001); Linen never reads its amount. */
+  quoteRequired: boolean
 }
 
 type Answer = string | number | boolean
@@ -71,9 +73,10 @@ function quantity(value: unknown, name: string, min: number, max: number): numbe
 }
 
 export function normalizeCatalogForm(value: unknown): CatalogForm {
-  if (value === undefined || value === null) return { fields: [], costCents: null, deliveryHours: null }
+  if (value === undefined || value === null) return { fields: [], costCents: null, deliveryHours: null, quoteRequired: false }
   const input = object(value, 'Catalog form', invalidForm)
-  knownKeys(input, ['fields', 'costCents', 'deliveryHours'], 'Catalog form', invalidForm)
+  knownKeys(input, ['fields', 'costCents', 'deliveryHours', 'quoteRequired'], 'Catalog form', invalidForm)
+  if (input.quoteRequired !== undefined && typeof input.quoteRequired !== 'boolean') return invalidForm('Quote requirement must be a boolean')
   const rawFields = input.fields === undefined ? [] : input.fields
   if (!Array.isArray(rawFields) || rawFields.length > 20) return invalidForm('Catalog form must contain at most 20 fields')
   const fields: CatalogField[] = []
@@ -118,6 +121,7 @@ export function normalizeCatalogForm(value: unknown): CatalogForm {
     fields,
     costCents: quantity(input.costCents, 'Cost in USD cents', 0, 1_000_000_000),
     deliveryHours: quantity(input.deliveryHours, 'Delivery in elapsed hours', 1, 87_600),
+    quoteRequired: input.quoteRequired === true,
   }
 }
 
@@ -136,12 +140,12 @@ export function validateCatalogAnswers(form: CatalogForm, value: unknown): Recor
       continue
     }
     if (!supplied) {
-      if (field.required) throw new ApiError(422,'catalog_field_required',`${field.label} is required`)
+      if (field.required) throw new ApiError(422,'catalog_field_required',`${field.label} is required.`)
       continue
     }
     const answer = input[field.id]
     if (!answerMatches(field, answer)) return invalidAnswers(`${field.label} must contain a valid ${field.type} value`)
-    if (field.required && typeof answer === 'string' && !answer.trim()) throw new ApiError(422,'catalog_field_required',`${field.label} is required`)
+    if (field.required && typeof answer === 'string' && !answer.trim()) throw new ApiError(422,'catalog_field_required',`${field.label} is required.`)
     answers[field.id] = answer
   }
   return answers
