@@ -4351,7 +4351,7 @@
       "executable": false
     },
     "src/ui/catalog-form-editor.tsx": {
-      "sha256": "d294379698cbf86d54eb342e42fd454567018a54ac3905157182cf69777b261b",
+      "sha256": "81c858d7c5793bb8695980a1654e437aae91448c6dcc76c8305dec4802e73a97",
       "executable": false
     },
     "src/ui/catalog-request-form.tsx": {
