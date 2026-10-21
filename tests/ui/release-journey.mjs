@@ -61,7 +61,7 @@ try {
   for(const ci of cis)await linked.getByRole('link',{name:ci.data.name,exact:true}).waitFor();
   await action(page,'Record your go/no-go decision',{decision:'go',reason:'Ready'},'/decisions','Save',409);
   await page.getByText('A go decision needs recorded passed build and test phases',{exact:true}).waitFor();
-  for(const phase of ['build','test'])await action(page,'Record a build or test result',{phase,outcome:'passed',reference:`Reviewed ${phase} report`},'/phases');
+  for(const phase of ['build','test']){await action(page,'Record a build or test result',{phase,outcome:'passed',reference:`Reviewed ${phase} report`},'/phases');await page.getByText(`passed · Reviewed ${phase} report`,{exact:false}).first().waitFor();}
   const ac=await browser.newContext(),ap=await ac.newPage();ap.on('pageerror',e=>errors.push(String(e)));
   await signIn(ap,base,approver.email);await ap.goto(base+'/app#/releases/'+release.id);
   await action(ap,'Record your go/no-go decision',{decision:'no-go',reason:'Brief the service desk first'},'/decisions');
