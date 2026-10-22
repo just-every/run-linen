@@ -1,3 +1,4 @@
+import {archiveJourney} from './archive-journey.mjs';
 import assert from 'node:assert/strict';
 import { action, local, later } from './connected-helpers.mjs';
 import { nativeCreate } from './native-regressions.mjs';
@@ -59,6 +60,7 @@ export async function connectedLifecycle(env) {
   await page.getByText('Existing sessions were invalidated.',{exact:false}).waitFor();
   await captureJourney(page,{path:out+'/LIFE-006-expired-verified.png',fullPage:true});
   await birthrightBaselineJourney(env);
+  await archiveJourney(env);
 }
 
 /** Focused entry point shares the exact birthright flow used by the connected CI journey. */

@@ -20,6 +20,17 @@ export async function archivePrivacyRevision(ctx:AdoptionContext) {
  return 'ap1:'+await archiveHmac(ctx.env,'linen/archive/privacy-checkpoint/v1',w,rows.map(r=>r.results));
 }
 
+/** Earlier safe archives remain usable until this workspace has a removal. */
+export async function assertExportPrivacy(ctx:AdoptionContext,metadata:Record<string,unknown>) {
+ const revision=await archivePrivacyRevision(ctx);
+ if(metadata.privacyRevision!==undefined)check(metadata.privacyRevision===revision,'erasure_invalidated_snapshot',409);
+ else {
+  const w=ctx.principal.workspaceId;
+  check(!await ctx.env.DB.prepare('SELECT 1 FROM adoption_tombstones WHERE workspace_id=? UNION ALL SELECT 1 FROM work_erasure WHERE workspace_id=? UNION ALL SELECT 1 FROM history_identity_tombstones WHERE workspace_id=? LIMIT 1').bind(w,w,w).first(),'erasure_invalidated_snapshot',409);
+ }
+ return revision;
+}
+
 export async function archiveIdentityMatcher(ctx:AdoptionContext,sourceWorkspace=ctx.principal.workspaceId) {
  const match=await identityMatcher(ctx.env,ctx.principal.workspaceId);
  const work=(await ctx.env.DB.prepare('SELECT person_id FROM work_erasure WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<{person_id:string}>()).results;

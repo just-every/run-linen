@@ -1,5 +1,5 @@
 import { prepareArchiveIdentityProjection } from '../history/archive-identities.mjs';
-import { archivePrivacyRevision,archiveProjector } from './archive-privacy';
+import { archivePrivacyRevision,archiveProjector,assertExportPrivacy } from './archive-privacy';
 import { id, now } from '../../platform/http';
 import { check, owner, statement, getRun, sha, encode, type AdoptionContext } from './core';
 import { nativeTables, excludedTables, type Manifest, type Chunk, MAX_CHUNK } from './schema';
@@ -47,8 +47,7 @@ async function saveChunk(ctx: AdoptionContext, runId: string, chunk: Chunk, byte
 export async function advanceExport(ctx: AdoptionContext, runId: string) {
     const run = await getRun(ctx, 'exports', runId);
     check(run.state !== 'erased', 'archive_erased', 410);
-    const privacyRevision=JSON.parse(String(run.manifest_json||'{}')).privacyRevision;
-    check(privacyRevision===await archivePrivacyRevision(ctx),'erasure_invalidated_snapshot',409);
+    const privacyRevision=await assertExportPrivacy(ctx,JSON.parse(String(run.manifest_json||'{}')));
     if (run.state === 'ready')
         return JSON.parse(String(run.manifest_json));
     const page = (await ctx.env.DB.prepare('SELECT * FROM adoption_snapshot WHERE workspace_id=? AND export_id=? AND seq>? ORDER BY seq LIMIT 25').bind(ctx.principal.workspaceId, runId, run.checkpoint).all<{
@@ -95,5 +94,5 @@ export async function advanceExport(ctx: AdoptionContext, runId: string) {
     await ctx.env.DB.batch([ctx.env.DB.prepare("UPDATE adoption_exports SET state='ready',manifest_json=? WHERE workspace_id=? AND id=? AND state='snapshot'").bind(JSON.stringify(manifest), ctx.principal.workspaceId, runId), statement(ctx, 'adoption.export.ready', runId, { chunks: chunks.length })]);
     return manifest;
 }
-export async function downloadChunk(ctx: AdoptionContext, runId: string, ordinal: number) { const run = await getRun(ctx, 'exports', runId); check(run.state === 'ready', 'archive_not_available', 409); check(JSON.parse(String(run.manifest_json)).privacyRevision===await archivePrivacyRevision(ctx),'erasure_invalidated_snapshot',409); const chunk = await ctx.env.DB.prepare('SELECT * FROM adoption_chunks WHERE workspace_id=? AND run_id=? AND ordinal=?').bind(ctx.principal.workspaceId, runId, ordinal).first<any>(); check(chunk, 'not_found', 404); await auditedDownload(ctx, runId, ordinal); const object = await ctx.env.ATTACHMENTS.get(chunk.object_key); check(object, 'artifact_missing', 409); const bytes = await object.arrayBuffer(); check(await sha(bytes) === chunk.sha256, 'artifact_corrupt', 409); return new Response(bytes, { headers: { 'Content-Type': 'application/octet-stream', 'Cache-Control': 'no-store', 'X-Content-SHA256': chunk.sha256 } }); }
+export async function downloadChunk(ctx: AdoptionContext, runId: string, ordinal: number) { const run = await getRun(ctx, 'exports', runId); check(run.state === 'ready', 'archive_not_available', 409); await assertExportPrivacy(ctx,JSON.parse(String(run.manifest_json))); const chunk = await ctx.env.DB.prepare('SELECT * FROM adoption_chunks WHERE workspace_id=? AND run_id=? AND ordinal=?').bind(ctx.principal.workspaceId, runId, ordinal).first<any>(); check(chunk, 'not_found', 404); await auditedDownload(ctx, runId, ordinal); const object = await ctx.env.ATTACHMENTS.get(chunk.object_key); check(object, 'artifact_missing', 409); const bytes = await object.arrayBuffer(); check(await sha(bytes) === chunk.sha256, 'artifact_corrupt', 409); await assertExportPrivacy(ctx,JSON.parse(String(run.manifest_json))); return new Response(bytes, { headers: { 'Content-Type': 'application/octet-stream', 'Cache-Control': 'no-store', 'X-Content-SHA256': chunk.sha256 } }); }
 async function auditedDownload(ctx: AdoptionContext, runId: string, ordinal: number) { await ctx.env.DB.batch([statement(ctx, 'adoption.export.download', runId, { ordinal })]); }
