@@ -46,6 +46,32 @@ export async function assetContractChecks(api,db) {
     assert.ok(scoped.some(e=>e.changes.some(c=>c.field==='link'&&c.after?.id===work.id)),'DESK-017 current staff can see a normal ticket asset link');
     assert.ok(!scoped.some(e=>e.id===privateEvent.id),'DESK-017 asset history hides the entire out-of-scope source event, including actor/time');
     assert.ok(!JSON.stringify(scoped).includes(restrictedWork.id));
+    const project=check(await api('/projects',{name:'synthetic-linen-821',ownerId:'owner'}),201).project;
+    const task=check(await api(`/projects/${project.id}/tasks`,{title:'synthetic-linen-822',ownerId:'owner',dueDate:'2030-10-20'}),201);
+    const link={kind:'asset',targetId:device.id,taskId:task.id};
+    check(await api(`/projects/${project.id}/links`,{items:[link]}));
+    const taskEvents=()=>api(`/assets/${device.id}/history`,undefined,{'x-user':'stranger','x-roles':'["operator"]'});
+    const before=check(await taskEvents()).events.find(e=>e.changes.some(c=>c.field==='link'&&c.after?.kind==='task'&&c.after.id===task.id));
+    assert.ok(before,'Current project staff read the original reverse task link');
+    assert.deepEqual(before.changes,[{field:'link',before:null,after:{kind:'task',id:task.id}}]);
+    assert.ok(!JSON.stringify(before).includes('synthetic-linen-821')&&!JSON.stringify(before).includes('synthetic-linen-822'),'No project or task title is copied');
+    check(await api(`/projects/${project.id}/links`,{items:[link]}));
+    check(await api(`/projects/${project.id}/links`,{items:[{...link,taskId:'synthetic-linen-823'}]}),422);
+    assert.deepEqual(check(await taskEvents()).events.filter(e=>e.id===before.id),[before],'Replay and refusal add no event');
+    const taskHistory=check(await api(`/projects/${project.id}/tasks/${task.id}/activity`)).items;
+    assert.equal(taskHistory.filter(e=>e.action==='Task linked').length,1,'Both timeline sides append once');
+    // A cleared historical event has no source proof even while a current project link exists.
+    await db.prepare("INSERT INTO audit_events VALUES(?, 'a','owner','work.asset_linked',?,?,?)").bind('synthetic-linen-824',device.id,JSON.stringify({redacted:'erasure',redactedAt:new Date().toISOString()}),new Date().toISOString()).run();
+    assert.ok(!check(await taskEvents()).events.some(e=>e.id==='synthetic-linen-824'),'Current links never reconstruct a cleared source');
+    await db.prepare('UPDATE memberships SET roles_json=? WHERE workspace_id=? AND user_id=?').bind('["employee"]','a','stranger').run();
+    check(await taskEvents(),403);
+    check(await api(`/projects/${project.id}/tasks/${task.id}/activity`,undefined,{'x-user':'stranger','x-roles':'["operator"]'}),403);
+    await db.prepare('UPDATE memberships SET roles_json=? WHERE workspace_id=? AND user_id=?').bind('["operator"]','a','stranger').run();
+    // Source removal is a persisted fixture transition; all assertions use the public history door.
+    await db.prepare('DELETE FROM work_project_tasks WHERE workspace_id=? AND id=?').bind('a',task.id).run();
+    assert.ok(!check(await taskEvents()).events.some(e=>e.id===before.id),'A missing current task withdraws the entire reverse event, actor and time included');
+    assert.ok(!check(await api(`/assets/${device.id}/history`)).events.some(e=>e.id===before.id),'Known missing sources remain unavailable to owners too');
+
   } finally {
     await db.prepare('UPDATE memberships SET roles_json=? WHERE workspace_id=? AND user_id=?').bind('["employee"]','a','stranger').run();
   }

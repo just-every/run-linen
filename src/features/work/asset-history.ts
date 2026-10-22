@@ -1,3 +1,5 @@
+import {decodeHistory} from '../history/registry';
+import {projectTaskReadable} from './project-activity';
 import { registeredHistory, historyEventStatement, readHistoryEvent } from '../history/event';
 import { getWork, type WorkContext } from './core';
 import { workPrivateReadable } from './scope';
@@ -17,15 +19,17 @@ export async function assetEvents(ctx: WorkContext, assetId: string) {
     .all<{id:string;actor_id:string;action:string;detail_json:string;created_at:string}>()).results;
   const items=[];
   for(const row of rows){
-    const original=JSON.parse(row.detail_json);
-    const ticketIds=(Array.isArray(original?.changes) ? original.changes : []).flatMap((change:any)=>
-      change.field==='link' ? [change.before,change.after].filter(value=>value && typeof value==='object' && value.kind==='ticket' && typeof value.id==='string').map(value=>value.id as string) : []);
+    const original=decodeHistory(row.detail_json);
     if(['work.asset_linked','work.asset_repair_linked'].includes(row.action)){
-      if(!ticketIds.length && !ctx.principal.roles.includes('owner'))continue;
+      const canonical=original?.action===row.action&&original.record.kind==='asset'&&original.record.id===assetId;
+      const values=canonical?original.changes.filter(change=>change.field==='link').flatMap(change=>[change.before,change.after]).filter(value=>value!==null):[];
+      const source=(value:unknown):value is {kind:'ticket'|'task';id:string}=>!!value&&typeof value==='object'&&'kind' in value&&['ticket','task'].includes(String(value.kind))&&'id' in value&&typeof value.id==='string'&&!!value.id&&Object.keys(value).every(key=>['kind','id'].includes(key));
+      if((!values.length||values.some(value=>!source(value)))&&!ctx.principal.roles.includes('owner'))continue;
       let readable=true;
-      for(const ticketId of new Set<string>(ticketIds)){
-        try { const work=await getWork(ctx,ticketId); if(!workPrivateReadable(ctx.principal,work)||'access' in work)readable=false; }
-        catch(error){if(error instanceof ApiError && [403,404].includes(error.status))readable=false;else throw error;}
+      for(const value of values.filter(source)){
+        if(value.kind==='task'){if(!await projectTaskReadable(ctx,value.id))readable=false;}
+        else try{const work=await getWork(ctx,value.id);if(!workPrivateReadable(ctx.principal,work)||'access' in work)readable=false;}
+        catch(error){if(error instanceof ApiError&&[403,404].includes(error.status))readable=false;else throw error;}
       }
       if(!readable)continue;
     }

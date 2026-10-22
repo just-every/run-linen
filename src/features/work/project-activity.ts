@@ -21,13 +21,22 @@ export function taskEvent(ctx: WorkContext, taskId: string, action: 'created' | 
   return historyEventStatement(ctx,{action:actionName,target:taskId,at,envelope:registeredHistory(actionName,{kind:'task',id:taskId},values.before,values.after,origin?{kind:'scenario',id:origin.scenarioId,name:origin.name,initiatedBy:ctx.principal.userId}:{kind:'person',id:ctx.principal.userId},changes.filter(c=>c.field==='owner').flatMap(c=>[c.before,c.after]).filter((v):v is string=>typeof v==='string'),'normal',at)});
 }
 
+/** A source link supplies no project authority: use current persisted membership and both current records. */
+export async function projectTaskReadable(ctx:WorkContext,taskId:string,projectId?:string) {
+  if(!ctx.principal.roles.some(role=>['owner','operator','auditor'].includes(role)))return false;
+  return !!await ctx.env.DB.prepare(`SELECT 1 FROM work_project_tasks t JOIN work_projects p ON p.workspace_id=t.workspace_id AND p.id=t.project_id
+    JOIN memberships m ON m.workspace_id=t.workspace_id AND m.user_id=? AND m.active=1
+    WHERE t.workspace_id=? AND t.id=? AND (? IS NULL OR t.project_id=?)
+    AND EXISTS(SELECT 1 FROM json_each(m.roles_json) WHERE value IN ('owner','operator','auditor'))`)
+    .bind(ctx.principal.userId,ctx.principal.workspaceId,taskId,projectId??null,projectId??null).first();
+}
+
 /** DESK-017: same live readership as PROJECT-001; historical values only ever come from their original event. */
 export async function projectTaskActivity(ctx: WorkContext, projectId: string, taskId: string) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner', 'operator', 'auditor']);
   const ws = ctx.principal.workspaceId;
-  if (!await ctx.env.DB.prepare(`SELECT 1 FROM work_project_tasks t JOIN work_projects p ON p.workspace_id=t.workspace_id AND p.id=t.project_id
-    WHERE t.workspace_id=? AND t.project_id=? AND t.id=?`).bind(ws, projectId, taskId).first())
+  if (!await projectTaskReadable(ctx,taskId,projectId))
     throw new ApiError(404, 'task_not_found', 'Task not found');
   const rows = (await ctx.env.DB.prepare(`SELECT e.*, CASE WHEN
     EXISTS(SELECT 1 FROM platform_identity_erasures p WHERE p.workspace_id=e.workspace_id AND p.user_id=e.actor_id) OR

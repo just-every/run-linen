@@ -1,3 +1,4 @@
+import {assetEvent} from './asset-history';
 import { taskChanges, taskEvent, taskSnapshot } from './project-activity';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now, requiredString } from "../../platform/http";
@@ -123,7 +124,8 @@ export async function linkProject(ctx: WorkContext, projectId: string, input: { 
   await project(ctx, projectId);
   const items = Array.isArray(input.items) ? input.items : [];
   if (!items.length || items.length > 200) throw new ApiError(422, "project_links", "Link 1 to 200 records per request");
-  const statements = [];
+  const guard=id(),w=ctx.principal.workspaceId;
+  const statements = [ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_projects p JOIN memberships m ON m.workspace_id=p.workspace_id WHERE p.workspace_id=? AND p.id=? AND m.user_id=? AND m.active=1 AND EXISTS(SELECT 1 FROM json_each(m.roles_json) WHERE value IN('owner','operator'))) THEN 1 ELSE 0 END)`).bind(guard,w,projectId,ctx.principal.userId)];
   for (const raw of items as Record<string, unknown>[]) {
     const kind = raw?.kind as (typeof linkKinds)[number];
     if (!linkKinds.includes(kind) || typeof raw.targetId !== "string") throw new ApiError(422, "project_link", "Each link names a ticket, change, asset or lifecycle plan");
@@ -131,11 +133,15 @@ export async function linkProject(ctx: WorkContext, projectId: string, input: { 
       throw new ApiError(422, "project_link_target", `No ${kind} ${raw.targetId} in this workspace's linkable records`);
     if (raw.taskId !== undefined && !(await ctx.env.DB.prepare("SELECT 1 FROM work_project_tasks WHERE workspace_id=? AND project_id=? AND id=?").bind(ctx.principal.workspaceId, projectId, raw.taskId).first()))
       throw new ApiError(422, "task_missing", "Choose a task of this project");
+    if(raw.taskId)statements.push(ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_project_tasks t JOIN work_projects p ON p.workspace_id=t.workspace_id AND p.id=t.project_id WHERE t.workspace_id=? AND t.project_id=? AND t.id=?) AND EXISTS(${linkTargets[kind]}) THEN 1 ELSE 0 END)`).bind(`${guard}:${statements.length}`,w,projectId,raw.taskId,w,raw.targetId));
+    const at=now();
     statements.push(ctx.env.DB.prepare("INSERT OR IGNORE INTO work_project_links(workspace_id,project_id,kind,target_id,task_id,detail,created_by,created_at) VALUES(?,?,?,?,?,?,?,?)")
-      .bind(ctx.principal.workspaceId, projectId, kind, raw.targetId, (raw.taskId as string) ?? null, typeof raw.detail === "string" ? raw.detail.slice(0, 300) : "", ctx.principal.userId, now()));
-    if (raw.taskId) statements.push(taskEvent(ctx, raw.taskId as string, 'linked', [{ field: kind + ' link', before: null, after: raw.targetId }], now()));
+      .bind(ctx.principal.workspaceId, projectId, kind, raw.targetId, (raw.taskId as string) ?? null, typeof raw.detail === "string" ? raw.detail.slice(0, 300) : "", ctx.principal.userId, at));
+    if (raw.taskId) statements.push(taskEvent(ctx, raw.taskId as string, 'linked', [{ field: kind + ' link', before: null, after: raw.targetId }], at));
+    if(raw.taskId&&kind==='asset')statements.push(assetEvent(ctx,raw.targetId,'work.asset_linked',{}, {link:{kind:'task',id:raw.taskId}},at));
   }
-  await ctx.env.DB.batch(statements);
+  statements.push(ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id=? OR id LIKE ?").bind(guard,guard+':%'));
+  try{await ctx.env.DB.batch(statements);}catch(error){if(/CHECK constraint failed/.test(String(error)))throw new ApiError(409,'project_link_changed','Current project, task, target or membership changed; refresh before linking');throw error;}
   return readProject(ctx, projectId);
 }
 

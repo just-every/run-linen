@@ -56,6 +56,12 @@ export async function projectChecks(api, db) {
   assert.equal(read.links.filter(l => l.kind === 'asset' && l.detail.includes('5th floor')).length, 30, 'PROJECT-001 thirty asset relocations link to the project');
   assert.deepEqual(read.links.filter(l => l.kind === 'change').map(l => l.label).sort(), ['Cut over Denver switches', 'Move Denver Wi-Fi SSID']);
   assert.ok(read.links.some(l => l.kind === 'ticket' && l.target_id === ticket.id));
+  const reverse=(await make(`/assets/${assets[0]}/history`,undefined,undefined,200)).events.filter(e=>e.action==='asset_linked');
+  assert.equal(reverse.length,1,'DESK-017 task-to-asset link appends one reverse asset event');
+  assert.deepEqual(reverse[0].changes,[{field:'link',before:null,after:{kind:'task',id:tasks[7]}}],'Reverse history freezes the task identity without source titles');
+  await make(`/projects/${projectId}/links`,{items:[{kind:'asset',targetId:assets[0],taskId:tasks[7]}]},undefined,200);
+  assert.deepEqual((await make(`/assets/${assets[0]}/history`,undefined,undefined,200)).events.filter(e=>e.action==='asset_linked'),reverse,'A replay preserves the same original asset event');
+
   // Audience: an employee is refused every project route and API, reads and writes alike, and changes nothing.
   const before = await make(`/projects/${projectId}`, undefined, undefined, 200);
   for (const [path, body] of [['/projects'], ['/projects', { name: 'Employee project' }], [`/projects/${projectId}`], ['/workload'],
