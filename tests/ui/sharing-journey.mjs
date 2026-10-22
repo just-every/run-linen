@@ -86,7 +86,7 @@ export async function collaborationJourney({browser,page,api,base,out,errors}) {
   const employee=await api('/members',{name:'Jordan Lee',email:'synthetic-linen-48@example.test',password,roles:['employee']});
   const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
   const webhookPublicKey=Buffer.from(await crypto.subtle.exportKey('spki',pair.publicKey)).toString('base64');
-  const mail=await createConnection(page,api,base,'sendgrid','Helpdesk email',{from:'helpdesk@example.test',webhookPublicKey,apiKey:'synthetic-linen-50'});
+  const mail=await createConnection(page,api,base,'sendgrid','Helpdesk email',{from:'synthetic-linen-43@example.test',webhookPublicKey,apiKey:'synthetic-linen-50'});
   const sc=await browser.newContext({viewport:{width:1440,height:1000}}),ec=await browser.newContext({viewport:{width:1440,height:1000}});
   const sp=await sc.newPage(),ep=await ec.newPage();
   for(const p of [sp,ep])p.on('pageerror',error=>errors.push(String(error)));
