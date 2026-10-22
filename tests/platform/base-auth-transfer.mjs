@@ -109,6 +109,7 @@ try{
   env.DB.prepare('UPDATE work_catalog SET department_id=? WHERE id=?').bind('retained-facilities','catalog-monitor'),
   env.DB.prepare('UPDATE work_groups SET department_id=? WHERE id=?').bind('retained-facilities','hardware'),
  ]);
+ await env.DB.prepare('INSERT INTO work_access_policies(id,workspace_id,name,match_json,grants_json,active,revision,created_at,updated_at) VALUES(?,?,?,?,?,1,3,?,?)').bind('synthetic-linen-12010','workspace','Sales app baseline','{"department":["dept-sales"]}','[{"kind":"group","target":"synthetic-linen-12011"}]',stamp,stamp).run();
  const releaseData={title:'Retained release',plan:'Reviewed release candidate',state:'go',changeIds:['retained-change'],services:['retained-ci'],problemIds:[],affectedGroupIds:['retained-cohort'],approverIds:['owner'],phases:{build:{outcome:'passed',reference:'Build 1',recordedBy:'owner'},test:{outcome:'passed',reference:'Test 1',recordedBy:'owner'}},decisions:[{id:'retained-decision',actor:'owner',decision:'go',reason:'Reviewed',revisions:{'retained-change':1},at:stamp}],priorDecisions:[]};
  await env.DB.prepare('INSERT INTO work_requester_groups(id,workspace_id,name,members_json,created_at) VALUES(?,?,?,?,?)').bind('retained-cohort','workspace','Release pilot','["owner"]',stamp).run();
  const retainedChange={title:'Retained member',state:'draft',services:['retained-ci'],window:{start:stamp,end:new Date(Date.now()+3600000).toISOString()},implementationRevision:1,invocations:[]};
@@ -202,6 +203,10 @@ try{
  assert.deepEqual(await env.DB.prepare('SELECT * FROM work_departments WHERE id=?').bind(retainedHrDepartment.id).first(),retainedHrDepartment,'Actual rer transfer preserves typed retained-HR workspace metadata');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT protected_departments_json FROM work_records WHERE id='work'").first()).protected_departments_json),[retainedHrDepartment.id],'Actual rer transfer retains the prior HR readership boundary');
  assert.deepEqual((await env.DB.prepare("SELECT department_id,user_id,active,updated_by FROM work_department_members WHERE user_id='retained-staff' ORDER BY department_id").all()).results,['retained-facilities',retainedHrDepartment.id].sort().map(department_id=>({department_id,user_id:'retained-staff',active:0,updated_by:null})),'Every restored current and retained department membership is inert');
+ const restoredAccessPolicy=await env.DB.prepare("SELECT name,match_json,grants_json,active,revision FROM work_access_policies WHERE id='synthetic-linen-12010'").first();
+ assert.equal(restoredAccessPolicy.active,0,'LIFE-003 actual rer archive retains access policies as inactive history');
+ assert.equal(restoredAccessPolicy.name,'Sales app baseline');assert.equal(restoredAccessPolicy.revision,3);
+ assert.deepEqual(JSON.parse(restoredAccessPolicy.grants_json),[{kind:'group',target:'synthetic-linen-12011'}]);
  const restoredRelease=JSON.parse((await env.DB.prepare("SELECT data_json FROM svc_records WHERE id='retained-release'").first()).data_json);
  assert.equal(restoredRelease.state,'imported-review','CHANGE-007 actual rer archive puts releases into review');
  assert.deepEqual(restoredRelease.decisions,[],'CHANGE-007 no live go decision survives native restore');
@@ -230,6 +235,8 @@ try{
  const confirmation=await request('/auth/confirm',{body:{token:decodeURIComponent(proof)}});assert.equal(confirmation.status,303)
  const cookie=confirmation.headers.get('set-cookie').split(';')[0]
  const session=await(await request('/api/v1/session',{cookie})).json();assert.equal(session.user.email,'owner@example.test')
+ const policyView=await(await request('/api/v1/access-policies',{cookie})).json();
+ const policy=policyView.items.find(p=>p.id==='synthetic-linen-12010');assert.ok(policy);assert.equal(policy.active,false,'LIFE-003 the current owner reads an archived baseline as inactive');
  const restoredApprovalView=await(await request('/api/v1/work/work/approvals/catalog-monitor',{cookie})).json();
  assert.equal(restoredApprovalView.satisfied,false,'CATALOG-002 restored approved decision cannot satisfy a current chain even with retained approver membership');
  assert.equal(restoredApprovalView.stages[0].state,'pending');assert.deepEqual(restoredApprovalView.stages[0].decisions,[]);
