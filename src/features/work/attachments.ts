@@ -69,7 +69,7 @@ export async function readAttachment(ctx: WorkContext, attachmentId: string) {
       name: string;
     }>();
   if (!row) throw new ApiError(404, "not_found", "Attachment not found");
-  // A catalog quote has its own exact readers; this generic door never serves one.
+  // The generic attachment door applies the quote reader rules too.
   if (row.visibility === QUOTE_VISIBILITY) return readCatalogQuote(ctx, attachmentId);
   const work = await getWork(ctx, row.work_id);
   if (

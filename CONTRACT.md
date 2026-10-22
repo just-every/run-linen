@@ -473,9 +473,9 @@ that product and marks how close the current code is (see [Status](#status)).
   audience-controlled or quote-backed item, is a fresh submission with no earlier
   approval. The file is a `work_attachments` row of visibility `catalog_quote`
   (so export, erasure and retention reach it) served only by
-  `GET /catalog-quotes/:id`, as a download; the generic attachment door, the
-  conversation attachment list, search, history, notifications and AI context
-  never carry it, and a non-reader sees `quote attached` only. Readers: the
+  `GET /catalog-quotes/:id`, as a download; the generic attachment download
+  delegates to the same reader check. The conversation attachment list, search,
+  history, notifications and AI context never carry it, and a non-reader sees `quote attached` only. Readers: the
   requester, the beneficiary and the owner; once submitted also the current
   approver (the beneficiary's manager or current delegate, while the request is
   open), an approver who recorded a decision on that fulfilment, and the current

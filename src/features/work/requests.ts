@@ -1,5 +1,5 @@
 import { requireCatalogAudience } from './catalog-audience';
-import { catalogRequestSnapshot } from './catalog-items';
+import { catalogChanged, catalogRequestSnapshot } from './catalog-items';
 import { taskStatements, describeObligations } from './catalog-tasks';
 import { applicationForRequest, applicationProjection } from './application-catalog';
 import { bindingErasureGuard, personForMember } from './person-binding';
@@ -84,6 +84,9 @@ export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord
       purpose: string;
       expires_at: string | null;
     }>();
+  // A form already open is tied to the item revision it displayed, including its audience.
+  if (!previous && input.catalogRevision !== undefined && input.catalogRevision !== catalog.revision)
+    throw new ApiError(409, 'catalog_changed', catalogChanged);
   // Audience gates a new submission, before the form or quote is described to someone who may not request it.
   const audience = previous ? null : await requireCatalogAudience(ctx,catalog,input.beneficiaryId);
   const catalogSnapshot = await catalogRequestSnapshot(ctx,workId,catalog,input,fresh);
