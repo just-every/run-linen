@@ -6,11 +6,12 @@ import { chainStatus, timers } from './approval-stages';
 import {managerRejected} from './approval-decisions';
 import { managerHolder,managerStageApproved } from './fulfilment-authority';
 
-/** Reminder and SLA handling for the open stage: one reminder to each undecided approver; one overdue request to the item's owner. */
+/** Reminder work is normal visibility: copy only owner-configured catalog/stage labels and opaque references, never
+ * the originating request title, conversation, purpose, quote or person/HR fields. Reminder and SLA handling for the open stage: one reminder to each undecided approver; one overdue request to the item's owner. */
 export async function remindApprovalStages(ctx: WorkContext, at: string) {
   const db = ctx.env.DB, w = ctx.principal.workspaceId, results: Record<string, unknown>[] = [];
   await openPendingStages(ctx,at);
-  const rows = (await db.prepare(`SELECT s.*,f.revision f_revision,f.beneficiary_id,f.application_json,f.catalog_id,f.purpose,f.expires_at,r.revision w_revision,r.state w_state,r.title,c.name catalog_name,c.owner_id,c.revision c_revision,c.approvals_json,c.requires_manager
+  const rows = (await db.prepare(`SELECT s.*,f.revision f_revision,f.beneficiary_id,f.application_json,f.catalog_id,f.purpose,f.expires_at,r.revision w_revision,r.state w_state,c.name catalog_name,c.owner_id,c.revision c_revision,c.approvals_json,c.requires_manager
     FROM work_approval_stages s JOIN work_fulfilments f ON f.workspace_id=s.workspace_id AND f.id=s.fulfilment_id JOIN work_records r ON r.workspace_id=f.workspace_id AND r.id=f.work_id
     JOIN work_catalog c ON c.workspace_id=f.workspace_id AND c.id=f.catalog_id
     WHERE s.workspace_id=? AND s.applies=1 AND s.active_at IS NOT NULL AND r.state NOT IN ('closed','cancelled') AND (f.expires_at IS NULL OR f.expires_at>?)
@@ -28,7 +29,7 @@ export async function remindApprovalStages(ctx: WorkContext, at: string) {
       createWork(ctx, { title, body, deduplicationKey: key, beneficiaryId: to, context }, { admittedLifecycleBeneficiary: to, statements: () => [] });
     if (row.remind_at && row.remind_at <= at && !row.reminded_at) {
       try {
-        for (const to of undecided) await ask(to, `Approval reminder: ${row.catalog_name} (${stage.name})`, `${stage.name} is waiting for your decision on ${row.title}.`, `approval-reminder:${row.fulfilment_id}:${stage.key}:${row.w_revision}:${row.f_revision}:${row.c_revision}:${to}`,
+        for (const to of undecided) await ask(to, `Approval reminder: ${row.catalog_name} (${stage.name})`, `${stage.name} is waiting for your decision. Sign in to Linen and open Decisions (/app#/decisions). Request reference: ${row.work_id}.`, `approval-reminder:${row.fulfilment_id}:${stage.key}:${row.w_revision}:${row.f_revision}:${row.c_revision}:${to}`,
           { approvalReminder: { workId: row.work_id, catalogId: row.catalog_id, stage: stage.key } });
         await db.prepare('UPDATE work_approval_stages SET reminded_at=? WHERE workspace_id=? AND fulfilment_id=? AND stage_key=? AND reminded_at IS NULL').bind(at, w, row.fulfilment_id, stage.key).run();
         results.push({ id: row.fulfilment_id, stage: stage.key, state: 'approval_reminded', recipients: undecided.length });
@@ -36,7 +37,7 @@ export async function remindApprovalStages(ctx: WorkContext, at: string) {
     }
     if (row.sla_at && row.sla_at <= at && !row.breached_at) {
       try {
-        await ask(row.owner_id, `Approval overdue: ${row.catalog_name} (${stage.name})`, `${stage.name} passed its approval SLA (${row.sla_at}) without a decision on ${row.title}.`, `approval-sla:${row.fulfilment_id}:${stage.key}:${row.w_revision}:${row.f_revision}:${row.c_revision}`,
+        await ask(row.owner_id, `Approval overdue: ${row.catalog_name} (${stage.name})`, `${stage.name} passed its approval SLA (${row.sla_at}) without a decision. Sign in to Linen and review Decisions (/app#/decisions). Request reference: ${row.work_id}.`, `approval-sla:${row.fulfilment_id}:${stage.key}:${row.w_revision}:${row.f_revision}:${row.c_revision}`,
           { approvalOverdue: { workId: row.work_id, catalogId: row.catalog_id, stage: stage.key, slaAt: row.sla_at } });
         await db.batch([db.prepare('UPDATE work_approval_stages SET breached_at=? WHERE workspace_id=? AND fulfilment_id=? AND stage_key=? AND breached_at IS NULL').bind(at, w, row.fulfilment_id, stage.key),
           db.prepare("INSERT INTO audit_events SELECT ?,?,?,'work.approval_sla_breached',?,?,? WHERE changes()=1").bind(id(), w, ctx.principal.userId, row.work_id, JSON.stringify({ stage: stage.key, slaAt: row.sla_at }), at)]);

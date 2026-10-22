@@ -1,3 +1,4 @@
+import {approvalReminderPrivacyChecks} from './approval-reminder-privacy-cases.mjs';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
 
@@ -40,7 +41,7 @@ export async function approvalChainChecks({db,ok,api,mf}){
  assert.equal((await api('/approval-mail/config',{...config,consent:false})).status,422);
  await ok('/approval-mail/config',config);
  await ok('/work/process-due',{});
- let out=await db.prepare('SELECT payload_json FROM test_approval_mail WHERE payload_json LIKE '%synthetic-linen-710%' ORDER BY rowid DESC LIMIT 1').first();
+ let out=await db.prepare('SELECT payload_json FROM test_approval_mail WHERE payload_json LIKE ? ORDER BY rowid DESC LIMIT 1').bind('%synthetic-linen-710%').first();
  const packet=JSON.parse(out.payload_json);assert.equal(packet.personalizations[0].to[0].email,finance+'@example.test');assert.equal(packet.reply_to.email,config.recipient);
  const token=/\[approval:([A-Za-z0-9_-]+)\]/.exec(packet.subject)[1];
  const signed=async({sender=finance,subject=`Re: [approval:${token}]`,text='approve\nsynthetic-linen-721',verdict='PASS',messageId=crypto.randomUUID(),alter=false,topic=config.topicArn}={})=>{
@@ -67,7 +68,7 @@ export async function approvalChainChecks({db,ok,api,mf}){
  assert.notEqual((await chain()).stages[0].state,'approved');
  await approveManager();
  await ok('/work/process-due',{});
- out=await db.prepare('SELECT payload_json FROM test_approval_mail WHERE payload_json LIKE '%synthetic-linen-710%' ORDER BY rowid DESC LIMIT 1').first();assert.notEqual(JSON.parse(out.payload_json).subject,packet.subject,'new revision gets a different single-use token');
+ out=await db.prepare('SELECT payload_json FROM test_approval_mail WHERE payload_json LIKE ? ORDER BY rowid DESC LIMIT 1').bind('%synthetic-linen-710%').first();assert.notEqual(JSON.parse(out.payload_json).subject,packet.subject,'new revision gets a different single-use token');
  assert.ok((await signed()).status>=400,'earlier revision email is refused');
  // A lower cost skips finance, while a missing amount never silently bypasses its threshold.
  for(const [n,cost,expected] of [[724,100000,'skipped'],[725,null,'pending']]){
@@ -125,6 +126,7 @@ export async function approvalChainChecks({db,ok,api,mf}){
  const frozen=(await ok(`/work/${quoteWork.id}/catalog-requests`,undefined,employee)).items[0].catalogSnapshot;
  assert.deepEqual(frozen.approvalAmounts.finance,{fieldId:'price',cents:180001},'item edits retain the submitted routing amount');
  assert.equal(frozen.answers.price,1800.01);
+ await approvalReminderPrivacyChecks({db,ok,api,employee,delegate,finance,second,calendar,stage});
  await ok('/approval-mail/config',{revision:1,enabled:false});
  const managerOnly=await ok('/catalog',{name:'synthetic-linen-736',kind:'service',target:'synthetic-linen-736',ownerId:'owner',requiresManager:true});
  await ok(`/catalog/${managerOnly.id}/approvals`,{revision:1,calendarId:calendar.id,approvals:[],manager:{remindHours:24,slaHours:24}});

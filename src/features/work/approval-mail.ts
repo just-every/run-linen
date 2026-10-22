@@ -15,7 +15,7 @@ import { personForMember } from './person-binding';
  * CATALOG-002: an approver may decide by replying "approve" or "reject" to the approval email. A reply counts only from
  * the approver's own address, authenticated (SPF, DKIM and DMARC pass and aligned with that address), carrying the
  * approval's single-use token, and only for the request revision the email was sent for. The receiving adapter supplies
- * the authentication verdicts; Linen refuses anything it cannot attribute. The email names the item and the people, never
+ * the authentication verdicts; Linen refuses anything it cannot attribute. The email carries only configured item/stage labels and a request reference, never
  * a quote, purpose or conversation, and carries no link that decides.
  */
 const TOKEN_LIFETIME_MS = 14 * 86_400_000;
@@ -53,7 +53,7 @@ export async function sendApprovalMail(ctx: WorkContext, at: string) {
   const mail = await db.prepare("SELECT 1 FROM connections WHERE workspace_id=? AND id=? AND provider='sendgrid' AND status='active'").bind(w, config.sending_connection_id).first();
   if (!mail) return results;
   for (const p of await pendingDecisions(ctx)) {
-    const user = await db.prepare('SELECT email,name FROM users WHERE id=?').bind(p.approverId).first<{ email: string; name: string }>();
+    const user = await db.prepare('SELECT email FROM users WHERE id=?').bind(p.approverId).first<{ email: string }>();
     if (!user?.email) continue;
     if (await db.prepare("SELECT 1 FROM work_approval_tokens WHERE workspace_id=? AND fulfilment_id=? AND stage_key=? AND approver_id=? AND work_revision=? AND fulfilment_revision=? AND catalog_revision=? AND state='issued'")
       .bind(w, p.f.id, p.stageKey, p.approverId, p.work.revision, p.f.revision, p.catalog.revision).first()) continue;
@@ -64,14 +64,13 @@ export async function sendApprovalMail(ctx: WorkContext, at: string) {
     try {
       const c = await connection(ctx, config.sending_connection_id, 'sendgrid');
       if (!c.config.from || !c.secret.apiKey) throw new ApiError(503, 'needs_configuration', 'Mail connection required');
-      const names = new Map((await db.prepare('SELECT id,name FROM users WHERE id IN (?,?)').bind(p.work.requester_id, p.f.beneficiary_id).all<{ id: string; name: string }>()).results.map(u => [u.id, u.name]));
       await assertAdoptionEffectAllowed(ctx,{resource:p.work.id,action:'notification.send'});
       const current=await approvalMailConfig(ctx);
       if (!current?.enabled || current.revision!==config.revision) throw new ApiError(409,'approval_mail_changed','Approval mail consent changed');
       if(!await pendingStillCurrent(ctx,p))throw new ApiError(409,'approval_changed','The current approval holder or request changed');
       const sent = await sendSendGrid({ apiKey: c.secret.apiKey, fetch: ((input,init)=>providerFetch(ctx,config.sending_connection_id,'notification',input,init)) as typeof fetch, message: { from: c.config.from, to: [user.email], replyTo: config.recipient,
-        subject: `Approval needed: ${p.catalog.name} for ${names.get(p.f.beneficiary_id) ?? 'a colleague'} [approval:${token}]`,
-        text: `${names.get(p.work.requester_id) ?? 'A colleague'} asked for ${p.catalog.name} for ${names.get(p.f.beneficiary_id) ?? 'a colleague'}. This is the ${p.stageName} decision.\n\nReply with "approve" or "reject" on the first line; anything after it is recorded as your comment. Only a reply from this address counts, and only while the request is unchanged. You can also decide in Linen.`,
+        subject: `Approval needed: ${p.catalog.name} (${p.stageName}) [approval:${token}]`,
+        text: `${p.stageName} is waiting for your decision on ${p.catalog.name}. Sign in to Linen and open Decisions (/app#/decisions). Request reference: ${p.work.id}.\n\nReply with "approve" or "reject" on the first line; anything after it is recorded as your comment. Only a reply from this address counts, and only while the request is unchanged. You can also decide in Linen.`,
         deliveryId: tokenId } });
       await db.prepare('UPDATE work_approval_tokens SET provider_ref=? WHERE id=?').bind(sent.providerMessageId, tokenId).run();
       results.push({ id: p.f.id, stage: p.stageKey, state: 'approval_mail_sent', approver: p.approverId });
