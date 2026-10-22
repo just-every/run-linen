@@ -35,11 +35,11 @@ export function legacySubjectMatcher(ctx:Context,matches:Match) {
     const next=new Set(seen).add(target),installed=await tables();
     const installedRelations=Object.entries(relations).filter(([table])=>installed.has(table));
     if(!installedRelations.length)return false;
-    const query=installedRelations.map(([table,relation])=>{
+    const queries=installedRelations.map(([table,relation])=>{
       const columns=[...relation.people,...relation.parents??[],...relation.content??[]];
-      return `SELECT '${table}' relation,json_object(${columns.map(column=>`'${column}',${column}`).join(',')}) payload FROM ${table} WHERE workspace_id=? AND id=?`;
-    }).join(' UNION ALL ');
-    const rows=(await db.prepare(query).bind(...installedRelations.flatMap(()=>[w,target])).all<{relation:string;payload:string}>()).results;
+      return db.prepare(`SELECT '${table}' relation,json_object(${columns.map(column=>`'${column}',${column}`).join(',')}) payload FROM ${table} WHERE workspace_id=? AND id=?`).bind(w,target);
+    });
+    const rows=(await db.batch<{relation:string;payload:string}>(queries)).flatMap(result=>result.results);
     for(const result of rows){
       const relation=relations[result.relation],row=JSON.parse(result.payload) as Record<string,unknown>;
       for(const column of relation.people)if(typeof row[column]==='string'&&await matches(row[column] as string))return true;
