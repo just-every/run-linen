@@ -11,12 +11,14 @@ import { registerServiceRoutes, registerServiceWebhooks } from './features/servi
 import { registerIntelligenceRoutes, setStandingIntakeExecution } from './features/intelligence'
 import { registerEngineeringAgentRoutes } from './features/intelligence/engineering'
 import { registerFreshserviceImportRoutes, freshserviceErasurePort } from './features/adoption/freshservice-import'
+import { registerServiceNowImportRoutes, servicenowErasurePort } from './features/adoption/servicenow-import'
 import { registerAdoptionErasurePort } from './features/adoption'
 import { registerAdoptionRoutes } from './features/adoption'
 import { registerSnipeitImportRoutes } from './features/adoption/snipeit-import'
 import { registerConnectionRoutes } from './features/connections'
 
 registerAdoptionErasurePort(freshserviceErasurePort)
+registerAdoptionErasurePort(servicenowErasurePort)
 
 /** One composition root for the emitted application and its integration tests. */
 export function createApplication() {
@@ -56,6 +58,7 @@ export function createApplication() {
   registerIntelligenceRoutes(authenticated)
   registerAdoptionRoutes(authenticated)
   registerFreshserviceImportRoutes(authenticated)
+  registerServiceNowImportRoutes(authenticated)
   registerSnipeitImportRoutes(authenticated)
   registerConnectionRoutes(authenticated)
   authenticated.get('/runtime-status', async c => {

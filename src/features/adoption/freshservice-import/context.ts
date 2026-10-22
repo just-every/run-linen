@@ -33,7 +33,7 @@ export async function requestContext(c: Context<AppEnv>, namespace: string) {
   return importContext({env:c.env,principal:c.get('principal')},namespace,await hashToken(getCookie(c,'linen_session') ?? ''));
 }
 export async function jobContext(c: Context<AppEnv>, id: string) {
-  const row = await c.env.DB.prepare('SELECT namespace FROM ik_jobs WHERE id=? AND destination=? AND principal_id=?').bind(id,c.get('principal').workspaceId,c.get('principal').userId).first<{namespace:string}>();
+  const row = await c.env.DB.prepare('SELECT namespace FROM ik_jobs WHERE id=? AND destination=? AND principal_id=? AND namespace LIKE \'freshservice:%\'').bind(id,c.get('principal').workspaceId,c.get('principal').userId).first<{namespace:string}>();
   if (!row) throw new ApiError(404,'not_found','Import job not found');
   return requestContext(c,row.namespace);
 }
