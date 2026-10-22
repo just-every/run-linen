@@ -32,7 +32,8 @@ export async function recordFulfilmentExecution(ctx: WorkContext, input: Fulfilm
     snapshots.push({ table, row });
     return row;
   }
-  snapshots.push({ table: "work_records", row: work });
+  const { department_name: _departmentName, department_kind: _departmentKind, ...storedWork } = work;
+  snapshots.push({ table: "work_records", row: storedWork });
   await one("memberships", "user_id=? AND active=1", [ctx.principal.userId]);
   const plan = await one("execution_plans", "id=?", [input.planId]) as Plan;
   check(plan.context_type === "work" && plan.work_id === work.id &&
