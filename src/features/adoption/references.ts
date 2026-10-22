@@ -7,6 +7,7 @@ export interface Reference {fromTable:string;fromKey:string;field:string;targets
 export function references(record:NativeRecord):Reference[] {
     validateShape(record);
     return archiveReferences(record).flatMap(ref=>{
+        if(record.table==='work_erasure'&&ref.column==='person_id')return [];
         if(ref.identity||ref.value==='[erased]'||ref.value==='erased')return [];
         if(isArchiveAlias(ref.value))return [{...ref,targets:['@archive-alias'],key:ref.value}];
         return ref.targets.length?[ref]:[];

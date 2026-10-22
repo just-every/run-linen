@@ -29,6 +29,6 @@ export const historyMetadataReferences: Readonly<Record<string, readonly Referen
     history_archive_identity_digests: [linkedAlias],
     history_archive_slots: [linkedAlias, business('event_id')],
     history_redactions: [business('event_id'), ...historyReferences('envelope_json')],
-    audit_events: [...historyReferences('detail_json'), { ...person('target', []), when: ({ row }) => ['work.person_erased', 'platform.identity_erased', 'platform.identity.erased'].includes(String(row.action)) }],
+    audit_events: [...historyReferences('detail_json'), { ...person('target', []), when: ({ row }) => ['member.created','member.changed','work.person_erased', 'platform.identity_erased', 'platform.identity.erased'].includes(String(row.action)) }],
     svc_events: historyReferences('data_json'),
 };
