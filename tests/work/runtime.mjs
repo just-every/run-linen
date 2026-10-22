@@ -730,9 +730,10 @@ try {
   assert.equal(erased.status, 200, JSON.stringify(erased));
   assert.equal(erased.value.state, "erased");
   assert.ok((await api(`/work/${collaborationProof.workId}`)).value.messages.every(m=>m.body==='[erased]'),'DESK-007 public erasure clears private mentions and both directions of side mail');
-  assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_watchers WHERE work_id=?').bind(collaborationProof.workId).first()).n,0);
-  assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_collaboration_notices WHERE work_id=?').bind(collaborationProof.workId).first()).n,0);
-  assert.ok((await db.prepare('SELECT vendor_email,closed_at FROM work_side_conversations WHERE work_id=?').bind(collaborationProof.workId).all()).results.every(s=>s.vendor_email==='[erased]'&&s.closed_at),'DESK-007 erasure clears recipient metadata and withdraws mail authority');
+  const restartedDb = await mf.getD1Database('DB');
+  assert.equal((await restartedDb.prepare('SELECT COUNT(*) n FROM work_watchers WHERE work_id=?').bind(collaborationProof.workId).first()).n,0);
+  assert.equal((await restartedDb.prepare('SELECT COUNT(*) n FROM work_collaboration_notices WHERE work_id=?').bind(collaborationProof.workId).first()).n,0);
+  assert.ok((await restartedDb.prepare('SELECT vendor_email,closed_at FROM work_side_conversations WHERE work_id=?').bind(collaborationProof.workId).all()).results.every(s=>s.vendor_email==='[erased]'&&s.closed_at),'DESK-007 erasure clears recipient metadata and withdraws mail authority');
   assert.equal((await api(`/work/${collaborationProof.workId}/collaboration`)).status,409);
   const erasedTaskHistory = (await api(taskHistoryProof.historyPath)).value.items;
   assert.deepEqual(erasedTaskHistory.map(e => e.id), taskHistoryProof.items.map(e => e.id), 'DESK-017 erasure retains every project-task event');
