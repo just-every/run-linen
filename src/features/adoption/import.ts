@@ -321,6 +321,14 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
     const permittedHistory = [...historyOnly, 'identities', 'workspace'];
     const remaining = await ctx.env.DB.prepare(`SELECT COUNT(*) n FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state NOT IN ('restored','erased') AND table_name NOT IN (${permittedHistory.map(()=>'?').join(',')})`).bind(w, runId,...permittedHistory).first<{n:number}>();
     const state = remaining?.n ? 'history_only' : 'restored';
+    // Old uploaded bytes are opaque source custody. After destination erasure,
+    // retain only the normalized rows, never a downloadable/exportable raw copy.
+    const privateInput=await ctx.env.DB.prepare('SELECT 1 FROM history_identity_tombstones WHERE workspace_id=? LIMIT 1').bind(w).first();
+    if(privateInput){
+      const inputChunks=(await ctx.env.DB.prepare('SELECT object_key FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId).all<{object_key:string}>()).results;
+      for(const chunk of inputChunks)await queueDelete(ctx,chunk.object_key);
+      await ctx.env.DB.batch([ctx.env.DB.prepare('DELETE FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId),ctx.env.DB.prepare('UPDATE adoption_imports SET input_erased_at=? WHERE workspace_id=? AND id=?').bind(now(),w,runId)]);
+    }
     await ctx.env.DB.batch([ctx.env.DB.prepare('UPDATE adoption_imports SET state=? WHERE workspace_id=? AND id=?').bind(state, w, runId), statement(ctx, 'adoption.import.checkpoint', runId, { state })]);
     if(privacy.containsTombstones){const chunks=(await ctx.env.DB.prepare('SELECT object_key FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId).all<{object_key:string}>()).results;for(const chunk of chunks)await queueDelete(ctx,chunk.object_key);await ctx.env.DB.batch([ctx.env.DB.prepare('DELETE FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId),ctx.env.DB.prepare('UPDATE adoption_imports SET manifest_json=? WHERE workspace_id=? AND id=?').bind(JSON.stringify({...m,chunks:[],retiredForPrivacy:true}),w,runId)]);}
     return importStatus(ctx, runId);

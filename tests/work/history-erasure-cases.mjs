@@ -55,7 +55,7 @@ export async function historyErasureChecks(workspaceApi,db) {
   assert.ok(Object.values(receipt.historyCounts).every(n=>Number.isInteger(n)&&n>=0),'receipt contains counts');
   assert.ok(!JSON.stringify(receipt.historyCounts).includes('Austin'),'count receipt contains no values');
   const first=(await call('/work/'+work.id+'/activity')).items;
-  const clearedText=first.find(e=>e.changes.some(c=>c.field==='Personal diagnostic'));
+  const clearedText=first.find(e=>e.changes.some(c=>c.fieldId===text.id));
   assert.ok(clearedText?.redactedAt,'cleared values keep the erasure date');
   await call('/people/'+bob+'/erase',{revision:0,reason:'synthetic-linen-12816'});
   const after=(await call('/work/'+work.id+'/activity')).items;
@@ -73,7 +73,7 @@ export async function historyErasureChecks(workspaceApi,db) {
   assert.ok(after.some(e=>e.actor==='Erased person'),'erased actor entry stays without identity link');
   const hrAfter=(await call('/work/'+hr.id+'/activity')).items;
   assert.ok(hrAfter.some(e=>e.changes.some(c=>c.field==='priority'&&c.after==='P2')),'HR priority survives');
-  for(const e of hrAfter)for(const c of e.changes)if(['type','category','subcategory','Office'].includes(c.field))assert.ok([null,'[erased]'].includes(c.before)&&[null,'[erased]'].includes(c.after),'HR subject erasure removes stricter field '+c.field);
+  for(const e of hrAfter)for(const c of e.changes)if(['type','category','subcategory','Office'].includes(c.field)||c.fieldId===office.id)assert.ok([null,'[erased]'].includes(c.before)&&[null,'[erased]'].includes(c.after),'HR subject erasure removes stricter field '+c.field);
   assert.deepEqual((await call('/work/'+unrelated.id+'/activity')).items,daveBefore,'unrelated Dave history is unchanged');
   assert.deepEqual((await call('/work/'+work.id+'/activity',undefined,auditAuth)).items,after,'authorized auditor reads the same redacted history');
   const publicHistory=(await call('/work/'+unrelated.id+'/activity',undefined,daveAuth)).items;

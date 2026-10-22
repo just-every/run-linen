@@ -14,7 +14,7 @@ function display(value:unknown):unknown { if(isErased(value))return (value as an
 export function projectHistoryEvent(action:string,payload:unknown) {
   const e=decodeHistory(payload);
   if(!e)return {changes:legacyChanges(action,payload),...(cleared(payload)?{redacted:'erasure' as const,redactedAt:clearedAt(payload)}:{})};
-  return {changes:e.changes.map(c=>({field:c.evidence?.label && c.field.startsWith('custom:')?c.evidence.label:c.field,before:display(c.before),after:display(c.after),...(c.beforeEvidence?.label?{beforeLabel:c.beforeEvidence.label}:{}),...(c.afterEvidence?.label?{afterLabel:c.afterEvidence.label}:{}),...(c.field.startsWith('custom:')?{fieldId:c.field.slice(7)}:{})})),actor:e.actor,...(e.source?{source:e.source}:{}),
+  return {changes:e.changes.map(c=>({field:c.field.startsWith('custom:')?(c.evidence?.label??'Custom field'):c.field,before:display(c.before),after:display(c.after),...(c.beforeEvidence?.label?{beforeLabel:c.beforeEvidence.label}:{}),...(c.afterEvidence?.label?{afterLabel:c.afterEvidence.label}:{}),...(c.field.startsWith('custom:')?{fieldId:c.field.slice(7)}:{})})),actor:e.actor,...(e.source?{source:e.source}:{}),
     ...(e.redacted?{redacted:e.redacted,redactedAt:e.redactedAt}:{})};
 }
 export function historyChanges(action:string,payload:unknown) {return projectHistoryEvent(action,payload).changes;}
@@ -23,7 +23,7 @@ function cleared(payload:unknown){const d=object(payload);return !!d && (d.redac
 function clearedAt(payload:unknown):string|undefined{return object(payload)?.redactedAt;}
 /** Existing original payloads remain readable until their writer migrates; this never fills missing values. */
 function legacyChanges(action:string,payload:unknown):{field:string;before:unknown;after:unknown;fieldId?:string;custom?:boolean}[] {
-  const d=object(payload);if(!d || d.redacted==='erasure')return [];
+  const d=object(payload);if(!d || d.redacted==='erasure'||d.schema==='linen.history')return [];
   if(Array.isArray(d.changes))return d.changes.filter((c:any)=>c && typeof c.field==='string'&&Object.hasOwn(c,'before')&&Object.hasOwn(c,'after')).map(({field,before,after,step}:any)=>({field,before,after,...(action==='work.scenario_run'&&step==='fields'?{custom:true}:{})}));
   if(action==='work.field_set')return Object.hasOwn(d,'before')?[{field:d.field,before:d.before,after:d.value,custom:true}]:[];
   if(action==='work.group_set')return Object.hasOwn(d,'to')?[{field:'group',before:d.from,after:d.to}]:[];

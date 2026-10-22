@@ -18,12 +18,15 @@ export async function redactHistory(payload:unknown,at:string,matches:(value:str
   const count=(key:string)=>{counts[key]=(counts[key]||0)+1;};
   if(!envelope){count('unregistered');return {payload:{redacted:'erasure',redactedAt:at},counts,affected:true,actorErased:actorId?await matches(actorId):false};}
   const e=structuredClone(envelope);
-  const actorErased=await matches(e.actor.id)||!!e.actor.name&&await matches(e.actor.name)||!!e.actor.initiatedBy&&await matches(e.actor.initiatedBy);
+  const actorErased=await matches(e.actor.id)||['person','integration'].includes(e.actor.kind)&&!!e.actor.name&&await matches(e.actor.name);
+  const initiatorErased=!!e.actor.initiatedBy&&await matches(e.actor.initiatedBy);
+  const storedActorErased=actorErased||!!actorId&&await matches(actorId);
   const subjectErased=(await Promise.all(e.subjects.map(matches))).some(Boolean);
   let valueErased=false;
   for(const c of e.changes)if(await matchesValue(c.before,matches)||await matchesValue(c.after,matches)||c.evidence?.label&&await matches(c.evidence.label)||c.beforeEvidence?.label&&await matches(c.beforeEvidence.label)||c.afterEvidence?.label&&await matches(c.afterEvidence.label))valueErased=true;
-  if(!actorErased&&!subjectErased&&!valueErased)return {payload:e,counts,affected:false,actorErased:false};
+  if(!actorErased&&!initiatorErased&&!storedActorErased&&!subjectErased&&!valueErased)return {payload:e,counts,affected:false,actorErased:false};
   if(actorErased){e.actor={kind:e.actor.kind,id:'[erased]',name:'Erased person'};count('actor');}
+  if(initiatorErased&&!actorErased){e.actor.initiatedBy='[erased]';count('initiator');}
   e.subjects=(await Promise.all(e.subjects.map(async v=>await matches(v)?null:v))).filter((v):v is string=>v!==null);
   const strict=subjectErased&&e.protection!=='normal';
   for(const c of e.changes){
@@ -49,7 +52,7 @@ export async function redactHistory(payload:unknown,at:string,matches:(value:str
     }
   }
   e.redacted='erasure';e.redactedAt=e.redactedAt??at;
-  return {payload:e,counts,affected:true,actorErased};
+  return {payload:e,counts,affected:true,actorErased:storedActorErased};
 }
 /** A durable earlier removal wins over every later source/archive revision. */
 export function intersectRedaction(incoming:unknown,previous:unknown):unknown {
