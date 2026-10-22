@@ -1,4 +1,4 @@
-import {obligationHistory} from './work-history';
+import {obligationHistory,ticketHistory} from './work-history';
 import { fulfilmentManagerApproval } from "./fulfilment-authority";
 import { ApiError, id, now } from '../../platform/http';
 import { getWork, type WorkContext } from './core';
@@ -93,8 +93,7 @@ export async function resumeFulfilmentAmendment(ctx: WorkContext, row: any): Pro
   statements.push(
     db.prepare('UPDATE work_fulfilment_amendments SET state=?,reason=?,result_json=? WHERE workspace_id=? AND id=?')
       .bind(result.state,reason,JSON.stringify(result),w,current.id),
-    db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)')
-      .bind(id(),w,ctx.principal.userId,'work.fulfilment_amended',current.id,JSON.stringify(result),now()),
+    ticketHistory(ctx,work,'work.fulfilment_amended',{expiresAt:prior.fulfilment.expiresAt,workRevision:work.revision,fulfilmentRevision:prior.fulfilment.revision,amendmentStatus:'prepared',reason:null},{expiresAt:result.expiresAt,workRevision:result.workRevision,fulfilmentRevision:result.fulfilmentRevision,amendmentStatus:result.state,reason},now(),{target:current.id}),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard));
   try { await db.batch(statements); }
   catch (error) {

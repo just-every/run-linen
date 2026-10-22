@@ -49,7 +49,7 @@ export async function deskFieldChecks(workspaceApi, db) {
   // Typed values survive the public door and history stores the original native values.
   const typed=[];
   for(const [type,value] of [['number',42.75],['boolean',false],['date','2026-10-20'],['multiselect',['one','two']]]){
-    const f=check(await api('/desk-fields',{name:`synthetic-linen-${type}`,type,options:type==='multiselect'?['one','two']:[],kinds:['incident']}),201);
+    const f=check(await api('/desk-fields',{name:`synthetic-linen-${typed.length+81}`,type,options:type==='multiselect'?['one','two']:[],kinds:['incident']}),201);
     check(await api(`/work/${a.id}/fields`,{fieldId:f.id,value},agent));typed.push({f,value});
     assert.deepEqual(check(await api(`/work/${a.id}/desk`,undefined,employee)).fields.find(x=>x.id===f.id).value,value);
   }

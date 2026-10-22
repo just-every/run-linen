@@ -94,6 +94,11 @@ try {
     const correction=await ok(`/work/${work.id}/fulfilment/amend`,{catalogId:catalog.id,expectedWorkRevision:current.workRevision,
       expectedFulfilmentRevision:current.revision,idempotencyKey:event,beneficiaryId:'employee',purpose:'Project',expiresAt},'employee');
     assert.equal(correction.state,'amended',JSON.stringify(correction));
+    const timeline=(await ok(`/work/${work.id}/activity`)).items;
+    const change=timeline.filter(e=>e.action==='fulfilment amended').at(-1);
+    assert.ok(change.changes.some(c=>c.field==='expiresAt'&&c.before===current.expiresAt&&c.after===expiresAt),'The amended expiry records its exact original and replacement instants');
+    assert.equal((await ok(`/work/${work.id}/activity`,undefined,'employee')).items.some(e=>e.action==='fulfilment amended'),false,'Expiry field history stays within the existing private ticket scope');
+
     current=await ok(`/work/${work.id}/fulfilments/${catalog.id}`,undefined,'employee');
   }
   await db.exec("UPDATE work_catalog SET revision=revision+1 WHERE target='managed'");
