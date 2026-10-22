@@ -1,7 +1,7 @@
 import {approvalParallelChecks} from './approval-parallel-cases.mjs';
 import {approvalReminderPrivacyChecks} from './approval-reminder-privacy-cases.mjs';
 import assert from 'node:assert/strict';
-import {webcrypto} from 'node:crypto';
+import {webcrypto,createHash} from 'node:crypto';
 
 /** Public catalog, decision, scheduler and signed SES SNS doors; only paid mail edge is faked. */
 export async function approvalChainChecks({db,ok,api,mf}){
@@ -73,9 +73,13 @@ export async function approvalChainChecks({db,ok,api,mf}){
  await ok('/work/process-due',{});
  out=await db.prepare('SELECT payload_json FROM test_approval_mail WHERE payload_json LIKE ? ORDER BY rowid DESC LIMIT 1').bind('%synthetic-linen-710%').first();assert.notEqual(JSON.parse(out.payload_json).subject,packet.subject,'new revision gets a different single-use token');
  const unusedToken=/\[approval:([A-Za-z0-9_-]+)\]/.exec(JSON.parse(out.payload_json).subject)[1];
+ const unusedHash=createHash('sha256').update(unusedToken).digest('hex');
+ const tokenState=()=>db.prepare('SELECT state,work_revision FROM work_approval_tokens WHERE token_hash=?').bind(unusedHash).first();
+ assert.deepEqual(await tokenState(),{state:'issued',work_revision:2},'the earlier-revision token has not been used');
  await ok(`/work/${request.id}/commands`,{command:'assign',revision:2,assigneeId:finance,reason:'synthetic-linen-783'});
+ assert.deepEqual(await tokenState(),{state:'expired',work_revision:2},'the edit atomically expires unused authority for the old revision');
  const staleReply=await signed({subject:`Re: [approval:${unusedToken}]`});
- assert.equal(staleReply.status,409);assert.equal(staleReply.value.code,'approval_revision_changed','an unused token for an earlier revision is refused');
+ assert.equal(staleReply.status,409);assert.equal(staleReply.value.code,'approval_token_used','an unused token for an earlier revision is refused');
  // A lower cost skips finance, while a missing amount never silently bypasses its threshold.
  for(const [n,cost,expected] of [[724,100000,'skipped'],[725,null,'pending']]){
   const c=await ok('/catalog',{name:`synthetic-linen-${n}`,kind:'service',target:`synthetic-linen-${n}`,ownerId:'owner',form:{costCents:cost}});
