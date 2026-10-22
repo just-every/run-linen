@@ -194,7 +194,7 @@ try {
     const serviceForm=ep.locator(`details[data-action-path="/work/${workId}/fulfilment"] form`);
     assert.equal(await serviceForm.getByRole('combobox',{name:'Service',exact:true}).inputValue(),items.facilities.id);
     assert.ok(!(await serviceForm.getByRole('combobox',{name:'Service',exact:true}).locator('option').allTextContents()).some(x=>x.includes(items.it.name)),'Existing ticket never silently changes teams for a catalog item');
-    await serviceForm.getByLabel('What do you need it for?',{exact:true}).fill('Restore power at the desk after inspection.');
+    await serviceForm.getByLabel(/^What do you need it for\?/).fill('Restore power at the desk after inspection.');
     await capture(ep,'matching-workspace-service-form',width);
     const request=ep.waitForResponse(r=>r.url().endsWith(`/work/${workId}/fulfilment`)&&r.request().method()==='POST');await serviceForm.getByRole('button',{name:'Save',exact:true}).click();assert.equal((await request).status(),201);
     await api(`/work/${workId}/messages`,{visibility:'private',body:'Facilities checked the socket. IT should inspect the laptop adapter next.',sourceMessageId:`synthetic-linen-${width===1440?312:313}`});
@@ -236,7 +236,7 @@ try {
     const quoteStart=portal.getByRole('form',{name:'Start service request'});await quoteStart.getByLabel('What do you need?',{exact:true}).fill('Please replace the damaged laptop adapter.');
     await quoteStart.getByRole('button',{name:'Continue to service form',exact:true}).click();await ep.waitForURL(/#\/work\/[^/?]+\?catalogId=/);
     const quoteWorkId=new URL(ep.url()).hash.split('/').at(-1).split('?')[0],quoteForm=ep.locator(`details[data-action-path="/work/${quoteWorkId}/fulfilment"] form`);
-    await quoteForm.getByLabel('What do you need it for?',{exact:true}).fill('Replace the damaged adapter with the quoted model.');
+    await quoteForm.getByLabel(/^What do you need it for\?/).fill('Replace the damaged adapter with the quoted model.');
     let sending=ep.waitForResponse(r=>r.url().endsWith(`/work/${quoteWorkId}/fulfilment`)&&r.request().method()==='POST');
     await quoteForm.getByRole('button',{name:'Save',exact:true}).click();assert.equal((await sending).status(),422,'Portal-created work still requires its catalog quote');
     await capture(ep,'portal-required-quote-refusal',width);
