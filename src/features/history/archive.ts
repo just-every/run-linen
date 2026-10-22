@@ -14,7 +14,7 @@ export async function historyArchiveRow(ctx:Context,table:string,row:Record<stri
   let e=decodeHistory(row[column]);
   if(e && table==='audit_events' && typeof row.action==='string' && row.action!==e.action)throw new ApiError(409,'history_action_conflict','History action does not match its original event');
   const foreign=ingress&&typeof row.workspace_id==='string'&&row.workspace_id!==ctx.principal.workspaceId;
-  const key=(foreign?'import:'+row.workspace_id+':':'')+historyEventKey(store,String(row.id),e);
+  const key=(foreign?'import:linen:'+row.workspace_id+':':'')+historyEventKey(store,String(row.id),e);
   const prior=await ctx.env.DB.prepare('SELECT envelope_json FROM history_redactions WHERE workspace_id=? AND event_key=?').bind(ctx.principal.workspaceId,key).first<{envelope_json:string}>();
   if(ingress && e && !prior){
     e=structuredClone(e);

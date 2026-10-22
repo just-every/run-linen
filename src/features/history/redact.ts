@@ -11,6 +11,11 @@ async function matchesValue(value:unknown,matches:(value:string)=>Promise<boolea
   else if(value && typeof value==='object'){for(const v of Object.values(value))if(await matchesValue(v,matches))return true;}
   return false;
 }
+async function matchingLabel(label:string,matches:(value:string)=>Promise<boolean>) {
+  if(await matches(label))return true;
+  for(const token of label.split(/[^\p{L}\p{N}@._+-]+/u).filter(v=>v.length>1))if(await matches(token))return true;
+  return false;
+}
 /** The sole retained-value policy. Personal and unregistered payloads never gain
  * retention by supplying a tag; the registry validates every field/value pair. */
 export async function redactHistory(payload:unknown,at:string,matches:(value:string)=>Promise<boolean>,actorId?:string,force=false) {
@@ -23,7 +28,7 @@ export async function redactHistory(payload:unknown,at:string,matches:(value:str
   const storedActorErased=actorErased||!!actorId&&await matches(actorId);
   const subjectErased=(await Promise.all(e.subjects.map(matches))).some(Boolean);
   let valueErased=false;
-  for(const c of e.changes)if(await matchesValue(c.before,matches)||await matchesValue(c.after,matches)||c.evidence?.label&&await matches(c.evidence.label)||c.beforeEvidence?.label&&await matches(c.beforeEvidence.label)||c.afterEvidence?.label&&await matches(c.afterEvidence.label))valueErased=true;
+  for(const c of e.changes)if(await matchesValue(c.before,matches)||await matchesValue(c.after,matches)||c.evidence?.label&&await matchingLabel(c.evidence.label,matches)||c.beforeEvidence?.label&&await matchingLabel(c.beforeEvidence.label,matches)||c.afterEvidence?.label&&await matchingLabel(c.afterEvidence.label,matches))valueErased=true;
   if(!force&&!actorErased&&!initiatorErased&&!storedActorErased&&!subjectErased&&!valueErased)return {payload:e,counts,affected:false,actorErased:false};
   if(actorErased){e.actor={kind:e.actor.kind,id:'[erased]',name:'Erased person'};count('actor');}
   if(initiatorErased&&!actorErased){e.actor.initiatedBy='[erased]';count('initiator');}
@@ -34,10 +39,10 @@ export async function redactHistory(payload:unknown,at:string,matches:(value:str
     for(const side of ['before','after'] as const){
       const value=c[side];if(isErased(value))continue;
       const evidence=c[side==='before'?'beforeEvidence':'afterEvidence']??c.evidence;
-      const identityHit=await matchesValue(value,matches)||!!evidence?.label&&await matches(evidence.label);
+      const identityHit=await matchesValue(value,matches)||!!evidence?.label&&await matchingLabel(evidence.label,matches);
       const retain=!identityHit && (!strict||(['state','priority','sla','timing'] as ValueClass[]).includes(kind)) && retainedValue(e.action,c.field,value,evidence);
       if(kind==='person'){
-        if(identityHit||strict){c[side]=erasedPerson;count('person');}
+        if(identityHit||strict||(value!==null&&(typeof value!=='string'||value.includes('@')||/\s|:\/\//.test(value)))){c[side]=erasedPerson;count('person');}
         else count('retained.person');
       } else if(retain){count('retained.'+kind);}
       else {c[side]=erasedValue;count(kind);}
@@ -46,7 +51,7 @@ export async function redactHistory(payload:unknown,at:string,matches:(value:str
     if(isErased(c.before)&&isErased(c.after)){delete c.evidence;delete c.beforeEvidence;delete c.afterEvidence;}
     else {
       if(c.evidence?.options)c.evidence.options=[...new Set([c.before,c.after].flat().filter(v=>typeof v==='string'&&!isErased(v)))];
-      if(c.evidence?.label&&await matches(c.evidence.label))delete c.evidence.label;
+      if(c.evidence?.label&&await matchingLabel(c.evidence.label,matches))delete c.evidence.label;
       if(isErased(c.before))delete c.beforeEvidence;
       if(isErased(c.after))delete c.afterEvidence;
     }

@@ -42,7 +42,7 @@ export async function restoreHistoryMetadata(ctx:AdoptionContext,table:string,ro
     const key='import:'+sourceId+':'+row.event_key;
     const old=await db.prepare('SELECT envelope_json FROM history_redactions WHERE workspace_id=? AND event_key=?').bind(w,key).first<{envelope_json:string}>();
     const payload=JSON.stringify(old?intersectRedaction(envelope,JSON.parse(old.envelope_json)):envelope);
-    await db.prepare('INSERT INTO history_redactions VALUES(?,?,?,?,?,?,?) ON CONFLICT(workspace_id,event_key) DO UPDATE SET envelope_json=excluded.envelope_json,redacted_at=MIN(history_redactions.redacted_at,excluded.redacted_at)').bind(w,key,row.event_id,row.store,row.redacted_at,payload,JSON.stringify(counts)).run();
+    await db.prepare('INSERT INTO history_redactions VALUES(?,?,?,?,?,?,?) ON CONFLICT(workspace_id,event_key) DO UPDATE SET envelope_json=excluded.envelope_json,redacted_at=MIN(history_redactions.redacted_at,excluded.redacted_at)').bind(w,key,row.event_id,row.store,envelope.redactedAt,payload,JSON.stringify(counts)).run();
   }else check(false);
   return {state:'restored' as const,reason:'inert typed history metadata'};
 }

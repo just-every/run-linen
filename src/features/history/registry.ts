@@ -57,6 +57,11 @@ export function decodeHistory(payload:unknown):HistoryEnvelope|null {
   if(!p || typeof p!=='object')return null;
   const e=p as HistoryEnvelope;
   if(e.schema!=='linen.history'||e.version!==1||!historyActions.has(e.action)||!e.record||!['ticket','task','change','problem','asset','service'].includes(e.record.kind)||typeof e.record.id!=='string'||!e.actor||typeof e.actor.id!=='string'||!['person','rule','scenario','agent','integration'].includes(e.actor.kind)||!Array.isArray(e.subjects)||!e.subjects.every(v=>typeof v==='string')||!['normal','hr','restricted'].includes(e.protection)||!Array.isArray(e.changes)||!e.changes.every(c=>c && typeof c.field==='string' && Object.hasOwn(c,'before') && Object.hasOwn(c,'after')))return null;
-  return e;
+  const evidence=(v:FieldEvidence|undefined):FieldEvidence|undefined=>v?Object.fromEntries(Object.entries(v).filter(([key,value])=>['label','type','classifiedAt'].includes(key)?typeof value==='string':['classificationRevision','groupMemberCount'].includes(key)?Number.isInteger(value)&&Number(value)>=0:key==='nonpersonal'?typeof value==='boolean':key==='options'?Array.isArray(value)&&value.every(v=>typeof v==='string'):false)):undefined;
+  return {schema:'linen.history',version:1,action:e.action,record:{kind:e.record.kind,id:e.record.id},
+    actor:{kind:e.actor.kind,id:e.actor.id,...(typeof e.actor.name==='string'?{name:e.actor.name}:{}),...(typeof e.actor.initiatedBy==='string'?{initiatedBy:e.actor.initiatedBy}:{})},
+    subjects:e.subjects,protection:e.protection,changes:e.changes.map(c=>({field:c.field,before:c.before,after:c.after,...(c.evidence?{evidence:evidence(c.evidence)}:{}),...(c.beforeEvidence?{beforeEvidence:evidence(c.beforeEvidence)}:{}),...(c.afterEvidence?{afterEvidence:evidence(c.afterEvidence)}:{})})),
+    ...(e.source&&typeof e.source.system==='string'&&typeof e.source.table==='string'&&typeof e.source.eventKey==='string'?{source:{system:e.source.system,table:e.source.table,eventKey:e.source.eventKey}}:{}),
+    ...(e.redacted==='erasure'?{redacted:'erasure',redactedAt:typeof e.redactedAt==='string'?e.redactedAt:undefined}:{}),...(e.pendingErasure?{pendingErasure:true}:{})};
 }
 function parse(value:string):unknown { try{return JSON.parse(value);}catch{return null;} }

@@ -22,7 +22,7 @@ export async function validateHistoryStaged(db,tables,projectArchiveRow=(table,r
     const incoming=await db.prepare(`SELECT * FROM ${quote(tables.history_redactions)}`).all();
     for(const marker of incoming.results){
       let payload;try{payload=JSON.parse(marker.envelope_json);}catch{return false;}
-      if(payload?.redacted!=='erasure'||typeof payload.redactedAt!=='string')return false;
+      if(payload?.redacted!=='erasure'||typeof payload.redactedAt!=='string'||payload.redactedAt!==marker.redacted_at)return false;
       if(payload?.changes?.some(c=>(c.field?.startsWith('custom:')||['group','groupId','group_id'].includes(c.field)) && [c.before,c.after].some(v=>v!==null && !(v && typeof v==='object' && v.redacted==='erasure')))) {
         if(!markers.results.some(raw=>{const known=projectArchiveRow('history_redactions',raw);return known.workspace_id===marker.workspace_id && known.event_key===marker.event_key && known.envelope_json===marker.envelope_json;}))return false;
       }
