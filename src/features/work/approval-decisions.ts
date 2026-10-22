@@ -3,7 +3,7 @@ import { ApiError, id, now } from '../../platform/http';
 import type { WorkContext, WorkRecord } from './core';
 import { approvalGuard } from './approval-guard';
 import { currentWorkPrincipal } from './identity';
-import { managerHolder, managerStageApproved } from './fulfilment-authority';
+import { approvalQuoteWitness, managerHolder, managerStageApproved } from './fulfilment-authority';
 import { chainStatus,activateStageStatements } from './approval-stages';
 
 export interface StageDecisionInput { catalogId: string; stageKey: string; decision: string; comment?: unknown; expectedWorkRevision: number; expectedFulfilmentRevision: number; expectedCatalogRevision: number; idempotencyKey: string }
@@ -51,7 +51,7 @@ export async function prepareStageDecision(ctx: WorkContext, workId: string, inp
       .bind(guard, w, workId, work.revision, w, f.id, f.revision, w, catalog.id, catalog.revision, w, ctx.principal.userId),
     db.prepare('INSERT INTO work_approval_decisions(id,workspace_id,work_id,fulfilment_id,stage_key,approver_id,decision,comment,channel,work_revision,fulfilment_revision,catalog_revision,event_key,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
       .bind(decisionId, w, workId, f.id, stage.key, ctx.principal.userId, input.decision, comment, channel, work.revision, f.revision, catalog.revision, input.idempotencyKey, t),
-    ticketHistory(ctx,work,'work.approval_stage_decided',null,{approvalOutcome:input.decision,workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:ctx.principal.userId,stage:stage.key,channel,comment},t,{target:decisionId}),
+    ticketHistory(ctx,work,'work.approval_stage_decided',null,{approvalOutcome:input.decision,workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:ctx.principal.userId,stage:stage.key,channel,comment,...approvalQuoteWitness(f)},t,{target:decisionId}),
     ...duties.flatMap(o=>[db.prepare("UPDATE work_obligations SET state='blocked',last_error=? WHERE workspace_id=? AND id=? AND revision=? AND state='pending'").bind(`Approval rejected at ${stage.name}`,w,o.id,o.revision),obligationHistory(ctx,o,'work.obligation_changed',{state:o.state},{state:'blocked'},t)]),
     ...opening,
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(t, w, workId),
@@ -87,7 +87,7 @@ async function prepareManagerRejection(ctx: WorkContext, work: WorkRecord, catal
       .bind(guard, w, work.id, work.revision, w, f.id, f.revision, w, catalog.id, catalog.revision),
     db.prepare('INSERT INTO work_approval_decisions(id,workspace_id,work_id,fulfilment_id,stage_key,approver_id,decision,comment,channel,work_revision,fulfilment_revision,catalog_revision,event_key,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
       .bind(decisionId, w, work.id, f.id, 'manager', ctx.principal.userId, 'rejected', comment, channel, work.revision, f.revision, catalog.revision, input.idempotencyKey, t),
-    ticketHistory(ctx,work,'work.approval_stage_decided',null,{approvalOutcome:'rejected',workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:holder,stage:'manager',channel,comment},t,{target:decisionId}),
+    ticketHistory(ctx,work,'work.approval_stage_decided',null,{approvalOutcome:'rejected',workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:holder,stage:'manager',channel,comment,...approvalQuoteWitness(f)},t,{target:decisionId}),
     ...duties.flatMap(o=>[db.prepare("UPDATE work_obligations SET state='blocked',last_error='Approval rejected by the manager' WHERE workspace_id=? AND id=? AND revision=? AND state='pending'").bind(w,o.id,o.revision),obligationHistory(ctx,o,'work.obligation_changed',{state:o.state},{state:'blocked'},t)]),
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(t, w, work.id),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)] };

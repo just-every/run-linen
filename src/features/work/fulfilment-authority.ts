@@ -10,6 +10,12 @@ import { chainStatus, managerRejected, stagesOf,activateStageStatements } from '
 
 /** Business approval is separate from the provider action grant; neither manufactures the other. */
 type FulfilmentFacts = { id?: string; revision?: number; beneficiary_id: string; purpose: string; expires_at: string | null };
+/** A decision witnesses the quote frozen in this exact fulfilment revision; no file name or content is copied. */
+export function approvalQuoteWitness(fulfilment:{catalog_snapshot_json?:string|null}) {
+  const quote=fulfilment.catalog_snapshot_json?JSON.parse(fulfilment.catalog_snapshot_json).quote:null;
+  return quote?{quoteSha256:quote.sha256}:{};
+}
+
 /** The manager stage alone: the current manager, or their delegate while they are out of office, approved this exact revision. */
 export async function managerStageAuthority(ctx: WorkContext, work: WorkRecord, catalog: any, fulfilment: FulfilmentFacts, step?: Step) {
   if(!catalog.requires_manager)return {allowed:true,holderId:null};
@@ -141,7 +147,7 @@ export async function prepareFulfilmentApproval(ctx: WorkContext, workId: string
       .bind(approvalId,w,workId,f.id,work.revision,f.revision,catalog.revision,person.revision,person.manager_id,holder,f.beneficiary_id,f.purpose,f.expires_at,input.idempotencyKey,now(),person.id,person.binding_id,
         typeof input.comment==='string'&&input.comment.trim()?input.comment.trim().slice(0,2000):null,channel),
     ...await openFirstStage(ctx,work,catalog,f),
-    ticketHistory(ctx,work,'work.fulfilment_approved',null,{approval:{approvalId,catalogId:catalog.id,workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:holder},approvalOutcome:'approved',workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:holder},now(),{target:approvalId,conditional:false}),
+    ticketHistory(ctx,work,'work.fulfilment_approved',null,{approval:{approvalId,catalogId:catalog.id,workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:holder},approvalOutcome:'approved',workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:holder,...approvalQuoteWitness(f)},now(),{target:approvalId,conditional:false}),
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(now(),w,workId),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),authorityGuard.end]};
 }
@@ -177,7 +183,7 @@ export async function recordWorkManagerGrantApproval(ctx: WorkContext, grantId: 
       .bind(approvalId,w,workId,f.id,work.revision,f.revision,f.catalog_revision,person.revision,person.manager_id,holder,
         f.beneficiary_id,f.purpose,grant.valid_until,`standing:${grant.id}:${version}:${f.id}`,at,grant.id,version,person.id,person.binding_id,
         w,workId,work.revision,w,f.id,f.revision,w,person.id,person.revision,f.beneficiary_id,person.binding_id,w,f.catalog_id,f.catalog_revision),
-      ticketHistory(ctx,work,'work.fulfilment_approved',null,{approval:{approvalId,catalogId:f.catalog_id,workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:f.catalog_revision,holderId:holder,grantId:grant.id,grantVersion:version},approvalOutcome:'approved',workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:f.catalog_revision,holderId:holder,grantVersion:version},at,{target:approvalId})]);
+      ticketHistory(ctx,work,'work.fulfilment_approved',null,{approval:{approvalId,catalogId:f.catalog_id,workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:f.catalog_revision,holderId:holder,grantId:grant.id,grantVersion:version},approvalOutcome:'approved',workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:f.catalog_revision,holderId:holder,grantVersion:version,...approvalQuoteWitness(f)},at,{target:approvalId})]);
   }
 }
 
