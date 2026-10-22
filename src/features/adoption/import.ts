@@ -250,14 +250,7 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
             const historyId = id();
             await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_history VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(historyId, w, runId, run.source_id, r.table, r.key, revision, JSON.stringify(r.row), state, why, now()).run();
             await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_import_records SELECT workspace_id,?,id FROM adoption_history WHERE workspace_id=? AND source_id=? AND table_name=? AND source_key=? AND revision=?').bind(runId, w, run.source_id, r.table, r.key, revision).run();
-            if (r.table === 'work_erasure' && typeof r.row.person_id === 'string') {
-                await preflightImportedTombstone(ctx,await importedTombstoneDigest(r.row.person_id),m.sourceWorkspace);
-                await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w, await importedTombstoneDigest(r.row.person_id), now()).run();
-            }
-            if (r.table === 'adoption_tombstones') {
-                await preflightImportedTombstone(ctx,String(r.row.identity_hash),m.sourceWorkspace);
-                await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w, r.row.identity_hash, now()).run();
-            }
+
         }
         await ctx.env.DB.prepare('UPDATE adoption_imports SET checkpoint=MAX(checkpoint,?) WHERE workspace_id=? AND id=?').bind(chunk.ordinal, w, runId).run();
     }
@@ -313,6 +306,8 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
     const permittedHistory = [...historyOnly, 'identities', 'workspace'];
     const remaining = await ctx.env.DB.prepare(`SELECT COUNT(*) n FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state NOT IN ('restored','erased') AND table_name NOT IN (${permittedHistory.map(()=>'?').join(',')})`).bind(w, runId,...permittedHistory).first<{n:number}>();
     const state = remaining?.n ? 'history_only' : 'restored';
+    report.privacyRevision=await archivePrivacyRevision(ctx);
+    await ctx.env.DB.prepare('UPDATE adoption_imports SET report_json=? WHERE workspace_id=? AND id=?').bind(JSON.stringify(report),w,runId).run();
     // Old uploaded bytes are opaque source custody. After destination erasure,
     // retain only the normalized rows, never a downloadable/exportable raw copy.
     const privateInput=await ctx.env.DB.prepare('SELECT 1 FROM history_identity_tombstones WHERE workspace_id=? LIMIT 1').bind(w).first();
