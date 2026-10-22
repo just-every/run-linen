@@ -121,7 +121,7 @@ try {
   await formAction(page,bundlePanel,'Build a bundle','/catalog-bundles',{name:'Desk and design setup',catalogIds:[designItem.id,items.facilities.id]},'Save',201,'mixed-workspace-bundle-build');
   await bundlePanel.getByText('Desk and design setup spans different service workspaces.',{exact:false}).waitFor();await captureBoth(page,'mixed-workspace-bundle-refusal');
   await page.goto(base+'/app#/knowledge');
-  await formAction(page,page,'Publish reviewed knowledge','/knowledge',{title:'Report a damaged power socket',body:'Stop using the socket. Ask Facilities to inspect it before connecting another device.',departmentId:departments.facilities.id,scope:'employees',expiresAt:'2030-01-01T00:00',review:true},'Save',200,'knowledge-publish');
+  await formAction(page,page,'Publish reviewed knowledge','/knowledge',{title:'Report a damaged power socket',body:'Stop using the socket. Ask Facilities to inspect it before connecting another device.',departmentId:departments.facilities.id,scope:'employees',expiresAt:'2030-01-01T00:00',review:true},'Save',201,'knowledge-publish');
   for(const width of [1440,390]) {await page.setViewportSize({width,height:1000});await page.getByLabel('Knowledge workspace',{exact:true}).selectOption(departments.it.id);await page.getByLabel('Knowledge workspace',{exact:true}).selectOption(departments.facilities.id);await capture(page,'knowledge-workspace-filter',width);}
   await page.getByRole('heading',{name:'Report a damaged power socket',exact:true}).waitFor();
   for(const width of [1440,390])await capture(page,'workspace-knowledge',width);
