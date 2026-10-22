@@ -22,6 +22,7 @@ async function capture(page,name,width) {
   await page.waitForFunction(()=>!document.querySelector('.loading'));await page.evaluate(()=>document.fonts.ready);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} fits ${width}`);
   await page.screenshot({path:`${out}/DESK-011-${name}-${width}.png`,fullPage:true});
+  await page.screenshot({path:`${out}/DESK-011-${name}-${width}-viewport.png`});
 }
 async function captureBoth(page,name) {for(const width of [1440,390])await capture(page,name,width);}
 try {
