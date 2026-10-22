@@ -82,18 +82,18 @@ export async function sharingJourney({browser,api,base,out,errors}) {
 /** DESK-007 native UI against the emitted app; only the external SendGrid protocol is a fixture. */
 export async function collaborationJourney({browser,page,api,base,out,errors}) {
   const password='synthetic-linen-46-password';
-  const staff=await api('/members',{name:'synthetic-linen-47',email:'synthetic-linen-47@example.test',password,roles:['operator']});
-  const employee=await api('/members',{name:'synthetic-linen-48',email:'synthetic-linen-48@example.test',password,roles:['employee']});
+  const staff=await api('/members',{name:'Maya Chen',email:'synthetic-linen-47@example.test',password,roles:['operator']});
+  const employee=await api('/members',{name:'Jordan Lee',email:'synthetic-linen-48@example.test',password,roles:['employee']});
   const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
   const webhookPublicKey=Buffer.from(await crypto.subtle.exportKey('spki',pair.publicKey)).toString('base64');
-  const mail=await createConnection(page,api,base,'sendgrid','synthetic-linen-49',{from:'synthetic-linen-43@example.test',webhookPublicKey,apiKey:'synthetic-linen-50'});
+  const mail=await createConnection(page,api,base,'sendgrid','Helpdesk email',{from:'helpdesk@example.test',webhookPublicKey,apiKey:'synthetic-linen-50'});
   const sc=await browser.newContext({viewport:{width:1440,height:1000}}),ec=await browser.newContext({viewport:{width:1440,height:1000}});
   const sp=await sc.newPage(),ep=await ec.newPage();
   for(const p of [sp,ep])p.on('pageerror',error=>errors.push(String(error)));
   try {
     await signIn(sp,base,'synthetic-linen-47@example.test',password);await signIn(ep,base,'synthetic-linen-48@example.test',password);
     for(const width of [1440,390]) {
-      const n=width===1440?60:90,label=i=>`synthetic-linen-${n+i}`;
+      const n=width===1440?60:90,label=i=>({0:width===1440?'VPN drops during client calls':'VPN drops when switching networks',1:'The VPN disconnects every few minutes during customer calls.',3:'Coordinate the network diagnosis with the existing ticket readers.',4:'Packet loss starts at the office firewall; internal address details stay private.',5:'We are checking the VPN path with our network team.',7:'Please check packet loss for the VPN gateway during the morning call window.',9:'VPN packet-loss investigation',10:'We found a failing upstream link and are scheduling its replacement.'}[i]??`synthetic-linen-${n+i}`);
       for(const p of [page,sp,ep])await p.setViewportSize({width,height:1000});
       const work=await api('/work',{title:label(0),body:label(1),beneficiaryId:employee.id,deduplicationKey:label(2)}),path='/work/'+work.id;
       await page.goto(base+'/app#'+path);
@@ -119,7 +119,7 @@ export async function collaborationJourney({browser,page,api,base,out,errors}) {
       await api(path+'/messages',{body:label(5),visibility:'public',sourceMessageId:label(6)});
       await open();
       const vendor=panel.getByRole('region',{name:'Vendor email side conversations'}),mailForm=vendor.locator('form');
-      await mailForm.getByLabel('Vendor email',{exact:true}).fill('synthetic-linen-51@example.test');
+      await mailForm.getByLabel('Vendor email',{exact:true}).fill('network-vendor@example.test');
       await mailForm.getByLabel('Mail connection',{exact:true}).selectOption(mail.id);
       await mailForm.getByLabel('Exact email message',{exact:true}).fill(label(7));await approve(mailForm);
       const sending=page.waitForResponse(r=>r.url().endsWith(path+'/side-conversations')&&r.request().method()==='POST');
@@ -127,15 +127,16 @@ export async function collaborationJourney({browser,page,api,base,out,errors}) {
       assert.equal(response.status(),201);const sent=await response.json();assert.equal(sent.state,'accepted');
       const wire=(await (await fetch(base+'/__fixture/evidence')).json()).calls.filter(c=>c.kind==='side-email').at(-1).data;
       assert.deepEqual(wire.content,[{type:'text/plain',value:label(7)}]);
-      await api('/mail/intake',{connectionId:mail.id,sourceMessageId:label(8),sender:'synthetic-linen-51@example.test',subject:label(9),text:label(10),inReplyTo:wire.headers['Message-ID']});
-      await page.reload();await open();await page.locator('.message-body').getByText(`Email from synthetic-linen-51@example.test:\n${label(10)}`,{exact:true}).waitFor();
+      await api('/mail/intake',{connectionId:mail.id,sourceMessageId:label(8),sender:'network-vendor@example.test',subject:label(9),text:label(10),inReplyTo:wire.headers['Message-ID']});
+      await page.reload();await open();await page.locator('.message-body').getByText(`Email from network-vendor@example.test:\n${label(10)}`,{exact:true}).waitFor();
       await panel.screenshot({path:`${out}/DESK-007-private-email-${width}.png`});
+      await page.screenshot({path:`${out}/DESK-007-vendor-reply-${width}.png`,fullPage:true});
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'DESK-007 owner controls fit');
-      await sp.reload();await sp.locator('.message-body').getByText(`Email from synthetic-linen-51@example.test:\n${label(10)}`,{exact:true}).waitFor();
+      await sp.reload();await sp.locator('.message-body').getByText(`Email from network-vendor@example.test:\n${label(10)}`,{exact:true}).waitFor();
       await ep.goto(base+'/app#'+path);await ep.reload();
       await ep.getByRole('region',{name:'Collaboration notifications'}).getByRole('link',{name:'A request you watch has a public update',exact:true}).last().waitFor();
       await ep.locator('.message-body').getByText(label(5),{exact:true}).waitFor();
-      for(const hidden of [label(4),label(7),label(10),'synthetic-linen-51@example.test'])assert.ok(!(await ep.locator('body').innerText()).includes(hidden),'DESK-007 employee sees no private collaboration');
+      for(const hidden of [label(4),label(7),label(10),'network-vendor@example.test'])assert.ok(!(await ep.locator('body').innerText()).includes(hidden),'DESK-007 employee sees no private collaboration');
       assert.equal(await ep.getByText('Private collaboration',{exact:true}).count(),0);
       assert.ok(await ep.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'DESK-007 employee view fits');
       await ep.screenshot({path:`${out}/DESK-007-employee-${width}.png`,fullPage:true});
