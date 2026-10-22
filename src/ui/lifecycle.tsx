@@ -23,7 +23,7 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
   const list = useRemote<{ items: RecordValue[] }>("/lifecycle"),
     people = useRemote<{ items: RecordValue[] }>("/people"),
     members = useRemote<RecordValue[]>("/members"),
-    detail = useRemote<{ lifecycle: RecordValue; baseline: RecordValue | null; obligations: RecordValue[] }>(
+    detail = useRemote<{ lifecycle: RecordValue; baseline: RecordValue | null; templates: { applied: RecordValue[]; skipped: RecordValue[] } | null; obligations: RecordValue[] }>(
       selectedId ? `/lifecycle/${selectedId}` : null,
     ),
     { session } = useSession();
@@ -157,6 +157,17 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
                 ]} />
               </section>
             )}
+            {detail.data.templates && <section aria-label="Task template review">
+              <h2>Task template review</h2>
+              <Facts entries={[["Templates applied", detail.data.templates.applied.map(template => `${text(template.name)} (revision ${text(template.revision)})`).join(', ')]]} />
+              {detail.data.templates.skipped.length > 0 && <>
+                <h3>Tasks waiting for a date</h3>
+                {detail.data.templates.skipped.map(task => <section className="connection-record" key={`${text(task.templateId)}:${text(task.key)}`}>
+                  <h3>{text(task.title)}</h3>
+                  <Notice>{text(task.reason)}. No deadline or reminder has been scheduled for this task.</Notice>
+                </section>)}
+              </>}
+            </section>}
             <h2>Outstanding and completed responsibilities</h2>
             {detail.data.obligations.map((o) => (
               <section className="connection-record" key={text(o.id)}>
@@ -191,7 +202,7 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
                   />
                 )}
                 {o.kind === "sessions.revoke" && o.state === "verified" && <Notice>Existing sessions were invalidated. Cancellation cannot restore those sessions; a later sign-in needs its own valid access.</Notice>}
-                {!String(o.kind).startsWith("device.") && !o.operation_id && session.principal.roles.includes("owner") && <ActionForm
+                {o.kind !== "task.manual" && !String(o.kind).startsWith("device.") && !o.operation_id && session.principal.roles.includes("owner") && <ActionForm
                   title="Bind the reviewed security action" path={`/obligations/${text(o.id)}/execution`}
                   fields={[{name:"step",label:"Exact action, provider account and current grant",type:"json",required:true}]}
                   transform={values => values.step as RecordValue}

@@ -27,12 +27,12 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
   await form.getByRole('combobox',{name:/^Applies to/}).selectOption('join');
   for(const label of ['Life Sales '+suffix,'Life Austin '+suffix,'Life account executive '+suffix,'Life W-2 '+suffix])
     await form.getByRole('checkbox',{name:label,exact:true}).check();
-  const fillTask=async(index,{title,assignee,team,offset,remind})=>{
+  const fillTask=async(index,{title,assignee,team,offset,remind,anchor='start'})=>{
     const row=form.getByRole('group',{name:'Task '+index,exact:true});
     await row.getByLabel('Task title '+index,{exact:true}).fill(title);
     await row.getByLabel('Who does task '+index+'?',{exact:true}).selectOption(assignee);
     if(team)await row.getByLabel('Team for task '+index,{exact:true}).selectOption({label:team});
-    await row.getByLabel('Date for task '+index,{exact:true}).selectOption('start');
+    await row.getByLabel('Date for task '+index,{exact:true}).selectOption(anchor);
     await row.getByLabel('Business days from date '+index,{exact:false}).fill(String(offset));
     if(remind!==undefined)await row.getByLabel('Remind business days before due '+index,{exact:false}).fill(String(remind));
   };
@@ -42,11 +42,14 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
   await form.getByRole('button',{name:'Add task',exact:true}).click();
   await fillTask(3,{title:'Set the quota plan',assignee:'owner',offset:3});
   await form.getByRole('button',{name:'Add task',exact:true}).click();
-  await form.getByRole('button',{name:'Remove task 4',exact:true}).click();
-  assert.equal(await form.getByRole('group',{name:'Task 4',exact:true}).count(),0,'LIFE-002 owners remove an unwanted task before saving');
+  await fillTask(4,{title:'Close out the contract',assignee:'owner',offset:0,anchor:'end'});
+  await form.getByRole('button',{name:'Add task',exact:true}).click();
+  await form.getByRole('button',{name:'Remove task 5',exact:true}).click();
+  assert.equal(await form.getByRole('group',{name:'Task 5',exact:true}).count(),0,'LIFE-002 owners remove an unwanted task before saving');
   await captureJourney(page,{path:out+'/LIFE-002-template-form.png',fullPage:true});
   const saving=page.waitForResponse(r=>r.url().endsWith('/lifecycle-templates')&&r.request().method()==='POST');
-  await form.getByRole('button',{name:'Save',exact:true}).click();assert.equal((await saving).status(),201,'LIFE-002 the owner adds a template natively');
+  await form.getByRole('button',{name:'Save',exact:true}).click();const savedResponse=await saving;assert.equal(savedResponse.status(),201,'LIFE-002 the owner adds a template natively');
+  const savedTemplate=await savedResponse.json();
   await region.getByRole('heading',{name:'Sales Austin onboarding '+suffix,exact:true}).waitFor();
 
   // The hire starts within the hour: its tasks exist, and the reminders are due now.
@@ -56,6 +59,16 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
     identityTarget:hire.personId,retained:[],added:[],removed:[],deviceIds:[]});
   await page.goto(base+'/app#/lifecycle/'+lifecycle.lifecycleId);
   for(const title of ['Order the laptop','Buddy assigned','Set the quota plan'])await page.getByRole('heading',{name:title,exact:true}).waitFor();
+  const templateReview=page.getByRole('region',{name:'Task template review',exact:true});
+  const previousViewport=page.viewportSize();
+  try {
+    for(const width of [1440,390]) {
+      await page.setViewportSize({width,height:width===1440?1000:844});
+      await templateReview.getByRole('heading',{name:'Close out the contract',exact:true}).waitFor();
+      assert.ok(await templateReview.getByText(`${savedTemplate.name} (revision ${savedTemplate.revision})`,{exact:true}).isVisible(),`LIFE-002 applied template and revision are visible at ${width}px`);
+      assert.ok(await templateReview.getByText('No end date is recorded to date this task from.',{exact:false}).isVisible(),`LIFE-002 the undated task has a visible named reason at ${width}px`);
+    }
+  } finally {await page.setViewportSize(previousViewport);}
   const quota=page.locator('section.connection-record').filter({has:page.getByRole('heading',{name:'Set the quota plan',exact:true})});
   await quota.getByText('Mark this task done',{exact:true}).click();
   const completing=page.waitForResponse(r=>/\/lifecycle-tasks\/[^/]+\/complete$/.test(r.url())&&r.request().method()==='POST');

@@ -136,6 +136,7 @@ export function registerLifecycleRoutes(app: Hono<AppEnv>) {
     return c.json({
       lifecycle: item,
       baseline: record ? JSON.parse(record.context_json || "{}").baseline ?? null : null,
+      templates: record ? JSON.parse(record.context_json || "{}").templates ?? null : null,
       obligations: item ? await listObligations(ctx, item.work_id) : [],
     });
   });

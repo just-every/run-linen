@@ -71,6 +71,9 @@ export async function lifecycleTemplateChecks(api, db) {
   assert.ok(!camTasks.includes('Close out the contract'));
   const camContext = JSON.parse((await ok(`/work/${contractRecord.value.work.id}`)).work.context_json);
   assert.deepEqual(camContext.templates.skipped.map(s => s.key), ['wrapup'], 'LIFE-002 a task with no end date to anchor on is listed as skipped');
+  const contractReview = await ok(`/lifecycle/${contractRecord.value.lifecycleId}`);
+  assert.equal(contractReview.templates.skipped[0].title, 'Close out the contract', 'LIFE-002 the lifecycle door retains the undated task title for the owner review');
+  assert.ok(contractReview.templates.applied.some(t => t.name === contractor.name && t.revision === contractor.revision), 'LIFE-002 the lifecycle door retains applied template names and revisions');
   const withEnd = await admit(await person('Life Dee', { employmentType: c1099.id }), 'synthetic-linen-10', { expiresAt: '2027-06-30T17:00:00-05:00', sponsorId: 'owner' });
   assert.equal(withEnd.status, 201, JSON.stringify(withEnd.value));
   assert.equal((await tasksOf(withEnd.value.lifecycleId)).find(t => t.title === 'Close out the contract').due_at, '2027-06-30T22:00:00.000Z', 'LIFE-002 an end-dated task is due at the contract end');

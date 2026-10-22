@@ -51,14 +51,14 @@ export function taskDates(calendar: BusinessCalendar, source: Pick<TaskSource, '
 export interface PlannedTask { obligationId: string; source: TaskSource; title: string; groupId: string | null; ownerId: string; dueAt: string; remindAt: string | null; note: string | null; state: 'pending' | 'blocked' }
 /** The dated tasks of every matching template; a task whose anchor does not exist (no end date) is listed as skipped. */
 export async function planTasks(ctx: WorkContext, input: { templates: Template[]; kind: string; effectiveAt: string; expiry: string | null; timezone: string; ownerId: string; managerId: string | null }) {
-  const planned: PlannedTask[] = [], skipped: { templateId: string; key: string; reason: string }[] = [];
+  const planned: PlannedTask[] = [], skipped: { templateId: string; key: string; title: string; reason: string }[] = [];
   if (!input.templates.length) return { planned, skipped };
   const calendar = await calendarFor(ctx, input.timezone, input.ownerId);
   const manager = input.managerId && await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId, input.managerId).first() ? input.managerId : null;
   for (const template of input.templates) for (const task of template.tasks) {
     const endFrom = input.expiry ? 'expiry' as const : 'effective' as const;
     const anchor = task.anchor === 'start' ? input.effectiveAt : input.expiry ?? (input.kind === 'leave' ? input.effectiveAt : null);
-    if (!anchor) { skipped.push({ templateId: template.id, key: task.key, reason: 'No end date is recorded to date this task from' }); continue; }
+    if (!anchor) { skipped.push({ templateId: template.id, key: task.key, title: task.title, reason: 'No end date is recorded to date this task from' }); continue; }
     const { dueAt, remindAt } = taskDates(calendar, task, anchor);
     const forManager = task.assignee.type === 'manager';
     planned.push({ obligationId: id(), title: task.title, dueAt, remindAt, groupId: task.assignee.type === 'group' ? task.assignee.groupId : null,
