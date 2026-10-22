@@ -215,7 +215,7 @@ try {
     await capture(page,'owner-handoff-history',width);
     const ticketGroup=page.getByRole('region',{name:'Group and owner',exact:true});await ticketGroup.getByLabel('Accountable group',{exact:true}).selectOption(groups.it.id);await ticketGroup.getByLabel('Owner (an agent in the group)',{exact:true}).selectOption(itAgent.id);await capture(page,'ticket-workspace-group-editing',width);
     const groupSaved=page.waitForResponse(r=>r.url().endsWith(`/work/${workId}/group`)&&r.request().method()==='POST');await ticketGroup.getByRole('button',{name:'Save group and owner',exact:true}).click();assert.equal((await groupSaved).status(),200);
-    await page.locator('a.back-link[href="#/work"]').click();
+    if(width===390)await page.locator('a.back-link[href="#/work"]').click();
     const ownerQueue=page.getByRole('region',{name:'Request queue'});await ownerQueue.getByLabel('Queue workspace',{exact:true}).selectOption(departments.it.id);
     await ownerQueue.getByText('Save a view',{exact:true}).click();const viewForm=ownerQueue.getByRole('form',{name:'Save a view'});
     await viewForm.getByLabel('View name',{exact:true}).fill(`IT handoffs · ${width===1440?'desktop':'mobile'}`);await viewForm.getByRole('checkbox').check();
@@ -226,7 +226,7 @@ try {
     assert.ok(!(await facApi('/work-views')).items.some(v=>v.id===view.id),'Other service teams cannot discover the private workspace view');
     await capture(page,'workspace-queue-view',width);
     await ip.goto(base+'/app#/work/'+workId);await ip.getByRole('heading',{level:2,name:items.facilities.name,exact:true}).waitFor();
-    await ip.locator('a.back-link[href="#/work"]').click();
+    if(width===390)await ip.locator('a.back-link[href="#/work"]').click();
     const queue=ip.getByRole('region',{name:'Request queue'});await queue.getByLabel('Queue workspace',{exact:true}).selectOption(departments.it.id);await queue.locator(`a[href="#/work/${workId}"]`).getByText(items.facilities.name,{exact:true}).waitFor();
     await capture(ip,'it-queue-after-handoff',width);
     assert.equal(await fp.evaluate(async id=>(await fetch('/api/v1/work/'+id)).status,workId),404,'Facilities staff lose access after handoff');
