@@ -36,6 +36,7 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
 
   // The hire starts within the hour: its tasks exist, and the reminders are due now.
   const soon=new Date(Date.now()+3600_000).toISOString().replace(/\.\d+Z$/,'Z');
+  await api('/calendars',{name:'synthetic-linen-6',timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]});
   const lifecycle=await api('/lifecycle',{personId:hire.personId,kind:'join',effectiveAt:soon,timezone:'UTC',source:'synthetic-linen-5-'+suffix,sourceRevision:1,ownerId:owner.user.id,
     identityTarget:hire.personId,retained:[],added:[],removed:[],deviceIds:[]});
   await page.goto(base+'/app#/lifecycle/'+lifecycle.lifecycleId);

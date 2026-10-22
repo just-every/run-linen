@@ -15,7 +15,7 @@ export function eraseLifecycleTaskStatements(ctx: WorkContext, personId: string)
     db.prepare(`UPDATE work_records SET title='[erased]',context_json='{}',revision=revision+1 WHERE workspace_id=? AND id IN (${lifecycleReminderWork})`).bind(w, ...args),
     db.prepare(`UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action='lifecycle.task_waived'
       AND (actor_id=? OR target IN (SELECT id FROM work_obligations WHERE workspace_id=? AND beneficiary_id=?))`).bind(w, personId, w, personId),
-    db.prepare(`UPDATE work_obligations SET title='[erased]',last_error=NULL,state=CASE WHEN state='pending' THEN 'cancelled' ELSE state END,revision=revision+1
+    db.prepare(`UPDATE work_obligations SET title='[erased]',last_error=NULL,state=CASE WHEN state IN ('pending','blocked') THEN 'cancelled' ELSE state END,revision=revision+1
       WHERE workspace_id=? AND beneficiary_id=? AND template_json IS NOT NULL`).bind(w, personId),
   ];
 }

@@ -14,9 +14,11 @@ import type { Template } from './lifecycle-templates';
  */
 export interface TaskSource { templateId: string; templateRevision: number; key: string; anchor: 'start' | 'end'; endFrom: 'effective' | 'expiry'; offsetDays: number; remindDays: number | null }
 
-export async function calendarFor(ctx: WorkContext, timezone: string): Promise<BusinessCalendar> {
-  const row = await ctx.env.DB.prepare('SELECT * FROM work_calendars WHERE workspace_id=? AND timezone=? ORDER BY name,id LIMIT 1').bind(ctx.principal.workspaceId, timezone).first<any>();
-  return row ? calendarFromRow(row) : { timezone, weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [], holidayCatalog: null };
+export async function calendarFor(ctx: WorkContext, timezone: string, ownerId: string): Promise<BusinessCalendar> {
+  const rows = (await ctx.env.DB.prepare('SELECT * FROM work_calendars WHERE workspace_id=? AND timezone=? ORDER BY id LIMIT 2').bind(ctx.principal.workspaceId, timezone).all<any>()).results;
+  if (rows.length !== 1) throw new ApiError(409, 'lifecycle_calendar_required',
+    `Dated tasks are held: accountable owner ${ownerId} must configure one unambiguous business calendar for ${timezone}; ${rows.length ? 'multiple calendars match' : 'none is configured'}`);
+  return calendarFromRow(rows[0]);
 }
 const wall = (t: number, zone: string) => {
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
@@ -46,10 +48,12 @@ export function taskDates(calendar: BusinessCalendar, source: Pick<TaskSource, '
   return { dueAt, remindAt: source.remindDays === null ? null : shiftBusinessDays(calendar, dueAt, -source.remindDays) };
 }
 
-export interface PlannedTask { obligationId: string; source: TaskSource; title: string; groupId: string | null; ownerId: string; dueAt: string; remindAt: string | null; note: string | null }
+export interface PlannedTask { obligationId: string; source: TaskSource; title: string; groupId: string | null; ownerId: string; dueAt: string; remindAt: string | null; note: string | null; state: 'pending' | 'blocked' }
 /** The dated tasks of every matching template; a task whose anchor does not exist (no end date) is listed as skipped. */
 export async function planTasks(ctx: WorkContext, input: { templates: Template[]; kind: string; effectiveAt: string; expiry: string | null; timezone: string; ownerId: string; managerId: string | null }) {
-  const calendar = await calendarFor(ctx, input.timezone), planned: PlannedTask[] = [], skipped: { templateId: string; key: string; reason: string }[] = [];
+  const planned: PlannedTask[] = [], skipped: { templateId: string; key: string; reason: string }[] = [];
+  if (!input.templates.length) return { planned, skipped };
+  const calendar = await calendarFor(ctx, input.timezone, input.ownerId);
   const manager = input.managerId && await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId, input.managerId).first() ? input.managerId : null;
   for (const template of input.templates) for (const task of template.tasks) {
     const endFrom = input.expiry ? 'expiry' as const : 'effective' as const;
@@ -59,31 +63,33 @@ export async function planTasks(ctx: WorkContext, input: { templates: Template[]
     const forManager = task.assignee.type === 'manager';
     planned.push({ obligationId: id(), title: task.title, dueAt, remindAt, groupId: task.assignee.type === 'group' ? task.assignee.groupId : null,
       ownerId: forManager ? manager ?? input.ownerId : input.ownerId,
-      note: forManager && !manager ? 'No manager is recorded for this person; the accountable owner completes this task' : null,
+      state: forManager && !manager ? 'blocked' : 'pending',
+      note: forManager && !manager ? `No active manager is recorded. Accountable owner ${input.ownerId} must resolve the missing manager; this task cannot be completed as a manager by the owner` : null,
       source: { templateId: template.id, templateRevision: template.revision, key: task.key, anchor: task.anchor, endFrom, offsetDays: task.offsetDays, remindDays: task.remindDays } });
   }
-  return { planned, skipped, calendar };
+  return { planned, skipped };
 }
 export const taskStatements = (ctx: WorkContext, workId: string, lifecycleId: string, personId: string, planned: PlannedTask[]) => planned.map(t => ctx.env.DB.prepare(
   `INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,state,owner_id,last_error,title,group_id,remind_at,template_json)
-   VALUES(?,?,?,?,'task.manual',?,?,?,'pending',?,?,?,?,?,?)`)
-  .bind(t.obligationId, ctx.principal.workspaceId, workId, lifecycleId, `template:${t.source.templateId}:${t.source.key}`, personId, t.dueAt, t.ownerId, t.note, t.title, t.groupId, t.remindAt, JSON.stringify(t.source)));
+   VALUES(?,?,?,?,'task.manual',?,?,?,?,?,?,?,?,?,?)`)
+  .bind(t.obligationId, ctx.principal.workspaceId, workId, lifecycleId, `template:${t.source.templateId}:${t.source.key}`, personId, t.dueAt, t.state, t.ownerId, t.note, t.title, t.groupId, t.remindAt, JSON.stringify(t.source)));
 
 /** An effective-date amendment re-dates every open template task from its recorded anchor; a cancellation cancels them. */
-export async function redateLifecycleTasks(ctx: WorkContext, lifecycleId: string, change: { effectiveAt: string | null; cancel: boolean; timezone: string }) {
+export async function redateLifecycleTasks(ctx: WorkContext, lifecycleId: string, change: { effectiveAt: string | null; cancel: boolean; timezone: string; ownerId: string }) {
   const db = ctx.env.DB, w = ctx.principal.workspaceId;
   if (change.cancel) {
-    await db.prepare("UPDATE work_obligations SET state='cancelled',revision=revision+1 WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' AND state='pending'").bind(w, lifecycleId).run();
+    await db.prepare("UPDATE work_obligations SET state='cancelled',revision=revision+1 WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' AND state IN ('pending','blocked')").bind(w, lifecycleId).run();
     return;
   }
   if (!change.effectiveAt) return;
-  const calendar = await calendarFor(ctx, change.timezone);
-  const rows = (await db.prepare("SELECT id,template_json FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' AND state='pending' AND template_json IS NOT NULL").bind(w, lifecycleId).all<{ id: string; template_json: string }>()).results;
+  const rows = (await db.prepare("SELECT id,template_json,owner_id,state FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' AND state IN ('pending','blocked') AND template_json IS NOT NULL").bind(w, lifecycleId).all<{ id: string; template_json: string; owner_id: string; state: string }>()).results;
+  if (!rows.length) return;
+  const calendar = await calendarFor(ctx, change.timezone, change.ownerId);
   for (const row of rows) {
     const source = JSON.parse(row.template_json) as TaskSource;
     if (source.anchor === 'end' && source.endFrom === 'expiry') continue;
     const { dueAt, remindAt } = taskDates(calendar, source, change.effectiveAt);
-    await db.prepare('UPDATE work_obligations SET due_at=?,remind_at=?,reminded_at=NULL,revision=revision+1 WHERE workspace_id=? AND id=? AND state=?').bind(dueAt, remindAt, w, row.id, 'pending').run();
+    await db.prepare('UPDATE work_obligations SET due_at=?,remind_at=?,reminded_at=NULL,revision=revision+1 WHERE workspace_id=? AND id=? AND state=?').bind(dueAt, remindAt, w, row.id, row.state).run();
   }
 }
 

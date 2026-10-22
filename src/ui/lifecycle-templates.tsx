@@ -38,7 +38,7 @@ export function LifecycleTemplates() {
         </section>
       ))}
       {owner && <ActionForm title="Add a task template" path="/lifecycle-templates" fields={fields} onSaved={templates.refresh}
-        explanation="Changes are versioned and audited. Reminders reach people in the portal; Slack, Teams and email reminders are not connected." />}
+        explanation="Changes are versioned and audited. Dated tasks need a configured business calendar in the change’s time zone. A missing manager holds their task with the accountable owner. Reminders reach people in the portal; Slack, Teams and email reminders are not connected." />}
     </section>
   );
 }
@@ -47,7 +47,7 @@ export function LifecycleTemplates() {
 export function LifecycleTaskCard({ task, onChanged }: { task: RecordValue; onChanged: () => void }) {
   return (
     <>
-      <Facts entries={[["Team", task.group_name ?? "The named person"], ["Due", date(task.due_at)], ["Reminder", task.remind_at ? date(task.remind_at) : "None"], ["Reminded", task.reminded_at ? date(task.reminded_at) : "Not yet"]]} />
+      <Facts entries={[["Team", task.group_name ?? "The named person"], ["Due", date(task.due_at)], ["Reminder", task.remind_at ? date(task.remind_at) : "None"], ["Reminded", task.reminded_at ? date(task.reminded_at) : "Not yet"], ["What remains", task.last_error]]} />
       <Notice>A done task is the team’s recorded completion, not independent verification. It grants no access.</Notice>
       {Boolean(task.can_complete) && <ActionForm title="Mark this task done" path={`/lifecycle-tasks/${text(task.id)}/complete`} defaults={{ revision: task.revision }} fields={[]} submit="Mark done" onSaved={onChanged} />}
       {Boolean(task.can_waive) && <ActionForm title="Waive this task" path={`/lifecycle-tasks/${text(task.id)}/waive`} defaults={{ revision: task.revision }} fields={[{ name: "reason", label: "Why is it waived?", required: true }]} submit="Waive" onSaved={onChanged} />}

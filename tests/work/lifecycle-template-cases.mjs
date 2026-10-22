@@ -41,6 +41,11 @@ export async function lifecycleTemplateChecks(api, db) {
 
   // A hire in Sales in Austin starting Monday gets the Sales/Austin template and the W-2 benefits tasks.
   const sam = await person('Life Sam', { department: sales.id, location: austin.id, title: ae.id, employmentType: w2.id });
+  const noCalendar = await admit(sam, 'synthetic-linen-17');
+  assert.equal(noCalendar.status, 409, 'LIFE-002 a missing calendar holds admission rather than inventing dates');
+  assert.match(noCalendar.value.error, /accountable owner owner.*America\/Chicago.*none is configured/);
+  assert.ok(!(await ok('/lifecycle')).items.some(l => l.source === 'synthetic-linen-17'), 'LIFE-002 no partial record is admitted without a task calendar');
+  await ok('/calendars', { name: 'synthetic-linen-18', timezone: 'America/Chicago', weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [] });
   const join = await admit(sam, 'synthetic-linen-9'); assert.equal(join.status, 201, JSON.stringify(join.value));
   const samTasks = await tasksOf(join.value.lifecycleId);
   assert.deepEqual(samTasks.map(t => t.title), ['Buddy assigned', 'Enrol in benefits', 'Order the laptop', 'Prepare the desk', 'Provision the CRM seat', 'Set the quota plan'],
@@ -72,8 +77,12 @@ export async function lifecycleTemplateChecks(api, db) {
   // Interns and leaves are matched on their own kind and values.
   const ivy = await person('Life Ivy', { employmentType: intern.id }, null);
   const internTasks = await tasksOf((await admit(ivy, 'synthetic-linen-12')).value.lifecycleId);
-  assert.deepEqual(internTasks.map(t => [t.title, t.owner_id]), [['Introduce the intern mentor', 'owner']], 'LIFE-002 an intern template applies, and a missing manager falls back to the accountable owner with its reason');
-  assert.match(internTasks[0].last_error, /No manager is recorded/);
+  assert.deepEqual(internTasks.map(t => [t.title, t.owner_id]), [['Introduce the intern mentor', 'owner']], 'LIFE-002 an intern template applies, with the accountable owner owning the missing-manager exception');
+  assert.equal(internTasks[0].state, 'blocked', 'LIFE-002 a manager task stays blocked until its manager responsibility is resolved');
+  assert.equal(internTasks[0].can_complete, false, 'LIFE-002 the owner is not offered completion as a missing manager');
+  assert.match(internTasks[0].last_error, /No active manager.*Accountable owner owner/);
+  assert.equal((await api(`/lifecycle-tasks/${internTasks[0].id}/complete`, { revision: internTasks[0].revision })).status, 409,
+    'LIFE-002 an owner cannot claim the missing manager completed the task');
   const leave = await admit(sam, 'synthetic-linen-13', { kind: 'leave', effectiveAt: '2027-09-01T17:00:00-05:00', baseline: { from: { department: sales.id } } });
   assert.deepEqual((await tasksOf(leave.value.lifecycleId)).map(t => t.title), ['Collect the laptop'], 'LIFE-002 a leave matches leave templates only');
 
@@ -114,6 +123,8 @@ export async function lifecycleTemplateChecks(api, db) {
   // Reminders reach each responsible person in their own requests, once.
   const now = Date.now(), soon = new Date(now + 3600_000).toISOString().replace(/\.\d+Z$/, 'Z');
   const fern = await person('Life Fern', { department: sales.id, location: austin.id, employmentType: w2.id });
+  if (!(await db.prepare("SELECT 1 FROM work_calendars WHERE workspace_id='a' AND timezone='UTC'").first()))
+    await ok('/calendars', { name: 'synthetic-linen-19', timezone: 'UTC', weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [] });
   const imminent = await admit(fern, 'synthetic-linen-15', { effectiveAt: soon, timezone: 'UTC' });
   assert.equal(imminent.status, 201, JSON.stringify(imminent.value));
   const due = (await api('/work/process-due', {})).value.items.filter(r => r.state === 'task_reminded');

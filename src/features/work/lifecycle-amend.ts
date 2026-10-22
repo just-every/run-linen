@@ -2,7 +2,7 @@ import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { createWork, getWork, permit, type WorkContext } from "./core";
 import { effectiveInstant } from "./lifecycle";
-import { redateLifecycleTasks } from "./lifecycle-tasks";
+import { calendarFor, redateLifecycleTasks } from "./lifecycle-tasks";
 export async function amendLifecycle(
   ctx: WorkContext,
   id: string,
@@ -13,13 +13,15 @@ export async function amendLifecycle(
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "hr"]);
   const row = await ctx.env.DB.prepare(
-    "SELECT * FROM work_lifecycle WHERE workspace_id=? AND id=?",
+    "SELECT l.*,json_extract(r.context_json,'$.ownerId') owner_id FROM work_lifecycle l JOIN work_records r ON r.workspace_id=l.workspace_id AND r.id=l.work_id WHERE l.workspace_id=? AND l.id=?",
   )
     .bind(ctx.principal.workspaceId, id)
-    .first<{ timezone: string; work_id: string }>();
+    .first<{ timezone: string; work_id: string; owner_id: string }>();
   if (!row) throw new ApiError(404, "not_found", "Lifecycle not found");
   await getWork(ctx, row.work_id);
   const due = effectiveAt ? effectiveInstant(effectiveAt, row.timezone) : null;
+  if (due && !cancel && await ctx.env.DB.prepare("SELECT 1 FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' AND state IN ('pending','blocked') AND template_json IS NOT NULL")
+    .bind(ctx.principal.workspaceId, id).first()) await calendarFor(ctx, row.timezone, row.owner_id);
   const result = await ctx.env.DB.prepare(
     "UPDATE work_lifecycle SET revision=revision+1,effective_at=COALESCE(?,effective_at),cancelled_at=? WHERE workspace_id=? AND id=? AND revision=?",
   )
@@ -32,7 +34,7 @@ export async function amendLifecycle(
   )
     .bind(due, Number(cancel), ctx.principal.workspaceId, id)
     .run();
-  await redateLifecycleTasks(ctx, id, { effectiveAt: due, cancel, timezone: row.timezone });
+  await redateLifecycleTasks(ctx, id, { effectiveAt: due, cancel, timezone: row.timezone, ownerId: row.owner_id });
   await ctx.env.DB.prepare(
     "UPDATE work_records SET revision=revision+1,updated_at=? WHERE workspace_id=? AND id=?",
   )
