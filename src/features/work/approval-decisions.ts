@@ -32,6 +32,7 @@ export async function prepareStageDecision(ctx: WorkContext, workId: string, inp
   }
   const { managerApproved } = await managerState(ctx, work, catalog, f);
   const chain = await chainStatus(ctx, work, catalog, f, managerApproved);
+  if(chain.rejected)throw new ApiError(409,'approval_not_open','This request revision was rejected; submit a revised request before deciding again');
   const stage = chain.stages.find(s => s.key === input.stageKey);
   if (!stage || !stage.applies) throw new ApiError(404, 'not_found', 'Approval stage not found');
   if (!stage.approvers.includes(ctx.principal.userId) || ctx.principal.userId === f.beneficiary_id) throw new ApiError(403, 'approval_denied', 'Only a current approver of this stage decides it');

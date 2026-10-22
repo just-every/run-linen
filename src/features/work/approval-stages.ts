@@ -69,12 +69,15 @@ export async function chainStatus(ctx: WorkContext, work: Pick<WorkRecord, 'id' 
     if (!row.applies) { stages.push({ ...base, state: 'skipped', approvers: [], decisions: [] }); continue; }
     const approvers = await stageApprovers(ctx, def, f, catalog);
     const approved = new Set(mine.filter(d => d.decision === 'approved' && approvers.includes(d.approver_id)).map(d => d.approver_id));
-    const rejected = mine.some(d => d.decision === 'rejected' && approvers.includes(d.approver_id));
+    // Decisions were authorized when recorded. Withdrawal can invalidate an approval, but cannot erase a final
+    // rejection of this exact revision; only a revised request opens a fresh decision.
+    const rejected = mine.some(d => d.decision === 'rejected');
     const satisfied = def.mode === 'any' ? approved.size >= 1 : approvers.length > 0 && approvers.every(a => approved.has(a));
-    const state: StageState = !prior ? 'waiting' : rejected ? 'rejected' : satisfied ? 'approved' : 'pending';
+    const state: StageState = rejected ? 'rejected' : !prior ? 'waiting' : satisfied ? 'approved' : 'pending';
     stages.push({ ...base, state, approvers, decisions: mine.map(d => ({ approverId: d.approver_id, decision: d.decision, comment: d.comment, channel: d.channel, at: d.created_at })) });
-    prior = prior && satisfied;
+    prior = prior && satisfied && !rejected;
   }
   const open = stages.find(s => s.applies && s.state !== 'approved');
-  return { stages, satisfied: managerApproved && !open, rejected: stages.some(s => s.state === 'rejected'), pending: stages.find(s => s.state === 'pending') ?? null };
+  const rejected=stages.some(s=>s.state==='rejected');
+  return { stages, satisfied: managerApproved && !open, rejected, pending: rejected?null:stages.find(s => s.state === 'pending') ?? null };
 }

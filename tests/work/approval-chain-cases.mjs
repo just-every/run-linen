@@ -90,6 +90,27 @@ export async function approvalChainChecks({db,ok,api,mf}){
  await ok(`/work-groups/${team.id}/members/${second}/remove`,{});
  assert.equal((await api(`/work/${work.id}/approval-stage`,{...withdrawn,decision:'approved',idempotencyKey:'synthetic-linen-728'},second)).status,403);
  await ok(`/work-groups/${team.id}/members`,{userId:second});await decide(second);assert.equal((await ok(`/work/${work.id}/approvals/${parallel.id}`,undefined,employee)).satisfied,true);
+ // A final rejection survives its holder's withdrawal, even when every remaining holder approved.
+ const refusedWork=await ok('/work',{title:'synthetic-linen-780',body:'synthetic-linen-780',deduplicationKey:'synthetic-linen-780'},employee);
+ const refusedInput={catalogId:parallel.id,catalogRevision:2,beneficiaryId:employee,purpose:'synthetic-linen-781'};
+ await ok(`/work/${refusedWork.id}/fulfilment`,refusedInput,employee);
+ const decisionOnRefused=async(user,decision)=>{
+  const q=(await ok('/approval-stages',undefined,user)).items.find(x=>x.workId===refusedWork.id);assert.ok(q);
+  return ok(`/work/${refusedWork.id}/approval-stage`,{...q,decision,idempotencyKey:crypto.randomUUID()},user);
+ };
+ await decisionOnRefused(finance,'approved');await decisionOnRefused(second,'rejected');
+ await ok(`/work-groups/${team.id}/members/${second}/remove`,{});
+ const afterWithdrawal=await ok(`/work/${refusedWork.id}/approvals/${parallel.id}`,undefined,employee);
+ assert.equal(afterWithdrawal.stages[0].state,'rejected');assert.equal(afterWithdrawal.rejected,true);assert.equal(afterWithdrawal.satisfied,false);
+ assert.equal((await ok('/approval-stages',undefined,finance)).items.some(x=>x.workId===refusedWork.id),false);
+ assert.equal((await ok(`/work/${refusedWork.id}/fulfilment`,refusedInput,employee)).state,'blocked','withdrawing the rejector cannot release fulfilment');
+ assert.equal((await ok(`/test/readiness/${refusedWork.id}/${parallel.id}`)).ready,false);
+ await ok(`/work-groups/${team.id}/members`,{userId:second});
+ assert.equal((await ok(`/work/${refusedWork.id}/approvals/${parallel.id}`,undefined,employee)).rejected,true,'restoring the holder also leaves that revision final');
+ await ok(`/work/${refusedWork.id}/commands`,{command:'pause',revision:1,reason:'synthetic-linen-782'},employee);
+ assert.equal((await ok(`/work/${refusedWork.id}/approvals/${parallel.id}`,undefined,employee)).rejected,false,'a revised request starts fresh decisions');
+ await decisionOnRefused(finance,'approved');await decisionOnRefused(second,'approved');
+ assert.equal((await ok(`/work/${refusedWork.id}/approvals/${parallel.id}`,undefined,employee)).satisfied,true);
  // Quote reader inheritance: current stage holders, replacement withdrawal and decided-holder custody.
  const quoted=await ok('/catalog',{name:'synthetic-linen-731',kind:'service',target:'synthetic-linen-731',ownerId:'owner',form:{quoteRequired:true,fields:[{id:'price',label:'synthetic-linen-732',type:'number',required:true}]}});
  await ok(`/catalog/${quoted.id}/approvals`,{revision:1,calendarId:calendar.id,approvals:[{...stage,costField:'price'}]});
