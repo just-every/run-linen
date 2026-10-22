@@ -30,6 +30,7 @@ export async function lightweightImportJourney({page,api,base,out}) {
       await fit('ticket-'+item.source,width);
     }
     await page.goto(base+'/app#/lifecycle');
+    await page.getByText('Record an authoritative HR change',{exact:true}).click();
     const choose=page.getByLabel('Person',{exact:true}).first();await choose.selectOption(created.people[0].id);assert.match(await choose.locator('option:checked').innerText(),/Avery Morgan/);
     await fit('people',width);
     await page.goto(base+'/app#/assets/'+asset.assets[0].id);await page.getByRole('heading',{name:'synthetic-linen-204',exact:true}).waitFor();
