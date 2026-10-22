@@ -18,7 +18,7 @@ export function taskChanges(before: Record<string, unknown> | null, after: Recor
 /** Place immediately after the mutation in its D1 batch: a losing CAS or ignored link adds no event. */
 export function taskEvent(ctx: WorkContext, taskId: string, action: 'created' | 'updated' | 'linked', changes: TaskChange[], at: string, origin?: TaskOrigin) {
   const actionName='work.project_task_'+action,values=changeRecords(changes.map(c=>c.field.endsWith(' link')?{...c,field:'link',after:{kind:c.field.slice(0,-5),id:c.after}}:c));
-  return historyEventStatement(ctx,{action:actionName,target:taskId,at,envelope:registeredHistory(actionName,{kind:'task',id:taskId},values.before,values.after,origin?{kind:'scenario',id:origin.scenarioId,name:origin.name,initiatedBy:ctx.principal.userId}:{kind:'person',id:ctx.principal.userId},[],'normal',at)});
+  return historyEventStatement(ctx,{action:actionName,target:taskId,at,envelope:registeredHistory(actionName,{kind:'task',id:taskId},values.before,values.after,origin?{kind:'scenario',id:origin.scenarioId,name:origin.name,initiatedBy:ctx.principal.userId}:{kind:'person',id:ctx.principal.userId},changes.filter(c=>c.field==='owner').flatMap(c=>[c.before,c.after]).filter((v):v is string=>typeof v==='string'),'normal',at)});
 }
 
 /** DESK-017: same live readership as PROJECT-001; historical values only ever come from their original event. */

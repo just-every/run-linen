@@ -731,6 +731,7 @@ try {
   assert.equal(restartedProposals.filter(p=>p.id===proposalProof.rejectedId).length,1,'PROB-002 rejected semantic cluster survives Worker restart');
   assert.equal(restartedProposals.find(p=>p.id===proposalProof.rejectedId).data.state,'rejected');
   assert.equal((await api(`/problems/${proposalProof.problemId}`)).value.data.sourceProposalId,proposalProof.acceptedId);
+  const classificationHistoryBefore=(await api(`/work/${classifiedId}/classification`)).value.history;
   const erased = await api("/people/employee/erase", {
     revision: 1,
     reason: "Fixture member erasure without HR record",
@@ -745,10 +746,17 @@ try {
   assert.equal((await api(`/work/${collaborationProof.workId}/collaboration`)).status,409);
   const erasedTaskHistory = (await api(taskHistoryProof.historyPath)).value.items;
   assert.deepEqual(erasedTaskHistory.map(e => e.id), taskHistoryProof.items.map(e => e.id), 'DESK-017 erasure retains every project-task event');
-  assert.ok(erasedTaskHistory.every(e => !e.changes.length && e.body.includes('removed by erasure')), 'DESK-017 untyped task values use blanket clearing and are never rebuilt');
+  assert.deepEqual(erasedTaskHistory,taskHistoryProof.items,'DESK-017 erasing an unrelated person leaves original task history unchanged');
   const erasedClassification=(await api(`/work/${classifiedId}/classification`)).value;
   assert.equal(erasedClassification.current,null,"DESK-002 authorized erasure clears classification content");
-  assert.deepEqual(erasedClassification.history,[],"DESK-002 redacted audit details cannot disclose content or break history rendering");
+  assert.deepEqual(erasedClassification.history.map(e=>[e.id,e.created_at]),classificationHistoryBefore.map(e=>[e.id,e.created_at]),'DESK-017 erasure retains classification event identity and time');
+  for(const original of classificationHistoryBefore){
+    const entry=erasedClassification.history.find(e=>e.id===original.id);
+    assert.equal(entry.redacted,'erasure');assert.ok(Number.isFinite(Date.parse(entry.redactedAt)));
+    for(const c of original.changes.filter(c=>['type','category','subcategory','impact','urgency','priority'].includes(c.field)))
+      assert.deepEqual(entry.changes.find(n=>n.field===c.field),c,'DESK-017 approved original classification facts survive erasure');
+    assert.equal(entry.reason,'[erased]','Free-text classification reason is removed');
+  }
   assert.equal((await api(`/work/${w}`)).value.work.title, "[erased]");
   assert.equal(
     (await mf.dispatchFetch(`http://localhost/attachments/${attachment.id}`))
@@ -773,9 +781,21 @@ try {
   const erasedTaskActor = await api('/people/search-agent/erase', { revision: 0, reason: 'DESK-017 fixture actor erasure' });
   assert.equal(erasedTaskActor.status, 200, JSON.stringify(erasedTaskActor));
   const anonymizedTaskHistory = (await api(taskHistoryProof.historyPath)).value.items;
-  assert.ok(anonymizedTaskHistory.some(e => e.actor === '[erased]'), 'DESK-017 erased task actor is anonymized');
+  assert.ok(anonymizedTaskHistory.some(e=>e.actor==='Erased person'&&!e.initiatedBy),'DESK-017 erased task actor is unlinkable');
   assert.deepEqual(anonymizedTaskHistory.map(e => e.id), taskHistoryProof.items.map(e => e.id));
-  assert.ok(anonymizedTaskHistory.every(e => !e.changes.length), 'DESK-017 erased payload values remain absent');
+  assert.deepEqual(anonymizedTaskHistory.map(e=>e.at),taskHistoryProof.items.map(e=>e.at),'Original event times remain unchanged');
+  const creation=anonymizedTaskHistory.find(e=>e.id===taskHistoryProof.items[0].id);
+  assert.equal(creation.redacted,'erasure');assert.ok(Number.isFinite(Date.parse(creation.redactedAt)));
+  assert.equal(creation.changes.find(c=>c.field==='title').after,'[erased]','Free-text task title is removed');
+  assert.equal(creation.changes.find(c=>c.field==='owner').after,'Erased person','Erased person-valued field is removed');
+  for(const original of taskHistoryProof.items){
+    const entry=anonymizedTaskHistory.find(e=>e.id===original.id);
+    for(const c of original.changes.filter(c=>['state','dueDate','dependencies','asset link'].includes(c.field)))
+      assert.deepEqual(entry.changes.find(n=>n.field===c.field),c,'Original approved task state, timing and link facts remain exact');
+  }
+  assert.ok(!JSON.stringify(anonymizedTaskHistory).includes('search-agent'),'Erased account identifier is absent from the public history projection');
+  await restartedDb.prepare("UPDATE work_project_tasks SET title='synthetic-linen-91' WHERE id=(SELECT target FROM audit_events WHERE id=?)").bind(creation.id).run();
+  assert.deepEqual((await api(taskHistoryProof.historyPath)).value.items,anonymizedTaskHistory,'Removed task title is never reconstructed from mutable current state');
   console.log(
     "WORK runtime passed: D1/R2 restart, scoped/revoked membership, restricted/HR/private data, dedup/CAS, custody, DST/holidays, JML dependencies/cancellation, identity and distinct mapped-subject intents, knowledge/escalation, leased intake, native held restore and member erasure/replay denial",
   );
