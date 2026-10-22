@@ -58,7 +58,7 @@ export async function relationshipChecks(api) {
   const history = async (id, headers) => (await make(`/work/${id}/activity`, undefined, headers, 200)).items;
   const expectChange = (items, field, before, after) => {
     const entry = items.find(e => e.changes.some(c => c.field === field && JSON.stringify(c.before) === JSON.stringify(before) && JSON.stringify(c.after) === JSON.stringify(after)));
-    assert.ok(entry, `DESK-017 ${field}: ${JSON.stringify(before)} -> ${JSON.stringify(after)}`);
+    assert.ok(entry, `DESK-017 ${field}: ${JSON.stringify(before)} -> ${JSON.stringify(after)}; original link events ${JSON.stringify(items.filter(e=>e.action==='linked'))}`);
     assert.equal(entry.actor, 'Owner', 'DESK-017 relationship actor');
     assert.equal(entry.actorKind, 'person');
     assert.ok(Number.isFinite(Date.parse(entry.at)), 'DESK-017 relationship time');
