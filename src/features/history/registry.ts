@@ -56,7 +56,7 @@ export function decodeHistory(payload:unknown):HistoryEnvelope|null {
   const p=typeof payload==='string'?parse(payload):payload;
   if(!p || typeof p!=='object')return null;
   const e=p as HistoryEnvelope;
-  if(e.schema!=='linen.history'||e.version!==1||!historyActions.has(e.action)||!e.record||!['ticket','task','change','problem','asset','service'].includes(e.record.kind)||typeof e.record.id!=='string'||!e.actor||typeof e.actor.id!=='string'||!Array.isArray(e.subjects)||!e.subjects.every(v=>typeof v==='string')||!['normal','hr','restricted'].includes(e.protection)||!Array.isArray(e.changes)||!e.changes.every(c=>c && typeof c.field==='string' && Object.hasOwn(c,'before') && Object.hasOwn(c,'after')))return null;
+  if(e.schema!=='linen.history'||e.version!==1||!historyActions.has(e.action)||!e.record||!['ticket','task','change','problem','asset','service'].includes(e.record.kind)||typeof e.record.id!=='string'||!e.actor||typeof e.actor.id!=='string'||!['person','rule','scenario','agent','integration'].includes(e.actor.kind)||!Array.isArray(e.subjects)||!e.subjects.every(v=>typeof v==='string')||!['normal','hr','restricted'].includes(e.protection)||!Array.isArray(e.changes)||!e.changes.every(c=>c && typeof c.field==='string' && Object.hasOwn(c,'before') && Object.hasOwn(c,'after')))return null;
   return e;
 }
 function parse(value:string):unknown { try{return JSON.parse(value);}catch{return null;} }

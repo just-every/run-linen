@@ -44,7 +44,7 @@ export const portabilityPolicy={
   return true;
  },
  exportRow(table,row){
-  historyExportRow(table,row);
+  row=historyExportRow(table,row);
   if(table==='svc_records' && row.kind==='release'){
    const data=JSON.parse(row.data_json);
    return {...row,data_json:JSON.stringify({...data,importedState:data.importedState||data.state,state:'imported-review',decisions:[],

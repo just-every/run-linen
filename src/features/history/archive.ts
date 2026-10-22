@@ -1,3 +1,4 @@
+import { ApiError } from '../../platform/http';
 import type { Env } from '../../platform/types';
 import { decodeHistory } from './registry';
 import { identityMatcher } from './identity';
@@ -11,7 +12,7 @@ export async function historyArchiveRow(ctx:Context,table:string,row:Record<stri
   if(!['audit_events','svc_events'].includes(table))return {row,typed:false};
   const store=table==='audit_events'?'audit':'service',column=store==='audit'?'detail_json':'data_json';
   let e=decodeHistory(row[column]);
-  if(e && table==='audit_events' && typeof row.action==='string' && row.action!==e.action)e=null;
+  if(e && table==='audit_events' && typeof row.action==='string' && row.action!==e.action)throw new ApiError(409,'history_action_conflict','History action does not match its original event');
   const key=historyEventKey(store,String(row.id),e);
   const prior=await ctx.env.DB.prepare('SELECT envelope_json FROM history_redactions WHERE workspace_id=? AND event_key=?').bind(ctx.principal.workspaceId,key).first<{envelope_json:string}>();
   if(ingress && e && !prior){
