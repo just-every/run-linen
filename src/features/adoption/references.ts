@@ -11,6 +11,12 @@ const fields: Record<string, string[]> = { department_id:['work_departments'], a
 export function references(record: NativeRecord): Reference[] {
     const out: Reference[] = [];
     if(['work_approval_stages','work_approval_decisions'].includes(record.table) && typeof record.row.fulfilment_id==='string')out.push({fromTable:record.table,fromKey:record.key,field:'fulfilment_id',targets:['work_fulfilments'],key:record.row.fulfilment_id});
+    if(record.table==='work_records'&&record.row.protected_departments_json!==undefined) {
+        let retained;
+        try {retained=JSON.parse(String(record.row.protected_departments_json));}catch{throw new ApiError(422,'restore_department','Typed retained HR workspace references required');}
+        if(!Array.isArray(retained)||retained.some(value=>typeof value!=='string'||!value)||new Set(retained).size!==retained.length)throw new ApiError(422,'restore_department','Typed retained HR workspace references required');
+        for(const key of retained)out.push({fromTable:record.table,fromKey:record.key,field:'protected_departments_json',targets:['work_departments'],key});
+    }
     if(record.table==='work_fulfilments' && record.row.application_json) {
         let value;
         try {value=JSON.parse(String(record.row.application_json));}catch{throw new ApiError(422,'restore_application_snapshot','Valid application snapshot required');}

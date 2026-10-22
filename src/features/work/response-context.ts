@@ -1,4 +1,4 @@
-import { departmentStaffPrincipal } from './scope';
+import { workDepartmentStaff } from './scope';
 import { ApiError } from '../../platform/http';
 import { conversation, permit, type WorkContext } from './core';
 import { searchKnowledge } from './knowledge';
@@ -7,7 +7,7 @@ import { assertReplyKnowledgeAudience } from './response-knowledge-audience';
 export async function responseContext(ctx: WorkContext, workId: string, kind: 'reply' | 'summary', articleIds: unknown) {
   const detail = await conversation(ctx, workId);
   permit(ctx, ['owner', 'operator']);
-  if(!departmentStaffPrincipal(ctx.principal,detail.work.department_id))throw new ApiError(403,'department_staff','Current department staff authority required');
+  if(!workDepartmentStaff(ctx.principal,detail.work))throw new ApiError(403,'department_staff','Current department staff authority required');
   if (!Array.isArray(articleIds) || articleIds.length > 5 || articleIds.some(id => typeof id !== 'string') || new Set(articleIds).size !== articleIds.length)
     throw new ApiError(422, 'response_articles', 'Choose up to five distinct current knowledge articles');
   const permitted = (await searchKnowledge(ctx, '')).filter(a => kind === 'summary' || a.scope === 'employees');

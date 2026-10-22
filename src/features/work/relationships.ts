@@ -1,4 +1,4 @@
-import { departmentStaffPrincipal } from './scope';
+import { workDepartmentStaff } from './scope';
 import { departmentNotHrSql, departmentWorkBatch } from './department-spaces';
 import { currentWorkPrincipal } from "./identity";
 import { closeResolution } from "./desk-fields";
@@ -29,11 +29,11 @@ export async function mergeWork(ctx: WorkContext, duplicateId: string, input: { 
   const reason = requiredString(input.reason, "reason", 2000);
   if (typeof input.intoId !== "string" || input.intoId === duplicateId) throw new ApiError(422, "merge_target", "Choose a different surviving ticket");
   const duplicate = await getWork(ctx, duplicateId) as WorkRecord & { merged_into?: string | null }, into = await getWork(ctx, input.intoId) as WorkRecord & { merged_into?: string | null };
-  if(!departmentStaffPrincipal(ctx.principal,duplicate.department_id)||!departmentStaffPrincipal(ctx.principal,into.department_id))throw new ApiError(403,'department_staff','Current department staff authority required');
+  if(!workDepartmentStaff(ctx.principal,duplicate)||!workDepartmentStaff(ctx.principal,into))throw new ApiError(403,'department_staff','Current department staff authority required');
   if((duplicate.department_id??null)!==(into.department_id??null))throw new ApiError(422,'merge_department','Merge requests only within the same department workspace');
   if (duplicate.sensitivity !== "normal" || into.sensitivity !== "normal")
     throw new ApiError(422, "merge_sensitivity", "HR and restricted tickets are never merged");
-  if(duplicate.department_kind==='hr'||into.department_kind==='hr')throw new ApiError(422,'merge_sensitivity','HR workspace tickets are never merged');
+  if(duplicate.department_kind==='hr'||into.department_kind==='hr'||JSON.parse(duplicate.protected_departments_json??'[]').length||JSON.parse(into.protected_departments_json??'[]').length)throw new ApiError(422,'merge_sensitivity','HR workspace tickets are never merged');
   if (!open(duplicate) || !open(into)) throw new ApiError(409, "merge_state", "Both tickets must be open and not already merged");
   const at = now(), db = ctx.env.DB, ws = ctx.principal.workspaceId;
   // DESK-010: the merge is an automatic close, recorded with the Duplicate code and its public closing line as close notes.
@@ -65,7 +65,7 @@ export async function splitWork(ctx: WorkContext, workId: string, input: { title
   agentOnly(ctx);
   const title = requiredString(input.title, "title", 300), reason = requiredString(input.reason, "reason", 2000);
   const source = await getWork(ctx, workId);
-  if(!departmentStaffPrincipal(ctx.principal,source.department_id))throw new ApiError(403,'department_staff','Current department staff authority required');
+  if(!workDepartmentStaff(ctx.principal,source))throw new ApiError(403,'department_staff','Current department staff authority required');
   const ids = Array.isArray(input.messageIds) ? [...new Set(input.messageIds)] : [];
   if (!ids.length || ids.length > 100) throw new ApiError(422, "split_messages", "Choose 1 to 100 public messages to move");
   const messages = (await ctx.env.DB.prepare("SELECT * FROM work_messages WHERE workspace_id=? AND work_id=? AND visibility='public' AND id IN (SELECT value FROM json_each(?)) ORDER BY created_at,id")
@@ -73,8 +73,8 @@ export async function splitWork(ctx: WorkContext, workId: string, input: { title
   if (messages.length !== ids.length) throw new ApiError(422, "split_messages", "Only this ticket's public messages can be split out");
   const at = now(), db = ctx.env.DB, ws = ctx.principal.workspaceId, newId = id();
   await departmentWorkBatch(ctx,source,[
-    db.prepare("INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,state,sensitivity,impact,created_at,updated_at,context_json,dedup_key,split_from,department_id) VALUES(?,?,?,?,?,?,'open',?,?,?,?,'{}',?,?,?)")
-      .bind(newId, ws, source.requester_id, source.beneficiary_id, source.kind, title, source.sensitivity, (source as any).impact ?? "individual", at, at, `split:${source.id}:${newId}`, source.id,source.department_id??null),
+    db.prepare("INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,state,sensitivity,impact,created_at,updated_at,context_json,dedup_key,split_from,department_id,protected_departments_json) VALUES(?,?,?,?,?,?,'open',?,?,?,?,'{}',?,?,?,?)")
+      .bind(newId, ws, source.requester_id, source.beneficiary_id, source.kind, title, source.sensitivity, (source as any).impact ?? "individual", at, at, `split:${source.id}:${newId}`, source.id,source.department_id??null,source.protected_departments_json??'[]'),
     ...messages.map((m) => db.prepare("INSERT INTO work_messages(id,workspace_id,work_id,author_id,visibility,body,source_key,created_at) VALUES(?,?,?,?,'public',?,?,?)")
       .bind(id(), ws, newId, m.author_id, m.body, `split:${m.id}`, m.created_at)),
     publicNote(ctx, newId, `split-from:${source.id}`, `Split from ticket ${ref(source.id)}: ${messages.length} message${messages.length === 1 ? "" : "s"} moved here, each linked to its original.`, at),
@@ -101,7 +101,7 @@ export async function setParent(ctx: WorkContext, childId: string, input: { pare
       .bind(parentId, ctx.principal.workspaceId, childId).first())
       throw new ApiError(422, "parent_cycle", "A ticket cannot be its own ancestor");
   }
-  if(!departmentStaffPrincipal(ctx.principal,child.department_id))throw new ApiError(403,'department_staff','Current department staff authority required');
+  if(!workDepartmentStaff(ctx.principal,child))throw new ApiError(403,'department_staff','Current department staff authority required');
   const previous = (child as WorkRecord & { parent_id: string | null }).parent_id;
   if (parentId === previous) return readRelationships(ctx, childId);
   const at = now(), ws = ctx.principal.workspaceId;
@@ -126,7 +126,7 @@ export async function linkWork(ctx: WorkContext, workId: string, input: { kind?:
   await currentWorkPrincipal(ctx);
   agentOnly(ctx);
   const work = await getWork(ctx, workId), kind = input.kind as LinkKind;
-  if(!departmentStaffPrincipal(ctx.principal,work.department_id))throw new ApiError(403,'department_staff','Current department staff authority required');
+  if(!workDepartmentStaff(ctx.principal,work))throw new ApiError(403,'department_staff','Current department staff authority required');
   if (!linkKinds.includes(kind) || typeof input.targetId !== "string" || !input.targetId) throw new ApiError(422, "work_link", "Link an asset, problem, change, release or engineering-issue URL");
   if (kind === "engineering_issue") {
     let url: URL | null = null;
@@ -150,7 +150,7 @@ export async function readRelationships(ctx: WorkContext, workId: string) {
   permit(ctx, ["owner", "operator", "auditor"]);
   const work = await getWork(ctx, workId) as WorkRecord & { merged_into?: string | null; split_from?: string | null; parent_id?: string | null };
   const ws = ctx.principal.workspaceId, db = ctx.env.DB;
-  const readable = async (ids: string[]) => (await Promise.all(ids.map((i) => db.prepare("SELECT id,title,state,sensitivity,requester_id,beneficiary_id,department_id FROM work_records WHERE workspace_id=? AND id=?").bind(ws, i).first<any>())))
+  const readable = async (ids: string[]) => (await Promise.all(ids.map((i) => db.prepare("SELECT id,title,state,sensitivity,requester_id,beneficiary_id,department_id,protected_departments_json FROM work_records WHERE workspace_id=? AND id=?").bind(ws, i).first<any>())))
     .filter((w) => w && workReadable(ctx.principal, w)).map((w) => ({ id: w.id, title: w.title, state: w.state }));
   const [links, merged, splits, children, participants] = await Promise.all([
     db.prepare("SELECT kind,target_id,created_at FROM work_links WHERE workspace_id=? AND work_id=? ORDER BY kind,created_at").bind(ws, workId).all<any>(),
@@ -177,7 +177,7 @@ export async function linkedWork(ctx: WorkContext, kind: string, targetId: strin
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "operator", "auditor"]);
   if (!linkKinds.includes(kind as LinkKind)) throw new ApiError(422, "work_link", "Choose an asset, problem, change, release or engineering issue");
-  const rows = (await ctx.env.DB.prepare("SELECT w.id,w.title,w.state,w.sensitivity,w.requester_id,w.beneficiary_id,w.department_id FROM work_links l JOIN work_records w ON w.workspace_id=l.workspace_id AND w.id=l.work_id WHERE l.workspace_id=? AND l.kind=? AND l.target_id=? ORDER BY l.created_at")
+  const rows = (await ctx.env.DB.prepare("SELECT w.id,w.title,w.state,w.sensitivity,w.requester_id,w.beneficiary_id,w.department_id,w.protected_departments_json FROM work_links l JOIN work_records w ON w.workspace_id=l.workspace_id AND w.id=l.work_id WHERE l.workspace_id=? AND l.kind=? AND l.target_id=? ORDER BY l.created_at")
     .bind(ctx.principal.workspaceId, kind, targetId).all<any>()).results;
   return rows.filter((w) => workReadable(ctx.principal, w)).map((w) => ({ id: w.id, title: w.title, state: w.state }));
 }

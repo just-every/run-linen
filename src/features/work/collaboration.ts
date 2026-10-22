@@ -9,7 +9,7 @@ import { workReadable, workPrivateReadable } from './scope';
 export async function collaborationOwner(ctx: WorkContext, workId: string) {
   await currentWorkPrincipal(ctx); permit(ctx, ['owner']);
   const work = await getWork(ctx, workId);
-  if (work.sensitivity !== 'normal' || work.department_kind==='hr') throw new ApiError(403, 'collaboration_sensitive', 'New collaboration is available only on normal tickets');
+  if (work.sensitivity !== 'normal' || work.department_kind==='hr' || JSON.parse(work.protected_departments_json??'[]').length>0) throw new ApiError(403, 'collaboration_sensitive', 'New collaboration is available only on normal tickets');
   if (await ctx.env.DB.prepare('SELECT 1 FROM work_erasure WHERE workspace_id=? AND person_id IN (?,?)')
     .bind(ctx.principal.workspaceId, work.requester_id, work.beneficiary_id).first())
     throw new ApiError(409, 'erased', 'Erased tickets cannot start collaboration');

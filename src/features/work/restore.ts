@@ -1,3 +1,4 @@
+import { protectedDepartments } from './scope';
 import { checkTaskPlan } from './catalog-task-plan';
 import { attributeDimensions, normalizeAudience, normalizeAttributes } from './catalog-audience';
 import { prepareApplicationWorkRestore } from './application-restore';
@@ -99,6 +100,12 @@ export async function restoreAdoptionRecord(
   if(input.table==='work_departments') {
     if(!['it','hr','facilities','finance','legal','custom'].includes(String(row.kind))||typeof row.name!=='string'||!row.name.trim())throw new ApiError(422,'restore_department','Typed department workspace metadata required');
     row.active=0;
+  }
+  if(input.table==='work_records'&&row.protected_departments_json!==undefined) {
+    if(typeof row.protected_departments_json!=='string')throw new ApiError(422,'restore_department','Typed retained department restrictions required');
+    const retained=protectedDepartments({protected_departments_json:row.protected_departments_json});
+    if(retained===null)throw new ApiError(422,'restore_department','Typed retained department restrictions required');
+    for(const departmentId of retained)if(!await ctx.env.DB.prepare("SELECT 1 FROM work_departments WHERE workspace_id=? AND id=? AND kind='hr'").bind(ctx.principal.workspaceId,departmentId).first())throw new ApiError(422,'restore_department','Restore each retained HR workspace before its request');
   }
   if(row.department_id!==undefined&&row.department_id!==null&&!await ctx.env.DB.prepare('SELECT 1 FROM work_departments WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,row.department_id).first())throw new ApiError(422,'restore_department','Restore the referenced department workspace first');
   if (

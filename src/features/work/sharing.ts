@@ -23,7 +23,7 @@ const teamWork = `${reports} SELECT w.id,w.title,w.state,w.kind,w.created_at,w.u
 function sharer(ctx: WorkContext, work: WorkRecord) {
   const me = ctx.principal.userId;
   if (work.requester_id !== me && work.beneficiary_id !== me) throw new ApiError(403, "share_forbidden", "Only the requester or the person it is for can share this request");
-  if (work.sensitivity !== "normal" || work.department_kind==='hr') throw new ApiError(422, "share_sensitivity", "HR and restricted requests are never shared");
+  if (work.sensitivity !== "normal" || work.department_kind==='hr' || JSON.parse(work.protected_departments_json??'[]').length>0) throw new ApiError(422, "share_sensitivity", "HR and restricted requests are never shared");
 }
 
 export async function shareWork(ctx: WorkContext, workId: string, input: Record<string, unknown>) {

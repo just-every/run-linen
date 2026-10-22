@@ -1,4 +1,4 @@
-import { workPrivateReadable } from './scope';
+import { workPrivateReadable, workDepartmentScoped } from './scope';
 import { departmentWorkBatch } from './department-spaces';
 import { ApiError, id, now } from '../../platform/http';
 import { getWork, operator, type WorkContext } from './core';
@@ -24,7 +24,7 @@ export async function timeTarget(ctx: WorkContext, workId: string, obligationId?
 export async function listTime(ctx: WorkContext, workId: string) {
   const work=await getWork(ctx, workId);
   // Notes and other people's effort are service-team records, not conversation messages.
-  const team = work.department_id ? workPrivateReadable(ctx.principal,work) : operator(ctx.principal)||ctx.principal.roles.includes('hr');
+  const team = workDepartmentScoped(work) ? workPrivateReadable(ctx.principal,work) : operator(ctx.principal)||ctx.principal.roles.includes('hr');
   return (await ctx.env.DB.prepare(`SELECT * FROM work_time_entries WHERE workspace_id=? AND work_id=? AND (?=1 OR actor_id=?) ORDER BY created_at,id`)
     .bind(ctx.principal.workspaceId, workId, Number(team), ctx.principal.userId).all<TimeEntry>()).results;
 }
@@ -39,7 +39,7 @@ export async function recordTime(ctx: WorkContext, workId: string, input: {
   if (!actorRole) throw new ApiError(403, 'human_role_required', 'A current human workspace role is required');
   const ownRole = ['operator','hr'].includes(actorRole) ? 'agent' : actorRole;
   const effortRole = input.effortRole || ownRole;
-  if (effortRole !== ownRole && !(operator(ctx.principal) && (!work.department_id||workPrivateReadable(ctx.principal,work)) && ['vendor','technician'].includes(effortRole)))
+  if (effortRole !== ownRole && !(operator(ctx.principal) && (!workDepartmentScoped(work)||workPrivateReadable(ctx.principal,work)) && ['vendor','technician'].includes(effortRole)))
     throw new ApiError(403, 'effort_role', 'Record your own role, or explicitly attributed vendor or technician work as a service operator');
   if (!['manual','measured'].includes(input.source) || typeof input.deduplicationKey !== 'string' || !input.deduplicationKey.trim() || input.deduplicationKey.length>200 || (input.note !== undefined && (typeof input.note !== 'string' || input.note.length>2000)))
     throw new ApiError(422, 'time_input', 'Source, stable entry identity and a note of at most 2000 characters required');

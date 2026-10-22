@@ -5,7 +5,7 @@ import { toolScopes } from './credentials';
 
 /** Queue readership is separate from every REST, requester, share and group-member rule. */
 export function readableTicket(queueOnly = false) {
-  return `NOT EXISTS(SELECT 1 FROM work_departments d WHERE d.workspace_id=w.workspace_id AND d.id=w.department_id AND d.kind='hr')
+  return `json_array_length(w.protected_departments_json)=0 AND NOT EXISTS(SELECT 1 FROM work_departments d WHERE d.workspace_id=w.workspace_id AND d.id=w.department_id AND d.kind='hr')
     AND w.workspace_id=c.workspace_id AND w.sensitivity='normal'
     AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=w.workspace_id AND e.person_id IN(w.requester_id,w.beneficiary_id))
     AND NOT EXISTS(SELECT 1 FROM platform_identity_erasures e WHERE e.workspace_id=w.workspace_id AND e.user_id IN(w.requester_id,w.beneficiary_id))

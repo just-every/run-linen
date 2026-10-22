@@ -1,4 +1,4 @@
-import { departmentStaffPrincipal, workPrivateReadable } from './scope';
+import { workDepartmentStaff, workPrivateReadable } from './scope';
 import { departmentWorkBatch } from './department-spaces';
 import { routeUnplaced } from './desk-routing';
 import { bindSlaPolicy } from './sla-policies';
@@ -57,7 +57,7 @@ async function apply(ctx: WorkContext, work: WorkRecord, expected: number, after
 export async function overrideClassification(ctx: WorkContext, workId: string, input: any) {
   const work = await getWork(ctx, workId);
   permit(ctx, ['owner', 'operator']);
-  if(!departmentStaffPrincipal(ctx.principal,work.department_id))throw new ApiError(403,'department_staff','Current department staff authority required');
+  if(!workDepartmentStaff(ctx.principal,work))throw new ApiError(403,'department_staff','Current department staff authority required');
   if (input.workRevision !== work.revision || !Number.isInteger(input.revision))
     throw new ApiError(409, 'classification_conflict', 'Refresh the current request before overriding');
   await apply(ctx, work, input.revision, classification(input), requiredString(input.reason, 'reason', 3000));
@@ -65,7 +65,7 @@ export async function overrideClassification(ctx: WorkContext, workId: string, i
 }
 export async function proposeClassification(ctx: WorkContext, workId: string, input: any) {
   const work = await getWork(ctx, workId);
-  if ((!operator(ctx.principal)||!departmentStaffPrincipal(ctx.principal,work.department_id)) && work.requester_id !== ctx.principal.userId)
+  if ((!operator(ctx.principal)||!workDepartmentStaff(ctx.principal,work)) && work.requester_id !== ctx.principal.userId)
     throw new ApiError(403, 'classification_actor', 'Requester or current service agent required');
   if (input.workRevision !== work.revision || !Number.isInteger(input.revision))
     throw new ApiError(409, 'classification_conflict', 'Refresh the current request before proposing');

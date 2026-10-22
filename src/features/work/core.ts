@@ -1,4 +1,4 @@
-import { workReadable, workPrivateReadable, departmentStaffPrincipal } from './scope';
+import { workReadable, workPrivateReadable, workDepartmentStaff, workDepartmentScoped } from './scope';
 import { departmentWorkBatch, requestDepartment, workReadSql, departmentNotHrSql, requireWorkPrivate } from './department-spaces';
 import { preparePendingRequest, pendingRequestSnapshot } from './pending-services';
 import { progressFor, requestProgress } from "./progress";
@@ -24,6 +24,7 @@ export interface WorkRecord {
   id: string;
   workspace_id: string;
   department_id?: string | null;
+  protected_departments_json?: string;
   department_name?: string | null;
   department_kind?: string | null;
   requester_id: string;
@@ -139,7 +140,7 @@ export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
     .bind(p.workspaceId, ids,p.workspaceId,ids).all<{ work_id: string; name: string; kind: string }>()).results;
   const seesAttention = operator(p) || p.roles.includes('hr');
   return Promise.all(rows.map(async (row: any) => {
-    const staff = !row.department_id || workPrivateReadable(p,row);
+    const staff = !workDepartmentScoped(row) || workPrivateReadable(p,row);
     const progress = flagged.has(row.id) ? await progressFor(ctx, row) : [];
     const item = { ...row, progress, services: services.filter(s => s.work_id === row.id).map(({ name, kind }) => ({ name, kind })) };
     // Ordinary conversation listings do not expose the operator attention packet, the group or the priority.
@@ -357,7 +358,7 @@ export async function appendMessage(
     );
   if (
     input.visibility === "public" &&
-    (work.department_id ? departmentStaffPrincipal(ctx.principal,work.department_id) && work.requester_id!==ctx.principal.userId && work.beneficiary_id!==ctx.principal.userId : operator(ctx.principal)) &&
+    (workDepartmentScoped(work) ? workDepartmentStaff(ctx.principal,work) && work.requester_id!==ctx.principal.userId && work.beneficiary_id!==ctx.principal.userId : operator(ctx.principal)) &&
     !input.sourceMessageId.startsWith("transition:")
   )
     statements.push(
@@ -453,7 +454,7 @@ export async function transitionWork(
     throw new ApiError(422, "invalid_command", "Unknown work command");
   if (!["reopen", "cancel"].includes(command)) {
     permit(ctx, ["owner", "operator", "hr"]);
-    if(!departmentStaffPrincipal(ctx.principal,work.department_id))throw new ApiError(403,"department_staff","Current department staff authority required");
+    if(!workDepartmentStaff(ctx.principal,work))throw new ApiError(403,"department_staff","Current department staff authority required");
   }
   if (command === "assign") {
     const member = await ctx.env.DB.prepare(
@@ -469,7 +470,7 @@ export async function transitionWork(
       );
     const targetRoles=await ctx.env.DB.prepare('SELECT roles_json FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId,assigneeId!).first<{roles_json:string}>();
     const destinationPrincipal=await currentPrincipal(ctx.env.DB,{...ctx.principal,userId:assigneeId!,roles:JSON.parse(targetRoles!.roles_json)});
-    if(!departmentStaffPrincipal(destinationPrincipal,work.department_id))throw new ApiError(422,'department_assignee','Assignee must be current staff of this department');
+    if(!workDepartmentStaff(destinationPrincipal,work))throw new ApiError(422,'department_assignee','Assignee must be current staff of this department');
     // DESK-001: a ticket's owner is a member of its accountable group.
     if (work.group_id && !await groupMember(ctx, work.group_id, assigneeId!))
       throw new ApiError(422, "owner_not_in_group", "The ticket's owner must be an agent in its group");
