@@ -71,7 +71,7 @@ export async function archiveMutationBatch<T = unknown>(
     ]);
     return results.slice(1, -1);
   } catch (error) {
-    if (/CHECK constraint failed/i.test(String(error)))
+    if (/CHECK constraint failed: valid\s*=\s*1/i.test(String(error)))
       throw new ApiError(409, 'erasure_changed_since_review', 'Privacy or restore authority changed since review');
     throw error;
   }
