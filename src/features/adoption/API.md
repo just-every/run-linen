@@ -167,7 +167,8 @@ Current owners alone can read these unmapped records and retained source files.
 `/:id/resume` advances the durable job; `/:id`, `/:id/history`, `/:id/artifacts`
 and `/:id/artifacts/:ordinal` inspect it. `/:id/undo` and `/:id/rollback` retain
 conflict protection for later native edits. Jobs are scoped to their source door
-and importing owner. Originals are retained exactly, withdrawn on related
+and importing owner. An operation key is unique to that owner and destination
+across source doors; use a fresh key for a different source/job. Originals are retained exactly, withdrawn on related
 person erasure, and unsanitized replay is refused. The existing archive retention
 and erasure rules apply; a restore confers no execution or membership authority.
 

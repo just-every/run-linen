@@ -10,7 +10,7 @@ export async function lightweightImportJourney({page,api,base,out}) {
   const zendesk={account:'synthetic-linen-browser',files:[{name:'tickets.ndjson',format:'tickets-json',base64:bytes.toString('base64')}]};
   const imported=[];
   for(const [path,data]of [['/adoption/csv-imports/tickets',input],['/adoption/zendesk-imports',zendesk]]) {
-    const review=await api(path+'/dry-run',{input:data}),job=await api(path,{input:data,reviewedFingerprint:review.fingerprint,operationKey:'synthetic-linen-browser',acceptOmissions:true});
+    const review=await api(path+'/dry-run',{input:data}),job=await api(path,{input:data,reviewedFingerprint:review.fingerprint,operationKey:'synthetic-linen-browser-'+(path.includes('zendesk')?'zendesk':'csv'),acceptOmissions:true});
     for(let i=0;i<6;i++){const result=await api(`${path}/${job.id}/resume`,{});if(result.state==='completed')break;assert.ok(i<5,JSON.stringify(result));}
     imported.push({id:review.records[0].targets[0].id,source:path.includes('zendesk')?'zendesk':'csv'});
   }
