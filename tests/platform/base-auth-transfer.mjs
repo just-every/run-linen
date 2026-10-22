@@ -237,6 +237,10 @@ try{
  const session=await(await request('/api/v1/session',{cookie})).json();assert.equal(session.user.email,'owner@example.test')
  const policyView=await(await request('/api/v1/access-policies',{cookie})).json();
  const policy=policyView.items.find(p=>p.id==='synthetic-linen-12010');assert.ok(policy);assert.equal(policy.active,false,'LIFE-003 the current owner reads an archived baseline as inactive');
+ const policyJoin=await request('/api/v1/lifecycle',{cookie,headers:{'X-Linen-CSRF':session.csrfToken},body:{personId:'owner-person',kind:'join',source:'synthetic-linen-12012',sourceRevision:1,effectiveAt:stamp,timezone:'UTC',ownerId:'owner',identityTarget:'synthetic-linen-12013',retained:[],added:[],removed:[],deviceIds:[],baseline:{to:{department:'dept-sales'}}}});
+ assert.equal(policyJoin.status,201,await policyJoin.clone().text());
+ const policyRecord=await policyJoin.json(),policyDuties=await(await request('/api/v1/lifecycle/'+policyRecord.lifecycleId,{cookie})).json();
+ assert.deepEqual(policyDuties.obligations.filter(o=>o.kind.startsWith('access.')),[],'LIFE-003 restored policies grant no access to a newly admitted join');
  const restoredApprovalView=await(await request('/api/v1/work/work/approvals/catalog-monitor',{cookie})).json();
  assert.equal(restoredApprovalView.satisfied,false,'CATALOG-002 restored approved decision cannot satisfy a current chain even with retained approver membership');
  assert.equal(restoredApprovalView.stages[0].state,'pending');assert.deepEqual(restoredApprovalView.stages[0].decisions,[]);
