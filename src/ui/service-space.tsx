@@ -1,3 +1,4 @@
+import { RecordHistory } from './record-history';
 import { NoticeControls } from './service-notices';
 import { NewRelease, ReleaseDetails } from './releases';
 import { LinkedTickets } from "./work-relationships";
@@ -215,6 +216,7 @@ export function ServiceSpace({
           record &&
           d && (
             <>
+              <RecordHistory path={`/service-history/${record.id}`} label={`${section === "changes" ? "Change" : section === "problems" ? "Problem" : section === "software-assets" ? "Software asset" : "Service"} activity`} version={record.updatedAt} />
               <div className="resource-details">
                 <Facts
                   entries={[

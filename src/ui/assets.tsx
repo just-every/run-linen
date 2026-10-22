@@ -1,3 +1,5 @@
+import { ActivityTimeline } from './work-activity';
+import type {ActivityEntry} from '../features/work/activity';
 import { LinkedTickets } from './work-relationships';
 import { AssetFinancials } from './asset-financials';
 import { AssetContracts } from "./asset-contracts";
@@ -136,10 +138,11 @@ export function AssetsSpace({selectedId}:{selectedId?:string}) {
 }
 
 function AssetHistory({ assetId }: { assetId: string }) {
-  const history = useRemote<{items:RecordValue[]}>(`/assets/${assetId}/history`);
+  const history = useRemote<{items:RecordValue[];events:ActivityEntry[]}>(`/assets/${assetId}/history`);
   const personName = usePeopleLabels();
   return <details className="evidence">
     <summary>Serial-level custody history</summary>
+    {history.data?.events&&<ActivityTimeline entries={history.data.events} label="Asset activity"/>}
     {history.loading ? <Loading /> : history.error ? <ErrorNotice error={history.error} retry={history.refresh} />
       : history.data?.items.map(event => {
         const certificate = event.certificate as RecordValue | null;

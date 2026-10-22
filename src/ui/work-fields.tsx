@@ -3,7 +3,7 @@ import { date } from "./api";
 import { useMutation, useRemote } from "./state";
 import { ErrorNotice, Facts } from "./primitives";
 
-interface DeskField { id: string; name: string; type: "text" | "dropdown"; options: string[]; requiredOn: string[]; value: string | null }
+interface DeskField { id: string; name: string; type: "text" | "dropdown" | "multiselect" | "number" | "boolean" | "date"; options: string[]; requiredOn: string[]; value: string | string[] | number | boolean | null }
 interface WorkDesk {
   fields: DeskField[];
   status: null | { name: string; waitingOn: string | null };
@@ -30,27 +30,30 @@ export function WorkFields({ workId, canEdit, version }: { workId: string; canEd
     ]} />}
     {data.fields.map((f) => canEdit
       ? <FieldForm key={`${f.id}:${f.value ?? ""}`} workId={workId} field={f} onSaved={remote.refresh} />
-      : <Facts key={f.id} entries={[[f.name, f.value ?? "Not set"]]} />)}
+      : <Facts key={f.id} entries={[[f.name, display(f.value)]]} />)}
   </section>;
 }
 
 function FieldForm({ workId, field, onSaved }: { workId: string; field: DeskField; onSaved: () => void }) {
-  const [value, setValue] = useState(field.value ?? ""), mutation = useMutation(), name = `${field.name}${field.requiredOn.includes("closed") ? " (required to resolve)" : ""}`;
+  const [value, setValue] = useState<string|string[]|number|boolean>(field.value ?? (field.type==='multiselect'?[]:"")), mutation = useMutation(), name = `${field.name}${field.requiredOn.includes("closed") ? " (required to resolve)" : ""}`;
   async function save(e: FormEvent) {
     e.preventDefault();
-    if (await mutation.mutate(`/work/${encodeURIComponent(workId)}/fields`, { fieldId: field.id, value })) onSaved();
+    if (await mutation.mutate(`/work/${encodeURIComponent(workId)}/fields`, { fieldId: field.id, value:field.type==='number'&&value!==''?Number(value):value })) onSaved();
   }
-  return <form className="inline-form" onSubmit={save}>
+  return <form className="inline-form" aria-label={`Edit ${field.name}`} onSubmit={save}>
     <label>
       {name}
-      {field.type === "dropdown"
-        ? <select value={value} onChange={(e) => setValue(e.target.value)}>
+      {["dropdown","boolean"].includes(field.type)
+        ? <select aria-label={name} value={String(value)} onChange={(e) => setValue(field.type==='boolean'&&e.target.value!==''?e.target.value==='true':e.target.value)}>
           <option value="">Not set</option>
-          {field.options.map((o) => <option key={o} value={o}>{o}</option>)}
+          {(field.type==='boolean'?['true','false']:field.options).map((o) => <option key={o} value={o}>{field.type==='boolean'?(o==='true'?'Yes':'No'):o}</option>)}
         </select>
-        : <input value={value} maxLength={2000} onChange={(e) => setValue(e.target.value)} />}
+        : field.type==='multiselect'?<select aria-label={name} multiple value={Array.isArray(value)?value:[]} onChange={e=>setValue([...e.target.selectedOptions].map(o=>o.value))}>{field.options.map(o=><option key={o} value={o}>{o}</option>)}</select>
+        : <input aria-label={name} type={field.type==='number'?'number':field.type==='date'?'date':'text'} step={field.type==='number'?'any':undefined} value={String(value)} maxLength={2000} onChange={(e) => setValue(e.target.value)} />}
     </label>
     <ErrorNotice error={mutation.error} />
-    <button className="action secondary small" disabled={mutation.pending || value === (field.value ?? "")}>Save {field.name}</button>
+    <button className="action secondary small" disabled={mutation.pending || JSON.stringify(value) === JSON.stringify(field.value ?? (field.type==='multiselect'?[]:""))}>Save {field.name}</button>
   </form>;
 }
+
+function display(value:DeskField['value']):string{return value===null?'Not set':Array.isArray(value)?value.join(', '):typeof value==='boolean'?(value?'Yes':'No'):String(value);}

@@ -6,7 +6,20 @@ import { Icon } from './icons';
 import type { Conversation } from './work';
 import type { ActivityEntry } from '../features/work/activity';
 
-const value = (v: unknown) => v === null || v === undefined ? 'none' : typeof v === 'string' ? v : JSON.stringify(v);
+function value(v: unknown): string {
+  if(v===null||v===undefined)return 'none';
+  if(typeof v==='string'||typeof v==='number')return String(v);
+  if(typeof v==='boolean')return v?'Yes':'No';
+  if(Array.isArray(v))return v.map(value).join(', ')||'none';
+  if(typeof v==='object') {
+    const item=v as Record<string,unknown>;
+    if(item.redacted==='erasure')return item.person?'Erased person':'Value removed by erasure';
+    if(typeof item.kind==='string'&&typeof item.id==='string')return `${humanize(item.kind)} ${item.id}`;
+    if(typeof item.id==='string'&&typeof item.label==='string')return item.label;
+    return Object.entries(item).map(([key,child])=>`${humanize(key)}: ${value(child)}`).join('; ');
+  }
+  return 'none';
+}
 
 /** Messages and scoped field changes share one timeline; message anchors still support search citations. */
 export function WorkActivity({ conversation }: { conversation: Conversation }) {
@@ -32,6 +45,8 @@ export function ActivityTimeline({ entries, label }: { entries: ActivityEntry[];
           </div>
           {event.initiatedBy && <p>Initiated by {event.initiatedBy}</p>}
           {event.body && <p className="message-body">{event.body}</p>}
+          {event.redacted==='erasure'&&<p className="message-body">Values removed by an erasure{event.redactedAt?` on ${date(event.redactedAt)}`:''}. Earlier values are never rebuilt.</p>}
+          {event.source&&<p>Imported from {humanize(event.source.system)} · {event.source.table} · Original source attribution</p>}
           {event.changes.length > 0 && <ul className="message-body">{event.changes.map((change, i) => <li key={i}>{humanize(change.field)}: {value(change.before)} → {value(change.after)}</li>)}</ul>}
         </div>
       </li>)}
