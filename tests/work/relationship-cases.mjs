@@ -236,6 +236,9 @@ export async function collaborationChecks(api,db) {
   const audits=(await db.prepare("SELECT action,detail_json FROM audit_events WHERE workspace_id='a' AND target=? AND action LIKE 'work.collaboration.%'").bind(ticket.id).all()).results;
   assert.ok(audits.some(a=>a.action==='work.collaboration.mentioned'&&JSON.parse(a.detail_json).reason===consent.reason));
   assert.ok(audits.some(a=>a.action==='work.collaboration.email_consented'));
+  check(await api(base+'/watchers',{...consent,userId:'employee'}));
+  check(await api(base+'/messages',{body:'synthetic-linen-53',visibility:'public',sourceMessageId:'synthetic-linen-54'}),201);
+  assert.ok(check(await api('/collaboration/inbox',undefined,employee)).items.some(n=>n.work_id===ticket.id),'DESK-007 live watcher and notice remain for the public erasure flow');
   // Preserve this ticket for the suite's existing public erasure flow, and prove all new personal metadata is gone afterward there.
   return {workId:ticket.id};
 }
