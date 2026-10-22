@@ -8,7 +8,7 @@ export async function assertProblemSources(db:D1Database, principal:Principal, r
   const p=await currentPrincipal(db,principal);
   for (const ref of record.data.evidence || []) {
     if(ref.type==='ticket') {
-      const work=await db.prepare('SELECT sensitivity,requester_id,beneficiary_id,department_id FROM work_records WHERE workspace_id=? AND id=?').bind(p.workspaceId,ref.id).first<{sensitivity:string;requester_id:string;beneficiary_id:string;department_id:string|null}>();
+      const work=await db.prepare('SELECT sensitivity,requester_id,beneficiary_id,department_id,protected_departments_json FROM work_records WHERE workspace_id=? AND id=?').bind(p.workspaceId,ref.id).first<{sensitivity:string;requester_id:string;beneficiary_id:string;department_id:string|null;protected_departments_json:string}>();
       if(!work || !workReadable(p,work)) throw new ApiError(404,'not_found','Problem evidence not found');
     } else {
       const alert=await getService(db,p,ref.id,'incident');

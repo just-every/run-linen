@@ -1,5 +1,5 @@
 import { currentPrincipal } from '../work/identity';
-import { workReadable } from '../work/scope';
+import { workReadable, workDepartmentScoped } from '../work/scope';
 import { changeGate } from "../services/changes";
 import { getCommitment } from "../intelligence/commitments";
 import { assert } from "./authority";
@@ -64,7 +64,7 @@ export async function origin(
     .bind(key, ctx.principal.workspaceId)
     .first();
   assert(work && work.revision === revision, "work_changed");
-  if (work.department_id) {
+  if (workDepartmentScoped(work)) {
     const principal = await currentPrincipal(ctx.env.DB, ctx.principal);
     assert(workReadable(principal, work), "restricted_work", 403);
   }

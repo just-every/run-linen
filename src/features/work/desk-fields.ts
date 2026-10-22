@@ -1,6 +1,6 @@
 import { departmentWorkBatch } from './department-spaces';
 import { departmentReportScope } from './department-report-scope';
-import { workPrivateReadable } from './scope';
+import { workPrivateReadable, workDepartmentScoped } from './scope';
 import { ApiError, id, now, requiredString } from "../../platform/http";
 import { currentWorkPrincipal } from "./identity";
 import { getWork, permit, type WorkContext, type WorkRecord } from "./core";
@@ -132,7 +132,7 @@ export async function setWorkField(ctx: WorkContext, workId: string, input: Reco
   await currentWorkPrincipal(ctx);
   const work = await getWork(ctx, workId);
   permit(ctx, ["owner", "operator", "hr"]);
-  if (work.department_id && !workPrivateReadable(ctx.principal, work)) throw new ApiError(403, "department_staff", "Current department staff required");
+  if (workDepartmentScoped(work) && !workPrivateReadable(ctx.principal, work)) throw new ApiError(403, "department_staff", "Current department staff required");
   const target = (await fields(ctx)).find((f) => f.id === input.fieldId);
   if (!target || !target.kinds.includes(ticketType(work.kind))) throw new ApiError(422, "field_missing", "Choose a field shown on this ticket type");
   if (typeof input.value !== "string" || input.value.length > 2000) throw new ApiError(422, "field_value", "A field value is text of at most 2000 characters");
@@ -149,7 +149,7 @@ export async function setWorkField(ctx: WorkContext, workId: string, input: Reco
       : ctx.env.DB.prepare("DELETE FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?").bind(ws, workId, target.id),
     ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(at, ws, workId),
   ];
-  if (work.department_id) await departmentWorkBatch(ctx, work, statements, "private");
+  if (workDepartmentScoped(work)) await departmentWorkBatch(ctx, work, statements, "private");
   else await ctx.env.DB.batch(statements);
   return readWorkDesk(ctx, workId);
 }

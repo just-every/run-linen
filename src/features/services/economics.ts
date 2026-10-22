@@ -1,5 +1,5 @@
 import { currentPrincipal } from '../work/identity';
-import { workReadable } from '../work/scope';
+import { workReadable, workDepartmentScoped } from '../work/scope';
 import type { Principal } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { create, date, getService, list, mutate, number, strings, type ServiceRecord, dto, readable, type RecordRow } from './store';
@@ -60,7 +60,7 @@ export async function assignAsset(db: D1Database, p: Principal, r: ServiceRecord
     const personId = requiredString(b.personId, 'personId');
     if (!await db.prepare('SELECT user_id FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(p.workspaceId, personId).first())
         throw new ApiError(400, 'person', 'Active beneficiary required');
-    const workId=requiredString(b.workId,'workId');const work=await db.prepare('SELECT requester_id,beneficiary_id,sensitivity,department_id FROM work_records WHERE workspace_id=? AND id=?').bind(p.workspaceId,workId).first<any>();if(!work||(work.department_id&&!workReadable(p,work))||work.beneficiary_id!==personId||(work.sensitivity==='hr'&&!p.roles.some(role=>['owner','hr'].includes(role))))throw new ApiError(404,'work_scope','Matching accessible beneficiary work required');
+    const workId=requiredString(b.workId,'workId');const work=await db.prepare('SELECT requester_id,beneficiary_id,sensitivity,department_id,protected_departments_json FROM work_records WHERE workspace_id=? AND id=?').bind(p.workspaceId,workId).first<any>();if(!work||(workDepartmentScoped(work)&&!workReadable(p,work))||work.beneficiary_id!==personId||(work.sensitivity==='hr'&&!p.roles.some(role=>['owner','hr'].includes(role))))throw new ApiError(404,'work_scope','Matching accessible beneficiary work required');
     if (r.data.assignments.some((a: any) => !a.returnedAt))
         throw new ApiError(409, 'custody', 'Prior custody is unresolved');
     return mutate(db, p, r, b.revision, { ...r.data, lifecycle: 'assigned', assignments: [...r.data.assignments, { personId, workId: requiredString(b.workId, 'workId'), receipt: requiredString(b.receipt, 'receipt'), assignedAt: now(), source: requiredString(b.source, 'source') }] }, 'asset-assigned');
