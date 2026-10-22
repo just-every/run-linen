@@ -25,6 +25,7 @@ async function close(){await proxy?.dispose();proxy=null}
 try{
  await cp(source,root,{recursive:true,filter:p=>{const rel=p.slice(source.length+1);return !rel||!['.git','node_modules','.wrangler','.rer','.seed','dist','exports','.dev.vars','.dev.vars.previous'].some(x=>rel===x||rel.startsWith(x+'/'))}})
  await symlink(resolve('node_modules'),join(root,'node_modules'),'dir')
+ await writeFile(join(root,'.dev.vars'),'ENCRYPTION_KEY='+Buffer.alloc(32,7).toString('base64')+'\n')
  // API-003 restore compatibility: produce an actual pre-MCP archive through rer,
  // then apply the additive migration and import it without inventing credentials.
  await mkdir(join(root,'pre-mcp-migrations'));
