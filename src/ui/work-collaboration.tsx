@@ -25,9 +25,9 @@ export function WorkCollaboration({workId,onChanged}:{workId:string;onChanged:()
     <Notice>Only existing ticket readers can be mentioned or watch. Watching sends notices for public updates. This does not give anyone new access.</Notice>
     <ErrorNotice error={remote.error}/>
     {remote.data&&<><form className="inline-form" onSubmit={submit}>
-      <label>Action<select value={mode} onChange={e=>setMode(e.target.value)}><option value="mention">Mention in a private note</option><option value="watch">Manage watchers</option></select></label>
-      <label>Colleague<select name="userId" required defaultValue=""><option value="">Choose…</option>{remote.data.readers.filter(r=>mode!=='mention'||r.privateNote).map(r=><option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
-      {mode==='mention'?<label>Private note<textarea name="body" rows={3} required maxLength={50000}/></label>:<label>Watcher action<select name="operation"><option value="add">Add watcher</option><option value="remove">Remove watcher</option></select></label>}
+      <label>Action<select aria-label="Action" value={mode} onChange={e=>setMode(e.target.value)}><option value="mention">Mention in a private note</option><option value="watch">Manage watchers</option></select></label>
+      <label>Colleague<select aria-label="Colleague" name="userId" required defaultValue=""><option value="">Choose…</option>{remote.data.readers.filter(r=>mode!=='mention'||r.privateNote).map(r=><option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
+      {mode==='mention'?<label>Private note<textarea name="body" rows={3} required maxLength={50000}/></label>:<label>Watcher action<select aria-label="Watcher action" name="operation"><option value="add">Add watcher</option><option value="remove">Remove watcher</option></select></label>}
       <CollaborationConsent/><ErrorNotice error={mutation.error}/><button className="action secondary" disabled={mutation.pending}>{mode==='mention'?'Save private note and notify':'Save watcher'}</button>
     </form>
     <p>Watchers: {remote.data.watchers.map(r=>r.name).join(', ')||'None'}</p>

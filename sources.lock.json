@@ -4751,7 +4751,7 @@
       "executable": false
     },
     "src/ui/work-collaboration.tsx": {
-      "sha256": "a67917aadd4bbbf7d53bf6bf3147e930a7a5dd4e51b073026610dd8e14466957",
+      "sha256": "30d0e45899e52dd61d163b9dafb1efd83dc1fe4971c43f56aee519975351f23f",
       "executable": false
     },
     "src/ui/work-composer.tsx": {
@@ -4795,7 +4795,7 @@
       "executable": false
     },
     "src/ui/work-side-conversations.tsx": {
-      "sha256": "96305e95887a0675e0db2246c2c81e4a0c6f6f4d92478226eba239ac61556bdd",
+      "sha256": "e286c9c10ba4cb412d00db16f1fe0cc39a5c6c253fd6425a5d554362549c123f",
       "executable": false
     },
     "src/ui/work-sla.tsx": {
@@ -5639,7 +5639,7 @@
       "executable": false
     },
     "tests/work/relationship-cases.mjs": {
-      "sha256": "a36909048e7492cece33ecc42473d361131ed60ee777c05e7e57c1b91d8f0fd5",
+      "sha256": "02efb458cdc435b8c620eaf79a816d572905dc693013446dcdd132e4194eb2c3",
       "executable": false
     },
     "tests/work/response-cases.mjs": {
@@ -5651,7 +5651,7 @@
       "executable": false
     },
     "tests/work/runtime.mjs": {
-      "sha256": "2d58fef2215b7605d7725dd716af1a1c741903d74a3eee666d3624b31a301584",
+      "sha256": "de14105f4162d85547a91c65ad57612de97352c4b4b067fe2d2ee145140caf76",
       "executable": false
     },
     "tests/work/search-cases.mjs": {
