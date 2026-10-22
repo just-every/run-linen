@@ -101,6 +101,6 @@ export async function birthrightBaselineJourney(env) {
   const ran=await api('/operations');
   for(const duty of await accessDuties(second))assert.ok(ran.find(o=>o.id===duty.operation_id),'LIFE-003 each duty ran as one operation under its standing grant');
   await page.goto(base+'/app#/lifecycle/'+second);await page.reload();
-  for(const kind of ['Access grant','Access revoke'])await page.locator('.connection-record').filter({has:page.getByRole('heading',{name:kind,exact:true})}).locator(':scope > .record-heading .badge-text').filter({hasText:/^verified$/i}).waitFor();
+  for(const kind of ['Access grant','Access revoke'])await page.locator('.connection-record').filter({has:page.getByRole('heading',{name:kind,exact:true})}).locator(':scope > .section-heading .badge-text').filter({hasText:/^verified$/i}).waitFor();
   await captureJourney(page,{path:out+'/LIFE-003-baseline-verified.png',fullPage:true});
 }
