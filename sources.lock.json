@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "b3d3919fc7789e6f9820868680d69eac43b5423478315529da1c07fe56a23aa1",
+      "sha256": "5b2270927fa202bf2365688c63b3996acfe914dc569a7682ff26841d8754883a",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "566123523687c273193e2b2d81eb1eed3b3f765a565e1b6bf565758ea4601e9f",
+      "sha256": "bda9a4d9c0530487186f814e60a5868d5b5f20395a0c33f37c553274492f087d",
       "executable": false
     },
     "DEMO.md": {
@@ -2591,7 +2591,7 @@
       "executable": false
     },
     "src/features/work/desk-routing.ts": {
-      "sha256": "db7cac183abb3e7551fd383c9214fd7cf6907a72b1005be3ac57b0942958eea1",
+      "sha256": "f333636027a67aa343f64b8e5fb05e96573a64b37cb734ccc5f10aeee8620626",
       "executable": false
     },
     "src/features/work/desk-scenario-plans.ts": {
@@ -2915,7 +2915,7 @@
       "executable": false
     },
     "src/features/work/work-history.ts": {
-      "sha256": "d41ce1a42b8aeeaa9e7558d1cc9f29147002510ef1d3b01102f43e9e5d920ed9",
+      "sha256": "b2740219613d9851e79d0d739ba8cb4fcba8f4c5d751918c99ce3ddfcc4b3ccc",
       "executable": false
     },
     "src/features/work/workaround-suggestions.ts": {
@@ -5759,7 +5759,7 @@
       "executable": false
     },
     "tests/ui/typed-history-journey.mjs": {
-      "sha256": "88fd960bd1f4241496a1e618fff3a98363259b6e0d5fa89f367a4b1d4d5c8acb",
+      "sha256": "7dc0a1888c6d02d88508ca7d0bf927a1dbc3f355e39de02503b5e42b040f45fd",
       "executable": false
     },
     "tests/ui/viewport-evidence.mjs": {
