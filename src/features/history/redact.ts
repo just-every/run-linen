@@ -22,7 +22,7 @@ export async function legacyIdentityContent(value:unknown,matches:(value:string)
   if(typeof value==='string'){
     if(await matches(value))return true;
     let parsed:unknown;try{parsed=JSON.parse(value);}catch{}
-    if(parsed!==undefined&&parsed!==value&&await legacyIdentityContent(parsed,matches))return true;
+    if(parsed!==undefined&&parsed!==value)return legacyIdentityContent(parsed,matches);
     const words=(value.match(/[\p{L}\p{N}][\p{L}\p{N}@._+:/-]*/gu)??[]).map(v=>v.replace(/[^\p{L}\p{N}]+$/u,''));
     for(let start=0;start<words.length;start++)for(let end=start+1;end<=words.length;end++)if(await matches(words.slice(start,end).join(' ')))return true;
     return false;

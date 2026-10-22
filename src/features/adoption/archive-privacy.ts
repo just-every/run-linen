@@ -5,7 +5,7 @@ import { identityMatcher } from '../history/identity';
 import { legacyIdentityContent } from '../history/redact';
 import { projectArchiveContent } from './archive-content';
 import { archiveReferences,archiveRowKey,mapArchiveRow,archiveTableSchema } from './archive-schema';
-import { check,encode,identityHash,sha,type AdoptionContext,type Row } from './core';
+import { check,identityHash,type AdoptionContext,type Row } from './core';
 import type { NativeRecord } from './import';
 import { ApiError } from '../../platform/http';
 
@@ -17,7 +17,7 @@ export async function archivePrivacyRevision(ctx:AdoptionContext) {
   db.prepare('SELECT person_id,created_at FROM work_erasure WHERE workspace_id=? ORDER BY person_id').bind(w).all(),
   db.prepare('SELECT digest,created_at FROM history_identity_tombstones WHERE workspace_id=? ORDER BY digest').bind(w).all(),
  ]);
- return sha(encode(rows.map(r=>r.results)));
+ return 'ap1:'+await archiveHmac(ctx.env,'linen/archive/privacy-checkpoint/v1',w,rows.map(r=>r.results));
 }
 
 export async function archiveIdentityMatcher(ctx:AdoptionContext,sourceWorkspace=ctx.principal.workspaceId) {
@@ -54,6 +54,10 @@ export async function archiveProjector(ctx:AdoptionContext,exportId?:string) {
   check(depth<20,'archive_nesting_limit');
   const original=record.row,table=record.table;
   let row=await projectArchiveContent(ctx,table,original,matches) as Row;
+  if(table==='work_people'&&(await matches(String(original.id))||await matches(`${original.source}:${original.source_id}`)))
+   row={...row,source_id:await alias(String(original.id),table+':'+record.key+':id')};
+  if(table==='identities'&&Object.hasOwn(row,'source_id')&&await matches(String(original.id)))
+   row={...row,source_id:await alias(String(original.id),table+':'+record.key+':id')};
   row=history.project(table,(await historyArchiveRow(ctx,table,row)).row) as Row;
   if(table==='adoption_history'&&typeof row.row_json==='string'){
    let nested:Row;try{nested=JSON.parse(row.row_json);}catch{check(false,'invalid_record_json');}

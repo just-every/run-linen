@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 
 /** Actual native archive download/upload and replay, with original audit values
  * supplied exclusively by public classification/custom-field commands. */
@@ -45,6 +46,11 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
     for(const chunk of manifest.chunks){const response=await request('/exports/'+run.id+'/chunks/'+chunk.ordinal,'GET',undefined,auth);assert.equal(response.status,200);const bytes=Buffer.from(await response.arrayBuffer());chunks.push({chunk,bytes});if(chunk.kind==='records')records.push(...JSON.parse(bytes));}
     return {manifest,chunks,records};
   }
+  const untypedBytes=Buffer.from(JSON.stringify([{table:'unmapped_incumbent_status',key:'synthetic-linen-13013',row:{id:'synthetic-linen-13013',opaque:JSON.stringify({nested:[actor.id]})}}]));
+  const untypedManifest={...manifest,tables:{unmapped_incumbent_status:1},chunks:[{ordinal:100,kind:'records',count:1,size:untypedBytes.length,sha256:createHash('sha256').update(untypedBytes).digest('hex')}]};
+  const untyped=await ok('/imports','POST',{manifest:untypedManifest,idempotencyKey:'synthetic-linen-13014'},owner,201);
+  await ok('/imports/'+untyped.id+'/chunks/100','PUT',untypedBytes,owner,200,true);
+  assert.equal((await request('/imports/'+untyped.id+'/dry-run','POST',{},owner)).status,409,'Unknown nested content has no tombstone exemption');
   const fresh=await archive(owner,'synthetic-linen-13010');
   const serialized=JSON.stringify(fresh.records);
   assert.ok(!serialized.includes(actor.id)&&!serialized.includes('synthetic-linen-13001@example.test')&&!serialized.includes('synthetic-linen-13007'),'Fresh archive removes erased identity and personal history');
