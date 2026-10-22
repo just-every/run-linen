@@ -30,6 +30,8 @@ jobs:
       - name: Configure CI package installation
         run: |
           # Avoid the throttled Azure mirror observed in cancelled setup steps.
+          # Hosted images use this mirror+file list for their active sources.
+          printf '%s\n' 'http://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt
           sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/sources.list.d/ubuntu.sources
           # Every verifier starts fresh after installation; unrelated host daemons
           # need not restart. Ubuntu documents restoring this mode here:
