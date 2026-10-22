@@ -49,6 +49,8 @@ export async function historyErasureChecks(workspaceApi,db) {
     const w=(await call('/work/'+id)).work;
     await call('/work/'+id+'/commands',{revision:w.revision,command:'pause',waitingOn:'vendor',reason:'synthetic-linen-12814'});
   }
+  const originalPrivateValue='synthetic-linen-12810 private subject marker';
+  assert.equal((await call('/work/'+work.id+'/desk')).fields.find(f=>f.id===text.id).value,originalPrivateValue,'personal custom value exists before erasure');
   const before=(await call('/work/'+work.id+'/activity')).items;
   const daveBefore=(await call('/work/'+unrelated.id+'/activity')).items;
   const receipt=await call('/people/'+alice+'/erase',{revision:0,reason:'synthetic-linen-12815'});
@@ -78,7 +80,18 @@ export async function historyErasureChecks(workspaceApi,db) {
   assert.deepEqual((await call('/work/'+work.id+'/activity',undefined,auditAuth)).items,after,'authorized auditor reads the same redacted history');
   const publicHistory=(await call('/work/'+unrelated.id+'/activity',undefined,daveAuth)).items;
   assert.ok(publicHistory.every(e=>e.kind==='message'&&e.visibility==='public'),'employee retains public history only');
-  assert.equal((await call('/search?q=synthetic-linen-12810')).total,0,'scrubbed text leaves search');
+  const currentFields=(await call('/work/'+work.id+'/desk')).fields;
+  assert.equal(currentFields.find(f=>f.id===text.id).value,null,'personal custom value is removed from the current ticket');
+  assert.equal(currentFields.find(f=>f.id===office.id).value,'Denver','approved current custom value remains');
+  // A short numeric fixture key also typo-matches the unrelated asset serial.
+  // Search the complete erased value while retaining the normal typo contract.
+  const searched=await call('/search?q='+encodeURIComponent(originalPrivateValue));
+  assert.equal(searched.total,0,'scrubbed private phrase leaves search');
+  const nearby=await call('/search?q=synthetic-linen-12810');
+  for(const results of [searched,nearby]){
+    assert.ok(!JSON.stringify(results.items).includes(originalPrivateValue),'search returns no original private value');
+    assert.ok(!JSON.stringify(results.items).includes('synthetic-linen-12810'),'search returns no exact private marker');
+  }
   await call('/work',{title:'synthetic-linen-12817',body:'synthetic-linen-12817',beneficiaryId:bob,deduplicationKey:'synthetic-linen-12818'},owner,409);
   return {workspace,workId:work.id,hrId:hr.id,unrelatedId:unrelated.id};
 }
