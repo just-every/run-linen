@@ -7,6 +7,7 @@ import { projectArchiveContent } from './archive-content';
 import { archiveReferences,archiveRowKey,mapArchiveRow,archiveTableSchema } from './archive-schema';
 import { check,encode,identityHash,sha,type AdoptionContext,type Row } from './core';
 import type { NativeRecord } from './import';
+import { ApiError } from '../../platform/http';
 
 /** A private checkpoint, never an identity inventory or exported key. */
 export async function archivePrivacyRevision(ctx:AdoptionContext) {
@@ -69,7 +70,10 @@ export async function archiveProjector(ctx:AdoptionContext,exportId?:string) {
    replacements.set(ref.field+'\0'+ref.value,await alias(ref.value,table+':'+record.key+':'+ref.field));
   row=mapArchiveRow(table,row,{person:(value,ref)=>replacements.get(ref.field+'\0'+value)??value}) as Row;
   const key=archiveTableSchema(table)?archiveRowKey(table,row):record.key;
-  check(!await legacyIdentityContent({key,row},matches),'erasure_untyped_archive_content',409);
+  if(await legacyIdentityContent({key,row},matches)){
+   let field='key';for(const [name,value]of Object.entries(row))if(await legacyIdentityContent({[name]:value},matches)){field=name;break;}
+   throw new ApiError(409,'erasure_untyped_archive_content',`An erased identity remains in untyped archive field ${table}.${field}; reconcile that content before exporting`);
+  }
   return {table,key,row};
  }
  async function flushAliases() {
