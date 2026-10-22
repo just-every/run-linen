@@ -14,7 +14,7 @@ export interface ActivityEntry {
   action: string;
   visibility: string;
   body?: string;
-  changes: { field: string; before: unknown; after: unknown }[];
+  changes: { field: string; before: unknown; after: unknown; fieldId?:string;beforeLabel?:string;afterLabel?:string }[];
 }
 type Audit = { id: string; actor_id: string; actor_name: string; action: string; detail_json: string; created_at: string };
 const actions = ['work.sla_bound','work.created','work.requested_for_updated','work.response_recorded','work.service_routed','work.imported_field','work.recurring_materialized','work.classification_overridden', 'work.classification_proposed', 'work.routed', 'work.group_set',
