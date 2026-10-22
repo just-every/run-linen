@@ -45,8 +45,8 @@ export async function approvalChainChecks({db,ok,api,mf}){
  let out=await db.prepare('SELECT payload_json FROM test_approval_mail WHERE payload_json LIKE ? ORDER BY rowid DESC LIMIT 1').bind('%synthetic-linen-710%').first();
  const packet=JSON.parse(out.payload_json);assert.equal(packet.personalizations[0].to[0].email,finance+'@example.test');assert.equal(packet.reply_to.email,config.recipient);
  const token=/\[approval:([A-Za-z0-9_-]+)\]/.exec(packet.subject)[1];
- const signed=async({sender=finance,subject=`Re: [approval:${token}]`,text='approve\nsynthetic-linen-721',verdict='PASS',messageId=crypto.randomUUID(),alter=false,topic=config.topicArn}={})=>{
-  const receipt={notificationType:'Received',mail:{messageId,source:sender+'@example.test',headersTruncated:false,headers:[{name:'DKIM-Signature',value:'v=1; d=example.test; s=synthetic-linen-722'}]},receipt:{recipients:[config.recipient],action:{type:'SNS',topicArn:config.topicArn},spfVerdict:{status:'PASS'},dkimVerdict:{status:'PASS'},dmarcVerdict:{status:verdict}},content:`From: ${sender}@example.test\r\nTo: ${config.recipient}\r\nMessage-ID: <${messageId}@example.test>\r\nSubject: ${subject}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${text}`};
+ const signed=async({sender=finance,subject=`Re: [approval:${token}]`,text='approve\nsynthetic-linen-721',verdict='PASS',spf='PASS',dkim='PASS',sourceDomain='example.test',signingDomain='example.test',messageId=crypto.randomUUID(),alter=false,topic=config.topicArn}={})=>{
+  const receipt={notificationType:'Received',mail:{messageId,source:sender+'@'+sourceDomain,headersTruncated:false,headers:[{name:'DKIM-Signature',value:'v=1; d='+signingDomain+'; s=synthetic-linen-722'}]},receipt:{recipients:[config.recipient],action:{type:'SNS',topicArn:config.topicArn},spfVerdict:{status:spf},dkimVerdict:{status:dkim},dmarcVerdict:{status:verdict}},content:`From: ${sender}@example.test\r\nTo: ${config.recipient}\r\nMessage-ID: <${messageId}@example.test>\r\nSubject: ${subject}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${text}`};
   const envelope={Type:'Notification',MessageId:crypto.randomUUID(),TopicArn:topic,Timestamp:new Date().toISOString(),Message:JSON.stringify(receipt),SignatureVersion:'2',SigningCertURL:config.signingCertUrl};
   const canonical=['Message','MessageId','Timestamp','TopicArn','Type'].map(k=>`${k}\n${envelope[k]}\n`).join('');
   envelope.Signature=Buffer.from(await webcrypto.subtle.sign('RSASSA-PKCS1-v1_5',pair.privateKey,new TextEncoder().encode(canonical))).toString('base64');
@@ -58,6 +58,8 @@ export async function approvalChainChecks({db,ok,api,mf}){
  assert.equal((await signed({sender:second})).value.code,'approval_sender_mismatch');
  assert.equal((await signed({subject:`Fwd: [approval:${token}]`})).value.code,'approval_forwarded');
  assert.equal((await signed({verdict:'FAIL'})).value.code,'approval_mail_unauthenticated','signed transport does not bless failed DMARC');
+ for(const authentication of [{spf:'FAIL'},{dkim:'FAIL'},{sourceDomain:'other.example.test'},{signingDomain:'other.example.test'}])
+  assert.equal((await signed(authentication)).value.code,'approval_mail_unauthenticated','a signed receipt still needs passing and aligned SPF/DKIM/DMARC');
  await ok('/test/due',{at:opened.remindAt});
  const reminded=(await chain()).stages[0];assert.ok(reminded.remindedAt);assert.ok(reminded.breachedAt);assert.equal(reminded.state,'pending','silence is not approval');
  const messageId=crypto.randomUUID(),recorded=await signed({messageId});assert.equal(recorded.status,200);assert.equal(recorded.value.channel,'email');
@@ -70,7 +72,10 @@ export async function approvalChainChecks({db,ok,api,mf}){
  await approveManager();
  await ok('/work/process-due',{});
  out=await db.prepare('SELECT payload_json FROM test_approval_mail WHERE payload_json LIKE ? ORDER BY rowid DESC LIMIT 1').bind('%synthetic-linen-710%').first();assert.notEqual(JSON.parse(out.payload_json).subject,packet.subject,'new revision gets a different single-use token');
- assert.ok((await signed()).status>=400,'earlier revision email is refused');
+ const unusedToken=/\[approval:([A-Za-z0-9_-]+)\]/.exec(JSON.parse(out.payload_json).subject)[1];
+ await ok(`/work/${request.id}/commands`,{command:'assign',revision:2,assigneeId:finance,reason:'synthetic-linen-783'});
+ const staleReply=await signed({subject:`Re: [approval:${unusedToken}]`});
+ assert.equal(staleReply.status,409);assert.equal(staleReply.value.code,'approval_revision_changed','an unused token for an earlier revision is refused');
  // A lower cost skips finance, while a missing amount never silently bypasses its threshold.
  for(const [n,cost,expected] of [[724,100000,'skipped'],[725,null,'pending']]){
   const c=await ok('/catalog',{name:`synthetic-linen-${n}`,kind:'service',target:`synthetic-linen-${n}`,ownerId:'owner',form:{costCents:cost}});
@@ -129,6 +134,9 @@ export async function approvalChainChecks({db,ok,api,mf}){
  assert.equal(submitted.catalogSnapshot.form.costCents,null,'quote amount comes from the selected saved answer, not item metadata or PDF');
  const read=user=>mf.dispatchFetch(`http://localhost/catalog-quotes/${quote.id}`,{headers:{'x-user':user}});
  assert.equal((await read(finance)).status,200);assert.equal((await read(manager)).status,404);
+ await ok('/work/process-due',{});
+ const quotedPacket=(await db.prepare('SELECT payload_json FROM test_approval_mail WHERE payload_json LIKE ? ORDER BY rowid DESC LIMIT 1').bind('%synthetic-linen-731%').first()).payload_json;
+ assert.ok(!quotedPacket.includes('synthetic-linen-734')&&!quotedPacket.includes('synthetic-linen-733'),'the approval email excludes quote bytes, filename, purpose and conversation');
  assert.equal((await ok('/approval-stages',undefined,finance)).items.find(x=>x.workId===quoteWork.id).costCents,180001,'the requester-entered USD price routes and appears in the approval packet');
  await ok(`/work-groups/${team.id}/members/${finance}/remove`,{});
  assert.equal((await read(finance)).status,404,'a holder replaced before deciding loses quote access');
