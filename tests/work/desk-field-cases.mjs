@@ -37,6 +37,10 @@ export async function deskFieldChecks(workspaceApi, db) {
 
   // Agents set the field; the requester reads it with the ticket and cannot write it; other employees cannot read it.
   const a = await ticket('a', 'incident', 'P2');
+  const slaHistory=check(await api(`/work/${a.id}/activity`,undefined,agent)).items.find(e=>e.action==='sla bound');
+  assert.ok(slaHistory.changes.some(c=>c.field==='firstResponseMinutes'&&c.before===null&&c.after===60),'The original bound SLA response target is recorded');
+  assert.ok(slaHistory.changes.some(c=>c.field==='resolutionMinutes'&&c.before===null&&c.after===480),'The original bound SLA resolution target is recorded');
+
   check(await api(`/work/${a.id}/fields`, { fieldId: officeField.id, value: 'Boston' }, agent), 422);
   check(await api(`/work/${a.id}/fields`, { fieldId: officeField.id, value: 'Denver' }, employee), 403);
   check(await api(`/work/${a.id}/fields`, { fieldId: officeField.id, value: 'Denver' }, agent));

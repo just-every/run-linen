@@ -1,5 +1,6 @@
+import {ticketHistory} from './work-history';
 import { departmentReportScope } from './department-report-scope';
-import { assertDepartmentConfig } from './department-spaces';
+import { departmentWorkBatch,assertDepartmentConfig } from './department-spaces';
 import { departmentRows } from './department-operations';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now, requiredString } from "../../platform/http";
@@ -88,7 +89,8 @@ export async function listSlaPolicies(ctx: WorkContext) {
 /** Binds the first policy, in owner order, whose set criteria all match; unset criteria match anything.
  * Called whenever a classification is applied, so a priority change rebinds from the ticket's opening. */
 export async function bindSlaPolicy(ctx: WorkContext, work: WorkRecord, classification: TicketClassification) {
-  const bound=await ctx.env.DB.prepare('SELECT c.policy_id,p.department_id FROM work_sla_clocks c LEFT JOIN work_sla_policies p ON p.workspace_id=c.workspace_id AND p.id=c.policy_id WHERE c.workspace_id=? AND c.work_id=?').bind(ctx.principal.workspaceId,work.id).first<{policy_id:string;department_id:string|null}>();
+  work=await getWork(ctx,work.id);
+  const bound=await ctx.env.DB.prepare('SELECT c.*,p.department_id FROM work_sla_clocks c LEFT JOIN work_sla_policies p ON p.workspace_id=c.workspace_id AND p.id=c.policy_id WHERE c.workspace_id=? AND c.work_id=?').bind(ctx.principal.workspaceId,work.id).first<{policy_id:string;department_id:string|null;policy_revision:number;policy_json:string;bound_at:string;revision:number}>();
   if(bound && bound.department_id!==(work.department_id??null))return bound.policy_id;
   const policy = await ctx.env.DB.prepare(
     `SELECT p.*,c.timezone,c.weekdays_json,c.start_hour,c.end_hour,c.holidays_json,c.location,c.holiday_catalog FROM work_sla_policies p
@@ -97,8 +99,12 @@ export async function bindSlaPolicy(ctx: WorkContext, work: WorkRecord, classifi
      AND (p.requester_group_id IS NULL OR EXISTS(SELECT 1 FROM work_requester_groups g, json_each(g.members_json) m WHERE g.id=p.requester_group_id AND g.workspace_id=p.workspace_id AND m.value=?))
      ORDER BY p.position LIMIT 1`,
   ).bind(ctx.principal.workspaceId, work.department_id??null,classification.priority, classification.category, work.requester_id).first<any>();
+  const original=bound?JSON.parse(bound.policy_json) as PolicySnapshot:null,at=now(),guard=id();
+  const before={slaPolicy:bound?{id:bound.policy_id,revision:bound.policy_revision,name:original!.name}:null,firstResponseMinutes:original?.firstResponseMinutes??null,nextResponseMinutes:original?.nextResponseMinutes??null,resolutionMinutes:original?.resolutionMinutes??null,boundAt:bound?.bound_at??null};
+  const fence=()=>ctx.env.DB.prepare('INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN (SELECT revision FROM work_sla_clocks WHERE workspace_id=? AND work_id=?) IS ? THEN 1 ELSE 0 END)').bind(guard,ctx.principal.workspaceId,work.id,bound?.revision??null);
+  const release=()=>ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard);
   if (!policy) {
-    await ctx.env.DB.prepare("DELETE FROM work_sla_clocks WHERE workspace_id=? AND work_id=?").bind(ctx.principal.workspaceId, work.id).run();
+    if(bound)await departmentWorkBatch(ctx,work,[fence(),ctx.env.DB.prepare('DELETE FROM work_sla_clocks WHERE workspace_id=? AND work_id=?').bind(ctx.principal.workspaceId,work.id),ticketHistory(ctx,work,'work.sla_bound',before,{slaPolicy:null,firstResponseMinutes:null,nextResponseMinutes:null,resolutionMinutes:null,boundAt:null},at),release()]);
     return null;
   }
   const snapshot: PolicySnapshot = {
@@ -106,9 +112,9 @@ export async function bindSlaPolicy(ctx: WorkContext, work: WorkRecord, classifi
     resolutionMinutes: policy.resolution_minutes, pauseOn: JSON.parse(policy.pause_on_json), hours: policy.calendar_id ? "business" : "calendar",
   };
   const calendar = policy.calendar_id ? calendarFromRow(policy) : null;
-  await ctx.env.DB.prepare(
-    "INSERT INTO work_sla_clocks(workspace_id,work_id,policy_id,policy_revision,policy_json,calendar_json,bound_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(workspace_id,work_id) DO UPDATE SET policy_id=excluded.policy_id,policy_revision=excluded.policy_revision,policy_json=excluded.policy_json,calendar_json=excluded.calendar_json,bound_at=excluded.bound_at,revision=work_sla_clocks.revision+1",
-  ).bind(ctx.principal.workspaceId, work.id, policy.id, policy.revision, JSON.stringify(snapshot), calendar && JSON.stringify(calendar), now()).run();
+  await departmentWorkBatch(ctx,work,[fence(),ctx.env.DB.prepare(
+    'INSERT INTO work_sla_clocks(workspace_id,work_id,policy_id,policy_revision,policy_json,calendar_json,bound_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(workspace_id,work_id) DO UPDATE SET policy_id=excluded.policy_id,policy_revision=excluded.policy_revision,policy_json=excluded.policy_json,calendar_json=excluded.calendar_json,bound_at=excluded.bound_at,revision=work_sla_clocks.revision+1'
+  ).bind(ctx.principal.workspaceId,work.id,policy.id,policy.revision,JSON.stringify(snapshot),calendar&&JSON.stringify(calendar),at),ticketHistory(ctx,work,'work.sla_bound',before,{slaPolicy:{id:policy.id,revision:policy.revision,name:snapshot.name},firstResponseMinutes:snapshot.firstResponseMinutes,nextResponseMinutes:snapshot.nextResponseMinutes,resolutionMinutes:snapshot.resolutionMinutes,boundAt:at},at),release()]);
   return policy.id as string;
 }
 

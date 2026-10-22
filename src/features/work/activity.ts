@@ -17,7 +17,7 @@ export interface ActivityEntry {
   changes: { field: string; before: unknown; after: unknown }[];
 }
 type Audit = { id: string; actor_id: string; actor_name: string; action: string; detail_json: string; created_at: string };
-const actions = ['work.created','work.requested_for_updated','work.response_recorded','work.service_routed','work.imported_field','work.recurring_materialized','work.classification_overridden', 'work.classification_proposed', 'work.routed', 'work.group_set',
+const actions = ['work.sla_bound','work.created','work.requested_for_updated','work.response_recorded','work.service_routed','work.imported_field','work.recurring_materialized','work.classification_overridden', 'work.classification_proposed', 'work.routed', 'work.group_set',
   'work.department_handed_off', 'work.assigned', 'work.scenario_run', 'work.field_set', 'work.transitioned',
   'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked', 'catalog.quote_attached'];
 
