@@ -1,3 +1,4 @@
+import { lightweightImportJourney } from './lightweight-import-journey.mjs';
 import { applicationJourney, catalogFormJourney, catalogAudienceJourney } from './application-journey.mjs';
 import { catalogQuoteJourney } from './catalog-quote-journey.mjs';
 import { calendarJourney } from './calendar-journey.mjs';
@@ -564,6 +565,7 @@ try {
   } finally {
     await other.close();
   }
+  await lightweightImportJourney({page,api,base,out});
   await applicationJourney({page,api,base,out});
   await catalogFormJourney({page,api,base,out});
   await catalogAudienceJourney({browser,page,api,base,out});
