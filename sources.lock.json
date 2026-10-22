@@ -5299,7 +5299,7 @@
       "executable": false
     },
     "tests/services/employee-notice-cases.mjs": {
-      "sha256": "54187e7f21d75f9fc197ed97c7c2b908d4bd7b655fc432e85e6e8d2c9e7d420b",
+      "sha256": "97aff32639471fe516458740b6545f182fc909adbb088c50fc920ad8c465cc03",
       "executable": false
     },
     "tests/services/integration-worker.ts": {
@@ -5323,7 +5323,7 @@
       "executable": false
     },
     "tests/services/run.mjs": {
-      "sha256": "39e4c67efbfd86c976ae51b8a9ef4551203c32435f69a36766ddbe0b3aac6c55",
+      "sha256": "cc6f9aaf017ad30a0b208ee2a1f4e563199708b9a43a18702d0d19612b122166",
       "executable": false
     },
     "tests/services/template-cases.mjs": {
