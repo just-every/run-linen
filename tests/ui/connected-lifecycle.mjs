@@ -58,6 +58,13 @@ export async function connectedLifecycle(env) {
   await page.goto(base+'/app#/lifecycle/'+lapsed);await page.reload();
   await page.getByText('Existing sessions were invalidated.',{exact:false}).waitFor();
   await captureJourney(page,{path:out+'/LIFE-006-expired-verified.png',fullPage:true});
+  await birthrightBaselineJourney(env);
+}
+
+/** Focused entry point shares the exact birthright flow used by the connected CI journey. */
+export async function birthrightBaselineJourney(env) {
+  const {page,api,base,out,issuerApi,graph,probe,until,fixture}=env,uid=(await api('/session')).principal.userId;
+  const person=(await api('/people')).items.find(p=>p.source_id==='provider-colleague');assert.ok(person);
   // LIFE-003: owner access policies compute a Sales-to-Marketing move; standing grants execute it at the provider with independent readback.
   await fixture({disabled:false,sessionsRevokedAt:null});
   const sales=await api('/catalog-values',{dimension:'department',label:'Sales'}),marketing=await api('/catalog-values',{dimension:'department',label:'Marketing'}),legal=await api('/catalog-values',{dimension:'department',label:'Legal'});
