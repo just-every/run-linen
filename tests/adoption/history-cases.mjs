@@ -74,11 +74,12 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
   await ok('/imports/'+raced.id+'/identities','POST',{sourceUserId:subject.id,targetUserId:racePerson.id},raceAuth);
   await ok('/imports/'+raced.id+'/dry-run','POST',{},raceAuth);
   const raceKey='synthetic-linen-13020';
-  const applying=request('/imports/'+raced.id+'/resume','POST',{acceptSemanticLoss:true},{...raceAuth,extraHeaders:{'X-Test-Archive-Commit':raceKey}});
+  let completed;
+  const applying=request('/imports/'+raced.id+'/resume','POST',{acceptSemanticLoss:true},{...raceAuth,extraHeaders:{'X-Test-Archive-Commit':raceKey}}).then(response=>{completed=response;return response;});
   let arrived=false;
   try{
-    for(let n=0;n<1000;n++){if((await ok('/fixtures/archive-race/'+raceKey+'/arrived','GET',undefined,raceAuth)).arrived){arrived=true;break;}await new Promise(resolve=>setTimeout(resolve,10));}
-    assert.ok(arrived,'Import reaches its real private-work history write');
+    for(let n=0;n<1000&&!completed;n++){if((await ok('/fixtures/archive-race/'+raceKey+'/arrived','GET',undefined,raceAuth)).arrived){arrived=true;break;}await new Promise(resolve=>setTimeout(resolve,10));}
+    assert.ok(arrived,'Import reaches its real private-work history write: '+(completed?await completed.clone().text():'still pending'));
     await ok('/adoption/erase','POST',{identity:racePerson.id},raceAuth);
   }finally{await ok('/fixtures/archive-race/'+raceKey+'/release','POST',{},raceAuth);}
   const rejected=await applying;
