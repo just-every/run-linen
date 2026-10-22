@@ -22,7 +22,9 @@ try{
  for(const sql of sqlStatements(schema))await db.prepare(sql).run();
  for(const migration of ['0500_adoption.sql','0784_typed_history.sql'])
   for(const sql of sqlStatements(await readFile(new URL('../../migrations/'+migration,import.meta.url),'utf8')))
-   if(/^CREATE TABLE (?:adoption_tombstones|history_redactions|history_identity_tombstones)\b/.test(sql))await db.prepare(sql).run();
+   if(/(?:^|\n)\s*CREATE TABLE (?:adoption_tombstones|history_redactions|history_identity_tombstones|history_write_guards)\b/.test(sql))await db.prepare(sql).run();
+
+ for(const sql of sqlStatements(await readFile(new URL('../../migrations/0786_archive_identity_aliases.sql',import.meta.url),'utf8')))await db.prepare(sql).run();
 
  for(const sql of sqlStatements(await readFile(new URL('../../migrations/0749_change_calendar.sql',import.meta.url),'utf8')))await db.prepare(sql).run();await db.exec("CREATE TABLE work_records(id TEXT,workspace_id TEXT,requester_id TEXT,beneficiary_id TEXT,sensitivity TEXT,kind TEXT,state TEXT DEFAULT 'open',created_at TEXT DEFAULT '2020-01-01',context_json TEXT DEFAULT '{}',revision INTEGER DEFAULT 1); INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,sensitivity,kind) VALUES('work-1','w1','employee','employee','normal','incident');")
  await db.exec('CREATE TABLE users(id TEXT PRIMARY KEY,email TEXT,name TEXT); CREATE TABLE work_requester_groups(id TEXT PRIMARY KEY,workspace_id TEXT,name TEXT,members_json TEXT,created_at TEXT);');
