@@ -35,9 +35,15 @@ async function check(db,mode,label){
  let history=[]
  if(mode==='fresh'){for(const f of files)await apply(f);await seed()}
  else {
-  const prior=mode==='retained-platform'?files.filter(f=>f<='0001_platform.sql'):files.filter(f=>f<='0500_adoption.sql')
+  const prior=mode==='retained-platform'?files.filter(f=>f<='0001_platform.sql'):mode==='retained-departments'?files.filter(f=>f<'0781_department_spaces.sql'):files.filter(f=>f<='0500_adoption.sql')
   for(const f of prior)await apply(f)
   await seed()
+  if(mode==='retained-departments') {
+   await db.run("INSERT INTO work_groups(id,workspace_id,name,created_by,created_at,assignment,max_open,last_assignee_id) VALUES('retained-support','w','Existing support','owner','2026','round_robin',5,'employee')")
+   await db.run("INSERT INTO work_group_members(workspace_id,group_id,user_id,is_lead) VALUES('w','retained-support','employee',1)")
+   await db.run("INSERT INTO work_sla_policies(id,workspace_id,name,position,first_response_minutes,next_response_minutes,resolution_minutes,pause_on_json,created_by,created_at) VALUES('retained-policy','w','Existing service promise',1,60,120,480,'[\"requester\"]','owner','2026')")
+   await db.run("INSERT INTO work_routing_rules(id,workspace_id,name,position,group_id,created_by,created_at) VALUES('retained-route','w','Existing route',1,'retained-support','owner','2026')")
+  }
   if(mode==='deployed-privacy'){
    for(const sql of deployedGuards)await db.run(sql)
    await db.run("INSERT INTO adoption_tombstones VALUES('w','prior','2026')")
@@ -47,6 +53,12 @@ async function check(db,mode,label){
   for(const f of files.filter(f=>!prior.includes(f)))await apply(f)
   assert.deepEqual((await db.all('SELECT * FROM d1_migrations ORDER BY id')).slice(0,history.length),history)
   if(mode==='deployed-privacy')assert.deepEqual(await db.all("SELECT * FROM platform_identity_erasures WHERE identity_hash='prior'"),[{workspace_id:'w',identity_hash:'prior',user_id:null,actor_id:'owner',erased_at:'2026'}])
+ }
+ if(mode==='retained-departments') {
+  assert.deepEqual(await db.all("SELECT name,assignment,max_open,last_assignee_id,department_id FROM work_groups WHERE id='retained-support'"),[{name:'Existing support',assignment:'round_robin',max_open:5,last_assignee_id:'employee',department_id:null}])
+  assert.equal((await db.all("SELECT user_id FROM work_group_members WHERE group_id='retained-support'"))[0].user_id,'employee')
+  assert.deepEqual(await db.all("SELECT name,position,first_response_minutes,next_response_minutes,resolution_minutes,pause_on_json,department_id FROM work_sla_policies WHERE id='retained-policy'"),[{name:'Existing service promise',position:1,first_response_minutes:60,next_response_minutes:120,resolution_minutes:480,pause_on_json:'["requester"]',department_id:null}])
+  assert.deepEqual(await db.all("SELECT group_id,department_id FROM work_routing_rules WHERE id='retained-route'"),[{group_id:'retained-support',department_id:null}])
  }
  assert.equal((await db.all('SELECT * FROM d1_migrations')).length,files.length)
  assert.equal((await db.all("SELECT * FROM users WHERE id='employee'"))[0].password_hash,'retained-hash')
@@ -66,7 +78,7 @@ async function check(db,mode,label){
  if(label==='SQLite')assert.equal((await db.all('PRAGMA integrity_check'))[0].integrity_check,'ok')
  console.log(`PASS ${label} ${mode}: ${files.length} sorted migrations, preserved data/history, privacy guards and foreign keys`)
 }
-for(const mode of ['fresh','retained-platform','deployed-privacy']){
+for(const mode of ['fresh','retained-platform','deployed-privacy','retained-departments']){
  const sqlite=new DatabaseSync(':memory:')
  try{await check({run:async(sql,...args)=>sqlite.prepare(sql).run(...args),all:async(sql)=>sqlite.prepare(sql).all().map(r=>({...r}))},mode,'SQLite')}finally{sqlite.close()}
  const mf=new Miniflare(convertV4MiniflareOptions({ port: Number(process.env.LINEN_TEST_WORKER_PORT || 0), modules:true,script:'export default {fetch(){return new Response("ok")}}',compatibilityDate:'2026-09-08',d1Databases:['DB']}))
