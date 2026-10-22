@@ -29,7 +29,8 @@ export async function typedHistoryJourney({page,base,out}) {
   for(const width of [1440,390]){await page.setViewportSize({width,height:1000});await timeline.scrollIntoViewIfNeeded();await fitCapture(page,out,section+'-original-history',width);}
  }
  const asset=await api('/assets',{serial:'NS-DENVER-A17',source:'Facilities purchase order PO-1042',location:'Denver stockroom'});
- await api(`/assets/${asset.id}/commands`,{command:'assign',personId:session.principal.userId,evidence:'IT desk custody receipt for the meeting room device'});
+ const person=await api('/people',{source:'Facilities reviewed roster',sourceId:'synthetic-linen-451',name:'Jordan Lee',effectiveAt:new Date().toISOString(),observedAt:new Date().toISOString()});
+ await api(`/assets/${asset.id}/commands`,{revision:1,command:'assign',personId:person.id,evidence:'IT desk custody receipt for the meeting room device'});
  await page.goto(base+'/app#/assets');const card=page.locator('.connection-record').filter({has:page.getByRole('heading',{name:'NS-DENVER-A17',exact:true})});await card.getByText('Serial-level custody history',{exact:true}).click();const timeline=card.getByRole('list',{name:'Asset activity',exact:true});await timeline.locator(':scope > li').first().waitFor();
  for(const width of [1440,390]){await page.setViewportSize({width,height:1000});await timeline.scrollIntoViewIfNeeded();await fitCapture(page,out,'hardware-original-history',width);}
  console.log('PASS native typed history at 1440/390: dropdown/multiselect/number/boolean/date saves and original ticket, service, problem, change, software and hardware activity');
