@@ -1,4 +1,6 @@
 import { ApiError } from '../../platform/http';
+import { currentWorkPrincipal } from './identity';
+import {workDepartmentStaff,type WorkScope} from './scope';
 import type { WorkContext } from './core';
 import { departmentStaff } from './department-spaces';
 
@@ -11,6 +13,10 @@ export async function departmentRows<T extends {department_id?: unknown}>(ctx: W
 }
 export async function requireDepartmentStaff(ctx: WorkContext, departmentId: string|null|undefined) {
   if (!await departmentStaff(ctx, departmentId)) throw new ApiError(404,'not_found','Department resource unavailable');
+}
+export async function requireWorkDepartmentStaff(ctx:WorkContext,work:Pick<WorkScope,'department_id'|'protected_departments_json'>) {
+  await currentWorkPrincipal(ctx);
+  if(!workDepartmentStaff(ctx.principal,work))throw new ApiError(404,'not_found','Department resource unavailable');
 }
 export async function activeCatalogDepartment(ctx: WorkContext, catalog: {id?:string;department_id?:string|null}) {
   const row = catalog.department_id !== undefined ? catalog : catalog.id

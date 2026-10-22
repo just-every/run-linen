@@ -1,5 +1,6 @@
-import { departmentWorkBatch } from './department-spaces';
-import { requireDepartmentStaff } from './department-operations';
+import {destinationAssignee} from './department-assignment';
+import { departmentWorkBatch,workDepartmentStaffSql } from './department-spaces';
+import { requireWorkDepartmentStaff } from './department-operations';
 import { ApiError, id, now } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { getWork, permit, type WorkContext, type WorkRecord } from './core';
@@ -29,7 +30,7 @@ async function target(ctx: WorkContext, work: WorkRecord): Promise<Target | null
 }
 
 /** The group's members in round-robin order (joined first), after the group's last automatic assignee. */
-async function pickAgent(ctx: WorkContext, group: { id: string;department_id:string|null; assignment: string; max_open: number | null; last_assignee_id: string | null }, skill: string | null) {
+async function pickAgent(ctx: WorkContext, group: { id: string;department_id:string|null; assignment: string; max_open: number | null; last_assignee_id: string | null }, skill: string | null,work:WorkRecord) {
   if (group.assignment === 'none') return null;
   const members = (await ctx.env.DB.prepare(`SELECT m.user_id,
       (SELECT json_object('timezone',c.timezone,'weekdays_json',c.weekdays_json,'start_hour',c.start_hour,'end_hour',c.end_hour,'holidays_json',c.holidays_json,'holiday_catalog',c.holiday_catalog)
@@ -38,7 +39,7 @@ async function pickAgent(ctx: WorkContext, group: { id: string;department_id:str
       (SELECT COUNT(*) FROM work_records r WHERE r.workspace_id=m.workspace_id AND r.assignee_id=m.user_id AND r.state NOT IN ('closed','cancelled')) open
     FROM work_group_members m JOIN memberships s ON s.workspace_id=m.workspace_id AND s.user_id=m.user_id AND s.active=1
       AND (s.roles_json LIKE '%"operator"%' OR s.roles_json LIKE '%"owner"%')
-    WHERE m.workspace_id=? AND m.group_id=? AND (? IS NULL OR EXISTS(SELECT 1 FROM json_each(s.roles_json) WHERE value='owner') OR EXISTS(SELECT 1 FROM work_department_members dm JOIN work_departments d ON d.workspace_id=dm.workspace_id AND d.id=dm.department_id WHERE dm.workspace_id=m.workspace_id AND dm.user_id=m.user_id AND dm.department_id=? AND dm.active=1 AND d.active=1)) ORDER BY m.added_at,m.user_id`).bind(ctx.principal.workspaceId, group.id,group.department_id,group.department_id).all<Member>()).results;
+    WHERE m.workspace_id=? AND m.group_id=? AND EXISTS(SELECT 1 FROM work_records w WHERE w.workspace_id=m.workspace_id AND w.id=? AND ${workDepartmentStaffSql('w','s')}) ORDER BY m.added_at,m.user_id`).bind(ctx.principal.workspaceId, group.id,work.id).all<Member>()).results;
   const start = members.findIndex((m) => m.user_id === group.last_assignee_id) + 1, t = Date.now();
   const ordered = [...members.slice(start), ...members.slice(0, start)];
   const available = ordered.filter((m) =>
@@ -57,16 +58,17 @@ async function route(ctx: WorkContext, work: WorkRecord, trigger: Trigger) {
     .bind(work.workspace_id, to.groupId,work.department_id??null).first<{ id: string;department_id:string|null; assignment: string; max_open: number | null; last_assignee_id: string | null }>();
   if (!group) return null;
   // Restricted and HR tickets are never handed to an agent automatically: only their own readers decide who works them.
-  const assigneeId = work.sensitivity === 'normal' ? await pickAgent(ctx, group, to.skill) : null;
+  const assigneeId = work.sensitivity === 'normal' ? await pickAgent(ctx, group, to.skill,work) : null;
   const t = now(), db = ctx.env.DB;
   const detail = {
     trigger, from: { groupId: work.group_id ?? null, assigneeId: work.assignee_id }, to: { groupId: group.id, assigneeId },
     ...(to.ruleId ? { ruleId: to.ruleId } : { itemId: to.itemId }), method: group.assignment,
     ...(assigneeId || group.assignment === 'none' || work.sensitivity !== 'normal' ? {} : { unassigned: 'no_available_agent' }),
   };
+  const assignment=destinationAssignee(ctx,assigneeId,work.department_id??null,work.protected_departments_json??'[]',work.sensitivity,group.id);
   const statements = [
-    db.prepare('UPDATE work_records SET group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND department_id IS ?')
-      .bind(group.id, assigneeId, t, work.workspace_id, work.id, work.revision,group.department_id),
+    db.prepare(`UPDATE work_records SET group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND department_id IS ? AND protected_departments_json=? AND (? IS NULL OR EXISTS(${assignment.sql}))`)
+      .bind(group.id, assigneeId, t, work.workspace_id, work.id, work.revision,group.department_id,work.protected_departments_json??'[]',assigneeId,...assignment.bindings),
     db.prepare("INSERT INTO audit_events SELECT ?,?,?,'work.routed',?,?,? WHERE changes()>0")
       .bind(id(), work.workspace_id, ctx.principal.userId, work.id, JSON.stringify(detail), t),
     db.prepare('UPDATE work_groups SET last_assignee_id=COALESCE(?,last_assignee_id) WHERE workspace_id=? AND id=? AND changes()>0')
@@ -88,7 +90,7 @@ export async function rerouteWork(ctx: WorkContext, workId: string, body: Record
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner', 'operator']);
   const work = await getWork(ctx, workId);
-  await requireDepartmentStaff(ctx,work.department_id);
+  await requireWorkDepartmentStaff(ctx,work);
   if (body.revision !== work.revision) throw new ApiError(409, 'revision_conflict', 'Work changed; refresh before routing');
   const routed = await route(ctx, work, 'agent');
   if (!routed) throw new ApiError(422, 'no_route', 'No support group or routing rule matches this ticket');

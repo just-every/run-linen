@@ -1,5 +1,6 @@
+import {destinationAssignee} from './department-assignment';
 import { assertDepartmentConfig,departmentWorkBatch } from './department-spaces';
-import { departmentRows,requireDepartmentStaff } from './department-operations';
+import { departmentRows,requireDepartmentStaff,requireWorkDepartmentStaff } from './department-operations';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { getWork, listWork, permit, type WorkContext } from './core';
@@ -96,17 +97,18 @@ export async function setWorkGroup(ctx: WorkContext, workId: string, body: Recor
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner', 'operator']);
   const work = await getWork(ctx, workId), target = await group(ctx, requiredString(body.groupId, 'groupId'));
-  await requireDepartmentStaff(ctx,work.department_id);
+  await requireWorkDepartmentStaff(ctx,work);
   if((target.department_id??null)!==(work.department_id??null))throw new ApiError(422,'group_department','Choose a group in the ticket department');
   if (typeof body.revision !== 'number') throw new ApiError(422, 'revision_required', 'Send the ticket revision you read');
   const assigneeId = body.assigneeId === null ? null : typeof body.assigneeId === 'string' && body.assigneeId ? body.assigneeId : work.assignee_id;
-  if(assigneeId && target.department_id && !await ctx.env.DB.prepare(`SELECT 1 FROM memberships m WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND (EXISTS(SELECT 1 FROM json_each(m.roles_json) WHERE value='owner') OR EXISTS(SELECT 1 FROM work_department_members dm JOIN work_departments d ON d.workspace_id=dm.workspace_id AND d.id=dm.department_id WHERE dm.workspace_id=m.workspace_id AND dm.user_id=m.user_id AND dm.department_id=? AND dm.active=1 AND d.active=1))`).bind(ctx.principal.workspaceId,assigneeId,target.department_id).first())throw new ApiError(422,'department_assignee','Choose a current agent in this department');
+  const assignment=destinationAssignee(ctx,assigneeId,work.department_id??null,work.protected_departments_json??'[]',work.sensitivity,target.id);
+  if(assigneeId && !await ctx.env.DB.prepare(assignment.sql).bind(...assignment.bindings).first())throw new ApiError(422,'department_assignee','Choose a current agent authorized for the ticket restrictions');
   if (assigneeId && (!await groupMember(ctx, target.id, assigneeId) || !await ctx.env.DB.prepare(agentMember).bind(ctx.principal.workspaceId, assigneeId).first()))
     throw new ApiError(422, 'owner_not_in_group', `The ticket's owner must be an agent in ${target.name}`);
   const t = now();
   const [changed] = await departmentWorkBatch(ctx,work,[
-    ctx.env.DB.prepare('UPDATE work_records SET group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?')
-      .bind(target.id, assigneeId ?? null, t, ctx.principal.workspaceId, workId, body.revision),
+    ctx.env.DB.prepare(`UPDATE work_records SET group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND (? IS NULL OR EXISTS(${assignment.sql}))`)
+      .bind(target.id, assigneeId ?? null, t, ctx.principal.workspaceId, workId, body.revision,assigneeId??null,...assignment.bindings),
     ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'work.group_set',?,?,? WHERE changes()>0")
       .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, workId, JSON.stringify({ from: work.group_id ?? null, to: target.id, assigneeId: assigneeId ?? null }), t),
   ],'staff');

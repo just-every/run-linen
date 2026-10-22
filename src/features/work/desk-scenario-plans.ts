@@ -1,5 +1,7 @@
+import {departmentWorkBatch,departmentNotHrSql} from './department-spaces';
+import {requireWorkDepartmentStaff} from './department-operations';
 import { ApiError, id, now, requiredString } from '../../platform/http';
-import { permit, type WorkContext, type WorkRecord } from './core';
+import { getWork,permit, type WorkContext, type WorkRecord } from './core';
 import { taskChanges, taskEvent, taskSnapshot, type TaskOrigin } from './project-activity';
 import { readProject } from './projects';
 
@@ -9,6 +11,8 @@ export type ScenarioPlan = { projectId: string } | { name: string; tasks: { titl
 interface PreparedPlan { id: string; name?: string; tasks: { title: string; ownerId: string; dueDate: string }[] }
 export async function prepareScenarioPlan(ctx: WorkContext, work: WorkRecord, value: ScenarioPlan): Promise<PreparedPlan> {
   permit(ctx, ['owner', 'operator']);
+  await requireWorkDepartmentStaff(ctx,work);
+  if(!await ctx.env.DB.prepare(`SELECT 1 FROM work_records w WHERE w.workspace_id=? AND w.id=? AND ${departmentNotHrSql('w')}`).bind(ctx.principal.workspaceId,work.id).first())throw new ApiError(422,'project_link','HR workspace history cannot link to a shared IT project task plan');
   if (work.sensitivity !== 'normal') throw new ApiError(422, 'project_link', 'Only normal-sensitivity tickets may link to an IT project task plan');
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new ApiError(422, 'scenario_plan', 'Link a projectId or start a named task plan');
   if ('projectId' in value) {
@@ -34,6 +38,8 @@ export async function prepareScenarioPlan(ctx: WorkContext, work: WorkRecord, va
 
 /** The local project, all its duties and its ticket link are one D1 batch. No provider effect or grant is created. */
 export async function applyScenarioPlan(ctx: WorkContext, workId: string, plan: PreparedPlan, origin: TaskOrigin) {
+  const work=await getWork(ctx,workId);
+  await requireWorkDepartmentStaff(ctx,work);
   const ws = ctx.principal.workspaceId, t = now(), writes: D1PreparedStatement[] = [];
   if (plan.name) {
     writes.push(ctx.env.DB.prepare("INSERT INTO work_projects(id,workspace_id,name,description,owner_id,status,created_at,updated_at) VALUES(?,?,?,'',?,'active',?,?)")
@@ -47,5 +53,6 @@ export async function applyScenarioPlan(ctx: WorkContext, workId: string, plan: 
   }
   writes.push(ctx.env.DB.prepare("INSERT OR IGNORE INTO work_project_links(workspace_id,project_id,kind,target_id,task_id,detail,created_by,created_at) VALUES(?,?,'ticket',?,NULL,'',?,?)")
     .bind(ws, plan.id, workId, ctx.principal.userId, t));
-  await ctx.env.DB.batch(writes);
+  const guard=id();
+  await departmentWorkBatch(ctx,work,[ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_records w WHERE w.workspace_id=? AND w.id=? AND ${departmentNotHrSql('w')}) THEN 1 ELSE 0 END)`).bind(guard,ws,workId),...writes,ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)],'staff');
 }

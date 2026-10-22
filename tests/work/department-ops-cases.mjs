@@ -103,6 +103,69 @@ export async function departmentOpsChecks(workspaceApi, db) {
   assert.equal((await api(`/work/${routed.id}/sla`,undefined,agent)).status,404);
   const report=await get('/reports/work?from=2026-01-01T00:00:00Z&to=2030-01-01T00:00:00Z&timezone=Australia/Brisbane',agent);
   assert.ok(!report.rows.some(r=>r.id===routed.id)); assert.ok(!report.sla.rows.some(r=>r.workId===routed.id));
+  // Retained HR scope follows a normal service request into IT; destination membership alone grants no staff rights.
+  const dualId='synthetic-linen-940',dual={'x-user':dualId,'x-roles':'["operator"]'};
+  await db.exec(`INSERT INTO users VALUES('synthetic-linen-940','synthetic-linen-940@example.test','synthetic-linen-940','unused','2026-01-01'); INSERT INTO memberships VALUES('synthetic-linen-901','synthetic-linen-940','["operator"]',1);`);
+  await membership(people.id,dualId,true);await membership(it.id,dualId,true);
+  await post(`/work-groups/${group.id}/members`,{userId:dualId},undefined,200);
+  const protectedTeam=await post('/work-groups',{name:'synthetic-linen-941',departmentId:people.id});
+  await post(`/work-groups/${protectedTeam.id}/members`,{userId:dualId},undefined,200);
+  await post(`/work-groups/${group.id}/assignment`,{mode:'round_robin'},undefined,200);
+  const protectedItem=await post('/catalog',{name:'synthetic-linen-942',kind:'service',target:'synthetic-linen-942',ownerId:dualId,departmentId:people.id,tasks:[{key:'synthetic-linen-943',title:'synthetic-linen-943',groupId:protectedTeam.id,after:[],dueHours:24}]});
+  const protectedWork=await post('/work',{departmentId:people.id,title:'synthetic-linen-944',body:'synthetic-linen-944',deduplicationKey:'synthetic-linen-944'},employee);
+  await post(`/work/${protectedWork.id}/fulfilment`,{catalogId:protectedItem.id,beneficiaryId:'employee',purpose:'synthetic-linen-945'},employee);
+  const moveToIt=async source=>{
+    const w=(await get(`/work/${source.id}`)).work;
+    return (await post(`/work/${source.id}/department`,{departmentId:it.id,revision:w.revision,reason:'synthetic-linen-946'},undefined,200)).work;
+  };
+  let carried=await moveToIt(protectedWork);
+  assert.deepEqual(JSON.parse(carried.protected_departments_json),[people.id]);
+  const scenario=await post('/work-scenarios',{name:'synthetic-linen-947',scope:'workspace',steps:{message:{visibility:'public',body:'synthetic-linen-948'}}});
+  const taskPlanScenario=await post('/work-scenarios',{name:'synthetic-linen-949',scope:'workspace',steps:{taskPlan:{name:'synthetic-linen-949',tasks:[{title:'synthetic-linen-949',ownerId:dualId,dueDate:'2030-01-01'}]}}});
+  assert.equal((await api(`/work/${carried.id}`,undefined,agent)).status,404);
+  assert.equal((await api(`/work/${carried.id}/group`,{groupId:group.id,assigneeId:agentId,revision:carried.revision})).status,422,'Destination-only assignee cannot receive retained HR history');
+  assert.equal((await api(`/work/${carried.id}/route`,{revision:carried.revision},agent)).status,404);
+  assert.equal((await api(`/work/${carried.id}/scenario-runs`,{scenarioId:scenario.id,revision:carried.revision},agent)).status,404);
+  const routedProtected=await post(`/work/${carried.id}/route`,{revision:carried.revision},undefined,200);
+  assert.equal(routedProtected.work.assignee_id,dualId,'Automatic routing skips an earlier IT-only agent');
+  carried=routedProtected.work;
+  await post(`/work/${carried.id}/group`,{groupId:group.id,assigneeId:dualId,revision:carried.revision},dual,200);
+  await post(`/work/${carried.id}/scenario-runs`,{scenarioId:scenario.id},dual,200);
+  assert.equal((await api(`/work/${carried.id}/scenario-runs`,{scenarioId:taskPlanScenario.id},dual)).status,422,'Protected HR evidence cannot enter a shared IT project plan');
+  let protectedTasks=(await get(`/work/${carried.id}/obligations`,dual)).items;
+  const protectedTask=protectedTasks.find(t=>t.title==='synthetic-linen-943');assert.ok(protectedTask.can_complete);
+  assert.equal((await api(`/work/${carried.id}/tasks/${protectedTask.id}/complete`,{revision:protectedTask.revision},agent)).status,404);
+  await post(`/work/${carried.id}/tasks/${protectedTask.id}/complete`,{revision:protectedTask.revision},dual,200);
+  // A requester retains their own public conversation, but that is no scenario, completion or waiver grant.
+  const ownItem=await post('/catalog',{name:'synthetic-linen-960',kind:'service',target:'synthetic-linen-960',ownerId:agentId,departmentId:people.id});
+  const ownWork=await post('/work',{departmentId:people.id,title:'synthetic-linen-961',body:'synthetic-linen-961',deduplicationKey:'synthetic-linen-961'},agent);
+  await post(`/work/${ownWork.id}/fulfilment`,{catalogId:ownItem.id,beneficiaryId:agentId,purpose:'synthetic-linen-962'},agent);
+  await moveToIt(ownWork);
+  const ownView=await get(`/work/${ownWork.id}`,agent);assert.ok(ownView.work);
+  const ownTask=(await get(`/work/${ownWork.id}/obligations`,agent)).items.find(t=>t.catalog_id===ownItem.id||t.target==='synthetic-linen-960');
+  assert.ok(ownTask);assert.equal(ownTask.can_complete,false);assert.equal(ownTask.can_waive,false);
+  assert.equal((await api(`/work/${ownWork.id}/scenario-runs`,{scenarioId:scenario.id},agent)).status,404);
+  assert.equal((await api(`/work/${ownWork.id}/tasks/${ownTask.id}/complete`,{revision:ownTask.revision},agent)).status,404);
+  assert.equal((await api(`/work/${ownWork.id}/obligations/${ownTask.id}/waive`,{revision:ownTask.revision,reason:'synthetic-linen-963'},agent)).status,404);
+  // Draft detection uses its own SQL projection; all three moved source guards retain the HR boundary.
+  const protectedSources=[];
+  for(let i=0;i<3;i++) {
+    const source=await post('/work',{departmentId:people.id,title:'synthetic-linen-950',body:'synthetic-linen-950',context:{app:'synthetic-linen-950'},deduplicationKey:`synthetic-linen-${951+i}`},employee);
+    const moved=await moveToIt(source);protectedSources.push(moved.id);
+    await post(`/work/${moved.id}/commands`,{revision:moved.revision,command:'close',resolutionCode:'Solved (workaround)',reason:'synthetic-linen-954'},undefined,200);
+  }
+  const protectedDraft=(await post('/knowledge-drafts/detect',{},dual,200)).items.find(d=>protectedSources.every(key=>d.sources.some(source=>source.id===key)));
+  assert.ok(protectedDraft);
+  assert.equal((await api(`/knowledge-drafts/${protectedDraft.id}`,undefined,agent)).status,404);
+  assert.ok(!(await post('/knowledge-drafts/detect',{},agent,200)).items.some(d=>d.id===protectedDraft.id));
+  await membership(people.id,dualId,false);
+  assert.equal((await api(`/work/${carried.id}`,undefined,dual)).status,404);
+  assert.equal((await api(`/work/${carried.id}/group`,{groupId:group.id,assigneeId:dualId,revision:carried.revision},dual)).status,404);
+  assert.equal((await api(`/work/${carried.id}/scenario-runs`,{scenarioId:scenario.id},dual)).status,404);
+  const remaining=protectedTasks.find(t=>t.target==='synthetic-linen-942');
+  assert.ok(remaining);
+  assert.equal((await api(`/work/${carried.id}/tasks/${remaining.id}/complete`,{revision:remaining.revision},dual)).status,404);
+  assert.equal((await api(`/knowledge-drafts/${protectedDraft.id}`,undefined,dual)).status,404);
   await membership(it.id,agentId,false);
   assert.equal((await get('/work-groups',agent)).items.some(g=>g.id===group.id),false);
   assert.equal((await get('/work-routing',agent)).rules.some(r=>r.departmentId===it.id),false);

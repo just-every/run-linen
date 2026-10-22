@@ -1,3 +1,4 @@
+import {requireWorkDepartmentStaff} from './department-operations';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { appendMessage, getWork, permit, transitionWork, type WorkContext } from './core';
@@ -96,6 +97,7 @@ export async function runScenario(ctx: WorkContext, workId: string, body: Record
   const refused = (Object.keys(s.steps) as (keyof Steps)[]).filter((step) => !ctx.principal.roles.some((r) => stepRoles[step].includes(r)));
   if (refused.length) throw new ApiError(403, 'scenario_step_forbidden', `Your role cannot ${refused.join(', ')}; nothing was applied`);
   let work = await getWork(ctx, workId);
+  await requireWorkDepartmentStaff(ctx,work);
   if (typeof body.revision === 'number' && body.revision !== work.revision) throw new ApiError(409, 'revision_conflict', 'Work changed; refresh before running a scenario');
   const taskPlan = s.steps.taskPlan ? await prepareScenarioPlan(ctx, work, s.steps.taskPlan) : null;
   const changes: { step: string; field: string; before: unknown; after: unknown }[] = [];
@@ -120,11 +122,12 @@ export async function runScenario(ctx: WorkContext, workId: string, body: Record
     changes.push({ step: 'fields', field: after?.name ?? f.fieldId, before: before?.value ?? null, after: after?.value ?? null });
   }
   if (s.steps.message) {
+    await requireWorkDepartmentStaff(ctx,await getWork(ctx,workId));
     const m = s.steps.message;
     const text = m.templateId
       ? (await insertCannedResponse(ctx, workId, { templateId: m.templateId, revision: (await ctx.env.DB.prepare('SELECT revision FROM work_canned_responses WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, m.templateId).first<{ revision: number }>())?.revision })).text
       : m.body!;
-    await appendMessage(ctx, { workId, body: text, visibility: m.visibility, sourceMessageId: `scenario:${s.id}:${id()}` });
+    await appendMessage(ctx, { workId, body: text, visibility: m.visibility, sourceMessageId: `scenario:${s.id}:${id()}` },'staff');
     changes.push({ step: 'message', field: m.visibility === 'private' ? 'private note' : 'public reply', before: null, after: 'added' });
   }
   if (s.steps.status) {
@@ -149,7 +152,7 @@ export async function runScenario(ctx: WorkContext, workId: string, body: Record
 export async function scenarioRuns(ctx: WorkContext, workId: string) {
   await currentWorkPrincipal(ctx);
   permit(ctx, agents);
-  await getWork(ctx, workId);
+  await requireWorkDepartmentStaff(ctx,await getWork(ctx, workId));
   const rows = (await ctx.env.DB.prepare("SELECT actor_id,detail_json,created_at FROM audit_events WHERE workspace_id=? AND target=? AND action='work.scenario_run' ORDER BY created_at,rowid")
     .bind(ctx.principal.workspaceId, workId).all<{ actor_id: string; detail_json: string; created_at: string }>()).results;
   return { items: rows.map((r) => ({ actorId: r.actor_id, at: r.created_at, ...JSON.parse(r.detail_json) })) };
