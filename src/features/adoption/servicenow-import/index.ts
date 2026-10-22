@@ -1,3 +1,4 @@
+import {identityMatcher} from '../../history/identity';
 import { Buffer } from 'node:buffer';
 import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../../../platform/types';
@@ -18,9 +19,12 @@ async function review(c:Context<AppEnv>, body:Record<string,unknown>) {
   const values=new Set<string>();
   const visit=(value:unknown):void=>{if(typeof value==='string'){values.add(value);values.add(value.trim().toLowerCase());}else if(value&&typeof value==='object')for(const [key,child]of Object.entries(value)){if(['requester_id','user_id'].includes(key))values.add(`user:${child}`);visit(child);}};
   parsed.source.records.forEach(record=>visit(record.payload));
+  const matches=await identityMatcher(c.env,context.destination);
+  for(const value of values)requireInput(!await matches(value),'Source includes an erased identity; reconcile and supply a sanitized export');
   const hashes=JSON.stringify([...values].map(value=>sha256(value))), priorPredicate=context.authorization.predicate;
   context.authorization.predicate=(action,destination)=>{const prior=priorPredicate(action,destination);return {sql:`(${prior.sql}) AND NOT EXISTS(SELECT 1 FROM adoption_tombstones WHERE workspace_id=? AND identity_hash IN (SELECT value FROM json_each(?)))`,params:[...prior.params??[],destination,hashes]};};
-  const plan = await planD1Import(parsed.source,mapping(parsed,context.destination,namespace),context);
+  const privacy={history:(await c.env.DB.prepare('SELECT digest FROM history_identity_tombstones WHERE workspace_id=? ORDER BY digest').bind(context.destination).all<{digest:string}>()).results.map(r=>r.digest),legacy:(await c.env.DB.prepare('SELECT identity_hash FROM adoption_tombstones WHERE workspace_id=? ORDER BY identity_hash').bind(context.destination).all<{identity_hash:string}>()).results.map(r=>r.identity_hash)};
+  const plan = await planD1Import(parsed.source,mapping(parsed,context.destination,namespace,privacy),context);
   for(const entry of plan.entries)for(const effect of entry.effects) {
     const value=effect.value as {audits?:{id:string;detail_json:string;created_at:string;actor_id:string;target:string}[]};
     for(const audit of value.audits??[]) {
