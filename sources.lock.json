@@ -2511,7 +2511,7 @@
       "executable": false
     },
     "src/features/work/fulfilment-execution.ts": {
-      "sha256": "e5e9c2dbb20d193a5fcc90627b52715000ad24de91d06bfafc5c20d870d323d2",
+      "sha256": "40f4ffa7282bb8965ea0a2186a475b1969136b11846c20bf7a8678264c8b1bc6",
       "executable": false
     },
     "src/features/work/fulfilment-readiness.ts": {
@@ -5459,7 +5459,7 @@
       "executable": false
     },
     "tests/ui/department-browser.mjs": {
-      "sha256": "7fa8a02b45137f5cd85800acdff0af7fb935275edfddd934f8d7835a80549b32",
+      "sha256": "b8681d0509f00e81d614b9c97edc3b15197e136180e84019ccfd36dd202e4fae",
       "executable": false
     },
     "tests/ui/dependency-journey.mjs": {
