@@ -43,4 +43,18 @@ export async function departmentSourceChecks({call:rootCall,db}) {
   const anotherAsset=await ok('POST','/software-assets',{...assetBody,name:'Second north office printer',externalId:'synthetic-linen-12003'});
   assert.equal((await call('POST',`/software-assets/${anotherAsset.id}/assign`,{...assign(),revision:anotherAsset.revision},'operator')).status,404);
   assert.equal((await call('GET','/problems/department-source-problem')).status,200,'Existing owner authority remains available');
+  const hr=await ok('POST','/departments',{name:'HR source protection',kind:'hr'});
+  const move=async departmentId=>{
+    const current=(await ok('GET',`/work/${ticket.id}`)).work;
+    await ok('POST',`/work/${ticket.id}/department`,{revision:current.revision,departmentId,reason:'Preserve HR source custody through the handoff'});
+  };
+  await move(hr.id);await move(null);
+  assert.equal((await ok('GET','/plans',undefined,'operator')).some(plan=>plan.id==='department-source-plan'),false,'Legacy routing never removes retained HR plan restrictions');
+  assert.equal((await call('GET','/problems/department-source-problem',undefined,'operator')).status,404);
+  const hrMembership=await ok('POST',`/departments/${hr.id}/members`,{revision:hr.revision,userId:'operator',active:true});
+  assert.equal((await ok('GET','/plans',undefined,'operator')).some(plan=>plan.id==='department-source-plan'),true);
+  assert.equal((await call('GET','/problems/department-source-problem',undefined,'operator')).status,200);
+  await ok('POST',`/departments/${hr.id}/members`,{revision:hrMembership.revision,userId:'operator',active:false});
+  assert.equal((await call('GET','/problems/department-source-problem',undefined,'operator')).status,404);
+
 }

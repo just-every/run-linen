@@ -34,6 +34,19 @@ export async function departmentReportChecks(api,db) {
   assert.equal(revoked.resolutions.denominator,0);
   assert.deepEqual(revoked.effort.groups,[]);
   assert.deepEqual(revoked.effort.byRequestType,[]);
+  const hr=check(await api('/departments',{name:'HR retained report boundary',kind:'hr'}),201);
+  const handoff=async departmentId=>{
+    const current=check(await api(`/work/${tickets[1].id}`)).work;
+    check(await api(`/work/${tickets[1].id}/department`,{revision:current.revision,departmentId,reason:'Retain the existing HR access boundary'}));
+  };
+  await handoff(hr.id);await handoff(null);
+  assert.equal(check(await api(`/reports/work?${range}`,undefined,agent)).resolutions.denominator,0,'A move to the legacy workspace cannot expose retained HR counts');
+  membership=check(await api(`/departments/${hr.id}/members`,{revision:hr.revision,userId:'department-report-agent',active:true}));
+  const retained=check(await api(`/reports/work?${range}`,undefined,agent));
+  assert.equal(retained.resolutions.denominator,1);
+  assert.equal(retained.effort.groups.reduce((sum,row)=>sum+row.activeMinutes,0),23);
+  check(await api(`/departments/${hr.id}/members`,{revision:membership.revision,userId:'department-report-agent',active:false}));
+  assert.equal(check(await api(`/reports/work?${range}`,undefined,agent)).resolutions.denominator,0);
   const own=check(await api('/work',{title:'My Finance service question',body:'Public employee request',kind:'question',departmentId:finance.id,deduplicationKey:'department-public-staff-request'},agent),201);
   check(await api(`/work/${own.id}`,undefined,agent));
   const field=check(await api('/desk-fields',{name:'Department service detail',type:'text',kinds:['question'],requiredOn:[]}),201);
