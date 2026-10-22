@@ -25,7 +25,7 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   assert.equal(metadata.find(d=>d.id===spaces.it.id).canStaff,true);
   assert.equal(metadata.find(d=>d.id===spaces.hr.id).canStaff,false);
   const make=(departmentId,key,headers=employee,extra={})=>call('/work',{departmentId,title:key,body:key+' public request',deduplicationKey:key,...extra},headers,201);
-  const hrWork=await make(spaces.hr.id,'synthetic-linen-11205');
+  const hrWork=await make(spaces.hr.id,'synthetic-linen-11205',employee,{body:'Employee payrollcorrectiondetailsrestricted request for the payroll form'});
   const hrPath='/work/'+hrWork.id;
   await call(hrPath+'/messages',{body:'synthetic-linen-11206 private HR diagnosis',visibility:'private',sourceMessageId:'synthetic-linen-11207'},owner,201);
   await call(hrPath,undefined,it,404);
@@ -85,7 +85,11 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   if(attachment){assert.ok(retained.attachments.some(a=>a.id===attachment.id));await call('/attachments/'+attachment.id,undefined,it);await call('/attachments/'+attachment.id,undefined,fac,404);}
   assert.ok((await call(path+'/activity',undefined,it)).items.some(e=>e.action==='department handed off'));
   await member('it',itUser,false);
-  await call(path,undefined,it,404);
+  const managerOnly=await call(path,undefined,it);
+  assert.equal(managerOnly.work.access,'team','The existing reporting-line entitlement retains its public-only manager view');
+  assert.ok(managerOnly.messages.every(message=>message.visibility==='public'));
+  assert.deepEqual(managerOnly.attachments,[]);
+  if(attachment)await call('/attachments/'+attachment.id,undefined,it,404);
   assert.ok(!(await call('/work?departmentId='+spaces.it.id,undefined,it)).items.some(w=>w.id===request.id));
   // Legacy NULL work remains governed by the existing tenant rules, independently of department membership.
   const legacy=await make(undefined,'synthetic-linen-11230');
@@ -98,7 +102,8 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   assert.equal(carried.id,hrWork.id);
   assert.deepEqual(JSON.parse(carried.protected_departments_json),[spaces.hr.id]);
   await call(hrPath,undefined,it,404);
-  assert.equal((await call('/search?q=synthetic-linen-11205',undefined,it)).total,0);
+  assert.ok((await call('/search?q=payrollcorrectiondetailsrestricted')).items.some(item=>item.id===hrWork.id));
+  assert.equal((await call('/search?q=payrollcorrectiondetailsrestricted',undefined,it)).total,0);
   assert.ok(!(await call('/work',undefined,it)).items.some(w=>w.id===hrWork.id));
   assert.ok(!(await call('/team-requests',undefined,it)).items.some(w=>w.id===hrWork.id));
   await call(hrPath+'/shares',{email:itUser+'@example.test'},employee,422);
