@@ -517,6 +517,39 @@ that product and marks how close the current code is (see [Status](#status)).
   forwarded and sent from another address, or a reply to an earlier revision, is
   refused; an edited request invalidates the earlier approval.
 
+  *Current implementation, conservative defaults pending ct approval:* the owner
+  configures versioned stages against an existing business calendar. Each stage
+  names current members, named groups, the linked application's current owner or
+  the beneficiary's reviewed manager/current delegate. Its any-of or all-of rule
+  is independent of serial ordering: an explicit "open with previous" choice
+  opens a group of stages together, and the next serial group waits for all of
+  them. An item's existing manager gate runs first. Each stage may have its own
+  strict USD threshold using the item's recorded cents or a named numeric USD
+  answer; decimal amounts must be exact cents and the selected amount is frozen
+  with the submitted form. No amount is read from a quote. Templates, thresholds,
+  business-calendar revision and reminder/SLA instants are copied to the request.
+  Missing timing configuration is shown as unconfigured, never an invented SLA.
+  Portal decisions, scheduler work and fulfillment recheck live holder, delegation,
+  membership, audience and request/fulfillment/item revisions. A recorded rejection
+  remains final for that exact revision even if its holder later loses authority;
+  any-of cannot override it. A changed request invalidates prior decisions.
+
+  Approval email is disabled until an active owner explicitly and with an audit entry consents
+  to an active SendGrid sender, receiving mailbox, exact SES SNS topic and pinned
+  SNS signing-certificate public key. No automatic subscription confirmation or
+  remote certificate fetch occurs. An inbound reply must be a fresh SNS v2 signed
+  notification carrying original MIME and SES's passing SPF, DKIM and DMARC
+  verdicts. Conservatively, envelope and every signing domain must exactly equal
+  the From domain; ambiguous alignment refuses. Only the current approver's own
+  address with an unexpired single-use hashed token for the current request may
+  approve/reject; forwarded, stale, unsigned or unattributed replies refuse. The
+  unquoted reply is the decision comment. Outbound packets and portal reminder
+  tickets contain configured item/stage labels and opaque references only; current
+  decision holders read request details and catalog quotes through gated doors.
+  Restored mail consent, tokens and approvals remain inert until re-adoption.
+  CHANNEL-001/002 inherit these authority and privacy rules before chat delivery;
+  NOTIFY-001/002 inherit consent, recipient rechecks and ambiguity reconciliation.
+
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
   each new door must prove the inherited audience and quote rules.
@@ -2781,7 +2814,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `CHANNEL-008` | Service notices to employees | target | partial | `src/features/services/employee-notices.ts`, `src/features/services/employee-notice-mail.ts`, `src/ui/service-notices.tsx`, `tests/services/employee-notice-cases.mjs`, `tests/services/run.mjs`, `tests/ui/service-notice-journey.mjs` | Portal cohort notices, matching-ticket offers, cadence, generic SendGrid mail, named verified all-clear and withdrawal implemented. Gap: Slack and Teams delivery/adapter acceptance under CHANNEL-001/002. |
 | `CHANNEL-009` | Request sharing and manager visibility | target | done | `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs` | |
 | `CATALOG-001` | Catalog items with forms | target | done | `tests/work/application-cases.mjs` (applicationChecks: typed conditional forms, cost/delivery and saved revisions; catalogAudienceChecks: reviewed values, discovery, every filer, atomic single/bundle admission and pending holds); `tests/work/catalog-quote-cases.mjs` (catalogQuoteChecks: required PDF, exact readers, frozen hash, amendment refusal/fresh approval, exclusions, audit and erasure); `tests/ui/application-journey.mjs` (catalogFormJourney, catalogAudienceJourney: native conditional $250 form, both eligible departments, outsider and changed-item refusal at 1440/390); `tests/ui/catalog-quote-journey.mjs` (catalogQuoteJourney: native item/audience/quote editor, required quote, upload/download and approver/colleague at 1440/390); `tests/work/pending-person-runtime.mjs` (audience hold, refused release with reason and later release); `tests/intelligence/repair-runtime.mjs` (eligible model context and missing-quote/answer refusals); `tests/platform/mcp-tools-cases.mjs` (mcpToolCases: no quote/submission payload); `tests/adoption/application-cases.mjs` (attachArchiveApplications, checkArchiveApplications: owner export/restore quote bytes); `tests/adoption/retention-cases.mjs` (retentionChecks: quote record/bytes deletion and receipt); `tests/platform/base-auth-transfer.mjs` (native submitted form, reviewed facts and inert bindings). | Every current catalog door enforces the approved rule or refuses unsupported form/quote submission. Future carrier duties remain in their own clauses. |
-| `CATALOG-002` | Approval chains | target | partial | `src/features/work/fulfilment-decisions.ts`, `src/features/work/delegation.ts`, `tests/ui/fulfilment-decision-journey.mjs`, `tests/execution/authority-manager-cases.mjs` | Single manager approval; no multi-level, finance threshold, approval SLA or email-reply approval. |
+| `CATALOG-002` | Approval chains | target | partial | `tests/work/approval-chain-cases.mjs` approvalChainChecks via `tests/work/amend-manager-runtime.mjs`: $1,800 manager/delegate then finance >$1,000, 24 business-hour reminder/SLA, signed SES reply/comment, forwarded sender and stale-revision refusal, edit invalidation, thresholds, current groups, rejection and fulfillment guards; `tests/work/approval-parallel-cases.mjs` approvalParallelChecks: independently conditioned parallel stages and current manager/delegate; `tests/work/approval-reminder-privacy-cases.mjs` approvalReminderPrivacyChecks: no private ticket text in ordinary reminders/mail; `tests/ui/approval-chain-journey.mjs` approvalChainJourney via `tests/ui/fulfilment-decision-journey.mjs`: native stage editor and portal decision at 1440/390. | Slack/Teams approvals require CHANNEL-001/002 owner workspace/app credentials and consent; native mobile requires CHANNEL-005. Live mailbox/SES/SendGrid receipt is unproved. Conservative defaults pending ct: exact-domain alignment, owner-only audited mail consent and rejection final for an exact revision even after holder withdrawal. These keep the full clause partial; no channel requirement is narrowed. |
 | `CATALOG-003` | Fulfillment task plans | target | done | `src/features/work/catalog-task-plan.ts`, `src/features/work/catalog-tasks.ts`, `src/features/work/requests.ts`, `src/features/work/progress.ts`, `src/ui/catalog-task-plan-editor.tsx`, `src/ui/obligation-actions.tsx`, `tests/work/catalog-task-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/ui/catalog-task-journey.mjs`, `tests/ui/catalog-task-browser.mjs`, `tests/platform/base-auth-transfer.mjs` | Public-route and 1440/390 browser proof: an owner-edited team task plan beside the automated step; manager approval before any team works; ordered and parallel tasks with elapsed-hour due dates; team-only completion; a failed automated step owned with the request open; owner waiver with a reason; close only when every responsibility is verified, done or waived; in-flight copies unchanged by plan edits; cancel, erasure and native archive retention. A done task is a recorded completion, not device or provider verification; the MDM install step is CATALOG-005's and inherits this rule. |
 | `CATALOG-004` | Bundles and kits | target | done | `src/features/work/bundles.ts`, `src/ui/bundles.tsx`, `tests/work/bundle-cases.mjs` | Public-route proof: an owner-built hardware/software/access bundle opens one ticket with five child fulfilments; one atomic manager decision covers both gated children (partial and single-child approvals refused); per-child grants run and verify; the bundle stays in progress until the laptop handoff verifies the fifth child, then reads complete; a changed item refuses the stale bundle. Bundle builder, grouped manager decision and per-item progress inspected at 1440/390. |
 | `CATALOG-005` | Software requests installed through MDM | target | partial | `src/features/work/requests.ts`, `src/features/execution/verification.ts` | Software is a catalog kind fulfilled as an access grant; no MDM app binding, install-group assignment, installed-inventory verification, deployment failure task or lease uninstall. |
