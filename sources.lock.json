@@ -4455,7 +4455,7 @@
       "executable": false
     },
     "src/ui/catalog-item-admin.tsx": {
-      "sha256": "a084477ca02d9ca19ac5c6a98100529d5cb03a2dfdca0a6702a23189d898bc05",
+      "sha256": "122b3eb1f8185e2409945b3449b80a26d55b04c60f50fe182036f18bdad35711",
       "executable": false
     },
     "src/ui/catalog-request-form.tsx": {

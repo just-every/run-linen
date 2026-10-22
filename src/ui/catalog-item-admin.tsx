@@ -21,7 +21,7 @@ export function CatalogValues({ onChanged }: { onChanged: () => void }) {
     <ActionForm title="Add a value" path="/catalog-values" onSaved={() => { values.refresh(); onChanged(); }}
       fields={[{ name: 'dimension', label: 'Value list', type: 'select', required: true, options: dimensions.map(([value, label]) => ({ value, label })) }, { name: 'label', label: 'Value name', required: true }]} />
     {dimensions.map(([dimension, label]) => <fieldset key={dimension} aria-label={`${label} values`}><legend>{label}</legend>
-      {values.data?.items.filter(v => v.dimension === dimension).map(v => <p key={v.id}>{v.label}{v.active ? '' : ' (retired)'} <button type="button" className="action secondary" onClick={() => void toggle(v)}>{v.active ? 'Retire' : 'Restore'} {v.label}</button></p>)}
+      {values.data?.items.filter(v => v.dimension === dimension).map(v => <p key={v.id} style={{ overflowWrap: 'anywhere' }}>{v.label}{v.active ? '' : ' (retired)'} <button type="button" className="action secondary" aria-label={`${v.active ? 'Retire' : 'Restore'} ${v.label}`} onClick={() => void toggle(v)}>{v.active ? 'Retire' : 'Restore'}</button></p>)}
     </fieldset>)}
     <Notice>A value an item still uses can be retired, never deleted. Who has which value is recorded by the owner or HR on the person's reviewed record.</Notice>
   </details>;
