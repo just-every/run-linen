@@ -75,11 +75,12 @@ if (shardValue !== undefined) {
   }
   shard = { number, count }
 }
-// Seconds each check took on CI (Verify 39658205193); unlisted checks count as 10.
+// CI seconds: baseline Verify 39658205193; department browser 39721605432.
+// Unlisted checks count as 10.
 // Heaviest first onto the lightest shard keeps every shard inside its job limit.
 const measuredSeconds = {
   'Native archive transfer': 447, 'browser journeys': 249, 'native connected provider journeys': 246,
-  'identity erasure': 143, 'operations KPI browser': 100, 'Base native auth': 78,
+  'department workspaces browser': 146, 'identity erasure': 143, 'operations KPI browser': 100, 'Base native auth': 78,
   'desk scenarios and templates browser': 74, 'connection and authority setup': 69, 'release browser': 56,
   'pending person browser': 55, 'MCP native conversation': 51, 'desk groups and views browser': 49,
   'Legacy session retirement': 46, 'service integration': 37, 'adoption and recovery': 36,
