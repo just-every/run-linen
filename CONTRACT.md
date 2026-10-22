@@ -479,7 +479,7 @@ that product and marks how close the current code is (see [Status](#status)).
   requester, the beneficiary and the owner; once submitted also the current
   approver (the beneficiary's manager or current delegate, while the request is
   open), an approver who recorded a decision on that fulfilment, and the current
-  fulfilment owner (the item's or application's owner holding the operator or
+  fulfilment owner (the item's or application's current owner holding the operator or
   owner role). Unsubmitted quotes are readable by the requester, beneficiary and
   owner. Every read by someone other than the requester or beneficiary is audited
   by relation and id; uploads, replacement and attachment are audited by id and

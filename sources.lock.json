@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "166cc968aa1188ba26ff841584a03e4e5c639b3948aee3f9dad5190bca6e0465",
+      "sha256": "11192c66129443d2b504d72079c8f93f610403fe19162822c1f854776eb78803",
       "executable": false
     },
     "DEMO.md": {
@@ -2275,7 +2275,7 @@
       "executable": false
     },
     "src/features/work/catalog-quotes.ts": {
-      "sha256": "dd0bb197990c79b0d69236b5c08edba1c7423e63328337a8f9cae63b40c7e705",
+      "sha256": "e4a0ba9ab0f3f95162f6c0d388961a2b43c7ab8e9fed6263dd3463c4caa0aeb4",
       "executable": false
     },
     "src/features/work/catalog-task-plan.ts": {

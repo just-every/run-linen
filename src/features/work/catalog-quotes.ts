@@ -5,7 +5,6 @@ import { normalizeCatalogForm } from './catalog-form-schema';
 import { safeFileName, sha256Hex } from './mail-attachment';
 import { personForMember } from './person-binding';
 import { resolveManager } from './delegation';
-import { applicationForRequest } from './application-catalog';
 import type { WorkContext } from './core';
 
 /**
@@ -85,8 +84,12 @@ export async function quoteRelation(ctx: WorkContext, quote: Pick<QuoteRow, 'wor
     const person = await personForMember(ctx, f.beneficiary_id);
     if (person && await resolveManager(ctx, person.manager_id || null) === userId) return 'approver';
   }
-  const application = await applicationForRequest(ctx, quote.work_id, catalog);
-  if (userId === (application?.ownerId ?? catalog.owner_id) && ctx.principal.roles.some(r => ['operator', 'owner'].includes(r))) return 'fulfilment_owner';
+  // Quote custody follows today's fulfillment owner, independently of the saved routing/cost snapshot.
+  const fulfillmentOwner = catalog.application_id
+    ? (await db.prepare("SELECT owner_id FROM svc_records WHERE workspace_id=? AND id=? AND kind='application'")
+      .bind(w, catalog.application_id).first<{ owner_id: string }>())?.owner_id
+    : catalog.owner_id;
+  if (userId === fulfillmentOwner && ctx.principal.roles.some(r => ['operator', 'owner'].includes(r))) return 'fulfilment_owner';
   return null;
 }
 
