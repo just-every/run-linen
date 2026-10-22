@@ -15,6 +15,8 @@ const omissions=[
 ];
 async function review(c:Context<AppEnv>,body:Record<string,unknown>) {
   const slug=account(body.account),source=`csv:${slug}`,context=await requestContext(c,`csv-people:${c.get('principal').workspaceId}:${slug}`);
+  const authority=context.authorization.predicate('apply',context.destination);
+  if(!await c.env.DB.prepare('SELECT 1 WHERE '+authority.sql).bind(...authority.params??[]).first())throw new ApiError(409,'owner_session_changed','Owner session changed; sign in and review again');
   const file=readFile(body.file),rows=readCsv(file.text,['id','name','effective_at','observed_at'],requireInput);
   requireInput(rows.length>0&&rows.length<=1000,'Supply 1–1,000 people per reviewed import');
   const seen=new Set<string>(),people:Person[]=rows.map(row=>{

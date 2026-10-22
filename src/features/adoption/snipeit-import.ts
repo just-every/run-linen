@@ -1,3 +1,5 @@
+import { requestContext } from './freshservice-import/context';
+import type { D1Sql } from '../../modules/import-kit/src/d1/index';
 import { registeredHistory } from '../history/event';
 import { Buffer } from 'node:buffer';
 import type { Context, Hono } from 'hono';
@@ -101,7 +103,7 @@ async function review(ctx: AdoptionContext, body: Record<string, unknown>, syste
   return { file, ready, report: { fingerprint, counts, conflicts: summary.conflicts, rejected: file.rejected, omissions: file.omissions } };
 }
 
-async function apply(ctx: AdoptionContext, body: Record<string, unknown>, system:'snipeit'|'csv'='snipeit') {
+async function apply(ctx: AdoptionContext, body: Record<string, unknown>, system:'snipeit'|'csv', authorization:D1Sql) {
   const { file, ready, report } = await review(ctx, body, system);
   const label=system==='snipeit'?'Snipe-IT':'CSV';
   if (body.reviewedFingerprint !== report.fingerprint) throw new ApiError(409, 'snipeit_review_changed', 'The export, its resolutions or Linen devices changed since your review; run the dry run again');
@@ -127,7 +129,8 @@ async function apply(ctx: AdoptionContext, body: Record<string, unknown>, system
     chunk.push(json);chunkBytes+=bytes+1;
   }
   if(chunk.length)historyJson.push('['+chunk.join(',')+']');
-  const currentOwner = `EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) role WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND role.value='owner')`;
+  const currentOwner = `(${authorization.sql})`;
+  const authorityBindings=authorization.params??[];
   let created: number;
   try {
     // One transaction: a serial that appeared since review (any letter case) nulls the
@@ -136,10 +139,10 @@ async function apply(ctx: AdoptionContext, body: Record<string, unknown>, system
       db.prepare(`INSERT INTO work_assets(id,workspace_id,serial,state,location,source,observed_at,latest_event_id,asset_tag)
         SELECT json_extract(e.value,'$.id'),?,CASE WHEN EXISTS(SELECT 1 FROM work_assets a WHERE a.workspace_id=? AND lower(a.serial)=json_extract(e.value,'$.key')) THEN NULL ELSE json_extract(e.value,'$.serial') END,
           'stock',json_extract(e.value,'$.location'),json_extract(e.value,'$.source'),?,json_extract(e.value,'$.eventId'),json_extract(e.value,'$.assetTag')
-        FROM json_each(?) e WHERE ${currentOwner}`).bind(w, w, at, assetJson, w, actor),
+        FROM json_each(?) e WHERE ${currentOwner}`).bind(w, w, at, assetJson, ...authorityBindings),
       db.prepare(`INSERT INTO work_custody(id,workspace_id,asset_id,actor_id,kind,person_id,evidence,created_at)
         SELECT json_extract(e.value,'$.eventId'),?,json_extract(e.value,'$.id'),?,'record',NULL,json_extract(e.value,'$.evidence'),?
-        FROM json_each(?) e WHERE ${currentOwner}`).bind(w, actor, at, custodyJson, w, actor),
+        FROM json_each(?) e WHERE ${currentOwner}`).bind(w, actor, at, custodyJson, ...authorityBindings),
       ...historyJson.map(json => db.prepare(`INSERT INTO audit_events
         SELECT json_extract(e.value,'$.eventId'),?,?,'work.asset_recorded',json_extract(e.value,'$.assetId'),
           json_set(json_extract(e.value,'$.envelope'),'$.actor.name',COALESCE((SELECT name FROM users WHERE id=?),?),
@@ -148,9 +151,9 @@ async function apply(ctx: AdoptionContext, body: Record<string, unknown>, system
           AND EXISTS(SELECT 1 FROM work_assets a JOIN work_custody c ON c.workspace_id=a.workspace_id AND c.asset_id=a.id
             WHERE a.workspace_id=? AND a.id=json_extract(e.value,'$.assetId') AND a.latest_event_id=json_extract(e.value,'$.eventId')
               AND c.id=json_extract(e.value,'$.eventId') AND c.kind='record')`)
-        .bind(w,actor,actor,actor,w,at,json,w,actor,w)),
+        .bind(w,actor,actor,actor,w,at,json,...authorityBindings,w)),
       db.prepare(`INSERT INTO audit_events SELECT ?,?,?,'adoption.' || ? || '.import',?,?,? WHERE ${currentOwner}`)
-        .bind(id(), w, actor, system, file.hash, JSON.stringify({ file: file.name, created: items.length, conflicts: report.counts.conflicts, rejected: report.counts.rejected }), at, w, actor),
+        .bind(id(), w, actor, system, file.hash, JSON.stringify({ file: file.name, created: items.length, conflicts: report.counts.conflicts, rejected: report.counts.rejected }), at, ...authorityBindings),
     ]);
     created = assets.meta.changes;
   } catch (error) {
@@ -165,6 +168,11 @@ async function apply(ctx: AdoptionContext, body: Record<string, unknown>, system
 export function registerSnipeitImportRoutes(app: Hono<AppEnv>, system:'snipeit'|'csv'='snipeit') {
   const base=system==='snipeit'?'/adoption/snipeit-imports':'/adoption/csv-imports/assets';
   const ctx = (c: Context<AppEnv>): AdoptionContext => ({ env: c.env, principal: c.get('principal') });
-  app.post(base+'/dry-run', async c => { c.header('Cache-Control', 'private, no-store'); return c.json((await review(ctx(c), await importBody(c.req.raw),system)).report); });
-  app.post(base, async c => { c.header('Cache-Control', 'private, no-store'); return c.json(await apply(ctx(c), await importBody(c.req.raw),system), 201); });
+  async function admitted(c:Context<AppEnv>){
+    const context=await requestContext(c,system+'-assets:'+c.get('principal').workspaceId),authority=context.authorization.predicate('apply',context.destination);
+    if(!await c.env.DB.prepare('SELECT 1 WHERE '+authority.sql).bind(...authority.params??[]).first())throw new ApiError(409,'owner_session_changed','Owner session changed; sign in and review again');
+    return authority;
+  }
+  app.post(base+'/dry-run', async c => { c.header('Cache-Control', 'private, no-store');const body=await importBody(c.req.raw);await admitted(c);return c.json((await review(ctx(c),body,system)).report); });
+  app.post(base, async c => { c.header('Cache-Control', 'private, no-store');const body=await importBody(c.req.raw),authority=await admitted(c);return c.json(await apply(ctx(c),body,system,authority), 201); });
 }

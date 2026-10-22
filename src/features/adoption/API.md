@@ -126,3 +126,66 @@ priority `3` to `2` is recorded as `P3` to `P2` without changing current priorit
 Only supplied audit rows are included. Saved files do not establish completeness
 or source-side deletion, and journal messages, attachment downloads, CMDB and
 source automations remain outside this importer.
+
+## CSV and Zendesk move-in (MIGRATE-004)
+
+All routes below use the current authenticated owner's session and CSRF token.
+Dry runs are read-only. Apply requires the returned `reviewedFingerprint` and
+`acceptOmissions:true`; changed files or destination state require a fresh review.
+These are saved-file imports, with no source account credentials or provider
+calls. They confer no account, membership, approval, execution or outbound right.
+
+- **Tickets CSV:** POST `/adoption/csv-imports/tickets/dry-run` with
+  `{input:{account,files:[{name,format:"tickets-csv",base64}]}}`. `account` is a
+  stable non-secret slug. Supply one UTF-8 CSV, at most 1 MiB and 100 tickets,
+  with headers `id,subject,description,type,status,requester,created_at,updated_at`.
+  IDs are stable ASCII letters/numbers/dot/dash/underscore (1–100 characters).
+  `type` is `incident` or `request`; `status` and `requester` are source history.
+  Timestamps must include a timezone. RFC 4180 quoted commas/newlines work.
+  No account identity mapping is accepted. POST the same input, fingerprint,
+  accepted omissions and an `operationKey` to `/adoption/csv-imports/tickets`.
+- **Zendesk:** the same job API under `/adoption/zendesk-imports` accepts
+  `{input:{account,files:[{name,format:"tickets-json",base64}]}}`. Supply the
+  [documented full JSON ticket export](https://support.zendesk.com/hc/en-us/articles/4408886165402-Exporting-ticket-user-or-organization-data-from-your-account):
+  newline-separated `{"ticket":{...}}` objects or the documented
+  `{"tickets":[{"ticket":{...}},...]}` conversion, UTF-8, at most 1 MiB total,
+  100 tickets and 100 supplied text comments per ticket. Each ticket requires its
+  source ID, subject, description, requester ID, status, nullable type, created
+  and updated timestamps, and explicit comments array. Each comment requires
+  its ID, author ID, plain-text `body`, `public` boolean and created timestamp.
+  Missing/ambiguous history, unsafe numeric IDs and HTML-only/voice comments
+  are refused. Zendesk incident tickets become inert incident records;
+  question/problem/task/untyped tickets become inert requests, with the source
+  type retained in original history. This does not create native problems/tasks.
+  Exports may omit recent updates or oversized histories; saved files do not
+  establish completeness. Users, organizations, attachments and automations
+  are listed omissions, not imported as live configuration.
+
+Both ticket doors return restricted paused native tickets with opaque historical
+requester/author identities and original times and public/private comment flags.
+Current owners alone can read these unmapped records and retained source files.
+`/:id/resume` advances the durable job; `/:id`, `/:id/history`, `/:id/artifacts`
+and `/:id/artifacts/:ordinal` inspect it. `/:id/undo` and `/:id/rollback` retain
+conflict protection for later native edits. Jobs are scoped to their source door
+and importing owner. Originals are retained exactly, withdrawn on related
+person erasure, and unsanitized replay is refused. The existing archive retention
+and erasure rules apply; a restore confers no execution or membership authority.
+
+- **People CSV:** POST `/adoption/csv-imports/people/dry-run` with
+  `{account,file:{name,base64},skipIds?:string[]}`. Supply UTF-8 CSV headers
+  `id,name,effective_at,observed_at`, at most 1 MiB and 1,000 people. IDs and dates
+  follow the ticket CSV rules. Every source person is an observed native person
+  under `csv:<account>`, with no member, manager or attribute binding. Email,
+  roles, managers and other fields are listed omissions. Existing source IDs
+  appear as conflicts and may only be explicitly skipped; they are never
+  overwritten or merged. POST the same body, fingerprint and accepted omissions
+  to `/adoption/csv-imports/people` to atomically record the remaining people.
+  The file is not retained. Current native people readership, erasure and source
+  replay fences apply; this never admits an HR event or runs a lifecycle plan.
+- **Assets CSV:** POST `/adoption/csv-imports/assets/dry-run` with the same
+  `{file,resolutions?}` body and `Asset Tag,Serial` schema as the Snipe-IT door
+  above; `Location,Status` are optional. Apply at `/adoption/csv-imports/assets`
+  uses the same owner review, serial conflict decisions, atomic observed-stock
+  write and typed `record` custody history. Source status is quoted evidence,
+  never an assignment; existing custody is not overwritten. The original file,
+  assignments, purchase and warranty fields are not imported or retained.

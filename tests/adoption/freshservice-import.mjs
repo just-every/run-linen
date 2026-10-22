@@ -106,5 +106,5 @@ try{
  console.log('PASS unproved legacy session denied; freshly authenticated owner resumes, reads retained bytes and undoes');
  await snipeitImportChecks({ok,request,login,owner,snapshot});
  await serviceNowImportChecks({ok,request,owner,snapshot,db});
- await lightweightImportChecks({ok,request,login,owner,steward,snapshot,db});
+ await lightweightImportChecks({ok,request,login,owner,steward,snapshot,db,h});
 }finally{await h.close();}

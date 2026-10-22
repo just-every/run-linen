@@ -4,7 +4,7 @@ const file=(name,text)=>({name,base64:Buffer.from(text).toString('base64')});
 const dates='2026-01-02T10:00:00Z,2026-01-03T11:00:00Z';
 
 /** Authenticated native file migration; provider exports are synthetic, the application and D1 are real. */
-export async function lightweightImportChecks({ok,request,login,owner,steward,snapshot,db}) {
+export async function lightweightImportChecks({ok,request,login,owner,steward,snapshot,db,h}) {
   const employee=await ok('/members','POST',{name:'Imported history outsider',email:'csv-employee@example.test',password:'synthetic-linen-1',roles:['employee']},owner,201);
   const employeeAuth=await login(employee.email??'csv-employee@example.test','synthetic-linen-1');
   const csvBase='/adoption/csv-imports/tickets',peopleBase='/adoption/csv-imports/people',assetBase='/adoption/csv-imports/assets',zendeskBase='/adoption/zendesk-imports';
@@ -41,6 +41,19 @@ export async function lightweightImportChecks({ok,request,login,owner,steward,sn
   const duplicate=await ok(csvBase+'/dry-run','POST',{input:csvInput},owner);assert.equal(duplicate.records[0].targets[0].id,csv.review.records[0].targets[0].id,'A repeated source identity keeps the native target');
   console.log('PASS CSV tickets: authenticated read-only review, exact quoted text/timestamps, reviewed checkpoint apply, inert restricted native readback, exact originals, idempotence and source/employee denial');
 
+  // Preserve the owner role while revoking this session after middleware has
+  // authenticated it: an already-open import still cannot write from that session.
+  const rr=await ok(peopleBase+'/dry-run','POST',peopleBody,owner),bodyBytes=Buffer.from(JSON.stringify({...peopleBody,reviewedFingerprint:rr.fingerprint,acceptOmissions:true}));
+  const readId=crypto.randomUUID();let controller;
+  const pending=h.fetch('http://localhost/api/v1'+peopleBase,{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/json',...owner,'X-Test-Body-Read':readId},body:new ReadableStream({start(c){controller=c;c.enqueue(bodyBytes.subarray(0,1));}}),duplex:'half'});
+  let revokedSnapshot;
+  try {
+    assert.equal((await h.fetch('http://localhost/__test/body-read/'+readId,{signal:AbortSignal.timeout(10000)})).status,204);
+    const ownerId=(await ok('/session','GET',undefined,owner)).principal.userId;
+    await ok('/members/'+ownerId,'PATCH',{roles:['owner','auditor'],active:true},steward);revokedSnapshot=await snapshot();
+  }finally{controller.enqueue(bodyBytes.subarray(1));controller.close();}
+  const revoked=await pending;assert.equal(revoked.status,409,await revoked.clone().text());assert.equal(await snapshot(),revokedSnapshot,'A revoked streamed people import writes nothing');
+  owner=await login('owner@example.test','fixture owner password');
   const beforePeople=await snapshot(),pr=await ok(peopleBase+'/dry-run','POST',peopleBody,owner,200,{'X-Test-Read-Only':'1'});assert.equal(await snapshot(),beforePeople);
   assert.deepEqual(pr.counts,{rows:2,ready:2,conflicts:0,unresolved:0});assert.ok(pr.omissions.some(o=>o.field==='email'));
   const pb={...peopleBody,reviewedFingerprint:pr.fingerprint,acceptOmissions:true};
@@ -83,5 +96,7 @@ export async function lightweightImportChecks({ok,request,login,owner,steward,sn
   assert.ok([409,422].includes((await request(zendeskBase+'/dry-run','POST',{input:zendeskInput},owner)).status));
   assert.equal((await request(`${csvBase}/${csv.job.id}/artifacts/0`,'GET',undefined,owner)).status,200);
   console.log('PASS Zendesk documented NDJSON/wrapped export: exact timestamps/visibility/attribution, inert native records, strict malformed-history refusal, scoped originals, erasure and replay refusal');
+  await ok('/adoption/erase','POST',{identity:created.people[0].id},owner);
+  assert.ok([409,422].includes((await request(peopleBase+'/dry-run','POST',peopleBody,owner)).status),'Erased people cannot be reimported');
   for(const table of ['execution_grants','execution_plans','execution_outbox','work_intake_events','work_obligations'])assert.equal((await db.prepare(`SELECT count(*) n FROM ${table}`).first()).n,0,table+' stays inert');
 }
