@@ -5959,7 +5959,7 @@
       "executable": false
     },
     "tests/work/relationship-cases.mjs": {
-      "sha256": "02efb458cdc435b8c620eaf79a816d572905dc693013446dcdd132e4194eb2c3",
+      "sha256": "4f763d11ebb5e0a66b2a27bbe5140c942a7339867ddf005b21ad149a955fc227",
       "executable": false
     },
     "tests/work/response-cases.mjs": {
@@ -5971,7 +5971,7 @@
       "executable": false
     },
     "tests/work/runtime.mjs": {
-      "sha256": "2bee735c3a7bacdc059b8cf7f19affd022ad9897efecb7bdccb5a991f13dd061",
+      "sha256": "0d5075ed6084b0884364bd298bd4f8b89a23c82560513eadc395732a71573211",
       "executable": false
     },
     "tests/work/search-cases.mjs": {
