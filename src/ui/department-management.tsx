@@ -35,8 +35,8 @@ function DepartmentEdit({department,people,onSaved}:{department:AdminDepartment;
     ]}/>
     <form className="inline-form" aria-label={`${department.name} staff membership`} onSubmit={membership}>
       <h3>Staff membership</h3>
-      <label>Membership action<select value={operation} onChange={e=>setOperation(e.target.value)}><option value="add">Add staff member</option><option value="remove">Remove staff member</option></select></label>
-      <label>Staff member<select name="userId" required defaultValue="" key={operation}><option value="">Choose…</option>{available.map(p=><option key={p.id} value={p.id}>{p.name} · {p.email}</option>)}</select></label>
+      <label>Membership action<select aria-label="Membership action" value={operation} onChange={e=>setOperation(e.target.value)}><option value="add">Add staff member</option><option value="remove">Remove staff member</option></select></label>
+      <label>Staff member<select aria-label="Staff member" name="userId" required defaultValue="" key={operation}><option value="">Choose…</option>{available.map(p=><option key={p.id} value={p.id}>{p.name} · {p.email}</option>)}</select></label>
       <ErrorNotice error={mutation.error}/><button className="action secondary" disabled={mutation.pending||!available.length}>Save staff membership</button>
     </form>
   </>;
