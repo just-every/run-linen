@@ -4,6 +4,7 @@ import { assertDepartmentConfig, getDepartment } from './department-spaces';
 
 /** One revision-fenced move keeps the ticket, frozen fulfillment evidence and elapsed SLA intact. */
 export async function handoffDepartment(ctx:WorkContext,workId:string,input:Record<string,unknown>) {
+  if(!Object.hasOwn(input,'departmentId'))throw new ApiError(422,'department_required','Choose the destination workspace explicitly');
   const targetId=await assertDepartmentConfig(ctx,input.departmentId),work=await getWork(ctx,workId);
   const reason=requiredString(input.reason,'reason',2000),w=ctx.principal.workspaceId;
   if(!Number.isInteger(input.revision)||input.revision!==work.revision)throw new ApiError(409,'revision_conflict','Work changed; reload before handing it off');
@@ -43,7 +44,7 @@ export async function handoffDepartment(ctx:WorkContext,workId:string,input:Reco
     ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard+':assignment'),
     ctx.env.DB.prepare('UPDATE work_records SET department_id=?,group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?').bind(targetId,groupId,assigneeId,at,w,workId,input.revision),
     ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(eventId,w,ctx.principal.userId,'work.department_handed_off',workId,JSON.stringify({from:work.department_id??null,to:targetId,reason,groupId,assigneeId}),at),
-    ctx.env.DB.prepare("INSERT INTO work_messages VALUES(?,?,?,?,'public',?,?,?)").bind(id(),w,workId,ctx.principal.userId,`Handed to ${target?.name??'the existing service workspace'}: ${reason}`,`department:${eventId}`,at),
+    ctx.env.DB.prepare("INSERT INTO work_messages VALUES(?,?,?,?,'public',?,?,?)").bind(id(),w,workId,ctx.principal.userId,`Handed to ${target?.name??'the existing service workspace'}: ${reason}`,`transition:department:${eventId}`,at),
     ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),
   ]); } catch(error){if(/CHECK constraint failed/i.test(String(error)))throw new ApiError(409,'department_changed','Ticket, department or current owner authority changed; reload');throw error;}
   return {work:await getWork(ctx,workId)};

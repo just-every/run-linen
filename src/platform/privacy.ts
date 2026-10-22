@@ -43,6 +43,8 @@ export async function erasePlatformIdentity(ctx: {env: Env, principal: Principal
    db.prepare('DELETE FROM platform_auth_links WHERE workspace_id=? AND user_id=?').bind(w,uid),
    db.prepare('DELETE FROM platform_auth_steps WHERE user_id=? AND session_id IN (SELECT id FROM sessions WHERE workspace_id=? AND user_id=?)').bind(uid,w,uid),
    db.prepare('DELETE FROM sessions WHERE workspace_id=? AND user_id=?').bind(w,uid),
+   db.prepare('DELETE FROM work_department_members WHERE workspace_id=? AND user_id=?').bind(w,uid),
+   db.prepare('UPDATE work_department_members SET updated_by=NULL WHERE workspace_id=? AND updated_by=?').bind(w,uid),
    db.prepare('DELETE FROM memberships WHERE workspace_id=? AND user_id=?').bind(w,uid),
    // Free-form audit payloads can contain nested personal data without subject
    // indexing. Drop workspace payloads, retaining event IDs/actions/time and

@@ -1,14 +1,15 @@
+import { workReadSql, workPrivateSql } from './department-spaces';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import type { Principal } from '../../platform/types';
-import { currentWorkPrincipal } from './identity';
+import { currentPrincipal, currentWorkPrincipal } from './identity';
 import { getWork, permit, type WorkContext, type WorkRecord } from './core';
-import { workReadable } from './scope';
+import { workReadable, workPrivateReadable } from './scope';
 
 /** Collaboration never grants ticket readership. New sharing is an explicit owner decision. */
 export async function collaborationOwner(ctx: WorkContext, workId: string) {
   await currentWorkPrincipal(ctx); permit(ctx, ['owner']);
   const work = await getWork(ctx, workId);
-  if (work.sensitivity !== 'normal') throw new ApiError(403, 'collaboration_sensitive', 'New collaboration is available only on normal tickets');
+  if (work.sensitivity !== 'normal' || work.department_kind==='hr') throw new ApiError(403, 'collaboration_sensitive', 'New collaboration is available only on normal tickets');
   if (await ctx.env.DB.prepare('SELECT 1 FROM work_erasure WHERE workspace_id=? AND person_id IN (?,?)')
     .bind(ctx.principal.workspaceId, work.requester_id, work.beneficiary_id).first())
     throw new ApiError(409, 'erased', 'Erased tickets cannot start collaboration');
@@ -40,16 +41,18 @@ export async function collaborationReader(ctx: WorkContext, workId: string, user
     .bind(ctx.principal.workspaceId,userId).first<{roles_json:string}>();
   const work=await getWork(ctx,workId);
   const roles: Principal['roles']=member?JSON.parse(member.roles_json):[];
-  if(!member || !workReadable({...ctx.principal,userId,roles},work) || (privateNote && !roles.some(r=>['owner','operator'].includes(r))) ||
+  const recipient=member?await currentPrincipal(ctx.env.DB,{...ctx.principal,userId,roles}):null;
+  if(!recipient || !workReadable(recipient,work) || (privateNote && !workPrivateReadable(recipient,work)) ||
     await ctx.env.DB.prepare('SELECT 1 FROM work_erasure WHERE workspace_id=? AND person_id=?').bind(ctx.principal.workspaceId,userId).first())
     throw new ApiError(422,'collaboration_reader','Choose an active colleague who already has the required ticket access');
-  return member;
+  return member!;
 }
 export async function collaborationState(ctx: WorkContext, workId: string) {
   const work=await collaborationOwner(ctx,workId),w=ctx.principal.workspaceId,db=ctx.env.DB;
   const members=(await db.prepare('SELECT m.user_id id,u.name,m.roles_json FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.workspace_id=? AND m.active=1 AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=m.workspace_id AND e.person_id=m.user_id)').bind(w).all<{id:string;name:string;roles_json:string}>()).results;
-  const readers=members.filter(m=>workReadable({...ctx.principal,userId:m.id,roles:JSON.parse(m.roles_json)},work));
-  return { readers:readers.map(m=>({id:m.id,name:m.name,privateNote:JSON.parse(m.roles_json).some((r:string)=>['owner','operator'].includes(r))})),
+  const readers=[];
+  for(const member of members){const p=await currentPrincipal(db,{...ctx.principal,userId:member.id,roles:JSON.parse(member.roles_json)});if(workReadable(p,work))readers.push({...member,privateNote:workPrivateReadable(p,work)});}
+  return { readers:readers.map(m=>({id:m.id,name:m.name,privateNote:m.privateNote})),
     watchers:(await db.prepare('SELECT w.user_id,u.name FROM work_watchers w JOIN users u ON u.id=w.user_id WHERE w.workspace_id=? AND w.work_id=?').bind(w,workId).all()).results,
     sides:(await db.prepare(`SELECT s.id,s.vendor_email,s.closed_at,s.created_at,c.name connection_name,
       CASE WHEN c.revision=s.connection_revision THEN json_extract(c.config_json,'$.from') ELSE NULL END sender
@@ -61,7 +64,8 @@ export async function saveWatcher(ctx: WorkContext, workId: string, input: Recor
   const work=await collaborationOwner(ctx,workId),userId=requiredString(input.userId,'userId'),reason=consent(input);
   const member=await collaborationReader(ctx,workId,userId,false),w=ctx.principal.workspaceId;
   const guard=id();
-  await collaborationBatch(ctx,work,[ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND roles_json=? AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=memberships.workspace_id AND e.person_id=memberships.user_id)) THEN 1 ELSE 0 END)`).bind(guard,w,userId,member.roles_json),
+  await collaborationBatch(ctx,work,[ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND roles_json=? AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=memberships.workspace_id AND e.person_id=memberships.user_id)) THEN 1 ELSE 0 END)`).bind(guard,w,userId,member.roles_json),ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_records w JOIN memberships m ON m.workspace_id=w.workspace_id WHERE w.workspace_id=? AND w.id=? AND m.user_id=? AND m.active=1 AND ${workReadSql()}) THEN 1 ELSE 0 END)`).bind(guard+':department',w,workId,userId),
+    ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard+':department'),
     input.remove===true?ctx.env.DB.prepare('DELETE FROM work_watchers WHERE workspace_id=? AND work_id=? AND user_id=?').bind(w,workId,userId):
       ctx.env.DB.prepare('INSERT OR IGNORE INTO work_watchers VALUES(?,?,?,?,?)').bind(w,workId,userId,ctx.principal.userId,now()),
     collaborationAudit(ctx,workId,input.remove===true?'watch_removed':'watch_added',{recipientId:userId,reason}),ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)]);
@@ -80,6 +84,7 @@ export async function mentionNote(ctx: WorkContext, workId: string, input: Recor
   }
   const messageId=id(),at=now(),guards=mentions.map(()=>id());
   await collaborationBatch(ctx,work,[...mentions.map((userId,i)=>db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND roles_json=? AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=memberships.workspace_id AND e.person_id=memberships.user_id)) THEN 1 ELSE 0 END)`).bind(guards[i],w,userId,members[i].roles_json)),
+    ...mentions.flatMap((userId,i)=>[db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_records w JOIN memberships m ON m.workspace_id=w.workspace_id WHERE w.workspace_id=? AND w.id=? AND m.user_id=? AND m.active=1 AND ${workReadSql()} AND ${workPrivateSql()}) THEN 1 ELSE 0 END)`).bind(guards[i]+':department',w,workId,userId),db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guards[i]+':department')]),
     db.prepare("INSERT INTO work_messages VALUES(?,?,?,?,'private',?,?,?)").bind(messageId,w,workId,ctx.principal.userId,body,source,at),
     ...mentions.map(userId=>db.prepare("INSERT INTO work_collaboration_notices VALUES(?,?,?,?,?,'mention',?,NULL)").bind(id(),w,workId,messageId,userId,at)),
     collaborationAudit(ctx,workId,'mentioned',{messageId,recipientIds:mentions,reason}),...guards.map(g=>db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(g))]);
@@ -92,7 +97,7 @@ export async function collaborationInbox(ctx: WorkContext) {
   const rows=(await ctx.env.DB.prepare('SELECT id,work_id,message_id,kind,created_at,read_at FROM work_collaboration_notices WHERE workspace_id=? AND recipient_id=? ORDER BY created_at DESC LIMIT 100').bind(w,ctx.principal.userId).all<{id:string;work_id:string;message_id:string;kind:string;created_at:string;read_at:string|null}>()).results;
   for(const row of rows) {
     const work=await ctx.env.DB.prepare('SELECT * FROM work_records WHERE workspace_id=? AND id=?').bind(w,row.work_id).first<WorkRecord>();
-    if(!work||!workReadable(ctx.principal,work)||(row.kind==='mention'&&!ctx.principal.roles.some(r=>['owner','operator'].includes(r))))continue;
+    if(!work||!workReadable(ctx.principal,work)||(row.kind==='mention'&&!workPrivateReadable(ctx.principal,work)))continue;
     if(row.kind==='watch'&&!await ctx.env.DB.prepare('SELECT 1 FROM work_watchers WHERE workspace_id=? AND work_id=? AND user_id=?').bind(w,row.work_id,ctx.principal.userId).first())continue;
     items.push(row);
   }

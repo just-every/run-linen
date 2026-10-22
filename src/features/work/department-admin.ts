@@ -31,6 +31,7 @@ export async function createDepartment(ctx:WorkContext,input:Record<string,unkno
 }
 export async function editDepartment(ctx:WorkContext,departmentId:string,input:Record<string,unknown>,membership=false) {
   await assertDepartmentConfig(ctx,null);const before=await getDepartment(ctx,departmentId,false),at=now(),w=ctx.principal.workspaceId;
+  if(!membership&&input.kind!==undefined&&input.kind!==before.kind)throw new ApiError(422,'department_kind_immutable','A department workspace kind cannot change');
   if(!Number.isInteger(input.revision)||input.revision!==before.revision)throw new ApiError(409,'department_changed','Department changed; reload');
   const statements:D1PreparedStatement[]=[];
   if(membership) {

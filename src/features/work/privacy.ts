@@ -128,6 +128,9 @@ async function eraseSinglePerson(
     // New task audit payloads are untyped for erasure: keep the approved full-clearing fallback.
     // Do not reconstruct any removed value from the task or a later event.
     ctx.env.DB.prepare("UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action IN ('work.project_task_created','work.project_task_updated','work.project_task_linked')").bind(w),
+    ctx.env.DB.prepare('DELETE FROM work_department_members WHERE workspace_id=? AND user_id IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify([p,...aliases])),
+    ctx.env.DB.prepare('UPDATE work_department_members SET updated_by=NULL WHERE workspace_id=? AND updated_by IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify([p,...aliases])),
+    ctx.env.DB.prepare("UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action IN ('work.department_handed_off','work.department_member_set') AND (actor_id=? OR json_extract(detail_json,'$.userId')=? OR target IN(SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(w,p,p,w,p,p),
     // Tombstone every current identity in this same transaction. A reviewer may
     // unbind an erased record, but cannot rebind either side during cleanup.
     ...[...new Set([p,...aliases,...people.map(p=>`${p.source}:${p.source_id}`)])].map(value =>

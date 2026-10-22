@@ -2,7 +2,7 @@ import { personForMember } from './person-binding';
 import { ApiError } from '../../platform/http';
 import { getService } from '../services/store';
 import { operator, type WorkContext, type WorkRecord } from './core';
-import { workReadable } from './scope';
+import { workReadable, workPrivateReadable } from './scope';
 import { searchKnowledge } from './knowledge';
 
 export const searchTypes = ['ticket','person','asset','ci','change','problem','catalog','article'] as const;
@@ -36,7 +36,7 @@ export async function searchDocuments(ctx: WorkContext): Promise<SearchDocument[
   const messagesByWork=group(messages.results,m=>m.work_id),repairsByWork=group(repairs.results,r=>r.work_id),
     dutiesByWork=group(duties.results,d=>d.work_id),devicesByPerson=group(deviceRows,a=>a.person_id||'');
   for (const row of work.results.filter(r=>workReadable(p,r))) {
-    const privateAllowed=operator(p)||(row.sensitivity==='hr'&&p.roles.includes('hr'));
+    const privateAllowed=workPrivateReadable(p,row);
     const content=(messagesByWork.get(row.id)||[]).filter(m=>m.visibility==='public'||privateAllowed).map(m=>m.body);
     const context=JSON.parse(row.context_json || '{}');
     const linkedIds=new Set([

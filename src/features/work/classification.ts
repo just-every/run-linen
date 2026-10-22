@@ -1,3 +1,5 @@
+import { departmentStaffPrincipal, workPrivateReadable } from './scope';
+import { departmentWorkBatch } from './department-spaces';
 import { routeUnplaced } from './desk-routing';
 import { bindSlaPolicy } from './sla-policies';
 import { ApiError, id, now, requiredString } from '../../platform/http';
@@ -22,18 +24,18 @@ function classification(input: any): TicketClassification {
 }
 export async function readClassification(ctx: WorkContext, workId: string): Promise<ClassificationSnapshot> {
   const work = await getWork(ctx, workId), saved = await row(ctx, workId);
-  const history = operator(ctx.principal) ? (await ctx.env.DB.prepare(`SELECT e.*,COALESCE(u.name,e.actor_id) actor_name FROM audit_events e LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? AND e.target=? AND e.action IN ('work.classification_proposed','work.classification_overridden') AND json_type(e.detail_json,'$.after')='object' ORDER BY e.created_at DESC,e.rowid DESC LIMIT 30`)
+  const history = operator(ctx.principal) && workPrivateReadable(ctx.principal,work) ? (await ctx.env.DB.prepare(`SELECT e.*,COALESCE(u.name,e.actor_id) actor_name FROM audit_events e LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? AND e.target=? AND e.action IN ('work.classification_proposed','work.classification_overridden') AND json_type(e.detail_json,'$.after')='object' ORDER BY e.created_at DESC,e.rowid DESC LIMIT 30`)
     .bind(ctx.principal.workspaceId, workId).all<{ id: string; actor_id: string; actor_name: string; action: string; created_at: string; detail_json: string }>()).results.map(event => ({ ...event, ...JSON.parse(event.detail_json) })) : [];
   return { revision: saved?.revision ?? 0, workRevision: work.revision, state: saved?.state ?? 'unclassified',
     current: saved?.current_json ? JSON.parse(saved.current_json) : null,
     proposal: saved?.proposal_json ? JSON.parse(saved.proposal_json) : null,
-    reason: operator(ctx.principal) ? saved?.reason ?? null : null, error: saved?.error ?? null, history };
+    reason: operator(ctx.principal) && workPrivateReadable(ctx.principal,work) ? saved?.reason ?? null : null, error: saved?.error ?? null, history };
 }
 /** Apply classification and its before/after audit in one transaction, fencing stale work and revoked roles. */
 async function apply(ctx: WorkContext, work: WorkRecord, expected: number, after: TicketClassification, reason: string, proposal?: ClassificationProposal, token?: string, messageCount?: number) {
   const saved = await row(ctx, work.id), before = saved?.current_json ? JSON.parse(saved.current_json) : null;
   const t = now(), db = ctx.env.DB, p = ctx.principal;
-  const result = await db.batch([
+  const result = await departmentWorkBatch(ctx,work,[
     db.prepare(`UPDATE work_records SET kind=?,impact=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?
       AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 ${proposal ? '' : "AND (EXISTS(SELECT 1 FROM json_each(roles_json) WHERE value IN ('owner','operator')))"})
       AND COALESCE((SELECT revision FROM work_classifications WHERE workspace_id=? AND work_id=?),0)=?
@@ -46,7 +48,7 @@ async function apply(ctx: WorkContext, work: WorkRecord, expected: number, after
     db.prepare('INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
       .bind(id(), p.workspaceId, p.userId, proposal ? 'work.classification_proposed' : 'work.classification_overridden', work.id,
         JSON.stringify({ before, after, reason, ...(proposal ? { attemptId: proposal.attemptId, model: proposal.model } : {}) }), t),
-  ]);
+  ],proposal?'read':'staff');
   if (!result[0].meta.changes) throw new ApiError(409, 'classification_conflict', 'Work, classification or current authority changed; refresh before applying');
   await bindSlaPolicy(ctx, work, after);
   // DESK-003: a classified ticket still without an accountable group is routed by its category.
@@ -55,6 +57,7 @@ async function apply(ctx: WorkContext, work: WorkRecord, expected: number, after
 export async function overrideClassification(ctx: WorkContext, workId: string, input: any) {
   const work = await getWork(ctx, workId);
   permit(ctx, ['owner', 'operator']);
+  if(!departmentStaffPrincipal(ctx.principal,work.department_id))throw new ApiError(403,'department_staff','Current department staff authority required');
   if (input.workRevision !== work.revision || !Number.isInteger(input.revision))
     throw new ApiError(409, 'classification_conflict', 'Refresh the current request before overriding');
   await apply(ctx, work, input.revision, classification(input), requiredString(input.reason, 'reason', 3000));
@@ -62,7 +65,7 @@ export async function overrideClassification(ctx: WorkContext, workId: string, i
 }
 export async function proposeClassification(ctx: WorkContext, workId: string, input: any) {
   const work = await getWork(ctx, workId);
-  if (!operator(ctx.principal) && work.requester_id !== ctx.principal.userId)
+  if ((!operator(ctx.principal)||!departmentStaffPrincipal(ctx.principal,work.department_id)) && work.requester_id !== ctx.principal.userId)
     throw new ApiError(403, 'classification_actor', 'Requester or current service agent required');
   if (input.workRevision !== work.revision || !Number.isInteger(input.revision))
     throw new ApiError(409, 'classification_conflict', 'Refresh the current request before proposing');

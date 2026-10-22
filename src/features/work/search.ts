@@ -18,9 +18,9 @@ export async function globalSearch(ctx:WorkContext, query:string, type:string, o
   matches.sort((a,b)=>b.score-a.score||a.type.localeCompare(b.type)||a.title.localeCompare(b.title)||a.id.localeCompare(b.id));
   for (const result of matches) counts[result.type]++;
   // A role change during a read cannot return an earlier, broader projection.
-  const roles=[...ctx.principal.roles].sort().join(',');
+  const roles=JSON.stringify([[...ctx.principal.roles].sort(),[...(ctx.principal.departmentIds??[])].sort()]);
   await currentWorkPrincipal(ctx);
-  if (roles!==[...ctx.principal.roles].sort().join(',')) throw new ApiError(409,'search_scope_changed','Your permissions changed; search again');
+  if (roles!==JSON.stringify([[...ctx.principal.roles].sort(),[...(ctx.principal.departmentIds??[])].sort()])) throw new ApiError(409,'search_scope_changed','Your permissions changed; search again');
   await ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)')
     .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,'search.privileged_read','global-search','{}',now()).run();
   return {query,type,offset,pageSize,total:matches.length,counts,

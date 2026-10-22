@@ -1,3 +1,5 @@
+import { workPrivateReadable } from './scope';
+import { departmentWorkBatch } from './department-spaces';
 import { ApiError, id, now } from '../../platform/http';
 import { getWork, operator, type WorkContext } from './core';
 
@@ -20,9 +22,9 @@ export async function timeTarget(ctx: WorkContext, workId: string, obligationId?
   return work;
 }
 export async function listTime(ctx: WorkContext, workId: string) {
-  await getWork(ctx, workId);
+  const work=await getWork(ctx, workId);
   // Notes and other people's effort are service-team records, not conversation messages.
-  const team = operator(ctx.principal) || ctx.principal.roles.includes('hr');
+  const team = work.department_id ? workPrivateReadable(ctx.principal,work) : operator(ctx.principal)||ctx.principal.roles.includes('hr');
   return (await ctx.env.DB.prepare(`SELECT * FROM work_time_entries WHERE workspace_id=? AND work_id=? AND (?=1 OR actor_id=?) ORDER BY created_at,id`)
     .bind(ctx.principal.workspaceId, workId, Number(team), ctx.principal.userId).all<TimeEntry>()).results;
 }
@@ -37,7 +39,7 @@ export async function recordTime(ctx: WorkContext, workId: string, input: {
   if (!actorRole) throw new ApiError(403, 'human_role_required', 'A current human workspace role is required');
   const ownRole = ['operator','hr'].includes(actorRole) ? 'agent' : actorRole;
   const effortRole = input.effortRole || ownRole;
-  if (effortRole !== ownRole && !(operator(ctx.principal) && ['vendor','technician'].includes(effortRole)))
+  if (effortRole !== ownRole && !(operator(ctx.principal) && (!work.department_id||workPrivateReadable(ctx.principal,work)) && ['vendor','technician'].includes(effortRole)))
     throw new ApiError(403, 'effort_role', 'Record your own role, or explicitly attributed vendor or technician work as a service operator');
   if (!['manual','measured'].includes(input.source) || typeof input.deduplicationKey !== 'string' || !input.deduplicationKey.trim() || input.deduplicationKey.length>200 || (input.note !== undefined && (typeof input.note !== 'string' || input.note.length>2000)))
     throw new ApiError(422, 'time_input', 'Source, stable entry identity and a note of at most 2000 characters required');
@@ -62,7 +64,7 @@ export async function recordTime(ctx: WorkContext, workId: string, input: {
   // Expired timers relinquish authority without inventing elapsed effort.
   const statements = input.source==='measured' ? [ctx.env.DB.prepare("UPDATE work_time_entries SET state='paused',last_seen_at=NULL,sequence=sequence+1 WHERE workspace_id=? AND actor_id=? AND state='active' AND last_seen_at<?")
     .bind(ctx.principal.workspaceId,ctx.principal.userId,new Date(Date.now()-heartbeatLimitMs).toISOString())] : [];
-  try { await ctx.env.DB.batch([...statements,ctx.env.DB.prepare(`INSERT INTO work_time_entries(id,workspace_id,work_id,obligation_id,actor_id,actor_role,effort_role,request_type,source,active_ms,note,state,last_seen_at,created_at,updated_at,dedup_key,touch_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+  try { await departmentWorkBatch(ctx,work,[...statements,ctx.env.DB.prepare(`INSERT INTO work_time_entries(id,workspace_id,work_id,obligation_id,actor_id,actor_role,effort_role,request_type,source,active_ms,note,state,last_seen_at,created_at,updated_at,dedup_key,touch_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
     .bind(entryId,ctx.principal.workspaceId,workId,input.obligationId||null,ctx.principal.userId,actorRole,effortRole,service?.name||work.kind,input.source,input.source==='manual'?Math.round(minutes!*60000):0,input.note||'',input.source==='manual'?'completed':'active',input.source==='manual'?null:t,t,t,input.deduplicationKey,touchKind)]); }
   catch(error) {
     if(String(error).includes('UNIQUE constraint')) throw new ApiError(409,'time_conflict','An entry or active timer already exists. Refresh the recorded effort before starting another.');

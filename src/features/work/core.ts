@@ -87,7 +87,7 @@ export async function getWork(ctx: WorkContext, id: string) {
   if (!row || !workReadable(p,row))
     throw new ApiError(404, "not_found", "Work not found");
   if (
-    operator(p) &&
+    (operator(p) || Boolean(row.department_id)&&p.roles.includes('hr')) &&
     row.requester_id !== p.userId &&
     row.beneficiary_id !== p.userId
   )
@@ -139,7 +139,7 @@ export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
     .bind(p.workspaceId, ids,p.workspaceId,ids).all<{ work_id: string; name: string; kind: string }>()).results;
   const seesAttention = operator(p) || p.roles.includes('hr');
   return Promise.all(rows.map(async (row: any) => {
-    const staff = workPrivateReadable(p,row);
+    const staff = !row.department_id || workPrivateReadable(p,row);
     const progress = flagged.has(row.id) ? await progressFor(ctx, row) : [];
     const item = { ...row, progress, services: services.filter(s => s.work_id === row.id).map(({ name, kind }) => ({ name, kind })) };
     // Ordinary conversation listings do not expose the operator attention packet, the group or the priority.
@@ -357,7 +357,7 @@ export async function appendMessage(
     );
   if (
     input.visibility === "public" &&
-    operator(ctx.principal) &&
+    (work.department_id ? departmentStaffPrincipal(ctx.principal,work.department_id) && work.requester_id!==ctx.principal.userId && work.beneficiary_id!==ctx.principal.userId : operator(ctx.principal)) &&
     !input.sourceMessageId.startsWith("transition:")
   )
     statements.push(
@@ -379,10 +379,13 @@ async function appendSharedReply(ctx: WorkContext, input: { workId: string; body
   if (previous && (previous.author_id !== ctx.principal.userId || previous.visibility !== "public" || previous.body !== input.body))
     throw new ApiError(409, "idempotency_conflict", "Message identity already used");
   if (!input.body.trim()) throw new ApiError(422, "invalid_message", "Body and sourceMessageId required");
-  await db.batch([
+  const guard=id();
+  try { await db.batch([
+    db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_records w JOIN memberships m ON m.workspace_id=w.workspace_id WHERE w.workspace_id=? AND w.id=? AND m.user_id=? AND m.active=1 AND w.sensitivity='normal' AND ${departmentNotHrSql('w')} AND EXISTS(SELECT 1 FROM work_shares s WHERE s.workspace_id=w.workspace_id AND s.work_id=w.id AND s.user_id=m.user_id AND s.revoked_at IS NULL)) THEN 1 ELSE 0 END)`).bind(guard,w,input.workId,ctx.principal.userId),
     db.prepare("INSERT OR IGNORE INTO work_messages VALUES(?,?,?,?,'public',?,?,?)").bind(id(), w, input.workId, ctx.principal.userId, input.body, input.sourceMessageId, at),
     db.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=? AND changes()>0").bind(at, w, input.workId),
-  ]);
+    db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),
+  ]); } catch(error){if(/CHECK constraint failed/i.test(String(error)))throw new ApiError(409,'share_changed','Current share or workspace changed; reload');throw error;}
   return db.prepare("SELECT * FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?").bind(w, input.workId, input.sourceMessageId).first();
 }
 export async function conversation(ctx: WorkContext, workId: string) {
@@ -411,6 +414,8 @@ export async function conversation(ctx: WorkContext, workId: string) {
     (SELECT name FROM users WHERE id=?) requester_name,
     (SELECT name FROM users WHERE id=?) assignee_name`)
     .bind(work.requester_id, work.assignee_id).first();
+  const current=await getWork(ctx,workId);
+  if((current.department_id??null)!==(work.department_id??null)||privateAllowed&&!workPrivateReadable(ctx.principal,current))throw new ApiError(409,'department_authority_changed','Ticket workspace or current authority changed; reload');
   return { work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, quotes: await quotesForRequest(ctx, workId), progress: await requestProgress(ctx, workId) };
 }
 // The public line each conversation command records, in words people read.

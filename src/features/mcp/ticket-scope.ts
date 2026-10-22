@@ -5,11 +5,12 @@ import { toolScopes } from './credentials';
 
 /** Queue readership is separate from every REST, requester, share and group-member rule. */
 export function readableTicket(queueOnly = false) {
-  return `w.workspace_id=c.workspace_id AND w.sensitivity='normal'
+  return `NOT EXISTS(SELECT 1 FROM work_departments d WHERE d.workspace_id=w.workspace_id AND d.id=w.department_id AND d.kind='hr')
+    AND w.workspace_id=c.workspace_id AND w.sensitivity='normal'
     AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=w.workspace_id AND e.person_id IN(w.requester_id,w.beneficiary_id))
     AND NOT EXISTS(SELECT 1 FROM platform_identity_erasures e WHERE e.workspace_id=w.workspace_id AND e.user_id IN(w.requester_id,w.beneficiary_id))
-    AND (EXISTS(SELECT 1 FROM work_groups g,json_each(c.queue_groups_json) q WHERE g.workspace_id=w.workspace_id AND g.id=w.group_id AND q.value=g.id)
-      ${queueOnly ? '' : "OR EXISTS(SELECT 1 FROM audit_events a WHERE a.workspace_id=w.workspace_id AND a.actor_id=c.principal_id AND a.target=w.id AND a.action='mcp.work_created')"})`;
+    AND (EXISTS(SELECT 1 FROM work_groups g,json_each(c.queue_groups_json) q WHERE g.workspace_id=w.workspace_id AND g.id=w.group_id AND g.department_id IS w.department_id AND q.value=g.id AND (g.department_id IS NULL OR EXISTS(SELECT 1 FROM work_departments d WHERE d.workspace_id=g.workspace_id AND d.id=g.department_id AND d.active=1)))
+      ${queueOnly ? '' : "OR w.department_id IS NULL AND EXISTS(SELECT 1 FROM audit_events a WHERE a.workspace_id=w.workspace_id AND a.actor_id=c.principal_id AND a.target=w.id AND a.action='mcp.work_created')"})`;
 }
 export function authorizedTool(tool: keyof typeof toolScopes) {
   return `${credentialPredicate('c')} AND EXISTS(SELECT 1 FROM json_each(c.tools_json) WHERE value='${tool}')

@@ -1,3 +1,4 @@
+import { workPrivateReadable } from './scope';
 import { approvalActivity } from './approval-activity';
 import { conversation, getWork, operator, type WorkContext } from './core';
 
@@ -15,10 +16,11 @@ export interface ActivityEntry {
 }
 type Audit = { id: string; actor_id: string; actor_name: string; action: string; detail_json: string; created_at: string };
 const actions = ['work.classification_overridden', 'work.classification_proposed', 'work.routed', 'work.group_set',
-  'work.assigned', 'work.scenario_run', 'work.field_set', 'work.transitioned',
+  'work.department_handed_off', 'work.assigned', 'work.scenario_run', 'work.field_set', 'work.transitioned',
   'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked', 'catalog.quote_attached'];
 
 function changes(event: Audit, detail: Record<string, any>): ActivityEntry['changes'] {
+  if(event.action==='work.department_handed_off')return [{field:'department workspace',before:detail.from,after:detail.to}];
   if (['work.scenario_run', 'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked'].includes(event.action)) return (detail.changes ?? []).map(({ field, before, after }: any) => ({ field, before, after }));
   if (event.action === 'work.field_set') return Object.hasOwn(detail, 'before')
     ? [{ field: detail.field, before: detail.before, after: detail.value }] : [];
@@ -45,7 +47,7 @@ export async function ticketActivity(ctx: WorkContext, workId: string) {
     visibility: message.visibility, body: message.body, changes: [],
   }));
   // A shared/participant view does not grant the agent's full ticket scope.
-  if (operator(ctx.principal) && !('access' in view.work)) {
+  if (operator(ctx.principal) && workPrivateReadable(ctx.principal,view.work) && !('access' in view.work)) {
     await getWork(ctx, workId);
     const rows = (await ctx.env.DB.prepare(`SELECT e.*,CASE WHEN EXISTS(SELECT 1 FROM platform_identity_erasures p WHERE p.workspace_id=e.workspace_id AND p.user_id=e.actor_id) THEN '[erased]' ELSE COALESCE(u.name,e.actor_id) END actor_name FROM audit_events e
       LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? AND e.target=?

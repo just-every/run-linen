@@ -1,3 +1,5 @@
+import { workPrivateReadable } from './scope';
+import { departmentWorkBatch } from './department-spaces';
 import { currentWorkPrincipal } from "./identity";
 import { safeFileName, safeContentType, sha256Hex } from "./mail-attachment";
 import { ApiError, id, now } from "../../platform/http";
@@ -17,8 +19,7 @@ export async function storeAttachment(
   const work = await getWork(ctx, workId);
   if (
     input.visibility === "private" &&
-    !operator(ctx.principal) &&
-    !(work.sensitivity === "hr" && ctx.principal.roles.includes("hr"))
+    !workPrivateReadable(ctx.principal,work)
   )
     throw new ApiError(403, "private", "Private attachments require operator");
   if (input.bytes.byteLength > 20 * 1024 * 1024 || !input.name)
@@ -34,7 +35,7 @@ export async function storeAttachment(
     httpMetadata: { contentType: "application/octet-stream" },
   });
   try {
-    await ctx.env.DB.prepare(
+    await departmentWorkBatch(ctx,work,[ctx.env.DB.prepare(
       "INSERT INTO work_attachments(id,workspace_id,work_id,visibility,blob_key,name,content_type,size,sha256,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
     )
       .bind(
@@ -49,7 +50,7 @@ export async function storeAttachment(
         hash,
         now(),
       )
-      .run();
+      ],input.visibility==='private'?'private':'read');
   } catch (error) {
     await ctx.env.ATTACHMENTS.delete(key);
     throw error;
@@ -74,8 +75,7 @@ export async function readAttachment(ctx: WorkContext, attachmentId: string) {
   const work = await getWork(ctx, row.work_id);
   if (
     row.visibility === "private" &&
-    !operator(ctx.principal) &&
-    !(work.sensitivity === "hr" && ctx.principal.roles.includes("hr"))
+    !workPrivateReadable(ctx.principal,work)
   )
     throw new ApiError(404, "not_found", "Attachment not found");
   const blob = await ctx.env.ATTACHMENTS.get(row.blob_key);
@@ -85,5 +85,7 @@ export async function readAttachment(ctx: WorkContext, attachmentId: string) {
       "attachment_unavailable",
       "Attachment bytes unavailable",
     );
+  const current=await getWork(ctx,row.work_id);
+  if(row.visibility==='private'&&!workPrivateReadable(ctx.principal,current))throw new ApiError(404,'not_found','Attachment not found');
   return { blob, name: row.name };
 }

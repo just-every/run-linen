@@ -1,3 +1,4 @@
+import { departmentNotHrSql, departmentWorkBatch } from './department-spaces';
 import type { Context, Hono } from "hono";
 import type { AppEnv } from "../../platform/types";
 import { ApiError, id, jsonBody, now } from "../../platform/http";
@@ -17,12 +18,12 @@ const reports = `WITH RECURSIVE reports(member_id,depth) AS (
     WHERE p.workspace_id=? AND p.active=1 AND p.merged_into IS NULL AND p.member_id IS NOT NULL AND p.binding_id IS NOT NULL AND r.depth<${MAX_DEPTH})`;
 const teamWork = `${reports} SELECT w.id,w.title,w.state,w.kind,w.created_at,w.updated_at,w.closed_at,w.revision,w.beneficiary_id,
     (SELECT name FROM work_people WHERE workspace_id=w.workspace_id AND member_id=w.beneficiary_id AND active=1) beneficiary_name
-  FROM work_records w WHERE w.workspace_id=? AND w.sensitivity='normal' AND w.beneficiary_id<>? AND w.beneficiary_id IN (SELECT member_id FROM reports)`;
+  FROM work_records w WHERE w.workspace_id=? AND w.sensitivity='normal' AND ${departmentNotHrSql('w')} AND w.beneficiary_id<>? AND w.beneficiary_id IN (SELECT member_id FROM reports)`;
 
 function sharer(ctx: WorkContext, work: WorkRecord) {
   const me = ctx.principal.userId;
   if (work.requester_id !== me && work.beneficiary_id !== me) throw new ApiError(403, "share_forbidden", "Only the requester or the person it is for can share this request");
-  if (work.sensitivity !== "normal") throw new ApiError(422, "share_sensitivity", "HR and restricted requests are never shared");
+  if (work.sensitivity !== "normal" || work.department_kind==='hr') throw new ApiError(422, "share_sensitivity", "HR and restricted requests are never shared");
 }
 
 export async function shareWork(ctx: WorkContext, workId: string, input: Record<string, unknown>) {
@@ -36,7 +37,7 @@ export async function shareWork(ctx: WorkContext, workId: string, input: Record<
   const userId = member.id;
   if ([work.requester_id, work.beneficiary_id].includes(userId)) throw new ApiError(422, "share_target", "This person already sees the request");
   const at = now(), shareId = id();
-  await ctx.env.DB.batch([
+  await departmentWorkBatch(ctx,work,[
     ctx.env.DB.prepare("INSERT OR IGNORE INTO work_shares(id,workspace_id,work_id,user_id,shared_by,shared_at) VALUES(?,?,?,?,?,?)").bind(shareId, w, workId, userId, ctx.principal.userId, at),
     ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0").bind(id(), w, ctx.principal.userId, "work.shared", workId, JSON.stringify({ userId, shareId }), at),
   ]);
@@ -67,7 +68,7 @@ export async function listShares(ctx: WorkContext, workId: string) {
 /** The public-only view a shared colleague (who may reply) or a manager of the beneficiary (read-only) gets. */
 export async function sharedView(ctx: WorkContext, workId: string) {
   const w = ctx.principal.workspaceId, me = ctx.principal.userId;
-  const shared = await ctx.env.DB.prepare(`SELECT w.id,w.title,w.state,w.kind,w.created_at,w.updated_at,w.closed_at,w.revision FROM work_records w WHERE w.workspace_id=? AND w.id=? AND w.sensitivity='normal' AND ${activeShare}`)
+  const shared = await ctx.env.DB.prepare(`SELECT w.id,w.title,w.state,w.kind,w.created_at,w.updated_at,w.closed_at,w.revision FROM work_records w WHERE w.workspace_id=? AND w.id=? AND w.sensitivity='normal' AND ${departmentNotHrSql('w')} AND ${activeShare}`)
     .bind(w, workId, me).first<any>();
   const team = shared ? null : await ctx.env.DB.prepare(`${teamWork} AND w.id=?`).bind(w, me, w, w, me, workId).first<any>();
   const work = shared ? { ...shared, access: "shared", canReply: true } : team ? { ...team, access: "team", canReply: false } : null;
@@ -82,11 +83,11 @@ export async function sharedView(ctx: WorkContext, workId: string) {
 
 /** True when the reader holds a current share of this normal request: they may add public replies only. */
 export async function sharedReplyAllowed(ctx: WorkContext, workId: string) {
-  return Boolean(await ctx.env.DB.prepare(`SELECT 1 FROM work_records w WHERE w.workspace_id=? AND w.id=? AND w.sensitivity='normal' AND ${activeShare}`)
+  return Boolean(await ctx.env.DB.prepare(`SELECT 1 FROM work_records w WHERE w.workspace_id=? AND w.id=? AND w.sensitivity='normal' AND ${departmentNotHrSql('w')} AND ${activeShare}`)
     .bind(ctx.principal.workspaceId, workId, ctx.principal.userId).first());
 }
 
-export const sharedListClause = `EXISTS(SELECT 1 FROM work_shares s WHERE s.workspace_id=work_records.workspace_id AND s.work_id=work_records.id AND s.user_id=? AND s.revoked_at IS NULL)`;
+export const sharedListClause = `${departmentNotHrSql('work_records')} AND EXISTS(SELECT 1 FROM work_shares s WHERE s.workspace_id=work_records.workspace_id AND s.work_id=work_records.id AND s.user_id=? AND s.revoked_at IS NULL)`;
 
 export async function teamRequests(ctx: WorkContext) {
   await currentWorkPrincipal(ctx);
