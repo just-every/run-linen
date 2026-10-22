@@ -36,7 +36,7 @@ export async function ticketActivity(ctx: WorkContext, workId: string) {
     .bind(ctx.principal.workspaceId,JSON.stringify(view.messages.map((m: any) => m.author_id))).all<{user_id:string;name:string}>()).results;
   const authors = new Map(automation.map(a => [a.user_id,a.name]));
   const items: ActivityEntry[] = view.messages.map((message: any) => ({
-    id: message.id, at: message.created_at, kind: 'message', actor: authors.get(message.author_id) ?? message.author_id, actorKind: authors.has(message.author_id) ? 'automation' : 'person',
+    id: message.id, at: message.created_at, kind: 'message', actor: message.author_id==='[erased]'?'Erased person':authors.get(message.author_id) ?? message.author_id, actorKind: authors.has(message.author_id) ? 'automation' : 'person',
     action: message.source_key?.startsWith('transition:') ? 'Public status update' : 'Message',
     visibility: message.visibility, body: message.body, changes: [],
   }));
