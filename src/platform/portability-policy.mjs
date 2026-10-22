@@ -24,6 +24,19 @@ export const portabilityPolicy={
   }
   const departmentMembers=tables.work_department_members;
   if(departmentMembers && await db.prepare(`SELECT 1 FROM "${departmentMembers.replaceAll('"','""')}" WHERE active<>0 LIMIT 1`).first())return false;
+  const work=tables.work_records,departments=tables.work_departments;
+  if(work){
+   const quoted='"'+work.replaceAll('"','""')+'"';
+   const columns=await db.prepare(`PRAGMA table_info(${quoted})`).all();
+   if(columns.results.some(column=>column.name==='protected_departments_json')){
+    if(await db.prepare(`SELECT 1 FROM ${quoted} WHERE NOT json_valid(protected_departments_json) OR json_type(protected_departments_json)<>'array' LIMIT 1`).first())return false;
+    if(!departments){if(await db.prepare(`SELECT 1 FROM ${quoted} WHERE json_array_length(protected_departments_json)>0 LIMIT 1`).first())return false;}
+    else {
+     const departmentTable='"'+departments.replaceAll('"','""')+'"';
+     if(await db.prepare(`SELECT 1 FROM ${quoted} w WHERE EXISTS(SELECT 1 FROM json_each(w.protected_departments_json) p LEFT JOIN ${departmentTable} d ON d.id=p.value AND d.workspace_id=w.workspace_id AND d.kind='hr' WHERE p.type<>'text' OR d.id IS NULL) OR json_array_length(w.protected_departments_json)<>(SELECT COUNT(DISTINCT value) FROM json_each(w.protected_departments_json)) LIMIT 1`).first())return false;
+    }
+   }
+  }
   const services=tables.svc_records;
   if(services && await db.prepare(`SELECT 1 FROM "${services.replaceAll('"','""')}" WHERE kind='release' AND (json_extract(data_json,'$.state') IS NOT 'imported-review' OR json_array_length(data_json,'$.decisions') IS NOT 0) LIMIT 1`).first())return false;
   return true;
