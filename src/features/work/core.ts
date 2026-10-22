@@ -1,4 +1,5 @@
-import { workReadable } from './scope';
+import { workReadable, workPrivateReadable, departmentStaffPrincipal } from './scope';
+import { departmentWorkBatch, requestDepartment, workReadSql, departmentNotHrSql, requireWorkPrivate } from './department-spaces';
 import { preparePendingRequest, pendingRequestSnapshot } from './pending-services';
 import { progressFor, requestProgress } from "./progress";
 import { hashToken } from "../../platform/crypto";
@@ -8,7 +9,7 @@ import { slaPauseStatements, validWaitingOn } from "./sla-policies";
 import { closeResolution, pauseStatus } from "./desk-fields";
 import { participantView } from "./relationships";
 import { sharedListClause, sharedReplyAllowed, sharedView } from "./sharing";
-import { currentWorkPrincipal } from "./identity";
+import { currentPrincipal, currentWorkPrincipal } from "./identity";
 import { assertCloseable } from "./catalog-tasks";
 import { quotesForRequest } from "./catalog-quotes";
 import { groupMember } from "./desk-groups";
@@ -22,6 +23,9 @@ export interface WorkContext {
 export interface WorkRecord {
   id: string;
   workspace_id: string;
+  department_id?: string | null;
+  department_name?: string | null;
+  department_kind?: string | null;
   requester_id: string;
   beneficiary_id: string;
   kind: string;
@@ -42,13 +46,15 @@ export interface WorkRecord {
 /** DESK-001: a queue filter within the reader's own scope. A group filter lists that group's tickets; `restricted: false`
  * leaves restricted ones out; the rest narrow by state, owner, priority and type, and sort the result. */
 export interface WorkFilter {
+  departmentId?: string | null;
   groupId?: string; restricted?: false; state?: "open" | "closed"; assignee?: "me" | "none"; priority?: string; kind?: string;
   sort?: "updated" | "created" | "oldest" | "priority";
 }
 const priorityOf = "(SELECT json_extract(c.current_json,'$.priority') FROM work_classifications c WHERE c.workspace_id=work_records.workspace_id AND c.work_id=work_records.id)";
-const workOrder = { updated: "updated_at DESC", created: "created_at DESC,rowid DESC", oldest: "created_at ASC,rowid ASC", priority: `COALESCE(${priorityOf},'P9') ASC,updated_at DESC` };
+const workOrder = { updated: "updated_at DESC", created: "work_records.created_at DESC,work_records.rowid DESC", oldest: "work_records.created_at ASC,work_records.rowid ASC", priority: `COALESCE(${priorityOf},'P9') ASC,updated_at DESC` };
 function narrow(filter: WorkFilter, userId: string): [string, unknown[]] {
   const parts: [string, unknown[]][] = [
+    [filter.departmentId !== undefined ? "AND department_id IS ?" : "", filter.departmentId !== undefined ? [filter.departmentId] : []],
     [filter.groupId ? "AND group_id=?" : "", filter.groupId ? [filter.groupId] : []],
     [filter.restricted === false ? "AND sensitivity<>'restricted'" : "", []],
     [filter.state === "open" ? "AND state NOT IN ('closed','cancelled')" : filter.state === "closed" ? "AND state IN ('closed','cancelled')" : "", []],
@@ -74,7 +80,7 @@ export async function getWork(ctx: WorkContext, id: string) {
 
   const p = ctx.principal;
   const row = await ctx.env.DB.prepare(
-    "SELECT * FROM work_records WHERE workspace_id=? AND id=?",
+    "SELECT w.*,(SELECT name FROM work_departments WHERE workspace_id=w.workspace_id AND id=w.department_id) department_name,(SELECT kind FROM work_departments WHERE workspace_id=w.workspace_id AND id=w.department_id) department_kind FROM work_records w WHERE w.workspace_id=? AND w.id=?",
   )
     .bind(p.workspaceId, id)
     .first<WorkRecord>();
@@ -106,19 +112,16 @@ export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
   const rows = (
     await ctx.env.DB.prepare(
       `SELECT work_records.*,(SELECT g.name FROM work_groups g WHERE g.workspace_id=work_records.workspace_id AND g.id=work_records.group_id) group_name,
-        ${priorityOf} priority,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name FROM work_records WHERE workspace_id=? AND ((sensitivity='hr' AND ?=1) OR (sensitivity<>'hr' AND (?=1 OR (sensitivity='normal' AND ?=1) OR requester_id=? OR beneficiary_id=? OR (sensitivity='normal' AND EXISTS(SELECT 1 FROM work_participants wp WHERE wp.workspace_id=work_records.workspace_id AND wp.work_id=work_records.id AND wp.user_id=?)) OR (sensitivity='normal' AND ${sharedListClause})))) ${narrowed} ORDER BY ${workOrder[filter.sort ?? "updated"]} LIMIT 200`,
+        (SELECT name FROM work_departments d WHERE d.workspace_id=work_records.workspace_id AND d.id=work_records.department_id) department_name,
+        (SELECT kind FROM work_departments d WHERE d.workspace_id=work_records.workspace_id AND d.id=work_records.department_id) department_kind,
+        ${priorityOf} priority,COALESCE((SELECT p.name FROM work_people p WHERE p.workspace_id=work_records.workspace_id AND p.id=work_records.pending_person_id),(SELECT u.name FROM users u WHERE u.id=work_records.beneficiary_id)) beneficiary_name
+        FROM work_records JOIN (SELECT workspace_id,user_id,(SELECT json_group_array(value) FROM json_each(memberships.roles_json) WHERE value IN(SELECT value FROM json_each(?))) roles_json FROM memberships WHERE active=1) m ON m.workspace_id=work_records.workspace_id AND m.user_id=?
+        WHERE work_records.workspace_id=? AND (${workReadSql('work_records','m')} OR
+          (sensitivity='normal' AND ${departmentNotHrSql('work_records')} AND
+            (EXISTS(SELECT 1 FROM work_participants wp WHERE wp.workspace_id=work_records.workspace_id AND wp.work_id=work_records.id AND wp.user_id=?) OR ${sharedListClause})))
+        ${narrowed} ORDER BY ${workOrder[filter.sort ?? "updated"]} LIMIT 200`,
     )
-      .bind(
-        p.workspaceId,
-        Number(p.roles.includes("hr") || p.roles.includes("owner")),
-        Number(p.roles.includes("owner")),
-        Number(operator(p)),
-        p.userId,
-        p.userId,
-        p.userId,
-        p.userId,
-        ...narrowBinds,
-      )
+      .bind(JSON.stringify(p.roles),p.userId,p.workspaceId,p.userId,p.userId,...narrowBinds)
       .all()
   ).results;
   // Each row carries the same progress projection its conversation shows, so the queue and the open
@@ -136,10 +139,11 @@ export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
     .bind(p.workspaceId, ids,p.workspaceId,ids).all<{ work_id: string; name: string; kind: string }>()).results;
   const seesAttention = operator(p) || p.roles.includes('hr');
   return Promise.all(rows.map(async (row: any) => {
+    const staff = workPrivateReadable(p,row);
     const progress = flagged.has(row.id) ? await progressFor(ctx, row) : [];
     const item = { ...row, progress, services: services.filter(s => s.work_id === row.id).map(({ name, kind }) => ({ name, kind })) };
     // Ordinary conversation listings do not expose the operator attention packet, the group or the priority.
-    if (!seesAttention) { const { group_id, group_name, priority, ...own } = item; return own; }
+    if (!seesAttention || !staff) { const { group_id, group_name, priority, ...own } = item; return own; }
     return { ...item, attention: progress.filter(entry =>
       entry.needsAction &&
       (entry.ownerId === p.userId || (entry.ownerLabel === 'Service team (recorded owner unavailable)' && operator(p)) || (!entry.ownerId && (
@@ -158,6 +162,7 @@ export async function createWork(
     beneficiaryId?: string;
     pendingPersonId?: string;
     catalogIds?: string[];
+    departmentId?: string | null;
     sensitivity?: string;
     context?: unknown;
   },
@@ -166,6 +171,7 @@ export async function createWork(
   await currentWorkPrincipal(ctx);
 
   const p = ctx.principal;
+  const departmentId=await requestDepartment(ctx,input.departmentId);
   if(input.beneficiaryId && await ctx.env.DB.prepare("SELECT 1 FROM work_pending_people WHERE workspace_id=? AND id=?").bind(p.workspaceId,input.beneficiaryId).first())
     throw new ApiError(422,'pending_person_required','Use pendingPersonId and selected services for a pending person');
   const pending=await preparePendingRequest(ctx,input);
@@ -208,7 +214,7 @@ export async function createWork(
       : value;
   const requestHash = await hashToken(JSON.stringify(canonical({
     workspaceId: p.workspaceId, requesterId: p.userId,
-    beneficiaryId, ...(pending?{pendingPersonId:input.pendingPersonId,catalogIds:input.catalogIds}:{}), kind: input.kind || "request",
+    beneficiaryId, ...(departmentId?{departmentId}:{}), ...(pending?{pendingPersonId:input.pendingPersonId,catalogIds:input.catalogIds}:{}), kind: input.kind || "request",
     title: input.title, body: input.body, sensitivity: input.sensitivity || "normal",
     context:pending?input.context||{}:context,
   })));
@@ -216,8 +222,10 @@ export async function createWork(
     t = now();
   const guard = id();
   try { await ctx.env.DB.batch([
+    ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1) AND (? IS NULL OR EXISTS(SELECT 1 FROM work_departments WHERE workspace_id=? AND id=? AND active=1)) THEN 1 ELSE 0 END)`).bind(guard+':department',p.workspaceId,p.userId,departmentId,p.workspaceId,departmentId),
+    ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard+':department'),
     ctx.env.DB.prepare(
-      "INSERT OR IGNORE INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,sensitivity,created_at,updated_at,context_json,dedup_key,request_hash,pending_person_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      "INSERT OR IGNORE INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,sensitivity,created_at,updated_at,context_json,dedup_key,request_hash,pending_person_id,department_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
     ).bind(
       workId,
       p.workspaceId,
@@ -232,6 +240,7 @@ export async function createWork(
       input.deduplicationKey,
       requestHash,
       input.pendingPersonId || null,
+      departmentId,
     ),
     // The conflict check is in the same transaction as every intake side effect.
     ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
@@ -294,16 +303,7 @@ export async function appendMessage(
     if (input.visibility !== "public" || !await sharedReplyAllowed(ctx, input.workId)) throw error;
     return appendSharedReply(ctx, input);
   }
-  if (
-    input.visibility === "private" &&
-    !operator(ctx.principal) &&
-    !(work.sensitivity === "hr" && ctx.principal.roles.includes("hr"))
-  )
-    throw new ApiError(
-      403,
-      "private_note",
-      "Private notes require service operator",
-    );
+  if(input.visibility==='private')requireWorkPrivate(ctx,work);
   const previous = await ctx.env.DB.prepare(
     "SELECT visibility,body FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?",
   )
@@ -365,7 +365,7 @@ export async function appendMessage(
         "UPDATE work_records SET response_at=COALESCE(response_at,?),updated_at=? WHERE workspace_id=? AND id=?",
       ).bind(now(), now(), ctx.principal.workspaceId, input.workId),
     );
-  await ctx.env.DB.batch(statements);
+  await departmentWorkBatch(ctx,work,statements,input.visibility==='private'?'private':'read');
   return ctx.env.DB.prepare(
     "SELECT * FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?",
   )
@@ -396,9 +396,7 @@ export async function conversation(ctx: WorkContext, workId: string) {
     if (!shared) throw error;
     return shared;
   }
-  const privateAllowed =
-    operator(ctx.principal) ||
-    (work.sensitivity === "hr" && ctx.principal.roles.includes("hr"));
+  const privateAllowed = workPrivateReadable(ctx.principal,work);
   const attachments = await ctx.env.DB.prepare(
     "SELECT id,name,content_type,size,sha256,visibility,created_at FROM work_attachments WHERE workspace_id=? AND work_id=? AND (visibility='public' OR (visibility='private' AND ?=1))",
   )
@@ -448,8 +446,10 @@ export async function transitionWork(
   )[command];
   if (!state)
     throw new ApiError(422, "invalid_command", "Unknown work command");
-  if (!["reopen", "cancel"].includes(command))
+  if (!["reopen", "cancel"].includes(command)) {
     permit(ctx, ["owner", "operator", "hr"]);
+    if(!departmentStaffPrincipal(ctx.principal,work.department_id))throw new ApiError(403,"department_staff","Current department staff authority required");
+  }
   if (command === "assign") {
     const member = await ctx.env.DB.prepare(
       "SELECT user_id FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND (roles_json LIKE '%operator%' OR roles_json LIKE '%owner%')",
@@ -462,6 +462,9 @@ export async function transitionWork(
         "assignee_unavailable",
         "Assignee must be an active service operator",
       );
+    const targetRoles=await ctx.env.DB.prepare('SELECT roles_json FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId,assigneeId!).first<{roles_json:string}>();
+    const destinationPrincipal=await currentPrincipal(ctx.env.DB,{...ctx.principal,userId:assigneeId!,roles:JSON.parse(targetRoles!.roles_json)});
+    if(!departmentStaffPrincipal(destinationPrincipal,work.department_id))throw new ApiError(422,'department_assignee','Assignee must be current staff of this department');
     // DESK-001: a ticket's owner is a member of its accountable group.
     if (work.group_id && !await groupMember(ctx, work.group_id, assigneeId!))
       throw new ApiError(422, "owner_not_in_group", "The ticket's owner must be an agent in its group");
@@ -472,7 +475,7 @@ export async function transitionWork(
   const t = now();
   // DESK-010: the close notes are this close's reason; an incident also needs a resolution code.
   const resolution = command === "close" ? await closeResolution(ctx, work, desk.resolutionCode, reason, t) : null;
-  const [result] = await ctx.env.DB.batch([ctx.env.DB.prepare(
+  const transitionStatements = [ctx.env.DB.prepare(
     `UPDATE work_records SET state=?,revision=revision+1,updated_at=?,closed_at=?,paused_at=?,paused_ms=paused_ms+?,assignee_id=COALESCE(?,assignee_id) WHERE workspace_id=? AND id=? AND revision=?`,
   )
     .bind(
@@ -493,7 +496,9 @@ export async function transitionWork(
         JSON.stringify(command === 'assign'
           ? { from: { assigneeId: work.assignee_id }, to: { assigneeId }, reason }
           : { before: { state: work.state }, after: { state }, reason }), t),
-  ]);
+  ];
+  if(work.revision!==revision)throw new ApiError(409,'revision_conflict','Work changed; refresh before deciding');
+  const [result]=await departmentWorkBatch(ctx,work,transitionStatements,['reopen','cancel'].includes(command)?'read':'staff');
   if (!result.meta.changes)
     throw new ApiError(
       409,

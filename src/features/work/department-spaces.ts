@@ -46,7 +46,7 @@ export function workPrivateSql(work='w',member='m') {
   return `(${departmentStaffSql(work,member)} AND (EXISTS(SELECT 1 FROM json_each(${member}.roles_json) WHERE value IN ('owner','operator')) OR ${work}.sensitivity='hr' AND EXISTS(SELECT 1 FROM json_each(${member}.roles_json) WHERE value='hr')))`;
 }
 /** Handoff and revocation between evaluation and commit must refuse the entire write. */
-export async function departmentWorkBatch(ctx:WorkContext,work:WorkRecord,statements:D1PreparedStatement[],authority:'read'|'private'|'staff'='read') {
+export async function departmentWorkBatch(ctx:WorkContext,work:WorkRecord & {department_id?:string|null},statements:D1PreparedStatement[],authority:'read'|'private'|'staff'='read') {
   const guard=id(),w=ctx.principal.workspaceId;
   const rule=authority==='private'?workPrivateSql():authority==='staff'?`${workReadSql()} AND ${departmentStaffSql('w','m')}`:workReadSql();
   try { const result=await ctx.env.DB.batch([

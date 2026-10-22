@@ -1,3 +1,4 @@
+import { registerDepartmentRoutes } from './department-routes';
 import { registerCollaborationRoutes } from './collaboration-routes';
 import { registerCatalogAudienceRoutes } from './catalog-audience-routes';
 import { registerAccessPolicyRoutes } from './access-policy-routes';
@@ -42,6 +43,7 @@ export function registerWorkRoutes(app: Hono<AppEnv>) {
   setWorkIntakePort(workIntakePort);
   // Before /work/:id so the literal retention paths win.
   registerRetentionRoutes(app);
+  registerDepartmentRoutes(app);
   registerCollaborationRoutes(app);
   registerBundleRoutes(app);
   registerSlaRoutes(app);

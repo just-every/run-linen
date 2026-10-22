@@ -88,7 +88,7 @@ export function registerConversationRoutes(app: Hono<AppEnv>) {
   );
   app.get("/work", async (c) =>
     c.json({
-      items: await listWork({ env: c.env, principal: c.get("principal") }),
+      items: await listWork({ env: c.env, principal: c.get("principal") }, {departmentId:c.req.query("departmentId")===undefined?undefined:["","legacy"].includes(c.req.query("departmentId")!)?null:c.req.query("departmentId")}),
     }),
   );
   app.get("/work/:id", async (c) =>
@@ -111,6 +111,7 @@ export function registerConversationRoutes(app: Hono<AppEnv>) {
         beneficiaryId: typeof b.beneficiaryId === "string" ? b.beneficiaryId : undefined,
         sensitivity: typeof b.sensitivity === "string" ? b.sensitivity : undefined,
         context: b.context,
+        departmentId: b.departmentId as string | null | undefined,
         pendingPersonId: typeof b.pendingPersonId === 'string' ? b.pendingPersonId : undefined,
         catalogIds: b.catalogIds as string[] | undefined,
       };
