@@ -136,6 +136,8 @@ export async function lifecycleTemplateChecks(api, db) {
   const erasedReminder = await ok(`/work/${managerQueue[0].id}`, undefined, as('synthetic-linen-3', 'employee'));
   assert.equal(erasedReminder.work.title, '[erased]', 'LIFE-002 erasure clears a reminder even though its recipient is the manager');
   assert.deepEqual(JSON.parse(erasedReminder.work.context_json), {}, 'LIFE-002 erased reminder context cannot retain the subject name or task');
+  const erasedConversation = await ok(`/work/${managerQueue[0].id}/conversation`, undefined, as('synthetic-linen-3', 'employee'));
+  assert.ok(erasedConversation.messages.every(m => m.body === '[erased]'), 'LIFE-002 the manager cannot recover erased subject content from the reminder conversation');
   assert.ok(!(await ok('/lifecycle-tasks', undefined, as('synthetic-linen-3', 'employee'))).items.some(t => t.person === 'Life Fern'),
     'LIFE-002 erased subjects disappear from the assignee task door');
   assert.equal((await api(`/lifecycle-tasks/${fernBuddy.id}/complete`, { revision: fernBuddy.revision }, as('synthetic-linen-3', 'employee'))).status, 404,

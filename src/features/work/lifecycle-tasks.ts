@@ -150,6 +150,7 @@ export async function waiveLifecycleTask(ctx: WorkContext, taskId: string, input
   const t = now(), w = ctx.principal.workspaceId;
   const [result] = await ctx.env.DB.batch([
     ctx.env.DB.prepare(`UPDATE work_obligations SET state='waived',waived_by=?,waived_at=?,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=? AND state='pending'
+      AND NOT EXISTS(SELECT 1 FROM work_lifecycle l WHERE l.workspace_id=work_obligations.workspace_id AND l.id=work_obligations.lifecycle_id AND l.cancelled_at IS NOT NULL)
       AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=work_obligations.workspace_id AND e.person_id=work_obligations.beneficiary_id)
       AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=work_obligations.workspace_id AND m.user_id=? AND m.active=1 AND r.value='owner')`).bind(ctx.principal.userId, t, w, taskId, input.revision, ctx.principal.userId),
     ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'lifecycle.task_waived',?,?,? WHERE changes()=1").bind(id(), w, ctx.principal.userId, taskId, JSON.stringify({ lifecycleId: row.lifecycle_id, reason: input.reason.trim() }), t),
@@ -183,8 +184,9 @@ export async function remindLifecycleTasks(ctx: WorkContext, at: string) {
           EXISTS(SELECT 1 FROM work_obligations o JOIN work_lifecycle l ON l.workspace_id=o.workspace_id AND l.id=o.lifecycle_id
             WHERE o.workspace_id=? AND o.id=? AND o.revision=? AND o.state='pending' AND l.cancelled_at IS NULL
             AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=o.workspace_id AND e.person_id=o.beneficiary_id))
-          AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1) THEN 1 ELSE 0 END)`)
-          .bind(guard, w, row.id, row.revision, w, user), db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)];
+          AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1)
+          AND (? IS NULL OR EXISTS(SELECT 1 FROM work_group_members WHERE workspace_id=? AND group_id=? AND user_id=?)) THEN 1 ELSE 0 END)`)
+          .bind(guard, w, row.id, row.revision, w, user, row.group_id, w, row.group_id, user), db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)];
       } });
       await db.prepare('UPDATE work_obligations SET reminded_at=? WHERE workspace_id=? AND id=? AND reminded_at IS NULL').bind(at, w, row.id).run();
       results.push({ id: row.id, state: 'task_reminded', recipients: to.length });
