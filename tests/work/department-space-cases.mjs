@@ -36,14 +36,15 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   assert.ok((await call(hrPath,undefined,hr)).messages.every(m=>m.visibility==='public'),'HR role alone does not expand the existing private-normal rule');
   // An IT operator acting as a requester in HR retains the employee public view only.
   const own=await make(spaces.hr.id,'synthetic-linen-11208',it);
-  await call('/work/'+own.id+'/messages',{body:'synthetic-linen-11209 private HR evidence',visibility:'private',sourceMessageId:'synthetic-linen-11210'},owner,201);
+  await call('/work/'+own.id+'/messages',{body:'synthetic-linen-11209 confidentialsalaryadjustment private HR evidence',visibility:'private',sourceMessageId:'synthetic-linen-11210'},owner,201);
   const ownView=await call('/work/'+own.id,undefined,it);
   assert.ok(ownView.messages.every(m=>m.visibility==='public'));
   assert.ok(!(await call('/work/'+own.id+'/activity',undefined,it)).items.some(e=>e.visibility==='private'));
   await call('/work/'+own.id+'/messages',{body:'synthetic-linen-11211',visibility:'private',sourceMessageId:'synthetic-linen-11212'},it,403);
   await call('/work/'+own.id+'/commands',{revision:own.revision,command:'close',reason:'synthetic-linen-11213'},it,403);
   await call('/work/'+own.id+'/classification/override',{type:'question',category:'general',subcategory:'guidance',impact:'low',urgency:'low',workRevision:own.revision,revision:0,reason:'synthetic-linen-11214'},it,403);
-  assert.equal((await call('/search?q=synthetic-linen-11209',undefined,it)).total,0);
+  assert.ok((await call('/search?q=confidentialsalaryadjustment')).items.some(item=>item.id===own.id),'Owner can search the actual private evidence');
+  assert.equal((await call('/search?q=confidentialsalaryadjustment',undefined,it)).total,0);
   await member('hr',itUser);
   const sensitive=await make(spaces.hr.id,'synthetic-linen-11215',owner,{sensitivity:'hr'});
   await call('/work/'+sensitive.id,undefined,it,404);
