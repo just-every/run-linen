@@ -4,7 +4,7 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 139 clauses (132 in the contract plus F1–F7), 50 done, 64
+Current count: 139 clauses (132 in the contract plus F1–F7), 51 done, 63
 partial and 25 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
