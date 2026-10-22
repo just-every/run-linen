@@ -941,6 +941,47 @@ that product and marks how close the current code is (see [Status](#status)).
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
   each new door must prove the inherited audience and quote rules.
 
+  *Current implementation, conservative administration default pending ct:*
+  department workspaces are internal to the existing Linen installation. The
+  owner creates IT, HR service, Facilities, Finance, Legal or custom departments,
+  explicitly grants current staff membership and configures their service
+  resources. Employee department attributes grant no staff authority. Current
+  department membership intersects existing roles, sensitivity and private-note
+  rules; the owner's existing global authority remains. Legacy records with no
+  department or retained HR restriction keep their existing permissions.
+
+  Catalog items, groups, saved queues, routing, SLA policies and knowledge carry
+  department ownership. The employee portal combines eligible active catalogs
+  and employee-visible knowledge. Catalog audience, form revisions and exact
+  quote readers remain CATALOG-001's; department staff membership grants no quote
+  access. A request uses its item's department. A new mixed-department bundle
+  refuses atomically with its reasons under the adopted default; same-department
+  and legacy bundles retain their existing atomic behavior. CATALOG-004 keeps
+  the obligation to supply mixed-department bundle routing after that policy is
+  decided; its requirement is not narrowed here.
+
+  Only the owner hands a ticket off, at its current revision with an audited
+  reason. Its identity, messages, attachments, sensitivity, submitted forms and
+  frozen SLA clock remain; incompatible group or agent assignments are cleared.
+  Moving out of an HR workspace retains that workspace as an additional live
+  staff-access requirement. Later moves, including to the legacy workspace,
+  cannot remove it. A nonowner needs current receiving-workspace membership and
+  every retained HR membership to use staff doors. Requesters and beneficiaries
+  retain their existing public view of normal service requests. HR-service
+  membership grants no HR employee-record authority. Managers, shared readers,
+  participants and MCP queue grants cannot recover HR-workspace or retained-HR
+  tickets through those relationships. Normal non-HR manager/public sharing
+  continues under CHANNEL-009.
+
+  Membership withdrawal applies to ticket reads, private writes, assignments,
+  scenarios, tasks, knowledge sources, derived service/execution views and
+  reports before aggregation. HR sources cannot be copied by a project-plan
+  scenario into a globally visible project. Native archives retain department
+  metadata and HR restrictions while restoring staff memberships inert; owners
+  explicitly confirm authority again. ROLE-001 inherits department administration
+  before delegated roles ship; CHANNEL-001/002, NOTIFY-001/002, PROJECT-001 and
+  MIGRATE-001/003 inherit the same source and retained-HR boundaries on new doors.
+
 - **DESK-012 — Time tracking and effort.** Agents log time on tickets and tasks,
   automatically measured active minutes are recorded, and both feed the human
   work measure in REPORT-004. **Acceptance evidence:** log 15 minutes manually,
@@ -2835,7 +2876,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `DESK-008` | Responses and summaries | target | done | `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs` | Local public-route and paid-model-edge fixture proof of safe canned placeholders, generated knowledge/history citations, a complete 20-message summary, native 1440/390 unsent-draft persistence and explicit agent Send; current role/scope, provider/citation failures and changed-message/article/expiry fences. Native template restore remains inert. No live-model quality claim. |
 | `DESK-009` | Satisfaction surveys | target | missing |  | No CSAT. |
 | `DESK-010` | Custom fields, forms and statuses | target | done | `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs` | Public-route proof: the owner adds an Office dropdown for incidents and service requests and an "Awaiting parts" vendor-wait status; the requester reads the field and cannot write it; Awaiting parts stops the clock under a vendor-pausing policy and not under a requester-only one; an incident is refused without a resolution code from the API and a bulk update (a service request in the same bulk closes with close notes); fields required on closed or on a named status are enforced; a merge records Duplicate and the no-reply close No response; the owner edits the code list; REPORT-001 counts resolutions by code. Browser proof at 1440/390: the console sets Office and Awaiting parts, refuses the close without a code, then shows the code and close notes, and the report counts it. |
-| `DESK-011` | Department workspaces | target | partial | `src/platform/auth.ts`, `src/features/work/core.ts`, `tests/platform/runtime.mjs` | No department workspaces under one portal. |
+| `DESK-011` | Department workspaces | target | partial | `tests/work/department-space-cases.mjs` departmentSpaceChecks via `tests/work/runtime.mjs`: explicit five-department membership, IT/HR refusal, public manager boundaries, same-ticket Facilities-to-IT history/attachment/SLA retention, retained HR handoffs and revocation. `tests/work/department-ops-cases.mjs` departmentOpsChecks: combined catalogs, atomic admission, department queues/routing/SLA/knowledge/tasks/scenarios and source fences. `tests/work/department-report-cases.mjs` departmentReportChecks and `tests/services/department-source-cases.mjs` departmentSourceChecks: scoped counts, costs and derived sources including retained HR through legacy routing. `tests/platform/mcp-tools-cases.mjs` mcpToolCases: explicit queue grants exclude retained HR. `tests/platform/base-auth-transfer.mjs`: actual archive, inert membership and fresh staff sign-in refusal. `tests/platform/privacy-runtime.mjs`: scoped membership erasure. `tests/ui/department-browser.mjs`: native administration, employee combined catalogs, denied HR reads, handoff and retained restrictions at 1440/390. | Conservative owner-only department administration and audited handoff, explicit intersected staff membership and cumulative retained HR scope await ct approval. Mixed-department bundle routing remains unbuilt under an atomic refusal default; CATALOG-004 inherits that obligation without narrowing. The full clause remains partial until ct approves the adopted defaults. |
 | `DESK-012` | Time tracking and effort | target | done | `src/features/work/time.ts`, `src/features/work/effort-report.ts`, `tests/work/time-cases.mjs`, `tests/ui/time-journey.mjs`, `tests/adoption/runtime.mjs` | Local public work/task routes and real 1440/390 browser interval: manual and measured active minutes feed role/request-type effort totals with touches and failed/pending work. Visibility/focus/inactivity pauses, server-bounded sequenced heartbeats, current scope, erasure and inert restored timers are proved. REPORT-004 prices these minutes at owner-declared role rates. |
 | `DESK-013` | Scheduled and recurring work | target | done | `src/features/work/recurrence.ts`, `src/features/work/recurrence-calendar.ts`; DESK-013 public routes in `tests/work/recurrence-cases.mjs` via `tests/work/runtime.mjs`, `tests/ui/recurrence-journey.mjs` via `tests/ui/browser.mjs`, `tests/adoption/recurrence-cases.mjs` via `tests/adoption/runtime.mjs`: calendar tickets/task plans with owners, first business day/holiday, atomic occurrences, DST/month-end, pause/resume, inert restore and 1440/390 journeys. | |
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
