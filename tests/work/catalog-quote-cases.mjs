@@ -180,6 +180,25 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
   assert.equal(refused.status, 403); assert.equal(refused.value.error, "This item isn't available for you. If you think that's wrong, ask the service desk.", 'CATALOG-001 an ineligible employee cannot attach a quote to the item');
   assert.equal((await db.prepare('SELECT count(*) n FROM work_attachments WHERE work_id=?').bind(outWork.id).first()).n, 0);
 
+  // A linked item's current application owner reads the quote; an old routing snapshot grants no continuing read.
+  const application = await ok('/applications', { name: 'Current quote owner', ownerId: 'q-fulfil', approverIds: ['q-mgr'],
+    connector: 'Not connected', sensitivity: 'confidential',
+    entitlements: [{ name: 'Studio licence', target: 'quote-linked', costCents: 180000, billingPeriod: 'one-time' }] });
+  const linked = await ok('/catalog', { name: 'Linked software purchase', kind: 'software', applicationId: application.id,
+    entitlementId: application.data.entitlements[0].id, form: { quoteRequired: true } });
+  const linkedWork = await newWork('q-req', 'q-linked');
+  const linkedQuote = await put(linkedWork, linked, 'q-req');
+  assert.equal(linkedQuote.status, 201);
+  assert.equal((await submit(linkedWork, linked)).status, 201);
+  assert.equal((await read(linkedQuote.value.id, 'q-fulfil', 'operator')).status, 200);
+  await ok(`/applications/${application.id}`, { ...application.data, ownerId: 'q-op', revision: application.revision }, {}, 200);
+  assert.equal((await read(linkedQuote.value.id, 'q-fulfil', 'operator')).status, 404,
+    'the former application owner loses quote access when the current owner changes');
+  assert.equal((await read(linkedQuote.value.id, 'q-op', 'operator')).status, 200,
+    'the current application fulfillment owner can read the purchase quote');
+  const linkedSnapshot = (await ok(`/work/${linkedWork.id}/application-services`, undefined, as('owner', 'owner'))).items[0];
+  assert.equal(linkedSnapshot.ownerId, 'q-fulfil', 'the original request routing snapshot stays unchanged');
+
   // Configuration edits and audience refusals are audited without attribute values.
   const itemEdit = await ok(`/catalog/${software.id}/form`, { name: 'Software purchase', revision: 1, form: { quoteRequired: true, costCents: 180000, fields: [{ id: 'price', label: 'Quoted price in USD', type: 'number', required: true }] } }, {}, 200);
   assert.equal(itemEdit.revision, 2, 'CATALOG-001 requiring a quote is a versioned item edit');

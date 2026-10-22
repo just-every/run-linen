@@ -168,7 +168,7 @@ export async function catalogAudienceJourney({browser,page,api,base,out}) {
         assert.equal(refused.status,403);assert.equal(refused.value.error.code,'catalog_audience','CATALOG-001 native session cannot bypass audience via direct API');
       } else {
         await service.locator(`option[value="${item.id}"]`).waitFor({state:'attached'});await service.selectOption(item.id);
-        await chooser.getByLabel('Monitor mounting',{exact:true}).focus();await ep.keyboard.press('End');await ep.keyboard.press('Tab');
+        await chooser.getByLabel('Monitor mounting',{exact:true}).selectOption('Wall');await chooser.getByLabel('Monitor mounting',{exact:true}).focus();await ep.keyboard.press('Tab');
         await chooser.getByLabel('Wall type',{exact:false}).fill('Concrete');
         await chooser.getByLabel(/What do you need it for/).fill('Training room display');
         await ep.screenshot({path:out+`/CATALOG-001-audience-${user.label}-form-${width}.png`,fullPage:true});

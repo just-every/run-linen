@@ -5171,7 +5171,7 @@
       "executable": false
     },
     "tests/ui/application-journey.mjs": {
-      "sha256": "dc0fc4a66f609023e331466964001fd4f3cbdee89e3cb1a9080e1cb74f77dd4d",
+      "sha256": "5eab2583c27f81c7d43956d44675965c3f0d86976bc13faf6771cd5af67d482e",
       "executable": false
     },
     "tests/ui/asset-audit-browser.mjs": {
@@ -5459,7 +5459,7 @@
       "executable": false
     },
     "tests/work/catalog-quote-cases.mjs": {
-      "sha256": "2d61eafdee0c1a511ce47261a7fcfb639e380df9952b741a213ec85924647faf",
+      "sha256": "62eb89b34f8bccce5e07f0f90a79dbab57d4ec70ff25e5b0c86d5b7976e80316",
       "executable": false
     },
     "tests/work/catalog-task-cases.mjs": {
