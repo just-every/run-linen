@@ -40,7 +40,7 @@ async function check(db,mode,label){
   await seed()
   if(mode==='retained-departments') {
    await db.run("INSERT INTO work_groups(id,workspace_id,name,created_by,created_at,assignment,max_open,last_assignee_id) VALUES('retained-support','w','Existing support','owner','2026','round_robin',5,'employee')")
-   await db.run("INSERT INTO work_group_members(workspace_id,group_id,user_id,is_lead) VALUES('w','retained-support','employee',1)")
+   await db.run("INSERT INTO work_group_members(workspace_id,group_id,user_id,lead,added_by,added_at) VALUES('w','retained-support','employee',1,'owner','2026')")
    await db.run("INSERT INTO work_sla_policies(id,workspace_id,name,position,first_response_minutes,next_response_minutes,resolution_minutes,pause_on_json,created_by,created_at) VALUES('retained-policy','w','Existing service promise',1,60,120,480,'[\"requester\"]','owner','2026')")
    await db.run("INSERT INTO work_routing_rules(id,workspace_id,name,position,group_id,created_by,created_at) VALUES('retained-route','w','Existing route',1,'retained-support','owner','2026')")
   }
