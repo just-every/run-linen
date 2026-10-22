@@ -295,15 +295,17 @@ export async function appendMessage(
     visibility: "public" | "private";
     sourceMessageId: string;
   },
+  internalAuthority?: "staff",
 ) {
   await currentWorkPrincipal(ctx);
 
   // CHANNEL-009: a colleague the request is shared with adds public replies only; the reply is conversation, not new intake.
   let work: WorkRecord;
   try { work = await getWork(ctx, input.workId); } catch (error) {
-    if (input.visibility !== "public" || !await sharedReplyAllowed(ctx, input.workId)) throw error;
+    if (internalAuthority === "staff" || input.visibility !== "public" || !await sharedReplyAllowed(ctx, input.workId)) throw error;
     return appendSharedReply(ctx, input);
   }
+  if (internalAuthority === 'staff' && !workDepartmentStaff(ctx.principal, work)) throw new ApiError(403, 'department_staff', 'Current department staff authority required');
   if(input.visibility==='private')requireWorkPrivate(ctx,work);
   const previous = await ctx.env.DB.prepare(
     "SELECT visibility,body FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?",
@@ -366,7 +368,7 @@ export async function appendMessage(
         "UPDATE work_records SET response_at=COALESCE(response_at,?),updated_at=? WHERE workspace_id=? AND id=?",
       ).bind(now(), now(), ctx.principal.workspaceId, input.workId),
     );
-  await departmentWorkBatch(ctx,work,statements,input.visibility==='private'?'private':'read');
+  await departmentWorkBatch(ctx,work,statements,input.visibility==='private'?'private':internalAuthority??'read');
   return ctx.env.DB.prepare(
     "SELECT * FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?",
   )
