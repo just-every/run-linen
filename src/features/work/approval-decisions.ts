@@ -21,6 +21,7 @@ export async function prepareStageDecision(ctx: WorkContext, workId: string, inp
   if (work.revision !== input.expectedWorkRevision || f.revision !== input.expectedFulfilmentRevision || catalog.revision !== input.expectedCatalogRevision)
     throw new ApiError(409, 'revision_conflict', 'Exact current work, fulfilment and catalog revisions required');
   const previous = await db.prepare('SELECT * FROM work_approval_decisions WHERE workspace_id=? AND work_id=? AND event_key=?').bind(w, workId, input.idempotencyKey).first<any>();
+  if(previous?.inert)throw new ApiError(409,'approval_imported_history','An archived decision cannot be replayed as current approval; use a fresh event');
   if (previous) {
     if (previous.work_revision !== work.revision || previous.catalog_revision !== catalog.revision || previous.stage_key !== input.stageKey || previous.approver_id !== ctx.principal.userId || previous.decision !== input.decision || previous.fulfilment_revision !== f.revision) throw new ApiError(409, 'idempotency_conflict', 'Approval event describes another decision');
     return { decisionId: previous.id as string, statements: [] as D1PreparedStatement[], stage: input.stageKey };
@@ -91,5 +92,5 @@ async function prepareManagerRejection(ctx: WorkContext, work: WorkRecord, catal
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)] };
 }
 export const managerRejected = async (ctx: WorkContext, work: { revision: number }, catalog: { revision: number }, f: { id: string; revision: number }) =>
-  Boolean(await ctx.env.DB.prepare("SELECT 1 FROM work_approval_decisions WHERE workspace_id=? AND fulfilment_id=? AND stage_key='manager' AND decision='rejected' AND work_revision=? AND fulfilment_revision=? AND catalog_revision=?")
+  Boolean(await ctx.env.DB.prepare("SELECT 1 FROM work_approval_decisions WHERE workspace_id=? AND fulfilment_id=? AND stage_key='manager' AND inert=0 AND decision='rejected' AND work_revision=? AND fulfilment_revision=? AND catalog_revision=?")
     .bind(ctx.principal.workspaceId, f.id, work.revision, f.revision, catalog.revision).first());

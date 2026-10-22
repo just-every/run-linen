@@ -13,7 +13,7 @@ export async function approvalGuard(ctx: WorkContext, workId: string, catalogId:
     ['memberships', 'user_id,active,roles_json', '1', []],
     ['work_group_members', 'group_id,user_id', '1', []],
     ['work_delegations', 'id,manager_id,delegate_id,starts_at,expires_at,revoked_at', '1', []],
-    ['work_approval_decisions', 'id,stage_key,approver_id,decision,work_revision,fulfilment_revision,catalog_revision', 'work_id=? AND fulfilment_id IN (SELECT id FROM work_fulfilments WHERE workspace_id=? AND catalog_id=?)', [workId,w,catalogId]],
+    ['work_approval_decisions', 'id,stage_key,approver_id,decision,inert,work_revision,fulfilment_revision,catalog_revision', 'work_id=? AND fulfilment_id IN (SELECT id FROM work_fulfilments WHERE workspace_id=? AND catalog_id=?)', [workId,w,catalogId]],
     ['work_approval_stages', 'fulfilment_id,stage_key,definition_json,applies,active_at', 'work_id=? AND fulfilment_id IN (SELECT id FROM work_fulfilments WHERE workspace_id=? AND catalog_id=?)', [workId,w,catalogId]],
     ['svc_records', 'id,revision,owner_id', "kind='application'", []],
   ] as const;

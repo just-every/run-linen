@@ -35,6 +35,24 @@ registerServiceRoutes(api);
 registerCoexistenceFixture(api);
 registerPrivacyFixture(api);
 api.get('/fixtures/restored-history',async c=>{const w=c.get('principal').workspaceId;return c.json({fulfilmentRuns:(await c.env.DB.prepare('SELECT * FROM intelligence_fulfilment_runs WHERE workspace_id=?').bind(w).all()).results,amendments:(await c.env.DB.prepare("SELECT state,row_json FROM adoption_history WHERE workspace_id=? AND table_name='work_fulfilment_amendments'").bind(w).all()).results,activeAmendments:(await c.env.DB.prepare('SELECT COUNT(*) n FROM work_fulfilment_amendments WHERE workspace_id=?').bind(w).first<any>()).n,sessions:(await c.env.DB.prepare('SELECT COUNT(*) n FROM sessions WHERE workspace_id=?').bind(w).first<any>()).n})});
+// Synthetic persisted provider-edge state proves archives do not carry local email approval authority.
+api.post('/fixtures/approval-archive',async c=>{
+ const p=c.get('principal'),w=p.workspaceId,t=now(),b=await c.req.json<any>();
+ const f=await c.env.DB.prepare('SELECT id,revision FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?').bind(w,b.workId,b.catalogId).first<any>();
+ const work=await c.env.DB.prepare('SELECT revision FROM work_records WHERE workspace_id=? AND id=?').bind(w,b.workId).first<any>();
+ await c.env.DB.batch([
+  c.env.DB.prepare(`INSERT INTO work_approval_tokens(id,workspace_id,work_id,fulfilment_id,stage_key,approver_id,token_hash,work_revision,fulfilment_revision,catalog_revision,sent_to,state,config_revision,expires_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,'issued',1,'2099-01-01',?)`).bind(id(),w,b.workId,f.id,'synthetic_linen_212',b.approverId,'synthetic-linen-216',work.revision,f.revision,2,'synthetic-linen-210@example.test',t),
+  c.env.DB.prepare('INSERT INTO work_approval_mail VALUES(?,?,?,?,?)').bind(w,'synthetic-linen-217','synthetic-linen-218','accepted',t),
+  c.env.DB.prepare('INSERT INTO work_approval_mail_config VALUES(?,1,?,1,?,?,?,?,?,?)').bind(w,p.userId,'synthetic-linen-219','synthetic-linen-220@example.test','synthetic-linen-221','synthetic-linen-222','synthetic-linen-223',t),
+  c.env.DB.prepare('INSERT INTO work_approval_mail_subscriptions VALUES(?,1,?,?)').bind(w,'synthetic-linen-224','2099-01-01'),
+ ]);return c.json({seeded:true});
+});
+api.get('/fixtures/approval-archive',async c=>{
+ const w=c.get('principal').workspaceId,db=c.env.DB;
+ const count=async(table:string)=>(await db.prepare(`SELECT COUNT(*) n FROM ${table} WHERE workspace_id=?`).bind(w).first<any>()).n;
+ const history=async(table:string)=>(await db.prepare('SELECT state,row_json FROM adoption_history WHERE workspace_id=? AND table_name=?').bind(w,table).all()).results;
+ return c.json({decisions:await history('work_approval_decisions'),mail:await history('work_approval_mail'),liveDecisions:await count('work_approval_decisions'),tokens:await count('work_approval_tokens'),configs:await count('work_approval_mail_config'),subscriptions:await count('work_approval_mail_subscriptions')});
+});
 api.get('/fixtures/schema',async c=>{const tables=(await c.env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE '_cf_%'").all<{name:string}>()).results.map(x=>x.name);return c.json({unclassified:tables.filter(t=>!(nativeTables as readonly string[]).includes(t)&&!(t in excludedTables)),missing:nativeTables.filter(t=>!tables.includes(t)),history:[...historyOnly]})});
 api.post('/fixtures', async (c) => {
     const p = c.get('principal'), ctx = { env: c.env, principal: p }, w = p.workspaceId, t = now(), person = id();

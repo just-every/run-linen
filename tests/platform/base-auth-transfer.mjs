@@ -99,6 +99,17 @@ try{
  for(const [recordId,kind,data]of [['retained-ci','service',{name:'Retained CI'}],['retained-change','change',retainedChange]])
   await env.DB.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,1,?,?)').bind(recordId,'workspace',kind,'owner','operators','[]',JSON.stringify(data),stamp,stamp).run();
  await env.DB.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,1,?,?)').bind('retained-release','workspace','release','owner','operators','[]',JSON.stringify(releaseData),stamp,stamp).run();
+ const approvalDefinition={key:'synthetic_linen_230',name:'synthetic-linen-230',mode:'any',approvers:[{type:'member',userId:'synthetic-linen-231'}],aboveCents:null,costField:null,remindHours:8,slaHours:24,calendar:{timezone:'Australia/Brisbane',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]}};
+ await env.DB.batch([
+  env.DB.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind('synthetic-linen-231','synthetic-linen-231@example.test','synthetic-linen-231','unused',stamp),
+  env.DB.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('workspace','synthetic-linen-231','["employee"]'),
+  env.DB.prepare('UPDATE work_catalog SET approvals_json=? WHERE id=?').bind(JSON.stringify([approvalDefinition]),'catalog-monitor'),
+  env.DB.prepare('INSERT INTO work_approval_stages(workspace_id,fulfilment_id,work_id,ordinal,stage_key,definition_json,applies,active_at,remind_at,sla_at) VALUES(?,?,?,?,?,?,1,?,?,?)').bind('workspace','catalog-request','work',0,approvalDefinition.key,JSON.stringify(approvalDefinition),stamp,stamp,stamp),
+  env.DB.prepare(`INSERT INTO work_approval_decisions(id,workspace_id,work_id,fulfilment_id,stage_key,approver_id,decision,comment,channel,work_revision,fulfilment_revision,catalog_revision,event_key,created_at) SELECT 'synthetic-linen-232','workspace','work','catalog-request',?,'synthetic-linen-231','approved','synthetic-linen-233','portal',w.revision,1,c.revision,'synthetic-linen-234',? FROM work_records w,work_catalog c WHERE w.id='work' AND c.id='catalog-monitor'`).bind(approvalDefinition.key,stamp),
+  env.DB.prepare(`INSERT INTO work_approval_tokens(id,workspace_id,work_id,fulfilment_id,stage_key,approver_id,token_hash,work_revision,fulfilment_revision,catalog_revision,sent_to,state,config_revision,expires_at,created_at) VALUES('synthetic-linen-235','workspace','work','catalog-request',?,'synthetic-linen-231','synthetic-linen-236',1,1,1,'synthetic-linen-231@example.test','issued',1,'2099-01-01',?)`).bind(approvalDefinition.key,stamp),
+  env.DB.prepare('INSERT INTO work_approval_mail_config VALUES(?,1,?,1,?,?,?,?,?,?)').bind('workspace','owner','synthetic-linen-237','synthetic-linen-238@example.test','synthetic-linen-239','synthetic-linen-240','synthetic-linen-241',stamp),
+  env.DB.prepare('INSERT INTO work_approval_mail_subscriptions VALUES(?,1,?,?)').bind('workspace','synthetic-linen-242','2099-01-01'),
+ ]);
  await env.ATTACHMENTS.put('workspace/private-file','Private retained attachment')
  await close()
  await run(['exec','rer','export','--output',archive])
@@ -129,6 +140,12 @@ try{
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT attributes_json FROM work_people WHERE id='owner-person'").first()).attributes_json),{department:'dept-sales'},'CATALOG-001 native archive retains reviewed attributes with the unbound person');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT audience_json FROM work_catalog WHERE id='catalog-monitor'").first()).audience_json),{department:['dept-sales'],location:[],employmentType:[]},'CATALOG-001 native archive retains versioned audience references');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT tasks_json FROM work_catalog WHERE id='catalog-monitor'").first()).tasks_json),taskPlan,'CATALOG-003 native archive retains the item task plan');
+ const restoredApproval=await env.DB.prepare("SELECT inert,decision,comment FROM work_approval_decisions WHERE id='synthetic-linen-232'").first();
+ assert.deepEqual(restoredApproval,{inert:1,decision:'approved',comment:'synthetic-linen-233'},'CATALOG-002 native archive preserves inert decision history');
+ assert.deepEqual(await env.DB.prepare("SELECT state,token_hash,sent_to FROM work_approval_tokens WHERE id='synthetic-linen-235'").first(),{state:'expired',token_hash:'synthetic-linen-235',sent_to:''});
+ assert.equal((await env.DB.prepare("SELECT enabled FROM work_approval_mail_config WHERE workspace_id='workspace'").first()).enabled,0);
+ assert.equal((await env.DB.prepare('SELECT COUNT(*) n FROM work_approval_mail_subscriptions').first()).n,0);
+ assert.deepEqual(await env.DB.prepare("SELECT active_at,remind_at,sla_at FROM work_approval_stages WHERE fulfilment_id='catalog-request'").first(),{active_at:null,remind_at:null,sla_at:null});
  const restoredRelease=JSON.parse((await env.DB.prepare("SELECT data_json FROM svc_records WHERE id='retained-release'").first()).data_json);
  assert.equal(restoredRelease.state,'imported-review','CHANGE-007 actual rer archive puts releases into review');
  assert.deepEqual(restoredRelease.decisions,[],'CHANGE-007 no live go decision survives native restore');
@@ -157,6 +174,10 @@ try{
  const confirmation=await request('/auth/confirm',{body:{token:decodeURIComponent(proof)}});assert.equal(confirmation.status,303)
  const cookie=confirmation.headers.get('set-cookie').split(';')[0]
  const session=await(await request('/api/v1/session',{cookie})).json();assert.equal(session.user.email,'owner@example.test')
+ const restoredApprovalView=await(await request('/api/v1/work/work/approvals/catalog-monitor',{cookie})).json();
+ assert.equal(restoredApprovalView.satisfied,false,'CATALOG-002 restored approved decision cannot satisfy a current chain even with retained approver membership');
+ assert.equal(restoredApprovalView.stages[0].state,'pending');assert.deepEqual(restoredApprovalView.stages[0].decisions,[]);
+ const restoredMailConfig=await(await request('/api/v1/approval-mail/config',{cookie})).json();assert.equal(restoredMailConfig.enabled,0);assert.equal(restoredMailConfig.confirmationUrl,null);
  const delivery=await request('/api/v1/notifications/process',{cookie,body:{},headers:{'X-Linen-CSRF':session.csrfToken}})
  assert.equal(delivery.status,200);assert.deepEqual(await delivery.json(),[{id:'delivery',state:'blocked'}],'Restored queued notification cannot resume an external effect')
  const db=await mf.getD1Database('DB');assert.equal((await db.prepare('SELECT COUNT(*) n FROM execution_provider_attempts').first()).n,0)

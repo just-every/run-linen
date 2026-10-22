@@ -10,6 +10,7 @@ import { prepareKnowledgeDraftRestore } from './knowledge-draft-restore';
 import { ApiError, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
 const tables = new Set([
+  'work_approval_stages',
   'work_canned_responses',
   'work_knowledge_drafts',
   "work_records",
@@ -147,6 +148,13 @@ export async function restoreAdoptionRecord(
       "restore_blob_scope",
       "Attachment bytes must first be restored under current workspace R2 prefix",
     );
+  if(input.table==='work_approval_stages') {
+    const definition=JSON.parse(String(row.definition_json));
+    if(!definition || typeof definition!=='object' || definition.key!==row.stage_key || !['any','all'].includes(definition.mode) || !Array.isArray(definition.approvers) || !definition.approvers.length || !Number.isInteger(row.ordinal) || ![0,1].includes(Number(row.applies)))throw new ApiError(422,'restore_approval_stage','A frozen approval stage and applicability are required');
+    if(!await ctx.env.DB.prepare('SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=? AND work_id=?').bind(ctx.principal.workspaceId,String(row.fulfilment_id),String(row.work_id)).first())throw new ApiError(422,'restore_parent','Restore the matching fulfilment before its approval stages');
+    // Definitions keep the request blocked; source clock/deadline state never resumes work.
+    for(const key of ['active_at','remind_at','reminded_at','sla_at','breached_at'])row[key]=null;
+  }
   if(input.table==='work_catalog_values' && (!attributeDimensions.includes(row.dimension as never) || typeof row.label!=='string' || !row.label.trim() || ![0,1].includes(Number(row.active))))
     throw new ApiError(422,'restore_catalog_value','Known dimension, label and state required');
   if(input.table==='work_catalog')row.audience_json=JSON.stringify(normalizeAudience(JSON.parse(String(row.audience_json??'{}'))));

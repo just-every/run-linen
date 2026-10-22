@@ -13,6 +13,15 @@ export const portabilityPolicy={
  async validateStaged({db,tables}){
   const table=tables.mcp_credentials;
   if(table && await db.prepare(`SELECT 1 FROM "${table.replaceAll('"','""')}" WHERE secret_hash IS NOT NULL OR state<>'revoked' LIMIT 1`).first())return false;
+  for(const [name,invalid] of [
+   ['work_approval_decisions','inert IS NOT 1'],
+   ['work_approval_tokens',"state IS NOT 'expired' OR token_hash IS NOT id OR sent_to IS NOT ''"],
+   ['work_approval_mail_config','enabled IS NOT 0'],
+   ['work_approval_stages','active_at IS NOT NULL OR remind_at IS NOT NULL OR reminded_at IS NOT NULL OR sla_at IS NOT NULL OR breached_at IS NOT NULL'],
+  ]){
+   const staged=tables[name];
+   if(staged && await db.prepare(`SELECT 1 FROM "${staged.replaceAll('"','""')}" WHERE ${invalid} LIMIT 1`).first())return false;
+  }
   const services=tables.svc_records;
   if(services && await db.prepare(`SELECT 1 FROM "${services.replaceAll('"','""')}" WHERE kind='release' AND (json_extract(data_json,'$.state') IS NOT 'imported-review' OR json_array_length(data_json,'$.decisions') IS NOT 0) LIMIT 1`).first())return false;
   return true;
@@ -23,6 +32,8 @@ export const portabilityPolicy={
    return {...row,data_json:JSON.stringify({...data,importedState:data.importedState||data.state,state:'imported-review',decisions:[],
     priorDecisions:[...(data.priorDecisions||[]),...(data.decisions||[])].map(d=>({...d,inert:true}))})};
   }
+  if(table==='work_approval_decisions')return {...row,inert:1}
+  if(table==='work_approval_stages')return {...row,active_at:null,remind_at:null,reminded_at:null,sla_at:null,breached_at:null}
   if(table==='work_approval_mail_config')return {...row,enabled:0}
   if(table==='work_approval_tokens')return {...row,state:'expired',token_hash:row.id,sent_to:''}
   if(table==='mcp_credentials')return {...row,secret_hash:null,state:'revoked',invalidated_at:row.invalidated_at||row.created_at}
