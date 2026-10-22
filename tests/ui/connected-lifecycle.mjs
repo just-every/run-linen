@@ -93,7 +93,7 @@ export async function connectedLifecycle(env) {
   assert.ok(seen.calls.some(c=>c.kind==='workflow-observation'&&c.data.target==='salesforce-users'&&c.data.desired==='denied'),'LIFE-003 independent negative workflow check after removal');
   const ran=await api('/operations');
   for(const duty of await accessDuties(second))assert.ok(ran.find(o=>o.id===duty.operation_id),'LIFE-003 each duty ran as one operation under its standing grant');
-  await page.goto(base+'/app#/lifecycle/'+second);
+  await page.goto(base+'/app#/lifecycle/'+second);await page.reload();
   for(const kind of ['Access grant','Access revoke'])await page.locator('.connection-record').filter({has:page.getByRole('heading',{name:kind,exact:true})}).getByText('Verified',{exact:true}).waitFor();
   await captureJourney(page,{path:out+'/LIFE-003-baseline-verified.png',fullPage:true});
 }
