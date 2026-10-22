@@ -1,3 +1,4 @@
+import { archiveMutationBatch } from '../adoption/archive-fence';
 import { protectedDepartments } from './scope';
 import { checkTaskPlan } from './catalog-task-plan';
 import { attributeDimensions, normalizeAudience, normalizeAttributes } from './catalog-audience';
@@ -281,7 +282,7 @@ export async function restoreAdoptionRecord(
   if (input.table === 'work_knowledge_drafts') await prepareKnowledgeDraftRestore(ctx, row);
   const keys = Object.keys(row),
     recordId = String(row.id || row.article_id || (input.table==='work_pending_services'?`${row.work_id}:${row.catalog_id}`:input.sourceKey));
-  await ctx.env.DB.batch([
+  await archiveMutationBatch(ctx, [
     ctx.env.DB.prepare(
       `INSERT INTO ${input.table}(${keys.join(",")}) VALUES(${keys.map(() => "?").join(",")})`,
     ).bind(...keys.map((k) => row[k] as string | number | null)),

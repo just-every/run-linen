@@ -1,6 +1,7 @@
+import { captureArchivePrivacyState,withArchiveFence,archiveMutationBatch,archiveMutationRun,advanceHistoryTombstone,type ArchivePrivacyState } from './archive-fence';
 import { historyRestoreTables,restoreHistoryMetadata } from '../history/adoption';
 import { historyArchiveRow } from '../history/archive';
-import { archivePrivacyRevision,validateArchivePrivacy } from './archive-privacy';
+import { archivePrivacyStateRevision,validateArchivePrivacy } from './archive-privacy';
 import { archiveRemoval,assertPreservedArchiveRemovals,removalTables } from './archive-removals';
 import { ApiError, id, now } from '../../platform/http';
 import { check, owner, statement, getRun, sha, encode, identityHash, type AdoptionContext, type Row } from './core';
@@ -28,7 +29,7 @@ export interface RestorePort {
     }>;
 }
 const ports = new Map<string, RestorePort>();
-ports.set('adoption_artifacts', { table: 'adoption_artifacts', restore: async (ctx, r) => { check(String(r.row.blob_key).startsWith(ctx.principal.workspaceId + '/'), 'artifact_scope_invalid'); await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_artifacts VALUES(?,?,?,?,?,?,?,?,?,?)').bind(r.row.id, ctx.principal.workspaceId, r.row.run_id, r.row.ordinal, r.row.kind, r.row.blob_key, r.row.size, r.row.sha256, r.row.metadata_json, r.row.created_at).run(); return { state: 'restored' }; } });
+ports.set('adoption_artifacts', { table: 'adoption_artifacts', restore: async (ctx, r) => { check(String(r.row.blob_key).startsWith(ctx.principal.workspaceId + '/'), 'artifact_scope_invalid'); await archiveMutationRun(ctx, ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_artifacts VALUES(?,?,?,?,?,?,?,?,?,?)').bind(r.row.id, ctx.principal.workspaceId, r.row.run_id, r.row.ordinal, r.row.kind, r.row.blob_key, r.row.size, r.row.sha256, r.row.metadata_json, r.row.created_at)); return { state: 'restored' }; } });
 for (const table of workRestoreTables)
     ports.set(table, { table, restore: async (ctx, r, p) => restoreNativeWork(ctx, r, p.sourceId) });
 for (const table of ['svc_records', 'svc_events'])
@@ -70,7 +71,20 @@ export async function createImport(ctx: AdoptionContext, input: {
     await ctx.env.DB.batch([ctx.env.DB.prepare("INSERT INTO adoption_imports(id,workspace_id,actor_id,idempotency_key,source_id,state,manifest_json,created_at) VALUES(?,?,?,?,?,'uploading',?,?)").bind(run, ctx.principal.workspaceId, ctx.principal.userId, input.idempotencyKey, `linen:${m.sourceWorkspace}`, JSON.stringify(m), now()), statement(ctx, 'adoption.import.create', run)]);
     return getRun(ctx, 'imports', run);
 }
-export async function uploadChunk(ctx: AdoptionContext, runId: string, ordinal: number, bytes: ArrayBuffer) { const run = await getRun(ctx, 'imports', runId); check(run.state === 'uploading', 'import_locked', 409); const manifest = validateManifest(JSON.parse(String(run.manifest_json))), chunk = manifest.chunks.find(x => x.ordinal === ordinal); check(chunk, 'unexpected_chunk'); check(bytes.byteLength === chunk.size && await sha(bytes) === chunk.sha256, 'chunk_hash_mismatch'); const key = `${ctx.principal.workspaceId}/adoption/imports/${runId}/${ordinal}`; await ctx.env.ATTACHMENTS.put(key, bytes); await ctx.env.DB.prepare('INSERT OR REPLACE INTO adoption_chunks VALUES(?,?,?,?,?,?,?,?)').bind(ctx.principal.workspaceId, runId, ordinal, chunk.kind, key, chunk.sha256, chunk.size, JSON.stringify(chunk)).run(); return { ordinal, sha256: chunk.sha256 }; }
+export async function uploadChunk(ctx:AdoptionContext,runId:string,ordinal:number,bytes:ArrayBuffer) {
+    ctx={...ctx,env:{...ctx.env}};
+    const snapshot=await captureArchivePrivacyState(ctx);
+    return withArchiveFence(ctx,runId,()=>snapshot.json,async()=>{
+        const run=await getRun(ctx,'imports',runId);check(run.state==='uploading','import_locked',409);
+        const manifest=validateManifest(JSON.parse(String(run.manifest_json))),chunk=manifest.chunks.find(x=>x.ordinal===ordinal);
+        check(chunk,'unexpected_chunk');check(bytes.byteLength===chunk.size&&await sha(bytes)===chunk.sha256,'chunk_hash_mismatch');
+        const key=`${ctx.principal.workspaceId}/adoption/imports/${runId}/${ordinal}`;
+        await ctx.env.ATTACHMENTS.put(key,bytes);
+        try{await archiveMutationRun(ctx,ctx.env.DB.prepare('INSERT OR REPLACE INTO adoption_chunks VALUES(?,?,?,?,?,?,?,?)').bind(ctx.principal.workspaceId,runId,ordinal,chunk.kind,key,chunk.sha256,chunk.size,JSON.stringify(chunk)));}
+        catch(error){await ctx.env.ATTACHMENTS.delete(key);throw error;}
+        return {ordinal,sha256:chunk.sha256};
+    });
+}
 async function bytesFor(ctx: AdoptionContext, runId: string, chunk: Chunk) { const object = await ctx.env.ATTACHMENTS.get(`${ctx.principal.workspaceId}/adoption/imports/${runId}/${chunk.ordinal}`); check(object, 'missing_chunk', 409); check(object.size === chunk.size, 'chunk_size_mismatch'); const bytes = await object.arrayBuffer(); check(await sha(bytes) === chunk.sha256, 'chunk_hash_mismatch'); return bytes; }
 export async function recordsFor(ctx: AdoptionContext, runId: string, chunk: Chunk): Promise<NativeRecord[]> {
     const run=await getRun(ctx,'imports',runId),manifest=validateManifest(JSON.parse(String(run.manifest_json)));
@@ -154,10 +168,15 @@ async function reasonFor(ctx: AdoptionContext, r: NativeRecord) {
     return null;
 }
 export async function dryRun(ctx: AdoptionContext, runId: string) {
+    ctx={...ctx,env:{...ctx.env}};
+    const snapshot=await captureArchivePrivacyState(ctx);
+    return withArchiveFence(ctx,runId,()=>snapshot.json,()=>dryRunFenced(ctx,runId,snapshot));
+}
+async function dryRunFenced(ctx:AdoptionContext,runId:string,snapshot:ArchivePrivacyState) {
     const run = await getRun(ctx, 'imports', runId);
     check(['uploading', 'validated'].includes(String(run.state)), 'import_locked', 409);
     const m = validateManifest(JSON.parse(String(run.manifest_json)));
-    const report: DryReport = { privacyRevision:await archivePrivacyRevision(ctx),counts: {}, privacy: {}, unknownMappings: 0, identityCollisions: 0, sourceRevisionConflicts: 0, liveIdentityErasures:0, unresolvedReferences: 0, unresolvedRecords: [], erasedRecords: 0, historyOnly: 0, attachmentBytes: 0, sourceCounts: m.tables, targetCounts: {}, samples: [] };
+    const report: DryReport = { privacyRevision:await archivePrivacyStateRevision(ctx,snapshot.rows),counts: {}, privacy: {}, unknownMappings: 0, identityCollisions: 0, sourceRevisionConflicts: 0, liveIdentityErasures:0, unresolvedReferences: 0, unresolvedRecords: [], erasedRecords: 0, historyOnly: 0, attachmentBytes: 0, sourceCounts: m.tables, targetCounts: {}, samples: [] };
     const keys = new Set<string>(), refs: Reference[] = [],removals=new Set<string>();
     for (const chunk of m.chunks) {
         if (chunk.kind !== 'records') {
@@ -210,16 +229,21 @@ export async function dryRun(ctx: AdoptionContext, runId: string) {
         }>();
         report.targetCounts[table] = count?.n || 0;
     }
-    await ctx.env.DB.batch([ctx.env.DB.prepare("UPDATE adoption_imports SET state='validated',report_json=? WHERE workspace_id=? AND id=? AND state IN ('uploading','validated')").bind(JSON.stringify(report), ctx.principal.workspaceId, runId), statement(ctx, 'adoption.import.inspect', runId, { counts: report.counts, unknownMappings: report.unknownMappings })]);
+    await archiveMutationBatch(ctx, [ctx.env.DB.prepare("UPDATE adoption_imports SET state='validated',report_json=? WHERE workspace_id=? AND id=? AND state IN ('uploading','validated')").bind(JSON.stringify(report), ctx.principal.workspaceId, runId), statement(ctx, 'adoption.import.inspect', runId, { counts: report.counts, unknownMappings: report.unknownMappings })]);
     return report;
 }
 export async function applyImport(ctx: AdoptionContext, runId: string, acceptSemanticLoss = false) {
+    ctx={...ctx,env:{...ctx.env}};
+    let snapshot=await captureArchivePrivacyState(ctx);
+    return withArchiveFence(ctx,runId,()=>snapshot.json,()=>applyFencedImport(ctx,runId,acceptSemanticLoss,()=>snapshot,value=>{snapshot=value;}));
+}
+async function applyFencedImport(ctx:AdoptionContext,runId:string,acceptSemanticLoss:boolean,privacyState:()=>ArchivePrivacyState,setPrivacyState:(value:ArchivePrivacyState)=>void) {
     const run = await getRun(ctx, 'imports', runId);
     if (run.state === 'restored' || run.input_erased_at)
         return importStatus(ctx, runId);
     check(['validated', 'applying', 'history_only','erasure_pending'].includes(String(run.state)), 'dry_run_required', 409);
     const report = JSON.parse(String(run.report_json)) as DryReport;
-    check(report.privacyRevision===await archivePrivacyRevision(ctx),'erasure_changed_since_review',409);
+    check(report.privacyRevision===await archivePrivacyStateRevision(ctx,privacyState().rows),'erasure_changed_since_review',409);
     check(acceptSemanticLoss || (!report.liveIdentityErasures&&!report.sourceRevisionConflicts && !report.unknownMappings && !report.identityCollisions && !report.unresolvedReferences && !report.historyOnly), 'semantic_loss_review_required', 409);
     // Recheck the entire incoming erasure set before any mutation: destination
     // identities/mappings may have changed since the review or prior checkpoint.
@@ -234,16 +258,16 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
     }
     await assertPreservedArchiveRemovals(ctx,m.sourceWorkspace,removals);
     const w = ctx.principal.workspaceId;
-    await ctx.env.DB.batch([ctx.env.DB.prepare("UPDATE workspace_settings SET settings_json=json_set(settings_json,'$.executionHeld',json('true')),revision=revision+1 WHERE workspace_id=?").bind(w), ctx.env.DB.prepare("INSERT INTO adoption_holds(id,workspace_id,import_id,state,reason,created_at) SELECT ?,?,?,'held','restore requires remote reconciliation and current authority',? WHERE NOT EXISTS(SELECT 1 FROM adoption_holds WHERE workspace_id=? AND import_id=?)").bind(id(), w, runId, now(), w, runId), ctx.env.DB.prepare("UPDATE adoption_imports SET state='applying' WHERE workspace_id=? AND id=? AND state='validated'").bind(w, runId), statement(ctx, 'adoption.import.apply', runId)]);
+    await archiveMutationBatch(ctx, [ctx.env.DB.prepare("UPDATE workspace_settings SET settings_json=json_set(settings_json,'$.executionHeld',json('true')),revision=revision+1 WHERE workspace_id=?").bind(w), ctx.env.DB.prepare("INSERT INTO adoption_holds(id,workspace_id,import_id,state,reason,created_at) SELECT ?,?,?,'held','restore requires remote reconciliation and current authority',? WHERE NOT EXISTS(SELECT 1 FROM adoption_holds WHERE workspace_id=? AND import_id=?)").bind(id(), w, runId, now(), w, runId), ctx.env.DB.prepare("UPDATE adoption_imports SET state='applying' WHERE workspace_id=? AND id=? AND state='validated'").bind(w, runId), statement(ctx, 'adoption.import.apply', runId)]);
     const chunks = m.chunks.filter(c => c.kind === 'records').sort((a, b) => a.ordinal - b.ordinal).filter(c => c.ordinal > Number(run.checkpoint)).slice(0, 25);
     for (const chunk of chunks) {
         for (const r of await recordsFor(ctx, runId, chunk)) {
             const revision = await sha(encode(r.row));
             const existing = await ctx.env.DB.prepare('SELECT id FROM adoption_history WHERE workspace_id=? AND source_id=? AND table_name=? AND source_key=? AND revision=?').bind(w, run.source_id, r.table, r.key, revision).first();
             if (existing) {
-                await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_import_records VALUES(?,?,?)').bind(w, runId, (existing as {
+                await archiveMutationRun(ctx, ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_import_records VALUES(?,?,?)').bind(w, runId, (existing as {
                     id: string;
-                }).id).run();
+                }).id));
                 continue;
             }
             const conflict = await ctx.env.DB.prepare('SELECT 1 FROM adoption_history WHERE workspace_id=? AND source_id=? AND table_name=? AND source_key=? AND revision<>? LIMIT 1').bind(w, run.source_id, r.table, r.key, revision).first();
@@ -254,15 +278,19 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
             let why = reason || (conflict ? 'source_revision_conflict' : null);
             // Records are persisted as restricted history BEFORE domain materialization. Ports must be idempotent.
             const historyId = id();
-            await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_history VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(historyId, w, runId, run.source_id, r.table, r.key, revision, JSON.stringify(r.row), state, why, now()).run();
-            await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_import_records SELECT workspace_id,?,id FROM adoption_history WHERE workspace_id=? AND source_id=? AND table_name=? AND source_key=? AND revision=?').bind(runId, w, run.source_id, r.table, r.key, revision).run();
+            await archiveMutationRun(ctx, ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_history VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(historyId, w, runId, run.source_id, r.table, r.key, revision, JSON.stringify(r.row), state, why, now()));
+            await archiveMutationRun(ctx, ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_import_records SELECT workspace_id,?,id FROM adoption_history WHERE workspace_id=? AND source_id=? AND table_name=? AND source_key=? AND revision=?').bind(runId, w, run.source_id, r.table, r.key, revision));
 
         }
-        await ctx.env.DB.prepare('UPDATE adoption_imports SET checkpoint=MAX(checkpoint,?) WHERE workspace_id=? AND id=?').bind(chunk.ordinal, w, runId).run();
+        await archiveMutationRun(ctx, ctx.env.DB.prepare('UPDATE adoption_imports SET checkpoint=MAX(checkpoint,?) WHERE workspace_id=? AND id=?').bind(chunk.ordinal, w, runId));
     }
     if (chunks.length)
         return { id: runId, state: 'applying', processedChunks: chunks.length };
-    const privacy=await reconcileImportedTombstones(ctx,runId);report.privacyRevision=await archivePrivacyRevision(ctx);await ctx.env.DB.prepare('UPDATE adoption_imports SET report_json=? WHERE workspace_id=? AND id=?').bind(JSON.stringify(report),w,runId).run();if(privacy.pending.length){await ctx.env.DB.prepare("UPDATE adoption_imports SET state='erasure_pending' WHERE workspace_id=? AND id=?").bind(w,runId).run();return {id:runId,state:'erasure_pending',pendingErasures:privacy.pending}}
+    const privacy=await reconcileImportedTombstones(ctx,runId);
+    // Explicit imported-erasure reconciliation may add this request's removals.
+    // Revalidate all retained input under that resulting state before restoring.
+    setPrivacyState(await captureArchivePrivacyState(ctx));
+    report.privacyRevision=await archivePrivacyStateRevision(ctx,privacyState().rows);await archiveMutationRun(ctx, ctx.env.DB.prepare('UPDATE adoption_imports SET report_json=? WHERE workspace_id=? AND id=?').bind(JSON.stringify(report),w,runId));if(privacy.pending.length){await archiveMutationRun(ctx, ctx.env.DB.prepare("UPDATE adoption_imports SET state='erasure_pending' WHERE workspace_id=? AND id=?").bind(w,runId));return {id:runId,state:'erasure_pending',pendingErasures:privacy.pending}}
     // Each supported domain port owns its own authority and invariants; grants are permanently excluded.
     const pending = (await ctx.env.DB.prepare("SELECT * FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state='history_only' ORDER BY created_at,id").bind(w, runId).all<any>()).results;
     const priority = [...historyRestoreTables,'work_departments', 'work_canned_responses', 'work_people', 'work_pending_people', 'work_records', 'work_calendars', 'work_catalog', 'work_assets', 'work_recurring_plans', 'work_recurring_occurrences', 'work_recurring_tasks', 'work_asset_financials', 'work_knowledge', 'work_messages', 'work_attachments', 'work_custody', 'work_lifecycle', 'work_fulfilments','work_approval_stages', 'work_commitments', 'work_obligations', 'work_time_entries', 'work_pending_services', 'work_article_versions', 'svc_records', 'work_knowledge_drafts', 'svc_events', 'work_asset_contracts', 'work_asset_repairs', 'work_classifications', 'execution_plans', 'execution_operations', 'execution_attempts', 'execution_receipts', 'execution_verifications', 'execution_decisions', 'intelligence_commitments', 'intelligence_versions', 'intelligence_observations', 'intelligence_events', 'intelligence_research', 'intelligence_attempts', 'intelligence_engineering_jobs', 'intelligence_capabilities', 'intelligence_reuse', 'intelligence_simplifications'];
@@ -271,7 +299,7 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
         // Prior import blobs are opaque nested archives. They cannot be certified
         // free of an incoming erased identity by inspecting scalar metadata.
         if (privacy.containsTombstones && h.table_name === 'adoption_artifacts') {
-            await ctx.env.DB.prepare("UPDATE adoption_history SET row_json='{}',state='erased',reason='opaque archive retired for incoming erasure' WHERE workspace_id=? AND id=?").bind(w,h.id).run();
+            await archiveMutationRun(ctx, ctx.env.DB.prepare("UPDATE adoption_history SET row_json='{}',state='erased',reason='opaque archive retired for incoming erasure' WHERE workspace_id=? AND id=?").bind(w,h.id));
             continue;
         }
         const port = ports.get(h.table_name);
@@ -280,11 +308,12 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
         if (!port)
             continue;
         const r = { table: h.table_name, key: h.source_key, row: await mapRow(ctx, h.source_id, (await historyArchiveRow(ctx,h.table_name,original,true)).row,h.table_name) };
+        let restoredBlob:string|undefined;
         if (r.table === 'work_attachments' || r.table === 'adoption_artifacts') {
             const data = await attachmentBytes(ctx, runId, m, String(original.id));
             const key = `${w}/adoption/restored/${String(r.row.id)}`;
             await ctx.env.ATTACHMENTS.put(key, data);
-            r.row.blob_key = key;
+            r.row.blob_key = key;restoredBlob=key;
         }
         let result: {
             state: 'restored' | 'quarantined';
@@ -292,38 +321,41 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
         };
         try {
             result = await port.restore(ctx, r, { sourceId: h.source_id, revision: h.revision });
+            if(r.table==='history_identity_tombstones')setPrivacyState(advanceHistoryTombstone(privacyState(),{digest:String(r.row.digest),created_at:String(r.row.created_at)}));
         }
         catch (e) {
-            if (!(e instanceof ApiError))
+            if(restoredBlob)await ctx.env.ATTACHMENTS.delete(restoredBlob);
+            if (!(e instanceof ApiError) || e.code==='erasure_changed_since_review')
                 throw e;
             result = { state: 'quarantined', reason: e.code };
         }
         ;
-        await ctx.env.DB.prepare('UPDATE adoption_history SET state=?,reason=? WHERE workspace_id=? AND id=?').bind(result.state, result.reason || null, w, h.id).run();
+        if(restoredBlob&&result.state!=='restored')await ctx.env.ATTACHMENTS.delete(restoredBlob);
+        await archiveMutationRun(ctx, ctx.env.DB.prepare('UPDATE adoption_history SET state=?,reason=? WHERE workspace_id=? AND id=?').bind(result.state, result.reason || null, w, h.id));
     }
     // Account bindings never survive workspace import. Keep source 'bound' only
     // while historical fulfilments materialize under the hold triggers, then show
     // these people as pending until a fresh authenticated account proves its email.
-    await ctx.env.DB.prepare(`UPDATE work_pending_people SET state='pending',bound_at=NULL WHERE workspace_id=? AND state='bound'
+    await archiveMutationRun(ctx, ctx.env.DB.prepare(`UPDATE work_pending_people SET state='pending',bound_at=NULL WHERE workspace_id=? AND state='bound'
       AND EXISTS(SELECT 1 FROM work_restore_records restored WHERE restored.workspace_id=work_pending_people.workspace_id
         AND restored.table_name='work_pending_people' AND restored.record_id=work_pending_people.id)
       AND EXISTS(SELECT 1 FROM work_people p WHERE p.workspace_id=work_pending_people.workspace_id AND p.id=work_pending_people.id AND p.member_id IS NULL)`)
-      .bind(w).run();
+      .bind(w));
     const permittedHistory = [...historyOnly, 'identities', 'workspace'];
     const remaining = await ctx.env.DB.prepare(`SELECT COUNT(*) n FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state NOT IN ('restored','erased') AND table_name NOT IN (${permittedHistory.map(()=>'?').join(',')})`).bind(w, runId,...permittedHistory).first<{n:number}>();
     const state = remaining?.n ? 'history_only' : 'restored';
-    report.privacyRevision=await archivePrivacyRevision(ctx);
-    await ctx.env.DB.prepare('UPDATE adoption_imports SET report_json=? WHERE workspace_id=? AND id=?').bind(JSON.stringify(report),w,runId).run();
-    // Old uploaded bytes are opaque source custody. After destination erasure,
-    // retain only the normalized rows, never a downloadable/exportable raw copy.
+    report.privacyRevision=await archivePrivacyStateRevision(ctx,privacyState().rows);
     const privateInput=await ctx.env.DB.prepare('SELECT 1 FROM history_identity_tombstones WHERE workspace_id=? LIMIT 1').bind(w).first();
-    if(privateInput){
-      const inputChunks=(await ctx.env.DB.prepare('SELECT object_key FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId).all<{object_key:string}>()).results;
-      for(const chunk of inputChunks)await queueDelete(ctx,chunk.object_key);
-      await ctx.env.DB.batch([ctx.env.DB.prepare('DELETE FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId),ctx.env.DB.prepare('UPDATE adoption_imports SET input_erased_at=? WHERE workspace_id=? AND id=?').bind(now(),w,runId)]);
+    const finish=[ctx.env.DB.prepare('UPDATE adoption_imports SET report_json=?,state=? WHERE workspace_id=? AND id=?').bind(JSON.stringify(report),state,w,runId),statement(ctx,'adoption.import.checkpoint',runId,{state})];
+    // Retire raw input and mark completion in the same guarded transaction.
+    if(privateInput||privacy.containsTombstones){
+      const chunks=(await ctx.env.DB.prepare('SELECT object_key FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId).all<{object_key:string}>()).results;
+      for(const chunk of chunks)await queueDelete(ctx,chunk.object_key);
+      finish.push(ctx.env.DB.prepare('DELETE FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId));
+      if(privateInput)finish.push(ctx.env.DB.prepare('UPDATE adoption_imports SET input_erased_at=? WHERE workspace_id=? AND id=?').bind(now(),w,runId));
+      if(privacy.containsTombstones)finish.push(ctx.env.DB.prepare('UPDATE adoption_imports SET manifest_json=? WHERE workspace_id=? AND id=?').bind(JSON.stringify({...m,chunks:[],retiredForPrivacy:true}),w,runId));
     }
-    await ctx.env.DB.batch([ctx.env.DB.prepare('UPDATE adoption_imports SET state=? WHERE workspace_id=? AND id=?').bind(state, w, runId), statement(ctx, 'adoption.import.checkpoint', runId, { state })]);
-    if(privacy.containsTombstones){const chunks=(await ctx.env.DB.prepare('SELECT object_key FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId).all<{object_key:string}>()).results;for(const chunk of chunks)await queueDelete(ctx,chunk.object_key);await ctx.env.DB.batch([ctx.env.DB.prepare('DELETE FROM adoption_chunks WHERE workspace_id=? AND run_id=?').bind(w,runId),ctx.env.DB.prepare('UPDATE adoption_imports SET manifest_json=? WHERE workspace_id=? AND id=?').bind(JSON.stringify({...m,chunks:[],retiredForPrivacy:true}),w,runId)]);}
+    await archiveMutationBatch(ctx,finish);
     return importStatus(ctx, runId);
 }
 export async function importStatus(ctx: AdoptionContext, runId: string) { const run = await getRun(ctx, 'imports', runId); const target = (await ctx.env.DB.prepare('SELECT table_name,state,COUNT(*) count FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) GROUP BY table_name,state').bind(ctx.principal.workspaceId, runId).all()).results; return { ...run, report: JSON.parse(String(run.report_json)), target }; }

@@ -1,3 +1,4 @@
+import { archiveMutationRun } from './archive-fence';
 import { mapArchiveRow } from './archive-schema';
 import { isArchiveAlias } from '../history/archive-identities.mjs';
 import { restoreAdoptionRecord as restoreWork } from '../work/restore';
@@ -13,7 +14,7 @@ export async function mapId(ctx: AdoptionContext, source: string, old: string, k
         return prior.target_id;
     const digest = await sha(encode([ctx.principal.workspaceId, source, old]));
     const uuid = `${digest.slice(0, 8)}-${digest.slice(8, 12)}-5${digest.slice(13, 16)}-a${digest.slice(17, 20)}-${digest.slice(20, 32)}`;
-    await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_identity_map VALUES(?,?,?,?,?,NULL,?)').bind(ctx.principal.workspaceId, source, old, uuid, kind, now()).run();
+    await archiveMutationRun(ctx, ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_identity_map VALUES(?,?,?,?,?,NULL,?)').bind(ctx.principal.workspaceId, source, old, uuid, kind, now()));
     return uuid;
 }
 export async function mapRow(ctx: AdoptionContext, source: string, row: Row, table:string) {

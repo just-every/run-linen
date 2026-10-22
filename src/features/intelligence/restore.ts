@@ -1,3 +1,4 @@
+import { archiveMutationBatch } from '../adoption/archive-fence';
 import { now } from '../../platform/http';
 import { assert, current } from './access';
 import type { IntelligenceContext } from './types';
@@ -62,6 +63,6 @@ export async function restoreAdoptionRecord(ctx: IntelligenceContext, input: {
     if ((row as any).commitment_id)
         assert(await ctx.env.DB.prepare('SELECT 1 FROM intelligence_commitments WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, (row as any).commitment_id).first(), 'restore_parent_required', 422);
     const keys = Object.keys(row), recordId = String((row as any).id || (row as any).commitment_id || input.sourceKey);
-    await ctx.env.DB.batch([ctx.env.DB.prepare(`INSERT INTO ${input.table}(${keys.join(',')}) VALUES(${keys.map(() => '?').join(',')})`).bind(...keys.map(k => (row as any)[k])), ctx.env.DB.prepare('INSERT INTO intelligence_restore_records VALUES(?,?,?,?,?,?)').bind(ctx.principal.workspaceId, input.sourceId, input.sourceKey, input.table, recordId, now())]);
+    await archiveMutationBatch(ctx, [ctx.env.DB.prepare(`INSERT INTO ${input.table}(${keys.join(',')}) VALUES(${keys.map(() => '?').join(',')})`).bind(...keys.map(k => (row as any)[k])), ctx.env.DB.prepare('INSERT INTO intelligence_restore_records VALUES(?,?,?,?,?,?)').bind(ctx.principal.workspaceId, input.sourceId, input.sourceKey, input.table, recordId, now())]);
     return { id: recordId, state: 'restored_held' };
 }

@@ -1,3 +1,4 @@
+import { archiveMutationRun } from '../adoption/archive-fence';
 import { hashToken } from "../../platform/crypto";
 import { assert, membership } from "./authority";
 import type { CoreContext } from "./types";
@@ -150,10 +151,9 @@ export async function restoreExecutionRecord(
   );
   if (existing) return { state: "retained", id: row.id };
   const keys = Object.keys(row);
-  await ctx.env.DB.prepare(
+  await archiveMutationRun(ctx, ctx.env.DB.prepare(
     `INSERT INTO ${input.table} (${keys.join(",")}) VALUES(${keys.map(() => "?").join(",")})`,
   )
-    .bind(...keys.map((k) => row[k] as any))
-    .run();
+    .bind(...keys.map((k) => row[k] as any)));
   return { state: "restored_held", id: row.id };
 }

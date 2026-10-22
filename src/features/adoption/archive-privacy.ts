@@ -1,3 +1,4 @@
+import { captureArchivePrivacyState } from './archive-fence';
 import { archiveHmac,archiveIdentityDigest,archiveLocalOrigin,archiveTombstone,isArchiveAlias,isArchiveTombstone,archiveIdentityMatches } from '../history/archive-identity-crypto.mjs';
 import { prepareArchiveIdentityProjection } from '../history/archive-identities.mjs';
 import { historyArchiveRow } from '../history/archive';
@@ -11,13 +12,12 @@ import { ApiError } from '../../platform/http';
 
 /** A private checkpoint, never an identity inventory or exported key. */
 export async function archivePrivacyRevision(ctx:AdoptionContext) {
- const db=ctx.env.DB,w=ctx.principal.workspaceId;
- const rows=await Promise.all([
-  db.prepare('SELECT identity_hash,created_at FROM adoption_tombstones WHERE workspace_id=? ORDER BY identity_hash').bind(w).all(),
-  db.prepare('SELECT person_id,created_at FROM work_erasure WHERE workspace_id=? ORDER BY person_id').bind(w).all(),
-  db.prepare('SELECT digest,created_at FROM history_identity_tombstones WHERE workspace_id=? ORDER BY digest').bind(w).all(),
- ]);
- return 'ap1:'+await archiveHmac(ctx.env,'linen/archive/privacy-checkpoint/v1',w,rows.map(r=>r.results));
+ const snapshot=await captureArchivePrivacyState(ctx);
+ return archivePrivacyStateRevision(ctx,snapshot.rows);
+}
+
+export async function archivePrivacyStateRevision(ctx:AdoptionContext,rows:unknown) {
+ return 'ap1:'+await archiveHmac(ctx.env,'linen/archive/privacy-checkpoint/v1',ctx.principal.workspaceId,rows);
 }
 
 /** Earlier safe archives remain usable until this workspace has a removal. */
@@ -36,6 +36,8 @@ export async function archiveIdentityMatcher(ctx:AdoptionContext,sourceWorkspace
  const work=(await ctx.env.DB.prepare('SELECT person_id FROM work_erasure WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<{person_id:string}>()).results;
  const exact=new Set(work.filter(r=>!isArchiveTombstone(r.person_id)).map(r=>r.person_id));
  const carried=(await ctx.env.DB.prepare('SELECT identity_hash FROM adoption_tombstones WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<{identity_hash:string}>()).results.filter(r=>isArchiveTombstone(r.identity_hash));
+ const mappings=(await ctx.env.DB.prepare('SELECT source_key,target_id FROM adoption_identity_map WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<{source_key:string;target_id:string}>()).results;
+ for(const mapping of mappings)if(exact.has(mapping.target_id)||await match(mapping.target_id))exact.add(mapping.source_key);
  const cache=new Map<string,boolean>();
  return async(value:string)=>{
   if(cache.has(value))return cache.get(value)!;

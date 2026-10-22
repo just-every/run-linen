@@ -1,3 +1,4 @@
+import { archiveMutationBatch,archiveMutationRun } from '../adoption/archive-fence';
 import { applicationData, type ApplicationData } from '../work/application-schema';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
@@ -33,7 +34,7 @@ export async function restoreAdoptionRecord(ctx: {
         const record = await env.DB.prepare('SELECT id FROM svc_records WHERE workspace_id=? AND id=?').bind(p.workspaceId, row.record_id).first();
         if (!record)
             throw new ApiError(409, 'restore_dependency', 'Restore parent record first');
-        await env.DB.prepare('INSERT OR IGNORE INTO svc_events VALUES(?,?,?,?,?,?,?)').bind(row.id, p.workspaceId, row.record_id, row.actor_id || p.userId, row.kind || 'imported', typeof row.data_json === 'string' ? row.data_json : JSON.stringify(row.data || {}), row.created_at || now()).run();
+        await archiveMutationRun(ctx, env.DB.prepare('INSERT OR IGNORE INTO svc_events VALUES(?,?,?,?,?,?,?)').bind(row.id, p.workspaceId, row.record_id, row.actor_id || p.userId, row.kind || 'imported', typeof row.data_json === 'string' ? row.data_json : JSON.stringify(row.data || {}), row.created_at || now()));
         return { id: row.id, restored: true, inert: true };
     }
     if (input.table !== 'svc_records')
@@ -93,6 +94,6 @@ export async function restoreAdoptionRecord(ctx: {
         data.state = 'needs-review';
         data.nextDueAt = null;
     }
-    await env.DB.batch([env.DB.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,?,?,?)').bind(row.id, p.workspaceId, row.kind, row.owner_id, row.visibility, JSON.stringify(participants), JSON.stringify(data), row.revision, row.created_at, row.updated_at), env.DB.prepare('INSERT INTO svc_events VALUES(?,?,?,?,?,?,?)').bind(id(), p.workspaceId, row.id, p.userId, 'restored-history', JSON.stringify({ sourceId: input.sourceId, sourceKey: input.sourceKey, inert: true }), now())]);
+    await archiveMutationBatch(ctx, [env.DB.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,?,?,?)').bind(row.id, p.workspaceId, row.kind, row.owner_id, row.visibility, JSON.stringify(participants), JSON.stringify(data), row.revision, row.created_at, row.updated_at), env.DB.prepare('INSERT INTO svc_events VALUES(?,?,?,?,?,?,?)').bind(id(), p.workspaceId, row.id, p.userId, 'restored-history', JSON.stringify({ sourceId: input.sourceId, sourceKey: input.sourceKey, inert: true }), now())]);
     return { id: row.id, restored: true, inert: true };
 }
