@@ -1951,7 +1951,7 @@
       "executable": false
     },
     "src/features/history/reconcile.ts": {
-      "sha256": "bc149bb69a6bf8bd37ca22e47344d239e123384cfd3e5980b1f0e70de98048d5",
+      "sha256": "e0911d54cf012b9e579d28457e03975a662528230159bd9798c8bf0e6ca8e389",
       "executable": false
     },
     "src/features/history/redact.ts": {
@@ -5447,7 +5447,7 @@
       "executable": false
     },
     "tests/services/employee-notice-cases.mjs": {
-      "sha256": "54187e7f21d75f9fc197ed97c7c2b908d4bd7b655fc432e85e6e8d2c9e7d420b",
+      "sha256": "97aff32639471fe516458740b6545f182fc909adbb088c50fc920ad8c465cc03",
       "executable": false
     },
     "tests/services/integration-worker.ts": {
@@ -5471,7 +5471,7 @@
       "executable": false
     },
     "tests/services/run.mjs": {
-      "sha256": "7f39b0e6f38ab0efe7d1378ed875af6c33c500c82b1e87b5c34f74318c033f43",
+      "sha256": "73f7b05a2f1812304ecf0a60ab91d84a56e82fafcbb2cffbc75e50708df71fc0",
       "executable": false
     },
     "tests/services/template-cases.mjs": {
@@ -5883,7 +5883,7 @@
       "executable": false
     },
     "tests/work/history-erasure-cases.mjs": {
-      "sha256": "b649edf7678b14aa4e094c2d4056e0d42ba431d0bc516029309ff6f18c1e4d32",
+      "sha256": "f238e69a1c5c06dd97d0c05ed4cdba2d96a2024bfda405c02637eb51dc56f4d2",
       "executable": false
     },
     "tests/work/integration-regressions-cases.mjs": {
