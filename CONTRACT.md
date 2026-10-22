@@ -798,6 +798,32 @@ that product and marks how close the current code is (see [Status](#status)).
   ticket as private notes, and confirm the employee sees none of them while the
   mentioned colleague is notified.
 
+  *Current collaboration semantic (sx, 22 October; conservative default awaiting
+  ct):* only a current owner initiates new collaboration on a normal ticket,
+  selecting the recipient and exact content with an explicit consent and audit
+  reason for each action. Mentioning or watching never grants readership.
+  Private-note mentions require an existing private-note reader; a current
+  recipient receives a content-free portal notification and reads the note only
+  under their current ticket rights. Watchers must already read the ticket and
+  receive notices for public updates only. Removing a watcher or withdrawing
+  readership removes later inbox access.
+
+  The owner can open a vendor email conversation through a current SendGrid
+  connection and send precisely the consented plain-text draft, without ticket
+  text, private notes, quote files or attachments being copied automatically.
+  Each send rechecks owner consent, normal-ticket scope, connection revision
+  and execution/import holds. A response loss or ambiguous provider outcome is
+  retained as unknown and replay never resends it. An authenticated receiving
+  adapter submits the original sender, provider message ID and In-Reply-To;
+  only the configured vendor and an accepted sent message on a current open
+  conversation may add a private reply. Wrong sender/thread, closed conversation
+  and withdrawn connection are quarantined. Inbound replay adds no second note.
+  Vendor addresses never become employee identities. Employee views contain
+  none of the mention/side-conversation private content. Erasure and retention
+  clear the new personal metadata, and archive restore carries no live
+  collaboration authority. Slack side conversations remain a CHANNEL-001 gap;
+  broader role and HR/restricted-ticket initiation await ct confirmation.
+
 - **DESK-008 — Responses and summaries.** Canned responses with placeholders,
   and assistant-drafted replies and ticket summaries that cite knowledge and
   ticket history; drafts are sent only by an agent unless a standing grant covers
@@ -2766,7 +2792,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `DESK-004` | SLA policies | target | done | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs` | Public-route proof: owner-ordered policies by priority and requester group (business and calendar hours); a P2 opened 4:30 pm Friday in `America/New_York` before Martin Luther King Jr. Day is due Tuesday 12:30 pm (first response 9:30 am); a requester pause from 10 to 11 am moves it to 1:30 pm while an internal hold does not; next-response targets start and are met; breaches show with their time on the ticket and in the period report. |
 | `DESK-005` | Escalation and supervisor rules | target | done | `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs` | Local public-route proof through the scheduler duty: P1 level-1 then level-2 escalation before the response target as private notes, level 3 stopped by the response; awaiting-requester reminder then disclosed resolution; a requester reply before the due time stops both; business days on the New York SLA calendar. Channel delivery of escalations and reminders is NOTIFY-001's. |
 | `DESK-006` | Ticket relationships | target | done | `src/features/work/relationships.ts`, `src/ui/work-relationships.tsx`, `tests/work/relationship-cases.mjs` | Public-route proof: a duplicate printer ticket merges into the survivor (closed with a pointer, HR merge refused); both requesters see the merge notice on the surviving ticket, the merged requester reads its public messages only and cannot act on it; a split moves the monitor ask into its own ticket citing the original message, with its own SLA binding, and becomes a child (cycle refused); a laptop, a problem and an engineering-issue URL link to the ticket, and the laptop and problem each list it. |
-| `DESK-007` | Collaboration | target | partial | `src/features/work/core.ts`, `tests/work/runtime.mjs`, `tests/ui/browser.mjs` | No mentions, watchers or side conversations. |
+| `DESK-007` | Collaboration | target | partial | `tests/work/relationship-cases.mjs` (collaborationChecks through `tests/work/runtime.mjs`: private mention/inbox, employee isolation, watcher scope/removal, exact consented SendGrid draft, private vendor replies, sender/thread/ref revision refusals, idempotency, unknown outcomes, authority withdrawal and public erasure); `tests/ui/sharing-journey.mjs` (collaborationJourney through `tests/ui/connected-run.mjs`: native named colleague/connection controls, notified colleague, vendor reply and employee-private exclusion at 1440/390). | Private Slack Network-team conversation/reply requires CHANNEL-001 owner workspace/app/signing and real adapter proof. Adopted conservative default pending ct: owner-only initiation on normal tickets with explicit audited per-action recipient/content consent and existing readership; broader roles and HR/restricted initiation remain unbuilt. Native/fixture email proof is distinct from a real receiving adapter or provider-delivery claim. |
 | `DESK-008` | Responses and summaries | target | done | `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs` | Local public-route and paid-model-edge fixture proof of safe canned placeholders, generated knowledge/history citations, a complete 20-message summary, native 1440/390 unsent-draft persistence and explicit agent Send; current role/scope, provider/citation failures and changed-message/article/expiry fences. Native template restore remains inert. No live-model quality claim. |
 | `DESK-009` | Satisfaction surveys | target | missing |  | No CSAT. |
 | `DESK-010` | Custom fields, forms and statuses | target | done | `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs` | Public-route proof: the owner adds an Office dropdown for incidents and service requests and an "Awaiting parts" vendor-wait status; the requester reads the field and cannot write it; Awaiting parts stops the clock under a vendor-pausing policy and not under a requester-only one; an incident is refused without a resolution code from the API and a bulk update (a service request in the same bulk closes with close notes); fields required on closed or on a named status are enforced; a merge records Duplicate and the no-reply close No response; the owner edits the code list; REPORT-001 counts resolutions by code. Browser proof at 1440/390: the console sets Office and Awaiting parts, refuses the close without a code, then shows the code and close notes, and the report counts it. |
