@@ -1,8 +1,7 @@
 import { ApiError, id, now } from '../../platform/http';
 import type { WorkContext, WorkRecord } from './core';
 import { createWork } from './core';
-import type {StageDef} from './approval-config';
-import { chainStatus, timers } from './approval-stages';
+import { chainStatus,activateStageStatements } from './approval-stages';
 import {managerRejected} from './approval-decisions';
 import { managerHolder,managerStageApproved } from './fulfilment-authority';
 
@@ -60,10 +59,9 @@ async function openPendingStages(ctx:WorkContext,at:string){
   const managerApproved=await managerStageApproved(ctx,work,catalog,f);
   const managerRow=await db.prepare("SELECT stage_key,active_at FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=? AND stage_key='manager'").bind(w,f.id).first<{stage_key:string;active_at:string|null}>();
   const chain=await chainStatus(ctx,work,catalog,f,managerApproved);
-  const pending=!managerApproved&&managerRow&&!await managerRejected(ctx,work,catalog,f)?{key:'manager',activeAt:managerRow.active_at}:chain.pending;
-  if(!pending || pending.activeAt)continue;
-  const row=await db.prepare('SELECT definition_json FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=? AND stage_key=?').bind(w,f.id,pending.key).first<{definition_json:string}>();
-  const def=JSON.parse(row!.definition_json) as StageDef,tm=timers(def.calendar,def,at);
-  await db.prepare('UPDATE work_approval_stages SET active_at=?,remind_at=?,sla_at=? WHERE workspace_id=? AND fulfilment_id=? AND stage_key=? AND active_at IS NULL AND EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=?)').bind(tm.activeAt,tm.remindAt,tm.slaAt,w,f.id,def.key,w,work.id,work.revision).run();
+  const pending=!managerApproved&&managerRow&&!await managerRejected(ctx,work,catalog,f)?[{key:'manager',activeAt:managerRow.active_at}]:chain.pendingStages;
+  const statements=await activateStageStatements(ctx,f.id,pending,at);
+  if(statements.length)await db.batch(statements);
+
  }
 }

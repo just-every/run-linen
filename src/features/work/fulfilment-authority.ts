@@ -5,7 +5,7 @@ import { ApiError, id, now } from '../../platform/http';
 import { getWork, type WorkContext, type WorkRecord } from './core';
 import { resolveManager } from './delegation';
 import type { Step } from '../execution/types';
-import { chainStatus, managerRejected, stagesOf, timers, type StageDef } from './approval-chain';
+import { chainStatus, managerRejected, stagesOf,activateStageStatements } from './approval-chain';
 
 /** Business approval is separate from the provider action grant; neither manufactures the other. */
 type FulfilmentFacts = { id?: string; revision?: number; beneficiary_id: string; purpose: string; expires_at: string | null };
@@ -52,7 +52,7 @@ export async function fulfilmentManagerApproval(ctx: WorkContext, work: WorkReco
   if (!fulfilment.id) return { allowed: false, holderId: manager.holderId, pendingStage: (manager.allowed ? stages[0].name : null) as string | null, rejected: false };
   const f = await ctx.env.DB.prepare('SELECT id,revision,beneficiary_id,application_json FROM work_fulfilments WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, fulfilment.id).first<any>();
   const chain = await chainStatus(ctx, work, catalog, { ...f, revision: fulfilment.revision ?? f.revision }, manager.allowed);
-  return { allowed: manager.allowed && chain.satisfied && !refused, holderId: manager.holderId, pendingStage: (manager.allowed ? chain.pending?.name ?? null : null) as string | null, rejected: chain.rejected || refused };
+  return { allowed: manager.allowed && chain.satisfied && !refused, holderId: manager.holderId, pendingStage: (manager.allowed ? chain.pendingStages.map(s=>s.name).join(', ')||null : null) as string | null, rejected: chain.rejected || refused };
 }
 
 export async function assertWorkFulfilmentAuthority(ctx: WorkContext, step: Step, planId: string) {
@@ -139,7 +139,7 @@ export async function prepareFulfilmentApproval(ctx: WorkContext, workId: string
     db.prepare('INSERT INTO work_fulfilment_approvals(id,workspace_id,work_id,fulfilment_id,work_revision,fulfilment_revision,catalog_revision,person_revision,manager_id,holder_id,beneficiary_id,purpose,expires_at,event_key,created_at,person_id,binding_id,comment,channel) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
       .bind(approvalId,w,workId,f.id,work.revision,f.revision,catalog.revision,person.revision,person.manager_id,holder,f.beneficiary_id,f.purpose,f.expires_at,input.idempotencyKey,now(),person.id,person.binding_id,
         typeof input.comment==='string'&&input.comment.trim()?input.comment.trim().slice(0,2000):null,channel),
-    ...await openFirstStage(ctx,f.id),
+    ...await openFirstStage(ctx,work,catalog,f),
     db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),w,ctx.principal.userId,'work.fulfilment_approved',approvalId,
       JSON.stringify({workId,fulfilmentId:f.id,catalogId:catalog.id,workRevision:work.revision,fulfilmentRevision:f.revision,
         catalogRevision:catalog.revision,personRevision:person.revision,managerId:person.manager_id,holderId:holder,
@@ -188,9 +188,7 @@ export async function recordWorkManagerGrantApproval(ctx: WorkContext, grantId: 
 }
 
 /** The first applicable stage after the manager opens at the manager's decision, counting its reminder and SLA from that instant. */
-async function openFirstStage(ctx: WorkContext, fulfilmentId: string) {
-  const first = await ctx.env.DB.prepare("SELECT stage_key,definition_json FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=? AND stage_key<>'manager' AND applies=1 AND active_at IS NULL ORDER BY ordinal LIMIT 1").bind(ctx.principal.workspaceId, fulfilmentId).first<{ stage_key: string; definition_json: string }>();
-  if (!first) return [];
-  const tm = timers((JSON.parse(first.definition_json) as StageDef).calendar, JSON.parse(first.definition_json) as StageDef, now());
-  return [ctx.env.DB.prepare('UPDATE work_approval_stages SET active_at=?,remind_at=?,sla_at=? WHERE workspace_id=? AND fulfilment_id=? AND stage_key=? AND active_at IS NULL').bind(tm.activeAt, tm.remindAt, tm.slaAt, ctx.principal.workspaceId, fulfilmentId, first.stage_key)];
+async function openFirstStage(ctx: WorkContext, work:WorkRecord,catalog:any,f:any) {
+  const chain=await chainStatus(ctx,work,catalog,f,true);
+  return activateStageStatements(ctx,f.id,chain.pendingStages,now());
 }

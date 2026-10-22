@@ -35,7 +35,7 @@ export async function listStageDecisions(ctx: WorkContext) {
     const work = { id: row.work_id, revision: row.w_revision, state: 'open' } as WorkRecord, catalog = { id: row.catalog_id, owner_id: row.owner_id, revision: row.c_revision, approvals_json: row.approvals_json, requires_manager: row.requires_manager, target: row.target };
     const f = { id: row.fulfilment_id, revision: row.f_revision, beneficiary_id: row.beneficiary_id, application_json: row.application_json,purpose:row.purpose,expires_at:row.expires_at };
     const chain = await chainStatus(ctx, work, catalog, f, await managerStageApproved(ctx, work, { ...catalog }, f));
-    const stage = chain.pending;
+    const stage = chain.pendingStages.find(s=>s.key===row.stage_key);
     if (!stage || stage.key !== row.stage_key || !stage.approvers.includes(ctx.principal.userId) || stage.decisions.some(d => d.approverId === ctx.principal.userId)) continue;
     const names = new Map((await db.prepare('SELECT id,name FROM users WHERE id IN (?,?)').bind(row.requester_id, row.beneficiary_id).all<{ id: string; name: string }>()).results.map(u => [u.id, u.name]));
     const quote = await db.prepare("SELECT id,name,size,sha256 FROM work_attachments WHERE workspace_id=? AND fulfilment_id=? AND visibility='catalog_quote'").bind(w, f.id).first<any>();

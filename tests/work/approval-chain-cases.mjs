@@ -1,3 +1,4 @@
+import {approvalParallelChecks} from './approval-parallel-cases.mjs';
 import {approvalReminderPrivacyChecks} from './approval-reminder-privacy-cases.mjs';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
@@ -147,6 +148,7 @@ export async function approvalChainChecks({db,ok,api,mf}){
  const frozen=(await ok(`/work/${quoteWork.id}/catalog-requests`,undefined,employee)).items[0].catalogSnapshot;
  assert.deepEqual(frozen.approvalAmounts.finance,{fieldId:'price',cents:180001},'item edits retain the submitted routing amount');
  assert.equal(frozen.answers.price,1800.01);
+ await approvalParallelChecks({db,ok,api,mf,employee,manager,delegate,finance,second,calendar,stage});
  await approvalReminderPrivacyChecks({db,ok,api,employee,delegate,finance,second,calendar,stage});
  await ok('/approval-mail/config',{revision:1,enabled:false});
  const managerOnly=await ok('/catalog',{name:'synthetic-linen-736',kind:'service',target:'synthetic-linen-736',ownerId:'owner',requiresManager:true});

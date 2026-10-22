@@ -37,7 +37,7 @@ async function pendingDecisions(ctx: WorkContext) {
     if (catalog.requires_manager && !manager.allowed) { if (manager.holderId && manager.holderId !== f.beneficiary_id) out.push({ work, catalog, f, approverId: manager.holderId, stageKey: 'manager', stageName: 'Manager approval' }); continue; }
 
     const chain = await chainStatus(ctx, work, catalog, f, true);
-    if (chain.pending) for (const a of chain.pending.approvers) if (!chain.pending.decisions.some(d => d.approverId === a)) out.push({ work, catalog, f, approverId: a, stageKey: chain.pending.key, stageName: chain.pending.name });
+    for(const stage of chain.pendingStages)for (const a of stage.approvers) if (!stage.decisions.some(d => d.approverId === a)) out.push({ work, catalog, f, approverId: a, stageKey: stage.key, stageName: stage.name });
   }
   return out;
 }
@@ -162,5 +162,6 @@ async function pendingStillCurrent(ctx:WorkContext,p:Pending){
  const manager=await managerStageAuthority(ctx,work,catalog,f);
  if(p.stageKey==='manager')return !manager.allowed&&manager.holderId===p.approverId;
  const chain=await chainStatus(ctx,work,catalog,f,manager.allowed);
- return chain.pending?.key===p.stageKey&&chain.pending.approvers.includes(p.approverId)&&!chain.pending.decisions.some(d=>d.approverId===p.approverId);
+ const stage=chain.pendingStages.find(s=>s.key===p.stageKey);
+ return !!stage&&stage.approvers.includes(p.approverId)&&!stage.decisions.some(d=>d.approverId===p.approverId);
 }

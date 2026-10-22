@@ -24,6 +24,16 @@ export async function approvalGuard(ctx: WorkContext, workId: string, catalogId:
     const row = await db.prepare(sql).bind(...params).first<{ value: string }>();
     conditions.push(`(${sql})=?`); bindings.push(...params, row!.value);
   }
+  // Compare effective holders too: a delegation can start/expire during the decision without any row being edited.
+  // SQLite evaluates 'now' again at the guarded write, so crossing that boundary cannot record stale authority.
+  const holderSql=`SELECT json_group_array(json_array(m.user_id,COALESCE((SELECT d.delegate_id FROM work_delegations d
+    JOIN memberships h ON h.workspace_id=d.workspace_id AND h.user_id=d.delegate_id AND h.active=1
+    WHERE d.workspace_id=m.workspace_id AND d.manager_id=m.user_id AND d.revoked_at IS NULL
+    AND d.starts_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now') AND d.expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now')
+    AND EXISTS(SELECT 1 FROM json_each(h.roles_json) r WHERE r.value IN ('approver','owner')) ORDER BY d.starts_at DESC LIMIT 1),m.user_id))) value
+    FROM (SELECT workspace_id,user_id FROM memberships WHERE workspace_id=? AND active=1 ORDER BY user_id) m`;
+  const holders=await db.prepare(holderSql).bind(w).first<{value:string}>();
+  conditions.push(`(${holderSql})=?`);bindings.push(w,holders!.value);
   return {
     start: db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN ${conditions.join(' AND ')} THEN 1 ELSE 0 END)`).bind(guardId, ...bindings),
     end: db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guardId),

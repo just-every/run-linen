@@ -3,8 +3,7 @@ import type { WorkContext, WorkRecord } from './core';
 import { approvalGuard } from './approval-guard';
 import { currentWorkPrincipal } from './identity';
 import { managerHolder, managerStageApproved } from './fulfilment-authority';
-import { chainStatus, timers } from './approval-stages';
-import type { StageDef } from './approval-config';
+import { chainStatus,activateStageStatements } from './approval-stages';
 
 export interface StageDecisionInput { catalogId: string; stageKey: string; decision: string; comment?: unknown; expectedWorkRevision: number; expectedFulfilmentRevision: number; expectedCatalogRevision: number; idempotencyKey: string }
 /** Records one approver's decision on the open stage, checked against current authority and revisions, atomically. */
@@ -39,13 +38,8 @@ export async function prepareStageDecision(ctx: WorkContext, workId: string, inp
   if (stage.state !== 'pending') throw new ApiError(409, 'approval_not_open', 'This stage is not waiting for a decision (earlier stages come first, and a decided stage is final)');
   if (stage.decisions.some(d => d.approverId === ctx.principal.userId)) throw new ApiError(409, 'approval_decided', 'You already decided this stage for this revision');
   const decisionId = id(), guard = id(), t = now();
-  // Whether this decision completes the stage decides what opens next.
-  const approvedNow = new Set([...stage.decisions.filter(d => d.decision === 'approved').map(d => d.approverId), ...(input.decision === 'approved' ? [ctx.principal.userId] : [])]);
-  const stageDef = JSON.parse((await db.prepare('SELECT definition_json FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=? AND stage_key=?').bind(w, f.id, stage.key).first<{ definition_json: string }>())!.definition_json) as StageDef;
-  const completes = input.decision === 'approved' && (stageDef.mode === 'any' ? approvedNow.size >= 1 : stage.approvers.every(a => approvedNow.has(a)));
-  const next = completes ? chain.stages.find(s => s.ordinal > stage.ordinal && s.applies && s.activeAt === null) : undefined;
-
-  const nextDef = next ? JSON.parse((await db.prepare('SELECT definition_json FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=? AND stage_key=?').bind(w, f.id, next.key).first<{ definition_json: string }>())!.definition_json) as StageDef : null;
+  const after=await chainStatus(ctx,work,catalog,f,managerApproved,{stageKey:stage.key,approverId:ctx.principal.userId,decision:input.decision});
+  const opening=await activateStageStatements(ctx,f.id,after.pendingStages,t);
   const statements = [
     authorityGuard.start,
     db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=?)
@@ -58,7 +52,7 @@ export async function prepareStageDecision(ctx: WorkContext, workId: string, inp
       JSON.stringify({ workId, fulfilmentId: f.id, catalogId: catalog.id, stage: stage.key, decision: input.decision, channel, workRevision: work.revision, fulfilmentRevision: f.revision, catalogRevision: catalog.revision }), t),
     ...(input.decision === 'rejected' ? [db.prepare(`UPDATE work_obligations SET state='blocked',last_error=? WHERE workspace_id=? AND work_id=? AND target=? AND state='pending'`)
       .bind(`Approval rejected at ${stage.name}`, w, workId, catalog.target)] : []),
-    ...(next && nextDef ? (() => { const tm = timers(nextDef.calendar, nextDef, t); return [db.prepare('UPDATE work_approval_stages SET active_at=?,remind_at=?,sla_at=? WHERE workspace_id=? AND fulfilment_id=? AND stage_key=? AND active_at IS NULL').bind(tm.activeAt, tm.remindAt, tm.slaAt, w, f.id, next.key)]; })() : []),
+    ...opening,
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(t, w, workId),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard), authorityGuard.end,
   ];
