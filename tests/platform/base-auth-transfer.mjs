@@ -20,7 +20,7 @@ const commandEnvironment={...process.env,WRANGLER_SEND_METRICS:'false',CI:'true'
 delete commandEnvironment.RER_LOCAL_OPERATION
 let proxy,mf
 async function run(args,expected=0){let output='';const child=spawn('pnpm',args,{cwd:root,env:commandEnvironment,stdio:['ignore','pipe','pipe']});for(const stream of [child.stdout,child.stderr])stream.on('data',c=>output+=c);const code=await new Promise(r=>child.once('exit',r));assert.equal(code,expected,args.slice(0,3).join(' ')+'\n'+output.slice(-8000));console.log('PASS command '+args.slice(0,3).join(' '));return output}
-async function open(){proxy=await getPlatformProxy({configPath:join(root,'wrangler.jsonc'),persist:{path:join(root,'.wrangler/state/v3')},remoteBindings:false});return proxy.env}
+async function open(){proxy=await getPlatformProxy({configPath:join(root,'wrangler.jsonc'),persist:{path:join(root,'.wrangler/state/v3')},remoteBindings:false});return {...proxy.env,ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}
 async function close(){await proxy?.dispose();proxy=null}
 try{
  await cp(source,root,{recursive:true,filter:p=>{const rel=p.slice(source.length+1);return !rel||!['.git','node_modules','.wrangler','.rer','.seed','dist','exports','.dev.vars','.dev.vars.previous'].some(x=>rel===x||rel.startsWith(x+'/'))}})
