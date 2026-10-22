@@ -12,7 +12,7 @@ export function ApprovalMailSettings(){
  <Notice>Until you explicitly enable this connection, decisions remain in Linen. The receiver refuses unsigned messages, missing authentication verdicts, forwarded replies and changed requests.</Notice>
  <ErrorNotice error={config.error??connections.error}/>{config.data?.confirmationUrl&&<p><a href={config.data.confirmationUrl} target="_blank" rel="noreferrer">Confirm selected SNS subscription</a></p>}<form key={config.data?.revision} className="inline-form" onSubmit={e=>void save(e)}>
  <label className="checkbox-field"><input type="checkbox" name="enabled" defaultChecked={saved?.enabled===1}/>Enable approval email</label>
- <label>Send using<select name="connection" defaultValue={saved?.sending_connection_id??''}><option value="">Choose SendGrid connection</option>{connections.data?.filter(c=>c.provider==='sendgrid'&&c.status==='active').map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+ <label>Send using<select aria-label="Send using" name="connection" defaultValue={saved?.sending_connection_id??''}><option value="">Choose SendGrid connection</option>{connections.data?.filter(c=>c.provider==='sendgrid'&&c.status==='active').map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
  <label>SES receiving mailbox<input name="recipient" type="email" defaultValue={saved?.recipient??''}/></label>
  <label>SNS topic ARN<input name="topic" defaultValue={saved?.topic_arn??''}/></label>
  <label>SNS signing certificate URL<input name="certificate" type="url" defaultValue={saved?.signing_cert_url??''}/></label>

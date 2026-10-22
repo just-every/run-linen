@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "72e0e4528f6f2cbb9f858fdf597de8c39930597dea31d8e0987c144406ac502a",
+      "sha256": "15639ccaa7a47936df9381549f2d24231f5b34b5b0eb05536571d24f91c41307",
       "executable": false
     },
     "ADOPTION.md": {
@@ -4519,11 +4519,11 @@
       "executable": false
     },
     "src/ui/approval-mail-settings.tsx": {
-      "sha256": "845dd89dbfbf312c457245cd5bd2e4b49d4b239c3e7bc3a9060d9d9ae8cddcd5",
+      "sha256": "7b05a6b6a38ef4c44457c51d817eeed50ce5adf8e617d6d1b32c55c0691e9205",
       "executable": false
     },
     "src/ui/approval-stage-decisions.tsx": {
-      "sha256": "3ef940c209d70917a6ab854601ed7eceb8bbfffb13b5622cc8034f1e8acf2f2e",
+      "sha256": "6f0c2d13e5f64aa43d188e3d18a8869484031a3635ba31fb6b2678914b35b010",
       "executable": false
     },
     "src/ui/asset-audits.tsx": {
@@ -4551,7 +4551,7 @@
       "executable": false
     },
     "src/ui/catalog-approval-editor.tsx": {
-      "sha256": "6777f5ba9f544336980b622dc5c0b3dd9d014387c36bf4c258ba54b61f501cc7",
+      "sha256": "903bb40f61ec4bb6377eb593b4545bd5c4780e3943a03c624b2aa38a55c0c6d7",
       "executable": false
     },
     "src/ui/catalog-form-editor.tsx": {
