@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useRemote } from './state';
 import { ActionForm } from './forms';
 import { ErrorNotice,Facts } from './primitives';
@@ -5,6 +6,10 @@ import type { AdminDepartment } from './departments';
 import type { AgentGroup } from './work-groups';
 /** Department-bound configuration uses the same public settings routes as the shared desk. */
 export function DepartmentSettings({department}:{department:AdminDepartment}) {
+  const [expanded,setExpanded]=useState<Set<string>>(()=>new Set());
+  function remember(id:string,open:boolean) {
+    setExpanded(previous=>{if(previous.has(id)===open)return previous;const next=new Set(previous);if(open)next.add(id);else next.delete(id);return next;});
+  }
   const groups=useRemote<{items:AgentGroup[]}>('/work-groups'),policies=useRemote<{items:{id:string;name:string;departmentId:string|null;first_response_minutes:number;next_response_minutes:number;resolution_minutes:number}[]}>('/sla-policies');
   const routing=useRemote<{rules:{id:string;name:string;departmentId:string|null;groupId:string;position:number}[]}>('/work-routing');
   const ownGroups=(groups.data?.items??[]).filter(g=>g.departmentId===department.id);
@@ -14,7 +19,7 @@ export function DepartmentSettings({department}:{department:AdminDepartment}) {
     <p>Catalog items are managed in <a href="#/connections">Connections & setup</a>. Reviewed guidance is published in <a href="#/knowledge">Knowledge</a>. Choose {department.name} as the service workspace there.</p>
     <h3>Agent groups</h3>
     <ActionForm title="Add workspace group" path="/work-groups" defaults={defaults} submit="Create group" fields={[{name:'name',label:'Group name',required:true}]} onSaved={groups.refresh}/>
-    {ownGroups.map(group=><details className="action-disclosure" key={group.id}><summary>{group.name}</summary>
+    {ownGroups.map(group=><details className="action-disclosure" key={group.id} open={expanded.has(group.id)} onToggle={event=>remember(group.id,event.currentTarget.open)}><summary>{group.name}</summary>
       <Facts entries={[["Agents",group.members.map(m=>m.name).join(', ')||'No agents assigned']]}/>
       <ActionForm title="Add an agent to this group" path={`/work-groups/${group.id}/members`} onSaved={groups.refresh} fields={[
         {name:'userId',label:'Workspace staff member',type:'select',required:true,options:staff.map(m=>({value:m.userId,label:m.name}))},

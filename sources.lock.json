@@ -4643,7 +4643,7 @@
       "executable": false
     },
     "src/ui/department-settings.tsx": {
-      "sha256": "dca89c1fd85d1b35fc3d8e0aa19eba3b6e018fd7bb486303fc703f1248f2367e",
+      "sha256": "e9c54c9d46b51a62a2f0a06ae5942d8af265892133139d327fd2d978d2bbe4d9",
       "executable": false
     },
     "src/ui/departments.tsx": {
