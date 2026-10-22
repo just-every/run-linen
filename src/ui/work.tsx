@@ -43,6 +43,7 @@ export interface WorkRecord {
   department_id?: string|null;
   department_name?: string|null;
   department_kind?: string|null;
+  protected_departments_json?:string;
 }
 export interface RequestProgress { needsAction?: boolean; title?: string; dueAt?: string; state: string; happened: string; next: string; ownerId: string | null; ownerLabel: string; }
 export interface Conversation {

@@ -8,20 +8,23 @@ import type { WorkRecord } from './work';
 export function WorkDepartment({work,onChanged}:{work:WorkRecord;onChanged:()=>void}) {
   const departments=useRemote<DepartmentAdmin>('/departments/admin'),groups=useRemote<{items:AgentGroup[]}>('/work-groups');
   const mutation=useMutation(),[departmentId,setDepartmentId]=useState(work.department_id??''),[groupId,setGroupId]=useState(''),[assigneeId,setAssigneeId]=useState('');
+  const protectedDepartments:string[]=[...new Set<string>([...JSON.parse(work.protected_departments_json??'[]'),...(work.department_kind==='hr'&&work.department_id?[work.department_id]:[])])];
   const chosen=departments.data?.items.find(d=>d.id===departmentId),matching=(groups.data?.items??[]).filter(g=>(g.departmentId??'')===departmentId),group=matching.find(g=>g.id===groupId);
-  const staff=chosen?.members.filter(m=>m.active&&(!group||group.members.some(g=>g.userId===m.userId)))??[];
+  const staff=chosen?.members.filter(m=>m.active&&protectedDepartments.every(id=>{const retained=departments.data?.items.find(d=>d.id===id);return retained?.active&&retained.members.some(previous=>previous.active&&previous.userId===m.userId);})&&(!group||group.members.some(g=>g.userId===m.userId)))??[];
   async function save(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();const data=new FormData(event.currentTarget);
     if(await mutation.mutate(`/work/${work.id}/department`,{revision:work.revision,departmentId:departmentId||null,reason:data.get('reason'),...(groupId?{groupId}:{}),...(assigneeId?{assigneeId}:{})}))onChanged();
   }
-  return <details className="action-disclosure"><summary>Hand off to another workspace</summary>
+  return <>
+    {protectedDepartments.length>0&&<Notice>HR workspace restrictions stay with this ticket. Receiving staff need current access to both the receiving workspace and every retained HR workspace. Handoff does not grant access or lower sensitivity.</Notice>}
+    <details className="action-disclosure"><summary>Hand off to another workspace</summary>
     <form className="inline-form" aria-label="Workspace handoff" onSubmit={save}>
-      <Notice>The same ticket keeps its conversation, restrictions and elapsed service-level history. Staff access changes to the receiving team. Assignments are kept only when compatible with that team.</Notice>
+      <Notice>{protectedDepartments.length?'The same ticket keeps its conversation, restrictions and elapsed service-level history. Assignments are kept only when compatible with the receiving team and retained access restrictions.':'The same ticket keeps its conversation, restrictions and elapsed service-level history. Staff access changes to the receiving team. Assignments are kept only when compatible with that team.'}</Notice>
       <DepartmentSelect items={departments.data?.items??[]} value={departmentId} onChange={value=>{setDepartmentId(value);setGroupId('');setAssigneeId('');}} label="Receiving workspace"/>
       <label>Receiving group<select value={groupId} onChange={e=>{setGroupId(e.target.value);setAssigneeId('');}}><option value="">Keep only if compatible</option>{matching.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
       <label>Receiving agent<select value={assigneeId} onChange={e=>setAssigneeId(e.target.value)}><option value="">Keep only if compatible</option>{staff.map(m=><option key={m.userId} value={m.userId}>{m.name}</option>)}</select></label>
       <label>Reason for handoff<textarea name="reason" required maxLength={1000} rows={3}/></label>
       <ErrorNotice error={departments.error??groups.error??mutation.error}/><button className="action primary" disabled={mutation.pending||departments.loading||groups.loading}>Hand off this ticket</button>
     </form>
-  </details>;
+  </details></>;
 }

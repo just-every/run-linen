@@ -147,6 +147,37 @@ try {
   const hrContext=await browser.newContext(),hp=await hrContext.newPage();await signIn(hp,base,hrAgent.email,password);
   assert.equal(await hp.evaluate(async id=>(await fetch('/api/v1/work/'+id)).status,hrRecord.id),404,'HR-service membership does not grant HR-record authority');await hp.goto(base+'/app#/work/'+hrRecord.id);await hp.getByRole('alert').first().waitFor();await captureBoth(hp,'hr-service-denied-record');await hrContext.close();
 
+  // HR history follows the existing ticket. A move grants no destination-only reader access.
+  await page.goto(base+'/app#/work/'+hrWork);await page.getByLabel('Message visibility',{exact:true}).selectOption('private');
+  const hrNote='HR service reviewed the payroll form location. Preserve this internal review when IT checks the portal link.';
+  await page.getByLabel('A private note for the service team',{exact:true}).fill(hrNote);
+  let hrSaved=page.waitForResponse(r=>r.url().endsWith(`/work/${hrWork}/messages`)&&r.request().method()==='POST');await page.getByRole('button',{name:'Send message',exact:true}).click();assert.equal((await hrSaved).status(),201);
+  await page.locator('.message-body').getByText(hrNote,{exact:true}).waitFor();const hrBefore=await api('/work/'+hrWork);
+  const retainedNotice='HR workspace restrictions stay with this ticket. Receiving staff need current access to both the receiving workspace and every retained HR workspace. Handoff does not grant access or lower sensitivity.';
+  await page.getByText(retainedNotice,{exact:true}).waitFor();await page.getByText('Hand off to another workspace',{exact:true}).click();
+  const hrHandoff=page.getByRole('form',{name:'Workspace handoff'});
+  for(const width of [1440,390]) {
+    await page.setViewportSize({width,height:1000});await hrHandoff.getByLabel('Receiving workspace',{exact:true}).selectOption(departments.it.id);await hrHandoff.getByLabel('Receiving agent',{exact:true}).selectOption('');
+    assert.ok(!(await hrHandoff.getByLabel('Receiving agent',{exact:true}).locator('option').allTextContents()).some(name=>name.includes(itAgent.name)),'An IT-only agent is not offered for retained HR history');
+    await hrHandoff.getByLabel('Reason for handoff',{exact:true}).fill('IT will check the payroll portal link; the original HR service access restriction must remain.');await capture(page,'hr-to-it-handoff-editing',width);
+  }
+  hrSaved=page.waitForResponse(r=>r.url().endsWith(`/work/${hrWork}/department`)&&r.request().method()==='POST');await hrHandoff.getByRole('button',{name:'Hand off this ticket',exact:true}).click();assert.equal((await hrSaved).status(),200);
+  await page.getByText(retainedNotice,{exact:true}).waitFor();await page.locator('.meta-line').getByText('IT',{exact:true}).waitFor();
+  const hrAfter=await api('/work/'+hrWork);assert.equal(hrAfter.work.department_id,departments.it.id);assert.equal(hrAfter.work.assignee_id,null);assert.equal(hrAfter.work.sensitivity,hrBefore.work.sensitivity);
+  assert.ok(JSON.parse(hrAfter.work.protected_departments_json).includes(departments.hr.id),'The original HR workspace remains a current access requirement');
+  for(const message of hrBefore.messages)assert.ok(hrAfter.messages.some(m=>m.id===message.id&&m.body===message.body),'HR handoff preserves each original message');
+  await page.locator('.message-body').getByText(hrNote,{exact:true}).waitFor();await captureBoth(page,'owner-retained-hr-history');
+  await ip.goto(base+'/app#/work/'+hrWork);await ip.getByRole('alert').first().waitFor();assert.equal(await ip.evaluate(async id=>(await fetch('/api/v1/work/'+id)).status,hrWork),404,'IT-only staff remain denied after HR→IT handoff');await captureBoth(ip,'it-denied-retained-hr-history');
+  // Only an explicit second staff membership admits the receiving agent; withdrawing it removes access again.
+  await page.goto(base+'/app#/members');let hrPanel=await openDepartment('HR service'),hrMembership=hrPanel.getByRole('form',{name:'HR service staff membership'});
+  await hrMembership.getByLabel('Staff member',{exact:true}).selectOption(itAgent.id);await captureBoth(page,'retained-hr-dual-staff-grant');
+  hrSaved=page.waitForResponse(r=>r.url().endsWith(`/departments/${departments.hr.id}/members`)&&r.request().method()==='POST');await hrMembership.getByRole('button',{name:'Save staff membership',exact:true}).click();assert.equal((await hrSaved).status(),200);
+  await ip.goto(base+'/app#/work/'+hrWork);await ip.locator('.message-body').getByText(hrNote,{exact:true}).waitFor();assert.equal((await itApi('/work/'+hrWork)).work.id,hrWork,'Current staff in both workspaces can read retained HR service history');await captureBoth(ip,'dual-staff-retained-hr-history');
+  assert.equal(await ip.evaluate(async id=>(await fetch('/api/v1/work/'+id)).status,hrRecord.id),404,'Dual service memberships never grant HR-record authority');
+  await page.reload();hrPanel=await openDepartment('HR service');hrMembership=hrPanel.getByRole('form',{name:'HR service staff membership'});await hrMembership.getByLabel('Membership action',{exact:true}).selectOption('remove');await hrMembership.getByLabel('Staff member',{exact:true}).selectOption(itAgent.id);
+  hrSaved=page.waitForResponse(r=>r.url().endsWith(`/departments/${departments.hr.id}/members`)&&r.request().method()==='POST');await hrMembership.getByRole('button',{name:'Save staff membership',exact:true}).click();assert.equal((await hrSaved).status(),200);
+  await ip.reload();await ip.getByRole('alert').first().waitFor();assert.equal(await ip.evaluate(async id=>(await fetch('/api/v1/work/'+id)).status,hrWork),404,'Withdrawing the original HR workspace membership immediately removes access');await captureBoth(ip,'retained-hr-access-withdrawn');
+
   for(const width of [1440,390]) {
     for(const p of [page,ep,ip,fp])await p.setViewportSize({width,height:1000});
     await ep.goto(base+'/app#/work');const portal=ep.getByRole('region',{name:'Services across departments'});
@@ -223,7 +254,7 @@ try {
     await capture(ep,'employee-same-workspace-bundle',width);
   }
   await itContext.close();await employeeContext.close();await facContext.close();assert.deepEqual(errors,[]);
-  console.log('PASS DESK-011 native 1440/390: five service workspaces, explicit staff, scoped catalogs/knowledge/SLA, IT denied HR-service ticket, HR-service staff denied HR records, combined employee catalog, Facilities→IT audited handoff retaining history/restrictions/SLA and withdrawing old staff access.');
+  console.log('PASS DESK-011 native 1440/390: five service workspaces, explicit staff, scoped catalogs/knowledge/SLA, HR→IT retains original HR restrictions with live dual-membership grant/withdrawal, HR-service staff denied HR records, combined employee catalog, Facilities→IT audited handoff retaining history/restrictions/SLA and withdrawing old staff access.');
 } catch(error) {
   for(const [i,context] of browser.contexts().entries())for(const [j,page] of context.pages().entries())await page.screenshot({path:`${out}/DESK-011-failure-${i}-${j}.png`,fullPage:true}).catch(()=>{});
   throw error;
