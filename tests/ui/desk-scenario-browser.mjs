@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {typedHistoryJourney} from './typed-history-journey.mjs';
 import { relationshipActivityJourney } from './relationship-activity-journey.mjs';
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
@@ -179,6 +180,7 @@ try {
   await captureJourney(ep, { path: `${out}/DESK-015-template-${width}.png`, fullPage: true });
   }
   await phone.close();
+  await typedHistoryJourney({page,base,out});
   assert.deepEqual(errors, []);
   console.log('PASS DESK-015 browser: "Escalate to Network L2" run from the ticket by keyboard at 1440 with each change listed, a bulk scenario run on two tickets at 390, and a "New laptop setup" template pre-filling a new ticket at 390.');
 } catch (error) {
