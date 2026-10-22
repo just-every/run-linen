@@ -133,7 +133,7 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
     beneficiaryId: 'q-req', purpose: 'A replacement purchase',
   }, as('q-req'));
   assert.equal(amendment.status, 409);
-  assert.equal(amendment.value.code, 'catalog_amendment_requires_resubmission', 'a quote-backed amendment requires a fresh submission and approval');
+  assert.match(amendment.value.error, /fresh catalog submission and renewed approval/, 'a quote-backed amendment requires a fresh submission and approval');
   assert.deepEqual((await ok(`/work/${work.id}/catalog-requests`, undefined, as('q-req'))).items[0], originalRequest,
     'refusing an in-place amendment preserves the submitted form and quote');
   await db.exec("UPDATE work_people SET manager_id='q-mgr2',revision=2 WHERE id='q-req-person'");
