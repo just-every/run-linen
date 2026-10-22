@@ -32,7 +32,12 @@ export async function serviceNowImportChecks({ok,request,owner,snapshot,db}) {
  assert.equal((await request(`${base}/dry-run`,'POST',{input:orphan},owner)).status,422);
  const display={...input,files:[file('incidents.json','incidents-json',[{...incident,caller_id:{value:incident.caller_id,display_value:'Historical reviewer'}}]),input.files[1]]};
  assert.equal((await request(`${base}/dry-run`,'POST',{input:display},owner)).status,422);
- const erased=await ok('/adoption/erase','POST',{identity:audit.user},owner);assert.ok(!erased.pendingDomains.includes('servicenow-import'),JSON.stringify(erased));
+ const pendingInput={...input,instance:'synthetic-linen-407'},pendingReview=await ok(`${base}/dry-run`,'POST',{input:pendingInput},owner),pending=await ok(base,'POST',{input:pendingInput,reviewedFingerprint:pendingReview.fingerprint,operationKey:'synthetic-linen-408',acceptOmissions:true},owner,201);
+ const sourceActor=await ok('/members','POST',{email:'synthetic-linen-409@example.test',name:audit.user,password:'synthetic-linen-409-password',roles:['employee']},owner,201);
+ await ok(`/people/${sourceActor.id}/erase`,'POST',{revision:0,reason:'synthetic-linen-410'},owner);
+ assert.ok([409,422].includes((await request(`${base}/${pending.id}/resume`,'POST',{},owner)).status),'An erasure after review atomically blocks pending source application');
+ assert.equal((await request('/work/'+pendingReview.records[0].targets[0].id,'GET',undefined,owner)).status,404,'Refused pending import materializes no work');
+ const erased=await ok('/adoption/erase' ,'POST',{identity:audit.user},owner);assert.ok(!erased.pendingDomains.includes('servicenow-import'),JSON.stringify(erased));
  assert.equal((await request(`${base}/${job.id}/artifacts/1`,'GET',undefined,owner)).status,410);
  assert.ok([409,422].includes((await request(`${base}/dry-run`,'POST',{input},owner)).status));
  assert.ok(!await db.prepare('SELECT 1 FROM servicenow_import_items WHERE work_id=?').bind(workId).first());
