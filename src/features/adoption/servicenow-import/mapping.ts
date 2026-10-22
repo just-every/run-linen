@@ -13,7 +13,7 @@ export function mapping(parsed:ParsedExport,destination:string,namespace:string,
   const audits=t.audits.map(a=>{
    const actorId=stableId(namespace,'actor',a.actor),field=a.field==='assignment_group'?'group':a.field==='assigned_to'?'assignee':a.field==='short_description'?'title':a.field;
    const payload=registeredHistory('work.imported_field',{kind:'ticket',id:workId},{[field]:sourceValue(a.field,a.before)},{[field]:sourceValue(a.field,a.after)},{kind:'integration',id:actorId,name:a.actor},[requester],'restricted',a.at,{source:{system:'servicenow',table:'sys_audit',eventKey:stableId(namespace,t.id,a.id)}});
-   return {id:stableId(destination,namespace,t.id,'audit',a.id),workspace_id:destination,actor_id:actorId,action:'work.imported_field',target:workId,detail_json:canonicalJson({...payload,pendingErasure:privacy.history.length>0} as any),created_at:a.at};
+   return {id:stableId(destination,namespace,t.id,'audit',a.id),workspace_id:destination,actor_id:actorId,action:'work.imported_field',target:workId,detail_json:canonicalJson(payload as any),created_at:a.at};
   }).sort((a,b)=>a.id.localeCompare(b.id));
   const identities=[...new Set([t.requester,requester,...t.audits.map(a=>a.actor)])].filter(Boolean).map(value=>sha256(value)).sort();
   const unmapped=[

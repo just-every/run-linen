@@ -9,7 +9,7 @@ const dependents = ['work_attachments','work_lifecycle','work_obligations','work
 const sql = (sql: string, ...params: any[]): D1Sql => ({ sql, params });
 function predicates(table: string, columns: string[], rows: any[], where: string, params: any[]): D1Sql {
   const parts = [`(SELECT COUNT(*) FROM ${table} WHERE ${where})=?`], bindings = [...params, rows.length];
-  for (const row of rows) { parts.push(`EXISTS(SELECT 1 FROM ${table} WHERE ${where} AND ${columns.map(c => `${c} IS ?`).join(' AND ')})`); bindings.push(...params, ...columns.map(c => row[c])); }
+  for (const row of rows) { parts.push(`EXISTS(SELECT 1 FROM ${table} WHERE ${where} AND ${columns.map(c => table==='audit_events'&&c==='detail_json'?"json_remove(detail_json,'$.pendingErasure') IS json_remove(?,'$.pendingErasure')":`${c} IS ?`).join(' AND ')})`); bindings.push(...params, ...columns.map(c => row[c])); }
   return sql(parts.join(' AND '), ...bindings);
 }
 const insert = (table: string, columns: string[], row: any) => sql(`INSERT INTO ${table}(${columns.join(',')}) VALUES(${columns.map(() => '?').join(',')})`, ...columns.map(c => row[c]));
@@ -22,7 +22,7 @@ export const servicenowTargets: D1TargetAdapter = {
     if (!work && !marker) return undefined;
     if (!work || !marker) throw new Error('SERVICENOW_NATIVE_INTEGRITY');
     const messages = (await db.prepare('SELECT * FROM work_messages WHERE workspace_id=? AND work_id=? ORDER BY id').bind(destination,id).all()).results;
-    const audits=(await db.prepare("SELECT id,workspace_id,actor_id,action,target,detail_json,created_at FROM audit_events WHERE workspace_id=? AND target=? AND action='work.imported_field' ORDER BY id").bind(destination,id).all()).results;
+    const audits=(await db.prepare("SELECT id,workspace_id,actor_id,action,target,detail_json,created_at FROM audit_events WHERE workspace_id=? AND target=? AND action='work.imported_field' ORDER BY id").bind(destination,id).all()).results.map((audit:any)=>{const payload=JSON.parse(audit.detail_json);delete payload.pendingErasure;return {...audit,detail_json:canonicalJson(payload)};});
     const related = await Promise.all(dependents.map(async table => (await db.prepare(`SELECT COUNT(*) n FROM ${table} WHERE workspace_id=? AND work_id=?`).bind(destination,id).first())!.n));
     return { destination, targetKind: kind, targetId: id, revision: marker.import_revision, value: { work, messages, audits, related, identities: JSON.parse(marker.identities_json),privacy:JSON.parse(marker.privacy_json) } } as TargetRow;
   },
@@ -53,7 +53,7 @@ export const servicenowTargets: D1TargetAdapter = {
       AND (SELECT COUNT(*) FROM adoption_tombstones WHERE workspace_id=?)=?
       AND NOT EXISTS(SELECT 1 FROM adoption_tombstones WHERE workspace_id=? AND identity_hash NOT IN(SELECT value FROM json_each(?)))
       THEN 1 ELSE json('SERVICENOW_REVIEW_PRIVACY_CHANGED') END`,value.work.department_id,row.destination,value.work.department_id,row.destination,privacy.history.length,row.destination,JSON.stringify(privacy.history),row.destination,privacy.legacy.length,row.destination,JSON.stringify(privacy.legacy));
-    return [fence,...this.remove(row.destination,row.targetKind,row.targetId), insert('work_records',workColumns,value.work), ...value.messages.map((message:any) => insert('work_messages',messageColumns,message)), ...value.audits.map((audit:any)=>insert('audit_events',auditColumns,audit)), sql('INSERT INTO servicenow_import_items VALUES(?,?,?,?,?)',row.destination,row.targetId,row.revision,canonicalJson(value.identities),canonicalJson(value.privacy))];
+    return [fence,...this.remove(row.destination,row.targetKind,row.targetId), insert('work_records',workColumns,value.work), ...value.messages.map((message:any) => insert('work_messages',messageColumns,message)), ...value.audits.map((audit:any)=>sql("INSERT INTO audit_events(id,workspace_id,actor_id,action,target,detail_json,created_at) SELECT ?,?,?,?,?,json_set(?,'$.pendingErasure',json(CASE WHEN EXISTS(SELECT 1 FROM history_identity_tombstones WHERE workspace_id=?) THEN 'true' ELSE 'false' END)),?",audit.id,audit.workspace_id,audit.actor_id,audit.action,audit.target,audit.detail_json,row.destination,audit.created_at)), sql('INSERT INTO servicenow_import_items VALUES(?,?,?,?,?)',row.destination,row.targetId,row.revision,canonicalJson(value.identities),canonicalJson(value.privacy))];
   },
   remove(destination, _kind, id) { return [sql("DELETE FROM audit_events WHERE workspace_id=? AND target=? AND action='work.imported_field'",destination,id),sql('DELETE FROM work_messages WHERE workspace_id=? AND work_id=?',destination,id),sql('DELETE FROM work_records WHERE workspace_id=? AND id=?',destination,id),sql('DELETE FROM servicenow_import_items WHERE workspace_id=? AND work_id=?',destination,id)]; },
   async list(db, destination) {

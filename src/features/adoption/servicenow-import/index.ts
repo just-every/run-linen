@@ -4,7 +4,7 @@ import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../../../platform/types';
 import { ApiError, requiredString } from '../../../platform/http';
 import { importBody } from '../body';
-import { planD1Import, createD1ImportJob, readD1ImportJob, readD1ImportOriginals, resumeD1Import, undoD1Import, rollbackD1Import, sha256 } from '../../../modules/import-kit/src/d1/index';
+import { canonicalJson, planD1Import, createD1ImportJob, readD1ImportJob, readD1ImportOriginals, resumeD1Import, undoD1Import, rollbackD1Import, sha256 } from '../../../modules/import-kit/src/d1/index';
 import { parseExport, requireInput, type ImportInput } from './format';
 import { mapping } from './mapping';
 import { requestContext, jobContext } from './context';
@@ -19,21 +19,23 @@ async function review(c:Context<AppEnv>, body:Record<string,unknown>) {
   const values=new Set<string>();
   const visit=(value:unknown):void=>{if(typeof value==='string'){values.add(value);values.add(value.trim().toLowerCase());}else if(value&&typeof value==='object')for(const [key,child]of Object.entries(value)){if(['requester_id','user_id'].includes(key))values.add(`user:${child}`);visit(child);}};
   parsed.source.records.forEach(record=>visit(record.payload));
+  const privacy={history:(await c.env.DB.prepare('SELECT digest FROM history_identity_tombstones WHERE workspace_id=? ORDER BY digest').bind(context.destination).all<{digest:string}>()).results.map(r=>r.digest),legacy:(await c.env.DB.prepare('SELECT identity_hash FROM adoption_tombstones WHERE workspace_id=? ORDER BY identity_hash').bind(context.destination).all<{identity_hash:string}>()).results.map(r=>r.identity_hash)};
   const matches=await identityMatcher(c.env,context.destination);
   for(const value of values)requireInput(!await matches(value),'Source includes an erased identity; reconcile and supply a sanitized export');
   const hashes=JSON.stringify([...values].map(value=>sha256(value))), priorPredicate=context.authorization.predicate;
   context.authorization.predicate=(action,destination)=>{const prior=priorPredicate(action,destination);return {sql:`(${prior.sql}) AND NOT EXISTS(SELECT 1 FROM adoption_tombstones WHERE workspace_id=? AND identity_hash IN (SELECT value FROM json_each(?)))`,params:[...prior.params??[],destination,hashes]};};
-  const privacy={history:(await c.env.DB.prepare('SELECT digest FROM history_identity_tombstones WHERE workspace_id=? ORDER BY digest').bind(context.destination).all<{digest:string}>()).results.map(r=>r.digest),legacy:(await c.env.DB.prepare('SELECT identity_hash FROM adoption_tombstones WHERE workspace_id=? ORDER BY identity_hash').bind(context.destination).all<{identity_hash:string}>()).results.map(r=>r.identity_hash)};
+
   const plan = await planD1Import(parsed.source,mapping(parsed,context.destination,namespace,privacy),context);
   for(const entry of plan.entries)for(const effect of entry.effects) {
     const value=effect.value as {audits?:{id:string;detail_json:string;created_at:string;actor_id:string;target:string}[]};
     for(const audit of value.audits??[]) {
       const prior=await c.env.DB.prepare('SELECT detail_json,created_at,actor_id,target FROM audit_events WHERE workspace_id=? AND id=?').bind(context.destination,audit.id).first<{detail_json:string;created_at:string;actor_id:string;target:string}>();
-      if(prior&&(prior.detail_json!==audit.detail_json||prior.created_at!==audit.created_at||prior.actor_id!==audit.actor_id||prior.target!==audit.target))throw new ApiError(409,'source_audit_conflict','An original source audit identity already has different or redacted values; source history cannot be rewritten');
+      if(prior&&(immutableAudit(prior.detail_json)!==immutableAudit(audit.detail_json)||prior.created_at!==audit.created_at||prior.actor_id!==audit.actor_id||prior.target!==audit.target))throw new ApiError(409,'source_audit_conflict','An original source audit identity already has different or redacted values; source history cannot be rewritten');
     }
   }
   return {plan,context};
 }
+function immutableAudit(value:string){const payload=JSON.parse(value);delete payload.pendingErasure;return canonicalJson(payload);}
 const report = (plan:Awaited<ReturnType<typeof planD1Import>>) => ({fingerprint:plan.fingerprint,counts:plan.counts,diagnostics:plan.diagnostics,artifacts:plan.source.artifacts.map(({original,...metadata})=>({...metadata,status:original?.status})),records:plan.entries.map(entry=>({sourceId:entry.source.sourceId,targets:entry.effects.map(e=>({kind:e.targetKind,id:e.targetId})),omissions:entry.unmapped,rejection:entry.rejection}))});
 /** Mount behind Linen authenticated/CSRF middleware, alongside native adoption. */
 export function registerServiceNowImportRoutes(parent:Hono<AppEnv>) {
