@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "266f892c6df86c8ebd548b074350e287a3ab4a3dd9c7c4d347ef5fb06131c959",
+      "sha256": "2605d8e8cfd34645d70bcd19207f2d92f29a5c457dfbbb58cb5d4b6a6974af94",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9864b96a044e49e87d5d4c9e9f401e7bb8ff10ff5e66cd7235e4f49b148963f6",
+      "sha256": "c4ca3190fca52c87fa73ff304efe3af12cc8a70eab319449989281748756188b",
       "executable": false
     },
     "DEMO.md": {
@@ -2235,7 +2235,7 @@
       "executable": false
     },
     "src/features/work/attachments.ts": {
-      "sha256": "1c9c84df9086fa9cbca5270352215747a0aee9f04149e737e305b9cd17fbac2a",
+      "sha256": "f49d1eb77b156ef16523e24e6ed5dea1f53f779bbf3eac278b1f72090169fad9",
       "executable": false
     },
     "src/features/work/automation-proposal.ts": {
@@ -2563,7 +2563,7 @@
       "executable": false
     },
     "src/features/work/requests.ts": {
-      "sha256": "5347f58c23771c124da37ea7424211372fca8e8e4e7825f75648c5ff7368bf84",
+      "sha256": "6c81108c9f8933ce228b095745a5f6ae89c86e1fac9c4fed17716a3098b9b85c",
       "executable": false
     },
     "src/features/work/resources.ts": {
@@ -4995,7 +4995,7 @@
       "executable": false
     },
     "tests/intelligence/repair-runtime.mjs": {
-      "sha256": "9a3ea1ea446747ce628e842f6d5cd18596e9edb6e6cd1e9afe9cbe788b0cb987",
+      "sha256": "b29c1c313a8df66b100d1dc491c80837e79360aad0b89dc9b5691531478774cf",
       "executable": false
     },
     "tests/intelligence/repair-worker.ts": {
@@ -5459,7 +5459,7 @@
       "executable": false
     },
     "tests/work/catalog-quote-cases.mjs": {
-      "sha256": "4a3a460d06e0a92a446ed7d94a43c3b3f1d6903d75efc126883e57ea579775cf",
+      "sha256": "2d61eafdee0c1a511ce47261a7fcfb639e380df9952b741a213ec85924647faf",
       "executable": false
     },
     "tests/work/catalog-task-cases.mjs": {

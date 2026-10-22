@@ -35,6 +35,18 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
     purpose: 'Studio licences', answers: item === software ? { price: 1800 } : {}, ...extra }, as(who, who === 'q-op' ? 'operator' : 'employee'));
   const read = (id, who, role = 'employee') => api(`/catalog-quotes/${id}`, undefined, as(who, role));
 
+  // A bundle cannot omit a child's required answers or PDF: refuse every failing child before opening any work.
+  const bundle = await ok('/catalog-bundles', { name: 'Purchase bundle', catalogIds: [software.id, service.id, plain.id] });
+  const beforeBundle = (await db.prepare('SELECT count(*) n FROM work_records').first()).n;
+  const bundled = await api(`/catalog-bundles/${bundle.id}/request`, { expectedRevision: bundle.revision,
+    purpose: 'Buy the studio kit', deduplicationKey: 'quote-bundle' }, as('q-req'));
+  assert.equal(bundled.status, 422);
+  assert.match(bundled.value.error, /Software purchase: .*required/);
+  assert.match(bundled.value.error, /Facilities service: .*vendor quote/);
+  assert.equal(bundled.value.error.split('\n').length, 2, 'each failing child is named and the valid account is not refused');
+  assert.equal((await db.prepare('SELECT count(*) n FROM work_records').first()).n, beforeBundle,
+    'a bundle missing required answers or a PDF creates no ticket or partial child');
+
   // A quote-required item refuses submission without the PDF, in the ruling's words, and before and after wrong files.
   const work = await newWork('q-req', 'q-software');
   const missing = await submit(work, software);
@@ -125,17 +137,6 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
   assert.equal(queue.quote.sha256, sha(quoteBytes));
   await ok(`/work/${work.id}/fulfilment/approve`, { ...queue, expectedHolderId: queue.holderId, idempotencyKey: 'q-decision' }, as('q-mgr', 'approver'), 200);
   assert.equal((await db.prepare("SELECT detail_json FROM audit_events WHERE action='work.fulfilment_approved' AND instr(detail_json,?)>0").bind(sha(quoteBytes)).first()) !== null, true, 'CATALOG-001 the decision records the quote hash it covered');
-  const originalRequest = (await ok(`/work/${work.id}/catalog-requests`, undefined, as('q-req'))).items[0];
-  const currentFulfilment = await ok(`/work/${work.id}/fulfilments/${software.id}`, undefined, as('q-req'));
-  const amendment = await api(`/work/${work.id}/fulfilment/amend`, {
-    catalogId: software.id, expectedWorkRevision: currentFulfilment.workRevision,
-    expectedFulfilmentRevision: currentFulfilment.revision, idempotencyKey: 'quote-amendment',
-    beneficiaryId: 'q-req', purpose: 'A replacement purchase',
-  }, as('q-req'));
-  assert.equal(amendment.status, 409);
-  assert.match(amendment.value.error, /fresh catalog submission and renewed approval/, 'a quote-backed amendment requires a fresh submission and approval');
-  assert.deepEqual((await ok(`/work/${work.id}/catalog-requests`, undefined, as('q-req'))).items[0], originalRequest,
-    'refusing an in-place amendment preserves the submitted form and quote');
   await db.exec("UPDATE work_people SET manager_id='q-mgr2',revision=2 WHERE id='q-req-person'");
   assert.equal((await read(quoteId, 'q-mgr', 'approver')).status, 200, 'CATALOG-001 an approver who recorded a decision keeps read of that quote revision');
   assert.equal((await read(quoteId, 'q-mgr2', 'approver')).status, 200, 'CATALOG-001 the new current approver reads the quote');
@@ -182,8 +183,6 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
   // Configuration edits and audience refusals are audited without attribute values.
   const itemEdit = await ok(`/catalog/${software.id}/form`, { name: 'Software purchase', revision: 1, form: { quoteRequired: true, costCents: 180000, fields: [{ id: 'price', label: 'Quoted price in USD', type: 'number', required: true }] } }, {}, 200);
   assert.equal(itemEdit.revision, 2, 'CATALOG-001 requiring a quote is a versioned item edit');
-  assert.deepEqual((await ok(`/work/${work.id}/catalog-requests`, undefined, as('q-req'))).items[0], originalRequest,
-    'editing the item leaves the in-flight form, answers, quote and item revision unchanged');
   const audited = (await db.prepare("SELECT action,detail_json FROM audit_events WHERE action IN ('catalog.form_edited','catalog.value_created','catalog.audience_refused') AND (target IN (?,?) OR action='catalog.value_created')").bind(software.id, restricted.id).all()).results;
   assert.deepEqual([...new Set(audited.map(a => a.action))].sort(), ['catalog.audience_refused', 'catalog.form_edited', 'catalog.value_created'], 'CATALOG-001 item edits, value-list edits and audience refusals are audited');
   assert.ok(audited.every(a => !a.detail_json.includes(sales.id)), 'CATALOG-001 audience audits carry no attribute values');

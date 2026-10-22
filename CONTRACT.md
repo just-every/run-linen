@@ -208,7 +208,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **CHANNEL-002 — Microsoft Teams as a primary employee channel.** A Linen Teams
   app (Teams Store and admin-deployable package, with Entra identity mapping and
@@ -236,7 +236,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **CHANNEL-003 — Email mailboxes.** Support addresses on Google Workspace (Gmail)
   and Microsoft 365 (Exchange Online) are connected by OAuth or forwarding.
@@ -293,7 +293,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **CHANNEL-007 — Phone and walk-up intake.** Calls to the IT line on the buyer's
   phone system (RingCentral, Dialpad, Zoom Phone, Aircall) create or update
@@ -519,7 +519,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **CATALOG-003 — Fulfillment task plans.** Each item expands into ordered and
   parallel tasks for teams, automated steps through connectors, and child tasks
@@ -553,7 +553,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **CATALOG-004 — Bundles and kits.** A bundle such as "New engineer" combines
   hardware, software and access items with shared approval and individual
@@ -575,7 +575,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **CATALOG-005 — Software requests installed through MDM.** Admins bind a
   software catalog item to an MDM application:
@@ -629,7 +629,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 ### Agent workspace and ticket operations
 
@@ -874,7 +874,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **DESK-012 — Time tracking and effort.** Agents log time on tickets and tasks,
   automatically measured active minutes are recorded, and both feed the human
@@ -983,7 +983,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **DESK-017 — Ticket activity history.** Every ticket, task, change, problem
   and asset shows a chronological, append-only history of each field change
@@ -1061,7 +1061,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 ### Notifications
 
@@ -1090,7 +1090,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **NOTIFY-002 — Admin-configured rules, templates and preferences.** Admins edit
   and add notifications per workspace: when to send (event and conditions), who
@@ -1110,7 +1110,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 ### Identity and SaaS access
 
@@ -1250,7 +1250,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **LIFE-002 — Dated task plans across teams.** Templates by department,
   location, role and employment type (W-2 employee, 1099 contractor, intern)
@@ -1949,7 +1949,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **SSO-001 — Sign-in, SSO and SCIM.** Base email sign-in, SAML 2.0 and OIDC SSO
   with Okta, Entra, Google and Auth, SCIM provisioning of requesters and agents,
@@ -1963,7 +1963,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **AUDIT-001 — Audit log.** Privileged reads, exports, configuration, grant,
   role and executor actions are recorded durably with actor and time, readable by
@@ -1975,7 +1975,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **API-001 — REST API and webhooks.** A versioned REST API with scoped tokens for
   automation principals and outbound signed webhooks for ticket, approval, asset
@@ -1986,7 +1986,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **API-002 — No-code workflow automator.** Triggers (ticket created/updated,
   time, approval, HR event, alert), conditions and actions (assign, notify, set
@@ -1998,7 +1998,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **API-003 — Agent access by MCP.** A Model Context Protocol server lets the
   buyer's own agents (Claude, ChatGPT, Copilot) read tickets and act within the
@@ -2049,7 +2049,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
   *MCP queue readership (ct, 21 October):* at mint the owner selects
   one or more existing workspace agent groups on this credential, shown in its
@@ -2102,7 +2102,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **ERASURE-001 — Authorized erasure.** Owner/HR erasure removes a person's
   content and attachments while keeping anonymized work, effect and audit
@@ -2114,7 +2114,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **RETENTION-001 — Retention policies.** Configurable retention for archives,
   closed tickets and attachments, with no hidden default; due deletion is durable
@@ -2148,7 +2148,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **BASE-001 — Base platform replacements.** Linen uses Base's lobby, owner
   claim, operator sign-in, mail and dependency modules rather than private
@@ -2395,7 +2395,7 @@ that product and marks how close the current code is (see [Status](#status)).
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
-  existing done status does not claim that unbuilt catalog quote journey.
+  each new door must prove the inherited audience and quote rules.
 
 - **A2 — Granted action.** Versioned grants bind action, target, beneficiary,
   conditions, limits and time. Standing low-risk authority avoids repeated human
@@ -2728,7 +2728,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `CHANNEL-007` | Phone and walk-up intake | target | missing |  | No phone-system or walk-up intake. |
 | `CHANNEL-008` | Service notices to employees | target | partial | `src/features/services/employee-notices.ts`, `src/features/services/employee-notice-mail.ts`, `src/ui/service-notices.tsx`, `tests/services/employee-notice-cases.mjs`, `tests/services/run.mjs`, `tests/ui/service-notice-journey.mjs` | Portal cohort notices, matching-ticket offers, cadence, generic SendGrid mail, named verified all-clear and withdrawal implemented. Gap: Slack and Teams delivery/adapter acceptance under CHANNEL-001/002. |
 | `CHANNEL-009` | Request sharing and manager visibility | target | done | `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs` | |
-| `CATALOG-001` | Catalog items with forms | target | partial | `src/features/work/catalog-items.ts`; `src/features/work/catalog-form-schema.ts`; `src/features/work/catalog-audience.ts`; `src/features/work/catalog-audience-routes.ts`; `tests/work/application-cases.mjs`; `tests/ui/application-journey.mjs`; `tests/platform/base-auth-transfer.mjs` | Typed forms, USD cost/delivery and immutable snapshots; stable dimension lists, owner/HR reviewed person attributes, scoped discovery and atomic single-item audience admission are implemented. Gap: required quote attachments and exact readers/custody, accounts/general-service items, audience editor, atomic eligible bundle/pending-person and amendment journeys, and complete receiver acceptance. |
+| `CATALOG-001` | Catalog items with forms | target | done | `tests/work/application-cases.mjs` (`applicationChecks`: typed conditional forms, cost/delivery and saved revisions; `catalogAudienceChecks`: reviewed values, discovery, every filer, atomic single/bundle admission and pending holds); `tests/work/catalog-quote-cases.mjs` (`catalogQuoteChecks`: required PDF, exact readers, frozen hash, amendment refusal/fresh approval, exclusions, audit and erasure); `tests/ui/application-journey.mjs` (`catalogFormJourney`, `catalogAudienceJourney`: native conditional $250 form, both eligible departments, outsider and changed-item refusal at 1440/390); `tests/ui/catalog-quote-journey.mjs` (`catalogQuoteJourney`: native item/audience/quote editor, required quote, upload/download and approver/colleague at 1440/390); `tests/work/pending-person-runtime.mjs` (audience hold, refused release with reason and later release); `tests/intelligence/repair-runtime.mjs` (eligible model context and missing-quote/answer refusals); `tests/platform/mcp-tools-cases.mjs` (`mcpToolCases`: no quote/submission payload); `tests/adoption/application-cases.mjs` (`attachArchiveApplications`, `checkArchiveApplications`: owner export/restore quote bytes); `tests/adoption/retention-cases.mjs` (`retentionChecks`: quote record/bytes deletion and receipt); `tests/platform/base-auth-transfer.mjs` (native submitted form, reviewed facts and inert bindings). | Every current catalog door enforces the approved rule or refuses unsupported form/quote submission. Future carrier duties remain in their own clauses. |
 | `CATALOG-002` | Approval chains | target | partial | `src/features/work/fulfilment-decisions.ts`, `src/features/work/delegation.ts`, `tests/ui/fulfilment-decision-journey.mjs`, `tests/execution/authority-manager-cases.mjs` | Single manager approval; no multi-level, finance threshold, approval SLA or email-reply approval. |
 | `CATALOG-003` | Fulfillment task plans | target | done | `src/features/work/catalog-task-plan.ts`, `src/features/work/catalog-tasks.ts`, `src/features/work/requests.ts`, `src/features/work/progress.ts`, `src/ui/catalog-task-plan-editor.tsx`, `src/ui/obligation-actions.tsx`, `tests/work/catalog-task-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/ui/catalog-task-journey.mjs`, `tests/ui/catalog-task-browser.mjs`, `tests/platform/base-auth-transfer.mjs` | Public-route and 1440/390 browser proof: an owner-edited team task plan beside the automated step; manager approval before any team works; ordered and parallel tasks with elapsed-hour due dates; team-only completion; a failed automated step owned with the request open; owner waiver with a reason; close only when every responsibility is verified, done or waived; in-flight copies unchanged by plan edits; cancel, erasure and native archive retention. A done task is a recorded completion, not device or provider verification; the MDM install step is CATALOG-005's and inherits this rule. |
 | `CATALOG-004` | Bundles and kits | target | done | `src/features/work/bundles.ts`, `src/ui/bundles.tsx`, `tests/work/bundle-cases.mjs` | Public-route proof: an owner-built hardware/software/access bundle opens one ticket with five child fulfilments; one atomic manager decision covers both gated children (partial and single-child approvals refused); per-child grants run and verify; the bundle stays in progress until the laptop handoff verifies the fifth child, then reads complete; a changed item refuses the stale bundle. Bundle builder, grouped manager decision and per-item progress inspected at 1440/390. |

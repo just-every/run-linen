@@ -113,6 +113,13 @@ try{
  startClock();await until(()=>one("SELECT * FROM intelligence_pending_fulfilments WHERE work_id=? AND state='blocked'",quotedWork.id),'assistant refused without the quote');await stopClock();
  assert.equal((await one('SELECT error_code FROM intelligence_pending_fulfilments WHERE work_id=?',quotedWork.id)).error_code,'catalog_quote_required','CATALOG-001 the assistant never submits a quote-required item without its quote');
  assert.equal((await one('SELECT COUNT(*) n FROM work_fulfilments WHERE work_id=?',quotedWork.id)).n,0);
+ const questionItem=await ok('/catalog','POST',{name:'Purchase with a required reason',kind:'service',target:'required-purchase',ownerId:uid,
+   form:{fields:[{id:'reason',label:'Business reason',type:'text',required:true}]}},owner);
+ await fixture('config',{catalogId:questionItem.id,probeMode:'negative'});
+ const questionWork=await ok('/work','POST',{title:'Purchase access with a required reason',body:'I need this purchase',deduplicationKey:'required-purchase'},employee.auth);
+ startClock();await until(()=>one("SELECT * FROM intelligence_pending_fulfilments WHERE work_id=? AND state='blocked'",questionWork.id),'assistant refused without a required answer');await stopClock();
+ assert.equal((await one('SELECT error_code FROM intelligence_pending_fulfilments WHERE work_id=?',questionWork.id)).error_code,'catalog_field_required');
+ assert.equal((await one('SELECT COUNT(*) n FROM work_fulfilments WHERE work_id=?',questionWork.id)).n,0,'the assistant never submits without required answers');
  await fixture('config',{catalogId:restricted.id,probeMode:'negative'});
  const hiddenWork=await ok('/work','POST',{title:'Legal purchase access',body:'I need the legal purchase',deduplicationKey:'legal-purchase'},employee.auth);
  startClock();await until(()=>one("SELECT * FROM work_intake_events WHERE work_id=? AND state='failed'",hiddenWork.id),'assistant refused an item outside the audience');await stopClock();
