@@ -1947,7 +1947,7 @@
       "executable": false
     },
     "src/features/history/legacy-scope.ts": {
-      "sha256": "893584e1455d5b09baf13562ecd80b2584850655c1352e3e58de68947f1b66fb",
+      "sha256": "a575c4baabfaf5118399cfb3592ce3497270dcb93c5178ca4d6d8c2bde341728",
       "executable": false
     },
     "src/features/history/portability.mjs": {
