@@ -1,3 +1,4 @@
+import { serviceHistoryRewrite } from './service-erasure';
 import { captureArchiveAliasStatements } from './archive-identities.mjs';
 import type { Env } from '../../platform/types';
 import { id } from '../../platform/http';
@@ -30,7 +31,7 @@ export async function prepareHistoryErasure(ctx:Context,identities:string[],at:s
       const aliasStatements=original&&identities.length?await captureArchiveAliasStatements(ctx,{eventId:event.id,store,payload:original,redactedPayload:JSON.parse(payload),identities:[...values],canonicalPersonKey:identities[0],personFields:original.changes.filter(c=>fieldClass(original.action,c.field)==='person').map(c=>c.field),at}):[];
       const guard=id();
       statements.push(db.prepare(`INSERT INTO history_write_guards SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM ${table} WHERE workspace_id=? AND id=? AND ${column}=? AND actor_id=?) THEN 1 ELSE 0 END`).bind(guard,w,event.id,event.payload,event.actor_id),...aliasStatements,
-        db.prepare(`UPDATE ${table} SET ${column}=?,actor_id=CASE WHEN ? THEN '[erased]' ELSE actor_id END WHERE workspace_id=? AND id=?`).bind(payload,Number(result.actorErased),w,event.id),
+        ...(store==='service'?serviceHistoryRewrite(db,{workspaceId:w,eventId:event.id,beforeActor:event.actor_id,beforePayload:event.payload,afterActor:result.actorErased?'[erased]':event.actor_id,afterPayload:payload}):[db.prepare(`UPDATE ${table} SET ${column}=?,actor_id=CASE WHEN ? THEN '[erased]' ELSE actor_id END WHERE workspace_id=? AND id=?`).bind(payload,Number(result.actorErased),w,event.id)]),
         db.prepare(`INSERT INTO history_redactions VALUES(?,?,?,?,?,?,?) ON CONFLICT(workspace_id,event_key) DO UPDATE SET envelope_json=excluded.envelope_json,redacted_at=MIN(history_redactions.redacted_at,excluded.redacted_at),counts_json=excluded.counts_json`).bind(w,key,event.id,store,at,payload,JSON.stringify(result.counts)),
         db.prepare('DELETE FROM history_write_guards WHERE id=?').bind(guard));
       for(const [kind,n] of Object.entries(result.counts))counts[kind]=(counts[kind]||0)+n;

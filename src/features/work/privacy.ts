@@ -140,9 +140,11 @@ async function eraseSinglePerson(
       person ? `${person.source}:${person.source_id}` : `member:${p}`,
       t,
     ),
+    // Clear authored-message notifications before removing their author reference.
+    ctx.env.DB.prepare('DELETE FROM work_collaboration_notices WHERE workspace_id=? AND message_id IN(SELECT id FROM work_messages WHERE workspace_id=? AND author_id=?)').bind(w,w,p),
     ctx.env.DB.prepare(
-      "UPDATE work_messages SET body='[erased]' WHERE workspace_id=? AND (author_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))",
-    ).bind(w, p, w, p, p),
+      "UPDATE work_messages SET body='[erased]',author_id=CASE WHEN author_id=? THEN '[erased]' ELSE author_id END WHERE workspace_id=? AND (author_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))",
+    ).bind(p, w, p, w, p, p),
     ctx.env.DB.prepare("UPDATE work_recurring_plans SET title='[erased]',body='[erased]',tasks_json='[]',enabled=0,revision=revision+1 WHERE workspace_id=? AND (creator_id=? OR owner_id=? OR EXISTS(SELECT 1 FROM json_each(tasks_json) WHERE json_extract(value,'$.ownerId')=?))").bind(w,p,p,p),
     ctx.env.DB.prepare("UPDATE work_recurring_tasks SET title='[erased]',owner_id=CASE WHEN owner_id=? THEN '[erased]' ELSE owner_id END,completed_by=CASE WHEN completed_by=? THEN '[erased]' ELSE completed_by END,revision=revision+1 WHERE workspace_id=? AND (owner_id=? OR completed_by=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(p,p,w,p,p,w,p,p),
     ctx.env.DB.prepare("UPDATE work_obligations SET completed_by=CASE WHEN completed_by=? THEN '[erased]' ELSE completed_by END,waived_by=CASE WHEN waived_by=? THEN '[erased]' ELSE waived_by END WHERE workspace_id=? AND (completed_by=? OR waived_by=?)").bind(p,p,w,p,p),

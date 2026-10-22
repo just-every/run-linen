@@ -1,3 +1,4 @@
+import { serviceHistoryRewrite } from './service-erasure';
 import { ApiError } from '../../platform/http';
 import type { Env } from '../../platform/types';
 import { decodeHistory } from './registry';
@@ -38,7 +39,7 @@ export async function readHistoryEvent(ctx:Context,action:string,payload:unknown
   const safe=await historyArchiveRow(ctx,store==='audit'?'audit_events':'svc_events',row);
   if(eventId && safe.row[column]!==row[column]) {
     const table=store==='audit'?'audit_events':'svc_events',w=ctx.principal.workspaceId;
-    const statements=[ctx.env.DB.prepare(`UPDATE ${table} SET ${column}=?,actor_id=? WHERE workspace_id=? AND id=? AND ${column}=?`).bind(safe.row[column],safe.row.actor_id,w,eventId,row[column])];
+    const statements=store==='service'?serviceHistoryRewrite(ctx.env.DB,{workspaceId:w,eventId,beforeActor:row.actor_id,beforePayload:row[column],afterActor:safe.row.actor_id,afterPayload:safe.row[column]}):[ctx.env.DB.prepare(`UPDATE ${table} SET ${column}=?,actor_id=? WHERE workspace_id=? AND id=? AND ${column}=? AND actor_id=?`).bind(safe.row[column],safe.row.actor_id,w,eventId,row[column],row.actor_id)];
     const envelope=decodeHistory(safe.row[column]);
     if(envelope?.redacted || JSON.parse(safe.row[column])?.redacted==='erasure')statements.push(ctx.env.DB.prepare(`INSERT OR IGNORE INTO history_redactions SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM ${table} WHERE workspace_id=? AND id=? AND ${column}=?)`).bind(w,historyEventKey(store,eventId,envelope),eventId,store,envelope?.redactedAt??new Date().toISOString(),safe.row[column],'{}',w,eventId,safe.row[column]));
     await ctx.env.DB.batch(statements);

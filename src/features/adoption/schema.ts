@@ -112,6 +112,7 @@ export const excludedTables: Record<string,string> = {
  servicenow_import_privacy:'full-installation rer archive only; legacy native export does not carry importer custody',
  history_archive_origin:'local installation origin; opaque alias origins retained',
  history_write_guards:'transient history erasure fence',
+ history_service_rewrite_permits:'transient exact service history privacy rewrite permit',
  freshservice_import_items:'full-installation rer archive only; legacy native export does not carry importer custody',
  freshservice_import_privacy:'full-installation rer archive only; legacy native export does not carry importer custody',
 
