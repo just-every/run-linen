@@ -1,3 +1,4 @@
+import { WorkCollaboration } from './work-collaboration';
 import { WorkActivity } from './work-activity';
 import { SponsorReattest } from "./sponsor-reattest";
 import { LifecycleTaskReminder } from "./lifecycle-templates";
@@ -146,6 +147,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkRelationships workId={work.id} messages={(detail.data?.messages ?? []) as never} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner","operator"].includes(r)) && <RepairCoverage workId={work.id} />}
       {!access && work.sensitivity === "normal" && (mine || operator) && <WorkShares workId={work.id} canShare={mine} canRevoke />}
+      {!access && work.sensitivity === 'normal' && session.principal.roles.includes('owner') && <WorkCollaboration workId={work.id} onChanged={changed} />}
       <WorkaroundSuggestions workId={work.id} />
       <RecurringTasks workId={work.id} />
       <Progress items={progress} exception={exception} operator={operator} />

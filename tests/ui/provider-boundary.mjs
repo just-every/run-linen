@@ -25,6 +25,16 @@ export async function fixtureRequest(request, env) {
 globalThis.fetch = async (input, init = {}) => {
   const url = new URL(String(input)), config = await read();
   const host = url.hostname;
+  if(host==='api.sendgrid.com') {
+    if(url.pathname==='/v3/scopes')return Response.json({scopes:['mail.send']});
+    if(url.pathname==='/v3/user/username')return Response.json({user_id:1,username:'synthetic-linen-42'});
+    if(url.pathname==='/v3/verified_senders')return Response.json({results:[{id:1,from_email:'synthetic-linen-43@example.test',verified:true}]});
+    if(url.pathname==='/v3/mail/send' && init.method==='POST') {
+      await event('side-email',JSON.parse(init.body));
+      return new Response(null,{status:202,headers:{'x-message-id':'synthetic-linen-44'}});
+    }
+    throw Error('Unexpected synthetic-linen-45 provider path');
+  }
   if (host === 'login.microsoftonline.com') { await event('token', {}); return Response.json({ access_token: 'test-only-token' }); }
   if (host === 'graph.microsoft.com') {
     await event('directory', { path: url.pathname, method: init.method || 'GET' });

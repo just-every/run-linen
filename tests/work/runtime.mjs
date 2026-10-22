@@ -10,7 +10,7 @@ import { deskGroupChecks } from './desk-group-cases.mjs';
 import { deskRoutingChecks } from './desk-routing-cases.mjs';
 import { deskScenarioChecks, deskActivityChecks } from './desk-scenario-cases.mjs';
 import { projectChecks } from './project-cases.mjs';
-import { relationshipChecks, sharingChecks } from './relationship-cases.mjs';
+import { relationshipChecks, sharingChecks, collaborationChecks } from './relationship-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
 import { timeChecks } from "./time-cases.mjs";
 import { problemChecks } from "./problem-cases.mjs";
@@ -97,6 +97,7 @@ try {
     `INSERT INTO workspaces VALUES('a','A','2026-01-01'); INSERT INTO users VALUES('owner','owner@test','Owner','unused','2026-01-01'); INSERT INTO users VALUES('employee','employee@test','Employee','unused','2026-01-01'); INSERT INTO users VALUES('stranger','stranger@test','Stranger','unused','2026-01-01'); INSERT INTO memberships VALUES('a','owner','["owner"]',1); INSERT INTO memberships VALUES('a','employee','["employee"]',1); INSERT INTO memberships VALUES('a','stranger','["employee"]',1);`,
   );
   await catalogAudienceChecks(api,db);
+  const collaborationProof=await collaborationChecks(api,db);
   await catalogQuoteChecks(api,db,uploadBytes,await mf.getR2Bucket('ATTACHMENTS'));
   await applicationChecks(api,db);
   const proposalProof=await problemDetectionChecks(api,db);
@@ -728,6 +729,11 @@ try {
   });
   assert.equal(erased.status, 200, JSON.stringify(erased));
   assert.equal(erased.value.state, "erased");
+  assert.ok((await api(`/work/${collaborationProof.workId}`)).value.messages.every(m=>m.body==='[erased]'),'DESK-007 public erasure clears private mentions and both directions of side mail');
+  assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_watchers WHERE work_id=?').bind(collaborationProof.workId).first()).n,0);
+  assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_collaboration_notices WHERE work_id=?').bind(collaborationProof.workId).first()).n,0);
+  assert.ok((await db.prepare('SELECT vendor_email,closed_at FROM work_side_conversations WHERE work_id=?').bind(collaborationProof.workId).all()).results.every(s=>s.vendor_email==='[erased]'&&s.closed_at),'DESK-007 erasure clears recipient metadata and withdraws mail authority');
+  assert.equal((await api(`/work/${collaborationProof.workId}/collaboration`)).status,409);
   const erasedTaskHistory = (await api(taskHistoryProof.historyPath)).value.items;
   assert.deepEqual(erasedTaskHistory.map(e => e.id), taskHistoryProof.items.map(e => e.id), 'DESK-017 erasure retains every project-task event');
   assert.ok(erasedTaskHistory.every(e => !e.changes.length && e.body.includes('removed by erasure')), 'DESK-017 untyped task values use blanket clearing and are never rebuilt');

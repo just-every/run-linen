@@ -1,3 +1,4 @@
+import { receiveSideMail } from './side-mail';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { appendMessage, createWork, permit, type WorkContext } from "./core";
@@ -39,10 +40,15 @@ export async function receiveMail(
     subject: string;
     text: string;
     workId?: string;
+    sideConversationId?: string;
+    inReplyTo?: string;
   },
 ) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "integration"]);
+  // Side replies are correlated before ordinary employee intake. Never let a vendor reply
+  // fall through to public ticket messages, even when the adapter omitted a conversation id.
+  if(input.sideConversationId || input.inReplyTo) return receiveSideMail(ctx,input);
   if (!input.sender || !input.sourceMessageId || !input.text)
     throw new ApiError(
       422,

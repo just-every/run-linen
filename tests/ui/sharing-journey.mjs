@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { requestWork } from './connected-helpers.mjs';
+import { requestWork, apiFor, createConnection, signIn } from './connected-helpers.mjs';
 // CHANNEL-009: Ana shares a request with Ben, who reads and replies without seeing the private note; Mia sees it in
 // "My team's requests" until the HRIS moves Ana to Noah. Each person signs in in their own browser context.
 export async function sharingJourney({browser,api,base,out,errors}) {
@@ -76,4 +76,71 @@ export async function sharingJourney({browser,api,base,out,errors}) {
     await n.page.screenshot({path:`${out}/CHANNEL-009-new-manager-1440.png`});
   } finally { for (const s of [a,b,m,n]) await s.context.close(); }
   console.log('PASS CHANNEL-009 browser: share by email at 390, colleague reads and replies at 1440 without the private note, manager read-only team view at 390, revoke, HRIS manager change moves visibility');
+}
+
+
+/** DESK-007 native UI against the emitted app; only the external SendGrid protocol is a fixture. */
+export async function collaborationJourney({browser,page,api,base,out,errors}) {
+  const password='synthetic-linen-46-password';
+  const staff=await api('/members',{name:'synthetic-linen-47',email:'synthetic-linen-47@example.test',password,roles:['operator']});
+  const employee=await api('/members',{name:'synthetic-linen-48',email:'synthetic-linen-48@example.test',password,roles:['employee']});
+  const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
+  const webhookPublicKey=Buffer.from(await crypto.subtle.exportKey('spki',pair.publicKey)).toString('base64');
+  const mail=await createConnection(page,api,base,'sendgrid','synthetic-linen-49',{from:'synthetic-linen-43@example.test',webhookPublicKey,apiKey:'synthetic-linen-50'});
+  const sc=await browser.newContext({viewport:{width:1440,height:1000}}),ec=await browser.newContext({viewport:{width:1440,height:1000}});
+  const sp=await sc.newPage(),ep=await ec.newPage();
+  for(const p of [sp,ep])p.on('pageerror',error=>errors.push(String(error)));
+  try {
+    await signIn(sp,base,'synthetic-linen-47@example.test',password);await signIn(ep,base,'synthetic-linen-48@example.test',password);
+    for(const width of [1440,390]) {
+      const n=width===1440?60:90,label=i=>`synthetic-linen-${n+i}`;
+      for(const p of [page,sp,ep])await p.setViewportSize({width,height:1000});
+      const work=await api('/work',{title:label(0),body:label(1),beneficiaryId:employee.id,deduplicationKey:label(2)}),path='/work/'+work.id;
+      await page.goto(base+'/app#'+path);
+      const panel=page.locator('details').filter({has:page.locator(':scope > summary').getByText('Private collaboration',{exact:true})});
+      const open=async()=>{await panel.locator(':scope > summary').waitFor();if(!await panel.evaluate(e=>e.open))await panel.locator(':scope > summary').click();await panel.getByLabel('Colleague',{exact:true}).waitFor();};
+      const approve=async form=>{await form.getByLabel('Reason for this collaboration',{exact:true}).fill(label(3));await form.getByRole('checkbox').check();};
+      await open();
+      let form=panel.locator('form').first();
+      await form.getByLabel('Colleague',{exact:true}).selectOption(staff.id);await form.getByLabel('Private note',{exact:true}).fill(label(4));await approve(form);
+      await form.getByRole('button',{name:'Save private note and notify',exact:true}).focus();
+      const mentioned=page.waitForResponse(r=>r.url().endsWith(path+'/mentions')&&r.request().method()==='POST');
+      await page.keyboard.press('Enter');assert.equal((await mentioned).status(),201);
+      await page.locator('.message-body').getByText(label(4),{exact:true}).waitFor();
+      await sp.goto(base+'/app#'+path);await sp.reload();
+      const inbox=sp.getByRole('region',{name:'Collaboration notifications'});
+      await inbox.locator(`a[href^="#/work/${work.id}?message="]`).filter({hasText:'You were mentioned in a private note'}).waitFor();
+      await sp.locator('.message-body').getByText(label(4),{exact:true}).waitFor();
+      await sp.screenshot({path:`${out}/DESK-007-mentioned-${width}.png`,fullPage:true});
+      await open();form=panel.locator('form').first();
+      await form.getByLabel('Action',{exact:true}).selectOption('watch');await form.getByLabel('Colleague',{exact:true}).selectOption(employee.id);await approve(form);
+      const watched=page.waitForResponse(r=>r.url().endsWith(path+'/watchers')&&r.request().method()==='POST');
+      await form.getByRole('button',{name:'Save watcher',exact:true}).click();assert.equal((await watched).status(),200);
+      await api(path+'/messages',{body:label(5),visibility:'public',sourceMessageId:label(6)});
+      await open();
+      const vendor=panel.getByRole('region',{name:'Vendor email side conversations'}),mailForm=vendor.locator('form');
+      await mailForm.getByLabel('Vendor email',{exact:true}).fill('synthetic-linen-51@example.test');
+      await mailForm.getByLabel('Mail connection',{exact:true}).selectOption(mail.id);
+      await mailForm.getByLabel('Exact email message',{exact:true}).fill(label(7));await approve(mailForm);
+      const sending=page.waitForResponse(r=>r.url().endsWith(path+'/side-conversations')&&r.request().method()==='POST');
+      await mailForm.getByRole('button',{name:'Send private email',exact:true}).click();const response=await sending;
+      assert.equal(response.status(),201);const sent=await response.json();assert.equal(sent.state,'accepted');
+      const wire=(await (await fetch(base+'/__fixture/evidence')).json()).calls.filter(c=>c.kind==='side-email').at(-1).data;
+      assert.deepEqual(wire.content,[{type:'text/plain',value:label(7)}]);
+      await api('/mail/intake',{connectionId:mail.id,sourceMessageId:label(8),sender:'synthetic-linen-51@example.test',subject:label(9),text:label(10),inReplyTo:wire.headers['Message-ID']});
+      await page.reload();await open();await page.locator('.message-body').getByText(`Email from synthetic-linen-51@example.test:\n${label(10)}`,{exact:true}).waitFor();
+      await panel.screenshot({path:`${out}/DESK-007-private-email-${width}.png`});
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'DESK-007 owner controls fit');
+      await sp.reload();await sp.locator('.message-body').getByText(`Email from synthetic-linen-51@example.test:\n${label(10)}`,{exact:true}).waitFor();
+      await ep.goto(base+'/app#'+path);await ep.reload();
+      await ep.getByRole('region',{name:'Collaboration notifications'}).getByRole('link',{name:'A request you watch has a public update',exact:true}).last().waitFor();
+      await ep.locator('.message-body').getByText(label(5),{exact:true}).waitFor();
+      for(const hidden of [label(4),label(7),label(10),'synthetic-linen-51@example.test'])assert.ok(!(await ep.locator('body').innerText()).includes(hidden),'DESK-007 employee sees no private collaboration');
+      assert.equal(await ep.getByText('Private collaboration',{exact:true}).count(),0);
+      assert.ok(await ep.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'DESK-007 employee view fits');
+      await ep.screenshot({path:`${out}/DESK-007-employee-${width}.png`,fullPage:true});
+      const employeeApi=apiFor(ep);assert.ok((await employeeApi('/collaboration/inbox')).items.every(i=>i.kind!=='mention'));
+    }
+  } finally {await sc.close();await ec.close();}
+  console.log('PASS DESK-007 native mention, colleague notification, watcher and email side reply as private notes, employee isolation at 1440/390. Slack remains blocked by CHANNEL-001.');
 }

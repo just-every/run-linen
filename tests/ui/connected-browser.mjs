@@ -10,6 +10,7 @@ import { connectedChanges } from './connected-change.mjs';
 import { connectedRequest } from './connected-request.mjs';
 import { responseJourney } from './response-journey.mjs';
 import { knowledgeDraftJourney } from './knowledge-draft-journey.mjs';
+import { collaborationJourney } from './sharing-journey.mjs';
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]});const context=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}});const page=await context.newPage();
@@ -30,6 +31,8 @@ try{
  for (const width of [1440,390]) await responseJourney({...env,width});
  checks.push('DESK-008 canned response with requester name, cited full-history model summary and knowledge, and agent-only sending at 1440/390');
  await knowledgeDraftJourney(env);
+ await collaborationJourney({...env,errors});
+ checks.push('DESK-007 private mention and notified colleague, public-update watcher and vendor email/reply privacy at 1440/390; Slack remains CHANNEL-001 blocked');
  checks.push('KB-004 three resolved sources, reviewed publication and known-error rejection with scoped source links at 1440/390');
  await writeFile(out+'/persistence.json',JSON.stringify({commitmentId:env.commitmentId,workId:env.workId,grants:await api('/grants'),operations:await api('/operations'),fixture:await (await fetch(base+'/__fixture/evidence')).json()}));
  await env.issuerContext.close();

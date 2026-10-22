@@ -5,8 +5,15 @@ registerResponseProvider(app);
 const providerFetch = globalThis.fetch;
 let release: (() => void) | null = null;
 let waiting = false;
+let sideMailMode = 'accepted';
+const sideMailCalls: unknown[] = [];
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = new URL(String(input));
+  if(url.origin==='https://api.sendgrid.com' && url.pathname==='/v3/mail/send') {
+    sideMailCalls.push(JSON.parse(String(init?.body)));
+    if(sideMailMode==='unknown') throw new Error('synthetic-linen-1 network interruption');
+    return new Response(null,{status:sideMailMode==='failed'?400:202,headers:{'x-message-id':'synthetic-linen-2'}});
+  }
   if (url.hostname !== 'api.openai.com') return providerFetch(input, init);
   const request = JSON.parse(String(init?.body)), packet = JSON.parse(request.input);
   if (['ticket_reply','ticket_summary'].includes(packet.purpose)) return responseProvider(packet);
@@ -24,5 +31,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   return Response.json({ status: 'completed', usage: { input_tokens: 120, output_tokens: 70, total_tokens: 190 }, output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(value) }] }] });
 }) as typeof fetch;
 app.get('/test/classification-provider', c => c.json({ waiting }));
+app.get('/test/side-mail',c=>c.json({calls:sideMailCalls}));
+app.post('/test/side-mail',async c=>{sideMailMode=(await c.req.json()).mode;return c.json({state:sideMailMode});});
 app.post('/test/classification-provider/release', c => { release?.(); release = null; return c.json({ released: true }); });
 export default app;

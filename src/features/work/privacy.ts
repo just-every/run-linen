@@ -1,4 +1,5 @@
 import { eraseLifecycleTaskStatements, lifecycleReminderWork } from './lifecycle-task-privacy';
+import { eraseCollaborationPerson } from './collaboration-privacy';
 import { eraseApplicationSnapshots } from './application-privacy';
 import { privacyPeople, privacyBindingFence, type PrivacyPerson } from './person-privacy';
 import { eraseKnowledgeDraftPerson } from './knowledge-draft-privacy';
@@ -190,6 +191,7 @@ async function eraseSinglePerson(
     throw new ApiError(409, "revision_conflict", "Person changed");
   await eraseKnowledgeDraftPerson(ctx, p);
   await eraseApplicationSnapshots(ctx,p);
+  await eraseCollaborationPerson(ctx,p);
   const failed = await processBlobErasure(ctx);
   return {
     personId: p,

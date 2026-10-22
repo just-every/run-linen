@@ -157,3 +157,85 @@ export async function sharingChecks(api, db) {
   assert.equal((await call(`/work/${ticket.id}`, undefined, as('c9-noah'))).work.access, 'team');
   console.log('PASS CHANNEL-009 public routes: share by work email, colleague reads and replies without private notes, revoke and audit; on-behalf for both; manager team view over direct and indirect reports without HR tickets; HRIS manager change moves visibility');
 }
+
+
+/** DESK-007 email slice; Slack remains blocked by CHANNEL-001. Paid mail is intercepted only at the network edge. */
+export async function collaborationChecks(api,db) {
+  const check=(r,status=200)=>{assert.equal(r.status,status,'DESK-007 '+JSON.stringify(r));return r.value;};
+  const staff={'x-user':'synthetic-linen-1','x-roles':'["operator"]'},employee={'x-user':'employee','x-roles':'["employee"]'};
+  await db.exec(`INSERT INTO users VALUES('synthetic-linen-1','synthetic-linen-1@example.test','synthetic-linen-1','unused','2026-01-01'); INSERT INTO memberships VALUES('a','synthetic-linen-1','["operator"]',1);`);
+  const ticket=check(await api('/work',{title:'synthetic-linen-3',body:'synthetic-linen-4',deduplicationKey:'synthetic-linen-5'},employee),201);
+  const base='/work/'+ticket.id,consent={consent:true,reason:'synthetic-linen-6'};
+  check(await api(base+'/collaboration',undefined,employee),403);
+  check(await api(base+'/collaboration',undefined,staff),403);
+  const note={...consent,body:'synthetic-linen-7 private diagnosis',mentions:['synthetic-linen-1'],sourceMessageId:'synthetic-linen-8'};
+  check(await api(base+'/mentions',{...note,consent:false}),422);
+  check(await api(base+'/mentions',{...note,mentions:['employee']}),422);
+  const mention=check(await api(base+'/mentions',note),201);
+  assert.equal(check(await api(base+'/mentions',note),201).id,mention.id,'DESK-007 replay does not duplicate mention or note');
+  check(await api(base+'/mentions',{...note,body:'synthetic-linen-9'}),409);
+  assert.ok(check(await api('/collaboration/inbox',undefined,staff)).items.some(n=>n.message_id===mention.id&&n.kind==='mention'),'DESK-007 mentioned colleague is notified');
+  assert.ok(check(await api(base,undefined,staff)).messages.some(m=>m.id===mention.id&&m.visibility==='private'));
+  assert.ok(!JSON.stringify(check(await api(base,undefined,employee))).includes(note.body),'DESK-007 employee cannot see private mentions');
+  check(await api(base+'/watchers',{...consent,userId:'stranger'}),422);
+  check(await api(base+'/watchers',{...consent,userId:'employee'}));
+  const publicMessage=check(await api(base+'/messages',{body:'synthetic-linen-10',visibility:'public',sourceMessageId:'synthetic-linen-11'}),201);
+  const ownInbox=check(await api('/collaboration/inbox',undefined,employee));
+  assert.ok(ownInbox.items.some(n=>n.message_id===publicMessage.id&&n.kind==='watch'));
+  assert.ok(!JSON.stringify(ownInbox).includes(note.body),'DESK-007 inbox carries identifiers only');
+  assert.ok(!ownInbox.items.some(n=>n.kind==='mention'));
+  const key=await crypto.subtle.importKey('raw',Buffer.alloc(32),'AES-GCM',false,['encrypt']),iv=crypto.getRandomValues(new Uint8Array(12));
+  const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify({apiKey:'synthetic-linen-12'})));
+  const secret=Buffer.from(iv).toString('base64')+'.'+Buffer.from(cipher).toString('base64');
+  await db.prepare("INSERT INTO connections VALUES('synthetic-linen-13','a','sendgrid','synthetic-linen-14',?,?,'active',1,?,?)")
+    .bind(JSON.stringify({from:'synthetic-linen-15@example.test'}),secret,new Date().toISOString(),new Date().toISOString()).run();
+  const mail={...consent,conversationId:'synthetic-linen-16',connectionId:'synthetic-linen-13',vendorEmail:'synthetic-linen-17@example.test',body:'synthetic-linen-18 exact vendor question',sourceMessageId:'synthetic-linen-19'};
+  check(await api(base+'/side-conversations',mail,employee),403);
+  check(await api(base+'/side-conversations',{...mail,consent:false}),422);
+  const sent=check(await api(base+'/side-conversations',mail),201);
+  assert.equal(sent.state,'accepted');
+  assert.equal(check(await api(base+'/side-conversations',mail),201).id,sent.id,'DESK-007 a lost response cannot resend');
+  check(await api(base+'/side-conversations',{...mail,body:'synthetic-linen-20'}),409);
+  const calls=check(await api('/test/side-mail')).calls;
+  assert.equal(calls.length,1);assert.deepEqual(calls[0].personalizations[0].to,[{email:mail.vendorEmail}]);
+  assert.deepEqual(calls[0].content,[{type:'text/plain',value:mail.body}],'DESK-007 only the consented draft leaves Linen');
+  assert.ok(!JSON.stringify(calls).includes(note.body));assert.equal(calls[0].attachments,undefined);
+  const envelope={connectionId:mail.connectionId,sourceMessageId:'synthetic-linen-21',sender:mail.vendorEmail,subject:'synthetic-linen-22',text:'synthetic-linen-23 vendor diagnosis',inReplyTo:sent.mailMessageId};
+  assert.equal(check(await api('/mail/intake',{...envelope,sender:'synthetic-linen-24@example.test'})).state,'quarantined');
+  assert.equal(check(await api('/mail/intake',{...envelope,inReplyTo:'synthetic-linen-25'})).state,'quarantined');
+  const received=check(await api('/mail/intake',envelope));assert.equal(received.state,'accepted');
+  assert.equal(check(await api('/mail/intake',envelope)).messageId,received.messageId);
+  check(await api('/mail/intake',{...envelope,text:'synthetic-linen-26'}),409);
+  assert.ok(check(await api(base,undefined,staff)).messages.some(m=>m.id===received.messageId&&m.visibility==='private'&&m.body.includes(envelope.text)));
+  const employeeView=JSON.stringify(check(await api(base,undefined,employee)));
+  for(const text of [note.body,mail.body,mail.vendorEmail,envelope.text])assert.ok(!employeeView.includes(text),'DESK-007 employee sees no private side content');
+  check(await api(base+'/side-conversations/'+mail.conversationId+'/messages',{...consent,body:'synthetic-linen-27 follow-up',sourceMessageId:'synthetic-linen-28'}),201);
+  assert.equal(check(await api('/test/side-mail')).calls.length,2);
+  // Uncertain sends keep their durable state and are never repeated by replay.
+  check(await api('/test/side-mail',{mode:'unknown'}));
+  const uncertain={...consent,body:'synthetic-linen-29',sourceMessageId:'synthetic-linen-30'};
+  assert.equal(check(await api(base+'/side-conversations/'+mail.conversationId+'/messages',uncertain),201).state,'unknown');
+  assert.equal(check(await api(base+'/side-conversations/'+mail.conversationId+'/messages',uncertain),201).state,'unknown');
+  assert.equal(check(await api('/test/side-mail')).calls.length,3);
+  check(await api('/test/side-mail',{mode:'accepted'}));
+  // Exact connection revision and current ownership are required for replies and sends.
+  await db.prepare('UPDATE connections SET revision=2 WHERE id=?').bind(mail.connectionId).run();
+  assert.equal(check(await api('/mail/intake',{...envelope,sourceMessageId:'synthetic-linen-31'})).state,'quarantined');
+  check(await api(base+'/side-conversations/'+mail.conversationId+'/messages',{...consent,body:'synthetic-linen-32',sourceMessageId:'synthetic-linen-33'}),409);
+  await db.prepare('UPDATE connections SET revision=1 WHERE id=?').bind(mail.connectionId).run();
+  check(await api(base+'/side-conversations/'+mail.conversationId+'/close',consent));
+  assert.equal(check(await api('/mail/intake',{...envelope,sourceMessageId:'synthetic-linen-34'})).state,'quarantined');
+  check(await api(base+'/side-conversations/'+mail.conversationId+'/messages',{...consent,body:'synthetic-linen-35',sourceMessageId:'synthetic-linen-36'}),409);
+  await db.prepare('UPDATE memberships SET roles_json=? WHERE workspace_id=? AND user_id=?').bind('["employee"]','a','synthetic-linen-1').run();
+  assert.deepEqual(check(await api('/collaboration/inbox',undefined,staff)).items,[],'DESK-007 role withdrawal hides private notifications');
+  check(await api(base+'/watchers',{...consent,userId:'employee',remove:true}));
+  assert.deepEqual(check(await api('/collaboration/inbox',undefined,employee)).items,[]);
+  const restricted=check(await api('/work',{title:'synthetic-linen-37',body:'synthetic-linen-38',sensitivity:'restricted',deduplicationKey:'synthetic-linen-39'}),201);
+  check(await api('/work/'+restricted.id+'/side-conversations',{...mail,conversationId:'synthetic-linen-40'}),403);
+  const cross=await api(base+'/collaboration',undefined,{'x-workspace':'synthetic-linen-41'});assert.ok([403,404].includes(cross.status));
+  const audits=(await db.prepare("SELECT action,detail_json FROM audit_events WHERE workspace_id='a' AND target=? AND action LIKE 'work.collaboration.%'").bind(ticket.id).all()).results;
+  assert.ok(audits.some(a=>a.action==='work.collaboration.mentioned'&&JSON.parse(a.detail_json).reason===consent.reason));
+  assert.ok(audits.some(a=>a.action==='work.collaboration.email_consented'));
+  // Preserve this ticket for the suite's existing public erasure flow, and prove all new personal metadata is gone afterward there.
+  return {workId:ticket.id};
+}
