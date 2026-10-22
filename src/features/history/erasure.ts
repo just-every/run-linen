@@ -16,6 +16,7 @@ export async function prepareHistoryErasure(ctx:Context,identities:string[],at:s
   const matches=await identityMatcher(ctx.env,w,[...values]);
   const statements:D1PreparedStatement[]=[],counts:HistoryCounts={};
   for(const value of values)statements.push(db.prepare('INSERT OR IGNORE INTO history_identity_tombstones VALUES(?,?,?)').bind(w,await historyIdentityDigest(ctx.env,w,value),at));
+  for(const email of [...values].filter(v=>v.includes('@')))statements.push(db.prepare("UPDATE audit_events SET target='[erased]' WHERE workspace_id=? AND instr(lower(target),lower(?))>0").bind(w,email));
   for(const store of ['audit','service'] as const){
     const table=store==='audit'?'audit_events':'svc_events',column=store==='audit'?'detail_json':'data_json';
     const events=(await db.prepare(`SELECT id,actor_id,${column} payload FROM ${table} WHERE workspace_id=?`).bind(w).all<{id:string;actor_id:string;payload:string}>()).results;

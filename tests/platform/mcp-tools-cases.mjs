@@ -281,6 +281,26 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
   check(!auditText.includes(excluded),'MCP audit excludes secrets, free text and personal values')
  check(sql(`SELECT secret_hash FROM mcp_credentials WHERE id=${quoted(issued.id)}`)[0].secret_hash===null,'issuer revocation clears stored hash')
 
+ // DESK-017: erasing an actor preserves authorized facts on somebody else's work.
+ const historyActor=await value(ownerApi('/members',{email:'synthetic-linen-12900@example.test',name:'synthetic-linen-12901 Alice',password,roles:['operator']}),201)
+ const historyActorSession=await nativeSession('synthetic-linen-12900@example.test',password)
+ const historyClassify=async priority=>{
+  const c=await value(historyActorSession.api('/work/'+normal.id+'/classification'))
+  await value(historyActorSession.api('/work/'+normal.id+'/classification/override',{revision:c.revision,workRevision:c.workRevision,type:'incident',category:'hardware',subcategory:'laptop',impact:'low',urgency:'medium',priority,reason:'synthetic-linen-12902'}))
+ }
+ await historyClassify('P3');await historyClassify('P2')
+ await value(historyActorSession.api('/work/'+normal.id+'/fields',{fieldId:textField.id,value:'synthetic-linen-12903 private history marker'}))
+ const actorHistoryBefore=await tool(full.secret,'work.history',{workId:normal.id})
+ const actorPriority=actorHistoryBefore.items.find(e=>e.changes.some(c=>c.field==='priority'&&c.before==='P3'&&c.after==='P2'))
+ check(actorPriority,'actor original priority change is visible through bounded MCP')
+ await value(ownerApi('/people/'+historyActor.id+'/erase',{revision:0,reason:'synthetic-linen-12904'}))
+ const actorHistoryAfter=await tool(full.secret,'work.history',{workId:normal.id})
+ const retainedActor=actorHistoryAfter.items.find(e=>e.id===actorPriority.id)
+ equal(retainedActor.actor,'Erased person','MCP keeps an unlinkable erased actor')
+ check(retainedActor.changes.some(c=>c.field==='priority'&&c.before==='P3'&&c.after==='P2'),'MCP preserves approved original priority values')
+ check(!JSON.stringify(actorHistoryAfter).includes(historyActor.id)&&!JSON.stringify(actorHistoryAfter).includes('synthetic-linen-12903'),'MCP does not recover erased actor or private text')
+ equal((await tool(full.secret,'work.search',{query:'synthetic-linen-12903'})).items,[],'erased history text is absent from MCP search')
+
  await value(ownerApi('/people/'+employee.id+'/erase',{revision:0,reason:'API-003 authorized subject erasure'}))
  await refused(credential.secret,'work.get',{workId:normal.id},'not_found')
  await refused(full.secret,'work.history',{workId:normal.id},'not_found')

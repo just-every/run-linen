@@ -83,7 +83,7 @@ export async function recordsFor(ctx: AdoptionContext, runId: string, chunk: Chu
         check(r && typeof r.table === 'string' && typeof r.key === 'string' && r.row && typeof r.row === 'object' && !Array.isArray(r.row), 'invalid_record');
         check(Object.values(r.row).every(v => v === null || typeof v === 'string' || typeof v === 'number'), 'invalid_record_value');
         check(!Object.keys(r.row).some(k => /password|secret|token|encryption_key/i.test(k) && r.row[k] !== null), 'credential_data_forbidden');
-        r.row=(await historyArchiveRow(ctx,r.table,r.row)).row;
+        r.row=(await historyArchiveRow(ctx,r.table,r.row,true)).row;
     }
     return records;
 }

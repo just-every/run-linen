@@ -1,3 +1,4 @@
+import { registerMcpFieldClassificationRoutes } from '../../src/features/mcp/field-classification';
 import { eraseServicePerson } from '../../src/features/services/privacy';
 import { registerServiceRoutes } from "../../src/features/services";
 import { createGrant } from "../../src/features/execution/grants";
@@ -19,6 +20,7 @@ app.use("*", async (c, next) => {
   });
   await next();
 });
+registerMcpFieldClassificationRoutes(app);
 // Test-only scheduling seam: change real D1 state after route evaluation, before its batch commits.
 for(const seam of ['/work/:id/fulfilment','/catalog-bundles/:id/request'])app.use(seam,async(c,next)=>{
   const kind=c.req.header('x-catalog-race'), target=c.req.header('x-catalog-target');

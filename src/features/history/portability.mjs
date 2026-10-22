@@ -2,7 +2,8 @@
 // visible refusal, never permission to copy an unevaluated payload into custody.
 export function historyExportRow(table,row) {
   const column=table==='audit_events'?'detail_json':table==='svc_events'?'data_json':null;
-  if(column){const payload=JSON.parse(row[column]);if(payload?.pendingErasure)throw new Error('History privacy reconciliation is required before export');}
+  if(column){const payload=JSON.parse(row[column]);if(payload?.pendingErasure)throw new Error('History privacy reconciliation is required before export');
+    if(payload?.schema==='linen.history'&&!payload.redacted){for(const c of payload.changes??[])if(c.field?.startsWith('custom:')||['group','groupId','group_id'].includes(c.field)){delete c.evidence;delete c.beforeEvidence;delete c.afterEvidence;}return {...row,[column]:JSON.stringify(payload)};}}
   return row;
 }
 export async function validateHistoryStaged(db,tables) {
@@ -21,6 +22,9 @@ export async function validateHistoryStaged(db,tables) {
     for(const marker of incoming.results){
       let payload;try{payload=JSON.parse(marker.envelope_json);}catch{return false;}
       if(payload?.redacted!=='erasure'||typeof payload.redactedAt!=='string')return false;
+      if(payload?.changes?.some(c=>(c.field?.startsWith('custom:')||['group','groupId','group_id'].includes(c.field)) && [c.before,c.after].some(v=>v!==null && !(v && typeof v==='object' && v.redacted==='erasure')))) {
+        if(!markers.results.some(known=>known.workspace_id===marker.workspace_id && known.event_key===marker.event_key && known.envelope_json===marker.envelope_json))return false;
+      }
       const table=marker.store==='audit'?'audit_events':marker.store==='service'?'svc_events':null;
       if(!table)continue;
       const staged=tables[table];if(!staged)return false;
