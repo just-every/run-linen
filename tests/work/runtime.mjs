@@ -718,7 +718,7 @@ try {
     .run();
   await searchChecks(api,db);
   const taskHistoryProof = await projectChecks(api, db);
-  await relationshipChecks(api);
+  await relationshipChecks(api,db);
   await sharingChecks(api, db);
   await mf.dispose();
   mf = new Miniflare({

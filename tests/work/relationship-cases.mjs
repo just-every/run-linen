@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 /** DESK-006: merge duplicates with both requesters informed, split with its own SLA and history, and links shown on each record, through public routes. */
-export async function relationshipChecks(api) {
-  const employee = { 'x-user': 'employee', 'x-roles': '["employee"]' }, requester = { 'x-user': 'stranger', 'x-roles': '["employee"]' };
+export async function relationshipChecks(api,db) {
+  // Other journeys deliberately erase the shared employee. These are fresh
+  // authenticated fixture subjects; no erased identity is revived for this flow.
+  const employeeId='synthetic-linen-14011',requesterId='synthetic-linen-14012';
+  for(const [id,name] of [[employeeId,'Jordan Lee'],[requesterId,'Taylor Reed']])await db.batch([
+    db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind(id,id+'@example.test',name,'unused','2026-01-01'),
+    db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('a',id,'["employee"]'),
+  ]);
+  const employee = { 'x-user': employeeId, 'x-roles': '["employee"]' }, requester = { 'x-user': requesterId, 'x-roles': '["employee"]' };
   const make = async (path, body, headers, status = 201) => { const r = await api(path, body, headers); assert.equal(r.status, status, 'DESK-006 ' + JSON.stringify(r)); return r.value; };
   const classify = async (work, priority) => make(`/work/${work.id}/classification/override`, { type: 'incident', category: 'hardware', subcategory: 'printer', impact: 'low', urgency: 'low', priority, revision: 0, workRevision: (await make(`/work/${work.id}`, undefined, undefined, 200)).work.revision, reason: 'Desk triage' }, undefined, 200);
 
@@ -14,7 +21,7 @@ export async function relationshipChecks(api) {
   await make(`/work/${hr.id}/merge`, { intoId: survivor.id, reason: 'Same printer' }, undefined, 422);
   const merged = await make(`/work/${duplicate.id}/merge`, { intoId: survivor.id, reason: 'Same printer, same fault' }, undefined, 200);
   assert.deepEqual(merged.mergedDuplicates.map(w => w.id), [duplicate.id]);
-  assert.deepEqual(merged.participants.map(p => p.user_id), ['stranger']);
+  assert.deepEqual(merged.participants.map(p => p.user_id), [requesterId]);
   await make(`/work/${duplicate.id}/merge`, { intoId: survivor.id, reason: 'again' }, undefined, 409);
   const closed = (await make(`/work/${duplicate.id}`, undefined, requester, 200)).work;
   assert.equal(closed.state, 'closed'); assert.equal(closed.merged_into, survivor.id);
@@ -32,7 +39,7 @@ export async function relationshipChecks(api) {
   await make(`/work/${mixed.id}/split`, { title: 'Second monitor', messageIds: ['not-a-message'], reason: 'Separate ask' }, undefined, 422);
   const split = await make(`/work/${mixed.id}/split`, { title: 'Second monitor', messageIds: [ask.id], reason: 'Separate ask' });
   const child = await make(`/work/${split.workId}`, undefined, employee, 200);
-  assert.equal(child.work.requester_id, 'employee'); assert.equal(child.work.split_from, mixed.id);
+  assert.equal(child.work.requester_id, employeeId); assert.equal(child.work.split_from, mixed.id);
   assert.ok(child.messages.some(m => m.source_key === `split:${ask.id}` && m.body === ask.body), 'DESK-006 the split ticket links back to the original message');
   assert.ok((await make(`/work/${mixed.id}`, undefined, employee, 200)).messages.some(m => m.source_key === `split-to:${split.workId}`));
   assert.ok((await make(`/work/${split.workId}/sla`, undefined, undefined, 200)).policy, 'DESK-006 the split ticket binds its own SLA');
