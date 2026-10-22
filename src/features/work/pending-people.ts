@@ -1,3 +1,4 @@
+import {ticketHistory} from './work-history';
 import { ApiError, id, now } from '../../platform/http';
 import { platformAdmissionGuard } from '../../platform/privacy';
 import { permit, type WorkContext } from './core';
@@ -38,6 +39,7 @@ export async function savePendingPerson(ctx: WorkContext,input: Parameters<typeo
  if(personId && (!previous || previous.state!=='pending' || previous.revision!==input.expectedRevision || !previous.active || previous.merged_into))
  throw new ApiError(409,'revision_conflict','Current unbound pending person required');
  const admission=await platformAdmissionGuard(db,w,pid,value.email);
+ const linked=(await db.prepare('SELECT * FROM work_records WHERE workspace_id=? AND pending_person_id=?').bind(w,pid).all<any>()).results;
  try {await db.batch([
  pendingReviewerGuard(ctx,reviewGuard),
  db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN ${values.sql} THEN 1 ELSE 0 END)`).bind(valueGuard,...values.bindings),
@@ -49,7 +51,7 @@ export async function savePendingPerson(ctx: WorkContext,input: Parameters<typeo
  db.prepare(`INSERT INTO work_people(id,workspace_id,source,source_id,name,effective_at,observed_at,attributes_json) VALUES(?,?,'pending-reviewed',?,?,?,?,?)`).bind(pid,w,pid,value.name,value.startDate+'T00:00:00.000Z',t,JSON.stringify(attributes)),
  personId?db.prepare('UPDATE work_pending_people SET email=?,start_date=?,team=?,reviewed_by=?,reviewed_at=? WHERE workspace_id=? AND id=?').bind(value.email,value.startDate,value.team,ctx.principal.userId,t,w,pid):
  db.prepare('INSERT INTO work_pending_people(workspace_id,id,email,start_date,team,reviewed_by,reviewed_at) VALUES(?,?,?,?,?,?,?)').bind(w,pid,value.email,value.startDate,value.team,ctx.principal.userId,t),
- db.prepare(`UPDATE work_records SET context_json=json_set(context_json,'$.requestedFor',?,'$.team',?,'$.neededBy',?),revision=revision+1,updated_at=? WHERE workspace_id=? AND pending_person_id=?`).bind(value.name,value.team,value.startDate,t,w,pid),
+ ...linked.flatMap(work=>{const context=JSON.parse(work.context_json);return [db.prepare(`UPDATE work_records SET context_json=json_set(context_json,'$.requestedFor',?,'$.team',?,'$.neededBy',?),revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?`).bind(value.name,value.team,value.startDate,t,w,work.id,work.revision),ticketHistory(ctx,work,'work.requested_for_updated',{requestedFor:context.requestedFor??null,team:context.team??null,neededBy:context.neededBy??null},{requestedFor:value.name,team:value.team,neededBy:value.startDate},t)];}),
  db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),w,ctx.principal.userId,personId?'work.pending_person_edited':'work.pending_person_created',pid,JSON.stringify({revision:(previous?.revision||0)+1,reviewed:true,...(reviewsAttributes?{attributeDimensions:Object.keys(attributes)}:{})}),t),
  db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),
  // Review guards are transaction-local and carry no continuing authority.
@@ -62,13 +64,14 @@ export async function withdrawPendingPerson(ctx: WorkContext,personId:string,inp
  if(!Number.isSafeInteger(input.expectedRevision)||typeof input.reason!=='string'||!input.reason.trim()||input.reason.length>2000)
  throw new ApiError(422,'pending_person_input','Current revision and withdrawal reason required');
  const db=ctx.env.DB,w=ctx.principal.workspaceId,t=now(),guard=id(),reviewGuard=id();
+ const linked=(await db.prepare("SELECT * FROM work_records WHERE workspace_id=? AND pending_person_id=? AND state<>'cancelled'").bind(w,personId).all<any>()).results;
  try {await db.batch([
  pendingReviewerGuard(ctx,reviewGuard),
  db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_people p JOIN work_pending_people h
  ON h.workspace_id=p.workspace_id AND h.id=p.id WHERE p.workspace_id=? AND p.id=? AND p.revision=? AND h.state='pending' AND p.member_id IS NULL) THEN 1 ELSE 0 END)`).bind(guard,w,personId,input.expectedRevision),
  db.prepare("UPDATE work_pending_people SET state='withdrawn',withdrawn_at=? WHERE workspace_id=? AND id=?").bind(t,w,personId),
  db.prepare('UPDATE work_people SET active=0,revision=revision+1 WHERE workspace_id=? AND id=?').bind(w,personId),
- db.prepare("UPDATE work_records SET state='cancelled',revision=revision+1,updated_at=? WHERE workspace_id=? AND pending_person_id=? AND state<>'cancelled'").bind(t,w,personId),
+ ...linked.flatMap(work=>[db.prepare("UPDATE work_records SET state='cancelled',revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?").bind(t,w,work.id,work.revision),ticketHistory(ctx,work,'work.transitioned',{state:work.state},{state:'cancelled'},t)]),
  db.prepare(`INSERT INTO audit_events SELECT 'withdraw-hold:'||work_id||':'||catalog_id,workspace_id,?,'work.pending_service_cancelled',work_id,json_object('catalogId',catalog_id,'personId',person_id),? FROM work_pending_services WHERE workspace_id=? AND person_id=? AND state='held'`).bind(ctx.principal.userId,t,w,personId),
  db.prepare("UPDATE work_pending_services SET state='cancelled',reason='Pending person withdrawn' WHERE workspace_id=? AND person_id=? AND state='held'").bind(w,personId),
  db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),w,ctx.principal.userId,'work.pending_person_withdrawn',personId,JSON.stringify({reason:input.reason,revision:input.expectedRevision+1}),t),

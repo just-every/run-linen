@@ -48,6 +48,12 @@ export async function catalogTaskChecks({ ok, api, db, actor, future }) {
   assert.equal((await api(`/work/${workId}/tasks/${task(items, 'seat').id}/complete`, { revision: 99 }, 'task-hw')).status, 409, 'CATALOG-003 a stale revision is refused');
   assert.equal((await complete(workId, task(items, 'seat'), 'task-hw')).status, 200, 'CATALOG-003 parallel tasks run while the automated step is still open');
   assert.equal((await complete(workId, task(items, 'seat'), 'task-hw')).status, 409, 'CATALOG-003 a done task is not completed twice');
+  const completedHistory=(await ok(`/work/${workId}/activity`)).items.filter(e=>e.action==='task completed');
+  assert.equal(completedHistory.length,1,'Losing and repeated completions append no event');
+  assert.equal(completedHistory[0].actor,'task-hw');
+  assert.ok(completedHistory[0].changes.some(c=>c.field==='state'&&c.before==='pending'&&c.after==='done'));
+  assert.equal((await ok(`/work/${workId}/activity`,undefined,'employee')).items.some(e=>e.kind==='change'),false,'Requester history stays public conversation only');
+
 
   // The automated step still verifies independently (the CATALOG-004 provider boundary).
   await ok('/grants', { id: 'task-licence-grant', principalId: actor.id, action: 'license.add', actionVersion: 1, target: 'task-licence', beneficiaryId: 'provider-employee-distinct',
@@ -92,8 +98,10 @@ export async function catalogTaskChecks({ ok, api, db, actor, future }) {
   assert.equal((await waive(task(items, 'seat'), 'owner')).status, 409, 'CATALOG-003 a done task is not waived');
   assert.equal((await waive(step, 'owner')).status, 200, 'CATALOG-003 the owner waives the failed automated step with a reason');
   assert.equal((await waive(step, 'owner')).status, 409);
-  const waiver = await db.prepare("SELECT detail_json FROM audit_events WHERE action='work.obligation_waived' AND target=?").bind(step.id).first();
-  assert.equal(JSON.parse(waiver.detail_json).reason, 'The licence is bought outside Linen', 'CATALOG-003 the waiver and its reason are audited');
+  const waivedHistory=(await ok(`/work/${failing.workId}/activity`)).items;
+  const waiver=waivedHistory.find(e=>e.action==='obligation waived'&&e.changes.some(c=>c.field==='reason'&&c.after==='The licence is bought outside Linen'));
+  assert.ok(waiver,'CATALOG-003 the original waiver reason is visible through the authorized history door');
+  assert.ok(waiver.changes.some(c=>c.field==='state'&&c.before==='failed'&&c.after==='waived'));
   items = await duties(failing.workId, 'employee');
   assert.deepEqual([items.find(o => o.kind === 'access.grant').state, items.find(o => o.kind === 'access.grant').waived_by], ['waived', 'owner'], 'CATALOG-003 a waived step is shown as waived, never as verified');
   assert.equal((await complete(failing.workId, task(items, 'configure'), 'task-net')).status, 200, 'CATALOG-003 a waived step releases the tasks that follow it');

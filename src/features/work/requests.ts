@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 import { workDepartmentStaffSql } from './department-spaces';
 import { requireWorkDepartmentStaff } from './department-operations';
 import { requireCatalogAudience } from './catalog-audience';
@@ -136,7 +137,7 @@ export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord
 export function fulfilmentStatements(ctx: WorkContext, e: Evaluation, workId: string, workRevision: number) {
   const {input,catalog,previous,audience,catalogSnapshot,application,blocked,approvalStages} = e;
   const w=ctx.principal.workspaceId,admissionGuard=id(),roles=JSON.stringify(ctx.principal.roles);
-  const fid = id(), catalogGuard = id(), automatedId = id(), quote = catalogSnapshot.quote as {id:string;sha256:string}|null|undefined;
+  const dueAt=now(),fid = id(), catalogGuard = id(), automatedId = id(), quote = catalogSnapshot.quote as {id:string;sha256:string}|null|undefined;
   const manual = manualKinds.includes(catalog.kind);
   const kind = catalog.kind === "device" ? "device.deliver" : "access.grant";
   return [
@@ -192,7 +193,7 @@ export function fulfilmentStatements(ctx: WorkContext, e: Evaluation, workId: st
     ] : []),
     manual ? ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,last_error,title,catalog_id) VALUES(?,?,?,'task.manual',?,?,?,?,?,?,?,?)",
-    ).bind(automatedId,w,workId,catalog.target,input.beneficiaryId,now(),blocked?'blocked':'pending',catalog.owner_id,blocked,catalog.name,catalog.id)
+    ).bind(automatedId,w,workId,catalog.target,input.beneficiaryId,dueAt,blocked?'blocked':'pending',catalog.owner_id,blocked,catalog.name,catalog.id)
     : ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,last_error) VALUES(?,?,?,?,?,?,?,?,?,?)",
     ).bind(
@@ -202,16 +203,17 @@ export function fulfilmentStatements(ctx: WorkContext, e: Evaluation, workId: st
       kind,
       catalog.target,
       input.beneficiaryId,
-      now(),
+      dueAt,
       blocked ? "blocked" : "pending",
       catalog.owner_id,
       blocked,
     ),
+    obligationHistory(ctx,{id:automatedId,work_id:workId,beneficiary_id:input.beneficiaryId,owner_id:catalog.owner_id},'work.task_created',null,{dueAt,state:blocked?'blocked':'pending',kind:manual?'task.manual':kind,owner:catalog.owner_id,...(manual?{title:catalog.name}:{})},now()),
     ...taskStatements(ctx, workId, {...catalog, id: input.catalogId}, input.beneficiaryId, automatedId),
     ...(catalog.capacity!==null ? [ctx.env.DB.prepare(`UPDATE work_obligations SET state='blocked',last_error=?
-      WHERE workspace_id=? AND work_id=? AND kind=? AND target=? AND state='pending'
+      WHERE workspace_id=? AND work_id=? AND kind=? AND target=? AND id=? AND state='pending'
       AND NOT EXISTS(SELECT 1 FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND work_id=? AND released_at IS NULL)`)
-      .bind(catalog.kind==='device'?'No stock; acquisition owner required':'No license capacity; license owner required',w,workId,manual?'task.manual':kind,catalog.target,w,input.catalogId,workId)] : []),
+      .bind(catalog.kind==='device'?'No stock; acquisition owner required':'No license capacity; license owner required',w,workId,manual?'task.manual':kind,catalog.target,automatedId,w,input.catalogId,workId),obligationHistory(ctx,{id:automatedId,work_id:workId,beneficiary_id:input.beneficiaryId,owner_id:catalog.owner_id},'work.obligation_changed',{state:'pending'},{state:'blocked'},now())] : []),
     // A newly recorded responsibility is a change to the request: its queue row and "Last changed" move.
     ...(previous ? [] : [ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(now(), w, workId)]),
     ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id IN (?,?)").bind(catalogGuard,admissionGuard),
@@ -225,21 +227,10 @@ export async function finishFulfilment(ctx: WorkContext, e: Evaluation, workId: 
     .bind(w,input.catalogId,workId).first()) {
     blocked=catalog.kind==='device'?'No stock; acquisition owner required':'No license capacity; license owner required';
   }
-  if (input.expiresAt && catalog.kind !== "device" && !manualKinds.includes(catalog.kind))
-    await ctx.env.DB.prepare(
-      "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,owner_id) VALUES(?,?,?,?,?,?,?,?)",
-    )
-      .bind(
-        id(),
-        w,
-        workId,
-        "access.revoke",
-        catalog.target,
-        input.beneficiaryId,
-        input.expiresAt,
-        catalog.owner_id,
-      )
-      .run();
+  if (input.expiresAt && catalog.kind !== 'device' && !manualKinds.includes(catalog.kind)) {
+    const taskId=id(),at=now();
+    await ctx.env.DB.batch([ctx.env.DB.prepare('INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,owner_id) VALUES(?,?,?,?,?,?,?,?)').bind(taskId,w,workId,'access.revoke',catalog.target,input.beneficiaryId,input.expiresAt,catalog.owner_id),obligationHistory(ctx,{id:taskId,work_id:workId,beneficiary_id:input.beneficiaryId,owner_id:catalog.owner_id},'work.task_created',null,{state:'pending',kind:'access.revoke',dueAt:input.expiresAt,owner:catalog.owner_id},at)]);
+  }
   return {
     workId,
     state: blocked ? "blocked" : "pending",
@@ -275,6 +266,7 @@ export async function recordPhysicalHandoff(
   )
     .bind(ctx.principal.workspaceId, obligationId)
     .first<{
+      id:string;state:string;revision:number;
       work_id: string;
       lifecycle_id: string | null;
       target: string;
@@ -310,7 +302,7 @@ export async function recordPhysicalHandoff(
     );
   const admission = await bindingErasureGuard(ctx, person,
     obligation.lifecycle_id ? null : obligation.beneficiary_id, null);
-  const result = await ctx.env.DB.prepare(`UPDATE work_obligations
+  const [result] = await ctx.env.DB.batch([ctx.env.DB.prepare(`UPDATE work_obligations
     SET state='verified',revision=revision+1,last_error=NULL WHERE workspace_id=? AND id=? AND revision=?
     AND EXISTS(SELECT 1 FROM work_people p WHERE p.workspace_id=work_obligations.workspace_id
       AND p.id=? AND p.revision=? AND p.member_id IS ? AND p.binding_id IS ? AND p.merged_into IS NULL
@@ -329,7 +321,7 @@ export async function recordPhysicalHandoff(
     AND ${admission.sql}`)
     .bind(ctx.principal.workspaceId, obligationId, input.revision, person.id, person.revision,
       person.member_id, person.binding_id, input.custodyEventId, person.id, event.kind, ...admission.bindings)
-    .run();
+,obligationHistory(ctx,obligation,'work.obligation_changed',{state:obligation.state,revision:obligation.revision},{state:'verified',revision:obligation.revision+1},now())]);
   if (!result.meta.changes)
     throw new ApiError(409, "revision_conflict", "Obligation, person or reviewed binding changed");
   await ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?")

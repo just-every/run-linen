@@ -33,6 +33,12 @@ export async function recurrenceChecks(api,db) {
   check(await api(`/work/${first.work_id}/recurring-tasks/${tasks[0].id}`,{revision:tasks[0].revision}));
   assert.equal(check(await api(`/work/${first.work_id}/recurring-tasks`)).items[0].state,'completed');
   check(await api(`/work/${first.work_id}/recurring-tasks/${tasks[0].id}`,{revision:tasks[0].revision}),409);
+  const events=check(await api(`/work/${first.work_id}/activity`)).items;
+  assert.ok(events.some(e=>e.action==='recurring task created'&&e.changes.some(c=>c.field==='title'&&c.before===null&&c.after==='Record patch exceptions')));
+  assert.equal(events.filter(e=>e.action==='recurring task completed').length,1,'A stale completion adds no historical decision');
+  assert.ok(events.some(e=>e.action==='recurring task completed'&&e.changes.some(c=>c.field==='state'&&c.before==='pending'&&c.after==='completed')));
+  assert.equal(check(await api(`/work/${first.work_id}/activity`,undefined,employee),404).items,undefined);
+
   check(await api('/recurring-work',undefined,{'x-workspace':'b'}),404);
   // Monthly period arithmetic retains the anchor, handles short months, and observes DST.
   const leap=check(await api('/recurring-work',{...input,title:'Month-end audit',calendar:{...calendar,weekdays:[0,1,2,3,4,5,6],holidays:[]},rule:{startDate:'2020-01-31',frequency:'monthly',interval:1,firstBusinessDay:false},tasks:[]}),201);

@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 /**
  * LIFE-006: the sponsor of a contractor or temp end date is reminded 72 hours
  * before the end instant and alone may re-attest to a later end date. Without
@@ -97,13 +98,17 @@ export async function reattestAccess(ctx: WorkContext, lifecycleId: string, expi
   if (next <= row.expires_at || next <= now())
     throw new ApiError(422, "reattest_later", "Re-attestation needs a later end date than the current one");
   const t = now();
+  const duties=(await ctx.env.DB.prepare('SELECT * FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? AND is_expiry=1').bind(ctx.principal.workspaceId,lifecycleId).all<any>()).results;
   const [moved] = await ctx.env.DB.batch([
     ctx.env.DB.prepare("UPDATE work_obligations SET due_at=?,revision=revision+1 WHERE workspace_id=? AND lifecycle_id=? AND is_expiry=1 AND state='pending' AND operation_id IS NULL AND due_at=? AND (SELECT COUNT(*) FROM work_obligations x WHERE x.workspace_id=? AND x.lifecycle_id=? AND x.is_expiry=1 AND (x.state<>'pending' OR x.operation_id IS NOT NULL))=0")
       .bind(next, ctx.principal.workspaceId, lifecycleId, row.expires_at, ctx.principal.workspaceId, lifecycleId),
+    ctx.env.DB.prepare('INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN changes()=? THEN 1 ELSE 0 END)').bind(lifecycleId+':reattest',row.duties),
+    ...duties.map(o=>obligationHistory(ctx,o,'work.obligation_changed',{dueAt:o.due_at,revision:o.revision},{dueAt:next,revision:o.revision+1},t,false)),
     ctx.env.DB.prepare("UPDATE work_lifecycle SET sponsor_reminded_at=NULL,sponsor_work_id=NULL,revision=revision+1 WHERE workspace_id=? AND id=?").bind(ctx.principal.workspaceId, lifecycleId),
     ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)").bind(crypto.randomUUID(), ctx.principal.workspaceId, ctx.principal.userId,
       "lifecycle.sponsor_reattested", lifecycleId, JSON.stringify({ from: row.expires_at, to: next }), t),
-  ]);
+    ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(lifecycleId+':reattest'),
+  ]).catch(error=>{if(/CHECK constraint failed/.test(String(error)))throw new ApiError(409,'expiry_started','Expiry has already started; reconcile it before any new access');throw error;});
   if (moved.meta.changes !== row.duties) throw new ApiError(409, "expiry_started", "Expiry has already started; reconcile it before any new access");
   return { lifecycleId, expiresAt: next, previousExpiresAt: row.expires_at };
 }

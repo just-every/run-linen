@@ -1,10 +1,11 @@
+import {obligationHistory,ticketHistory} from './work-history';
 import { workReadable, workPrivateReadable, workDepartmentStaff, workDepartmentScoped } from './scope';
 import { departmentWorkBatch, requestDepartment, workReadSql, departmentNotHrSql, requireWorkPrivate } from './department-spaces';
 import { preparePendingRequest, pendingRequestSnapshot } from './pending-services';
 import { progressFor, requestProgress } from "./progress";
 import { hashToken } from "../../platform/crypto";
 import { cancelWorkExecution } from "./execution";
-import { shiftCommitmentForPause } from "./calendar";
+import { pauseCommitmentStatement } from "./calendar";
 import { slaPauseStatements, validWaitingOn } from "./sla-policies";
 import { closeResolution, pauseStatus } from "./desk-fields";
 import { participantView } from "./relationships";
@@ -243,6 +244,7 @@ export async function createWork(
       input.pendingPersonId || null,
       departmentId,
     ),
+    ticketHistory(ctx,{id:workId,requester_id:p.userId,beneficiary_id:beneficiaryId,sensitivity:input.sensitivity??'normal'},'work.created',null,{state:'open',type:input.kind??'request',title:input.title,assignee:null,department:departmentId},t),
     // The conflict check is in the same transaction as every intake side effect.
     ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
       EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND requester_id=? AND dedup_key=? AND request_hash=?)
@@ -281,11 +283,11 @@ export async function createWork(
 }
 /** The person a request's own words name, recorded once as a fact of the request. It is never an identity or authority. */
 export async function recordRequestedFor(ctx: WorkContext, workId: string, name: string) {
-  await getWork(ctx, workId);
+  const work=await getWork(ctx, workId),at=now();
   const context = "CASE WHEN json_valid(context_json) AND json_type(context_json)='object' THEN context_json ELSE '{}' END";
-  await ctx.env.DB.prepare(`UPDATE work_records SET context_json=json_set(${context},'$.requestedFor',?),updated_at=?
+  await departmentWorkBatch(ctx,work,[ctx.env.DB.prepare(`UPDATE work_records SET context_json=json_set(${context},'$.requestedFor',?),updated_at=?
     WHERE workspace_id=? AND id=? AND json_extract(${context},'$.requestedFor') IS NULL`)
-    .bind(name, now(), ctx.principal.workspaceId, workId).run();
+    .bind(name, at, ctx.principal.workspaceId, workId),ticketHistory(ctx,work,'work.requested_for_updated',{requestedFor:null},{requestedFor:name},at)]);
 }
 export async function appendMessage(
   ctx: WorkContext,
@@ -341,6 +343,7 @@ export async function appendMessage(
       now(),
     ),
   ];
+  const responseAt=now();
   if (
     input.visibility === "public" &&
     !input.sourceMessageId.startsWith("interpretation:") &&
@@ -365,8 +368,9 @@ export async function appendMessage(
   )
     statements.push(
       ctx.env.DB.prepare(
-        "UPDATE work_records SET response_at=COALESCE(response_at,?),updated_at=? WHERE workspace_id=? AND id=?",
-      ).bind(now(), now(), ctx.principal.workspaceId, input.workId),
+        "UPDATE work_records SET response_at=?,updated_at=? WHERE workspace_id=? AND id=? AND response_at IS NULL",
+      ).bind(responseAt,responseAt,ctx.principal.workspaceId,input.workId),
+      ticketHistory(ctx,work,'work.response_recorded',{responseAt:work.response_at??null},{responseAt},responseAt),
     );
   await departmentWorkBatch(ctx,work,statements,input.visibility==='private'?'private':internalAuthority??'read');
   return ctx.env.DB.prepare(
@@ -483,6 +487,10 @@ export async function transitionWork(
   const t = now();
   // DESK-010: the close notes are this close's reason; an incident also needs a resolution code.
   const resolution = command === "close" ? await closeResolution(ctx, work, desk.resolutionCode, reason, t) : null;
+  const priorPause=await ctx.env.DB.prepare('SELECT waiting_on,status_id FROM work_sla_pauses WHERE workspace_id=? AND work_id=? AND resumed_at IS NULL ORDER BY paused_at DESC LIMIT 1').bind(ctx.principal.workspaceId,workId).first<{waiting_on:string|null;status_id:string|null}>();
+  const priorResolution=await ctx.env.DB.prepare('SELECT code,close_notes FROM work_resolutions WHERE workspace_id=? AND work_id=?').bind(ctx.principal.workspaceId,workId).first<{code:string|null;close_notes:string|null}>();
+  const commitment=work.paused_at?await pauseCommitmentStatement(ctx,workId,work.paused_at,t):null;
+  const cancelledTasks=command==='cancel'?(await ctx.env.DB.prepare("SELECT * FROM work_obligations WHERE workspace_id=? AND work_id=? AND kind IN ('access.grant','device.deliver','identity.create','task.manual') AND state NOT IN ('verified','done','waived')").bind(ctx.principal.workspaceId,workId).all<any>()).results:[];
   const transitionStatements = [ctx.env.DB.prepare(
     `UPDATE work_records SET state=?,revision=revision+1,updated_at=?,closed_at=?,paused_at=?,paused_ms=paused_ms+?,assignee_id=COALESCE(?,assignee_id) WHERE workspace_id=? AND id=? AND revision=?`,
   )
@@ -499,11 +507,13 @@ export async function transitionWork(
       workId,
       revision,
     ),
-    ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0")
-      .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, command === 'assign' ? 'work.assigned' : 'work.transitioned', workId,
-        JSON.stringify(command === 'assign'
-          ? { from: { assigneeId: work.assignee_id }, to: { assigneeId }, reason }
-          : { before: { state: work.state }, after: { state }, reason }), t),
+    ticketHistory(ctx,work,command==='assign'?'work.assigned':'work.transitioned',
+      {state:work.state,assignee:work.assignee_id,closedAt:work.closed_at??null,pausedAt:work.paused_at,pausedMs:Number(work.paused_ms),waitingOn:priorPause?.waiting_on??'none',status:priorPause?.status_id??null,resolutionCode:priorResolution?.code??null,closeNotes:priorResolution?.close_notes??null},
+      {state,assignee:assigneeId??work.assignee_id,closedAt:state==='closed'?t:null,pausedAt:state==='paused'?t:null,pausedMs:Number(work.paused_ms)+(work.paused_at?Math.max(0,Date.parse(t)-Date.parse(work.paused_at)):0),waitingOn:command==='pause'?waiting??'none':'none',status:command==='pause'?statusId:null,resolutionCode:command==='close'?desk.resolutionCode??null:priorResolution?.code??null,closeNotes:command==='close'?reason:priorResolution?.close_notes??null},t),
+    ...cancelledTasks.flatMap(row=>[ctx.env.DB.prepare("UPDATE work_obligations SET state=?,last_error=?,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=? AND state=? AND operation_id IS ?").bind(row.operation_id?'unknown':'cancelled','Cancellation requested; reconcile every applied or uncertain effect',ctx.principal.workspaceId,row.id,row.revision,row.state,row.operation_id),obligationHistory(ctx,row,'work.obligation_changed',{state:row.state,revision:row.revision},{state:row.operation_id?'unknown':'cancelled',revision:row.revision+1},t)]),
+    ...(resolution?[resolution]:[]),
+    ...(commitment?[commitment]:[]),
+    ...(work.paused_at||command==='pause'?slaPauseStatements(ctx,workId,command,waiting,t,statusId):[]),
   ];
   if(work.revision!==revision)throw new ApiError(409,'revision_conflict','Work changed; refresh before deciding');
   const [result]=await departmentWorkBatch(ctx,work,transitionStatements,['reopen','cancel'].includes(command)?'read':'staff');
@@ -513,19 +523,11 @@ export async function transitionWork(
       "revision_conflict",
       "Work changed; refresh before deciding",
     );
-  if (resolution) await resolution.run();
-  if (work.paused_at)
-    await shiftCommitmentForPause(ctx, workId, work.paused_at, t);
-  if (work.paused_at || command === "pause")
-    await ctx.env.DB.batch(slaPauseStatements(ctx, workId, command, waiting, t, statusId));
   let pendingCancellation = 0;
   if (command === "cancel") {
     await ctx.env.DB.batch([
       ctx.env.DB.prepare(`INSERT INTO audit_events SELECT ?||':'||catalog_id,workspace_id,?,'work.pending_service_cancelled',work_id,json_object('catalogId',catalog_id,'personId',person_id),? FROM work_pending_services WHERE workspace_id=? AND work_id=? AND state='held'`).bind(id(),ctx.principal.userId,now(),ctx.principal.workspaceId,workId),
       ctx.env.DB.prepare("UPDATE work_pending_services SET state='cancelled',reason='Request cancelled' WHERE workspace_id=? AND work_id=? AND state='held'").bind(ctx.principal.workspaceId,workId),
-      ctx.env.DB.prepare(
-        "UPDATE work_obligations SET state=CASE WHEN operation_id IS NULL THEN 'cancelled' ELSE 'unknown' END,last_error='Cancellation requested; reconcile every applied or uncertain effect',revision=revision+1 WHERE workspace_id=? AND work_id=? AND kind IN ('access.grant','device.deliver','identity.create','task.manual') AND state NOT IN ('verified','done','waived')",
-      ).bind(ctx.principal.workspaceId, workId),
       ctx.env.DB.prepare(
         "UPDATE work_catalog_reservations SET released_at=? WHERE workspace_id=? AND work_id=?",
       ).bind(now(), ctx.principal.workspaceId, workId),

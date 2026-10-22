@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 import { ensureAmendedRemoval, inspectAmendedRemoval, resumeFulfilmentAmendment } from "./fulfilment-amend-execution";
 import { inspectFulfilmentExecution } from "./fulfilment-execution";
 import { currentWorkPrincipal } from "./identity";
@@ -162,10 +163,9 @@ export async function cancelWorkExecution(ctx: WorkContext, workId: string, reas
       const code = error instanceof ApiError ? error.code : "execution_cancellation_unknown";
       // Persist the partial outcome and keep cancelling other independent initial duties.
       // A cancellation flag never supplies provider evidence or replacement authority.
+      const duties=(await ctx.env.DB.prepare('SELECT * FROM work_obligations WHERE workspace_id=? AND work_id=? AND operation_id=?').bind(ctx.principal.workspaceId,workId,operation.id).all<any>()).results;
       await ctx.env.DB.batch([
-        ctx.env.DB.prepare(`UPDATE work_obligations SET state='unknown',last_error=?
-          WHERE workspace_id=? AND work_id=? AND operation_id=?`)
-          .bind(`Cancellation pending reconciliation: ${code}`, ctx.principal.workspaceId, workId, operation.id),
+        ...duties.flatMap(o=>[ctx.env.DB.prepare("UPDATE work_obligations SET state='unknown',last_error=? WHERE workspace_id=? AND id=? AND revision=? AND operation_id=? AND state=?").bind(`Cancellation pending reconciliation: ${code}`,ctx.principal.workspaceId,o.id,o.revision,operation.id,o.state),obligationHistory(ctx,o,'work.obligation_changed',{state:o.state,error:o.last_error},{state:'unknown',error:`Cancellation pending reconciliation: ${code}`},now())]),
         ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)")
           .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, "work.execution_cancel_pending",
             operation.id, JSON.stringify({ workId, reason: code }), now()),

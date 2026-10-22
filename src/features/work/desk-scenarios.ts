@@ -1,3 +1,5 @@
+import {ticketHistory,changeRecords} from './work-history';
+import {readHistoryEvent} from '../history/event';
 import {requireWorkDepartmentStaff} from './department-operations';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
@@ -101,9 +103,10 @@ export async function runScenario(ctx: WorkContext, workId: string, body: Record
   if (typeof body.revision === 'number' && body.revision !== work.revision) throw new ApiError(409, 'revision_conflict', 'Work changed; refresh before running a scenario');
   const taskPlan = s.steps.taskPlan ? await prepareScenarioPlan(ctx, work, s.steps.taskPlan) : null;
   const changes: { step: string; field: string; before: unknown; after: unknown }[] = [];
-  const recordRun = async (errorCode?: string) => ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)')
-    .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, 'work.scenario_run', workId,
-      JSON.stringify({ scenarioId: s.id, name: s.name, changes, ...(errorCode ? { errorCode } : {}) }), now()).run();
+  const recordRun = async (errorCode?:string)=>{
+    const values=changeRecords(changes.filter(c=>c.step!=='fields'&&c.step!=='message').map(c=>({...c,field:c.field==='owner'?'assignee':c.field}))),at=now();
+    await ticketHistory(ctx,work,'work.scenario_run',values.before,{...values.after,'scenario run':{scenarioId:s.id,name:s.name,changes,...(errorCode?{errorCode}:{})}},at,{conditional:false,actor:{kind:'scenario',id:s.id,name:s.name,initiatedBy:ctx.principal.userId}}).run();
+  };
   try {
   if (s.steps.classification) {
     const current = await readClassification(ctx, workId), after = { ...(current.current ?? {}), ...s.steps.classification };
@@ -153,7 +156,7 @@ export async function scenarioRuns(ctx: WorkContext, workId: string) {
   await currentWorkPrincipal(ctx);
   permit(ctx, agents);
   await requireWorkDepartmentStaff(ctx,await getWork(ctx, workId));
-  const rows = (await ctx.env.DB.prepare("SELECT actor_id,detail_json,created_at FROM audit_events WHERE workspace_id=? AND target=? AND action='work.scenario_run' ORDER BY created_at,rowid")
-    .bind(ctx.principal.workspaceId, workId).all<{ actor_id: string; detail_json: string; created_at: string }>()).results;
-  return { items: rows.map((r) => ({ actorId: r.actor_id, at: r.created_at, ...JSON.parse(r.detail_json) })) };
+  const rows = (await ctx.env.DB.prepare("SELECT id,actor_id,detail_json,created_at FROM audit_events WHERE workspace_id=? AND target=? AND action='work.scenario_run' ORDER BY created_at,rowid")
+    .bind(ctx.principal.workspaceId, workId).all<{ id:string;actor_id: string; detail_json: string; created_at: string }>()).results;
+  return {items:await Promise.all(rows.map(async r=>{const projected=await readHistoryEvent(ctx,'work.scenario_run',r.detail_json,r.actor_id,r.id),original=projected.changes.find(c=>c.field==='scenario run')?.after;return {actorId:r.actor_id,at:r.created_at,...(original&&typeof original==='object'?original:!('actor' in projected)&&!projected.redacted?JSON.parse(r.detail_json):{changes:projected.changes}),...(projected.redacted?{redacted:projected.redacted,redactedAt:projected.redactedAt}:{})};}))};
 }

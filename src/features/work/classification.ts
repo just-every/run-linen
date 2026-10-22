@@ -1,3 +1,5 @@
+import {ticketHistory} from './work-history';
+import {readHistoryEvent} from '../history/event';
 import { workDepartmentStaff, workPrivateReadable } from './scope';
 import { departmentWorkBatch } from './department-spaces';
 import { routeUnplaced } from './desk-routing';
@@ -24,8 +26,8 @@ function classification(input: any): TicketClassification {
 }
 export async function readClassification(ctx: WorkContext, workId: string): Promise<ClassificationSnapshot> {
   const work = await getWork(ctx, workId), saved = await row(ctx, workId);
-  const history = operator(ctx.principal) && workPrivateReadable(ctx.principal,work) ? (await ctx.env.DB.prepare(`SELECT e.*,COALESCE(u.name,e.actor_id) actor_name FROM audit_events e LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? AND e.target=? AND e.action IN ('work.classification_proposed','work.classification_overridden') AND json_type(e.detail_json,'$.after')='object' ORDER BY e.created_at DESC,e.rowid DESC LIMIT 30`)
-    .bind(ctx.principal.workspaceId, workId).all<{ id: string; actor_id: string; actor_name: string; action: string; created_at: string; detail_json: string }>()).results.map(event => ({ ...event, ...JSON.parse(event.detail_json) })) : [];
+  const history = operator(ctx.principal) && workPrivateReadable(ctx.principal,work) ? await Promise.all((await ctx.env.DB.prepare(`SELECT e.*,COALESCE(u.name,e.actor_id) actor_name FROM audit_events e LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? AND e.target=? AND e.action IN ('work.classification_proposed','work.classification_overridden') ORDER BY e.created_at DESC,e.rowid DESC LIMIT 30`)
+    .bind(ctx.principal.workspaceId, workId).all<{ id: string; actor_id: string; actor_name: string; action: string; created_at: string; detail_json: string }>()).results.map(async({detail_json,...event})=>{const projected=await readHistoryEvent(ctx,event.action,detail_json,event.actor_id,event.id);return {...event,...projected,actor_name:'actor' in projected&&projected.actor?projected.actor.name??(projected.actor.id==='[erased]'?'Erased person':projected.actor.id):event.actor_name,before:Object.fromEntries(projected.changes.map(c=>[c.field,c.before])),after:Object.fromEntries(projected.changes.map(c=>[c.field,c.after])),reason:String(projected.changes.find(c=>c.field==='reason')?.after??'')};})) : [];
   return { revision: saved?.revision ?? 0, workRevision: work.revision, state: saved?.state ?? 'unclassified',
     current: saved?.current_json ? JSON.parse(saved.current_json) : null,
     proposal: saved?.proposal_json ? JSON.parse(saved.proposal_json) : null,
@@ -45,9 +47,7 @@ async function apply(ctx: WorkContext, work: WorkRecord, expected: number, after
     db.prepare(`INSERT INTO work_classifications(workspace_id,work_id,revision,state,current_json,proposal_json,reason,updated_at)
       SELECT ?,?,1,?,?,?,?,? WHERE changes()=1 ON CONFLICT(workspace_id,work_id) DO UPDATE SET revision=revision+1,state=excluded.state,current_json=excluded.current_json,proposal_json=COALESCE(excluded.proposal_json,proposal_json),reason=excluded.reason,error=NULL,proposal_token=NULL,proposal_until=NULL,updated_at=excluded.updated_at`)
       .bind(p.workspaceId, work.id, proposal ? 'proposed' : 'overridden', JSON.stringify(after), proposal ? JSON.stringify(proposal) : null, reason, t),
-    db.prepare('INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
-      .bind(id(), p.workspaceId, p.userId, proposal ? 'work.classification_proposed' : 'work.classification_overridden', work.id,
-        JSON.stringify({ before, after, reason, ...(proposal ? { attemptId: proposal.attemptId, model: proposal.model } : {}) }), t),
+    ticketHistory(ctx,work,proposal?'work.classification_proposed':'work.classification_overridden',{...before,reason:saved?.reason??null},{...after,reason},t,{actor:proposal?{kind:'agent',id:p.userId,name:'Linen',initiatedBy:p.userId}:undefined,originalLabels:{category:{before:before?.category??null,after:after.category},subcategory:{before:before?.subcategory??null,after:after.subcategory}}}),
   ],proposal?'read':'staff');
   if (!result[0].meta.changes) throw new ApiError(409, 'classification_conflict', 'Work, classification or current authority changed; refresh before applying');
   await bindSlaPolicy(ctx, work, after);

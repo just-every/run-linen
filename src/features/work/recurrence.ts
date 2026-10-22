@@ -1,3 +1,4 @@
+import {obligationHistory,ticketHistory} from './work-history';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { getWork, operator, permit, type WorkContext } from './core';
@@ -85,12 +86,11 @@ export async function processDueRecurrences(ctx:WorkContext,at=now()) {
       .bind(workId,p.workspace_id,p.creator_id,p.owner_id,p.title,p.owner_id,t,t,JSON.stringify({recurringPlanId:p.id,recurringOccurrenceId:occurrenceId,dueAt:due.dueAt,businessDate:due.date}),`recurring:${p.id}:${p.next_index}`,occurrenceId,p.workspace_id),
     ctx.env.DB.prepare(`INSERT INTO work_messages SELECT ?,?,?,?,'public',?,'initial',? WHERE ${admitted}`)
       .bind(id(),p.workspace_id,workId,p.creator_id,`${p.body}\n\nScheduled for ${due.date} (${calendar.timezone}).`,t,occurrenceId,p.workspace_id),
-    ...tasks.map(task=>ctx.env.DB.prepare(`INSERT INTO work_recurring_tasks(id,workspace_id,occurrence_id,work_id,title,owner_id) SELECT ?,?,?,?,?,? WHERE ${admitted}`)
-      .bind(id(),p.workspace_id,occurrenceId,workId,task.title,task.ownerId,occurrenceId,p.workspace_id)),
+    ...tasks.flatMap(task=>{const taskId=id();return [ctx.env.DB.prepare(`INSERT INTO work_recurring_tasks(id,workspace_id,occurrence_id,work_id,title,owner_id) SELECT ?,?,?,?,?,? WHERE ${admitted}`)
+      .bind(taskId,p.workspace_id,occurrenceId,workId,task.title,task.ownerId,occurrenceId,p.workspace_id),obligationHistory(ctx,{id:taskId,work_id:workId,owner_id:task.ownerId},'work.recurring_task_created',null,{state:'pending',title:task.title,owner:task.ownerId},t)];}),
     ctx.env.DB.prepare(`UPDATE work_recurring_plans SET next_index=next_index+1,next_due_at=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND next_index=? AND ${admitted}`)
       .bind(next.dueAt,t,p.workspace_id,p.id,p.next_index,occurrenceId,p.workspace_id),
-    ctx.env.DB.prepare(`INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE ${admitted}`)
-      .bind(id(),p.workspace_id,ctx.principal.userId,'work.recurring_materialized',workId,JSON.stringify({planId:p.id,occurrenceIndex:p.next_index}),t,occurrenceId,p.workspace_id)];
+    ticketHistory(ctx,{id:workId,requester_id:p.creator_id,beneficiary_id:p.owner_id},'work.recurring_materialized',null,{state:'open',type:'request',title:p.title,assignee:p.owner_id,dueAt:due.dueAt},t)];
     const result=await ctx.env.DB.batch(writes);
     results.push({planId:p.id,state:result[0].meta.changes?'created':'held_or_already_created',workId:result[0].meta.changes?workId:null});
   }
@@ -102,14 +102,14 @@ export async function recurringTasks(ctx:WorkContext,workId:string) {
 }
 export async function completeRecurringTask(ctx:WorkContext,workId:string,taskId:string,b:Record<string,unknown>) {
   await currentWorkPrincipal(ctx); await getWork(ctx,workId);
-  const task=await ctx.env.DB.prepare('SELECT * FROM work_recurring_tasks WHERE workspace_id=? AND work_id=? AND id=?').bind(ctx.principal.workspaceId,workId,taskId).first<{owner_id:string;revision:number}>();
+  const task=await ctx.env.DB.prepare('SELECT * FROM work_recurring_tasks WHERE workspace_id=? AND work_id=? AND id=?').bind(ctx.principal.workspaceId,workId,taskId).first<{owner_id:string;revision:number;state:string;completed_by:string|null;completed_at:string|null}>();
   if(!task)throw new ApiError(404,'not_found','Task not found');
   if(task.owner_id!==ctx.principal.userId && !operator(ctx.principal))throw new ApiError(403,'forbidden','Task owner or service operator required');
   if(!Number.isInteger(b.revision))throw new ApiError(422,'revision','Current task revision required');
   const t=now(), result=await ctx.env.DB.batch([
     ctx.env.DB.prepare("UPDATE work_recurring_tasks SET state='completed',completed_by=?,completed_at=?,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=? AND state='pending'")
       .bind(ctx.principal.userId,t,ctx.principal.workspaceId,taskId,b.revision as number),
-    ctx.env.DB.prepare('INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()=1').bind(id(),ctx.principal.workspaceId,ctx.principal.userId,'work.recurring_task_completed',taskId,JSON.stringify({workId}),t),
+    obligationHistory(ctx,{id:taskId,work_id:workId,owner_id:task.owner_id},'work.recurring_task_completed',{state:task.state,completedBy:task.completed_by,completedAt:task.completed_at,revision:task.revision},{state:'completed',completedBy:ctx.principal.userId,completedAt:t,revision:task.revision+1},t),
   ]);
   if(!result[0].meta.changes)throw new ApiError(409,'revision_conflict','Task already completed or changed');
   return {id:taskId,state:'completed',revision:Number(b.revision)+1};

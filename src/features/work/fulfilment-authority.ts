@@ -1,3 +1,4 @@
+import {ticketHistory} from './work-history';
 import { approvalGuard } from './approval-guard';
 import { personForMember } from './person-binding';
 import { currentWorkPrincipal } from "./identity";
@@ -140,11 +141,7 @@ export async function prepareFulfilmentApproval(ctx: WorkContext, workId: string
       .bind(approvalId,w,workId,f.id,work.revision,f.revision,catalog.revision,person.revision,person.manager_id,holder,f.beneficiary_id,f.purpose,f.expires_at,input.idempotencyKey,now(),person.id,person.binding_id,
         typeof input.comment==='string'&&input.comment.trim()?input.comment.trim().slice(0,2000):null,channel),
     ...await openFirstStage(ctx,work,catalog,f),
-    db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),w,ctx.principal.userId,'work.fulfilment_approved',approvalId,
-      JSON.stringify({workId,fulfilmentId:f.id,catalogId:catalog.id,workRevision:work.revision,fulfilmentRevision:f.revision,
-        catalogRevision:catalog.revision,personRevision:person.revision,managerId:person.manager_id,holderId:holder,
-        beneficiaryId:f.beneficiary_id,expiresAt:f.expires_at,
-        ...(f.catalog_snapshot_json&&JSON.parse(f.catalog_snapshot_json).quote?{quoteSha256:JSON.parse(f.catalog_snapshot_json).quote.sha256}:{})}),now()),
+    ticketHistory(ctx,work,'work.fulfilment_approved',null,{approval:{approvalId,catalogId:catalog.id,workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:holder},approvalOutcome:'approved',workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:holder},now(),{target:approvalId,conditional:false}),
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(now(),w,workId),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),authorityGuard.end]};
 }
@@ -180,10 +177,7 @@ export async function recordWorkManagerGrantApproval(ctx: WorkContext, grantId: 
       .bind(approvalId,w,workId,f.id,work.revision,f.revision,f.catalog_revision,person.revision,person.manager_id,holder,
         f.beneficiary_id,f.purpose,grant.valid_until,`standing:${grant.id}:${version}:${f.id}`,at,grant.id,version,person.id,person.binding_id,
         w,workId,work.revision,w,f.id,f.revision,w,person.id,person.revision,f.beneficiary_id,person.binding_id,w,f.catalog_id,f.catalog_revision),
-      db.prepare('INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
-        .bind(id(),w,ctx.principal.userId,'work.fulfilment_approved',approvalId,
-          JSON.stringify({workId,fulfilmentId:f.id,catalogId:f.catalog_id,workRevision:work.revision,
-            fulfilmentRevision:f.revision,catalogRevision:f.catalog_revision,holderId:holder,grantId:grant.id,grantVersion:version}),at)]);
+      ticketHistory(ctx,work,'work.fulfilment_approved',null,{approval:{approvalId,catalogId:f.catalog_id,workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:f.catalog_revision,holderId:holder,grantId:grant.id,grantVersion:version},approvalOutcome:'approved',workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:f.catalog_revision,holderId:holder,grantVersion:version},at,{target:approvalId})]);
   }
 }
 

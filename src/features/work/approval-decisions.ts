@@ -1,3 +1,4 @@
+import {obligationHistory,ticketHistory} from './work-history';
 import { ApiError, id, now } from '../../platform/http';
 import type { WorkContext, WorkRecord } from './core';
 import { approvalGuard } from './approval-guard';
@@ -41,6 +42,7 @@ export async function prepareStageDecision(ctx: WorkContext, workId: string, inp
   const decisionId = id(), guard = id(), t = now();
   const after=await chainStatus(ctx,work,catalog,f,managerApproved,{stageKey:stage.key,approverId:ctx.principal.userId,decision:input.decision});
   const opening=await activateStageStatements(ctx,f.id,after.pendingStages,t);
+  const duties=input.decision==='rejected'?(await db.prepare("SELECT * FROM work_obligations WHERE workspace_id=? AND work_id=? AND target=? AND state='pending'").bind(w,workId,catalog.target).all<any>()).results:[];
   const statements = [
     authorityGuard.start,
     db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=?)
@@ -49,10 +51,8 @@ export async function prepareStageDecision(ctx: WorkContext, workId: string, inp
       .bind(guard, w, workId, work.revision, w, f.id, f.revision, w, catalog.id, catalog.revision, w, ctx.principal.userId),
     db.prepare('INSERT INTO work_approval_decisions(id,workspace_id,work_id,fulfilment_id,stage_key,approver_id,decision,comment,channel,work_revision,fulfilment_revision,catalog_revision,event_key,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
       .bind(decisionId, w, workId, f.id, stage.key, ctx.principal.userId, input.decision, comment, channel, work.revision, f.revision, catalog.revision, input.idempotencyKey, t),
-    db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(), w, ctx.principal.userId, 'work.approval_stage_decided', decisionId,
-      JSON.stringify({ workId, fulfilmentId: f.id, catalogId: catalog.id, stage: stage.key, decision: input.decision, channel, workRevision: work.revision, fulfilmentRevision: f.revision, catalogRevision: catalog.revision }), t),
-    ...(input.decision === 'rejected' ? [db.prepare(`UPDATE work_obligations SET state='blocked',last_error=? WHERE workspace_id=? AND work_id=? AND target=? AND state='pending'`)
-      .bind(`Approval rejected at ${stage.name}`, w, workId, catalog.target)] : []),
+    ticketHistory(ctx,work,'work.approval_stage_decided',null,{approvalOutcome:input.decision,workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:ctx.principal.userId,stage:stage.key,channel,comment},t,{target:decisionId}),
+    ...duties.flatMap(o=>[db.prepare("UPDATE work_obligations SET state='blocked',last_error=? WHERE workspace_id=? AND id=? AND revision=? AND state='pending'").bind(`Approval rejected at ${stage.name}`,w,o.id,o.revision),obligationHistory(ctx,o,'work.obligation_changed',{state:o.state},{state:'blocked'},t)]),
     ...opening,
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(t, w, workId),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard), authorityGuard.end,
@@ -80,14 +80,15 @@ async function prepareManagerRejection(ctx: WorkContext, work: WorkRecord, catal
   if (!holder || holder !== ctx.principal.userId || holder === f.beneficiary_id) throw new ApiError(403, 'approval_denied', 'Only the current manager or their delegate decides this');
   if (await managerStageApproved(ctx, work, catalog, f)) throw new ApiError(409, 'approval_not_open', 'The manager stage is already approved');
   const decisionId = id(), guard = id(), t = now();
+  const duties=(await db.prepare("SELECT * FROM work_obligations WHERE workspace_id=? AND work_id=? AND target=? AND state='pending'").bind(w,work.id,catalog.target).all<any>()).results;
   return { decisionId, stage: 'manager', statements: [
     db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=?)
       AND EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=? AND revision=?) AND EXISTS(SELECT 1 FROM work_catalog WHERE workspace_id=? AND id=? AND revision=?) THEN 1 ELSE 0 END)`)
       .bind(guard, w, work.id, work.revision, w, f.id, f.revision, w, catalog.id, catalog.revision),
     db.prepare('INSERT INTO work_approval_decisions(id,workspace_id,work_id,fulfilment_id,stage_key,approver_id,decision,comment,channel,work_revision,fulfilment_revision,catalog_revision,event_key,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
       .bind(decisionId, w, work.id, f.id, 'manager', ctx.principal.userId, 'rejected', comment, channel, work.revision, f.revision, catalog.revision, input.idempotencyKey, t),
-    db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(), w, ctx.principal.userId, 'work.approval_stage_decided', decisionId, JSON.stringify({ workId: work.id, fulfilmentId: f.id, catalogId: catalog.id, stage: 'manager', decision: 'rejected' }), t),
-    db.prepare(`UPDATE work_obligations SET state='blocked',last_error='Approval rejected by the manager' WHERE workspace_id=? AND work_id=? AND target=? AND state='pending'`).bind(w, work.id, catalog.target),
+    ticketHistory(ctx,work,'work.approval_stage_decided',null,{approvalOutcome:'rejected',workRevision:work.revision,fulfilmentRevision:f.revision,catalogRevision:catalog.revision,holderId:holder,stage:'manager',channel,comment},t,{target:decisionId}),
+    ...duties.flatMap(o=>[db.prepare("UPDATE work_obligations SET state='blocked',last_error='Approval rejected by the manager' WHERE workspace_id=? AND id=? AND revision=? AND state='pending'").bind(w,o.id,o.revision),obligationHistory(ctx,o,'work.obligation_changed',{state:o.state},{state:'blocked'},t)]),
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(t, w, work.id),
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)] };
 }

@@ -1,3 +1,4 @@
+import {ticketHistory} from './work-history';
 import { ApiError, id, now } from '../../platform/http';
 import { getWork, type WorkContext } from './core';
 import { getService } from '../services/store';
@@ -16,8 +17,7 @@ export async function classifyEmployeeIncident(ctx: WorkContext, workId: string,
     const result = await ctx.env.DB.batch([
       ctx.env.DB.prepare("UPDATE work_records SET kind='incident',assignee_id=?,context_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1) AND EXISTS(SELECT 1 FROM svc_records WHERE workspace_id=? AND id=? AND owner_id=? AND revision=?)")
         .bind(service.ownerId, JSON.stringify({...context, serviceId:service.id}), now(), ctx.principal.workspaceId, work.id, work.revision,ctx.principal.workspaceId,ctx.principal.userId,ctx.principal.workspaceId,service.id,service.ownerId,service.revision),
-      ctx.env.DB.prepare('INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
-        .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,'work.service_routed',work.id,JSON.stringify({serviceId:service.id,ownerId:service.ownerId}),now()),
+      ticketHistory(ctx,work,'work.service_routed',{type:work.kind,service:context.serviceId??null,assignee:work.assignee_id},{type:'incident',service:service.id,assignee:service.ownerId},now(),{metadata:{fields:{service:{label:service.data.name}}}}),
     ]);
     if (!result[0].meta.changes) throw new ApiError(409,'revision_conflict','Work changed during correlation');
   }

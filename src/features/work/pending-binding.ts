@@ -1,3 +1,4 @@
+import {ticketHistory} from './work-history';
 import type { Env, Role } from '../../platform/types';
 import { id, now } from '../../platform/http';
 import { platformAdmissionGuard } from '../../platform/privacy';
@@ -30,13 +31,14 @@ export async function authenticatePendingPerson(env:Env,input:{workspaceId:strin
  if(candidate) {
   const person=await pendingPerson(ctx,candidate.id);
   const admission=await platformAdmissionGuard(db,w,uid,account.email),erasure=await bindingErasureGuard(ctx,person,uid,null),guard=id(),bindingId=id();
+  const linked=(await db.prepare('SELECT * FROM work_records WHERE workspace_id=? AND pending_person_id=?').bind(w,person.id).all<any>()).results;
   try {await db.batch([
    db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_people p JOIN work_pending_people h ON h.workspace_id=p.workspace_id AND h.id=p.id WHERE p.workspace_id=? AND p.id=? AND p.revision=? AND p.active=1 AND p.merged_into IS NULL AND p.member_id IS NULL AND h.state IN ('pending','bound') AND h.email=? AND ${freshRestoreProof})
    AND EXISTS(SELECT 1 FROM sessions s JOIN platform_auth_session_proofs proof ON proof.session_id=s.id JOIN platform_auth_versions v ON v.user_id=s.user_id AND v.version=proof.version JOIN users u ON u.id=s.user_id JOIN memberships m ON m.user_id=u.id AND m.workspace_id=s.workspace_id WHERE s.id=? AND s.user_id=? AND s.workspace_id=? AND s.expires_at>? AND m.active=1 AND lower(trim(u.email))=? AND proof.kind IN ('native','password','dev'))
    AND ${admission.sql} AND ${erasure.sql} THEN 1 ELSE 0 END)`).bind(guard,w,person.id,person.revision,account.email.trim().toLowerCase(),input.sessionId,input.sessionId,uid,w,t,account.email.trim().toLowerCase(),...admission.bindings,...erasure.bindings),
    db.prepare('UPDATE work_people SET member_id=?,binding_id=?,revision=revision+1 WHERE workspace_id=? AND id=?').bind(uid,bindingId,w,person.id),
    db.prepare("UPDATE work_pending_people SET state='bound',bound_at=? WHERE workspace_id=? AND id=?").bind(t,w,person.id),
-   db.prepare('UPDATE work_records SET beneficiary_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND pending_person_id=?').bind(uid,t,w,person.id),
+   ...linked.flatMap(work=>[db.prepare('UPDATE work_records SET beneficiary_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?').bind(uid,t,w,work.id,work.revision),ticketHistory(ctx,work,'work.requested_for_updated',{beneficiaryId:work.beneficiary_id},{beneficiaryId:uid},t)]),
    db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),w,uid,'work.pending_person_bound',person.id,JSON.stringify({memberId:uid,bindingId,revision:person.revision+1}),t),
    db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),
   ]);}catch(error){

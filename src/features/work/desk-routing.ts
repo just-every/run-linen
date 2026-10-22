@@ -1,3 +1,5 @@
+import {readHistoryEvent} from '../history/event';
+import {ticketHistory} from './work-history';
 import {destinationAssignee} from './department-assignment';
 import { departmentWorkBatch,workDepartmentStaffSql } from './department-spaces';
 import { requireWorkDepartmentStaff } from './department-operations';
@@ -60,17 +62,12 @@ async function route(ctx: WorkContext, work: WorkRecord, trigger: Trigger) {
   // Restricted and HR tickets are never handed to an agent automatically: only their own readers decide who works them.
   const assigneeId = work.sensitivity === 'normal' ? await pickAgent(ctx, group, to.skill,work) : null;
   const t = now(), db = ctx.env.DB;
-  const detail = {
-    trigger, from: { groupId: work.group_id ?? null, assigneeId: work.assignee_id }, to: { groupId: group.id, assigneeId },
-    ...(to.ruleId ? { ruleId: to.ruleId } : { itemId: to.itemId }), method: group.assignment,
-    ...(assigneeId || group.assignment === 'none' || work.sensitivity !== 'normal' ? {} : { unassigned: 'no_available_agent' }),
-  };
+  const detail={trigger,from:{groupId:work.group_id??null,assigneeId:work.assignee_id},to:{groupId:group.id,assigneeId},...(to.ruleId?{ruleId:to.ruleId}:{itemId:to.itemId}),method:group.assignment,...(assigneeId||group.assignment==='none'||work.sensitivity!=='normal'?{}:{unassigned:'no_available_agent'})};
   const assignment=destinationAssignee(ctx,assigneeId,work.department_id??null,work.protected_departments_json??'[]',work.sensitivity,group.id);
   const statements = [
     db.prepare(`UPDATE work_records SET group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND department_id IS ? AND protected_departments_json=? AND (? IS NULL OR EXISTS(${assignment.sql}))`)
       .bind(group.id, assigneeId, t, work.workspace_id, work.id, work.revision,group.department_id,work.protected_departments_json??'[]',assigneeId,...assignment.bindings),
-    db.prepare("INSERT INTO audit_events SELECT ?,?,?,'work.routed',?,?,? WHERE changes()>0")
-      .bind(id(), work.workspace_id, ctx.principal.userId, work.id, JSON.stringify(detail), t),
+    ticketHistory(ctx,work,'work.routed',{group:work.group_id??null,assignee:work.assignee_id,method:null},{group:group.id,assignee:assigneeId,method:group.assignment},t,{actor:{kind:'rule',id:to.ruleId??to.itemId??group.id,name:to.ruleId??'Support group routing',initiatedBy:ctx.principal.userId}}),
     db.prepare('UPDATE work_groups SET last_assignee_id=COALESCE(?,last_assignee_id) WHERE workspace_id=? AND id=? AND changes()>0')
       .bind(assigneeId, work.workspace_id, group.id),
   ];
@@ -101,9 +98,14 @@ export async function rerouteWork(ctx: WorkContext, workId: string, body: Record
 export async function assignmentHistory(ctx: WorkContext, workId: string) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner', 'operator']);
-  await getWork(ctx, workId);
-  const rows = (await ctx.env.DB.prepare(`SELECT action,actor_id,detail_json,created_at FROM audit_events WHERE workspace_id=? AND target=?
+  await requireWorkDepartmentStaff(ctx,await getWork(ctx, workId));
+  const rows = (await ctx.env.DB.prepare(`SELECT id,action,actor_id,detail_json,created_at FROM audit_events WHERE workspace_id=? AND target=?
     AND action IN ('work.routed','work.group_set','work.assigned') ORDER BY created_at,rowid`).bind(ctx.principal.workspaceId, workId)
-    .all<{ action: string; actor_id: string; detail_json: string; created_at: string }>()).results;
-  return { items: rows.map((r) => ({ action: r.action, actorId: r.actor_id, at: r.created_at, ...JSON.parse(r.detail_json) })) };
+    .all<{ id:string; action: string; actor_id: string; detail_json: string; created_at: string }>()).results;
+  return {items:await Promise.all(rows.map(async r=>{
+    const projected=await readHistoryEvent(ctx,r.action,r.detail_json,r.actor_id,r.id),values=Object.fromEntries(projected.changes.map(c=>[c.field,c]));
+    if(!('actor' in projected)&&!projected.redacted)return {action:r.action,actorId:r.actor_id,at:r.created_at,...JSON.parse(r.detail_json)};
+    return {action:r.action,actorId:'actor' in projected?projected.actor?.id:r.actor_id,at:r.created_at,
+      from:{groupId:values.group?.before??null,assigneeId:values.assignee?.before??null},to:{groupId:values.group?.after??null,assigneeId:values.assignee?.after??null},method:values.method?.after??null,changes:projected.changes,...(projected.redacted?{redacted:projected.redacted,redactedAt:projected.redactedAt}:{})};
+  }))};
 }

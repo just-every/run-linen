@@ -42,6 +42,23 @@ export async function deskFieldChecks(workspaceApi, db) {
   check(await api(`/work/${a.id}/fields`, { fieldId: officeField.id, value: 'Denver' }, agent));
   assert.deepEqual(check(await api(`/work/${a.id}/desk`, undefined, employee)).fields.map(f => [f.name, f.value]), [['Office', 'Denver']]);
   check(await api(`/work/${a.id}/desk`, undefined, colleague), 404);
+  // Typed values survive the public door and history stores the original native values.
+  const typed=[];
+  for(const [type,value] of [['number',42.75],['boolean',false],['date','2026-10-20'],['multiselect',['one','two']]]){
+    const f=check(await api('/desk-fields',{name:`synthetic-linen-${type}`,type,options:type==='multiselect'?['one','two']:[],kinds:['incident']}),201);
+    check(await api(`/work/${a.id}/fields`,{fieldId:f.id,value},agent));typed.push({f,value});
+    assert.deepEqual(check(await api(`/work/${a.id}/desk`,undefined,employee)).fields.find(x=>x.id===f.id).value,value);
+  }
+  check(await api(`/work/${a.id}/fields`,{fieldId:typed[2].f.id,value:'2026-02-30'},agent),422);
+  const fieldHistory=check(await api(`/work/${a.id}/activity`,undefined,agent)).items;
+  for(const {f,value} of typed)assert.ok(fieldHistory.some(e=>e.changes.some(c=>c.field===f.name&&c.before===null&&JSON.stringify(c.after)===JSON.stringify(value))));
+  check(await api(`/work/${a.id}/fields`,{fieldId:typed[0].f.id,value:42.75},agent));
+  assert.equal(check(await api(`/work/${a.id}/activity`,undefined,agent)).items.filter(e=>e.action==='field set').length,fieldHistory.filter(e=>e.action==='field set').length,'No-op field save creates no change');
+  check(await api(`/work/${a.id}/fields`,{fieldId:typed[0].f.id,value:43},agent));
+  const edited=check(await api(`/work/${a.id}/activity`,undefined,agent)).items;
+  assert.ok(edited.some(e=>e.changes.some(c=>c.field===typed[0].f.name&&c.before===42.75&&c.after===43)));
+  assert.ok(edited.some(e=>e.changes.some(c=>c.field===typed[0].f.name&&c.before===null&&c.after===42.75)),'Earlier value remains original after a later edit');
+
 
   // Awaiting parts pauses the SLA under the vendor-pausing policy; under the requester-only policy the clock keeps running.
   await command(a, { command: 'pause', reason: 'Replacement charger ordered', statusId: parts.id });

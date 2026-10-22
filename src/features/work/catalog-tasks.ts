@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 import {departmentWorkBatch} from './department-spaces';
 import {requireWorkDepartmentStaff} from './department-operations';
 import {workDepartmentStaff,workDepartmentScoped} from './scope';
@@ -23,13 +24,15 @@ const audit = (ctx: WorkContext, action: string, target: string, detail: unknown
 /** The item's plan becomes obligation rows in the request's own batch; `automatedId` is the item's connector step. */
 export function taskStatements(ctx: WorkContext, workId: string, catalog: { id: string; owner_id: string; tasks_json?: string }, beneficiaryId: string, automatedId: string) {
   const plan: CatalogTask[] = JSON.parse(catalog.tasks_json || '[]'), ids = new Map<string, string>([['automated', automatedId]]), at = Date.now();
-  return plan.map(task => {
+  return plan.flatMap(task => {
     const taskId = id();
     ids.set(task.key, taskId);
-    return ctx.env.DB.prepare(`INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,title,group_id,catalog_id,after_json)
+    const dueAt=new Date(at + task.dueHours * 3600_000).toISOString();
+    return [ctx.env.DB.prepare(`INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,title,group_id,catalog_id,after_json)
       VALUES(?,?,?,'task.manual',?,?,?,'pending',?,?,?,?,?)`).bind(taskId, ctx.principal.workspaceId, workId, task.key, beneficiaryId,
-      new Date(at + task.dueHours * 3600_000).toISOString(), catalog.owner_id, task.title, task.groupId, catalog.id,
-      JSON.stringify(task.after.map(key => ids.get(key)!)));
+      dueAt, catalog.owner_id, task.title, task.groupId, catalog.id,
+      JSON.stringify(task.after.map(key => ids.get(key)!))),
+      obligationHistory(ctx,{id:taskId,work_id:workId,beneficiary_id:beneficiaryId,owner_id:catalog.owner_id},'work.task_created',null,{state:'pending',title:task.title,group:task.groupId,owner:catalog.owner_id,dueAt,dependencies:task.after.map(key=>ids.get(key)!)},new Date(at).toISOString())];
   });
 }
 
@@ -73,7 +76,7 @@ export async function completeTask(ctx: WorkContext, workId: string, obligationI
     WHERE workspace_id=? AND id=? AND revision=? AND state='pending'
     AND NOT EXISTS(SELECT 1 FROM json_each(work_obligations.after_json) j JOIN work_obligations d ON d.workspace_id=work_obligations.workspace_id AND d.id=j.value WHERE d.state NOT IN ${SATISFIED})`)
     .bind(ctx.principal.userId, t, w, obligationId, input.revision),
-    audit(ctx, 'work.task_completed', obligationId, { workId }, true),
+    obligationHistory(ctx,row,'work.task_completed',{state:row.state,completedBy:row.completed_by??null,completedAt:row.completed_at??null,revision:row.revision},{state:'done',completedBy:ctx.principal.userId,completedAt:t,revision:Number(input.revision)+1},t),
     ctx.env.DB.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=? AND changes()=1').bind(t, w, workId)],'staff');
   if (!result.meta.changes) {
     const earlier = await ctx.env.DB.prepare(`SELECT o.title FROM json_each(?) j JOIN work_obligations o ON o.workspace_id=? AND o.id=j.value WHERE o.state NOT IN ${SATISFIED}`)
@@ -94,7 +97,7 @@ export async function waiveObligation(ctx: WorkContext, workId: string, obligati
   const w = ctx.principal.workspaceId, t = now();
   const [result] = await departmentWorkBatch(ctx,work,[ctx.env.DB.prepare(`UPDATE work_obligations SET state='waived',waived_by=?,waived_at=?,revision=revision+1
     WHERE workspace_id=? AND id=? AND revision=? AND state IN ('pending','blocked','failed')`).bind(ctx.principal.userId, t, w, obligationId, input.revision),
-    audit(ctx, 'work.obligation_waived', obligationId, { workId, kind: row.kind, reason: input.reason.trim() }, true),
+    obligationHistory(ctx,row,'work.obligation_waived',{state:row.state,waivedBy:row.waived_by??null,waivedAt:row.waived_at??null,revision:row.revision,reason:null},{state:'waived',waivedBy:ctx.principal.userId,waivedAt:t,revision:Number(input.revision)+1,reason:input.reason.trim()},t),
     ctx.env.DB.prepare(`UPDATE work_catalog_reservations SET released_at=? WHERE workspace_id=? AND work_id=? AND released_at IS NULL AND changes()=1
       AND catalog_id IN (SELECT id FROM work_catalog WHERE workspace_id=? AND target=?)`).bind(t, w, workId, w, row.target),
     ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=? AND EXISTS(SELECT 1 FROM work_obligations WHERE workspace_id=? AND id=? AND state='waived')").bind(t, w, workId, w, obligationId)],workDepartmentScoped(work)?'staff':'read');

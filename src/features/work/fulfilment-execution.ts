@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 import { assertWorkFulfilmentAuthority } from "./fulfilment-authority";
 import { ApiError, id, now } from "../../platform/http";
 import { getWork, type WorkContext } from "./core";
@@ -157,7 +158,7 @@ export async function recordFulfilmentExecution(ctx: WorkContext, input: Fulfilm
     statements.push(db.prepare(`UPDATE work_obligations SET operation_id=?,is_expiry=?,
       state=CASE WHEN operation_id IS NULL THEN 'pending' ELSE state END,
       last_error=CASE WHEN operation_id IS NULL THEN NULL ELSE last_error END
-      WHERE workspace_id=? AND id=?`).bind(operation.id, Number(phase === "expiry"), workspace, obligation.id));
+      WHERE workspace_id=? AND id=?`).bind(operation.id, Number(phase === 'expiry'), workspace, obligation.id),obligationHistory(ctx,{...obligation,id:obligation.id},'work.obligation_changed',{operationId:obligation.operation_id,state:obligation.state,isExpiry:!!obligation.is_expiry},{operationId:operation.id,state:obligation.operation_id?obligation.state:'pending',isExpiry:phase==='expiry'},now()));
   }
   statements.push(db.prepare("DELETE FROM work_fulfilment_link_guards WHERE id LIKE ?").bind(`${guard}:%`));
   try { await db.batch(statements); }

@@ -1,3 +1,4 @@
+import {ticketHistory} from './work-history';
 import {destinationAssignee} from './department-assignment';
 import { assertDepartmentConfig,departmentWorkBatch } from './department-spaces';
 import { departmentRows,requireDepartmentStaff,requireWorkDepartmentStaff } from './department-operations';
@@ -109,8 +110,7 @@ export async function setWorkGroup(ctx: WorkContext, workId: string, body: Recor
   const [changed] = await departmentWorkBatch(ctx,work,[
     ctx.env.DB.prepare(`UPDATE work_records SET group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND (? IS NULL OR EXISTS(${assignment.sql}))`)
       .bind(target.id, assigneeId ?? null, t, ctx.principal.workspaceId, workId, body.revision,assigneeId??null,...assignment.bindings),
-    ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'work.group_set',?,?,? WHERE changes()>0")
-      .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, workId, JSON.stringify({ from: work.group_id ?? null, to: target.id, assigneeId: assigneeId ?? null }), t),
+    ticketHistory(ctx,work,'work.group_set',{group:work.group_id??null,assignee:work.assignee_id},{group:target.id,assignee:assigneeId??null},t),
   ],'staff');
   if (!changed.meta.changes) throw new ApiError(409, 'revision_conflict', 'Work changed; refresh before deciding');
   return getWork(ctx, workId);

@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 import { remindSponsors } from "./contractor-sponsor";
 import { remindLifecycleTasks } from "./lifecycle-tasks";
 import { remindApprovalStages } from "./approval-chain";
@@ -18,6 +19,7 @@ export interface Obligation {
   owner_id: string;
   revision: number;
   operation_id: string | null;
+  state:string; last_error:string|null;
 }
 export interface WorkExecutionPort {
   ensureIntent(
@@ -56,51 +58,25 @@ export async function processDueWork(
   // another due duty (including physical handoff) from recording its own status.
   const settled = await Promise.all(rows.results.map(async (o) => {
     try {
-      if (o.kind.startsWith("device.")) {
-        await ctx.env.DB.prepare(
-          "UPDATE work_obligations SET state='blocked',last_error='Physical handoff requires assigned owner evidence' WHERE workspace_id=? AND id=?",
-        )
-          .bind(ctx.principal.workspaceId, o.id)
-          .run();
-        return { id: o.id, state: "physical_pending" };
+      const update=async(after:{state:string;last_error?:string|null;operation_id?:string|null})=>{
+        const next={state:after.state,last_error:after.last_error===undefined?o.last_error:after.last_error,operation_id:after.operation_id===undefined?o.operation_id:after.operation_id};
+        const [result]=await ctx.env.DB.batch([ctx.env.DB.prepare('UPDATE work_obligations SET state=?,last_error=?,operation_id=? WHERE workspace_id=? AND id=? AND revision=? AND state=? AND operation_id IS ?').bind(next.state,next.last_error,next.operation_id,ctx.principal.workspaceId,o.id,o.revision,o.state,o.operation_id),obligationHistory(ctx,o,'work.obligation_changed',{state:o.state,error:o.last_error,operationId:o.operation_id},{state:next.state,error:next.last_error,operationId:next.operation_id},now())]);
+        if(result.meta.changes)Object.assign(o,next);
+        return !!result.meta.changes;
+      };
+      if (o.kind.startsWith('device.')) {
+        await update({state:'blocked',last_error:'Physical handoff requires assigned owner evidence'});
+        return {id:o.id,state:'physical_pending'};
       }
-      const { operationId } = o.operation_id
-        ? { operationId: o.operation_id }
-        : await execution.ensureIntent(ctx, o);
-      await ctx.env.DB.prepare(
-        "UPDATE work_obligations SET operation_id=?,state=? WHERE workspace_id=? AND id=? AND revision=?",
-      )
-        .bind(
-          operationId,
-          "executing",
-          ctx.principal.workspaceId,
-          o.id,
-          o.revision,
-        )
-        .run();
-      const observed = await execution.inspect(ctx, operationId);
-      await ctx.env.DB.prepare(
-        "UPDATE work_obligations SET state=?,last_error=? WHERE workspace_id=? AND id=? AND operation_id=?",
-      )
-        .bind(
-          observed.state === "pending" ? "executing" : observed.state,
-          observed.reason || null,
-          ctx.principal.workspaceId,
-          o.id,
-          operationId,
-        )
-        .run();
+      const {operationId}=o.operation_id?{operationId:o.operation_id}:await execution.ensureIntent(ctx,o);
+      // A competing amendment cannot be overwritten by the observation of an older duty.
+      if(!await update({operation_id:operationId,state:'executing'}))return {id:o.id,state:'changed'};
+      const observed=await execution.inspect(ctx,operationId);
+      await update({state:observed.state==='pending'?'executing':observed.state,last_error:observed.reason||null});
       return { id: o.id, ...observed };
     } catch (error) {
-      await ctx.env.DB.prepare(
-        "UPDATE work_obligations SET state='blocked',last_error=? WHERE workspace_id=? AND id=?",
-      )
-        .bind(
-          error instanceof Error ? error.message : "Execution unavailable",
-          ctx.principal.workspaceId,
-          o.id,
-        )
-        .run();
+      const reason=error instanceof Error?error.message:'Execution unavailable';
+      await ctx.env.DB.batch([ctx.env.DB.prepare("UPDATE work_obligations SET state='blocked',last_error=? WHERE workspace_id=? AND id=? AND revision=? AND state=? AND operation_id IS ?").bind(reason,ctx.principal.workspaceId,o.id,o.revision,o.state,o.operation_id),obligationHistory(ctx,o,'work.obligation_changed',{state:o.state,error:o.last_error},{state:'blocked',error:reason},now())]);
       return { id: o.id, state: "blocked" };
     }
   }));

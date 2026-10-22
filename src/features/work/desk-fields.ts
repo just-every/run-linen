@@ -1,3 +1,5 @@
+import {fieldValue,storedFieldValue,customFieldTypes,type CustomFieldType} from './desk-field-values';
+import {ticketHistory} from './work-history';
 import { departmentWorkBatch } from './department-spaces';
 import { departmentReportScope } from './department-report-scope';
 import { workPrivateReadable, workDepartmentScoped } from './scope';
@@ -15,7 +17,7 @@ const defaultCodes = ["Solved (workaround)", "Solved (permanent fix)", "Not repr
 /** Automatic closures record these, so they stay on every workspace's list. */
 export const systemCodes = ["Duplicate", "No response"] as const;
 const builtInStates = ["open", "paused", "closed", "cancelled"];
-interface FieldRow { id: string; name: string; field_type: "text" | "dropdown"; options_json: string; kinds_json: string; required_on_json: string }
+interface FieldRow { id: string; name: string; field_type: CustomFieldType; options_json: string; kinds_json: string; required_on_json: string }
 const field = (row: FieldRow) => ({
   id: row.id, name: row.name, type: row.field_type, options: JSON.parse(row.options_json) as string[],
   kinds: JSON.parse(row.kinds_json) as string[], requiredOn: JSON.parse(row.required_on_json) as string[],
@@ -57,9 +59,9 @@ export async function saveCustomField(ctx: WorkContext, input: Record<string, un
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner"]);
   const name = requiredString(input.name, "name", 80);
-  if (input.type !== "text" && input.type !== "dropdown") throw new ApiError(422, "field_type", "A field is text or a dropdown");
-  const options = input.type === "dropdown" ? distinctTexts(input.options, "field_options", 100, 120) : [];
-  if (input.type === "dropdown" && !options.length) throw new ApiError(422, "field_options", "A dropdown needs at least one option");
+  if(!customFieldTypes.includes(input.type as CustomFieldType))throw new ApiError(422,"field_type","Choose a supported custom field type");
+  const options = (input.type === "dropdown"||input.type === "multiselect") ? distinctTexts(input.options, "field_options", 100, 120) : [];
+  if (["dropdown","multiselect"].includes(input.type as string) && !options.length) throw new ApiError(422, "field_options", "A dropdown needs at least one option");
   const kinds = distinctTexts(input.kinds, "field_kinds", 3, 40);
   if (!kinds.length || !kinds.every((k) => ticketTypes.includes(k as never)))
     throw new ApiError(422, "field_kinds", "Show the field on incidents, service requests, questions or several of them");
@@ -123,7 +125,7 @@ export async function readWorkDesk(ctx: WorkContext, workId: string) {
     .bind(ws, workId).first() : null;
   return {
     workId, ticketType: type, status, resolution,
-    fields: (await fields(ctx)).filter((f) => f.kinds.includes(type)).map((f) => ({ ...f, value: values.find((v) => v.field_id === f.id)?.value ?? null })),
+    fields: (await fields(ctx)).filter((f) => f.kinds.includes(type)).map((f) => ({ ...f, value:storedFieldValue(f,values.find((v)=>v.field_id===f.id)?.value??null) })),
   };
 }
 
@@ -135,22 +137,22 @@ export async function setWorkField(ctx: WorkContext, workId: string, input: Reco
   if (workDepartmentScoped(work) && !workPrivateReadable(ctx.principal, work)) throw new ApiError(403, "department_staff", "Current department staff required");
   const target = (await fields(ctx)).find((f) => f.id === input.fieldId);
   if (!target || !target.kinds.includes(ticketType(work.kind))) throw new ApiError(422, "field_missing", "Choose a field shown on this ticket type");
-  if (typeof input.value !== "string" || input.value.length > 2000) throw new ApiError(422, "field_value", "A field value is text of at most 2000 characters");
-  const value = input.value.trim();
-  if (value && target.type === "dropdown" && !target.options.includes(value)) throw new ApiError(422, "field_value", `Choose one of the ${target.name} options`);
-  const at = now(), ws = ctx.principal.workspaceId;
-  const statements = [
-    ctx.env.DB.prepare(`INSERT INTO audit_events SELECT ?,?,?,'work.field_set',?,
-      json_object('field',?,'before',(SELECT value FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?),'value',?),?`)
-      .bind(id(), ws, ctx.principal.userId, workId, target.name, ws, workId, target.id, value || null, at),
-    value
-      ? ctx.env.DB.prepare("INSERT INTO work_field_values(workspace_id,work_id,field_id,value,updated_by,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(workspace_id,work_id,field_id) DO UPDATE SET value=excluded.value,updated_by=excluded.updated_by,updated_at=excluded.updated_at")
-        .bind(ws, workId, target.id, value, ctx.principal.userId, at)
-      : ctx.env.DB.prepare("DELETE FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?").bind(ws, workId, target.id),
-    ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(at, ws, workId),
+  const normalized=fieldValue(target,input.value),at=now(),ws=ctx.principal.workspaceId;
+  const prior=await ctx.env.DB.prepare('SELECT value FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?').bind(ws,workId,target.id).first<{value:string}>();
+  if((prior?.value??null)===normalized.stored)return readWorkDesk(ctx,workId);
+  const before=storedFieldValue(target,prior?.value??null),key='custom:'+target.id,guard=id();
+  const statements=[
+    ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN (SELECT value FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?) IS ? AND EXISTS(SELECT 1 FROM work_custom_fields WHERE workspace_id=? AND id=? AND field_type=? AND json(options_json)=json(?)) THEN 1 ELSE 0 END)`).bind(guard,ws,workId,target.id,prior?.value??null,ws,target.id,target.type,JSON.stringify(target.options)),
+    normalized.stored!==null
+      ?ctx.env.DB.prepare('INSERT INTO work_field_values(workspace_id,work_id,field_id,value,updated_by,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(workspace_id,work_id,field_id) DO UPDATE SET value=excluded.value,updated_by=excluded.updated_by,updated_at=excluded.updated_at').bind(ws,workId,target.id,normalized.stored,ctx.principal.userId,at)
+      :ctx.env.DB.prepare('DELETE FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?').bind(ws,workId,target.id),
+    ticketHistory(ctx,work,'work.field_set',{[key]:before},{[key]:normalized.value},at),
+    ctx.env.DB.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(at,ws,workId),
+    ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),
   ];
-  if (workDepartmentScoped(work)) await departmentWorkBatch(ctx, work, statements, "private");
-  else await ctx.env.DB.batch(statements);
+  try {await departmentWorkBatch(ctx,work,statements,workDepartmentScoped(work)?'private':'staff');}
+  catch(error){if(/CHECK constraint failed/i.test(String(error)))throw new ApiError(409,'field_conflict','The field or its value changed; refresh');throw error;}
+
   return readWorkDesk(ctx, workId);
 }
 

@@ -196,7 +196,7 @@ export async function commitmentStatus(ctx: WorkContext, workId: string) {
   };
 }
 
-export async function shiftCommitmentForPause(
+export async function pauseCommitmentStatement(
   ctx: WorkContext,
   workId: string,
   from: string,
@@ -218,7 +218,7 @@ export async function shiftCommitmentForPause(
       location: string | null;
       holiday_catalog: string | null;
     }>();
-  if (!row) return;
+  if (!row) return null;
   const calendar = calendarFromRow(row), working = businessMinuteTest(calendar);
   let pausedMinutes = 0;
   for (
@@ -229,7 +229,7 @@ export async function shiftCommitmentForPause(
     if (working(instant)) pausedMinutes++;
   const response = businessDue(row.response_due_at, pausedMinutes, calendar),
     resolution = businessDue(row.resolution_due_at, pausedMinutes, calendar);
-  await ctx.env.DB.prepare(
+  return ctx.env.DB.prepare(
     "UPDATE work_commitments SET response_due_at=CASE WHEN EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND response_at IS NULL) THEN ? ELSE response_due_at END,resolution_due_at=?,revision=revision+1 WHERE workspace_id=? AND id=?",
   )
     .bind(
@@ -239,6 +239,5 @@ export async function shiftCommitmentForPause(
       resolution,
       ctx.principal.workspaceId,
       row.id,
-    )
-    .run();
+    );
 }

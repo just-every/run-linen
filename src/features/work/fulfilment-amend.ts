@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 import { restrictedAudience } from './catalog-audience';
 import { normalizeCatalogForm } from './catalog-form-schema';
 import { fulfilmentManagerApproval } from "./fulfilment-authority";
@@ -119,7 +120,7 @@ export async function amendFulfilment(ctx: WorkContext, workId: string, input: F
   ];
   // Wake the existing duty at the earlier deadline, including recovery after interruption.
   if (!reason) statements.splice(2,0,db.prepare('UPDATE work_obligations SET due_at=MIN(due_at,?) WHERE workspace_id=? AND id=?')
-    .bind(input.expiresAt,w,obligation.id));
+    .bind(input.expiresAt,w,obligation.id),obligationHistory(ctx,obligation,'work.obligation_changed',{dueAt:obligation.due_at},{dueAt:obligation.due_at<input.expiresAt!?obligation.due_at:input.expiresAt},now()));
   try { await db.batch(statements); }
   catch (error) {
     if (/constraint|CHECK|UNIQUE/i.test(String(error))) {

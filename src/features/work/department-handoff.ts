@@ -1,3 +1,4 @@
+import {ticketHistory} from './work-history';
 import { destinationAssignee } from './department-assignment';
 import { protectedDepartments } from './scope';
 import { ApiError, id, now, requiredString } from '../../platform/http';
@@ -38,7 +39,7 @@ export async function handoffDepartment(ctx:WorkContext,workId:string,input:Reco
       .bind(guard+':assignment',groupId,w,groupId,targetId,assigneeId,...assignment.bindings),
     ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard+':assignment'),
     ctx.env.DB.prepare('UPDATE work_records SET department_id=?,protected_departments_json=?,group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?').bind(targetId,protectedJson,groupId,assigneeId,at,w,workId,input.revision),
-    ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(eventId,w,ctx.principal.userId,'work.department_handed_off',workId,JSON.stringify({from:work.department_id??null,to:targetId,protectedDepartments:JSON.parse(protectedJson),reason,groupId,assigneeId}),at),
+    ticketHistory(ctx,work,'work.department_handed_off',{department:work.department_id??null,group:work.group_id??null,assignee:work.assignee_id},{department:targetId,group:groupId,assignee:assigneeId},at,{id:eventId}),
     ctx.env.DB.prepare("INSERT INTO work_messages VALUES(?,?,?,?,'public',?,?,?)").bind(id(),w,workId,ctx.principal.userId,`Handed to ${target?.name??'the existing service workspace'}: ${reason}`,`transition:department:${eventId}`,at),
     ctx.env.DB.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),
   ]); } catch(error){if(/CHECK constraint failed/i.test(String(error)))throw new ApiError(409,'department_changed','Ticket, department or current owner authority changed; reload');throw error;}

@@ -1,3 +1,5 @@
+import {registeredHistory,historyEventStatement,readHistoryEvent} from '../history/event';
+import {changeRecords} from './work-history';
 import { ApiError, id, now } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { permit, type WorkContext } from './core';
@@ -15,9 +17,8 @@ export function taskChanges(before: Record<string, unknown> | null, after: Recor
 }
 /** Place immediately after the mutation in its D1 batch: a losing CAS or ignored link adds no event. */
 export function taskEvent(ctx: WorkContext, taskId: string, action: 'created' | 'updated' | 'linked', changes: TaskChange[], at: string, origin?: TaskOrigin) {
-  return ctx.env.DB.prepare('INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
-    .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, 'work.project_task_' + action, taskId,
-      JSON.stringify({ changes, ...(origin ? { origin } : {}) }), at);
+  const actionName='work.project_task_'+action,values=changeRecords(changes.map(c=>c.field.endsWith(' link')?{...c,field:'link',after:{kind:c.field.slice(0,-5),id:c.after}}:c));
+  return historyEventStatement(ctx,{action:actionName,target:taskId,at,envelope:registeredHistory(actionName,{kind:'task',id:taskId},values.before,values.after,origin?{kind:'scenario',id:origin.scenarioId,name:origin.name,initiatedBy:ctx.principal.userId}:{kind:'person',id:ctx.principal.userId},[],'normal',at)});
 }
 
 /** DESK-017: same live readership as PROJECT-001; historical values only ever come from their original event. */
@@ -37,12 +38,12 @@ export async function projectTaskActivity(ctx: WorkContext, projectId: string, t
     .bind(ws, taskId).all<any>()).results;
   await ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)')
     .bind(id(), ws, ctx.principal.userId, 'work.project_task_activity_read', taskId, '{}', now()).run();
-  return { items: rows.map((e): ActivityEntry => {
-    const detail = JSON.parse(e.detail_json), origin = detail.origin;
-    return { id: e.id, at: e.created_at, kind: 'change', actor: origin ? origin.name : e.actor_name,
-      actorKind: origin ? 'scenario' : 'person', ...(origin ? { initiatedBy: e.actor_name } : {}),
+  return { items: await Promise.all(rows.map(async(e): Promise<ActivityEntry> => {
+    const detail=await readHistoryEvent(ctx,e.action,e.detail_json,e.actor_id,e.id),actor='actor' in detail?detail.actor:undefined;
+    return { id: e.id, at: e.created_at, kind: 'change', actor:actor?.name??(actor?.id==='[erased]'?'Erased person':e.actor_name),
+      actorKind:actor?.kind==='scenario'?'scenario':'person',...(actor?.initiatedBy?{initiatedBy:actor.initiatedBy}:{}),
       action: e.action.replace('work.project_task_', 'Task '), visibility: 'private',
-      changes: (detail.changes ?? []).map(({ field, before, after }: TaskChange) => ({ field, before, after })),
-      ...(!detail.changes ? { body: 'Values unavailable: not recorded or removed by erasure. They are never rebuilt from the current task.' } : {}) };
-  }) };
+      changes:detail.changes.map(c=>c.field==='link'&&c.after&&typeof c.after==='object'&&'kind' in c.after?{...c,field:String(c.after.kind)+' link',after:(c.after as any).id}:c),...detail.redacted?{redacted:detail.redacted,redactedAt:detail.redactedAt}:{},
+      ...(!detail.changes.length ? { body: 'Values unavailable: not recorded or removed by erasure. They are never rebuilt from the current task.' } : {}) };
+  })) };
 }

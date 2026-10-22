@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 import { hashToken } from "../../platform/crypto";
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
@@ -245,19 +246,19 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
         "INSERT INTO work_lifecycle(id,workspace_id,work_id,person_id,kind,effective_at,timezone,source,source_revision,source_hash,sponsor_id) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
       ).bind(lifecycleId, ctx.principal.workspaceId, workId, input.personId, input.kind,
         effectiveAt, input.timezone, input.source, input.sourceRevision, fingerprint, sponsorId),
-      ...obligations.map((o, i) => ctx.env.DB.prepare(
+      ...obligations.flatMap((o, i) => {const taskId=i===0?identityId:id(),dueAt=input.urgent&&input.kind==='leave'?now():effectiveAt;return [ctx.env.DB.prepare(
         "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,depends_on,owner_id) VALUES(?,?,?,?,?,?,?,?,?,?)",
-      ).bind(i === 0 ? identityId : id(), ctx.principal.workspaceId, workId, lifecycleId,
-        o.kind, o.target, input.personId, input.urgent && input.kind === "leave" ? now() : effectiveAt,
+      ).bind(taskId, ctx.principal.workspaceId, workId, lifecycleId,
+        o.kind, o.target, input.personId, dueAt,
         // A leave revokes sessions once the disable is verified: both effects share one account
         // fence, so a same-instant pair would invalidate the disable's verification.
-        (input.kind === "join" && i > 0) || (input.kind === "leave" && o.kind === "sessions.revoke") ? identityId : null, input.ownerId)),
+        (input.kind === "join" && i > 0) || (input.kind === "leave" && o.kind === "sessions.revoke") ? identityId : null, input.ownerId),obligationHistory(ctx,{id:taskId,work_id:workId,beneficiary_id:input.personId,owner_id:input.ownerId},'work.task_created',null,{state:'pending',kind:o.kind,dueAt,owner:input.ownerId},now())];}),
       // LIFE-006: both expiry duties fall due at the end instant. Sessions are revoked once the
       // disable is verified: the two effects share one account fence, so they never race.
-      ...(expiry ? [["identity.disable", expiryDisableId, null], ["sessions.revoke", id(), expiryDisableId]].map(([kind, dutyId, dependsOn]) => ctx.env.DB.prepare(
+      ...(expiry ? [["identity.disable", expiryDisableId, null], ["sessions.revoke", id(), expiryDisableId]].flatMap(([kind, dutyId, dependsOn]) => [ctx.env.DB.prepare(
         "INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,depends_on,owner_id,is_expiry) VALUES(?,?,?,?,?,?,?,?,?,?,1)",
       ).bind(dutyId, ctx.principal.workspaceId, workId, lifecycleId, kind, material.identityTarget,
-        input.personId, expiry, dependsOn, input.ownerId)) : []),
+        input.personId, expiry, dependsOn, input.ownerId),obligationHistory(ctx,{id:dutyId!,work_id:workId,beneficiary_id:input.personId,owner_id:input.ownerId},'work.task_created',null,{state:'pending',kind,dueAt:expiry,owner:input.ownerId},now())]) : []),
       ...(diff ? [ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN ${policyGuardSql} THEN 1 ELSE 0 END)`)
         .bind(`${lifecycleId}:policies`, ctx.principal.workspaceId, policyFingerprint(snapshot))] : []),
       ...taskStatements(ctx, workId, lifecycleId, input.personId, taskPlan.planned),

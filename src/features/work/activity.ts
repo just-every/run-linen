@@ -1,3 +1,4 @@
+import {readHistoryEvent} from '../history/event';
 import { workPrivateReadable } from './scope';
 import { approvalActivity } from './approval-activity';
 import { conversation, getWork, operator, type WorkContext } from './core';
@@ -8,29 +9,22 @@ export interface ActivityEntry {
   kind: 'message' | 'change' | 'notification';
   actor: string;
   initiatedBy?: string;
-  actorKind: 'person' | 'rule' | 'scenario' | 'agent' | 'automation';
+  actorKind: 'person' | 'rule' | 'scenario' | 'agent' | 'automation' | 'integration';
+  redacted?:'erasure'; redactedAt?:string; source?:{system:string;table:string;eventKey:string};
   action: string;
   visibility: string;
   body?: string;
   changes: { field: string; before: unknown; after: unknown }[];
 }
 type Audit = { id: string; actor_id: string; actor_name: string; action: string; detail_json: string; created_at: string };
-const actions = ['work.classification_overridden', 'work.classification_proposed', 'work.routed', 'work.group_set',
+const actions = ['work.created','work.requested_for_updated','work.response_recorded','work.service_routed','work.imported_field','work.recurring_materialized','work.classification_overridden', 'work.classification_proposed', 'work.routed', 'work.group_set',
   'work.department_handed_off', 'work.assigned', 'work.scenario_run', 'work.field_set', 'work.transitioned',
   'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked', 'catalog.quote_attached'];
 
-function changes(event: Audit, detail: Record<string, any>): ActivityEntry['changes'] {
-  if(event.action==='work.department_handed_off')return [{field:'department workspace',before:detail.from,after:detail.to}];
-  if (['work.scenario_run', 'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked'].includes(event.action)) return (detail.changes ?? []).map(({ field, before, after }: any) => ({ field, before, after }));
-  if (event.action === 'work.field_set') return Object.hasOwn(detail, 'before')
-    ? [{ field: detail.field, before: detail.before, after: detail.value }] : [];
-  if (event.action === 'work.group_set') return Object.hasOwn(detail, 'to') ? [{ field: 'group', before: detail.from, after: detail.to }] : [];
-  const before = detail.before ?? detail.from, after = detail.after ?? detail.to;
-  if (!after || typeof after !== 'object') return [];
-  return Object.keys(after).filter(field => JSON.stringify(before?.[field] ?? null) !== JSON.stringify(after[field]))
-    .map(field => ({ field, before: before?.[field] ?? null, after: after[field] }));
+function displayChanges(changes:ActivityEntry['changes']):ActivityEntry['changes'] {
+  const labels:Record<string,string>={mergedInto:'merged into',duplicate:'merged duplicate',splitFrom:'split from',splitChild:'split into',closedAt:'closed at',parent:'parent',department:'department workspace'};
+  return changes.map(c=>c.field==='link'&&c.after&&typeof c.after==='object'&&'kind' in c.after?{...c,field:String(c.after.kind)+' link',after:(c.after as any).id}:{...c,field:labels[c.field]??c.field});
 }
-
 /** DESK-017 ticket slice: existing conversation visibility and stricter operator-only audit access.
  * No raw audit payload or imported-source custody is exposed through this read model. */
 export async function ticketActivity(ctx: WorkContext, workId: string) {
@@ -50,18 +44,17 @@ export async function ticketActivity(ctx: WorkContext, workId: string) {
   if (operator(ctx.principal) && workPrivateReadable(ctx.principal,view.work) && !('access' in view.work)) {
     await getWork(ctx, workId);
     const rows = (await ctx.env.DB.prepare(`SELECT e.*,CASE WHEN EXISTS(SELECT 1 FROM platform_identity_erasures p WHERE p.workspace_id=e.workspace_id AND p.user_id=e.actor_id) THEN '[erased]' ELSE COALESCE(u.name,e.actor_id) END actor_name FROM audit_events e
-      LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? AND e.target=?
-      AND e.action IN (${actions.map(() => '?').join(',')}) ORDER BY e.created_at,e.rowid`)
-      .bind(ctx.principal.workspaceId, workId, ...actions).all<Audit>()).results;
+      LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? AND ((e.target=? AND e.action IN (${actions.map(() => '?').join(',')})) OR (e.action='work.approval_stage_decided' AND e.target IN(SELECT id FROM work_approval_decisions WHERE workspace_id=e.workspace_id AND work_id=?)) OR (e.action IN ('work.task_created','work.task_completed','work.obligation_waived','work.obligation_changed','lifecycle.task_created','lifecycle.task_rescheduled','lifecycle.task_cancelled','lifecycle.task_completed','lifecycle.task_waived','work.recurring_task_created','work.recurring_task_completed') AND (e.target IN (SELECT id FROM work_obligations WHERE workspace_id=e.workspace_id AND work_id=?) OR e.target IN(SELECT id FROM work_recurring_tasks WHERE workspace_id=e.workspace_id AND work_id=?)))) ORDER BY e.created_at,e.rowid`)
+      .bind(ctx.principal.workspaceId, workId, ...actions,workId,workId,workId).all<Audit>()).results;
     for (const event of rows) {
-      const detail = JSON.parse(event.detail_json);
-      const actorKind = event.action === 'work.scenario_run' ? 'scenario' : event.action === 'work.routed' ? 'rule'
-        : event.action === 'work.classification_proposed' ? 'agent' : 'person';
-      items.push({ id: event.id, at: event.created_at, kind: 'change', actor: actorKind === 'scenario' ? detail.name ?? 'Scenario' : actorKind === 'rule' ? detail.ruleId ?? 'Support group routing' : actorKind === 'agent' ? 'Linen' : event.actor_name, actorKind,
-        ...(actorKind !== 'person' ? { initiatedBy: event.actor_name } : {}),
-        action: event.action === 'catalog.quote_attached' ? 'Quote attached' : event.action.replace('work.', '').replaceAll('_', ' '), visibility: 'private', changes: changes(event, detail),
-        ...(actorKind === 'scenario' && detail.name ? { body: detail.name } : {}),
-      });
+      const detail=await readHistoryEvent(ctx,event.action,event.detail_json,event.actor_id,event.id),actor='actor' in detail?detail.actor:undefined;
+      const legacy=actor||detail.redacted?null:JSON.parse(event.detail_json);
+      const actorKind=actor?.kind??(event.action==='work.scenario_run'?'scenario':event.action==='work.routed'?'rule':event.action==='work.classification_proposed'?'agent':'person');
+      const original=detail.changes.filter(c=>c.field!=='scenario run').map(c=>event.action==='work.routed'&&c.field==='assignee'?{...c,field:'assigneeId'}:c);
+      items.push({id:event.id,at:event.created_at,kind:'change',actor:actor?.name??(actor?.id==='[erased]'?'Erased person':actor?actor.id:actorKind==='scenario'?legacy?.name??'Scenario':actorKind==='rule'?legacy?.ruleId??'Support group routing':actorKind==='agent'?'Linen':event.actor_name),actorKind,
+        ...(actor?.initiatedBy?{initiatedBy:actor.initiatedBy}:actorKind!=='person'&&!actor?{initiatedBy:event.actor_name}:{}),
+        action:event.action==='catalog.quote_attached'?'Quote attached':event.action.replace('work.','').replaceAll('_',' '),visibility:'private',changes:displayChanges(original),
+        ...('source' in detail&&detail.source?{source:detail.source}:{}),...(detail.redacted?{redacted:detail.redacted,redactedAt:detail.redactedAt}:{})});
     }
     items.push(...await approvalActivity(ctx, workId));
     const deliveries = (await ctx.env.DB.prepare(`SELECT o.id,o.created_at,o.state,o.actor_id,e.id event_id,e.event,e.created_at event_at

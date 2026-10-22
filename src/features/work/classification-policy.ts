@@ -35,5 +35,5 @@ export interface ClassificationSnapshot {
   proposal: ClassificationProposal | null;
   reason: string | null;
   error: string | null;
-  history: { id: string; actor_id: string; actor_name: string; action: string; created_at: string; before: TicketClassification | null; after: TicketClassification; reason: string }[];
+  history: { id: string; actor_id: string; actor_name: string; action: string; created_at: string; before: Partial<TicketClassification>; after: Partial<TicketClassification>;reason:string; changes:{field:string;before:unknown;after:unknown}[];redacted?:'erasure';redactedAt?:string }[];
 }

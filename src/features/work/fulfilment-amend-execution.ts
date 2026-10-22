@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 import { fulfilmentManagerApproval } from "./fulfilment-authority";
 import { ApiError, id, now } from '../../platform/http';
 import { getWork, type WorkContext } from './core';
@@ -59,11 +60,12 @@ export async function resumeFulfilmentAmendment(ctx: WorkContext, row: any): Pro
     state:reason ? 'pending_decision':'amended',reason,ownerId:current.owner_id,
     workRevision:work.revision+(reason?0:1),fulfilmentRevision:prior.fulfilment.revision+(reason?0:1),
     expiresAt:reason ? prior.fulfilment.expiresAt:request.expiresAt};
+  const duty=await db.prepare('SELECT * FROM work_obligations WHERE workspace_id=? AND id=?').bind(w,current.obligation_id).first<any>();
   const guard = id(), statements = [db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
     EXISTS(SELECT 1 FROM work_fulfilment_amendments WHERE workspace_id=? AND id=? AND state='prepared') AND
     EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=?) AND
-    EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=? AND revision=?) THEN 1 ELSE 0 END)`)
-    .bind(guard,w,current.id,w,work.id,work.revision,w,current.fulfilment_id,prior.fulfilment.revision)];
+    EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=? AND revision=?) AND EXISTS(SELECT 1 FROM work_obligations WHERE workspace_id=? AND id=? AND revision=? AND state=? AND due_at=? AND operation_id IS ?) THEN 1 ELSE 0 END)`)
+    .bind(guard,w,current.id,w,work.id,work.revision,w,current.fulfilment_id,prior.fulfilment.revision,w,duty?.id??'',duty?.revision??-1,duty?.state??'',duty?.due_at??'',duty?.operation_id??null)];
   if (!reason) statements.push(
     db.prepare('UPDATE work_records SET revision=revision+1,updated_at=? WHERE workspace_id=? AND id=?').bind(now(),w,work.id),
     db.prepare('UPDATE work_fulfilments SET expires_at=?,revision=revision+1 WHERE workspace_id=? AND id=?')
@@ -85,9 +87,9 @@ export async function resumeFulfilmentAmendment(ctx: WorkContext, row: any): Pro
     db.prepare(`INSERT INTO work_execution_bindings VALUES(?,?,?,1) ON CONFLICT(workspace_id,obligation_id)
       DO UPDATE SET step_json=excluded.step_json,revision=work_execution_bindings.revision+1`).bind(w,current.obligation_id,current.step_json),
     db.prepare(`UPDATE work_obligations SET operation_id=NULL,due_at=?,state='pending',last_error=?,revision=revision+1,is_expiry=1
-      WHERE workspace_id=? AND id=?`).bind(result.expiresAt,reason,w,current.obligation_id));
+      WHERE workspace_id=? AND id=?`).bind(result.expiresAt,reason,w,current.obligation_id),obligationHistory(ctx,duty,'work.obligation_changed',{state:duty.state,dueAt:duty.due_at,operationId:duty.operation_id,revision:duty.revision},{state:'pending',dueAt:result.expiresAt,operationId:null,revision:duty.revision+1},now()));
   else statements.push(db.prepare('UPDATE work_obligations SET due_at=? WHERE workspace_id=? AND id=?')
-    .bind(prior.fulfilment.expiresAt,w,current.obligation_id));
+    .bind(prior.fulfilment.expiresAt,w,current.obligation_id),obligationHistory(ctx,duty,'work.obligation_changed',{dueAt:duty.due_at},{dueAt:prior.fulfilment.expiresAt},now()));
   statements.push(
     db.prepare('UPDATE work_fulfilment_amendments SET state=?,reason=?,result_json=? WHERE workspace_id=? AND id=?')
       .bind(result.state,reason,JSON.stringify(result),w,current.id),

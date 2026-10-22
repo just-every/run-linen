@@ -1,3 +1,4 @@
+import {obligationHistory} from './work-history';
 import { ApiError, id, now } from '../../platform/http';
 import { createWork, permit, type WorkContext } from './core';
 import { currentWorkPrincipal } from './identity';
@@ -69,28 +70,30 @@ export async function planTasks(ctx: WorkContext, input: { templates: Template[]
   }
   return { planned, skipped };
 }
-export const taskStatements = (ctx: WorkContext, workId: string, lifecycleId: string, personId: string, planned: PlannedTask[]) => planned.map(t => ctx.env.DB.prepare(
+export const taskStatements = (ctx: WorkContext, workId: string, lifecycleId: string, personId: string, planned: PlannedTask[]) => planned.flatMap(t => [ctx.env.DB.prepare(
   `INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,lifecycle_id,kind,target,beneficiary_id,due_at,state,owner_id,last_error,title,group_id,remind_at,template_json)
    VALUES(?,?,?,?,'task.manual',?,?,?,?,?,?,?,?,?,?)`)
-  .bind(t.obligationId, ctx.principal.workspaceId, workId, lifecycleId, `template:${t.source.templateId}:${t.source.key}`, personId, t.dueAt, t.state, t.ownerId, t.note, t.title, t.groupId, t.remindAt, JSON.stringify(t.source)));
+  .bind(t.obligationId, ctx.principal.workspaceId, workId, lifecycleId, `template:${t.source.templateId}:${t.source.key}`, personId, t.dueAt, t.state, t.ownerId, t.note, t.title, t.groupId, t.remindAt, JSON.stringify(t.source)),obligationHistory(ctx,{id:t.obligationId,work_id:workId,beneficiary_id:personId,owner_id:t.ownerId},'lifecycle.task_created',null,{state:t.state,title:t.title,owner:t.ownerId,group:t.groupId,dueAt:t.dueAt,remindAt:t.remindAt},now())]);
 
 /** An effective-date amendment re-dates every open template task from its recorded anchor; a cancellation cancels them. */
 export async function redateLifecycleTasks(ctx: WorkContext, lifecycleId: string, change: { effectiveAt: string | null; cancel: boolean; timezone: string; ownerId: string }) {
   const db = ctx.env.DB, w = ctx.principal.workspaceId;
-  if (change.cancel) {
-    await db.prepare("UPDATE work_obligations SET state='cancelled',revision=revision+1 WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' AND state IN ('pending','blocked')").bind(w, lifecycleId).run();
-    return;
+  if (!change.cancel&&!change.effectiveAt) return;
+  const rows = (await db.prepare("SELECT * FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' AND state IN ('pending','blocked') AND template_json IS NOT NULL").bind(w,lifecycleId).all<any>()).results;
+  if(!rows.length)return;
+  const calendar=change.cancel?null:await calendarFor(ctx,change.timezone,change.ownerId);
+  const writes:D1PreparedStatement[]=[],at=now();
+  for(const row of rows){
+    const source=JSON.parse(row.template_json) as TaskSource;
+    if(!change.cancel&&source.anchor==='end'&&source.endFrom==='expiry')continue;
+    if(change.cancel)writes.push(db.prepare("UPDATE work_obligations SET state='cancelled',revision=revision+1 WHERE workspace_id=? AND id=? AND revision=? AND state=?").bind(w,row.id,row.revision,row.state),obligationHistory(ctx,row,'lifecycle.task_cancelled',{state:row.state,revision:row.revision},{state:'cancelled',revision:row.revision+1},at));
+    else {
+      const {dueAt,remindAt}=taskDates(calendar!,source,change.effectiveAt!);
+      if(dueAt===row.due_at&&remindAt===row.remind_at)continue;
+      writes.push(db.prepare('UPDATE work_obligations SET due_at=?,remind_at=?,reminded_at=NULL,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=? AND state=?').bind(dueAt,remindAt,w,row.id,row.revision,row.state),obligationHistory(ctx,row,'lifecycle.task_rescheduled',{dueAt:row.due_at,remindAt:row.remind_at,revision:row.revision},{dueAt,remindAt,revision:row.revision+1},at));
+    }
   }
-  if (!change.effectiveAt) return;
-  const rows = (await db.prepare("SELECT id,template_json,owner_id,state FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' AND state IN ('pending','blocked') AND template_json IS NOT NULL").bind(w, lifecycleId).all<{ id: string; template_json: string; owner_id: string; state: string }>()).results;
-  if (!rows.length) return;
-  const calendar = await calendarFor(ctx, change.timezone, change.ownerId);
-  for (const row of rows) {
-    const source = JSON.parse(row.template_json) as TaskSource;
-    if (source.anchor === 'end' && source.endFrom === 'expiry') continue;
-    const { dueAt, remindAt } = taskDates(calendar, source, change.effectiveAt);
-    await db.prepare('UPDATE work_obligations SET due_at=?,remind_at=?,reminded_at=NULL,revision=revision+1 WHERE workspace_id=? AND id=? AND state=?').bind(dueAt, remindAt, w, row.id, row.state).run();
-  }
+  if(writes.length)await db.batch(writes);
 }
 
 interface TaskRow { id: string; work_id: string; lifecycle_id: string; owner_id: string; group_id: string | null; state: string; revision: number; title: string; due_at: string; remind_at: string | null; reminded_at: string | null; beneficiary_id: string; cancelled_at: string | null; kind: string; effective_at: string; person_name: string }
@@ -140,7 +143,7 @@ export async function completeLifecycleTask(ctx: WorkContext, taskId: string, in
           (NOT EXISTS(SELECT 1 FROM json_each(m.roles_json) WHERE value='integration') AND
             ((work_obligations.group_id IS NULL AND work_obligations.owner_id=m.user_id) OR
              EXISTS(SELECT 1 FROM work_group_members g WHERE g.workspace_id=m.workspace_id AND g.user_id=m.user_id AND g.group_id=work_obligations.group_id)))))`).bind(ctx.principal.userId, t, w, taskId, input.revision, w, row.lifecycle_id, ctx.principal.userId),
-    ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'lifecycle.task_completed',?,?,? WHERE changes()=1").bind(id(), w, ctx.principal.userId, taskId, JSON.stringify({ lifecycleId: row.lifecycle_id }), t),
+    obligationHistory(ctx,row,'lifecycle.task_completed',{state:row.state,completedAt:null,completedBy:null,revision:row.revision},{state:'done',completedAt:t,completedBy:ctx.principal.userId,revision:row.revision+1},t),
     ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=? AND changes()=1").bind(t, w, row.work_id),
   ]);
   if (!result.meta.changes) throw new ApiError(409, 'revision_conflict', 'Task changed; refresh before completing it');
@@ -159,7 +162,7 @@ export async function waiveLifecycleTask(ctx: WorkContext, taskId: string, input
       AND NOT EXISTS(SELECT 1 FROM work_lifecycle l WHERE l.workspace_id=work_obligations.workspace_id AND l.id=work_obligations.lifecycle_id AND l.cancelled_at IS NOT NULL)
       AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=work_obligations.workspace_id AND e.person_id=work_obligations.beneficiary_id)
       AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=work_obligations.workspace_id AND m.user_id=? AND m.active=1 AND r.value='owner')`).bind(ctx.principal.userId, t, w, taskId, input.revision, ctx.principal.userId),
-    ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'lifecycle.task_waived',?,?,? WHERE changes()=1").bind(id(), w, ctx.principal.userId, taskId, JSON.stringify({ lifecycleId: row.lifecycle_id, reason: input.reason.trim() }), t),
+    obligationHistory(ctx,row,'lifecycle.task_waived',{state:row.state,waivedAt:null,waivedBy:null,revision:row.revision,reason:null},{state:'waived',waivedAt:t,waivedBy:ctx.principal.userId,revision:row.revision+1,reason:input.reason.trim()},t),
   ]);
   if (!result.meta.changes) throw new ApiError(409, 'revision_conflict', 'Task changed; refresh before waiving it');
   return { id: taskId, state: 'waived', revision: Number(input.revision) + 1 };
@@ -194,7 +197,7 @@ export async function remindLifecycleTasks(ctx: WorkContext, at: string) {
           AND (? IS NULL OR EXISTS(SELECT 1 FROM work_group_members WHERE workspace_id=? AND group_id=? AND user_id=?)) THEN 1 ELSE 0 END)`)
           .bind(guard, w, row.id, row.revision, w, user, row.group_id, w, row.group_id, user), db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)];
       } });
-      await db.prepare('UPDATE work_obligations SET reminded_at=? WHERE workspace_id=? AND id=? AND reminded_at IS NULL').bind(at, w, row.id).run();
+      await db.batch([db.prepare('UPDATE work_obligations SET reminded_at=? WHERE workspace_id=? AND id=? AND revision=? AND reminded_at IS NULL').bind(at,w,row.id,row.revision),obligationHistory(ctx,row,'work.obligation_changed',{remindedAt:row.reminded_at},{remindedAt:at},at)]);
       results.push({ id: row.id, state: 'task_reminded', recipients: to.length });
     } catch (error) { results.push({ id: row.id, state: 'reminder_failed', error: error instanceof ApiError ? error.code : 'error' }); }
   }
