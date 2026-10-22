@@ -6,10 +6,10 @@ export async function employeeNoticeChecks(request, db) {
   const check = (r, status = 200) => { assert.equal(r.status, status, 'CHANNEL-008 ' + JSON.stringify(r)); return r.json; };
   const api = async (method, path, body, user = 'owner', status = 200) => check(await request(method, path, body, as(user)), status);
   for (const [user,name] of [['employee','Sales teammate'],['outsider','Engineering teammate'],['owner','Owner'],['operator','Operator']]) {
-    await db.prepare('INSERT INTO users VALUES(?,?,?)').bind(user, user+'@example.test', name).run();
+    await db.prepare('INSERT INTO users(id,email,name,password_hash,created_at) VALUES(?,?,?,\'synthetic-linen-14006\',datetime(\'now\')) ON CONFLICT(id) DO UPDATE SET name=excluded.name').bind(user, user+'@example.test', name).run();
   }
   await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('w1','outsider','["employee"]').run();
-  await db.prepare('INSERT INTO work_requester_groups VALUES(?,?,?,?,?)').bind('sales','w1','Sales','["employee"]',new Date().toISOString()).run();
+  await db.prepare('INSERT INTO work_requester_groups(id,workspace_id,name,members_json,created_at) VALUES(?,?,?,?,?)').bind('sales','w1','Sales','["employee"]',new Date().toISOString()).run();
   const service = await api('POST','/services',{name:'Sales Console',description:'Order entry',businessImpact:'Sales interrupted',source:'owner',observedAt:new Date().toISOString(),visibility:'workspace'},'owner',201);
   let incident = await api('POST','/incidents',{title:'Order entry unavailable',serviceId:service.id,impact:'Sales cannot enter orders',cohorts:['sales'],visibility:'workspace'},'owner',201);
   const base = `/incidents/${incident.id}/notices`;
@@ -21,7 +21,7 @@ export async function employeeNoticeChecks(request, db) {
   await publish({groupId:'missing'},'owner',404);
   await api('POST',`/incidents/${incident.id}/notices`,{revision:0,groupId:'sales'},'owner',409);
   const mailSecret = (await api('POST','/fixture/secret',{apiKey:'test-only-notice-key'})).secret;
-  await db.prepare('INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext) VALUES(?,?,?,?,?,?)')
+  await db.prepare('INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext,name,created_at,updated_at) VALUES(?,?,?,?,?,?,\'synthetic-linen-14007\',datetime(\'now\'),datetime(\'now\'))')
     .bind('notice-mail','w1','sendgrid','active',JSON.stringify({from:'linen@example.test'}),mailSecret).run();
   let published = await publish({emailConnectionId:'notice-mail'}), n=published.items[0];
   assert.equal(n.state,'open');assert.equal(n.publishedBy,'owner');assert.ok(n.nextUpdateAt>n.publishedAt);
@@ -105,7 +105,7 @@ export async function employeeNoticeChecks(request, db) {
   await db.prepare("UPDATE connections SET status='disconnected' WHERE id='notice-mail'").run();
   await db.prepare("DELETE FROM work_requester_groups WHERE id='sales'").run();
   await api('POST',`${base}/${n.id}/withdraw`,{revision:published.revision},'operator');
-  await db.prepare('INSERT INTO work_requester_groups VALUES(?,?,?,?,?)').bind('sales','w1','Sales','["employee"]',new Date().toISOString()).run();
+  await db.prepare('INSERT INTO work_requester_groups(id,workspace_id,name,members_json,created_at) VALUES(?,?,?,?,?)').bind('sales','w1','Sales','["employee"]',new Date().toISOString()).run();
   assert.equal((await api('GET','/service-notices',undefined,'employee')).items.length,0);
   // Concurrent publication through the same source revision has one winner and no losing mail intent.
   const revision=(await read()).revision, body={revision,groupId:'sales',message:'Another interruption',cadenceMinutes:30};

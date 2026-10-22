@@ -2,7 +2,7 @@ import { employeeNoticeChecks } from './employee-notice-cases.mjs';
 import { templateChecks } from './template-cases.mjs';
 import { calendarChecks } from './calendar-cases.mjs';
 import { dependencyChecks } from './dependency-cases.mjs';
-import { sqlStatements } from '../sql-migrations.mjs';
+import { applyMigrations } from '../sql-migrations.mjs';
 import assert from 'node:assert/strict'
 import {createHmac} from 'node:crypto'
 import {readFile,mkdtemp,rm} from 'node:fs/promises'
@@ -17,12 +17,12 @@ await build({entryPoints:[new URL('./worker.ts',import.meta.url).pathname],outfi
 const mf=new Miniflare(convertV4MiniflareOptions({ port: Number(process.env.LINEN_TEST_WORKER_PORT || 0), modules:true,script:await readFile(path.join(dir,'worker.mjs'),'utf8'),compatibilityDate:'2026-09-01',d1Databases:{DB:'services-test'},bindings:{SESSION_SECRET:'test-only',APP_ORIGIN:'https://linen.example.test',ENCRYPTION_KEY:btoa('a'.repeat(32))}}))
 try{
  const db=await mf.getD1Database('DB')
- const schema=await readFile(new URL('../../migrations/0300_services.sql',import.meta.url),'utf8')
- await db.exec('CREATE TABLE memberships(workspace_id TEXT,user_id TEXT,roles_json TEXT,active INTEGER); CREATE TABLE audit_events(id TEXT,workspace_id TEXT,actor_id TEXT,action TEXT,target TEXT,detail_json TEXT,created_at TEXT); CREATE TABLE connections(id TEXT,workspace_id TEXT,provider TEXT,status TEXT,config_json TEXT,secret_ciphertext TEXT,revision INTEGER DEFAULT 1); CREATE TABLE connection_validations(workspace_id TEXT,connection_id TEXT,connection_revision INTEGER,validated_at TEXT,state TEXT,evidence_json TEXT,PRIMARY KEY(workspace_id,connection_id)); CREATE TABLE workspace_settings(workspace_id TEXT,settings_json TEXT); CREATE TABLE adoption_holds(workspace_id TEXT,state TEXT); CREATE TABLE adoption_ownership(workspace_id TEXT,resource TEXT,action TEXT);')
- for(const sql of sqlStatements(schema))await db.prepare(sql).run();
- for(const sql of sqlStatements(await readFile(new URL('../../migrations/0749_change_calendar.sql',import.meta.url),'utf8')))await db.prepare(sql).run();await db.exec("CREATE TABLE work_records(id TEXT,workspace_id TEXT,requester_id TEXT,beneficiary_id TEXT,sensitivity TEXT,kind TEXT,state TEXT DEFAULT 'open',created_at TEXT DEFAULT '2020-01-01',context_json TEXT DEFAULT '{}',revision INTEGER DEFAULT 1); INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,sensitivity,kind) VALUES('work-1','w1','employee','employee','normal','incident');")
- await db.exec('CREATE TABLE users(id TEXT PRIMARY KEY,email TEXT,name TEXT); CREATE TABLE work_requester_groups(id TEXT PRIMARY KEY,workspace_id TEXT,name TEXT,members_json TEXT,created_at TEXT);');
- for(const [w,u,roles] of [['w1','owner',['owner']],['w1','employee',['employee']],['w1','operator',['operator']],['w1','approver',['approver']],['w2','owner',['owner']]])await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind(w,u,JSON.stringify(roles)).run()
+ await applyMigrations(db);
+ const fixtureAt=new Date().toISOString();
+ for(const workspace of ['w1','w2'])await db.prepare('INSERT INTO workspaces(id,name,created_at) VALUES(?,?,?)').bind(workspace,'synthetic-linen-14001',fixtureAt).run();
+ for(const user of ['owner','employee','operator','approver'])await db.prepare('INSERT INTO users(id,email,name,password_hash,created_at) VALUES(?,?,?,?,?)').bind(user,user+'@example.test',user,'synthetic-linen-14002',fixtureAt).run();
+ for(const [w,u,roles] of [['w1','owner',['owner']],['w1','employee',['employee']],['w1','operator',['operator']],['w1','approver',['approver']],['w2','owner',['owner']]])await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind(w,u,JSON.stringify(roles)).run();
+ await db.prepare("INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,sensitivity,kind,title,created_at,updated_at,dedup_key) VALUES('work-1','w1','employee','employee','normal','incident','synthetic-linen-14003',?,?,'synthetic-linen-14004')").bind(fixtureAt,fixtureAt).run();
  async function request(method,url,body,headers={}){const response=await mf.dispatchFetch('http://localhost'+url,{method,headers:{'Content-Type':'application/json',...headers},body:body?JSON.stringify(body):undefined});const json=response.headers.get('content-type')?.includes('text/calendar')?await response.text():await response.json();return {status:response.status,json,headers:Object.fromEntries(response.headers)}}
  async function ok(method,url,body,headers){const r=await request(method,url,body,headers);assert.ok(r.status<300,JSON.stringify(r));return r.json}
  const service=await ok('POST','/services',{name:'Orders',description:'Order entry',businessImpact:'Sales cannot work',source:'owner',observedAt:new Date().toISOString(),visibility:'workspace'})
@@ -63,7 +63,7 @@ try{
  decision=await ok('POST',`/decisions/${decision.id}/choose`,{revision:decision.revision,optionId:'renew',reason:'Keep service'});assert.equal(decision.data.state,'chosen');assert.match(decision.data.authority,/separate current grant/)
  assert.equal((await request('POST',`/decisions/${decision.id}/choose`,{revision:1,optionId:'renew',reason:'Replay'})).status,409)
  const secret=(await ok('POST','/fixture/secret',{signingSecret:'fixture-signing-secret'})).secret;
- await db.prepare('INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext) VALUES(?,?,?,?,?,?)').bind('monitor-connection','w1','monitoring-webhook','inbound-unobserved','{}',secret).run();
+ await db.prepare('INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext,name,created_at,updated_at) VALUES(?,?,?,?,?,?,\'synthetic-linen-14005\',datetime(\'now\'),datetime(\'now\'))').bind('monitor-connection','w1','monitoring-webhook','inbound-unobserved','{}',secret).run();
  const monitor=await ok('POST','/monitors',{name:'Orders monitor',serviceId:service.id,connectionId:'monitor-connection',freshnessMs:1000,cohorts:['a','b']});
  const event={id:'event-1',serviceId:service.id,status:'failed',observedAt:new Date().toISOString()};
  const timestamp=String(Math.floor(Date.now()/1000)),sig=b=>createHmac('sha256','fixture-signing-secret').update(timestamp+'.'+JSON.stringify(b)).digest('hex');
@@ -85,7 +85,7 @@ try{
  const notices=await ok('GET','/service-notifications');assert.ok(notices.items.some(n=>n.record_id===detected.id&&n.kind==='oncall-page'&&n.state==='pending'),'On-call delivery remains accountable when unconfigured');
  await ok('POST',`/webhooks/monitoring/${monitor.id}`,event2,signed2);await ok('POST','/services/process-due',{});assert.equal((await ok('GET','/incidents')).items.filter(r=>r.data.monitorEventKey===monitor.id+':event-2').length,1,'Duplicate monitoring does not duplicate shared incidents');
  const notificationSecret=(await ok('POST','/fixture/secret',{token:'notification-fixture'})).secret;
- await db.prepare('INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext) VALUES(?,?,?,?,?,?)').bind('notify','w1','notification-webhook','active',JSON.stringify({url:'https://notification.fixture.test/send',allowedHosts:['notification.fixture.test']}),notificationSecret).run();await db.prepare('INSERT INTO workspace_settings VALUES(?,?)').bind('w1',JSON.stringify({notificationConnectionId:'notify'})).run();
+ await db.prepare('INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext,name,created_at,updated_at) VALUES(?,?,?,?,?,?,\'synthetic-linen-14005\',datetime(\'now\'),datetime(\'now\'))').bind('notify','w1','notification-webhook','active',JSON.stringify({url:'https://notification.fixture.test/send',allowedHosts:['notification.fixture.test']}),notificationSecret).run();await db.prepare('INSERT INTO workspace_settings(workspace_id,settings_json) VALUES(?,?)').bind('w1',JSON.stringify({notificationConnectionId:'notify'})).run();
  const delivered=await ok('POST','/services/process-due',{});assert.ok(delivered.notifications.some(n=>n.state==='submitted'),'Configured provider submission uses real notification adapter');
  const submitted=(await ok('GET','/service-notifications')).items.find(n=>n.state==='submitted');assert.ok(submitted);const reconciled=await ok('POST',`/service-notifications/${submitted.id}/reconcile`,{});assert.equal(reconciled.state,'delivered','Fresh provider readback establishes delivery');
  await employeeNoticeChecks(request, db);
