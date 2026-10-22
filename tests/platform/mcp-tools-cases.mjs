@@ -130,6 +130,39 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  check(!(await tool(full.secret,'work.get',{workId:normal.id})).custom_fields.some(f=>f.id===safeField.id),'reclassification removes field on next read')
  check(!(await tool(full.secret,'work.history',{workId:normal.id})).items.some(e=>e.changes.some(c=>c.field_id===safeField.id)),'reclassification removes historical field values immediately')
 
+ // A retained HR boundary still excludes MCP when its explicit queue grant matches the new placement.
+ const hrDepartment=await value(ownerApi('/departments',{name:'synthetic-linen-12100',kind:'hr'}),201)
+ const itDepartment=await value(ownerApi('/departments',{name:'synthetic-linen-12101',kind:'it'}),201)
+ const hrQueue=await value(ownerApi('/work-groups',{name:'synthetic-linen-12102',departmentId:hrDepartment.id}),201)
+ const itQueue=await value(ownerApi('/work-groups',{name:'synthetic-linen-12103',departmentId:itDepartment.id}),201)
+ const retainedTitle='synthetic-linen-12104',retainedNote='synthetic-linen-12105'
+ const retained=await value(employeeSession.api('/work',{departmentId:hrDepartment.id,title:retainedTitle,body:'synthetic-linen-12106',deduplicationKey:'synthetic-linen-12107'}),201)
+ await route(retained.id,hrQueue.id)
+ await value(ownerApi('/work/'+retained.id+'/messages',{body:retainedNote,visibility:'private',sourceMessageId:'synthetic-linen-12108'}),201)
+ const retainedCredential=await mint({name:'synthetic-linen-12109',groupIds:[hrQueue.id,itQueue.id,hardware],scopes:['work.read'],tools:['work.get','work.list','work.search']})
+ const excludesRetained=async()=>{
+  equal(await refused(retainedCredential.secret,'work.get',{workId:retained.id},'not_found'),missing,'HR-protected work has the same response as absent work')
+  const queued=await tool(retainedCredential.secret,'work.list')
+  check(!queued.items.some(item=>item.id===retained.id),'matching queue grants never list HR-protected work')
+  for(const query of [retainedTitle,retainedNote]) {
+   const found=await tool(retainedCredential.secret,'work.search',{query})
+   equal({items:found.items,total:found.total},{items:[],total:0},'protected source text and private history reveal neither results nor counts')
+   check(!JSON.stringify(queued).includes(query),'queue payload contains no protected source text')
+  }
+ }
+ await excludesRetained()
+ for(const destination of [{departmentId:itDepartment.id,groupId:itQueue.id},{departmentId:null,groupId:hardware}]) {
+  const current=await value(ownerApi('/work/'+retained.id))
+  const moved=await value(ownerApi('/work/'+retained.id+'/department',{revision:current.work.revision,...destination,reason:'synthetic-linen-12110'}))
+  equal({id:moved.work.id,departmentId:moved.work.department_id,groupId:moved.work.group_id,sensitivity:moved.work.sensitivity},
+   {id:retained.id,departmentId:destination.departmentId,groupId:destination.groupId,sensitivity:'normal'},'owner handoff really places the same normal ticket in an explicitly granted destination queue')
+  equal(JSON.parse(moved.work.protected_departments_json),[hrDepartment.id],'IT and legacy placement both retain the original HR boundary')
+  await excludesRetained()
+ }
+ const retainedGrantView=await tool(retainedCredential.secret,'work.get',{workId:normal.id})
+ check(!Object.hasOwn(retainedGrantView,'quotes')&&!Object.hasOwn(retainedGrantView,'catalogSnapshot'),'department queue grants do not add quote or submission payload authority')
+ check(!JSON.stringify(retainedGrantView).includes('MCP-HIDDEN-QUOTE'),'matching ordinary queue access still excludes quote content and metadata')
+
  // No work-intake, mail/notification or provider/model attempt is part of a comment.
  const effectTables=['work_intake_events','execution_outbox','execution_operations','execution_provider_attempts','intelligence_attempts']
  const effects=()=>Object.fromEntries(sql(effectTables.map(table=>`SELECT '${table}' table_name,count(*) n FROM ${table} WHERE workspace_id=${quoted(session.principal.workspaceId)}`).join(' UNION ALL ')).map(row=>[row.table_name,row.n]))
