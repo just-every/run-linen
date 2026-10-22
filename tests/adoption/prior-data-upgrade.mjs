@@ -4,6 +4,26 @@ import { resolve, join } from 'node:path';
 import { priorDataHarness } from './prior-data-harness.mjs';
 import { populatePriorData } from './prior-data-populate.mjs';
 
+// The current API can add fields and update generated guidance. Keep every
+// original business field, ordered array member and privacy boundary strict.
+function priorReadback(actual,expected,path='') {
+  if(Array.isArray(expected)){
+    assert.ok(Array.isArray(actual),path);assert.equal(actual.length,expected.length,'Prior list changed: '+path);
+    return expected.map((value,index)=>priorReadback(actual[index],value,path+'/'+index));
+  }
+  if(expected&&typeof expected==='object'){
+    assert.ok(actual&&typeof actual==='object',path);
+    return Object.fromEntries(Object.keys(expected).filter(key=>!(/^.*\/progress\/\d+$/.test(path)&&['next','happened','ownerLabel'].includes(key))).map(key=>{
+      assert.ok(Object.hasOwn(actual,key),'Prior field disappeared: '+path+'/'+key);
+      return [key,priorReadback(actual[key],expected[key],path+'/'+key)];
+    }));
+  }
+  return actual;
+}
+function assertPriorReadback(actual,expected,path){
+  assert.deepEqual(priorReadback(actual,expected,path),priorReadback(expected,expected,path),'Native retained readback changed: '+path);
+}
+
 const archive = process.env.LINEN_PRIOR_SOURCE;
 if (!archive) throw Error('LINEN_PRIOR_SOURCE must name the read-only archived last-commit Linen checkout');
 const out = resolve(process.env.LINEN_TEST_OUTPUT || '/tmp/linen-prior-data-evidence');
@@ -64,10 +84,12 @@ try {
         return person;
       }),
     } : upgradedReadbacks[path];
-    assert.deepEqual(retained, expected, 'Native stable readback changed: ' + path);
+    assertPriorReadback(retained,expected,path);
   }
   await writeFile(join(out, 'native-after-upgrade.json'), JSON.stringify(upgradedReadbacks, null, 2));
-  assert.deepEqual(await h.ok('/work/' + data.work.id, undefined, data.employee), employeeConversation);
+  const upgradedEmployeeConversation=await h.ok('/work/'+data.work.id,undefined,data.employee);
+  assertPriorReadback(upgradedEmployeeConversation,employeeConversation,'/work/'+data.work.id);
+  assert.ok(!JSON.stringify(upgradedEmployeeConversation).includes('Private operator assessment'),'Upgrade preserves employee private-note denial');
   checks.push('After fresh sign-in, prior native owner and employee accounts retain exact workspace, users, roles, policies, conversations, lifecycle duties, custody, knowledge, plans, grants and unknown-operation readbacks.');
   const employeeKnowledge = await h.ok('/knowledge?q=Prior', undefined, data.employee);
   assert.ok(employeeKnowledge.items.some(article => article.id === data.knowledge.id));
