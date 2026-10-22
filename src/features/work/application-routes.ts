@@ -18,15 +18,15 @@ export function registerApplicationRoutes(app: Hono<AppEnv>) {
 }
 export async function catalogItems(ctx: {env: AppEnv['Bindings'];principal: AppEnv['Variables']['principal']}) {
   await currentWorkPrincipal(ctx);
-  const items=(await ctx.env.DB.prepare('SELECT id,name,kind,target,owner_id,capacity,revision,form_json,audience_json,application_id,entitlement_id,tasks_json FROM work_catalog WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<any>()).results;
+  const items=(await ctx.env.DB.prepare('SELECT id,name,kind,target,owner_id,capacity,revision,form_json,audience_json,application_id,entitlement_id,tasks_json,approvals_json,manager_approval_json,requires_manager FROM work_catalog WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<any>()).results;
   const visible=[];
   for(const item of items) {
     if(!ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r)) && !(await audienceEvaluation(ctx,item,ctx.principal.userId)).allowed)continue;
     visible.push(item);
   }
   return Promise.all(visible.map(async item=>{
-    const {application_id,entitlement_id,form_json,audience_json,tasks_json,...base}=item;
-    const publicItem={...base,form:JSON.parse(form_json),...(ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r))?{tasks:JSON.parse(tasks_json)}:{}),...(ctx.principal.roles.includes('owner')?{audience:JSON.parse(audience_json)}:{})};
+    const {application_id,entitlement_id,form_json,audience_json,tasks_json,approvals_json,manager_approval_json,...base}=item;
+    const publicItem={...base,form:JSON.parse(form_json),...(ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r))?{tasks:JSON.parse(tasks_json)}:{}),...(ctx.principal.roles.includes('owner')?{audience:JSON.parse(audience_json),approvals:JSON.parse(approvals_json),managerApproval:manager_approval_json?JSON.parse(manager_approval_json):null}:{})};
     if(!application_id || !entitlement_id)return publicItem;
     try {return {...publicItem,application:applicationProjection(ctx,await resolveApplication(ctx,application_id,entitlement_id))};}
     catch(error) {if(!(error instanceof ApiError)||![404,409].includes(error.status))throw error;return {...publicItem,applicationUnavailable:true};}

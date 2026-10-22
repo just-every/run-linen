@@ -1,13 +1,16 @@
+import { approvalGuard } from './approval-guard';
 import { personForMember } from './person-binding';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from '../../platform/http';
 import { getWork, type WorkContext, type WorkRecord } from './core';
 import { resolveManager } from './delegation';
 import type { Step } from '../execution/types';
+import { chainStatus, managerRejected, stagesOf, timers, type StageDef } from './approval-chain';
 
 /** Business approval is separate from the provider action grant; neither manufactures the other. */
-export async function fulfilmentManagerApproval(ctx: WorkContext, work: WorkRecord, catalog: any,
-  fulfilment: { id?: string; revision?: number; beneficiary_id: string; purpose: string; expires_at: string | null }, step?: Step) {
+type FulfilmentFacts = { id?: string; revision?: number; beneficiary_id: string; purpose: string; expires_at: string | null };
+/** The manager stage alone: the current manager, or their delegate while they are out of office, approved this exact revision. */
+export async function managerStageAuthority(ctx: WorkContext, work: WorkRecord, catalog: any, fulfilment: FulfilmentFacts, step?: Step) {
   if(!catalog.requires_manager)return {allowed:true,holderId:null};
   const db=ctx.env.DB,w=ctx.principal.workspaceId;
   const person=await personForMember(ctx,fulfilment.beneficiary_id);
@@ -22,7 +25,7 @@ export async function fulfilmentManagerApproval(ctx: WorkContext, work: WorkReco
       WHERE p.workspace_id=a.workspace_id AND p.id=a.person_id AND p.member_id=a.beneficiary_id
       AND p.binding_id=a.binding_id AND p.revision=a.person_revision AND p.manager_id=a.manager_id AND p.active=1 AND p.merged_into IS NULL
       AND a.holder_id=COALESCE((SELECT d.delegate_id FROM work_delegations d
-        JOIN memberships holder ON holder.workspace_id=d.workspace_id AND holder.user_id=d.delegate_id AND holder.active=1
+        JOIN memberships holder ON holder.workspace_id=d.workspace_id AND holder.user_id=d.delegate_id AND holder.active=1 AND EXISTS(SELECT 1 FROM json_each(holder.roles_json) r WHERE r.value IN ('approver','owner'))
         WHERE d.workspace_id=p.workspace_id AND d.manager_id=p.manager_id AND d.revoked_at IS NULL
         AND d.starts_at<=? AND d.expires_at>? ORDER BY d.starts_at DESC LIMIT 1),p.manager_id))
     AND (a.expires_at IS NULL OR (? IS NOT NULL AND a.expires_at>=?))
@@ -36,6 +39,21 @@ export async function fulfilmentManagerApproval(ctx: WorkContext, work: WorkReco
       now(),now(),step?.grantId||null,step?.grantId||null,step?.grantVersion||null).first():null;
   return {allowed:!!approval,holderId:holder};
 }
+export const managerStageApproved = async (ctx: WorkContext, work: any, catalog: any, f: any) => (await managerStageAuthority(ctx, work, catalog, f)).allowed;
+export async function managerHolder(ctx: WorkContext, f: { beneficiary_id: string }) {
+  const person = await personForMember(ctx, f.beneficiary_id);
+  return resolveManager(ctx, person?.manager_id || null);
+}
+/** The whole chain: the manager stage, then every applicable stage in order. Approval here is business approval only. */
+export async function fulfilmentManagerApproval(ctx: WorkContext, work: WorkRecord, catalog: any, fulfilment: FulfilmentFacts, step?: Step) {
+  const stages = stagesOf(catalog), manager = await managerStageAuthority(ctx, work, catalog, fulfilment, step);
+  const refused = Boolean(fulfilment.id && catalog.requires_manager && await managerRejected(ctx, work, catalog, { id: fulfilment.id, revision: fulfilment.revision ?? 0 }));
+  if (!stages.length && !fulfilment.id) return { allowed: manager.allowed && !refused, holderId: manager.holderId, pendingStage: null as string | null, rejected: refused };
+  if (!fulfilment.id) return { allowed: false, holderId: manager.holderId, pendingStage: (manager.allowed ? stages[0].name : null) as string | null, rejected: false };
+  const f = await ctx.env.DB.prepare('SELECT id,revision,beneficiary_id,application_json FROM work_fulfilments WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, fulfilment.id).first<any>();
+  const chain = await chainStatus(ctx, work, catalog, { ...f, revision: fulfilment.revision ?? f.revision }, manager.allowed);
+  return { allowed: manager.allowed && chain.satisfied && !refused, holderId: manager.holderId, pendingStage: (manager.allowed ? chain.pending?.name ?? null : null) as string | null, rejected: chain.rejected || refused };
+}
 
 export async function assertWorkFulfilmentAuthority(ctx: WorkContext, step: Step, planId: string) {
   if(!['group.add','license.add'].includes(step.action))return;
@@ -48,7 +66,7 @@ export async function assertWorkFulfilmentAuthority(ctx: WorkContext, step: Step
     await db.prepare('SELECT work_id,context_type FROM execution_plans WHERE workspace_id=? AND id=?').bind(w,planId).first<any>();
   if(pendingWork?.context_type==='work' && await db.prepare(`SELECT 1 FROM work_records r JOIN work_pending_people h ON h.workspace_id=r.workspace_id AND h.id=r.pending_person_id JOIN work_people p ON p.workspace_id=h.workspace_id AND p.id=h.id WHERE r.workspace_id=? AND r.id=? AND (h.state<>'bound' OR p.member_id IS NULL OR p.member_id<>r.beneficiary_id OR p.binding_id IS NULL)`).bind(w,pendingWork.work_id).first())
     throw new ApiError(409,'pending_person_unbound','Pending person services cannot execute before verified account binding');
-  const requiresManager=await db.prepare('SELECT 1 FROM work_catalog WHERE workspace_id=? AND target=? AND kind=? AND requires_manager=1 LIMIT 1')
+  const requiresManager=await db.prepare(`SELECT 1 FROM work_catalog WHERE workspace_id=? AND target=? AND kind=? AND (requires_manager=1 OR approvals_json<>'[]' OR EXISTS(SELECT 1 FROM work_fulfilments f JOIN work_approval_stages s ON s.workspace_id=f.workspace_id AND s.fulfilment_id=f.id WHERE f.workspace_id=work_catalog.workspace_id AND f.catalog_id=work_catalog.id)) LIMIT 1`)
     .bind(w,step.target,kind).first();
   if(!requiresManager)return;
   const plan=planId.startsWith('work:')?{work_id:planId.slice(5),context_type:'work'}:
@@ -61,7 +79,7 @@ export async function assertWorkFulfilmentAuthority(ctx: WorkContext, step: Step
     FROM work_fulfilments f JOIN work_catalog c ON c.workspace_id=f.workspace_id AND c.id=f.catalog_id
     WHERE f.workspace_id=? AND f.work_id=? AND c.target=? AND c.kind=? AND f.beneficiary_id=?`)
     .bind(w,work.id,step.target,kind,step.localBeneficiaryId||'').all<any>()).results;
-  if(!rows.some(row=>row.requires_manager) || rows.some(row=>!row.requires_manager) || step.localBeneficiaryId!==work.beneficiary_id)
+  if(!rows.length || step.localBeneficiaryId!==work.beneficiary_id)
     throw new ApiError(403,'manager_approval_required','Exact catalogue fulfilment and beneficiary required for manager approval');
   for(const row of rows) {
     if((step.expiresAt||null)!==row.expires_at)
@@ -74,7 +92,7 @@ export async function assertWorkFulfilmentAuthority(ctx: WorkContext, step: Step
 
 export interface FulfilmentApprovalInput {
   catalogId:string;expectedWorkRevision:number;expectedFulfilmentRevision:number;idempotencyKey:string;
-  expectedCatalogRevision:number;expectedPersonId:string;expectedPersonRevision:number;expectedBindingId:string;expectedHolderId:string;
+  expectedCatalogRevision:number;expectedPersonId:string;expectedPersonRevision:number;expectedBindingId:string;expectedHolderId:string;comment?:unknown;
 }
 export async function approveFulfilment(ctx: WorkContext, workId: string, input: FulfilmentApprovalInput) {
   await currentWorkPrincipal(ctx);
@@ -85,7 +103,8 @@ export async function approveFulfilment(ctx: WorkContext, workId: string, input:
   return {id:prepared.approvalId,state:'approved' as const};
 }
 /** Checks one manager approval and returns its guarded writes, so a bundle can record several in one atomic batch (CATALOG-004). */
-export async function prepareFulfilmentApproval(ctx: WorkContext, workId: string, input: FulfilmentApprovalInput) {
+export async function prepareFulfilmentApproval(ctx: WorkContext, workId: string, input: FulfilmentApprovalInput, channel: 'portal' | 'email' = 'portal') {
+  const authorityGuard = await approvalGuard(ctx, workId, input.catalogId);
   const db=ctx.env.DB,w=ctx.principal.workspaceId;
   const work=await db.prepare('SELECT * FROM work_records WHERE workspace_id=? AND id=?').bind(w,workId).first<WorkRecord>();
   if(!work)throw new ApiError(404,'not_found','Work not found');
@@ -108,23 +127,26 @@ export async function prepareFulfilmentApproval(ctx: WorkContext, workId: string
       throw new ApiError(409,'idempotency_conflict','Approval event describes another authority revision');
     return {approvalId:previous.id as string,statements:[] as D1PreparedStatement[]};
   }
+  if(await managerRejected(ctx,work,catalog,f))throw new ApiError(409,'approval_not_open','The manager rejected this revision; submit a revised request');
   const approvalId=id(),guard=id();
-  return {approvalId,statements:[
+  return {approvalId,statements:[authorityGuard.start,
     db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN
       EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=?) AND
       EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=? AND revision=?) AND
       EXISTS(SELECT 1 FROM work_people WHERE workspace_id=? AND id=? AND revision=? AND member_id=? AND binding_id=? AND active=1 AND merged_into IS NULL) AND
       EXISTS(SELECT 1 FROM work_catalog WHERE workspace_id=? AND id=? AND revision=?) THEN 1 ELSE 0 END)`)
       .bind(guard,w,workId,work.revision,w,f.id,f.revision,w,person.id,person.revision,f.beneficiary_id,person.binding_id,w,catalog.id,catalog.revision),
-    db.prepare('INSERT INTO work_fulfilment_approvals(id,workspace_id,work_id,fulfilment_id,work_revision,fulfilment_revision,catalog_revision,person_revision,manager_id,holder_id,beneficiary_id,purpose,expires_at,event_key,created_at,person_id,binding_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-      .bind(approvalId,w,workId,f.id,work.revision,f.revision,catalog.revision,person.revision,person.manager_id,holder,f.beneficiary_id,f.purpose,f.expires_at,input.idempotencyKey,now(),person.id,person.binding_id),
+    db.prepare('INSERT INTO work_fulfilment_approvals(id,workspace_id,work_id,fulfilment_id,work_revision,fulfilment_revision,catalog_revision,person_revision,manager_id,holder_id,beneficiary_id,purpose,expires_at,event_key,created_at,person_id,binding_id,comment,channel) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(approvalId,w,workId,f.id,work.revision,f.revision,catalog.revision,person.revision,person.manager_id,holder,f.beneficiary_id,f.purpose,f.expires_at,input.idempotencyKey,now(),person.id,person.binding_id,
+        typeof input.comment==='string'&&input.comment.trim()?input.comment.trim().slice(0,2000):null,channel),
+    ...await openFirstStage(ctx,f.id),
     db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),w,ctx.principal.userId,'work.fulfilment_approved',approvalId,
       JSON.stringify({workId,fulfilmentId:f.id,catalogId:catalog.id,workRevision:work.revision,fulfilmentRevision:f.revision,
         catalogRevision:catalog.revision,personRevision:person.revision,managerId:person.manager_id,holderId:holder,
         beneficiaryId:f.beneficiary_id,expiresAt:f.expires_at,
         ...(f.catalog_snapshot_json&&JSON.parse(f.catalog_snapshot_json).quote?{quoteSha256:JSON.parse(f.catalog_snapshot_json).quote.sha256}:{})}),now()),
     db.prepare('UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?').bind(now(),w,workId),
-    db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)]};
+    db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),authorityGuard.end]};
 }
 
 
@@ -150,7 +172,7 @@ export async function recordWorkManagerGrantApproval(ctx: WorkContext, grantId: 
   for(const f of rows) {
     if(f.expires_at && grant.valid_until<=f.expires_at)continue;
     const approvalId=id(),at=now();
-    await db.batch([db.prepare(`INSERT OR IGNORE INTO work_fulfilment_approvals
+    await db.batch([db.prepare(`INSERT OR IGNORE INTO work_fulfilment_approvals(id,workspace_id,work_id,fulfilment_id,work_revision,fulfilment_revision,catalog_revision,person_revision,manager_id,holder_id,beneficiary_id,purpose,expires_at,event_key,created_at,grant_id,grant_version,person_id,binding_id)
       SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=?)
       AND EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=? AND revision=?)
       AND EXISTS(SELECT 1 FROM work_people WHERE workspace_id=? AND id=? AND revision=? AND member_id=? AND binding_id=? AND active=1 AND merged_into IS NULL)
@@ -163,4 +185,12 @@ export async function recordWorkManagerGrantApproval(ctx: WorkContext, grantId: 
           JSON.stringify({workId,fulfilmentId:f.id,catalogId:f.catalog_id,workRevision:work.revision,
             fulfilmentRevision:f.revision,catalogRevision:f.catalog_revision,holderId:holder,grantId:grant.id,grantVersion:version}),at)]);
   }
+}
+
+/** The first applicable stage after the manager opens at the manager's decision, counting its reminder and SLA from that instant. */
+async function openFirstStage(ctx: WorkContext, fulfilmentId: string) {
+  const first = await ctx.env.DB.prepare("SELECT stage_key,definition_json FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=? AND stage_key<>'manager' AND applies=1 AND active_at IS NULL ORDER BY ordinal LIMIT 1").bind(ctx.principal.workspaceId, fulfilmentId).first<{ stage_key: string; definition_json: string }>();
+  if (!first) return [];
+  const tm = timers((JSON.parse(first.definition_json) as StageDef).calendar, JSON.parse(first.definition_json) as StageDef, now());
+  return [ctx.env.DB.prepare('UPDATE work_approval_stages SET active_at=?,remind_at=?,sla_at=? WHERE workspace_id=? AND fulfilment_id=? AND stage_key=? AND active_at IS NULL').bind(tm.activeAt, tm.remindAt, tm.slaAt, ctx.principal.workspaceId, fulfilmentId, first.stage_key)];
 }

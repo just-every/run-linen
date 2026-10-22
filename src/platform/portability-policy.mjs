@@ -3,7 +3,7 @@
 export const portabilityPolicy={
  product:'runeditrun/linen',
  replaceableTables:['platform_auth_policy'],
- excludeTables:['platform_archive_recovery','sessions','login_limits','platform_auth_session_proofs','platform_auth_links','platform_auth_steps','platform_auth_limits','platform_auth_guard','execution_secrets'],
+ excludeTables:['work_approval_mail_subscriptions','platform_archive_recovery','sessions','login_limits','platform_auth_session_proofs','platform_auth_links','platform_auth_steps','platform_auth_limits','platform_auth_guard','execution_secrets'],
  secretColumns:{connections:['secret_ciphertext'],intelligence_engineering_jobs:['claim_token_hash']},
  requiredConfiguration:['OWNER_EMAIL','SESSION_SECRET','SETUP_TOKEN','AUTH_ORIGIN','ENCRYPTION_KEY','MAIL_PROVIDER','MAIL_FROM'],
  buckets:{ATTACHMENTS:{}},
@@ -23,6 +23,8 @@ export const portabilityPolicy={
    return {...row,data_json:JSON.stringify({...data,importedState:data.importedState||data.state,state:'imported-review',decisions:[],
     priorDecisions:[...(data.priorDecisions||[]),...(data.decisions||[])].map(d=>({...d,inert:true}))})};
   }
+  if(table==='work_approval_mail_config')return {...row,enabled:0}
+  if(table==='work_approval_tokens')return {...row,state:'expired',token_hash:row.id,sent_to:''}
   if(table==='mcp_credentials')return {...row,secret_hash:null,state:'revoked',invalidated_at:row.invalidated_at||row.created_at}
   if(table==='work_time_entries')return {...row,state:'completed',last_seen_at:null,sequence:Number(row.sequence||0)+1}
   if(table==='work_people')return {...row,member_id:null,binding_id:null,manager_id:null}

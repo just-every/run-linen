@@ -1,3 +1,4 @@
+import {approvalChainChecks} from './approval-chain-cases.mjs';
 import assert from 'node:assert/strict';
 import {harness} from './amend-harness.mjs';
 import {bundleChecks} from './bundle-cases.mjs';
@@ -100,5 +101,6 @@ try {
   assert.equal((await api('/test/manager-policy',{step:resolved.step,planId:'work:'+work.id})).value.code,'manager_approval_required');
   await bundleChecks({ok,api,db,actor,future});
   await catalogTaskChecks({ok,api,db,actor,future});
+  await approvalChainChecks({ok,api,db,mf:h.mf});
   console.log('MANAGER APPROVAL passed: current manager alone/unrelated issuer denied; exact revision-scoped approval and replay; wrong holder denied; manager change invalidates at effect; current manager-issued scoped standing grant proceeds without extra approval.');
 } finally {await h.close();}

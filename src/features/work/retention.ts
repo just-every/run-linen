@@ -18,7 +18,7 @@ const OPEN_OBLIGATIONS = "('pending','blocked','executing','unknown')";
 /** Service record states after which a link no longer holds the ticket. */
 const CLOSED_SERVICE_STATES = ['verified', 'failed', 'compensated', 'cancelled', 'closed', 'resolved'];
 /** Rows that are the ticket's own content. Effect, execution, fulfilment, lifecycle, time and audit records keep the opaque id. */
-const TICKET_CONTENT = ['work_side_receipts', 'work_side_deliveries', 'work_side_conversations', 'work_collaboration_notices', 'work_watchers', 'work_messages', 'work_attachments', 'work_intake_events', 'work_classifications', 'work_knowledge_suggestions', 'work_commitments', 'work_obligations'];
+const TICKET_CONTENT = ['work_approval_tokens', 'work_approval_decisions', 'work_approval_stages', 'work_side_receipts', 'work_side_deliveries', 'work_side_conversations', 'work_collaboration_notices', 'work_watchers', 'work_messages', 'work_attachments', 'work_intake_events', 'work_classifications', 'work_knowledge_suggestions', 'work_commitments', 'work_obligations'];
 
 function days(value: unknown, field: string): Days {
   if (value === null || value === undefined || value === '' || value === 'keep') return null;

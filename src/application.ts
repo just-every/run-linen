@@ -1,3 +1,4 @@
+import { handleApprovalMail } from './features/work/approval-mail-provider'
 import { mcpProtocol, registerMcpCredentialRoutes } from './features/mcp'
 import { deploymentHealth } from './base/deployment-health'
 import { Hono } from 'hono'
@@ -40,6 +41,7 @@ export function createApplication() {
 
   // These integrations authenticate each request themselves. They do not mint a user session.
   const integrations = new Hono<AppEnv>()
+  integrations.post('/approval-mail/webhooks/:workspaceId',async c=>c.json(await handleApprovalMail(c.env,c.req.param('workspaceId'),c.req.raw)))
   registerEngineeringAgentRoutes(integrations)
   registerServiceWebhooks(integrations)
   integrations.post('/notifications/webhooks/:connectionId', async c =>

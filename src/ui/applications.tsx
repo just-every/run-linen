@@ -1,3 +1,6 @@
+import {ApprovalDelegation} from './approval-delegation';
+import { CatalogApprovalEditor } from './catalog-approval-editor';
+import type {StageDef} from '../features/work/approval-config';
 import { CatalogFormEditor } from './catalog-form-editor';
 import { CatalogTaskPlanEditor } from './catalog-task-plan-editor';
 import { CatalogAudienceEditor, CatalogItemCreate, CatalogValues } from './catalog-item-admin';
@@ -15,13 +18,15 @@ export function seatCost(value:{costCents:number;billingPeriod:string}) {
 export function Applications() {
   const apps=useRemote<{items:RecordValue[]}>('/applications'),members=useRemote<{id:string;name:string;active:number}[]>('/members'),{session}=useSession();
   const owner=session.principal.roles.includes('owner');
-  const catalog=useRemote<{items:{id:string;name:string;revision:number;form:CatalogForm;tasks?:CatalogTask[];audience?:{department:string[];location:string[];employmentType:string[]}}[]}>(owner?'/catalog':null);
+  const catalog=useRemote<{items:{id:string;name:string;revision:number;form:CatalogForm;approvals?:StageDef[];requires_manager?:number;managerApproval?:StageDef|null;tasks?:CatalogTask[];audience?:{department:string[];location:string[];employmentType:string[]}}[]}>(owner?'/catalog':null);
   return <section role="region" aria-label="Application registry" className="history">
     <h2>Application registry</h2><p>Record who owns each application, its entitlements and the quoted cost per seat.</p>
     <ErrorNotice error={apps.error??members.error} retry={apps.refresh}/>
     {owner&&members.data&&<details className="action-disclosure"><summary>Register application</summary><ApplicationEditor members={members.data} onSaved={apps.refresh}/></details>}
+    {owner&&members.data&&<ApprovalDelegation members={members.data}/>}
     {owner&&members.data&&<CatalogItemCreate members={members.data} onSaved={catalog.refresh}/>}
     {owner&&<CatalogValues onChanged={catalog.refresh}/>}
+    {owner&&<details className="action-disclosure"><summary>Manage approval chains</summary><ErrorNotice error={catalog.error} retry={catalog.refresh}/>{catalog.data?.items.map(item=><details className="action-disclosure" key={item.id}><summary>{item.name}</summary><CatalogApprovalEditor key={item.id+':'+item.revision} item={item} onSaved={catalog.refresh}/></details>)}</details>}
     {owner&&<details className="action-disclosure"><summary>Manage catalog task plans</summary><ErrorNotice error={catalog.error} retry={catalog.refresh}/>{catalog.data?.items.map(item=><details className="action-disclosure" key={item.id}><summary>{item.name}</summary><CatalogTaskPlanEditor key={item.id+':'+item.revision} item={item} onSaved={catalog.refresh}/></details>)}</details>}
     {owner&&<details className="action-disclosure"><summary>Manage catalog forms</summary><ErrorNotice error={catalog.error} retry={catalog.refresh}/>{catalog.data?.items.map(item=><details className="action-disclosure" key={item.id}><summary>{item.name}</summary><CatalogFormEditor key={item.id+':'+item.revision} item={item} onSaved={catalog.refresh}/></details>)}</details>}
     {owner&&<details className="action-disclosure"><summary>Manage catalog audiences</summary><ErrorNotice error={catalog.error} retry={catalog.refresh}/>{catalog.data?.items.map(item=><details className="action-disclosure" key={item.id}><summary>{item.name}</summary><CatalogAudienceEditor key={item.id+':'+item.revision} item={item} onSaved={catalog.refresh}/></details>)}</details>}

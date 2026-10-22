@@ -70,7 +70,7 @@ export async function resumeFulfilmentAmendment(ctx: WorkContext, row: any): Pro
       .bind(request.expiresAt,w,current.fulfilment_id),
     // Carry the same bounded decision through this proven expiry-only revision;
     // its issuer, person/catalog revision, grant version and authorized horizon stay fixed.
-    db.prepare(`INSERT INTO work_fulfilment_approvals
+    db.prepare(`INSERT INTO work_fulfilment_approvals(id,workspace_id,work_id,fulfilment_id,work_revision,fulfilment_revision,catalog_revision,person_revision,manager_id,holder_id,beneficiary_id,purpose,expires_at,event_key,created_at,grant_id,grant_version,person_id,binding_id)
       SELECT lower(hex(randomblob(16))),workspace_id,work_id,fulfilment_id,?, ?,catalog_revision,person_revision,
         manager_id,holder_id,beneficiary_id,purpose,expires_at,?||id,?,grant_id,grant_version,person_id,binding_id
       FROM work_fulfilment_approvals WHERE workspace_id=? AND work_id=? AND fulfilment_id=?

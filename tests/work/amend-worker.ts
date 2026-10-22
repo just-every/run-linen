@@ -1,3 +1,5 @@
+import { handleApprovalMail } from '../../src/features/work/approval-mail-provider';
+import { encryptSecret } from '../../src/platform/crypto';
 import { getFulfilmentReadiness } from "../../src/features/work/fulfilment-readiness";
 import { assertWorkFulfilmentAuthority } from "../../src/features/work/fulfilment-authority";
 import app from './fulfilment-link-worker';
@@ -6,6 +8,7 @@ import type { Env } from '../../src/platform/types';
 let env: Env;
 globalThis.fetch = async (input: RequestInfo | URL, init: RequestInit = {}) => {
   const u=new URL(String(input)),db=env.DB;
+  if(u.hostname==='api.sendgrid.com'&&u.pathname==='/v3/mail/send'){await db.prepare('INSERT INTO test_approval_mail(payload_json) VALUES(?)').bind(String(init.body)).run();return new Response(null,{status:202,headers:{'x-message-id':crypto.randomUUID()}});}
   if(u.hostname==='login.microsoftonline.com')return Response.json({access_token:'fixture'});
   if(u.hostname==='graph.microsoft.com') {
     // Licences (CATALOG-004 software child): assignLicense writes and licenseDetails reads the same fixture rows as groups.
@@ -34,6 +37,8 @@ globalThis.fetch = async (input: RequestInfo | URL, init: RequestInit = {}) => {
   }
   throw new Error(`Unexpected fixture request ${u.origin}`);
 };
+app.post('/approval-mail/webhooks/:workspaceId',async c=>c.json(await handleApprovalMail(c.env,c.req.param('workspaceId'),c.req.raw)));
+app.post('/test/approval-mail-connection',async c=>{const t=new Date().toISOString();await c.env.DB.exec('CREATE TABLE IF NOT EXISTS test_approval_mail(payload_json TEXT)');await c.env.DB.prepare("INSERT INTO connections VALUES('synthetic-linen-718','w','sendgrid','synthetic-linen-718',?,?,'active',1,?,?)").bind(JSON.stringify({from:'synthetic-linen-729@example.test'}),await encryptSecret(c.env.ENCRYPTION_KEY,JSON.stringify({apiKey:'synthetic-linen-730'})),t,t).run();return c.json({configured:true});});
 app.get('/test/readiness/:work/:catalog',async c=>c.json(await getFulfilmentReadiness(
   {env:c.env,principal:c.get('principal')},c.req.param('work'),c.req.param('catalog'))));
 app.post('/test/manager-policy',async c=>{

@@ -1,5 +1,7 @@
 import { remindSponsors } from "./contractor-sponsor";
 import { remindLifecycleTasks } from "./lifecycle-tasks";
+import { remindApprovalStages } from "./approval-chain";
+import { sendApprovalMail } from "./approval-mail";
 import { processDueRecurrences } from './recurrence';
 import { processFollowups } from './escalations';
 import { resumeFulfilmentAmendment } from "./fulfilment-amend-execution";
@@ -38,7 +40,7 @@ export async function processDueWork(
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "integration"]);
   await processDueRecurrences(ctx,at);
-  const reminders = [...await remindSponsors(ctx, at), ...await remindLifecycleTasks(ctx, at)];
+  const reminders = [...await remindSponsors(ctx, at), ...await remindLifecycleTasks(ctx, at), ...await remindApprovalStages(ctx, at), ...await sendApprovalMail(ctx, at)];
   await processFollowups(ctx, at);
   const prepared = await ctx.env.DB.prepare("SELECT * FROM work_fulfilment_amendments WHERE workspace_id=? AND state='prepared' ORDER BY created_at LIMIT 50")
     .bind(ctx.principal.workspaceId).all();

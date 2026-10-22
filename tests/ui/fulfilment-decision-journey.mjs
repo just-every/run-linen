@@ -1,3 +1,4 @@
+import {approvalChainJourney} from './approval-chain-journey.mjs';
 import assert from 'node:assert/strict';
 
 export async function fulfilmentDecisionJourney(page, api, base, managerId) {
@@ -64,4 +65,5 @@ export async function fulfilmentDecisionJourney(page, api, base, managerId) {
   await page.getByText('Business approval recorded.',{exact:false}).waitFor();
   assert.equal(await currentDecision(), undefined);
   assert.equal((await api('/grants')).length, grantsBefore);
+  await approvalChainJourney(page,api,base,managerId);
 }

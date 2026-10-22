@@ -1,0 +1,34 @@
+import {useState,type FormEvent} from 'react';
+import {request} from './api';
+import {useRemote,useSession} from './state';
+import {ErrorNotice,Notice} from './primitives';
+import type {StageDef,StageApprover} from '../features/work/approval-config';
+import type {CatalogForm} from '../features/work/catalog-form-schema';
+
+type Item={id:string;revision:number;form:CatalogForm;approvals?:StageDef[];requires_manager?:number;managerApproval?:StageDef|null};
+export function CatalogApprovalEditor({item,onSaved}:{item:Item;onSaved:()=>void}) {
+  const {session}=useSession(),groups=useRemote<{items:{id:string;name:string}[]}>('/work-groups'),members=useRemote<{id:string;name:string;active:number}[]>('/members'),calendars=useRemote<{items:{id:string;name:string;timezone:string}[]}>('/approval-calendars');
+  const [stages,setStages]=useState<StageDef[]>(item.approvals??[]),[manager,setManager]=useState(item.managerApproval?{remindHours:item.managerApproval.remindHours,slaHours:item.managerApproval.slaHours}:null),[calendarId,setCalendar]=useState(item.approvals?.[0]?.calendarId??item.managerApproval?.calendarId??''),[error,setError]=useState<unknown>(),[saving,setSaving]=useState(false);
+  const edit=(i:number,patch:Partial<StageDef>)=>setStages(stages.map((s,n)=>n===i?{...s,...patch}:s));
+  async function save(e:FormEvent){e.preventDefault();setSaving(true);setError(undefined);try{await request(`/catalog/${item.id}/approvals`,{method:'POST',csrf:session.csrfToken,body:{revision:item.revision,calendarId,manager,approvals:stages.map(({calendar,calendarId,calendarRevision,...s})=>s)}});onSaved();}catch(error){setError(error);}finally{setSaving(false);}}
+  function selectApprover(i:number,type:StageApprover['type'],value:string,selected:boolean){const a:StageApprover=type==='group'?{type,groupId:value}:{type,userId:value};edit(i,{approvers:selected?[...stages[i].approvers,a]:stages[i].approvers.filter(x=>JSON.stringify(x)!==JSON.stringify(a))});}
+  return <form className="inline-form" onSubmit={e=>void save(e)}><p>The manager decision comes first when required. These stages follow in order; people within a stage decide in parallel. Finance and cost-center holders are named explicitly below.</p>
+    <ErrorNotice error={groups.error??members.error??calendars.error}/>
+    <label>Approval business calendar<select required value={calendarId} onChange={e=>setCalendar(e.target.value)}><option value="">Choose a calendar</option>{calendars.data?.items.map(c=><option key={c.id} value={c.id}>{c.name} · {c.timezone}</option>)}</select></label>
+    {!!item.requires_manager&&<fieldset><legend>Manager reminder and SLA</legend><label className="checkbox-field"><input type="checkbox" checked={!!manager} onChange={e=>setManager(e.target.checked?{remindHours:24,slaHours:48}:null)}/>Configure manager approval timing</label>{manager&&<><label>Manager reminder after business hours<input type="number" min="1" step="1" value={manager.remindHours??''} onChange={e=>setManager({...manager,remindHours:e.target.value?Number(e.target.value):null})}/></label><label>Manager SLA in business hours<input type="number" min="1" step="1" value={manager.slaHours??''} onChange={e=>setManager({...manager,slaHours:e.target.value?Number(e.target.value):null})}/></label></>}</fieldset>}
+    {stages.map((stage,i)=><fieldset key={stage.key}><legend>Approval stage {i+1}</legend>
+      <label>Stage name {i+1}<input required maxLength={120} value={stage.name} onChange={e=>edit(i,{name:e.target.value})}/></label>
+      <label>Decision rule {i+1}<select value={stage.mode} onChange={e=>edit(i,{mode:e.target.value as 'any'|'all'})}><option value="any">Any one holder approves</option><option value="all">Every holder approves</option></select></label>
+      <label className="checkbox-field"><input type="checkbox" checked={stage.approvers.some(a=>a.type==='application_owner')} onChange={e=>edit(i,{approvers:e.target.checked?[...stage.approvers,{type:'application_owner'}]:stage.approvers.filter(a=>a.type!=='application_owner')})}/>Application or item owner · stage {i+1}</label>
+      {groups.data?.items.map(g=><label key={g.id} className="checkbox-field"><input type="checkbox" checked={stage.approvers.some(a=>a.type==='group'&&a.groupId===g.id)} onChange={e=>selectApprover(i,'group',g.id,e.target.checked)}/>{g.name} · stage {i+1}</label>)}
+      {members.data?.filter(m=>m.active).map(m=><label key={m.id} className="checkbox-field"><input type="checkbox" checked={stage.approvers.some(a=>a.type==='member'&&a.userId===m.id)} onChange={e=>selectApprover(i,'member',m.id,e.target.checked)}/>{m.name} · stage {i+1}</label>)}
+      <label>Applies above USD {i+1}<input type="number" min="0" step="0.01" value={stage.aboveCents===null?'':stage.aboveCents/100} onChange={e=>edit(i,{aboveCents:e.target.value===''?null:Math.round(Number(e.target.value)*100)})}/><small>Empty means always. Unknown amounts require this stage.</small></label>
+      <label>Price source {i+1}<select value={stage.costField??''} onChange={e=>edit(i,{costField:e.target.value||null})}><option value="">Recorded item cost</option>{item.form.fields.filter(f=>f.type==='number').map(f=><option key={f.id} value={f.id}>{f.label} (requester enters USD)</option>)}</select></label>
+      <label>Remind after business hours {i+1}<input type="number" min="1" step="1" value={stage.remindHours??''} onChange={e=>edit(i,{remindHours:e.target.value?Number(e.target.value):null})}/></label>
+      <label>Approval SLA in business hours {i+1}<input type="number" min="1" step="1" value={stage.slaHours??''} onChange={e=>edit(i,{slaHours:e.target.value?Number(e.target.value):null})}/></label>
+      <button type="button" className="action secondary" onClick={()=>setStages(stages.filter((_,n)=>n!==i))}>Remove stage {i+1}</button>
+    </fieldset>)}
+    <button type="button" className="action secondary" disabled={stages.length>=8} onClick={()=>setStages([...stages,{key:'s'+crypto.randomUUID().replaceAll('-','').slice(0,12),name:'',mode:'any',approvers:[],aboveCents:null,costField:null,remindHours:24,slaHours:48,calendar:undefined as never}])}>Add approval stage</button>
+    <Notice>Saving creates a new item revision. Submitted requests keep their stages and recorded costs. Decisions require current authority and the current request revision. Approval grants no provider permission.</Notice><ErrorNotice error={error}/><button className="action primary" disabled={saving}>Save approval chain</button>
+  </form>;
+}

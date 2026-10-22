@@ -3,7 +3,7 @@ import { currentWorkPrincipal } from "./identity";
 import type { WorkContext } from "./core";
 export async function delegateManager(
   ctx: WorkContext,
-  input: { managerId: string; delegateId: string; expiresAt: string },
+  input: { managerId: string; delegateId: string; expiresAt: string; startsAt?: string },
 ) {
   await currentWorkPrincipal(ctx);
   if (
@@ -18,7 +18,7 @@ export async function delegateManager(
   if (
     input.managerId === input.delegateId ||
     !Number.isFinite(Date.parse(input.expiresAt)) ||
-    Date.parse(input.expiresAt) <= Date.now()
+    Date.parse(input.expiresAt) <= Math.max(Date.now(),Date.parse(input.startsAt??now())) || (input.startsAt!==undefined && !Number.isFinite(Date.parse(input.startsAt)))
   )
     throw new ApiError(
       422,
@@ -56,7 +56,7 @@ export async function delegateManager(
       ctx.principal.workspaceId,
       input.managerId,
       input.delegateId,
-      now(),
+      input.startsAt??now(),
       input.expiresAt,
     ),
     ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)").bind(
@@ -83,7 +83,7 @@ export async function resolveManager(
   if (!managerId || !await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1')
     .bind(ctx.principal.workspaceId,managerId).first()) return null;
   const delegate = await ctx.env.DB.prepare(
-    "SELECT d.delegate_id FROM work_delegations d JOIN memberships m ON m.workspace_id=d.workspace_id AND m.user_id=d.delegate_id AND m.active=1 WHERE d.workspace_id=? AND d.manager_id=? AND d.starts_at<=? AND d.expires_at>? AND d.revoked_at IS NULL ORDER BY d.starts_at DESC LIMIT 1",
+    "SELECT d.delegate_id FROM work_delegations d JOIN memberships m ON m.workspace_id=d.workspace_id AND m.user_id=d.delegate_id AND m.active=1 WHERE d.workspace_id=? AND d.manager_id=? AND d.starts_at<=? AND d.expires_at>? AND d.revoked_at IS NULL AND EXISTS(SELECT 1 FROM json_each(m.roles_json) r WHERE r.value IN ('approver','owner')) ORDER BY d.starts_at DESC LIMIT 1",
   )
     .bind(ctx.principal.workspaceId, managerId, now(), now())
     .first<{ delegate_id: string }>();
@@ -95,4 +95,19 @@ export async function resolveManager(
     .first())
     ? managerId
     : null;
+}
+
+/** Withdrawal immediately returns future decisions to their holder; already emailed tokens cannot bypass it. */
+export async function revokeDelegation(ctx:WorkContext,delegationId:string){
+ await currentWorkPrincipal(ctx);
+ const row=await ctx.env.DB.prepare('SELECT manager_id FROM work_delegations WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,delegationId).first<{manager_id:string}>();
+ if(!row)throw new ApiError(404,'not_found','Delegation not found');
+ if(ctx.principal.userId!==row.manager_id) {
+  if(!ctx.principal.roles.includes('owner'))throw new ApiError(403,'delegation_issuer','Only the holder or owner may withdraw a delegation');
+ }
+ await ctx.env.DB.batch([
+  ctx.env.DB.prepare('UPDATE work_delegations SET revoked_at=? WHERE workspace_id=? AND id=? AND revoked_at IS NULL').bind(now(),ctx.principal.workspaceId,delegationId),
+  ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'work.delegation_revoked',?,'{}',? WHERE changes()=1").bind(id(),ctx.principal.workspaceId,ctx.principal.userId,delegationId,now()),
+ ]);
+ return {state:'revoked'};
 }

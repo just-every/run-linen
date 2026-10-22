@@ -1,3 +1,5 @@
+import { chainStatus } from './approval-stages';
+import { managerStageApproved } from './fulfilment-authority';
 import { ApiError, id, now } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { requireCatalogAudience } from './catalog-audience';
@@ -80,6 +82,9 @@ export async function quoteRelation(ctx: WorkContext, quote: Pick<QuoteRow, 'wor
   const catalog = await db.prepare('SELECT * FROM work_catalog WHERE workspace_id=? AND id=?').bind(w, quote.catalog_id).first<any>();
   if (!catalog) return null;
   if (await db.prepare('SELECT 1 FROM work_fulfilment_approvals WHERE workspace_id=? AND fulfilment_id=? AND holder_id=?').bind(w, f.id, userId).first()) return 'decided_approver';
+  if (await db.prepare('SELECT 1 FROM work_approval_decisions WHERE workspace_id=? AND fulfilment_id=? AND approver_id=?').bind(w,f.id,userId).first()) return 'decided_approver';
+  const chain=await chainStatus(ctx,work,catalog,f,await managerStageApproved(ctx,work,catalog,f));
+  if (!['closed','cancelled'].includes(work.state) && chain.pending?.approvers.includes(userId)) return 'approver';
   if (catalog.requires_manager && !['closed', 'cancelled'].includes(work.state) && userId !== f.beneficiary_id) {
     const person = await personForMember(ctx, f.beneficiary_id);
     if (person && await resolveManager(ctx, person.manager_id || null) === userId) return 'approver';

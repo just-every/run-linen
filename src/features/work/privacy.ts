@@ -153,7 +153,10 @@ async function eraseSinglePerson(
     ctx.env.DB.prepare("UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action IN ('work.classification_proposed','work.classification_overridden') AND target IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))").bind(w,w,p,p),
     ctx.env.DB.prepare("UPDATE work_fulfilments SET purpose='[erased]',catalog_snapshot_json=NULL WHERE workspace_id=? AND work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))").bind(w,w,p,p),
     ctx.env.DB.prepare("UPDATE work_fulfilments SET purpose='[erased]',catalog_snapshot_json=NULL WHERE workspace_id=? AND json_extract(catalog_snapshot_json,'$.submittedBy')=?").bind(w,p),
-    ctx.env.DB.prepare("UPDATE work_fulfilment_approvals SET purpose='[erased]' WHERE workspace_id=? AND work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))").bind(w,w,p,p),
+    ctx.env.DB.prepare("UPDATE work_fulfilment_approvals SET comment=NULL WHERE workspace_id=? AND holder_id=?").bind(w,p),
+    ctx.env.DB.prepare("UPDATE work_approval_decisions SET comment=NULL WHERE workspace_id=? AND (approver_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(w,p,w,p,p),
+    ctx.env.DB.prepare("UPDATE work_approval_tokens SET token_hash=id,state='expired',sent_to='' WHERE workspace_id=? AND (approver_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(w,p,w,p,p),
+    ctx.env.DB.prepare("UPDATE work_fulfilment_approvals SET comment=NULL,purpose='[erased]' WHERE workspace_id=? AND work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))").bind(w,w,p,p),
     ctx.env.DB.prepare("UPDATE work_fulfilment_amendments SET request_json='{}',prior_json='{}',result_json='{}',reason='Identity erased',state='erased' WHERE workspace_id=? AND work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))").bind(w,w,p,p),
     ctx.env.DB.prepare(
       "DELETE FROM work_attachments WHERE workspace_id=? AND work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))",

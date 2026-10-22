@@ -1,6 +1,7 @@
 import { currentWorkPrincipal } from './identity';
 import { type WorkContext, type WorkRecord } from './core';
-import { fulfilmentManagerApproval } from './fulfilment-authority';
+import { managerRejected } from './approval-decisions';
+import { managerStageAuthority } from './fulfilment-authority';
 import { now } from '../../platform/http';
 export interface FulfilmentDecision {
   workId:string; title:string; catalogId:string; catalogName:string; beneficiaryId:string; beneficiaryName:string;
@@ -11,6 +12,7 @@ export interface FulfilmentDecision {
   /** CATALOG-004: set when the item is a bundle child; bundle children are approved together. */
   bundleName:string|null;
   /** The frozen vendor quote the current approver may read (CATALOG-001), never its amount. */
+  approvalTimer:{sla_at:string|null;reminded_at:string|null;breached_at:string|null}|null;
   quote:{id:string;name:string;size:number;sha256:string}|null;
 }
 /** Only the current decision holder sees the minimal business scope, never conversation or context. */
@@ -37,9 +39,11 @@ export async function listFulfilmentDecisions(ctx: WorkContext): Promise<{items:
   const items:FulfilmentDecision[]=[];
   for(const f of candidates) {
     const work={id:f.work_id,revision:f.work_revision} as WorkRecord;
-    const authority=await fulfilmentManagerApproval(ctx,work,{...f,revision:f.catalog_revision},f);
+    const authority=await managerStageAuthority(ctx,work,{...f,revision:f.catalog_revision},f);
+    if(await managerRejected(ctx,work,{revision:f.catalog_revision},f))continue;
     if(authority.allowed || authority.holderId!==ctx.principal.userId || f.beneficiary_id===ctx.principal.userId)continue;
-    items.push({workId:f.work_id,title:f.title,catalogId:f.catalog_id,catalogName:f.catalog_name,beneficiaryId:f.beneficiary_id,
+    const approvalTimer=await db.prepare("SELECT sla_at,reminded_at,breached_at FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=? AND stage_key='manager'").bind(w,f.id).first<{sla_at:string|null;reminded_at:string|null;breached_at:string|null}>();
+    items.push({approvalTimer,workId:f.work_id,title:f.title,catalogId:f.catalog_id,catalogName:f.catalog_name,beneficiaryId:f.beneficiary_id,
       beneficiaryName:f.beneficiary_name,requesterName:f.requester_name,requestForName:f.request_for_name,
       serviceForOtherPerson:f.beneficiary_id!==f.request_beneficiary_id,purpose:f.purpose,expiresAt:f.expires_at,expectedWorkRevision:f.work_revision,
       expectedFulfilmentRevision:f.revision,expectedCatalogRevision:f.catalog_revision,

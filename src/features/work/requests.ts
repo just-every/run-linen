@@ -4,6 +4,7 @@ import { taskStatements, describeObligations } from './catalog-tasks';
 import { applicationForRequest, applicationProjection } from './application-catalog';
 import { bindingErasureGuard, personForMember } from './person-binding';
 import { fulfilmentManagerApproval } from "./fulfilment-authority";
+import { planStages, stageStatements, stagesOf } from './approval-chain';
 import { amendFulfilment } from "./fulfilment-amend";
 import { resolveManager } from "./delegation";
 import { currentWorkPrincipal } from "./identity";
@@ -71,6 +72,7 @@ export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord
       target: string;
       owner_id: string;
       requires_manager: number;
+      approvals_json: string;manager_approval_json:string|null;
       capacity: number | null;
     }>();
   if (!catalog) throw new ApiError(404, "not_found", "Catalog item not found");
@@ -114,18 +116,21 @@ export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord
       "fulfilment_changed",
       "Material beneficiary, purpose or expiry edit requires revised work and renewed authority",
     );
-  if (catalog.requires_manager) {
+  if (previous || catalog.requires_manager || stagesOf(catalog).length) {
     const approval = await fulfilmentManagerApproval(ctx,{id:workId,revision:work.revision} as WorkRecord,{...catalog,id:input.catalogId,revision:catalog.revision},
       previous || {beneficiary_id:input.beneficiaryId,purpose:input.purpose,expires_at:input.expiresAt||null});
-    if(!approval.allowed) blocked = approval.holderId
-      ? "Current scoped manager approval required; manager identity alone does not approve this request"
-      : "Missing authoritative manager; owner must resolve authority";
+    if(!approval.allowed) blocked = approval.rejected ? "Approval was rejected; the request needs a fresh submission"
+      : catalog.requires_manager && !approval.holderId ? "Missing authoritative manager; owner must resolve authority"
+      : approval.pendingStage && !catalog.requires_manager ? `Approval stage "${approval.pendingStage}" is waiting for its decision`
+      : approval.holderId ? "Current scoped manager approval required; manager identity alone does not approve this request"
+      : "Approval stages are waiting for their decisions";
   }
-  return {input,catalog,previous,audience,catalogSnapshot,application,blocked,decisionOwner};
+  const approvalStages = previous ? [] : await planStages(ctx,catalog,catalogSnapshot);
+  return {input,catalog,previous,audience,catalogSnapshot,application,blocked,decisionOwner,approvalStages};
 }
 /** The single atomic write that records one request: guards, reservation, snapshot, quote binding and every duty. */
 export function fulfilmentStatements(ctx: WorkContext, e: Evaluation, workId: string, workRevision: number) {
-  const {input,catalog,previous,audience,catalogSnapshot,application,blocked} = e;
+  const {input,catalog,previous,audience,catalogSnapshot,application,blocked,approvalStages} = e;
   const w=ctx.principal.workspaceId,admissionGuard=id(),roles=JSON.stringify(ctx.principal.roles);
   const fid = id(), catalogGuard = id(), automatedId = id(), quote = catalogSnapshot.quote as {id:string;sha256:string}|null|undefined;
   const manual = manualKinds.includes(catalog.kind);
@@ -171,6 +176,7 @@ export function fulfilmentStatements(ctx: WorkContext, e: Evaluation, workId: st
       application ? JSON.stringify(application) : null,
       JSON.stringify(catalogSnapshot),
     ),
+    ...stageStatements(ctx, workId, fid, approvalStages),
     ...(quote && !previous ? [
       ctx.env.DB.prepare("UPDATE work_attachments SET fulfilment_id=? WHERE workspace_id=? AND id=? AND fulfilment_id IS NULL AND EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND id=?)")
         .bind(fid,w,quote.id,w,fid),

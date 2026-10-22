@@ -220,11 +220,11 @@ export function FulfilmentDecisions({
                     ["Requested by", item.requesterName],
                     ["For", item.beneficiaryName],
                     ["Service", item.catalogName],
-                    ["Purpose", item.purpose],
+                    ["Purpose", item.purpose],["Approval due",item.approvalTimer?.sla_at?date(item.approvalTimer.sla_at):"No approval SLA configured"],
                     ["Access ends", item.expiresAt ? date(item.expiresAt) : "No expiry recorded"],
                   ]}
                 />
-                {item.quote && <p>Vendor quote: <a href={`/api/v1/catalog-quotes/${item.quote.id}`}>Download the quote ({Math.ceil(item.quote.size / 1024)} KiB)</a></p>}
+                {item.approvalTimer?.reminded_at&&<Notice>Approval reminder sent {date(item.approvalTimer.reminded_at)}.</Notice>}{item.approvalTimer?.breached_at&&<Notice tone="warning">The approval SLA has passed. The item owner has been notified.</Notice>}{item.quote && <p>Vendor quote: <a href={`/api/v1/catalog-quotes/${item.quote.id}`}>Download the quote ({Math.ceil(item.quote.size / 1024)} KiB)</a></p>}
               </div>
               {item.serviceForOtherPerson && (
                 <Notice tone="warning">

@@ -1,3 +1,4 @@
+import {ApprovalMailSettings} from './approval-mail-settings';
 import { OperationsKpis } from './operations-kpis';
 import { EffortReport, type EffortReportData } from "./effort-report";
 import { SlaReport } from "./work-sla";
@@ -63,6 +64,7 @@ export function OperationsSpace({ section }: { section: string }) {
           repeat or compensation.
         </Notice>
       )}
+      {section==="notifications"&&owner&&<ApprovalMailSettings/>}
       <div className={section === "members" ? "split" : "stack"}>
       {list.loading ? (
         <Loading />

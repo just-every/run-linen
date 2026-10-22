@@ -52,7 +52,7 @@ export async function amendFulfilment(ctx: WorkContext, workId: string, input: F
   const catalog = await db.prepare('SELECT * FROM work_catalog WHERE workspace_id=? AND id=?')
     .bind(w, input.catalogId).first<any>();
   // An amendment is a fresh submission: it re-gates the audience, binds a quote again and needs new approval (CATALOG-001).
-  if(restrictedAudience(catalog) || normalizeCatalogForm(JSON.parse(catalog.form_json)).quoteRequired)throw new ApiError(409,'catalog_amendment_requires_resubmission','Audience-controlled and quote-backed amendments require a fresh catalog submission and renewed approval');
+  if(await db.prepare('SELECT 1 FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=?').bind(w,f.id).first() || restrictedAudience(catalog) || normalizeCatalogForm(JSON.parse(catalog.form_json)).quoteRequired)throw new ApiError(409,'catalog_amendment_requires_resubmission','Audience-controlled and quote-backed amendments require a fresh catalog submission and renewed approval');
   const initial = await db.prepare(`SELECT o.* FROM work_fulfilment_execution l JOIN execution_operations o
     ON o.workspace_id=l.workspace_id AND o.id=l.operation_id WHERE l.workspace_id=? AND l.fulfilment_id=? AND l.phase='initial'`)
     .bind(w, f.id).first<Operation>();

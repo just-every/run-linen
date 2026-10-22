@@ -39,8 +39,9 @@ export function RailNav({ section }: { section: string }) {
     Promise.all([
       request<{ items: DomainRecord[] }>("/decisions", { signal }),
       request<{ items: FulfilmentDecision[] }>("/fulfilment-decisions", { signal }),
+      request<{items:unknown[]}>("/approval-stages",{signal}),
     ]).then(
-      ([choices, approvals]) => setWaiting(choices.items.filter((d) => d.data.state === "needs-decision").length + approvals.items.length),
+      ([choices, approvals, stages]) => setWaiting(choices.items.filter((d) => d.data.state === "needs-decision").length + approvals.items.length + stages.items.length),
       () => signal.aborted || setWaiting(undefined),
     );
     return () => controller.abort();

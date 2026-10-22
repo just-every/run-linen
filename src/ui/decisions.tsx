@@ -1,3 +1,4 @@
+import { ApprovalStageDecisions } from './approval-stage-decisions';
 import { FulfilmentDecisions, type FulfilmentQueueStatus } from "./fulfilment-decisions";
 import { usePeopleLabels } from "./people-labels";
 import { useState, type FormEvent } from "react";
@@ -164,7 +165,7 @@ export function DecisionSpace({ selectedId }: { selectedId?: string }) {
                 matter. Routine authorized work carries on.
               </p>
             </Hero>
-            <FulfilmentDecisions onQueueStatus={setFulfilmentStatus} />
+            <FulfilmentDecisions onQueueStatus={setFulfilmentStatus} /><ApprovalStageDecisions/>
             {list.loading ? (
               <Loading label="Reading decisions…" />
             ) : list.error ? (
