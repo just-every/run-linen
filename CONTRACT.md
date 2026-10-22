@@ -1260,6 +1260,32 @@ that product and marks how close the current code is (see [Status](#status)).
   template; the manager's "buddy assigned" task is reminded in Slack two
   business days before start; a 1099 template omits benefits tasks.
 
+  *Current dated-task semantic (sx, 22 October):* the owner configures versioned
+  join/move/leave templates using reviewed department, location, title (job role)
+  and employment-type value IDs. Owner and HR may read the templates. A person
+  must match every restricted dimension; values within one dimension are OR,
+  unknown fails a restriction, and every active matching template contributes
+  its tasks. Names and roles are never inferred. Each admitted plan keeps the
+  template names/revisions and its task offsets; later template edits do not
+  rewrite it. Tasks name IT/HR/Facilities groups, the reviewed manager, or the
+  accountable owner. Due dates and reminders are whole business days relative
+  to start or end using the sole owner-configured calendar for the plan's
+  timezone; a missing or ambiguous calendar refuses admission visibly. An
+  absent end date leaves a named undated task and reason in the record review.
+  A missing active manager leaves that task blocked with the accountable owner
+  owning the exception, without permission to complete as the manager. A current
+  assigned person or named group member completes a task; only the owner may
+  waive it with a reason. A recorded completion is never provider verification
+  or an execution grant. Re-dating moves open tasks and cancellation cancels
+  them; completed duties remain recorded. Current assignees see only their
+  task, person name, change and dates, without the HR record. Reminders are
+  deduplicated portal requests for the responsible person or current group
+  leads; erasure clears their subject content and prevents recreation. No
+  outbound message is sent. Slack delivery required below remains unbuilt;
+  CHANNEL-001/002 and NOTIFY-001/002 inherit the task/reminder scope before any
+  additional channel is enabled. The owner-only configuration and minimal
+  assignee view are the adopted conservative default pending ct confirmation.
+
 - **LIFE-003 — Birthright access baselines.** Access policies map department,
   title, location and employment type to groups, apps and licenses; a join grants
   the baseline and a move computes retained, added and removed access for review
@@ -2764,7 +2790,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `ACCESS-009` | User access reviews | target | missing |  | No access reviews. |
 | `ACCESS-010` | On-premises Active Directory (hybrid identity) | target | missing |  | No on-premises AD relay, source-of-authority routing or domain-controller readback. |
 | `LIFE-001` | HRIS-triggered lifecycle | target | missing |  | No Rippling, Gusto, BambooHR, Workday or Willow connector; lifecycle accepts HR facts through the API only. |
-| `LIFE-002` | Dated task plans across teams | target | partial | `src/features/work/lifecycle.ts`, `tests/work/runtime.mjs` | No templates by role, location or employment type. |
+| `LIFE-002` | Dated task plans across teams | target | partial | `tests/work/lifecycle-template-cases.mjs` (lifecycleTemplateChecks through `tests/work/runtime.mjs`: reviewed dimension matching, Sales/Austin Monday plan, 1099 benefits exclusion, IT/HR/manager/Facilities task dates, business-day reminder instants, current assignee scope, completion/waiver, re-dating/cancellation, frozen templates, audit and erasure); `tests/ui/lifecycle-template-journey.mjs` (lifecycleTemplateJourney: native named template controls, record tasks, undated reason, manager reminder and completion at 1440/390). | Slack reminder and real CHANNEL-001 adapter proof remain unbuilt; future owner-channel delivery inherits CHANNEL-002 and NOTIFY-001/002. Adopted default pending ct: owner-only template configuration, owner/HR review, reviewed-value matching and minimal current-assignee task views; no new outbound action. |
 | `LIFE-003` | Birthright access baselines | target | done | `src/features/work/access-policies.ts`, `src/features/work/access-policy-routes.ts`, `src/features/work/lifecycle.ts`, `src/ui/access-policies.tsx`, `tests/work/access-policy-cases.mjs`, `tests/ui/connected-lifecycle.mjs` | Public-route proof: owner-only versioned and audited policies over department, title, location and employment type; a join grants the matching baseline, a 1099 omits benefits, Sales to Marketing records retained Slack, added HubSpot and removed Salesforce with the policies behind each, replay stays read-only after a policy edit and a deactivated policy grants nothing. Native fixture journey: standing grants execute only the added and removed access, readback shows HubSpot present and Salesforce removed, and the review screen is inspected at 1440/390. Provider proof is fixture-only; native app connectors remain ACCESS-005. |
 | `LIFE-004` | Joiner device readiness | target | partial | `src/features/work/resources.ts`, `tests/ui/custody-journey.mjs` | No zero-touch enrollment or shipping. |
 | `LIFE-005` | Leaver revocation everywhere | target | partial | `src/features/execution/identity.ts`, `src/features/work/lifecycle.ts`, `tests/ui/connected-lifecycle.mjs` | Entra only; no Okta, Google, SaaS or on-premises AD revocation, data transfer or device actions. |
