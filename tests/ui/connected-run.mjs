@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { mkdtemp, rm, mkdir, open, cp, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { tmpdir, userInfo } from "node:os";
 import { join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import { createServer } from "node:net";
@@ -19,7 +19,7 @@ async function stopWorker() {
   worker = undefined;
 }
 async function browserCheck(file,url) {
-  await new Promise((yes,no)=>{const child=spawn(process.execPath,[file],{cwd:root,stdio:"inherit",env:{...process.env,LINEN_TEST_URL:url,LINEN_TEST_OUTPUT:out}});child.on("error",no);child.on("exit",code=>code===0?yes():no(Error(`Browser acceptance exited ${code}`)));});
+  await new Promise((yes,no)=>{const child=spawn(process.execPath,[file],{cwd:root,stdio:"inherit",env:{...process.env,HOME:userInfo().homedir,LINEN_TEST_URL:url,LINEN_TEST_OUTPUT:out}});child.on("error",no);child.on("exit",code=>code===0?yes():no(Error(`Browser acceptance exited ${code}`)));});
 }
 async function command(bin, args) {
   await new Promise((yes, no) => {
