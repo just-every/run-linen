@@ -1,3 +1,5 @@
+import { decodeHistory } from '../history/registry';
+import { historyArchiveRow } from '../history/archive';
 import { ApiError, id, now } from '../../platform/http';
 import { check, owner, statement, getRun, sha, encode, erased, identityHash, type AdoptionContext, type Row } from './core';
 import { supported, historyOnly, MAX_CHUNK, type Manifest, type Chunk } from './schema';
@@ -81,6 +83,7 @@ export async function recordsFor(ctx: AdoptionContext, runId: string, chunk: Chu
         check(r && typeof r.table === 'string' && typeof r.key === 'string' && r.row && typeof r.row === 'object' && !Array.isArray(r.row), 'invalid_record');
         check(Object.values(r.row).every(v => v === null || typeof v === 'string' || typeof v === 'number'), 'invalid_record_value');
         check(!Object.keys(r.row).some(k => /password|secret|token|encryption_key/i.test(k) && r.row[k] !== null), 'credential_data_forbidden');
+        r.row=(await historyArchiveRow(ctx,r.table,r.row)).row;
     }
     return records;
 }
@@ -126,7 +129,7 @@ export interface DryReport {
 async function reasonFor(ctx: AdoptionContext, r: NativeRecord) {
     if (!supported(r.table))
         return 'unknown_mapping';
-    if (await erased(ctx, r.row))
+    if (!(['audit_events','svc_events'].includes(r.table) && decodeHistory(r.row[r.table==='audit_events'?'detail_json':'data_json'])) && await erased(ctx, r.row))
         return 'erased_identity';
     if (r.table !== 'identities' && r.table !== 'workspace') {
         const columns = (await ctx.env.DB.prepare(`PRAGMA table_info(${r.table})`).all<{
@@ -277,7 +280,7 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
         }
         const port = ports.get(h.table_name);
         const original = JSON.parse(h.row_json) as Row;
-        if (await erased(ctx, original)) {
+        if (!(['audit_events','svc_events'].includes(h.table_name) && decodeHistory(original[h.table_name==='audit_events'?'detail_json':'data_json'])) && await erased(ctx, original)) {
             if (original.id)
                 await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w, await identityHash(String(original.id)), now()).run();
             await ctx.env.DB.prepare("UPDATE adoption_history SET row_json='{}',state='erased',reason='erasure tombstone' WHERE workspace_id=? AND id=?").bind(w, h.id).run();

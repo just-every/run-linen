@@ -42,6 +42,7 @@ export async function redactHistory(payload:unknown,at:string,matches:(value:str
     // Evidence itself is content. Keep only proof for a value that survived.
     if(isErased(c.before)&&isErased(c.after)){delete c.evidence;delete c.beforeEvidence;delete c.afterEvidence;}
     else {
+      if(c.evidence?.options)c.evidence.options=[...new Set([c.before,c.after].flat().filter(v=>typeof v==='string'&&!isErased(v)))];
       if(c.evidence?.label&&await matches(c.evidence.label))delete c.evidence.label;
       if(isErased(c.before))delete c.beforeEvidence;
       if(isErased(c.after))delete c.afterEvidence;

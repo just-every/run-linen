@@ -1,3 +1,4 @@
+import { historyChanges, readHistoryEvent } from '../history/event';
 import type { Env } from '../../platform/types';
 import { ApiError, now } from '../../platform/http';
 import { categories, levels, ticketTypes } from '../work/classification-policy';
@@ -12,7 +13,7 @@ interface Change { field: string; before: unknown; after: unknown; custom?: bool
 interface SafeChange { field: string; field_id?: string; before: string | null; after: string | null }
 const actions = ['work.classification_overridden', 'work.classification_proposed', 'work.routed', 'work.group_set',
   'work.assigned', 'work.scenario_run', 'work.field_set', 'work.transitioned',
-  'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked'];
+  'work.imported_field', 'work.merged', 'work.duplicate_merged', 'work.split', 'work.split_created', 'work.parent_set', 'work.linked'];
 const arrayChanges = ['work.scenario_run', 'work.merged', 'work.duplicate_merged', 'work.split',
   'work.split_created', 'work.parent_set', 'work.linked'];
 
@@ -110,25 +111,6 @@ export async function projectTicket(env: Env, credential: Reader, row: any) {
   };
 }
 
-/** Same original-value extraction as work/activity.ts. Keep custom-field origin
- * internally so a text field named "priority" cannot impersonate a core field.
- * No live ticket state is used to fill a missing/erasure-cleared audit value. */
-function originalChanges(event: Audit, detail: Record<string, any>): Change[] {
-  if (arrayChanges.includes(event.action)) return Array.isArray(detail.changes)
-    ? detail.changes.filter((change: any) => change && typeof change.field === 'string'
-      && Object.hasOwn(change, 'before') && Object.hasOwn(change, 'after'))
-      .map((change: any) => ({ field: change.field, before: change.before, after: change.after,
-        custom: event.action === 'work.scenario_run' && change.step === 'fields' })) : [];
-  if (event.action === 'work.field_set') return Object.hasOwn(detail, 'before') && Object.hasOwn(detail, 'value')
-    ? [{ field: detail.field, before: detail.before, after: detail.value, custom: true }] : [];
-  if (event.action === 'work.group_set') return Object.hasOwn(detail, 'from') && Object.hasOwn(detail, 'to')
-    ? [{ field: 'group', before: detail.from, after: detail.to }] : [];
-  const before = detail.before ?? detail.from, after = detail.after ?? detail.to;
-  if (!after || typeof after !== 'object' || Array.isArray(after)) return [];
-  return Object.keys(after).filter(field => JSON.stringify(before?.[field] ?? null) !== JSON.stringify(after[field]))
-    .map(field => ({ field, before: before?.[field] ?? null, after: after[field] }));
-}
-
 function safeChange(change: Change, fields: ClassifiedDropdown[], groupIds: Set<string>): SafeChange | null {
   if (change.custom) {
     const field = fields.find(field => field.name === change.field || field.id === change.field);
@@ -167,18 +149,19 @@ export async function projectHistory(env: Env, credential: Reader, row: any) {
       .bind(credential.workspace_id).all<{ id: string }>(),
   ]);
   const groupIds = new Set(groups.results.map(group => group.id)), permittedFields = fieldsFor(fields, row.kind);
-  const changes = events.results.map(event => {
+  const changes = await Promise.all(events.results.map(async event => {
     const detail: Record<string, any> = JSON.parse(event.detail_json);
-    const cleared = Object.keys(detail).length === 0 || detail.redacted === 'erasure';
+    const projection=await readHistoryEvent({env,principal:{workspaceId:credential.workspace_id}},event.action,detail,event.actor??undefined,event.id);
+    const cleared = projection.redacted==='erasure';
     return { id: event.id, at: event.created_at, kind: 'change' as const, actor: event.actor,
       actorKind: event.action === 'work.scenario_run' ? 'scenario' : event.action === 'work.routed' ? 'rule'
         : event.action === 'work.classification_proposed' ? 'agent' : 'person',
       action: event.action, visibility: 'private',
-      changes: originalChanges(event, detail).map(change => safeChange(change, permittedFields, groupIds))
+      changes: projection.changes.map(change => safeChange({...change,field:change.fieldId??change.field,custom:!!change.fieldId || ('custom' in change && !!change.custom)}, permittedFields, groupIds))
         .filter((change): change is SafeChange => change !== null),
-      ...(cleared ? { redacted: 'erasure' as const } : {}),
+      ...(cleared ? { redacted: 'erasure' as const,redactedAt:projection.redactedAt } : {}),
     };
-  });
+  }));
   const messageEntries = thread.map(message => ({ id: message.id, at: message.created_at, kind: 'message' as const,
     actor: message.author_id ?? 'Erased person', actorKind: message.author_id === credential.principal_id ? 'automation' : 'person', action: 'Message',
     visibility: message.visibility, body: message.body, changes: [] as SafeChange[] }));

@@ -1,3 +1,4 @@
+import { historyArchiveRow } from '../history/archive';
 import { id, now } from '../../platform/http';
 import { check, owner, statement, getRun, sha, encode, erased, type AdoptionContext, type Row } from './core';
 import { nativeTables, excludedTables, type Manifest, type Chunk, MAX_CHUNK } from './schema';
@@ -51,8 +52,9 @@ export async function advanceExport(ctx: AdoptionContext, runId: string) {
         row_json: string;
     }>()).results;
     for (const item of page) {
-        const row = JSON.parse(item.row_json) as Row;
-        check(!await erased(ctx, row), 'erasure_invalidated_snapshot', 409);
+        const history = await historyArchiveRow(ctx,item.table_name,JSON.parse(item.row_json));
+        const row = history.row as Row;
+        check(history.typed || !await erased(ctx, row), 'erasure_invalidated_snapshot', 409);
         const record = { table: item.table_name, key: item.source_key, row };
         const bytes = encode([record]);
         check(bytes.byteLength <= MAX_CHUNK, 'record_exceeds_chunk_limit');

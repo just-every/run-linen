@@ -1,5 +1,6 @@
 // Explicit native mapping. Never accept table or column names from an archive as SQL.
 export const nativeTables = [
+    'history_redactions','history_identity_tombstones',
     'work_departments', 'work_department_members',
     'work_approval_stages','work_approval_decisions','work_approval_mail',
     'work_watchers', 'work_collaboration_notices', 'work_side_conversations', 'work_side_deliveries', 'work_side_receipts',
@@ -107,6 +108,9 @@ export const excludedTables: Record<string,string> = {
  ik_d1_retirements:'full-installation rer archive only; legacy native export does not carry importer custody',
  ik_d1_erasure_journal:'full-installation rer archive only; legacy native export does not carry importer custody',
  ik_d1_erasure_tally:'full-installation rer archive only; legacy native export does not carry importer custody',
+ servicenow_import_items:'full-installation rer archive only; legacy native export does not carry importer custody',
+ servicenow_import_privacy:'full-installation rer archive only; legacy native export does not carry importer custody',
+ history_write_guards:'transient history erasure fence',
  freshservice_import_items:'full-installation rer archive only; legacy native export does not carry importer custody',
  freshservice_import_privacy:'full-installation rer archive only; legacy native export does not carry importer custody',
 

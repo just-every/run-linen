@@ -3,6 +3,7 @@ import { decodeHistory, historyActions } from './registry';
 import { erasedPerson, isErased, type HistoryActor, type HistoryEnvelope, type HistoryMetadata, type HistoryRecord, type Protection } from './types';
 export type {HistoryActor,HistoryEnvelope,HistoryMetadata,HistoryRecord,Protection} from './types';
 export {historyEventStatement} from './statement';
+export {readHistoryEvent} from './archive';
 
 export function registeredHistory(action:string,record:HistoryRecord,before:Record<string,unknown>|null,after:Record<string,unknown>,actor:HistoryActor,subjects:string[],protection:Protection,at?:string,metadata:HistoryMetadata={}):HistoryEnvelope {
   if(!historyActions.has(action))throw new Error('Unregistered history action: '+action);

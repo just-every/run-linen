@@ -1,3 +1,4 @@
+import { prepareHistoryErasure } from '../history/erasure';
 import { erasedCalendarPolicy } from './calendar-privacy';
 import { eraseProblemArticles } from './problem-privacy';
 import { eraseKnowledgeDraftPerson } from '../work/knowledge-draft-privacy';
@@ -25,6 +26,8 @@ export async function eraseServicePerson(ctx: {
         name: string;
     }>();
     if(!person&&!await env.DB.prepare('SELECT 1 FROM adoption_tombstones WHERE workspace_id=? AND identity_hash=?').bind(p.workspaceId,await hashToken(input.userId)).first())throw new ApiError(404,'person_not_found','Workspace person or scoped erasure tombstone required');
+    const history=await prepareHistoryErasure(ctx,[input.userId],new Date().toISOString());
+    await env.DB.batch(history.statements);
     const pseudonym = 'erased-' + (await hashToken(p.workspaceId + ':' + input.userId)).slice(0, 24);
     const tokens = [input.userId, person?.email, person?.name].filter((x): x is string => !!x && x.length > 2);
     await eraseKnowledgeDraftPerson(ctx, input.userId, tokens);
@@ -73,14 +76,8 @@ export async function eraseServicePerson(ctx: {
             data.state = 'needs-owner';
             data.nextDueAt = null;
         }
-        await env.DB.batch([env.DB.prepare('UPDATE svc_records SET owner_id=?,participants_json=?,data_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?').bind(r.owner_id === input.userId ? pseudonym : r.owner_id, JSON.stringify(participants.filter(x => x !== input.userId)), JSON.stringify(data), now(), p.workspaceId, r.id, r.revision), env.DB.prepare('INSERT INTO svc_events SELECT ?,?,?,?,?,?,? WHERE changes()=1').bind(id(), p.workspaceId, r.id, p.userId, 'person-erased', JSON.stringify({ subject: pseudonym, reason: input.reason }), now())]);
+        await env.DB.batch([env.DB.prepare('UPDATE svc_records SET owner_id=?,participants_json=?,data_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?').bind(r.owner_id === input.userId ? pseudonym : r.owner_id, JSON.stringify(participants.filter(x => x !== input.userId)), JSON.stringify(data), now(), p.workspaceId, r.id, r.revision), env.DB.prepare('INSERT INTO svc_events SELECT ?,?,?,?,?,?,? WHERE changes()=1').bind(id(), p.workspaceId, r.id, p.userId, 'person-erased', JSON.stringify({ historyCounts: history.counts }), now())]);
         count++;
-    }
-    const events = await env.DB.prepare('SELECT * FROM svc_events WHERE workspace_id=?').bind(p.workspaceId).all<any>();
-    for (const e of events.results) {
-        if (e.actor_id !== input.userId && !tokens.some(t => e.data_json.includes(t)) && !(!person && affectedRecords.has(e.record_id)))
-            continue;
-        await env.DB.batch([env.DB.prepare('DELETE FROM svc_events WHERE workspace_id=? AND id=?').bind(p.workspaceId, e.id), env.DB.prepare('INSERT INTO svc_events VALUES(?,?,?,?,?,?,?)').bind(e.id, p.workspaceId, e.record_id, e.actor_id === input.userId ? pseudonym : e.actor_id, e.kind, JSON.stringify(redact(JSON.parse(e.data_json))), e.created_at)]);
     }
     await env.DB.prepare("UPDATE svc_outbox SET payload_json='{}',recipient_id=?,state='erased',error=NULL WHERE workspace_id=? AND recipient_id=?").bind(pseudonym, p.workspaceId, input.userId).run();
     if (!person) for (const recordId of affectedRecords) {

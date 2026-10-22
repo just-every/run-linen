@@ -1,3 +1,4 @@
+import { prepareHistoryErasure } from '../history/erasure';
 import { eraseLifecycleTaskStatements, lifecycleReminderWork } from './lifecycle-task-privacy';
 import { eraseCollaborationPerson } from './collaboration-privacy';
 import { eraseApplicationSnapshots } from './application-privacy';
@@ -102,6 +103,7 @@ async function eraseSinglePerson(
   const w = ctx.principal.workspaceId,
     p = input.personId,
     t = now();
+  const history = await prepareHistoryErasure(ctx,[p,...aliases],t);
   const guard = id(), bindingGuard = id();
   let changed;
   try { changed = await ctx.env.DB.batch([
@@ -125,12 +127,9 @@ async function eraseSinglePerson(
       ctx.env.DB.prepare("UPDATE work_pending_services SET purpose='[erased]',reason='Identity erased',state=CASE WHEN state='held' THEN 'cancelled' ELSE state END WHERE workspace_id=? AND person_id=?").bind(w,p),
     ]:[]),
     ...eraseLifecycleTaskStatements(ctx, p),
-    // New task audit payloads are untyped for erasure: keep the approved full-clearing fallback.
-    // Do not reconstruct any removed value from the task or a later event.
-    ctx.env.DB.prepare("UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action IN ('work.project_task_created','work.project_task_updated','work.project_task_linked')").bind(w),
+    ...history.statements,
     ctx.env.DB.prepare('DELETE FROM work_department_members WHERE workspace_id=? AND user_id IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify([p,...aliases])),
     ctx.env.DB.prepare('UPDATE work_department_members SET updated_by=NULL WHERE workspace_id=? AND updated_by IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify([p,...aliases])),
-    ctx.env.DB.prepare("UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action IN ('work.department_handed_off','work.department_member_set') AND (actor_id=? OR json_extract(detail_json,'$.userId')=? OR target IN(SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(w,p,p,w,p,p),
     // Tombstone every current identity in this same transaction. A reviewer may
     // unbind an erased record, but cannot rebind either side during cleanup.
     ...[...new Set([p,...aliases,...people.map(p=>`${p.source}:${p.source_id}`)])].map(value =>
@@ -146,14 +145,12 @@ async function eraseSinglePerson(
     ctx.env.DB.prepare("UPDATE work_recurring_plans SET title='[erased]',body='[erased]',tasks_json='[]',enabled=0,revision=revision+1 WHERE workspace_id=? AND (creator_id=? OR owner_id=? OR EXISTS(SELECT 1 FROM json_each(tasks_json) WHERE json_extract(value,'$.ownerId')=?))").bind(w,p,p,p),
     ctx.env.DB.prepare("UPDATE work_recurring_tasks SET title='[erased]',owner_id=CASE WHEN owner_id=? THEN '[erased]' ELSE owner_id END,completed_by=CASE WHEN completed_by=? THEN '[erased]' ELSE completed_by END,revision=revision+1 WHERE workspace_id=? AND (owner_id=? OR completed_by=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(p,p,w,p,p,w,p,p),
     ctx.env.DB.prepare("UPDATE work_obligations SET completed_by=CASE WHEN completed_by=? THEN '[erased]' ELSE completed_by END,waived_by=CASE WHEN waived_by=? THEN '[erased]' ELSE waived_by END WHERE workspace_id=? AND (completed_by=? OR waived_by=?)").bind(p,p,w,p,p),
-    ctx.env.DB.prepare("UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action='work.obligation_waived' AND (actor_id=? OR target IN (SELECT o.id FROM work_obligations o JOIN work_records r ON r.workspace_id=o.workspace_id AND r.id=o.work_id WHERE o.workspace_id=? AND (r.requester_id=? OR r.beneficiary_id=?)))").bind(w,p,w,p,p),
     ctx.env.DB.prepare("UPDATE work_knowledge_suggestions SET asker_id='[erased]',articles_json='[]' WHERE workspace_id=? AND asker_id=?").bind(w,p),
     ctx.env.DB.prepare("UPDATE work_time_entries SET note='[erased]',state='completed',last_seen_at=NULL,sequence=sequence+1 WHERE workspace_id=? AND (actor_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(w,p,w,p,p),
     ctx.env.DB.prepare(
       "UPDATE work_records SET title='[erased]',context_json='{}',revision=revision+1 WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)",
     ).bind(w, p, p),
     ctx.env.DB.prepare("UPDATE work_classifications SET current_json=NULL,proposal_json=NULL,reason=NULL,error=NULL,state='erased',proposal_token=NULL,proposal_until=NULL,revision=revision+1 WHERE workspace_id=? AND work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))").bind(w,w,p,p),
-    ctx.env.DB.prepare("UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action IN ('work.classification_proposed','work.classification_overridden') AND target IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))").bind(w,w,p,p),
     ctx.env.DB.prepare("UPDATE work_fulfilments SET purpose='[erased]',catalog_snapshot_json=NULL WHERE workspace_id=? AND work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))").bind(w,w,p,p),
     ctx.env.DB.prepare("UPDATE work_fulfilments SET purpose='[erased]',catalog_snapshot_json=NULL WHERE workspace_id=? AND json_extract(catalog_snapshot_json,'$.submittedBy')=?").bind(w,p),
     ctx.env.DB.prepare("UPDATE work_fulfilment_approvals SET comment=NULL WHERE workspace_id=? AND holder_id=?").bind(w,p),
@@ -176,7 +173,7 @@ async function eraseSinglePerson(
       ctx.principal.userId,
       "work.person_erased",
       p,
-      JSON.stringify({ reason: input.reason, contentRemoved: true }),
+      JSON.stringify({ contentRemoved: true, historyCounts: history.counts }),
       t,
     ),
     ...attachments.map((a) =>
@@ -203,6 +200,7 @@ async function eraseSinglePerson(
     personId: p,
     state: failed.length ? "content_erased_blob_cleanup_pending" : "erased",
     unresolvedBlobKeys: failed,
+    historyCounts: history.counts,
     retained:
       "Anonymized work, operation, source replay tombstones and audit identities",
   };

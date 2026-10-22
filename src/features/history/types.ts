@@ -7,6 +7,7 @@ export interface HistoryEnvelope {
   schema: 'linen.history'; version: 1; action: string; record: HistoryRecord; actor: HistoryActor;
   subjects: string[]; protection: Protection; changes: HistoryChange[];
   source?: { system: string; table: string; eventKey: string };
+  pendingErasure?:boolean;
   redacted?: 'erasure'; redactedAt?: string;
 }
 export interface HistoryMetadata { fields?: Record<string, FieldEvidence>; source?: HistoryEnvelope['source'] }

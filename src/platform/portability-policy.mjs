@@ -1,9 +1,10 @@
+import { historyExportRow,validateHistoryStaged } from '../features/history/portability.mjs';
 // Retain accounts, memberships, all domain history, Freshservice custody and R2
 // bytes. An archive is data custody, never permission to resume remote effects.
 export const portabilityPolicy={
  product:'runeditrun/linen',
  replaceableTables:['platform_auth_policy'],
- excludeTables:['work_approval_mail_subscriptions','platform_archive_recovery','sessions','login_limits','platform_auth_session_proofs','platform_auth_links','platform_auth_steps','platform_auth_limits','platform_auth_guard','execution_secrets'],
+ excludeTables:['history_write_guards','work_approval_mail_subscriptions','platform_archive_recovery','sessions','login_limits','platform_auth_session_proofs','platform_auth_links','platform_auth_steps','platform_auth_limits','platform_auth_guard','execution_secrets'],
  secretColumns:{connections:['secret_ciphertext'],intelligence_engineering_jobs:['claim_token_hash']},
  requiredConfiguration:['OWNER_EMAIL','SESSION_SECRET','SETUP_TOKEN','AUTH_ORIGIN','ENCRYPTION_KEY','MAIL_PROVIDER','MAIL_FROM'],
  buckets:{ATTACHMENTS:{}},
@@ -11,6 +12,7 @@ export const portabilityPolicy={
  // Export removes the hash below; staged validation refuses any active/hash-bearing
  // credential before native restore can write objects or records.
  async validateStaged({db,tables}){
+  if(!await validateHistoryStaged(db,tables))return false;
   const table=tables.mcp_credentials;
   if(table && await db.prepare(`SELECT 1 FROM "${table.replaceAll('"','""')}" WHERE secret_hash IS NOT NULL OR state<>'revoked' LIMIT 1`).first())return false;
   for(const [name,invalid] of [
@@ -42,6 +44,7 @@ export const portabilityPolicy={
   return true;
  },
  exportRow(table,row){
+  historyExportRow(table,row);
   if(table==='svc_records' && row.kind==='release'){
    const data=JSON.parse(row.data_json);
    return {...row,data_json:JSON.stringify({...data,importedState:data.importedState||data.state,state:'imported-review',decisions:[],

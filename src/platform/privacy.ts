@@ -1,3 +1,4 @@
+import { prepareHistoryErasure } from '../features/history/erasure'
 import type { Env, Principal } from './types'
 import { ApiError, now } from './http'
 import { hashToken } from './crypto'
@@ -32,9 +33,10 @@ export async function erasePlatformIdentity(ctx: {env: Env, principal: Principal
  if(matches.results.length>1)throw new ApiError(409,'ambiguous_identity','Identity is ambiguous')
  const person=matches.results[0], uid=prior?.user_id ?? person?.id ?? null
  const time=now()
+ const history=await prepareHistoryErasure(ctx,[identity,...(uid?[uid]:[]),...(person?.email?[person.email]:[])],time)
  // The INSERT trigger rechecks authority, tombstone and last-owner safety inside
  // the atomic batch, including on conflict/replay. No read/write authorization gap.
- const statements=[db.prepare(`INSERT INTO platform_identity_erasures VALUES(?,?,?,?,?) ON CONFLICT(workspace_id,identity_hash) DO UPDATE SET user_id=COALESCE(platform_identity_erasures.user_id,excluded.user_id)`).bind(w,hash,uid,actor,time)]
+ const statements=[...history.statements,db.prepare(`INSERT INTO platform_identity_erasures VALUES(?,?,?,?,?) ON CONFLICT(workspace_id,identity_hash) DO UPDATE SET user_id=COALESCE(platform_identity_erasures.user_id,excluded.user_id)`).bind(w,hash,uid,actor,time)]
  if(identity.includes('@'))statements.push(db.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w,await hashToken(identity.trim().toLowerCase()),time))
  if(uid){
   const aliases=[...new Set([uid,person?.email,person?.email?.trim().toLowerCase(),identity.includes('@')?identity.trim().toLowerCase():null].filter((v):v is string=>!!v))]
@@ -46,10 +48,6 @@ export async function erasePlatformIdentity(ctx: {env: Env, principal: Principal
    db.prepare('DELETE FROM work_department_members WHERE workspace_id=? AND user_id=?').bind(w,uid),
    db.prepare('UPDATE work_department_members SET updated_by=NULL WHERE workspace_id=? AND updated_by=?').bind(w,uid),
    db.prepare('DELETE FROM memberships WHERE workspace_id=? AND user_id=?').bind(w,uid),
-   // Free-form audit payloads can contain nested personal data without subject
-   // indexing. Drop workspace payloads, retaining event IDs/actions/time and
-   // opaque targets required to correlate effects and recovery provenance.
-   db.prepare("UPDATE audit_events SET detail_json='{}',actor_id=CASE WHEN lower(actor_id)=lower(?) THEN '[erased]' ELSE actor_id END,target=CASE WHEN instr(lower(target),lower(?))>0 THEN '[erased]' ELSE target END WHERE workspace_id=?").bind(person?.email ?? (identity.includes('@') ? identity : null),person?.email ?? (identity.includes('@') ? identity : null),w),
    // Even inactive memberships elsewhere retain legitimate tenant history.
    db.prepare("UPDATE users SET email=? ,name='[erased]',password_hash='!erased' WHERE id=? AND NOT EXISTS(SELECT 1 FROM memberships WHERE user_id=? AND workspace_id<>?)").bind(`erased-${await hashToken(uid)}@invalid.local`,uid,uid,w)
   )

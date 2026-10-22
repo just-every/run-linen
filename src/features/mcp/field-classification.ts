@@ -37,8 +37,8 @@ export function registerMcpFieldClassificationRoutes(app: Hono<AppEnv>) {
     const field = await c.env.DB.prepare('SELECT field_type FROM work_custom_fields WHERE workspace_id=? AND id=?')
       .bind(p.workspaceId, fieldId).first<{ field_type: string }>();
     if (!field) throw new ApiError(404, 'not_found', 'Field not found');
-    if (input.nonpersonal && field.field_type !== 'dropdown')
-      throw new ApiError(422, 'field_type_personal', 'Only dropdown fields can be classified nonpersonal');
+    if (input.nonpersonal && !['dropdown','multiselect','number','boolean','date'].includes(field.field_type))
+      throw new ApiError(422, 'field_type_personal', 'Only dropdown, multiselect, number, boolean and date fields can be classified nonpersonal');
     let result: D1Result;
     try {
       result = await c.env.DB.prepare(`UPDATE work_custom_fields SET privacy_class=?,privacy_classified_by=?,privacy_classified_at=?
@@ -47,7 +47,7 @@ export function registerMcpFieldClassificationRoutes(app: Hono<AppEnv>) {
         .bind(input.nonpersonal ? 'nonpersonal' : 'personal', p.userId, now(), p.workspaceId, fieldId, p.workspaceId, p.userId).run();
     } catch (error) {
       if (String(error).includes('mcp_field_type_personal'))
-        throw new ApiError(422, 'field_type_personal', 'Only dropdown fields can be classified nonpersonal');
+        throw new ApiError(422, 'field_type_personal', 'Only dropdown, multiselect, number, boolean and date fields can be classified nonpersonal');
       if (String(error).includes('mcp_field_owner_required'))
         throw new ApiError(403, 'owner_required', 'Current owner required');
       throw error;

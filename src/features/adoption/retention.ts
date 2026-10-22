@@ -1,3 +1,6 @@
+import { reconcilePendingHistory } from '../history/reconcile';
+import { prepareHistoryErasure } from '../history/erasure';
+import { historyArchiveRow } from '../history/archive';
 import { privacyBindingFence } from '../work/person-privacy';
 import { ApiError, id, now } from '../../platform/http';
 import type { Env } from '../../platform/types';
@@ -32,16 +35,18 @@ export async function erasePersonData(ctx: AdoptionContext, identity: string, op
     check(!self, 'different_owner_required_for_self_erasure', 409);
     const expanded = await erasureIdentities(ctx, identity);
     check(!expanded.identities.includes(ctx.principal.userId), 'different_owner_required_for_self_erasure', 409);
+    const historyErasure=await prepareHistoryErasure(ctx,expanded.identities,now());
     const hash = await identityHash(identity), jobId = id();
     try {
         await ctx.env.DB.batch([
             privacyBindingFence(ctx, expanded.people, jobId, expanded.identities),
+            ...historyErasure.statements,
             ...await Promise.all(expanded.identities.map(async value =>
                 ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)')
                     .bind(ctx.principal.workspaceId, await identityHash(value), now()))),
-            ctx.env.DB.prepare("INSERT INTO adoption_erasure_jobs(id,workspace_id,identity_hash,state,ports_json,created_at,identity_ciphertext,actor_id,updated_at,aliases_ciphertext) VALUES(?,?,?,'pending','[]',?,?,?,?,?)")
+            ctx.env.DB.prepare("INSERT INTO adoption_erasure_jobs(id,workspace_id,identity_hash,state,ports_json,created_at,identity_ciphertext,actor_id,updated_at,aliases_ciphertext,history_counts_json) VALUES(?,?,?,'pending','[]',?,?,?,?,?,?)")
                 .bind(jobId, ctx.principal.workspaceId, hash, now(), await encryptSecret(ctx.env.ENCRYPTION_KEY, identity),
-                    ctx.principal.userId, now(), await encryptSecret(ctx.env.ENCRYPTION_KEY, JSON.stringify(expanded.identities))),
+                    ctx.principal.userId, now(), await encryptSecret(ctx.env.ENCRYPTION_KEY, JSON.stringify(expanded.identities)),JSON.stringify(historyErasure.counts)),
             ...(options.preserveImportId ? [ctx.env.DB.prepare('INSERT INTO adoption_import_erasures VALUES(?,?,?)')
                 .bind(ctx.principal.workspaceId, options.preserveImportId, jobId)] : []),
             statement(ctx, 'adoption.erase.request', hash),
@@ -63,15 +68,17 @@ export async function erasePersonData(ctx: AdoptionContext, identity: string, op
     }>()).results;
     for (const r of imports)
         if(r.id!==options.preserveImportId)await invalidateArchive(ctx, r.id, 'imports');
-    const history = (await ctx.env.DB.prepare('SELECT id,row_json FROM adoption_history WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<{
+    const history = (await ctx.env.DB.prepare('SELECT id,table_name,row_json FROM adoption_history WHERE workspace_id=?').bind(ctx.principal.workspaceId).all<{
         id: string;
-        row_json: string;
+        row_json: string; table_name:string;
     }>()).results;
     const blocked = new Set(expanded.identities);
     let changed = true;
     while (changed) {
         changed = false;
         for (const row of history) {
+            const archive=await historyArchiveRow(ctx,row.table_name,JSON.parse(row.row_json));
+            if(archive.typed){await ctx.env.DB.prepare('UPDATE adoption_history SET row_json=? WHERE workspace_id=? AND id=?').bind(JSON.stringify(archive.row),ctx.principal.workspaceId,row.id).run();continue;}
             const value = JSON.parse(row.row_json);
             if (Object.values(value).some(v => typeof v === 'string' && [...blocked].some(identity => v === identity || (identity.length > 3 && v.includes(identity)))) || blocked.has(`${value.source}:${value.source_id}`)) {
                 if (value.id && !blocked.has(value.id)) {
@@ -100,7 +107,7 @@ export async function resumeErasure(ctx: AdoptionContext, jobId: string) {
     const job = await ctx.env.DB.prepare('SELECT * FROM adoption_erasure_jobs WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, jobId).first<any>();
     check(job, 'erasure_not_found', 404);
     if (job.state === 'completed')
-        return { id: jobId, state: 'completed', pendingDomains: [] };
+        return { id: jobId, state: 'completed', pendingDomains: [],historyCounts:JSON.parse(job.history_counts_json) };
     const identity = await decryptSecret(ctx.env.ENCRYPTION_KEY, job.identity_ciphertext), done = JSON.parse(job.ports_json) as string[];
     const { identities, platformIds } = await erasureIdentities(ctx, identity);if(job.aliases_ciphertext){const saved=JSON.parse(await decryptSecret(ctx.env.ENCRYPTION_KEY,job.aliases_ciphertext));check(Array.isArray(saved)&&saved.every(v=>typeof v==='string'),'invalid_erasure_aliases');identities.push(...saved)}
     check(!identities.includes(ctx.principal.userId), 'different_owner_required_for_self_erasure', 409);
@@ -124,9 +131,10 @@ export async function resumeErasure(ctx: AdoptionContext, jobId: string) {
     const required = [...erasers.keys()];
     await processDueAdoption(ctx.env);const blobs=await ctx.env.DB.prepare("SELECT COUNT(*) n FROM adoption_deletions WHERE workspace_id=? AND state='pending'").bind(ctx.principal.workspaceId).first<{n:number}>();const pending = required.filter(n => !done.includes(n)), state = pending.length ? 'domain_erasure_pending' : blobs?.n?'blob_cleanup_pending':'completed';
     await ctx.env.DB.batch([ctx.env.DB.prepare('UPDATE adoption_erasure_jobs SET state=?,identity_ciphertext=CASE WHEN ?=1 THEN NULL ELSE identity_ciphertext END,aliases_ciphertext=CASE WHEN ?=1 THEN NULL ELSE aliases_ciphertext END,updated_at=? WHERE workspace_id=? AND id=?').bind(state, Number(state==='completed'),Number(state==='completed'), now(), ctx.principal.workspaceId, jobId), statement(ctx, 'adoption.erase.checkpoint', job.identity_hash, { state, completedDomains: done })]);
-    return { id: jobId, state, completedDomains: done, pendingDomains: pending, pendingBlobs:blobs?.n||0, errors };
+    return { id: jobId, state,historyCounts:JSON.parse(job.history_counts_json), completedDomains: done, pendingDomains: pending, pendingBlobs:blobs?.n||0, errors };
 }
 export async function processDueAdoption(env: Env) {
+    await reconcilePendingHistory(env);
     let deleted = 0, failed = 0;
     const pending = (await env.DB.prepare("SELECT * FROM adoption_deletions WHERE state='pending' ORDER BY created_at LIMIT 100").all<any>()).results;
     for (const row of pending) {

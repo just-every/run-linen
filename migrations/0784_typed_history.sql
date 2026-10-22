@@ -49,3 +49,5 @@ WHEN NEW.privacy_class='nonpersonal' BEGIN
  'nonpersonal',json('true')),NEW.privacy_classified_at);
 END;
 CREATE TABLE history_write_guards(id TEXT PRIMARY KEY,valid INTEGER NOT NULL CHECK(valid=1));
+
+ALTER TABLE adoption_erasure_jobs ADD COLUMN history_counts_json TEXT NOT NULL DEFAULT '{}';
