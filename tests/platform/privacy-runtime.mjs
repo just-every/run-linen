@@ -7,7 +7,7 @@ import {createServer} from 'node:net'
 const dir=await mkdtemp(join(tmpdir(),'linen-privacy-'))
 const socket=createServer();await new Promise(r=>socket.listen(Number(process.env.LINEN_TEST_PORT || 0),'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r))
 const config=join(dir,'wrangler.json')
-await writeFile(config,JSON.stringify({name:'linen-privacy-test',main:resolve('tests/platform/privacy-worker.ts'),compatibility_date:'2026-09-08',d1_databases:[{binding:'DB',database_name:'linen',database_id:'local-linen'}]}))
+await writeFile(config,JSON.stringify({name:'linen-privacy-test',main:resolve('tests/platform/privacy-worker.ts'),compatibility_date:'2026-09-08',vars:{ENCRYPTION_KEY:Buffer.alloc(32,13).toString('base64')},d1_databases:[{binding:'DB',database_name:'linen',database_id:'local-linen'}]}))
 function migrate(file){const r=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--config',config,'--local','--persist-to',dir,'--file',file],{encoding:'utf8'});assert.equal(r.status,0,r.stdout+r.stderr)}
 let worker,output=''
 async function start(){worker=spawn(process.execPath,['node_modules/wrangler/bin/wrangler.js','dev','--config',config,'--local','--persist-to',dir,'--port',String(port)],{stdio:['ignore','pipe','pipe']});worker.stdout.on('data',x=>output+=x);worker.stderr.on('data',x=>output+=x);for(let i=0;i<120;i++){try{await call({sql:'SELECT 1'});return}catch{}await new Promise(r=>setTimeout(r,250))}throw Error(output)}
@@ -45,7 +45,9 @@ try{
  assert.equal((await sql("SELECT * FROM sessions WHERE user_id='shared'")).length,1)
  assert.equal((await sql("SELECT name FROM users WHERE id='shared'"))[0].name,'Private shared')
  assert.equal((await sql("SELECT detail_json FROM audit_events WHERE id='bevent'"))[0].detail_json.includes('shared@example.test'),true)
- assert.deepEqual((await sql("SELECT id,actor_id,target,detail_json FROM audit_events WHERE id='aevent'"))[0],{id:'aevent',actor_id:'shared',target:'operation-opaque',detail_json:'{}'})
+ const erasedAudit=(await sql("SELECT id,actor_id,target,detail_json FROM audit_events WHERE id='aevent'"))[0]
+ assert.deepEqual({id:erasedAudit.id,actor_id:erasedAudit.actor_id,target:erasedAudit.target},{id:'aevent',actor_id:'[erased]',target:'operation-opaque'})
+ const removed=JSON.parse(erasedAudit.detail_json);assert.equal(removed.redacted,'erasure');assert.ok(Number.isFinite(Date.parse(removed.redactedAt)));assert.ok(!erasedAudit.detail_json.includes('shared@example.test'))
  await call({identity:'shared'});await call({identity:'shared@example.test'})
  assert.equal((await sql("SELECT target FROM audit_events WHERE id='account-event'"))[0].target,'shared')
  await call({sql:"INSERT INTO memberships VALUES('a','shared','[\"employee\"]',1)"},500)
