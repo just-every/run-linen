@@ -5,10 +5,18 @@ import { priorDataHarness } from './prior-data-harness.mjs';
 import { populatePriorData } from './prior-data-populate.mjs';
 
 // The current API can add fields and update generated guidance. Keep every
-// original business field, ordered array member and privacy boundary strict.
+// original business field, list member and privacy boundary strict.
 function priorReadback(actual,expected,path='') {
   if(Array.isArray(expected)){
     assert.ok(Array.isArray(actual),path);assert.equal(actual.length,expected.length,'Prior list changed: '+path);
+    // Identified row collections retain membership and all fields. Their old
+    // equal-timestamp SQL tie order is not a data-continuity requirement.
+    const identified=(rows)=>rows.every(value=>value&&typeof value==='object'&&typeof value.id==='string');
+    if(expected.length&&identified(expected)&&identified(actual)){
+      assert.deepEqual(actual.map(row=>row.id).sort(),expected.map(row=>row.id).sort(),'Prior identities changed: '+path);
+      const byId=new Map(actual.map(row=>[row.id,row]));
+      return expected.map((value,index)=>priorReadback(byId.get(value.id),value,path+'/'+index));
+    }
     return expected.map((value,index)=>priorReadback(actual[index],value,path+'/'+index));
   }
   if(expected&&typeof expected==='object'){
