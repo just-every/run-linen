@@ -1,12 +1,19 @@
 import assert from 'node:assert/strict';
 
 // Department membership must hold on derived service and execution doors too.
-export async function departmentSourceChecks({ok,call,db}) {
+export async function departmentSourceChecks({call:rootCall,db}) {
+  const workspace='department-source-workspace',stamp=new Date().toISOString();
+  await db.batch([
+    db.prepare('INSERT INTO workspaces VALUES(?,?,?)').bind(workspace,'Department source checks',stamp),
+    db.prepare('INSERT INTO workspace_settings VALUES(?,?,1)').bind(workspace,'{}'),
+    ...['owner','operator'].map(user=>db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind(workspace,user,JSON.stringify([user]))),
+  ]);
+  const call=(method,path,body,user='owner')=>rootCall(method,path,body,user,workspace);
+  const ok=async(method,path,body,user)=>{const result=await call(method,path,body,user);assert.ok(result.status<300,JSON.stringify(result));return result.body;};
   const department=await ok('POST','/departments',{name:'Facilities service operations',kind:'facilities'});
   const ticket=await ok('POST','/work',{title:'Facilities printer incident',body:'Printer unavailable in the north office',kind:'incident',departmentId:department.id,deduplicationKey:'department-source-incident'});
-  const stamp=new Date().toISOString();
   await db.prepare('INSERT INTO execution_plans(id,workspace_id,work_id,work_revision,actor_id,steps_json,idempotency_key,created_at,context_type,context_snapshot_json) VALUES(?,?,?,?,?,?,?,?,?,?)')
-    .bind('department-source-plan','w',ticket.id,ticket.revision,'owner','[]','department-source-plan',stamp,'work','{}').run();
+    .bind('department-source-plan',workspace,ticket.id,ticket.revision,'owner','[]','department-source-plan',stamp,'work','{}').run();
   const service=await ok('POST','/services',{name:'North office printing',description:'Office print workflow',businessImpact:'Printing unavailable',source:'Reviewed service record',observedAt:stamp});
   let incident=await ok('POST','/incidents',{title:'North office printer outage',serviceId:service.id,impact:'Office printing unavailable',cohorts:['north-office']});
   const assetBody={name:'North office printer',serviceId:service.id,assetType:'hardware',externalId:'synthetic-linen-12001',source:'Reviewed asset register',currency:'USD',acquisitionCost:500,observedAt:stamp};
@@ -27,7 +34,7 @@ export async function departmentSourceChecks({ok,call,db}) {
   asset=await ok('POST',`/software-assets/${asset.id}/assign`,assign(),'operator');
   assert.equal(asset.data.assignments.at(-1).workId,ticket.id);
   // A previously accepted problem retains its ticket source fence after revocation.
-  await db.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,1,?,?)').bind('department-source-problem','w','problem','owner','operators','[]',JSON.stringify({title:'Department source problem',serviceId:service.id,sourceProposalId:'reviewed-department-proposal',evidence:[{type:'ticket',id:ticket.id,revision:ticket.revision}],incidentIds:[],workarounds:[]}),stamp,stamp).run();
+  await db.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,1,?,?)').bind('department-source-problem',workspace,'problem','owner','operators','[]',JSON.stringify({title:'Department source problem',serviceId:service.id,sourceProposalId:'reviewed-department-proposal',evidence:[{type:'ticket',id:ticket.id,revision:ticket.revision}],incidentIds:[],workarounds:[]}),stamp,stamp).run();
   assert.equal((await call('GET','/problems/department-source-problem',undefined,'operator')).status,200);
   await membership(false);
   assert.equal((await ok('GET','/plans',undefined,'operator')).some(plan=>plan.id==='department-source-plan'),false);
