@@ -5,8 +5,11 @@ import type {WorkContext,WorkRecord} from './core';
 export function historyProtection(work:Partial<WorkRecord>) {
   return work.sensitivity==='hr'||work.department_kind==='hr'||JSON.parse(work.protected_departments_json??'[]').length?'hr' as const:work.sensitivity==='restricted'?'restricted' as const:'normal' as const;
 }
-export function ticketHistory(ctx:WorkContext,work:Pick<WorkRecord,'id'> & Partial<WorkRecord>,action:string,before:Record<string,unknown>|null,after:Record<string,unknown>,at:string,options:{id?:string;target?:string;conditional?:boolean;actor?:HistoryActor;metadata?:HistoryMetadata;originalLabels?:Record<string,{before:string|null;after:string|null}>}={}) {
+export function ticketHistory(ctx:WorkContext,work:Pick<WorkRecord,'id'> & Partial<WorkRecord>,action:string,before:Record<string,unknown>|null,after:Record<string,unknown>,at:string,options:{id?:string;target?:string;conditional?:boolean;actor?:HistoryActor;metadata?:HistoryMetadata;contextFields?:string[];originalLabels?:Record<string,{before:string|null;after:string|null}>}={}) {
   const envelope=registeredHistory(action,{kind:'ticket',id:work.id},before,after,options.actor??{kind:'person',id:ctx.principal.userId},[work.requester_id,work.beneficiary_id].filter((v):v is string=>!!v),historyProtection(work),at,options.metadata);
+  // Some existing read models include the original placement beside the changed
+  // assignee. Capture it at the command, under the same typed privacy policy.
+  for(const field of options.contextFields??[])if(Object.hasOwn(after,field)&&!envelope.changes.some(change=>change.field===field))envelope.changes.push({field,before:before?.[field]??null,after:after[field]??null});
   for(const c of envelope.changes){const labels=options.originalLabels?.[c.field];if(labels){if(labels.before!==null)c.beforeEvidence={label:labels.before};if(labels.after!==null)c.afterEvidence={label:labels.after};}}
   return historyEventStatement(ctx,{id:options.id,action,target:options.target??work.id,at,conditional:options.conditional,envelope});
 }

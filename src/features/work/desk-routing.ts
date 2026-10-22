@@ -67,7 +67,7 @@ async function route(ctx: WorkContext, work: WorkRecord, trigger: Trigger) {
   const statements = [
     db.prepare(`UPDATE work_records SET group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND department_id IS ? AND protected_departments_json=? AND (? IS NULL OR EXISTS(${assignment.sql}))`)
       .bind(group.id, assigneeId, t, work.workspace_id, work.id, work.revision,group.department_id,work.protected_departments_json??'[]',assigneeId,...assignment.bindings),
-    ticketHistory(ctx,work,'work.routed',{group:work.group_id??null,assignee:work.assignee_id,method:null},{group:group.id,assignee:assigneeId,method:group.assignment},t,{actor:{kind:'rule',id:to.ruleId??to.itemId??group.id,name:to.ruleId??'Support group routing',initiatedBy:ctx.principal.userId}}),
+    ticketHistory(ctx,work,'work.routed',{group:work.group_id??null,assignee:work.assignee_id,method:null},{group:group.id,assignee:assigneeId,method:group.assignment},t,{contextFields:['group'],actor:{kind:'rule',id:to.ruleId??to.itemId??group.id,name:to.ruleId??'Support group routing',initiatedBy:ctx.principal.userId}}),
     db.prepare('UPDATE work_groups SET last_assignee_id=COALESCE(?,last_assignee_id) WHERE workspace_id=? AND id=? AND changes()>0')
       .bind(assigneeId, work.workspace_id, group.id),
   ];
