@@ -1107,29 +1107,33 @@ that product and marks how close the current code is (see [Status](#status)).
   the public status change; an imported ServiceNow incident shows its audited
   priority change with the original actor and time.
 
-  *Current native ticket history:* relationship writes append typed field
-  changes for both merge pointers, the duplicate's state/closed time, both split
-  pointers, parent set/clear and record links. Repeated links or unchanged
-  parents append no event. Approval entries record addition of an exact approval
-  record (`before: null`), its catalog/work/fulfillment revisions and decision
-  holder; standing-grant decisions also name the grant version. This records a
-  business decision, not provider execution or successful fulfillment. Entry
-  values come from the original audit payload, never reconstructed from current
-  mutable authority or an erasure-cleared payload. Employee and shared views
-  retain public messages only. Other record histories, complete mutation
-  coverage, erasure-preserved field values and imported source events remain
-  gaps.
+  *Current native history:* ticket, project/catalog/lifecycle/recurring task,
+  service/change/problem/software-asset and hardware mutations append their
+  original field values in the same fenced transaction as the business change.
+  Refused, replayed and unchanged commands add no field event. The shared typed
+  registry captures current subjects, record protection, change-time group
+  membership and audited custom-field classification; it does not reconstruct
+  earlier values from current records. Ticket and task readers keep the current
+  private work/project authority, including retained HR workspace restrictions.
+  Service employees see no internal field events; asset links require current
+  private access to their source ticket. Original message and delivery states
+  remain chronological. Custom dropdown, multi-select, number, boolean and date
+  inputs use typed values; text remains personal.
 
-  *Current project-task history:* project task creation (including DESK-015
-  scenarios), state, owner, due date, dependency edits and task-specific record
-  links append original before/after values with actor and time atomically with
-  the mutation. The project shows each task's history to its current owners,
-  operators and auditors; employees have no project history view. Rejected,
-  repeated-link and unchanged-field commands add no field event. The reader
-  never builds missing historical values from current task fields. These new
-  audit payloads remain untyped for erasure, so the existing full-clearing
-  fallback applies, retaining entries without values. Other task kinds and
-  change, problem and asset histories remain gaps.
+  *Current import and privacy custody:* saved raw ServiceNow incident and
+  `sys_audit` Table API responses use the durable reviewed import door, preserving
+  original source actor, time, stable event identity and supplied before/after
+  values. Conflicting original audit identities are refused. Imported work is
+  paused and restricted, without inferred accounts, grants or execution.
+  Saved files do not prove complete source history. Registered history applies
+  the approved closed retained-value rule selectively, records dated removal
+  markers and count-only receipts, and refuses resurrection through old archive
+  replay. Unregistered actions keep full clearing. Transport projections apply
+  the same redactor with their existing narrower authority. Legacy entries with
+  missing values remain missing; missing historical erasure dates or person
+  associations are never fabricated. Native exports refuse pending history
+  privacy reconciliation instead of copying unevaluated payloads. Full archive
+  opaque-alias and every-door end-to-end custody proof remain gaps until proven.
 
   *Erasure semantic (ct, 20 October):* the following approved retained-value rule
   is an implementation obligation, not a claim that value preservation exists
@@ -2882,7 +2886,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `DESK-014` | Remote support handoff | target | missing |  | No remote-support integration. |
 | `DESK-015` | Agent scenarios and record templates | target | done | `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/ui/desk-scenario-browser.mjs` | Watchers inherit from DESK-007 and native mobile from CHANNEL-005 before they ship. |
 | `DESK-016` | Global agent search | target | done | `src/features/work/search.ts`, `tests/work/search-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/search-journey.mjs` | Local public-route and 1440/390 browser evidence: all eight current record types, filters, typo matching, serial-linked asset/ticket/person, native ticket ID, subject/content/requester, recorded asset tags, scoped visible counts and pages. HR/private/restricted/article/current-role fences and generated-source withdrawal are asserted. |
-| `DESK-017` | Ticket activity history | target | partial | `src/features/work/activity.ts`, `src/features/work/approval-activity.ts`, `src/features/work/relationships.ts`, `src/features/work/fulfilment-authority.ts`, `src/ui/work-activity.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/work/relationship-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/work/bundle-cases.mjs`, `tests/execution/runtime.mjs`, `tests/ui/relationship-activity-journey.mjs`, `src/features/work/project-activity.ts`, `tests/work/project-cases.mjs` | Project-task creation, edits and task-specific links now keep atomic original-value history (including scenario-created tasks), with current project scope, restart and untyped erasure clearing. Remaining: other task kinds, change/problem/asset histories, remaining ticket mutations, approved erasure-preserved values and imported ServiceNow field events. |
+| `DESK-017` | Ticket activity history | target | partial | `tests/work/desk-scenario-cases.mjs` deskActivityChecks and `tests/execution/runtime.mjs`: agent/scenario/rule original changes and employee public-only history. `tests/work/project-cases.mjs`, `tests/work/catalog-task-cases.mjs`, `tests/work/lifecycle-template-cases.mjs`, `tests/work/desk-field-cases.mjs`: typed task, approval, field and SLA mutations. `tests/work/history-erasure-cases.mjs` historyErasureChecks: Alice/Bob/Carol/Dave, classified values, singleton groups, HR restriction, unlinkable people, dates, search and auditor scope. `tests/services/run.mjs`, `tests/services/integration.mjs`, `tests/work/asset-contract-cases.mjs`: original service/asset changes, rollback and private reverse-link scope. `tests/adoption/servicenow-import-cases.mjs` serviceNowImportChecks: original imported priority/actor/time, immutable identity, native scope, retained bytes and erasure/replay. `tests/adoption/history-cases.mjs`: typed export/restore and old-archive refusal. `tests/platform/mcp-tools-cases.mjs`: actor-only retained MCP history with unchanged subject erasure refusal. `tests/ui/typed-history-journey.mjs` via `tests/ui/desk-scenario-browser.mjs`: typed editors and record/source timelines at 1440/390. | Full native opaque archive aliases, cross-generation retained-value closure, historical erasure dates/associations absent from already-cleared legacy payloads, and complete every-door custody proof remain unproved; no earlier-cleared values may be rebuilt. |
 | `NOTIFY-001` | Default notifications by role and event | target | partial | `src/features/execution/notifications.ts`, `tests/execution/runtime.mjs` | Explicit per-message only; no event-driven default set, chat or push delivery, or actionable agent notifications. |
 | `NOTIFY-002` | Admin-configured rules, templates and preferences | target | missing |  | No notification rules, templates, branding or preferences. |
 | `ACCESS-001` | Microsoft Entra ID | target | done | `src/features/execution/connectors.ts`, `src/features/execution/identity.ts`, `tests/execution/runtime.mjs`, `tests/ui/connected-lifecycle.mjs` |  |
