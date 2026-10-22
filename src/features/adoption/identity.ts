@@ -1,8 +1,10 @@
 import { now } from '../../platform/http';
 import { check, getRun, owner, statement, type AdoptionContext } from './core';
 import { recordsFor, validateManifest } from './import';
+import { isArchiveAlias } from '../history/archive-identities.mjs';
 export async function mapImportedPrincipal(ctx: AdoptionContext, runId: string, sourceUserId: string, targetUserId: string) {
     await owner(ctx);
+    check(!isArchiveAlias(sourceUserId)&&!['[erased]','erased'].includes(sourceUserId),'erased_identity_binding',409);
     const run = await getRun(ctx, 'imports', runId);
     check(['uploading', 'validated'].includes(String(run.state)), 'identity_mapping_locked', 409);
     check(await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId, targetUserId).first(), 'target_membership_required');

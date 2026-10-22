@@ -1,6 +1,7 @@
 import { historyRestoreTables,restoreHistoryMetadata } from '../history/adoption';
 import { historyArchiveRow } from '../history/archive';
 import { archivePrivacyRevision,validateArchivePrivacy } from './archive-privacy';
+import { archiveRemoval,assertPreservedArchiveRemovals,removalTables } from './archive-removals';
 import { ApiError, id, now } from '../../platform/http';
 import { check, owner, statement, getRun, sha, encode, identityHash, type AdoptionContext, type Row } from './core';
 import { supported, historyOnly, MAX_CHUNK, type Manifest, type Chunk } from './schema';
@@ -157,7 +158,7 @@ export async function dryRun(ctx: AdoptionContext, runId: string) {
     check(['uploading', 'validated'].includes(String(run.state)), 'import_locked', 409);
     const m = validateManifest(JSON.parse(String(run.manifest_json)));
     const report: DryReport = { privacyRevision:await archivePrivacyRevision(ctx),counts: {}, privacy: {}, unknownMappings: 0, identityCollisions: 0, sourceRevisionConflicts: 0, liveIdentityErasures:0, unresolvedReferences: 0, unresolvedRecords: [], erasedRecords: 0, historyOnly: 0, attachmentBytes: 0, sourceCounts: m.tables, targetCounts: {}, samples: [] };
-    const keys = new Set<string>(), refs: Reference[] = [];
+    const keys = new Set<string>(), refs: Reference[] = [],removals=new Set<string>();
     for (const chunk of m.chunks) {
         if (chunk.kind !== 'records') {
             await bytesFor(ctx, runId, chunk);
@@ -166,6 +167,7 @@ export async function dryRun(ctx: AdoptionContext, runId: string) {
         for (const r of await recordsFor(ctx, runId, chunk)) {
             check(!keys.has(`${r.table}:${r.key}`), 'duplicate_source_identity');
             keys.add(`${r.table}:${r.key}`);
+            const marker=archiveRemoval(r);if(marker)removals.add(marker);
             if(r.table==='history_archive_aliases')keys.add('@archive-alias:'+r.row.alias);
             report.counts[r.table] = (report.counts[r.table] || 0) + 1;
             const privacy = String(r.row.visibility || r.row.sensitivity || r.row.scope || 'restricted');
@@ -194,6 +196,7 @@ export async function dryRun(ctx: AdoptionContext, runId: string) {
             }
         }
     }
+    await assertPreservedArchiveRemovals(ctx,m.sourceWorkspace,removals);
     for (const ref of refs)
         if (!ref.targets.some(table => keys.has(`${table}:${ref.key}`))) {
             report.unresolvedReferences++;
@@ -221,12 +224,15 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
     // Recheck the entire incoming erasure set before any mutation: destination
     // identities/mappings may have changed since the review or prior checkpoint.
     const m = validateManifest(JSON.parse(String(run.manifest_json)));
-    for (const chunk of (m.tables.adoption_tombstones || m.tables.work_erasure ? m.chunks.filter(c=>c.kind==='records') : [])) {
+    const removals=new Set<string>();
+    for (const chunk of ([...removalTables].some(t=>m.tables[t]) ? m.chunks.filter(c=>c.kind==='records') : [])) {
         for (const r of await recordsFor(ctx,runId,chunk)) {
+            const marker=archiveRemoval(r);if(marker)removals.add(marker);
             if(r.table==='adoption_tombstones')await preflightImportedTombstone(ctx,String(r.row.identity_hash),m.sourceWorkspace);
             if(r.table==='work_erasure'&&typeof r.row.person_id==='string')await preflightImportedTombstone(ctx,await importedTombstoneDigest(r.row.person_id),m.sourceWorkspace);
         }
     }
+    await assertPreservedArchiveRemovals(ctx,m.sourceWorkspace,removals);
     const w = ctx.principal.workspaceId;
     await ctx.env.DB.batch([ctx.env.DB.prepare("UPDATE workspace_settings SET settings_json=json_set(settings_json,'$.executionHeld',json('true')),revision=revision+1 WHERE workspace_id=?").bind(w), ctx.env.DB.prepare("INSERT INTO adoption_holds(id,workspace_id,import_id,state,reason,created_at) SELECT ?,?,?,'held','restore requires remote reconciliation and current authority',? WHERE NOT EXISTS(SELECT 1 FROM adoption_holds WHERE workspace_id=? AND import_id=?)").bind(id(), w, runId, now(), w, runId), ctx.env.DB.prepare("UPDATE adoption_imports SET state='applying' WHERE workspace_id=? AND id=? AND state='validated'").bind(w, runId), statement(ctx, 'adoption.import.apply', runId)]);
     const chunks = m.chunks.filter(c => c.kind === 'records').sort((a, b) => a.ordinal - b.ordinal).filter(c => c.ordinal > Number(run.checkpoint)).slice(0, 25);

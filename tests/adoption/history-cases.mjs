@@ -63,9 +63,20 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
   const restored=await ok('/imports','POST',{manifest:fresh.manifest,idempotencyKey:'synthetic-linen-13011'},destination,201);
   for(const {chunk,bytes}of fresh.chunks)await ok('/imports/'+restored.id+'/chunks/'+chunk.ordinal,'PUT',bytes,destination,200,true);
   const report=await ok('/imports/'+restored.id+'/dry-run','POST',{},destination);assert.equal(report.unresolvedReferences,0,JSON.stringify(report));
+  const destOwner=(await ok('/session','GET',undefined,destination)).principal.userId;
+  assert.equal((await request('/imports/'+restored.id+'/identities','POST',{sourceUserId:archivedEvent.row.actor_id,targetUserId:destOwner},destination)).status,409,'An erased archive alias cannot bind a current account');
+  const late=await ok('/members','POST',{email:'synthetic-linen-13015@example.test',name:'Late removal',password,roles:['employee']},destination,201);
+  await ok('/adoption/erase','POST',{identity:late.id},destination);
+  assert.equal((await request('/imports/'+restored.id+'/resume','POST',{acceptSemanticLoss:true},destination)).status,409,'An erasure after dry run fences apply');
+  // A fresh review checks all normalized source records against the new removals.
+  await ok('/imports/'+restored.id+'/dry-run','POST',{},destination);
+
   for(let n=0;n<200;n++){const r=await ok('/imports/'+restored.id+'/resume','POST',{acceptSemanticLoss:true},destination);if(r.state==='restored'||r.state==='history_only'&&!r.processedChunks)break;assert.notEqual(n,199);}
   const domain=await ok('/fixtures/records','GET',undefined,destination);assert.equal(domain.grants,0,'Fresh import stays inert');
   assert.ok(domain.work.some(r=>r.title==='synthetic-linen-13003'),'Business work survives with its history');
+  const staleForeign=await ok('/imports','POST',{manifest,idempotencyKey:'synthetic-linen-13016'},destination,201);
+  for(const {chunk,bytes}of chunks)await ok('/imports/'+staleForeign.id+'/chunks/'+chunk.ordinal,'PUT',bytes,destination,200,true);
+  assert.equal((await request('/imports/'+staleForeign.id+'/dry-run','POST',{},destination)).status,409,'A later source import cannot discard its carried removal markers');
   const second=await archive(destination,'synthetic-linen-13012'),secondBytes=JSON.stringify(second.records);
   assert.ok(secondBytes.includes(archivedEvent.row.actor_id),'Second generation preserves the original opaque actor');
   assert.ok(!secondBytes.includes(actor.id)&&!secondBytes.includes('synthetic-linen-13007'),'Second generation never reconstructs erased content');

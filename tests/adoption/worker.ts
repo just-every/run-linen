@@ -41,6 +41,7 @@ api.post('/fixtures/approval-archive',async c=>{
  const f=await c.env.DB.prepare('SELECT id,revision FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?').bind(w,b.workId,b.catalogId).first<any>();
  const work=await c.env.DB.prepare('SELECT revision FROM work_records WHERE workspace_id=? AND id=?').bind(w,b.workId).first<any>();
  await c.env.DB.batch([
+  c.env.DB.prepare('UPDATE work_fulfilment_amendments SET fulfilment_id=? WHERE workspace_id=? AND work_id=?').bind(f.id,w,b.workId),
   c.env.DB.prepare(`INSERT INTO work_approval_tokens(id,workspace_id,work_id,fulfilment_id,stage_key,approver_id,token_hash,work_revision,fulfilment_revision,catalog_revision,sent_to,state,config_revision,expires_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,'issued',1,'2099-01-01',?)`).bind(id(),w,b.workId,f.id,'synthetic_linen_212',b.approverId,'synthetic-linen-216',work.revision,f.revision,2,'synthetic-linen-210@example.test',t),
   c.env.DB.prepare('INSERT INTO work_approval_mail VALUES(?,?,?,?,?)').bind(w,'synthetic-linen-217','synthetic-linen-218','accepted',t),
   c.env.DB.prepare('INSERT INTO work_approval_mail_config VALUES(?,1,?,1,?,?,?,?,?,?)').bind(w,p.userId,'synthetic-linen-219','synthetic-linen-220@example.test','synthetic-linen-221','synthetic-linen-222','synthetic-linen-223',t),
@@ -59,7 +60,7 @@ api.post('/fixtures', async (c) => {
     const work = await createWork(ctx, { title: 'Restricted laptop fault', body: 'Employee public message', deduplicationKey: 'fixture-work' });
     await appendMessage(ctx, { workId: work.id, body: 'PRIVATE diagnosis', visibility: 'private', sourceMessageId: 'private-fixture' });
     const attachment = await storeAttachment(ctx, work.id, { name: 'private.txt', contentType: 'text/plain', visibility: 'private', bytes: new TextEncoder().encode('PRIVATE attachment bytes').buffer });
-    const plan = id(), operation = id(), grant = id(), service = id(), commitment = id();
+    const plan = id(), operation = id(), grant = id(), service = id(), commitment = id(), dependency = id();
     await c.env.DB.batch([
         c.env.DB.prepare('INSERT INTO work_people(id,workspace_id,source,source_id,name,observed_at,effective_at) VALUES(?,?,?,?,?,?,?)').bind(person, w, 'fixture', 'person-1', 'Sensitive Person', t, t),
         c.env.DB.prepare("INSERT INTO work_assets(id,workspace_id,serial,state,person_id,source,observed_at,asset_tag) VALUES(?,?,?,'assigned',?,'fixture',?,'DEN-IT-042')").bind(id(), w, 'fixture-serial', person, t),
@@ -72,7 +73,8 @@ api.post('/fixtures', async (c) => {
         c.env.DB.prepare("INSERT INTO intelligence_fulfilment_runs VALUES(?,?,?,?,?,?,?,'running',?,?)").bind(id(),w,work.id,p.userId,p.userId,plan,JSON.stringify([operation]),t,t),
         c.env.DB.prepare("INSERT INTO work_fulfilment_amendments(id,workspace_id,work_id,fulfilment_id,event_key,requester_id,request_json,prior_json,state,owner_id,created_at) VALUES(?,?,?,?,?,?,?,?,'pending_decision',?,?)").bind(id(),w,work.id,id(),'history-fixture',p.userId,'{"purpose":"Retained correction"}','{"purpose":"Original request"}',p.userId,t),
         c.env.DB.prepare("INSERT INTO svc_records VALUES(?,?,'service',?,'restricted',?, ?,1,?,?)").bind(service, w, p.userId, JSON.stringify([p.userId]), JSON.stringify({ title: 'Private service', ownerId: p.userId }), t, t),
-        c.env.DB.prepare("INSERT INTO intelligence_commitments VALUES(?,?,?,?,? ,?,1,?,NULL,?,?)").bind(commitment, w, p.userId, JSON.stringify([p.userId]), 'restricted', JSON.stringify({ outcome: 'Private commitment', cohort: [p.userId], observations: [], freshnessSeconds: 60, dependencies: [service], effectiveAt: t, expiresAt: null, intervalSeconds: 60, modelConnectionId: null }), t, t, t)
+        c.env.DB.prepare("INSERT INTO intelligence_commitments VALUES(?,?,?,?,? ,?,1,?,NULL,?,?)").bind(dependency,w,p.userId,JSON.stringify([p.userId]),'restricted',JSON.stringify({outcome:'Private prerequisite',cohort:[p.userId],observations:[],freshnessSeconds:60,dependencies:[],effectiveAt:t,expiresAt:null,intervalSeconds:60,modelConnectionId:null}),t,t,t),
+        c.env.DB.prepare("INSERT INTO intelligence_commitments VALUES(?,?,?,?,? ,?,1,?,NULL,?,?)").bind(commitment, w, p.userId, JSON.stringify([p.userId]), 'restricted', JSON.stringify({ outcome: 'Private commitment', cohort: [p.userId], observations: [], freshnessSeconds: 60, dependencies: [dependency], effectiveAt: t, expiresAt: null, intervalSeconds: 60, modelConnectionId: null }), t, t, t)
     ]);
     await recordTime(ctx,work.id,{source:'manual',minutes:15,deduplicationKey:'portable-manual',note:'Private human effort'});
     await recordTime(ctx,work.id,{source:'measured',deduplicationKey:'portable-active'});
