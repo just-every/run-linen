@@ -530,11 +530,12 @@ that product and marks how close the current code is (see [Status](#status)).
   business-calendar revision and reminder/SLA instants are copied to the request.
   Missing timing configuration is shown as unconfigured, never an invented SLA.
   Portal decisions, scheduler work and fulfillment recheck live holder, delegation,
-  membership, audience and request/fulfillment/item revisions. A recorded rejection
+  membership and request/fulfillment/item revisions. Audience gates submission only;
+  these decisions do not re-apply it. A recorded rejection
   remains final for that exact revision even if its holder later loses authority;
   any-of cannot override it. A changed request invalidates prior decisions.
 
-  Approval email is disabled until an active owner explicitly and with an audit entry consents
+  Approval email is disabled until an active owner explicitly consents, with an audit entry,
   to an active SendGrid sender, receiving mailbox, exact SES SNS topic and pinned
   SNS signing-certificate public key. No automatic subscription confirmation or
   remote certificate fetch occurs. An inbound reply must be a fresh SNS v2 signed
