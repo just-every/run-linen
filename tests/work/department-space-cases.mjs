@@ -71,7 +71,8 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   assert.ok(clockBefore.policy,'Facilities policy must bind before handoff');
   const revision=(await call(path)).work.revision;
   await call(path+'/department',{revision,departmentId:spaces.it.id,reason:'synthetic-linen-11228'},fac,403);
-  await call(path+'/department',{revision,departmentId:spaces.it.id,reason:''},owner,422);
+  await call(path+'/department',{revision,departmentId:spaces.it.id,reason:''},owner,400);
+  assert.equal((await call(path)).work.revision,revision,'Missing handoff reason leaves the ticket unchanged');
   const moved=(await call(path+'/department',{revision,departmentId:spaces.it.id,reason:'synthetic-linen-11229'})).work;
   assert.deepEqual([moved.id,moved.department_id,moved.sensitivity],[request.id,spaces.it.id,'normal']);
   await call(path,undefined,fac,404);
