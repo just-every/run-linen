@@ -1,3 +1,4 @@
+import { registeredHistory } from '../history/event';
 import { Buffer } from 'node:buffer';
 import type { Context, Hono } from 'hono';
 import type { AppEnv } from '../../platform/types';
@@ -112,6 +113,18 @@ async function apply(ctx: AdoptionContext, body: Record<string, unknown>) {
     evidence: `Recorded from Snipe-IT export ${file.name} (SHA-256 ${file.hash}) row ${row.row}, asset tag ${row.assetTag}${row.status ? `, Snipe-IT status "${row.status}"` : ''}. Snipe-IT custody is not imported.`,
   }));
   const assetJson = JSON.stringify(items.map(({ evidence, ...asset }) => asset)), custodyJson = JSON.stringify(items.map(({ id: assetId, eventId, evidence }) => ({ id: assetId, eventId, evidence })));
+  // Keep the existing setwise import: each audit row uses its custody event's identity and exact original values.
+  const history = items.map((asset,index) => ({eventId:asset.eventId,assetId:asset.id,envelope:registeredHistory(
+    'work.asset_recorded',{kind:'asset',id:asset.id},null,
+    {serial:asset.serial,assetTag:asset.assetTag,state:'stock',personId:null,location:asset.location,source:asset.source,observedAt:at,evidence:asset.evidence},
+    {kind:'person',id:actor},[],'normal',at,{source:{system:'snipeit',table:'assets',eventKey:`${file.hash}:${ready[index].row}`}})}));
+  // Expanded evidence may exceed the export's byte count; each bound audit JSON stays within the same limit.
+  const historyJson:string[]=[],encoder=new TextEncoder();let chunk:string[]=[],chunkBytes=2;
+  for(const row of history){const json=JSON.stringify(row),bytes=encoder.encode(json).byteLength;
+    if(chunk.length&&chunkBytes+bytes+1>MAX_BYTES){historyJson.push('['+chunk.join(',')+']');chunk=[];chunkBytes=2;}
+    chunk.push(json);chunkBytes+=bytes+1;
+  }
+  if(chunk.length)historyJson.push('['+chunk.join(',')+']');
   const currentOwner = `EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) role WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND role.value='owner')`;
   let created: number;
   try {
@@ -125,6 +138,15 @@ async function apply(ctx: AdoptionContext, body: Record<string, unknown>) {
       db.prepare(`INSERT INTO work_custody(id,workspace_id,asset_id,actor_id,kind,person_id,evidence,created_at)
         SELECT json_extract(e.value,'$.eventId'),?,json_extract(e.value,'$.id'),?,'record',NULL,json_extract(e.value,'$.evidence'),?
         FROM json_each(?) e WHERE ${currentOwner}`).bind(w, actor, at, custodyJson, w, actor),
+      ...historyJson.map(json => db.prepare(`INSERT INTO audit_events
+        SELECT json_extract(e.value,'$.eventId'),?,?,'work.asset_recorded',json_extract(e.value,'$.assetId'),
+          json_set(json_extract(e.value,'$.envelope'),'$.actor.name',COALESCE((SELECT name FROM users WHERE id=?),?),
+            '$.pendingErasure',json(CASE WHEN EXISTS(SELECT 1 FROM history_identity_tombstones WHERE workspace_id=?) THEN 'true' ELSE 'false' END)),?
+        FROM json_each(?) e WHERE ${currentOwner}
+          AND EXISTS(SELECT 1 FROM work_assets a JOIN work_custody c ON c.workspace_id=a.workspace_id AND c.asset_id=a.id
+            WHERE a.workspace_id=? AND a.id=json_extract(e.value,'$.assetId') AND a.latest_event_id=json_extract(e.value,'$.eventId')
+              AND c.id=json_extract(e.value,'$.eventId') AND c.kind='record')`)
+        .bind(w,actor,actor,actor,w,at,json,w,actor,w)),
       db.prepare(`INSERT INTO audit_events SELECT ?,?,?,'adoption.snipeit.import',?,?,? WHERE ${currentOwner}`)
         .bind(id(), w, actor, file.hash, JSON.stringify({ file: file.name, created: items.length, conflicts: report.counts.conflicts, rejected: report.counts.rejected }), at, w, actor),
     ]);
