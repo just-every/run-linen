@@ -13,10 +13,11 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
   const member=async(name,role)=>{const email=`synthetic-linen-${emails.size+3}-${suffix}@example.test`;const m=await api('/members',{name,email,password,roles:[role],isPerson:true});emails.set(m.id,email);return m;};
   const manager=await member('Life manager','employee'), hire=await member('Life hire','employee');
   const sales=await api('/catalog-values',{dimension:'department',label:'Life Sales '+suffix}), austin=await api('/catalog-values',{dimension:'location',label:'Life Austin '+suffix});
+  const role=await api('/catalog-values',{dimension:'title',label:'Life account executive '+suffix}), employment=await api('/catalog-values',{dimension:'employmentType',label:'Life W-2 '+suffix});
   const it=await api('/work-groups',{name:'Life IT '+suffix});
   const person=(await api('/people')).items.find(p=>p.id===hire.personId);
   await api('/people',{source:person.source,sourceId:person.source_id,name:person.name,managerId:manager.id,effectiveAt:new Date(Date.now()+1).toISOString(),
-    observedAt:new Date().toISOString(),expectedRevision:person.revision,attributes:{department:sales.id,location:austin.id}});
+    observedAt:new Date().toISOString(),expectedRevision:person.revision,attributes:{department:sales.id,location:austin.id,title:role.id,employmentType:employment.id}});
 
   await page.goto(base+'/app#/lifecycle');
   const region=page.getByRole('region',{name:'Task templates',exact:true});
@@ -24,11 +25,25 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
   const form=region.locator('details[data-action-path="/lifecycle-templates"] form');
   await form.getByLabel('Template name').fill('Sales Austin onboarding '+suffix);
   await form.getByRole('combobox',{name:/^Applies to/}).selectOption('join');
-  await form.getByLabel('Reviewed values it applies to').fill(JSON.stringify({department:[sales.id],location:[austin.id]}));
-  await form.getByLabel('Dated tasks').fill(JSON.stringify([
-    {key:'laptop',title:'Order the laptop',assignee:{type:'group',groupId:it.id},anchor:'start',offsetDays:-5,remindDays:2},
-    {key:'buddy',title:'Buddy assigned',assignee:{type:'manager'},anchor:'start',offsetDays:0,remindDays:2},
-    {key:'quota',title:'Set the quota plan',assignee:{type:'owner'},anchor:'start',offsetDays:3}]));
+  for(const label of ['Life Sales '+suffix,'Life Austin '+suffix,'Life account executive '+suffix,'Life W-2 '+suffix])
+    await form.getByRole('checkbox',{name:label,exact:true}).check();
+  const fillTask=async(index,{title,assignee,team,offset,remind})=>{
+    const row=form.getByRole('group',{name:'Task '+index,exact:true});
+    await row.getByLabel('Task title '+index,{exact:true}).fill(title);
+    await row.getByLabel('Who does task '+index+'?',{exact:true}).selectOption(assignee);
+    if(team)await row.getByLabel('Team for task '+index,{exact:true}).selectOption({label:team});
+    await row.getByLabel('Date for task '+index,{exact:true}).selectOption('start');
+    await row.getByLabel('Business days from date '+index,{exact:false}).fill(String(offset));
+    if(remind!==undefined)await row.getByLabel('Remind business days before due '+index,{exact:false}).fill(String(remind));
+  };
+  await fillTask(1,{title:'Order the laptop',assignee:'group',team:'Life IT '+suffix,offset:-5,remind:2});
+  await form.getByRole('button',{name:'Add task',exact:true}).click();
+  await fillTask(2,{title:'Buddy assigned',assignee:'manager',offset:0,remind:2});
+  await form.getByRole('button',{name:'Add task',exact:true}).click();
+  await fillTask(3,{title:'Set the quota plan',assignee:'owner',offset:3});
+  await form.getByRole('button',{name:'Add task',exact:true}).click();
+  await form.getByRole('button',{name:'Remove task 4',exact:true}).click();
+  assert.equal(await form.getByRole('group',{name:'Task 4',exact:true}).count(),0,'LIFE-002 owners remove an unwanted task before saving');
   await captureJourney(page,{path:out+'/LIFE-002-template-form.png',fullPage:true});
   const saving=page.waitForResponse(r=>r.url().endsWith('/lifecycle-templates')&&r.request().method()==='POST');
   await form.getByRole('button',{name:'Save',exact:true}).click();assert.equal((await saving).status(),201,'LIFE-002 the owner adds a template natively');

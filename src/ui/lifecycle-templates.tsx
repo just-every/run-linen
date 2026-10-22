@@ -1,44 +1,41 @@
 import { date, text, humanize, type RecordValue } from "./api";
 import { useRemote, useSession } from "./state";
-import { ActionForm, type Field } from "./forms";
-import { Badge, Facts, Notice } from "./primitives";
+import { ActionForm } from "./forms";
+import { Badge, ErrorNotice, Facts, Notice } from "./primitives";
 
-const kinds = [{ value: "join", label: "Joining the team" }, { value: "move", label: "Moving role or location" }, { value: "leave", label: "Leaving the team" }];
-const fields: Field[] = [
-  { name: "name", label: "Template name", required: true },
-  { name: "kind", label: "Applies to", type: "select", required: true, options: kinds },
-  { name: "match", label: "Reviewed values it applies to", type: "json", required: true,
-    hint: 'Value ids per dimension: department, location, title (role) and employmentType, for example {"department":["…"],"location":["…"]}. A value must match in every dimension named; {} applies to everyone.' },
-  { name: "tasks", label: "Dated tasks", type: "json", required: true,
-    hint: 'A list such as [{"key":"laptop","title":"Order the laptop","assignee":{"type":"group","groupId":"…"},"anchor":"start","offsetDays":-5,"remindDays":2}]. Assignee: a team ({"type":"group","groupId":"…"}), "manager" or "owner". offsetDays are business days from the start or end (negative is before); remindDays are business days before the due date.' },
-];
-const taskLine = (t: RecordValue) => `${text(t.title)} (${text((t.assignee as RecordValue).type)}, ${Math.abs(Number(t.offsetDays))} business day${Math.abs(Number(t.offsetDays)) === 1 ? "" : "s"} ${Number(t.offsetDays) < 0 ? "before" : "after"} ${text(t.anchor)}${t.remindDays === null || t.remindDays === undefined ? "" : `, reminded ${text(t.remindDays)} before`})`;
+import type { Template } from '../features/work/lifecycle-templates';
+import { LifecycleTemplateEditor, templateDimensions, type TemplateTeam, type TemplateValue } from './lifecycle-template-editor';
 
 /** LIFE-002: owner-managed dated task templates; HR reads them. A recorded change keeps the tasks it was admitted with. */
 export function LifecycleTemplates() {
-  const templates = useRemote<{ items: RecordValue[] }>("/lifecycle-templates"), { session } = useSession();
+  const templates = useRemote<{ items: Template[] }>("/lifecycle-templates"), { session } = useSession();
   const owner = session.principal.roles.includes("owner");
+  const values = useRemote<{ items: TemplateValue[] }>('/catalog-values'), groups = useRemote<{ items: TemplateTeam[] }>('/work-groups');
+  const taskLine = (task: Template['tasks'][number]) => {
+    const assignee = task.assignee;
+    const responsible = assignee.type === 'group' ? groups.data?.items.find(group => group.id === assignee.groupId)?.name ?? 'Unavailable team'
+      : assignee.type === 'manager' ? 'The person’s manager' : 'The accountable owner';
+    return `${task.title} (${responsible}, ${Math.abs(task.offsetDays)} business days ${task.offsetDays < 0 ? 'before' : 'after'} ${task.anchor}${task.remindDays === null ? '' : `, reminded ${task.remindDays} business days before`})`;
+  };
   return (
     <section aria-label="Task templates">
       <h2>Task templates</h2>
       <p>A join, move or leave gets the tasks of every active template whose department, location, role and employment type match. Tasks are done by a team, the person’s manager or the accountable owner, and each owner is reminded in their own requests.</p>
+      <ErrorNotice error={templates.error} retry={templates.refresh} />
+      <ErrorNotice error={values.error} retry={values.refresh} />
+      <ErrorNotice error={groups.error} retry={groups.refresh} />
       {templates.data?.items.map((t) => (
         <section className="connection-record" key={text(t.id)}>
           <div className="section-heading"><h3>{text(t.name)}</h3><Badge value={t.active ? "active" : "inactive"} /></div>
           <Facts entries={[
-            ["Applies to", `${humanize(t.kind)} · ${Object.entries(t.match as RecordValue).map(([d, v]) => `${humanize(d)}: ${(v as string[]).length} value(s)`).join(" · ") || "Everyone"}`],
-            ["Tasks", (t.tasks as RecordValue[]).map(taskLine).join("; ")],
+            ["Applies to", `${humanize(t.kind)} · ${templateDimensions.filter(([dimension]) => t.match[dimension]?.length).map(([dimension, label]) => `${label}: ${t.match[dimension]!.map(id => values.data?.items.find(value => value.id === id)?.label ?? 'Unavailable reviewed value').join(', ')}`).join(' · ') || 'Everyone'}`],
+            ["Tasks", t.tasks.map(taskLine).join("; ")],
             ["Revision", t.revision],
           ]} />
-          {owner && <ActionForm title={`Edit ${text(t.name)}`} path={`/lifecycle-templates/${text(t.id)}`} defaults={{ revision: t.revision }} onSaved={templates.refresh}
-            fields={[
-              { ...fields[0], value: text(t.name) }, { ...fields[1], value: text(t.kind) }, { ...fields[2], value: JSON.stringify(t.match) }, { ...fields[3], value: JSON.stringify(t.tasks) },
-              { name: "active", label: "Active", type: "checkbox", value: Boolean(t.active) },
-            ]} />}
+          {owner && values.data && groups.data && <LifecycleTemplateEditor key={`${t.id}:${t.revision}`} template={t} values={values.data.items} groups={groups.data.items} onSaved={templates.refresh} />}
         </section>
       ))}
-      {owner && <ActionForm title="Add a task template" path="/lifecycle-templates" fields={fields} onSaved={templates.refresh}
-        explanation="Changes are versioned and audited. Dated tasks need a configured business calendar in the change’s time zone. A missing manager holds their task with the accountable owner. Reminders reach people in the portal; Slack, Teams and email reminders are not connected." />}
+      {owner && values.data && groups.data && <LifecycleTemplateEditor values={values.data.items} groups={groups.data.items} onSaved={templates.refresh} />}
     </section>
   );
 }
