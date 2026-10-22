@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { date, humanize } from './api';
+import { ActivityTimeline } from './work-activity';
+import { humanize } from './api';
 import { useMutation, useRemote, useSession } from './state';
 import { ErrorNotice, Facts } from './primitives';
 import { categories, levels, priorityMatrix, ticketTypes, type ClassificationSnapshot, type TicketClassification } from '../features/work/classification-policy';
@@ -35,8 +36,7 @@ export function WorkClassification({ workId, onChanged }: { workId: string; onCh
           <tbody>{levels.map(impact => <tr key={impact}><th scope="row">{humanize(impact)}</th>{levels.map(urgency => <td key={urgency}>{priorityMatrix[impact][urgency]}</td>)}</tr>)}</tbody></table>
       </details>
       {agent && data.history.length > 0 && <details className="evidence"><summary>Classification history</summary>
-        <ol>{data.history.map(event => <li key={event.id}><strong>{event.action === 'work.classification_overridden' ? 'Agent override' : 'Linen proposal'}</strong> · {event.actor_name} · {date(event.created_at)}
-          <p>{event.before ? `${humanize(event.before.type)}, ${event.before.category}/${event.before.subcategory}, ${event.before.impact} impact, ${event.before.urgency} urgency, ${event.before.priority}` : 'Unclassified'} → {humanize(event.after.type)}, {event.after.category}/{event.after.subcategory}, {event.after.impact} impact, {event.after.urgency} urgency, {event.after.priority}</p><p>{event.reason}</p></li>)}</ol>
+        <ActivityTimeline label="Classification history" entries={data.history.map(event=>({id:event.id,at:event.created_at,kind:'change' as const,actor:event.actor_name,actorKind:event.action==='work.classification_overridden'?'person' as const:'agent' as const,action:event.action==='work.classification_overridden'?'Classification override':'Classification proposal',visibility:'private',body:event.reason,changes:event.changes,...(event.redacted?{redacted:event.redacted,redactedAt:event.redactedAt}:{})}))}/>
       </details>}
     </>}
     <ErrorNotice error={mutation.error} />
