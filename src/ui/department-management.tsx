@@ -6,6 +6,10 @@ import { departmentKinds,type DepartmentAdmin,type AdminDepartment } from './dep
 import { DepartmentSettings } from './department-settings';
 export function DepartmentManagement() {
   const remote=useRemote<DepartmentAdmin>('/departments/admin');
+  const [expanded,setExpanded]=useState<Set<string>>(()=>new Set());
+  function remember(id:string,open:boolean) {
+    setExpanded(previous=>{if(previous.has(id)===open)return previous;const next=new Set(previous);if(open)next.add(id);else next.delete(id);return next;});
+  }
   return <section className="history" aria-label="Department workspaces"><h2>Department workspaces</h2>
     <p>Keep each service team's staff, catalog, queues, service levels and guidance together. Employees use one portal across the teams.</p>
     <Notice>Staff access is explicit. HR service work does not grant access to employee records or restricted HR conversations.</Notice>
@@ -14,7 +18,7 @@ export function DepartmentManagement() {
       {name:'name',label:'Workspace name',required:true},
       {name:'kind',label:'Service team',type:'select',required:true,options:departmentKinds.map(([value,label])=>({value,label}))},
     ]}/>
-    {remote.data?.items.map(department=><details className="action-disclosure" key={department.id}><summary>{department.name}{department.active?'':' · Inactive'}</summary>
+    {remote.data?.items.map(department=><details className="action-disclosure" key={department.id} open={expanded.has(department.id)} onToggle={event=>remember(department.id,event.currentTarget.open)}><summary>{department.name}{department.active?'':' · Inactive'}</summary>
       <DepartmentEdit key={`${department.id}:${department.revision}`} department={department} people={remote.data!.people} onSaved={remote.refresh}/>
       {department.active&&<DepartmentSettings department={department}/>}
     </details>)}

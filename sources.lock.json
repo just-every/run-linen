@@ -4639,7 +4639,7 @@
       "executable": false
     },
     "src/ui/department-management.tsx": {
-      "sha256": "ee390ada0aa81c15422f3985c19302ebfb71fd3f259c66821916be604967a451",
+      "sha256": "6a411e3e6573c799a762be5cb8c88daa21ee143f134f71362b42040ec775dfe0",
       "executable": false
     },
     "src/ui/department-settings.tsx": {
