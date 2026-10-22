@@ -35,6 +35,7 @@ export async function assetEvents(ctx: WorkContext, assetId: string) {
     }
     const projection=await readHistoryEvent(ctx,row.action,row.detail_json,row.actor_id,row.id);
     items.push({ id:row.id, at:row.created_at, kind:'change' as const, action:row.action.replace('work.',''), visibility:'private',
+      actorId:projection.actor?.id ?? (projection.redacted ? '[erased]' : row.actor_id),
       actor:(projection.actor ? projection.actor.name ?? projection.actor.id : row.actor_id), actorKind:(projection.actor ? projection.actor.kind : 'person'),
       changes:projection.changes, ...('source' in projection && projection.source ? {source:projection.source} : {}), ...(projection.redacted ? {redacted:projection.redacted,redactedAt:projection.redactedAt,
         redaction:{reason:'erasure',at:projection.redactedAt,cleared:projection.changes.length===0}} : {}) });

@@ -115,7 +115,7 @@ export async function assetHistory(ctx: WorkContext, assetId: string) {
     const event=byId.get(String((row as any).id));
     const after=new Map(event?.changes.map(change=>[change.field,change.after]) ?? []);
     // Old untyped custody entries retain their identity/time, never inferred field values.
-    return {...row,actor_id:event?.actor ?? (row as any).actor_id,person_id:after.get('custodyPersonId') ?? after.get('personId') ?? null,
+    return {...row,actor_id:event?.actorId ?? (row as any).actor_id,person_id:after.get('custodyPersonId') ?? after.get('personId') ?? null,
       evidence:after.get('evidence') ?? null,certificate:after.get('certificate') ?? null};
   })};
 }
