@@ -14,13 +14,13 @@ export function LifecycleTemplateTaskRows({ tasks, groups, onChange }: {
     {tasks.map((task, index) => <fieldset key={task.key} aria-label={`Task ${index + 1}`}><legend>Task {index + 1}</legend>
       <div className="field-grid">
         <label>Task title {index + 1}<input required maxLength={200} value={task.title} onChange={e => edit(index, { title: e.target.value })} /></label>
-        <label>Who does task {index + 1}?<select required value={task.assignee.type} onChange={e => edit(index, { assignee: e.target.value === 'group' ? { type: 'group', groupId: '' } : { type: e.target.value as 'manager' | 'owner' } })}>
+        <label>Who does task {index + 1}?<select aria-label={`Who does task ${index + 1}?`} required value={task.assignee.type} onChange={e => edit(index, { assignee: e.target.value === 'group' ? { type: 'group', groupId: '' } : { type: e.target.value as 'manager' | 'owner' } })}>
           <option value="group">A team</option><option value="manager">The person’s manager</option><option value="owner">The accountable owner</option>
         </select></label>
-        {task.assignee.type === 'group' && <label>Team for task {index + 1}<select required value={task.assignee.groupId} onChange={e => edit(index, { assignee: { type: 'group', groupId: e.target.value } })}>
+        {task.assignee.type === 'group' && <label>Team for task {index + 1}<select aria-label={`Team for task ${index + 1}`} required value={task.assignee.groupId} onChange={e => edit(index, { assignee: { type: 'group', groupId: e.target.value } })}>
           <option value="">Choose a team</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}
         </select></label>}
-        <label>Date for task {index + 1}<select required value={task.anchor} onChange={e => edit(index, { anchor: e.target.value as 'start' | 'end' })}>
+        <label>Date for task {index + 1}<select aria-label={`Date for task ${index + 1}`} required value={task.anchor} onChange={e => edit(index, { anchor: e.target.value as 'start' | 'end' })}>
           <option value="start">Start date</option><option value="end">End date</option>
         </select></label>
         <label>Business days from date {index + 1}<input type="number" required min={-120} max={365} step={1} value={task.offsetDays} onChange={e => edit(index, { offsetDays: e.target.value })} />

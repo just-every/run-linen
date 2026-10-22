@@ -4583,7 +4583,7 @@
       "executable": false
     },
     "src/ui/lifecycle-template-task-rows.tsx": {
-      "sha256": "cdef3e894fd74191c2ef06db14e0107604eae80ac030df16c675a7ce036a0019",
+      "sha256": "c3f2f36153df17e44e5a0764b28966da6eefa17a182481c97b4e78c8d9ebad1e",
       "executable": false
     },
     "src/ui/lifecycle-templates.tsx": {
