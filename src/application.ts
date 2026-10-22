@@ -14,6 +14,7 @@ import { registerFreshserviceImportRoutes, freshserviceErasurePort } from './fea
 import { registerServiceNowImportRoutes, servicenowErasurePort } from './features/adoption/servicenow-import'
 import { registerAdoptionErasurePort } from './features/adoption'
 import { registerAdoptionRoutes } from './features/adoption'
+import { registerLightweightImportRoutes } from './features/adoption/lightweight-import'
 import { registerSnipeitImportRoutes } from './features/adoption/snipeit-import'
 import { registerConnectionRoutes } from './features/connections'
 
@@ -60,6 +61,7 @@ export function createApplication() {
   registerFreshserviceImportRoutes(authenticated)
   registerServiceNowImportRoutes(authenticated)
   registerSnipeitImportRoutes(authenticated)
+  registerLightweightImportRoutes(authenticated)
   registerConnectionRoutes(authenticated)
   authenticated.get('/runtime-status', async c => {
     const principal = requireRole(c, 'owner', 'operator', 'auditor')

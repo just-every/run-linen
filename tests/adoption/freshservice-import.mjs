@@ -3,6 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {importHarness} from './freshservice-import-harness.mjs';
 import {serviceNowImportChecks} from './servicenow-import-cases.mjs';
+import {lightweightImportChecks} from './lightweight-import-cases.mjs';
 import {snipeitImportChecks} from './snipeit-import-cases.mjs';
 const h=await importHarness(),base='/adoption/freshservice-imports',origin='http://localhost';
 async function request(path,method='GET',body,auth={},extra={}){return h.fetch(origin+'/api/v1'+path,{method,headers:{Origin:origin,'Content-Type':'application/json',...auth,...extra},body:body===undefined?undefined:JSON.stringify(body)});}
@@ -105,4 +106,5 @@ try{
  console.log('PASS unproved legacy session denied; freshly authenticated owner resumes, reads retained bytes and undoes');
  await snipeitImportChecks({ok,request,login,owner,snapshot});
  await serviceNowImportChecks({ok,request,owner,snapshot,db});
+ await lightweightImportChecks({ok,request,login,owner,steward,snapshot,db});
 }finally{await h.close();}

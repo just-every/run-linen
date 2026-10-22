@@ -74,7 +74,7 @@ function readResolutions(value: unknown) {
 }
 
 /** Read-only review: the same computation backs the dry run and the apply. */
-async function review(ctx: AdoptionContext, body: Record<string, unknown>) {
+async function review(ctx: AdoptionContext, body: Record<string, unknown>, system:'snipeit'|'csv'='snipeit') {
   await owner(ctx);
   const file = readExport(body.file), resolutions = readResolutions(body.resolutions), groups = new Map<string, Row[]>();
   for (const row of file.rows) groups.set(row.key, [...(groups.get(row.key) ?? []), row]);
@@ -94,14 +94,16 @@ async function review(ctx: AdoptionContext, body: Record<string, unknown>) {
   }
   for (const [key] of resolutions) requireInput(conflicts.some(conflict => conflict.key === key), `Serial ${key} has no conflict to resolve`);
   ready.sort((a, b) => a.row - b.row);
+  if(system==='csv')file.omissions=file.omissions.map(o=>({...o,reason:o.reason.replaceAll('Snipe-IT','CSV')}));
   const summary = { ready: ready.map(({ row, assetTag, serial, location, status }) => ({ row, assetTag, serial, location, status })), conflicts: conflicts.map(({ key, ...conflict }) => conflict), rejected: file.rejected, omissions: file.omissions };
-  const fingerprint = sha256(canonicalJson({ format: FORMAT, file: { name: file.name, sha256: file.hash }, ...summary }));
+  const fingerprint = sha256(canonicalJson({ format: FORMAT, system, file: { name: file.name, sha256: file.hash }, ...summary }));
   const counts = { rows: file.rows.length + file.rejected.length, ready: ready.length, conflicts: conflicts.length, unresolved: conflicts.filter(conflict => !conflict.resolution).length, rejected: file.rejected.length };
   return { file, ready, report: { fingerprint, counts, conflicts: summary.conflicts, rejected: file.rejected, omissions: file.omissions } };
 }
 
-async function apply(ctx: AdoptionContext, body: Record<string, unknown>) {
-  const { file, ready, report } = await review(ctx, body);
+async function apply(ctx: AdoptionContext, body: Record<string, unknown>, system:'snipeit'|'csv'='snipeit') {
+  const { file, ready, report } = await review(ctx, body, system);
+  const label=system==='snipeit'?'Snipe-IT':'CSV';
   if (body.reviewedFingerprint !== report.fingerprint) throw new ApiError(409, 'snipeit_review_changed', 'The export, its resolutions or Linen devices changed since your review; run the dry run again');
   if (report.counts.unresolved) throw new ApiError(409, 'snipeit_conflicts_unresolved', 'Resolve every serial conflict in the dry run before applying');
   requireInput(body.acceptOmissions === true, 'Review and explicitly accept the listed omissions');
@@ -109,15 +111,15 @@ async function apply(ctx: AdoptionContext, body: Record<string, unknown>) {
   const db = ctx.env.DB, w = ctx.principal.workspaceId, actor = ctx.principal.userId, at = now();
   const items = ready.map(row => ({
     id: id(), eventId: id(), key: row.key, serial: row.serial, assetTag: row.assetTag, location: row.location,
-    source: `Snipe-IT export ${file.name} · asset tag ${row.assetTag}`,
-    evidence: `Recorded from Snipe-IT export ${file.name} (SHA-256 ${file.hash}) row ${row.row}, asset tag ${row.assetTag}${row.status ? `, Snipe-IT status "${row.status}"` : ''}. Snipe-IT custody is not imported.`,
+    source: `${label} export ${file.name} · asset tag ${row.assetTag}`,
+    evidence: `Recorded from ${label} export ${file.name} (SHA-256 ${file.hash}) row ${row.row}, asset tag ${row.assetTag}${row.status ? `, ${label} status "${row.status}"` : ''}. ${label} custody is not imported.`,
   }));
   const assetJson = JSON.stringify(items.map(({ evidence, ...asset }) => asset)), custodyJson = JSON.stringify(items.map(({ id: assetId, eventId, evidence }) => ({ id: assetId, eventId, evidence })));
   // Keep the existing setwise import: each audit row uses its custody event's identity and exact original values.
   const history = items.map((asset,index) => ({eventId:asset.eventId,assetId:asset.id,envelope:registeredHistory(
     'work.asset_recorded',{kind:'asset',id:asset.id},null,
     {serial:asset.serial,assetTag:asset.assetTag,state:'stock',personId:null,location:asset.location,source:asset.source,observedAt:at,evidence:asset.evidence},
-    {kind:'person',id:actor},[],'normal',at,{source:{system:'snipeit',table:'assets',eventKey:`${file.hash}:${ready[index].row}`}})}));
+    {kind:'person',id:actor},[],'normal',at,{source:{system,table:'assets',eventKey:`${file.hash}:${ready[index].row}`}})}));
   // Expanded evidence may exceed the export's byte count; each bound audit JSON stays within the same limit.
   const historyJson:string[]=[],encoder=new TextEncoder();let chunk:string[]=[],chunkBytes=2;
   for(const row of history){const json=JSON.stringify(row),bytes=encoder.encode(json).byteLength;
@@ -147,8 +149,8 @@ async function apply(ctx: AdoptionContext, body: Record<string, unknown>) {
             WHERE a.workspace_id=? AND a.id=json_extract(e.value,'$.assetId') AND a.latest_event_id=json_extract(e.value,'$.eventId')
               AND c.id=json_extract(e.value,'$.eventId') AND c.kind='record')`)
         .bind(w,actor,actor,actor,w,at,json,w,actor,w)),
-      db.prepare(`INSERT INTO audit_events SELECT ?,?,?,'adoption.snipeit.import',?,?,? WHERE ${currentOwner}`)
-        .bind(id(), w, actor, file.hash, JSON.stringify({ file: file.name, created: items.length, conflicts: report.counts.conflicts, rejected: report.counts.rejected }), at, w, actor),
+      db.prepare(`INSERT INTO audit_events SELECT ?,?,?,'adoption.' || ? || '.import',?,?,? WHERE ${currentOwner}`)
+        .bind(id(), w, actor, system, file.hash, JSON.stringify({ file: file.name, created: items.length, conflicts: report.counts.conflicts, rejected: report.counts.rejected }), at, w, actor),
     ]);
     created = assets.meta.changes;
   } catch (error) {
@@ -160,8 +162,9 @@ async function apply(ctx: AdoptionContext, body: Record<string, unknown>) {
   return { created, conflicts: report.counts.conflicts, rejected: report.counts.rejected, assets: items.map(({ id: assetId, serial, assetTag }) => ({ id: assetId, serial, assetTag })) };
 }
 
-export function registerSnipeitImportRoutes(app: Hono<AppEnv>) {
+export function registerSnipeitImportRoutes(app: Hono<AppEnv>, system:'snipeit'|'csv'='snipeit') {
+  const base=system==='snipeit'?'/adoption/snipeit-imports':'/adoption/csv-imports/assets';
   const ctx = (c: Context<AppEnv>): AdoptionContext => ({ env: c.env, principal: c.get('principal') });
-  app.post('/adoption/snipeit-imports/dry-run', async c => { c.header('Cache-Control', 'private, no-store'); return c.json((await review(ctx(c), await importBody(c.req.raw))).report); });
-  app.post('/adoption/snipeit-imports', async c => { c.header('Cache-Control', 'private, no-store'); return c.json(await apply(ctx(c), await importBody(c.req.raw)), 201); });
+  app.post(base+'/dry-run', async c => { c.header('Cache-Control', 'private, no-store'); return c.json((await review(ctx(c), await importBody(c.req.raw),system)).report); });
+  app.post(base, async c => { c.header('Cache-Control', 'private, no-store'); return c.json(await apply(ctx(c), await importBody(c.req.raw),system), 201); });
 }
