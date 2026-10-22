@@ -42,6 +42,10 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
   }while(cursor);
   const replayed=(await ok('/work/'+work.id+'/activity','GET',undefined,owner)).items;
   assert.deepEqual(replayed.find(e=>e.id===priority.id),retained,'replay preserves the original retained entry and erasure date');
-  assert.equal((await ok('/search?q=synthetic-linen-13007','GET',undefined,owner)).total,0,'replay does not re-index cleared values');
+  const privateValue='synthetic-linen-13007 private archive history';
+  const search=await ok('/search?q='+encodeURIComponent(privateValue),'GET',undefined,owner);
+  assert.equal(search.total,0,'replay does not re-index cleared values');
+  const fuzzy=await ok('/search?q=synthetic-linen-13007','GET',undefined,owner);
+  assert.ok(!JSON.stringify(fuzzy.items).includes(privateValue),'unrelated typo matches contain no cleared source value');
   console.log('PASS DESK-017 native archive: original history, actor erasure, approved priority retention, count receipt, old archive invalidation and actual upload/replay without resurrection');
 }
