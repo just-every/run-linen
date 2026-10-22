@@ -1,3 +1,4 @@
+import { installFreshserviceNetworkFixture,registerFreshserviceNetworkFixture } from './freshservice-network-fixture';
 import { archiveRaceFetch } from './archive-race-fixture';
 import { registerWorkRoutes } from "../../src/features/work";
 import './knowledge-model-edge';
@@ -24,11 +25,13 @@ import {identityHash} from '../../src/features/adoption/core';
 import { passwordHash } from '../../src/platform/crypto';
 import { Freshservice } from '../../src/features/adoption/freshservice';
 import { ingestSourceRecord, establishOwnership, pollSource, validateSourceAuthority, beginCutover, completeCutover, writebackEvidence, reconcileWriteback } from '../../src/features/adoption/coexistence';
+installFreshserviceNetworkFixture();
 const app = new Hono<AppEnv>();
 app.onError((e, c) => e instanceof ApiError ? c.json({ error: { code: e.code, message: e.message } }, e.status as 400) : c.json({ error: { code: 'internal', message: e.message } }, 500));
 app.get('/health', c => c.text('ok'));
 const api = platformApp();
 registerAdoptionRoutes(api);
+registerFreshserviceNetworkFixture(api);
 registerWorkRoutes(api);
 registerConnectionRoutes(api);
 registerIntelligenceRoutes(api);
