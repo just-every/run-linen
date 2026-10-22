@@ -31,7 +31,7 @@ export async function lightweightImportJourney({page,api,base,out}) {
     }
     await page.goto(base+'/app#/lifecycle');
     await page.getByText('Record an authoritative HR change',{exact:true}).click();
-    const choose=page.getByLabel('Person',{exact:true}).first();await choose.selectOption(created.people[0].id);assert.match(await choose.locator('option:checked').innerText(),/Avery Morgan/);
+    const choose=page.locator('details[data-action-path="/lifecycle"] select[name="personId"]');await choose.selectOption(created.people[0].id);assert.match(await choose.locator('option:checked').innerText(),/Avery Morgan/);
     await fit('people',width);
     await page.goto(base+'/app#/assets/'+asset.assets[0].id);await page.getByRole('heading',{name:'synthetic-linen-204',exact:true}).waitFor();
     await page.getByText('Serial-level custody history',{exact:true}).click();await page.getByRole('list',{name:'Asset activity',exact:true}).waitFor();
