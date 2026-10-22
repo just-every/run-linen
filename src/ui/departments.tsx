@@ -10,5 +10,5 @@ export function departmentField(items:Department[],value?:string|null):Field {
   return {name:'departmentId',label:'Service workspace',type:'select',value:value??'',hint:'Leave unselected for the shared service desk.',options:items.filter(d=>d.active&&d.canStaff).map(d=>({value:d.id,label:d.name}))};
 }
 export function DepartmentSelect({items,value,onChange,label='Service workspace',empty='Shared service desk',name='departmentId'}:{items:Department[];value:string;onChange:(value:string)=>void;label?:string;empty?:string;name?:string}) {
-  return <label>{label}<select name={name} value={value} onChange={event=>onChange(event.target.value)}><option value="">{empty}</option>{value&&!items.some(d=>d.id===value&&d.active)&&<option value={value} disabled>Current workspace is unavailable</option>}{items.filter(d=>d.active).map(d=><option key={d.id} value={d.id}>{d.name}</option>)}</select></label>;
+  return <label>{label}<select aria-label={label} name={name} value={value} onChange={event=>onChange(event.target.value)}><option value="">{empty}</option>{value&&!items.some(d=>d.id===value&&d.active)&&<option value={value} disabled>Current workspace is unavailable</option>}{items.filter(d=>d.active).map(d=><option key={d.id} value={d.id}>{d.name}</option>)}</select></label>;
 }

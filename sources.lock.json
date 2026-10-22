@@ -4647,7 +4647,7 @@
       "executable": false
     },
     "src/ui/departments.tsx": {
-      "sha256": "0edfc3b9959abf9f14754d193d2c251ffd2b74377ada72a0e09f0f0528837751",
+      "sha256": "9d6f5a038a5123319a481819c27aa3324ad67b6cbd63b56efb31f614f5cbe4d4",
       "executable": false
     },
     "src/ui/dependency-details.tsx": {
@@ -4879,7 +4879,7 @@
       "executable": false
     },
     "src/ui/work-department.tsx": {
-      "sha256": "fcbab9f0a0b101bd4bd8b741a3b2733d49290ccc78c77a6a3804f1c31da7aee1",
+      "sha256": "858fd04158a2ba89be0870cab9ed7de4fe998098fac289d9c1a55e4778291d9f",
       "executable": false
     },
     "src/ui/work-detail.tsx": {

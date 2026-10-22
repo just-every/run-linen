@@ -21,8 +21,8 @@ export function WorkDepartment({work,onChanged}:{work:WorkRecord;onChanged:()=>v
     <form className="inline-form" aria-label="Workspace handoff" onSubmit={save}>
       <Notice>{protectedDepartments.length?'The same ticket keeps its conversation, restrictions and elapsed service-level history. Assignments are kept only when compatible with the receiving team and retained access restrictions.':'The same ticket keeps its conversation, restrictions and elapsed service-level history. Staff access changes to the receiving team. Assignments are kept only when compatible with that team.'}</Notice>
       <DepartmentSelect items={departments.data?.items??[]} value={departmentId} onChange={value=>{setDepartmentId(value);setGroupId('');setAssigneeId('');}} label="Receiving workspace"/>
-      <label>Receiving group<select value={groupId} onChange={e=>{setGroupId(e.target.value);setAssigneeId('');}}><option value="">Keep only if compatible</option>{matching.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
-      <label>Receiving agent<select value={assigneeId} onChange={e=>setAssigneeId(e.target.value)}><option value="">Keep only if compatible</option>{staff.map(m=><option key={m.userId} value={m.userId}>{m.name}</option>)}</select></label>
+      <label>Receiving group<select aria-label="Receiving group" value={groupId} onChange={e=>{setGroupId(e.target.value);setAssigneeId('');}}><option value="">Keep only if compatible</option>{matching.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
+      <label>Receiving agent<select aria-label="Receiving agent" value={assigneeId} onChange={e=>setAssigneeId(e.target.value)}><option value="">Keep only if compatible</option>{staff.map(m=><option key={m.userId} value={m.userId}>{m.name}</option>)}</select></label>
       <label>Reason for handoff<textarea name="reason" required maxLength={1000} rows={3}/></label>
       <ErrorNotice error={departments.error??groups.error??mutation.error}/><button className="action primary" disabled={mutation.pending||departments.loading||groups.loading}>Hand off this ticket</button>
     </form>
