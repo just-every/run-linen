@@ -11,7 +11,8 @@ export function registeredHistory(action:string,record:HistoryRecord,before:Reco
     changes:Object.entries({...Object.fromEntries(Object.keys(before??{}).map(key=>[key,null])),...after}).filter(([key,value])=>JSON.stringify(before?.[key]??null)!==JSON.stringify(value??null)).map(([field,value])=>({field,before:before?.[field]??null,after:value??null,...(metadata.fields?.[field]?{evidence:metadata.fields[field]}:{})})),...(metadata.source?{source:metadata.source}:{})};
 }
 function display(value:unknown):unknown { if(isErased(value))return (value as any).person?'Erased person':'[erased]';return value; }
-export function projectHistoryEvent(action:string,payload:unknown) {
+export interface HistoryProjection {changes:{field:string;before:unknown;after:unknown;fieldId?:string;custom?:boolean;beforeLabel?:string;afterLabel?:string}[];actor?:HistoryActor;source?:HistoryEnvelope['source'];redacted?:'erasure';redactedAt?:string}
+export function projectHistoryEvent(action:string,payload:unknown):HistoryProjection {
   const e=decodeHistory(payload);
   if(!e)return {changes:legacyChanges(action,payload),...(cleared(payload)?{redacted:'erasure' as const,redactedAt:clearedAt(payload)}:{})};
   return {changes:e.changes.map(c=>({field:c.field.startsWith('custom:')?(c.evidence?.label??'Custom field'):c.field,before:display(c.before),after:display(c.after),...(c.beforeEvidence?.label?{beforeLabel:c.beforeEvidence.label}:{}),...(c.afterEvidence?.label?{afterLabel:c.afterEvidence.label}:{}),...(c.field.startsWith('custom:')?{fieldId:c.field.slice(7)}:{})})),actor:e.actor,...(e.source?{source:e.source}:{}),

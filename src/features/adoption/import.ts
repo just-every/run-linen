@@ -1,3 +1,4 @@
+import { historyRestoreTables,restoreHistoryMetadata } from '../history/adoption';
 import { decodeHistory } from '../history/registry';
 import { historyArchiveRow } from '../history/archive';
 import { ApiError, id, now } from '../../platform/http';
@@ -36,6 +37,7 @@ for (const table of ['execution_plans', 'execution_operations', 'execution_attem
 for (const table of intelligenceRestoreTables)
     ports.set(table, { table, restore: async (ctx, r, p) => { await restoreIntelligence(ctx, { table: r.table, row: r.row, sourceId: p.sourceId, sourceKey: `${r.table}:${r.key}` }); return { state: 'restored' }; } });
 export function registerAdoptionRestorePort(port: RestorePort) { check(supported(port.table) && !historyOnly.has(port.table), 'unsafe_restore_port'); check(!ports.has(port.table), 'duplicate_restore_port'); ports.set(port.table, port); }
+for(const table of historyRestoreTables)registerAdoptionRestorePort({table,restore:(ctx,r,provenance)=>restoreHistoryMetadata(ctx,r.table,r.row,provenance.sourceId)});
 export function validateManifest(value: unknown): Manifest {
     const m = value as Manifest;
     check(m && m.format === 'linen-native' && m.version === 1 && m.state === 'ready', 'unsupported_archive');
@@ -211,7 +213,7 @@ export async function dryRun(ctx: AdoptionContext, runId: string) {
 }
 export async function applyImport(ctx: AdoptionContext, runId: string, acceptSemanticLoss = false) {
     const run = await getRun(ctx, 'imports', runId);
-    if (run.state === 'restored')
+    if (run.state === 'restored' || run.input_erased_at)
         return importStatus(ctx, runId);
     check(['validated', 'applying', 'history_only','erasure_pending'].includes(String(run.state)), 'dry_run_required', 409);
     const report = JSON.parse(String(run.report_json)) as DryReport;
@@ -269,7 +271,7 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
     const privacy=await reconcileImportedTombstones(ctx,runId);if(privacy.pending.length){await ctx.env.DB.prepare("UPDATE adoption_imports SET state='erasure_pending' WHERE workspace_id=? AND id=?").bind(w,runId).run();return {id:runId,state:'erasure_pending',pendingErasures:privacy.pending}}
     // Each supported domain port owns its own authority and invariants; grants are permanently excluded.
     const pending = (await ctx.env.DB.prepare("SELECT * FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state='history_only' ORDER BY created_at,id").bind(w, runId).all<any>()).results;
-    const priority = ['work_departments', 'work_canned_responses', 'work_people', 'work_pending_people', 'work_records', 'work_calendars', 'work_catalog', 'work_assets', 'work_recurring_plans', 'work_recurring_occurrences', 'work_recurring_tasks', 'work_asset_financials', 'work_knowledge', 'work_messages', 'work_attachments', 'work_custody', 'work_lifecycle', 'work_fulfilments','work_approval_stages', 'work_commitments', 'work_obligations', 'work_time_entries', 'work_pending_services', 'work_article_versions', 'svc_records', 'work_knowledge_drafts', 'svc_events', 'work_asset_contracts', 'work_asset_repairs', 'work_classifications', 'execution_plans', 'execution_operations', 'execution_attempts', 'execution_receipts', 'execution_verifications', 'execution_decisions', 'intelligence_commitments', 'intelligence_versions', 'intelligence_observations', 'intelligence_events', 'intelligence_research', 'intelligence_attempts', 'intelligence_engineering_jobs', 'intelligence_capabilities', 'intelligence_reuse', 'intelligence_simplifications'];
+    const priority = [...historyRestoreTables,'work_departments', 'work_canned_responses', 'work_people', 'work_pending_people', 'work_records', 'work_calendars', 'work_catalog', 'work_assets', 'work_recurring_plans', 'work_recurring_occurrences', 'work_recurring_tasks', 'work_asset_financials', 'work_knowledge', 'work_messages', 'work_attachments', 'work_custody', 'work_lifecycle', 'work_fulfilments','work_approval_stages', 'work_commitments', 'work_obligations', 'work_time_entries', 'work_pending_services', 'work_article_versions', 'svc_records', 'work_knowledge_drafts', 'svc_events', 'work_asset_contracts', 'work_asset_repairs', 'work_classifications', 'execution_plans', 'execution_operations', 'execution_attempts', 'execution_receipts', 'execution_verifications', 'execution_decisions', 'intelligence_commitments', 'intelligence_versions', 'intelligence_observations', 'intelligence_events', 'intelligence_research', 'intelligence_attempts', 'intelligence_engineering_jobs', 'intelligence_capabilities', 'intelligence_reuse', 'intelligence_simplifications'];
     pending.sort((a, b) => (priority.indexOf(a.table_name) < 0 ? 999 : priority.indexOf(a.table_name)) - (priority.indexOf(b.table_name) < 0 ? 999 : priority.indexOf(b.table_name)));
     for (const h of pending) {
         // Prior import blobs are opaque nested archives. They cannot be certified

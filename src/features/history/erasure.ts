@@ -1,6 +1,7 @@
+import { captureArchiveAliasStatements } from './archive-identities.mjs';
 import type { Env } from '../../platform/types';
 import { id } from '../../platform/http';
-import { decodeHistory } from './registry';
+import { decodeHistory,fieldClass } from './registry';
 import { historyIdentityDigest, identityMatcher } from './identity';
 import { historyEventKey, intersectRedaction, redactHistory, type HistoryCounts } from './redact';
 
@@ -25,8 +26,10 @@ export async function prepareHistoryErasure(ctx:Context,identities:string[],at:s
       const key=historyEventKey(store,event.id,decodeHistory(event.payload));
       const prior=await db.prepare('SELECT envelope_json FROM history_redactions WHERE workspace_id=? AND event_key=?').bind(w,key).first<{envelope_json:string}>();
       const payload=JSON.stringify(prior?intersectRedaction(result.payload,JSON.parse(prior.envelope_json)):result.payload);
+      const original=decodeHistory(event.payload);
+      const aliasStatements=original&&identities.length?await captureArchiveAliasStatements(ctx,{eventId:event.id,store,payload:original,redactedPayload:JSON.parse(payload),identities:[...values],canonicalPersonKey:identities[0],personFields:original.changes.filter(c=>fieldClass(original.action,c.field)==='person').map(c=>c.field),at}):[];
       const guard=id();
-      statements.push(db.prepare(`INSERT INTO history_write_guards SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM ${table} WHERE workspace_id=? AND id=? AND ${column}=? AND actor_id=?) THEN 1 ELSE 0 END`).bind(guard,w,event.id,event.payload,event.actor_id),
+      statements.push(db.prepare(`INSERT INTO history_write_guards SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM ${table} WHERE workspace_id=? AND id=? AND ${column}=? AND actor_id=?) THEN 1 ELSE 0 END`).bind(guard,w,event.id,event.payload,event.actor_id),...aliasStatements,
         db.prepare(`UPDATE ${table} SET ${column}=?,actor_id=CASE WHEN ? THEN '[erased]' ELSE actor_id END WHERE workspace_id=? AND id=?`).bind(payload,Number(result.actorErased),w,event.id),
         db.prepare(`INSERT INTO history_redactions VALUES(?,?,?,?,?,?,?) ON CONFLICT(workspace_id,event_key) DO UPDATE SET envelope_json=excluded.envelope_json,redacted_at=MIN(history_redactions.redacted_at,excluded.redacted_at),counts_json=excluded.counts_json`).bind(w,key,event.id,store,at,payload,JSON.stringify(result.counts)),
         db.prepare('DELETE FROM history_write_guards WHERE id=?').bind(guard));

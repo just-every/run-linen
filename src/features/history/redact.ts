@@ -13,7 +13,7 @@ async function matchesValue(value:unknown,matches:(value:string)=>Promise<boolea
 }
 /** The sole retained-value policy. Personal and unregistered payloads never gain
  * retention by supplying a tag; the registry validates every field/value pair. */
-export async function redactHistory(payload:unknown,at:string,matches:(value:string)=>Promise<boolean>,actorId?:string) {
+export async function redactHistory(payload:unknown,at:string,matches:(value:string)=>Promise<boolean>,actorId?:string,force=false) {
   const envelope=decodeHistory(payload),counts:HistoryCounts={};
   const count=(key:string)=>{counts[key]=(counts[key]||0)+1;};
   if(!envelope){count('unregistered');return {payload:{redacted:'erasure',redactedAt:at},counts,affected:true,actorErased:actorId?await matches(actorId):false};}
@@ -24,11 +24,11 @@ export async function redactHistory(payload:unknown,at:string,matches:(value:str
   const subjectErased=(await Promise.all(e.subjects.map(matches))).some(Boolean);
   let valueErased=false;
   for(const c of e.changes)if(await matchesValue(c.before,matches)||await matchesValue(c.after,matches)||c.evidence?.label&&await matches(c.evidence.label)||c.beforeEvidence?.label&&await matches(c.beforeEvidence.label)||c.afterEvidence?.label&&await matches(c.afterEvidence.label))valueErased=true;
-  if(!actorErased&&!initiatorErased&&!storedActorErased&&!subjectErased&&!valueErased)return {payload:e,counts,affected:false,actorErased:false};
+  if(!force&&!actorErased&&!initiatorErased&&!storedActorErased&&!subjectErased&&!valueErased)return {payload:e,counts,affected:false,actorErased:false};
   if(actorErased){e.actor={kind:e.actor.kind,id:'[erased]',name:'Erased person'};count('actor');}
   if(initiatorErased&&!actorErased){e.actor.initiatedBy='[erased]';count('initiator');}
   e.subjects=(await Promise.all(e.subjects.map(async v=>await matches(v)?null:v))).filter((v):v is string=>v!==null);
-  const strict=subjectErased&&e.protection!=='normal';
+  const strict=(subjectErased||force)&&e.protection!=='normal';
   for(const c of e.changes){
     const kind=fieldClass(e.action,c.field);
     for(const side of ['before','after'] as const){

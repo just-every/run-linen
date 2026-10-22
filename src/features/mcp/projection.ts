@@ -1,3 +1,4 @@
+import { isArchiveAlias } from '../history/archive-identities.mjs';
 import { historyChanges, readHistoryEvent } from '../history/event';
 import type { Env } from '../../platform/types';
 import { ApiError, now } from '../../platform/http';
@@ -153,7 +154,7 @@ export async function projectHistory(env: Env, credential: Reader, row: any) {
     const detail: Record<string, any> = JSON.parse(event.detail_json);
     const projection=await readHistoryEvent({env,principal:{workspaceId:credential.workspace_id}},event.action,detail,event.actor??undefined,event.id);
     const cleared = projection.redacted==='erasure';
-    return { id: event.id, at: event.created_at, kind: 'change' as const, actor: event.actor,
+    return { id: event.id, at: event.created_at, kind: 'change' as const, actor: projection.actor?.id==='[erased]'||isArchiveAlias(projection.actor?.id)?'Erased person':event.actor,
       actorKind: event.action === 'work.scenario_run' ? 'scenario' : event.action === 'work.routed' ? 'rule'
         : event.action === 'work.classification_proposed' ? 'agent' : 'person',
       action: event.action, visibility: 'private',

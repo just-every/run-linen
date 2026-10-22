@@ -13,7 +13,8 @@ export async function historyArchiveRow(ctx:Context,table:string,row:Record<stri
   const store=table==='audit_events'?'audit':'service',column=store==='audit'?'detail_json':'data_json';
   let e=decodeHistory(row[column]);
   if(e && table==='audit_events' && typeof row.action==='string' && row.action!==e.action)throw new ApiError(409,'history_action_conflict','History action does not match its original event');
-  const key=historyEventKey(store,String(row.id),e);
+  const foreign=ingress&&typeof row.workspace_id==='string'&&row.workspace_id!==ctx.principal.workspaceId;
+  const key=(foreign?'import:'+row.workspace_id+':':'')+historyEventKey(store,String(row.id),e);
   const prior=await ctx.env.DB.prepare('SELECT envelope_json FROM history_redactions WHERE workspace_id=? AND event_key=?').bind(ctx.principal.workspaceId,key).first<{envelope_json:string}>();
   if(ingress && e && !prior){
     e=structuredClone(e);
@@ -22,8 +23,8 @@ export async function historyArchiveRow(ctx:Context,table:string,row:Record<stri
   }
   const matches=await identityMatcher(ctx.env,ctx.principal.workspaceId);
   const count=await ctx.env.DB.prepare('SELECT 1 FROM adoption_tombstones WHERE workspace_id=? UNION ALL SELECT 1 FROM history_identity_tombstones WHERE workspace_id=? LIMIT 1').bind(ctx.principal.workspaceId,ctx.principal.workspaceId).first();
-  if(!prior&&!count)return {row,typed:!!e};
-  const at=new Date().toISOString(),result=await redactHistory(ingress&&prior?prior.envelope_json:row[column],at,matches,row.actor_id);
+  if(!prior&&!count&&!(ingress&&e?.redacted))return {row,typed:!!e};
+  const at=new Date().toISOString(),result=await redactHistory(ingress&&prior?prior.envelope_json:row[column],at,matches,row.actor_id,ingress&&!prior&&!!e?.redacted);
   const payload=prior?intersectRedaction(result.payload,JSON.parse(prior.envelope_json)):result.payload;
   if(payload && typeof payload==='object')delete (payload as any).pendingErasure;
   return {row:{...row,[column]:JSON.stringify(payload),...(result.actorErased?{actor_id:'[erased]'}:{})},typed:!!e||!!prior};

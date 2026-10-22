@@ -6,12 +6,13 @@ export function historyExportRow(table,row) {
     if(payload?.schema==='linen.history'&&!payload.redacted){for(const c of payload.changes??[])if(c.field?.startsWith('custom:')||['group','groupId','group_id'].includes(c.field)){delete c.evidence;delete c.beforeEvidence;delete c.afterEvidence;}return {...row,[column]:JSON.stringify(payload)};}}
   return row;
 }
-export async function validateHistoryStaged(db,tables) {
+export async function validateHistoryStaged(db,tables,projectArchiveRow=(table,row)=>row) {
   const quote=name=>'"'+name.replaceAll('"','""')+'"';
   const markers=await db.prepare('SELECT * FROM history_redactions').all();
   // A pre-erasure snapshot cannot replace an installation's durable removal.
   // Refusal also covers older schemas without the marker table.
-  for(const marker of markers.results){
+  for(const raw of markers.results){
+    const marker=projectArchiveRow('history_redactions',raw);
     const staged=tables.history_redactions;
     if(!staged)return false;
     const same=await db.prepare(`SELECT 1 FROM ${quote(staged)} WHERE workspace_id=? AND event_key=? AND envelope_json=? AND redacted_at=?`).bind(marker.workspace_id,marker.event_key,marker.envelope_json,marker.redacted_at).first();
@@ -23,7 +24,7 @@ export async function validateHistoryStaged(db,tables) {
       let payload;try{payload=JSON.parse(marker.envelope_json);}catch{return false;}
       if(payload?.redacted!=='erasure'||typeof payload.redactedAt!=='string')return false;
       if(payload?.changes?.some(c=>(c.field?.startsWith('custom:')||['group','groupId','group_id'].includes(c.field)) && [c.before,c.after].some(v=>v!==null && !(v && typeof v==='object' && v.redacted==='erasure')))) {
-        if(!markers.results.some(known=>known.workspace_id===marker.workspace_id && known.event_key===marker.event_key && known.envelope_json===marker.envelope_json))return false;
+        if(!markers.results.some(raw=>{const known=projectArchiveRow('history_redactions',raw);return known.workspace_id===marker.workspace_id && known.event_key===marker.event_key && known.envelope_json===marker.envelope_json;}))return false;
       }
       const table=marker.store==='audit'?'audit_events':marker.store==='service'?'svc_events':null;
       if(!table)continue;

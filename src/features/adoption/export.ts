@@ -1,3 +1,4 @@
+import { prepareArchiveIdentityProjection } from '../history/archive-identities.mjs';
 import { historyArchiveRow } from '../history/archive';
 import { id, now } from '../../platform/http';
 import { check, owner, statement, getRun, sha, encode, erased, type AdoptionContext, type Row } from './core';
@@ -12,6 +13,7 @@ export async function createExport(ctx: AdoptionContext, key: string) {
     }>();
     if (existing)
         return getRun(ctx, 'exports', existing.id);
+    await prepareArchiveIdentityProjection(ctx.env);
     const run = id(), at = now(), statements: D1PreparedStatement[] = [db.prepare("INSERT INTO adoption_exports(id,workspace_id,actor_id,idempotency_key,state,created_at) VALUES(?,?,?,?,'snapshot',?)").bind(run, w, ctx.principal.userId, key, at)];
     const present = (await db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all<{
         name: string;
@@ -51,9 +53,10 @@ export async function advanceExport(ctx: AdoptionContext, runId: string) {
         source_key: string;
         row_json: string;
     }>()).results;
+    const archiveIdentities=await prepareArchiveIdentityProjection(ctx.env);
     for (const item of page) {
         const history = await historyArchiveRow(ctx,item.table_name,JSON.parse(item.row_json));
-        const row = history.row as Row;
+        const row = archiveIdentities.project(item.table_name,history.row) as Row;
         check(history.typed || !await erased(ctx, row), 'erasure_invalidated_snapshot', 409);
         const record = { table: item.table_name, key: item.source_key, row };
         const bytes = encode([record]);
