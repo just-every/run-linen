@@ -89,8 +89,12 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
     await ok('/adoption/erase','POST',{identity:racePerson.id},raceAuth);
   }finally{await ok('/fixtures/archive-race/'+raceKey+'/release','POST',{},raceAuth);}
   const rejected=await applying;
-  const raceRecords=await ok('/imports/'+raced.id+'/records','GET',undefined,raceAuth);
-  assert.ok(!JSON.stringify(raceRecords).includes('synthetic-linen-13004'),'A held import cannot restore private source content after erasure');
+  let raceCursor='';
+  do{
+    const raceRecords=await ok('/imports/'+raced.id+'/records?cursor='+encodeURIComponent(raceCursor),'GET',undefined,raceAuth);
+    assert.ok(!JSON.stringify(raceRecords.data).includes('synthetic-linen-13004'),'A held import cannot restore private source content after erasure');
+    raceCursor=raceRecords.cursor;
+  }while(raceCursor);
   assert.equal(rejected.status,409,'An erasure concurrent with a stage write atomically refuses that write');
   const late=await ok('/members','POST',{email:'synthetic-linen-13015@example.test',name:'Late removal',password,roles:['employee']},destination,201);
   await ok('/adoption/erase','POST',{identity:late.id},destination);
