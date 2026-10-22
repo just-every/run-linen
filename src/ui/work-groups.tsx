@@ -3,7 +3,7 @@ import { useMutation, useRemote, useSession } from "./state";
 import { ErrorNotice } from "./primitives";
 import type { WorkRecord } from "./work";
 
-export interface AgentGroup { id: string; name: string; members: { userId: string; name: string; lead: boolean }[] }
+export interface AgentGroup { id: string; name: string; departmentId?:string|null; members: { userId: string; name: string; lead: boolean }[] }
 
 /** DESK-001: the workspace's agent groups, read by agents only. */
 export function useGroups() {
@@ -18,7 +18,7 @@ export function WorkGroup({ work, onChanged }: { work: WorkRecord; onChanged: ()
     mutation = useMutation(),
     [groupId, setGroupId] = useState(work.group_id ?? ""),
     [assigneeId, setAssigneeId] = useState(work.assignee_id ?? ""),
-    items = groups.data?.items ?? [],
+    items = (groups.data?.items ?? []).filter(g=>(g.departmentId??null)===(work.department_id??null)),
     chosen = items.find((g) => g.id === groupId),
     current = items.find((g) => g.id === work.group_id);
   if (!items.length) return null;

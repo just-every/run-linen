@@ -65,6 +65,7 @@ export function WorkOutcome({ work, onChanged, pendingPerson }: { work: WorkReco
       {saved && <Notice tone="warning"><strong>{saved.state === 'blocked' ? 'At submission, your catalog request was blocked.' : 'At submission, your catalog request was pending.'}</strong><p>No fulfillment was confirmed by that response. Current progress and next owners are shown above.</p></Notice>}
       <ErrorNotice error={obligations.backgroundError} />
       <ErrorNotice error={catalog.error} retry={catalog.refresh} />
+      {work.department_id&&<p>Services on this ticket belong to {work.department_name}. <a href="#/work">Start a separate request</a> for another service team.</p>}
       {Boolean(catalog.data?.items.length) && !closed && named && (
         <Notice>
           <strong>A known service can’t be chosen here.</strong>
@@ -72,7 +73,7 @@ export function WorkOutcome({ work, onChanged, pendingPerson }: { work: WorkReco
         </Notice>
       )}
       {Boolean(catalog.data?.items.length) && !closed && !named && pendingPerson?.state !== "pending" && (
-        <CatalogRequestForm items={catalog.data!.items} workId={workId} beneficiaryId={work.beneficiary_id}
+        <CatalogRequestForm items={catalog.data!.items.filter(c=>(c.departmentId??null)===(work.department_id??null))} workId={workId} beneficiaryId={work.beneficiary_id}
           onSaved={result=>{setSaved(result);obligations.refresh();onChanged?.();}}/>
       )}
     </section>

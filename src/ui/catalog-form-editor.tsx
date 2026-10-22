@@ -3,24 +3,28 @@ import { request } from './api';
 import { useSession } from './state';
 import { ErrorNotice, Notice } from './primitives';
 import type { CatalogField, CatalogForm } from '../features/work/catalog-form-schema';
+import { DepartmentSelect,useDepartments } from './departments';
 
-type Item = {id:string;name:string;revision:number;form:CatalogForm};
+type Item = {id:string;name:string;revision:number;form:CatalogForm;departmentId?:string|null};
 export function CatalogFormEditor({item,onSaved}:{item:Item;onSaved:()=>void}) {
   const {session}=useSession(),[fields,setFields]=useState<CatalogField[]>(item.form.fields),[quoteRequired,setQuoteRequired]=useState(item.form.quoteRequired===true);
   const [error,setError]=useState<unknown>(null),[saving,setSaving]=useState(false),[saved,setSaved]=useState(false);
+  const departments=useDepartments(),[departmentId,setDepartmentId]=useState(item.departmentId??'');
   function edit(index:number,patch:Partial<CatalogField>) {setFields(fields.map((f,i)=>i===index?{...f,...patch}:f));}
   async function save(e:FormEvent<HTMLFormElement>) {
     e.preventDefault();setError(null);setSaved(false);setSaving(true);
     const data=new FormData(e.currentTarget),price=String(data.get('price')),hours=String(data.get('hours'));
     try {
       if(price && !/^\d+(\.\d{1,2})?$/.test(price))throw Error('Use USD with at most two decimal places.');
-      await request(`/catalog/${item.id}/form`,{method:'POST',csrf:session.csrfToken,body:{name:data.get('name'),revision:item.revision,
+      await request(`/catalog/${item.id}/form`,{method:'POST',csrf:session.csrfToken,body:{name:data.get('name'),revision:item.revision,departmentId:departmentId||null,
         form:{fields:fields.map(f=>({...f,...(f.type==='select'?{options:f.options??[]}:{} )})),costCents:price?Math.round(Number(price)*100):null,deliveryHours:hours?Number(hours):null,quoteRequired}}});
       setSaved(true);onSaved();
     }catch(error){setError(error);}finally{setSaving(false);}
   }
   return <form className="inline-form" onSubmit={save}>
     <label>Catalog item name<input name="name" required defaultValue={item.name}/></label>
+    <DepartmentSelect items={(departments.data?.items??[]).filter(d=>d.canStaff)} value={departmentId} onChange={setDepartmentId}/>
+    <ErrorNotice error={departments.error} retry={departments.refresh}/>
     <label>Request cost in USD<input name="price" type="number" min="0" step="0.01" defaultValue={item.form.costCents===null?'':item.form.costCents/100}/></label>
     <label>Expected delivery in elapsed hours<input name="hours" type="number" min="1" step="1" defaultValue={item.form.deliveryHours??''}/></label>
     <p>Leave cost or delivery empty when unknown. These are recorded estimates.</p>
@@ -37,6 +41,6 @@ export function CatalogFormEditor({item,onSaved}:{item:Item;onSaved:()=>void}) {
     <button type="button" className="action secondary" disabled={fields.length>=20} onClick={()=>setFields([...fields,{id:'f_'+crypto.randomUUID().replaceAll('-',''),label:'',type:'text',required:false}])}>Add question</button>
     <Notice>Saving makes a new item revision. Submitted forms keep their original questions, answers, cost and delivery estimate. A required quote is a private PDF the requester attaches; Linen never reads its amount, so ask for the price as a question. Audience is edited separately.</Notice>
     <ErrorNotice error={error}/>{saved&&<Notice>Catalog form saved.</Notice>}
-    <button className="action primary" disabled={saving}>Save catalog form</button>
+    <button className="action primary" disabled={saving||departments.loading||Boolean(departments.error)}>Save catalog form</button>
   </form>;
 }

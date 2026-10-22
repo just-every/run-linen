@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { request, type RecordValue } from './api';
 import { useRemote, useSession } from './state';
 import { ActionForm } from './forms';
-import { ErrorNotice, Notice } from './primitives';
+import { ErrorNotice, Notice,Loading } from './primitives';
+import { useDepartments,departmentField } from './departments';
 
 const dimensions = [['department', 'Department'], ['location', 'Location'], ['employmentType', 'Employment type']] as const;
 type Value = { id: string; dimension: string; label: string; active: number; revision: number };
@@ -52,10 +53,14 @@ export function CatalogAudienceEditor({ item, onSaved }: { item: { id: string; r
 
 /** CATALOG-001: an item of any kind. Account and general-service items are done by their owner as a task; none grants provider authority. */
 export function CatalogItemCreate({ members, onSaved }: { members: { id: string; name: string; active: number }[]; onSaved: (result: RecordValue) => void }) {
+  const departments=useDepartments();
+  if(departments.error)return <ErrorNotice error={departments.error} retry={departments.refresh}/>;
+  if(departments.loading)return <Loading/>;
   return <ActionForm title="Add catalog item" path="/catalog" onSaved={onSaved} submit="Save catalog item"
     explanation="Choose what kind of item this is. Access, software and hardware are provisioned through their reviewed targets; accounts and general services become a task their owner completes."
     fields={[
       { name: 'name', label: 'Item name', required: true },
+      departmentField(departments.data?.items??[]),
       { name: 'kind', label: 'Item kind', type: 'select', required: true, options: [['access', 'Access'], ['software', 'Software'], ['device', 'Hardware'], ['account', 'Account'], ['service', 'General service']].map(([value, label]) => ({ value, label })) },
       { name: 'target', label: 'Reviewed target or service name', required: true, hint: 'The exact access, license, device model or service this item delivers.' },
       { name: 'ownerId', label: 'Fulfilment owner', type: 'select', required: true, options: members.filter(m => m.active).map(m => ({ value: m.id, label: m.name })) },

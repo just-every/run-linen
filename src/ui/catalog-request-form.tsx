@@ -15,7 +15,7 @@ async function uploadQuote(workId:string,catalogId:string,file:File,csrf:string)
     throw new ApiFailure(response.status,data?.error?.code??'request_failed',data?.error?.message??`The quote could not be attached (${response.status}).`);}
 }
 export function CatalogRequestForm({items,workId,beneficiaryId,onSaved}:{items:RecordValue[];workId:string;beneficiaryId:string;onSaved:(r:RecordValue)=>void}) {
-  const {session}=useSession(),[selected,setSelected]=useState(''),[answers,setAnswers]=useState<Record<string,string|number|boolean>>({});
+  const {session}=useSession(),[selected,setSelected]=useState(()=>new URLSearchParams(typeof location==='undefined'?'':location.hash.split('?')[1]).get('catalogId')??''),[answers,setAnswers]=useState<Record<string,string|number|boolean>>({});
   const [error,setError]=useState<unknown>(null),[pending,setPending]=useState(false),[quote,setQuote]=useState<File|null>(null);
   const item=items.find(c=>c.id===selected) as Item|undefined;
   const visible:Record<string,string|number|boolean>={};
@@ -26,10 +26,10 @@ export function CatalogRequestForm({items,workId,beneficiaryId,onSaved}:{items:R
       const result=await request<RecordValue>(`/work/${workId}/fulfilment`,{method:'POST',csrf:session.csrfToken,body:{catalogId:item.id,catalogRevision:item.revision,beneficiaryId,purpose:data.get('purpose'),...(expiry?{expiresAt:localInstant(expiry).instant}:{}),answers:visible}});onSaved(result);}
     catch(error){setError(error);}finally{setPending(false);}
   }
-  return <details className="action-disclosure" data-action-path={`/work/${workId}/fulfilment`}><summary>Or choose a known service</summary>
+  return <details className="action-disclosure" data-action-path={`/work/${workId}/fulfilment`} open={Boolean(item&&new URLSearchParams(typeof location==='undefined'?'':location.hash.split('?')[1]).get('catalogId')===item.id)||undefined}><summary>Or choose a known service</summary>
     <form className="inline-form" onSubmit={submit}>
       <p>You can also ask in the conversation. This optional selection preserves the same request.</p>
-      <label>Service<select aria-label="Service" required name="catalogId" value={selected} onChange={e=>{setSelected(e.target.value);setAnswers({});setQuote(null);}}><option value="">Choose…</option>{items.map(c=><option key={text(c.id)} value={text(c.id)}>{text(c.name)}{c.application?` · $${(Number((c.application as RecordValue).costCents)/100).toFixed(2)} / ${text((c.application as RecordValue).billingPeriod)}`:c.applicationUnavailable?' · registration needs review':''}</option>)}</select></label>
+      <label>Service<select aria-label="Service" required name="catalogId" value={selected} onChange={e=>{setSelected(e.target.value);setAnswers({});setQuote(null);}}><option value="">Choose…</option>{items.map(c=><option key={text(c.id)} value={text(c.id)}>{text(c.name)}{c.department_name?` · ${text(c.department_name)}`:''}{c.application?` · $${(Number((c.application as RecordValue).costCents)/100).toFixed(2)} / ${text((c.application as RecordValue).billingPeriod)}`:c.applicationUnavailable?' · registration needs review':''}</option>)}</select></label>
       {item&&<><Facts entries={[["Recorded request cost",item.form.costCents===null?'Unknown':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.form.costCents/100)],["Expected delivery",item.form.deliveryHours===null?'Unknown':`${item.form.deliveryHours} elapsed hours`]]}/>
       {item.form.fields.filter(f=>fieldVisible(f,visible)).map(f=><label key={f.id} className={f.type==='checkbox'?'checkbox-field':''}>
         <span>{f.label}{f.required?' *':''}</span>

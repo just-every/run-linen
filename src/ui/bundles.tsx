@@ -15,25 +15,31 @@ export function Bundles({ onRequested }: { onRequested: () => void }) {
   const { session } = useSession();
   const owner = session.principal.roles.includes("owner");
   const bundles = useRemote<{ items: Bundle[] }>("/catalog-bundles");
-  const catalog = useRemote<{ items: RecordValue[] }>(owner ? "/catalog" : null);
+  const catalog = useRemote<{ items: RecordValue[] }>("/catalog");
   if (!owner && !bundles.data?.items.length) return null;
   return (
     <section className="new-request" aria-label="Bundles">
       <h2>Bundles</h2>
       <ErrorNotice error={bundles.error ?? catalog.error} />
-      {bundles.data?.items.map((b) => (
+      {bundles.data?.items.map((b) => {
+        if(!catalog.data)return null;
+        const children=b.items.map(item=>catalog.data!.items.find(c=>c.id===item.catalogId));
+        if(children.some(c=>!c))return <Notice key={b.id}>{b.name} has an item outside your available catalog. Its owner must review the bundle before it can be requested.</Notice>;
+        const departments=[...new Set(children.map(c=>c!.departmentId??null))];
+        if(departments.length!==1)return <Notice key={b.id}>{b.name} spans different service workspaces. Request its services separately; this bundle cannot apply part of its items.</Notice>;
+        return (
         <ActionForm key={b.id} title={`Request ${b.name}`} path={`/catalog-bundles/${b.id}/request`} submit="Request bundle"
-          defaults={{ expectedRevision: b.revision, deduplicationKey: "" }}
+          defaults={{ expectedRevision: b.revision, deduplicationKey: "",departmentId:departments[0] }}
           fields={[{ name: "purpose", label: "What it is for", type: "textarea", required: true }]}
           explanation={`One request for ${b.items.map((i) => i.name).join(", ")}. One manager decision covers every item that needs approval; each item is delivered and verified on its own.`}
           onSaved={(result) => { onRequested(); window.location.hash = `#/work/${text(result.workId)}`; }} />
-      ))}
+      );})}
       {owner && catalog.data && (
         <ActionForm title="Build a bundle" path="/catalog-bundles" onSaved={bundles.refresh}
           fields={[
             { name: "name", label: "Bundle name", required: true },
             { name: "catalogIds", label: "Catalog items in this bundle", type: "checkboxes", required: true,
-              options: catalog.data.items.map((c) => ({ value: text(c.id), label: `${text(c.name)} · ${text(c.kind)}` })) },
+              options: catalog.data.items.map((c) => ({ value: text(c.id), label: `${text(c.name)} · ${text(c.kind)}${c.department_name?` · ${text(c.department_name)}`:''}` })) },
           ]}
           explanation="Items are pinned at their current version. If an item changes later, rebuild the bundle before anyone can request it again." />
       )}

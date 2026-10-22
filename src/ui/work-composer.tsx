@@ -9,6 +9,7 @@ import { ResponseTools } from './response-tools';
 import { KnowledgeSuggestions, type OfferedArticles } from "./knowledge-suggestions";
 import { useTriage } from "./work-triage";
 import { TemplatePicker, type TicketDraft } from "./work-templates";
+import type { Department } from './departments';
 export function Composer({
   workId,
   onSent,
@@ -48,6 +49,7 @@ export function Composer({
     pendingId = forId.startsWith("pending:") ? forId.slice(8) : null,
     catalog = useRemote<{items: RecordValue[]}>(pendingId ? "/catalog" : null);
   const [savedDraftKey, setSavedDraftKey] = useState<string | null>(null);
+  const [departmentId,setDepartmentId]=useState(''),departments=useRemote<{items:Department[]}>(!workId?'/departments':null);
   const [draftError, setDraftError] = useState(false);
   useEffect(() => {
     let active = true;
@@ -57,6 +59,7 @@ export function Composer({
     setVisibility("public");
     setFile(null);
     setAttachmentName("");
+    setDepartmentId('');
     draftKey(session, workId).then(storageKey => {
       if (!active) return;
       try {
@@ -64,13 +67,14 @@ export function Composer({
         setBody(draft.body);
         setVisibility(draft.visibility);
         setAttachmentName(draft.attachmentName ?? "");
+        setDepartmentId(draft.departmentId??'');
         key.current = draft.messageId ?? crypto.randomUUID();
       } catch { setDraftError(true); }
       setSavedDraftKey(storageKey);
     }).catch(() => { if (active) setDraftError(true); });
     return () => { active = false; };
   }, [session.csrfToken, session.principal.userId, session.principal.workspaceId, privateAllowed, workId]);
-  function updateDraft(nextBody: string, nextVisibility: string, nextAttachmentName = attachmentName) {
+  function updateDraft(nextBody: string, nextVisibility: string, nextAttachmentName = attachmentName,nextDepartmentId=departmentId) {
     if (nextBody !== offer?.body) setOffer(null);
     if (nextBody !== noticeOffer?.body) setNoticeOffer(null);
     setSolvedTitle("");
@@ -78,7 +82,7 @@ export function Composer({
     setVisibility(nextVisibility);
     setAttachmentName(nextAttachmentName);
     if (savedDraftKey) {
-      try { writeDraft(sessionStorage, savedDraftKey, { body: nextBody, visibility: nextVisibility, messageId: key.current, attachmentName: nextAttachmentName }); }
+      try { writeDraft(sessionStorage, savedDraftKey, { body: nextBody, visibility: nextVisibility, messageId: key.current, attachmentName: nextAttachmentName,departmentId:nextDepartmentId }); }
       catch { setDraftError(true); }
     }
   }
@@ -111,6 +115,8 @@ export function Composer({
     await send(!workId && !forId && offer?.body === body ? offer.value?.id ?? null : null);
   }
   async function send(suggestionId: string | null) {
+    if(!workId&&(departments.loading||departments.error))return;
+    if(!workId&&departmentId&&!departments.data?.items.some(d=>d.id===departmentId&&d.active)) {setUploadError(new Error('The selected service workspace is unavailable. Choose a current team before sending.'));return;}
     const result = await mutation.mutate<RecordValue>(
       workId ? `/work/${workId}/messages` : "/work",
       workId
@@ -119,6 +125,7 @@ export function Composer({
             title: template?.title ?? body.trim().split("\n")[0].slice(0, 150),
             body,
             deduplicationKey: key.current,
+            ...(departmentId?{departmentId}:{}),
             ...(template ? { kind: template.kind, context: template.context } : {}),
             ...(pendingId ? { pendingPersonId: pendingId, catalogIds } : forId ? { beneficiaryId: forId } : {}),
             ...(suggestionId ? { suggestionId } : {}),
@@ -158,7 +165,8 @@ export function Composer({
         setUploading(false);
       }
     }
-    updateDraft("", visibility, "");
+    updateDraft("", visibility, "",'');
+    setDepartmentId('');
     setTemplate(null);
     setOffer(null);
     setForId("");
@@ -197,6 +205,8 @@ export function Composer({
         required
         maxLength={50000}
       />
+      {!workId&&Boolean(departments.data?.items.length||departmentId)&&<label>Service workspace (optional)<select aria-label="Service workspace (optional)" value={departmentId} onChange={e=>{setDepartmentId(e.target.value);updateDraft(body,visibility,attachmentName,e.target.value);}}><option value="">Let the shared service desk route this</option>{departmentId&&!departments.data?.items.some(d=>d.id===departmentId&&d.active)&&<option value={departmentId} disabled>Previously selected workspace is unavailable</option>}{departments.data?.items.filter(d=>d.active).map(d=><option key={d.id} value={d.id}>{d.name}</option>)}</select></label>}
+      <ErrorNotice error={departments.error} retry={departments.refresh}/>
       <div className="composer-tools">
         <label className="file-picker">
           <Icon name="attachment" />
@@ -258,7 +268,7 @@ export function Composer({
         <button
           className="send"
           type="submit"
-          disabled={mutation.pending || uploading || !body.trim() || Boolean(attachmentName && !file)}
+          disabled={mutation.pending || uploading || !body.trim() || Boolean(attachmentName && !file)||(!workId&&(departments.loading||Boolean(departments.error)))}
           aria-label={mutation.pending ? "Sending message" : "Send message"}
         >
           <span>{mutation.pending || uploading ? "Sending…" : "Send"}</span>
@@ -273,7 +283,7 @@ export function Composer({
           {catalog.data?.items.map(service => <label className="checkbox-field" key={text(service.id)}>
             <input type="checkbox" value={text(service.id)} checked={catalogIds.includes(text(service.id))}
               onChange={event => setCatalogIds(ids => event.target.checked ? [...ids, text(service.id)] : ids.filter(id => id !== service.id))} />
-            <span>{text(service.name)}</span>
+            <span>{text(service.name)}{service.department_name?` · ${text(service.department_name)}`:''}</span>
           </label>)}
           {catalog.data && !catalog.data.items.length && <p>No catalog services are available yet. Add them in Connections &amp; setup before sending this request.</p>}
         </fieldset>

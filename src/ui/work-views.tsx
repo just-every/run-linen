@@ -3,7 +3,7 @@ import { useMutation, useRemote } from "./state";
 import { ErrorNotice } from "./primitives";
 import type { AgentGroup } from "./work-groups";
 
-export interface SavedView { id: string; name: string; shared: boolean; mine: boolean; sort: string; filters: Record<string, string> }
+export interface SavedView { id: string; name: string; shared: boolean; mine: boolean; sort: string; filters: Record<string, string>;departmentId?:string|null }
 
 /** DESK-001: the agent's own saved views and the views other agents share. */
 export function useViews(agent: boolean) {
@@ -20,13 +20,13 @@ const pick = (label: string, name: string, options: [string, string][]) => (
 );
 
 /** DESK-001: save the filters and sort of a queue view under a name, for oneself or shared with every agent. */
-export function SaveView({ groups, onSaved }: { groups: AgentGroup[]; onSaved: (view: SavedView) => void }) {
+export function SaveView({ groups, onSaved,departmentId }: { groups: AgentGroup[]; onSaved: (view: SavedView) => void;departmentId?:string }) {
   const mutation = useMutation(), [open, setOpen] = useState(false);
   async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget, v = Object.fromEntries(new FormData(form)) as Record<string, string>;
     const filters = Object.fromEntries(["state", "assignee", "priority", "kind", "groupId"].filter((k) => v[k]).map((k) => [k, v[k]]));
-    const saved = await mutation.mutate<SavedView>("/work-views", { name: v.name, filters, sort: v.sort || "updated", shared: v.shared === "on" });
+    const saved = await mutation.mutate<SavedView>("/work-views", { name: v.name, filters, sort: v.sort || "updated", shared: v.shared === "on",departmentId:departmentId||null });
     if (saved) {
       form.reset();
       setOpen(false);
@@ -49,7 +49,7 @@ export function SaveView({ groups, onSaved }: { groups: AgentGroup[]; onSaved: (
         {pick("View sort", "sort", [["", "Recently updated"], ["oldest", "Oldest first"], ["created", "Newest first"], ["priority", "Priority"]])}
         <label className="checkbox-field">
           <input type="checkbox" name="shared" />
-          <span>Share with every agent in this workspace</span>
+          <span>{departmentId?'Share with permitted agents in this service workspace':'Share with every agent in this workspace'}</span>
         </label>
         <ErrorNotice error={mutation.error} />
         <button className="action secondary small" disabled={mutation.pending}>Save view</button>

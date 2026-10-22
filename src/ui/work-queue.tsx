@@ -11,6 +11,7 @@ import { usePeopleLabels } from "./people-labels";
 import { isOpen, useQueue } from "./queue";
 import type { WorkRecord } from "./work";
 import { progressException, requestFacts, requestFor, requestStatus } from "./request-facts";
+import { DepartmentSelect,useDepartments } from './departments';
 
 /** A short, stable reference for a request: the start of its real id. */
 export const shortRef = (id: string) => id.replace(/-/g, "").slice(0, 6).toUpperCase();
@@ -32,13 +33,14 @@ export function Queue({ selectedId }: { selectedId?: string }) {
     operator = session.principal.roles.some((r) => ["owner", "operator", "hr"].includes(r)),
     [filter, setFilter] = useState("all"),
     [source, setSource] = useState(""),
-    groups = useGroups();
+    groups = useGroups(),departments=useDepartments(),[departmentId,setDepartmentId]=useState('');
   const me = session.user.id;
   // DESK-001: a lead reads their group's view (its non-restricted tickets) in place of the whole queue.
   const leadOf = (groups.data?.items ?? []).filter((g) => g.members.some((m) => m.userId === me && m.lead)),
     views = useViews(operator),
     lead = useRemote<{ items: WorkRecord[] }>(source ? (source.startsWith("lead:") ? `/work-groups/${encodeURIComponent(source.slice(5))}/queue` : `/work-views/${encodeURIComponent(source.slice(5))}/work`) : null),
-    remote = source ? lead : queue;
+    departmentQueue=useRemote<{items:WorkRecord[]}>(departmentId?`/work?departmentId=${encodeURIComponent(departmentId)}`:null,departmentId?30000:0),
+    remote = source ? lead : departmentId?departmentQueue:queue;
   const filters: Filter[] = operator
     ? [
         ["all", "All", () => true],
@@ -54,22 +56,24 @@ export function Queue({ selectedId }: { selectedId?: string }) {
         ["open", "Open", isOpen],
         ["closed", "Closed", (item) => !isOpen(item)],
       ];
-  const items = remote.data?.items ?? [],
+  const items = (remote.data?.items ?? []).filter(item=>!departmentId||item.department_id===departmentId),
     active = filters.find(([key]) => key === filter) ?? filters[0],
     shown = items.filter(active[2]);
   return (
     <section className="queue" aria-label="Request queue">
       {operator && (
         <div className="queue-view">
+          <DepartmentSelect items={(departments.data?.items??[]).filter(d=>d.canStaff)} value={departmentId} onChange={value=>{setDepartmentId(value);setSource('');}} label="Queue workspace" empty="All requests I can read"/>
+          <ErrorNotice error={departments.error} retry={departments.refresh}/>
           <label>
             Queue view
             <select value={source} onChange={(e) => setSource(e.target.value)}>
               <option value="">All requests I can read</option>
-              {leadOf.map((g) => <option key={g.id} value={`lead:${g.id}`}>Lead view · {g.name}</option>)}
-              {(views.data?.items ?? []).map((v) => <option key={v.id} value={`view:${v.id}`}>{v.name}{v.shared ? " · shared" : ""}</option>)}
+              {leadOf.filter(g=>!departmentId||g.departmentId===departmentId).map((g) => <option key={g.id} value={`lead:${g.id}`}>Lead view · {g.name}</option>)}
+              {(views.data?.items ?? []).filter(v=>!departmentId||v.departmentId===departmentId).map((v) => <option key={v.id} value={`view:${v.id}`}>{v.name}{v.shared ? " · shared" : ""}</option>)}
             </select>
           </label>
-          <SaveView groups={groups.data?.items ?? []} onSaved={(v) => { views.refresh(); setSource(`view:${v.id}`); }} />
+          {(!departmentId||session.principal.roles.includes('owner'))&&<SaveView groups={(groups.data?.items ?? []).filter(g=>(g.departmentId??'')===departmentId)} departmentId={departmentId} onSaved={(v) => { views.refresh(); setSource(`view:${v.id}`); }} />}
           <BulkUpdate items={shown} onDone={() => { remote.refresh(); queue.refresh(); }} />
           <TriageShortcuts ids={shown.map((item) => item.id)} selectedId={selectedId} />
         </div>
@@ -122,7 +126,7 @@ export function Queue({ selectedId }: { selectedId?: string }) {
                 <span role="cell" className="q-ref">{shortRef(item.id)}</span>
                 <span role="cell" className="q-person">
                   <strong>{requestFor(item, personName)}</strong>
-                  <small>{[team, place, item.group_name, item.priority].filter(Boolean).join(" · ") || (item.kind === "incident" ? "Incident" : "Request")}</small>
+                  <small>{[item.department_name,team, place, item.group_name, item.priority].filter(Boolean).join(" · ") || (item.kind === "incident" ? "Incident" : "Request")}</small>
                 </span>
                 <span role="cell" className="q-subject" title={item.title}>
                   <strong>{item.title}</strong>

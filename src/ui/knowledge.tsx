@@ -5,11 +5,13 @@ import { ActionForm } from "./forms";
 import { audienceLabel } from "./labels";
 import { Empty, ErrorNotice, Facts, Hero, Loading } from "./primitives";
 import { KnowledgeDrafts } from './knowledge-drafts';
+import { DepartmentSelect,useDepartments,departmentField } from './departments';
 export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
   const [query, setQuery] = useState(initial),
     [search, setSearch] = useState(initial),
+    [departmentId,setDepartmentId]=useState(''),departments=useDepartments(),
     list = useRemote<{ items: RecordValue[] }>(
-      `/knowledge?q=${encodeURIComponent(search)}`,
+      `/knowledge?q=${encodeURIComponent(search)}${departmentId?`&departmentId=${encodeURIComponent(departmentId)}`:''}`,
     ),
     { session } = useSession();
   return (
@@ -37,6 +39,8 @@ export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
         </label>
         <button className="action secondary">Search</button>
       </form>
+      <DepartmentSelect items={departments.data?.items??[]} value={departmentId} onChange={setDepartmentId} label="Knowledge workspace" empty="All service workspaces"/>
+      <ErrorNotice error={departments.error} retry={departments.refresh}/>
       {list.loading ? (
         <Loading />
       ) : list.error ? (
@@ -52,6 +56,7 @@ export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
                 ["Reviewed", date(article.reviewed_at)],
                 ["Review expires", date(article.expires_at)],
                 ["Audience", audienceLabel(article.scope)],
+                ["Service workspace",article.department_name??'Shared service desk'],
               ]}
             />
             <ActionForm
@@ -91,6 +96,7 @@ export function KnowledgeSpace({ query: initial = "" }: { query?: string }) {
           path="/knowledge"
           fields={[
             { name: "title", label: "Article title", required: true },
+            ...(session.principal.roles.includes('owner')?[departmentField(departments.data?.items??[])]:[]),
             {
               name: "body",
               label: "Guidance, source and limitations",

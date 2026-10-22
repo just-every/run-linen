@@ -3,10 +3,12 @@ import { useState, type FormEvent } from 'react';
 import { request, text, type RecordValue } from './api';
 import { ErrorNotice, Notice } from './primitives';
 import type { ApplicationEntitlement } from '../features/work/application-schema';
+import { DepartmentSelect,useDepartments } from './departments';
 type Member={id:string;name:string;active:number};
 export function ApplicationEditor({members,existing,onSaved}:{members:Member[];existing?:RecordValue;onSaved:()=>void}) {
   const {session}=useSession();
   const data=existing?.data as RecordValue|undefined;
+  const departments=useDepartments(),[departmentId,setDepartmentId]=useState(String(data?.departmentId??''));
   const [entitlements,setEntitlements]=useState<Partial<ApplicationEntitlement>[]>((data?.entitlements as ApplicationEntitlement[]|undefined)??[{}]);
   const [error,setError]=useState<unknown>(null),[pending,setPending]=useState(false);
   async function save(event:FormEvent<HTMLFormElement>) {
@@ -19,13 +21,15 @@ export function ApplicationEditor({members,existing,onSaved}:{members:Member[];e
         return {id:e.id,name:form.get(`name-${i}`),target:form.get(`target-${i}`),costCents:Math.round(Number(amount)*100),billingPeriod:form.get(`period-${i}`)};
       });
       await request(existing?`/applications/${text(existing.id)}`:'/applications',{method:'POST',csrf:session.csrfToken,body:{
-        name:form.get('name'),ownerId:form.get('ownerId'),connector:form.get('connector'),sensitivity:form.get('sensitivity'),
+        name:form.get('name'),ownerId:form.get('ownerId'),connector:form.get('connector'),sensitivity:form.get('sensitivity'),departmentId:departmentId||null,
         approverIds:form.getAll('approverIds'),entitlements:entries,revision:existing?.revision,
       }});onSaved();
     }catch(error){setError(error);}finally{setPending(false);}
   }
   return <form className="inline-form" onSubmit={save}>
     <label>Application name<input name="name" required maxLength={200} defaultValue={String(data?.name??'')}/></label>
+    <DepartmentSelect items={(departments.data?.items??[]).filter(d=>d.canStaff)} value={departmentId} onChange={setDepartmentId}/>
+    <ErrorNotice error={departments.error} retry={departments.refresh}/>
     <label>Application owner<select aria-label="Application owner" name="ownerId" required defaultValue={String(existing?.ownerId??'')}><option value="">Choose an accountable owner…</option>{members.filter(m=>m.active).map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
     <fieldset><legend>Recorded approvers</legend>{members.filter(m=>m.active).map(m=><label className="checkbox-field" key={m.id}><input type="checkbox" name="approverIds" value={m.id} defaultChecked={((data?.approverIds as string[])??[]).includes(m.id)}/>{m.name}</label>)}</fieldset>
     <label>Connector description<input name="connector" required maxLength={200} defaultValue={String(data?.connector??'')} placeholder="Provider and connection status"/></label>
@@ -38,6 +42,6 @@ export function ApplicationEditor({members,existing,onSaved}:{members:Member[];e
     </fieldset>)}
     <button className="action secondary" type="button" onClick={()=>setEntitlements([...entitlements,{}])}>Add entitlement</button>
     <Notice>Registration records ownership, entitlement targets and quoted seat costs. It does not connect the provider, grant access or approve a request.</Notice>
-    <ErrorNotice error={error}/><button className="action primary" disabled={pending}>Save application</button>
+    <ErrorNotice error={error}/><button className="action primary" disabled={pending||departments.loading||Boolean(departments.error)}>Save application</button>
   </form>;
 }

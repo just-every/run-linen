@@ -55,6 +55,7 @@ const checks = [
   ['catalog team tasks browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/catalog-task-browser.mjs']],
   ['lifecycle templates browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/lifecycle-template-journey.mjs']],
   ['desk scenarios and templates browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/desk-scenario-browser.mjs']],
+  ['department workspaces browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/department-browser.mjs']],
   ['native connected provider journeys', process.execPath, ['tests/ui/connected-run.mjs']],
   ['connection and authority setup', process.execPath, ['tests/ui/setup-run.mjs']],
   ['release browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/release-journey.mjs']],

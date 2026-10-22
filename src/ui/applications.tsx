@@ -12,16 +12,19 @@ import { ApplicationEditor } from './application-editor';
 import { ActionForm } from './forms';
 import { ErrorNotice,Facts,Loading } from './primitives';
 import type { ApplicationEntitlement } from '../features/work/application-schema';
+import { useDepartments,departmentField } from './departments';
 export function seatCost(value:{costCents:number;billingPeriod:string}) {
   return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value.costCents/100)+' / '+value.billingPeriod;
 }
 export function Applications() {
   const apps=useRemote<{items:RecordValue[]}>('/applications'),members=useRemote<{id:string;name:string;active:number}[]>('/members'),{session}=useSession();
   const owner=session.principal.roles.includes('owner');
-  const catalog=useRemote<{items:{id:string;name:string;revision:number;form:CatalogForm;approvals?:StageDef[];requires_manager?:number;managerApproval?:StageDef|null;tasks?:CatalogTask[];audience?:{department:string[];location:string[];employmentType:string[]}}[]}>(owner?'/catalog':null);
+  const departments=useDepartments();
+  const catalog=useRemote<{items:{id:string;name:string;revision:number;departmentId?:string|null;form:CatalogForm;approvals?:StageDef[];requires_manager?:number;managerApproval?:StageDef|null;tasks?:CatalogTask[];audience?:{department:string[];location:string[];employmentType:string[]}}[]}>(owner?'/catalog':null);
   return <section role="region" aria-label="Application registry" className="history">
     <h2>Application registry</h2><p>Record who owns each application, its entitlements and the quoted cost per seat.</p>
     <ErrorNotice error={apps.error??members.error} retry={apps.refresh}/>
+    <ErrorNotice error={departments.error} retry={departments.refresh}/>
     {owner&&members.data&&<details className="action-disclosure"><summary>Register application</summary><ApplicationEditor members={members.data} onSaved={apps.refresh}/></details>}
     {owner&&members.data&&<ApprovalDelegation members={members.data}/>}
     {owner&&members.data&&<CatalogItemCreate members={members.data} onSaved={catalog.refresh}/>}
@@ -36,7 +39,7 @@ export function Applications() {
         <h3>{text(data.name)}</h3>
         <Facts entries={[["Owner",members.data?.find(m=>m.id===app.ownerId)?.name||app.ownerId],["Connector",data.connector],["Data sensitivity",data.sensitivity],["Recorded approvers",(data.approverIds as string[]).map(id=>members.data?.find(m=>m.id===id)?.name||id).join(', ')||'None recorded']]}/>
         {(data.entitlements as ApplicationEntitlement[]).map(e=><fieldset key={e.id} aria-label={e.name}><legend>{e.name}</legend><p>{seatCost(e)}</p><p>{e.target}</p>
-          {owner&&<ActionForm title="Offer in catalog" path="/catalog" defaults={{kind:'access',applicationId:app.id,entitlementId:e.id}} fields={[{name:'name',label:'Catalog service name',required:true},{name:'requiresManager',label:'Require existing manager approval',type:'checkbox'}]}/>}
+          {owner&&!departments.loading&&!departments.error&&<ActionForm title="Offer in catalog" path="/catalog" defaults={{kind:'access',applicationId:app.id,entitlementId:e.id}} fields={[{name:'name',label:'Catalog service name',required:true},departmentField(departments.data?.items??[]),{name:'requiresManager',label:'Require existing manager approval',type:'checkbox'}]}/>}
         </fieldset>)}
         {owner&&members.data&&<details className="action-disclosure"><summary>Edit application</summary><ApplicationEditor existing={app} members={members.data} onSaved={apps.refresh}/></details>}
       </article>;

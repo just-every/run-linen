@@ -1,3 +1,4 @@
+import { PortalCatalog } from './portal-catalog';
 import { CollaborationInbox } from './work-collaboration';
 import { ServiceNotices } from './service-notices';
 import { RecurringWork } from './recurring-work';
@@ -39,6 +40,9 @@ export interface WorkRecord {
   group_id?: string | null;
   group_name?: string | null;
   priority?: string | null;
+  department_id?: string|null;
+  department_name?: string|null;
+  department_kind?: string|null;
 }
 export interface RequestProgress { needsAction?: boolean; title?: string; dueAt?: string; state: string; happened: string; next: string; ownerId: string | null; ownerLabel: string; }
 export interface Conversation {
@@ -103,6 +107,7 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
               <p className="meta-sub">{managerDisclosure}</p>
             </section>
             <Bundles onRequested={queue.refresh} />
+            <PortalCatalog />
             <section className="decision-card">
               <Icon name="approve" size={24} />
               <div>
