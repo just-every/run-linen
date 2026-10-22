@@ -139,7 +139,7 @@ export async function setWorkField(ctx: WorkContext, workId: string, input: Reco
   const value = input.value.trim();
   if (value && target.type === "dropdown" && !target.options.includes(value)) throw new ApiError(422, "field_value", `Choose one of the ${target.name} options`);
   const at = now(), ws = ctx.principal.workspaceId;
-  await departmentWorkBatch(ctx, work, [
+  const statements = [
     ctx.env.DB.prepare(`INSERT INTO audit_events SELECT ?,?,?,'work.field_set',?,
       json_object('field',?,'before',(SELECT value FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?),'value',?),?`)
       .bind(id(), ws, ctx.principal.userId, workId, target.name, ws, workId, target.id, value || null, at),
@@ -148,7 +148,9 @@ export async function setWorkField(ctx: WorkContext, workId: string, input: Reco
         .bind(ws, workId, target.id, value, ctx.principal.userId, at)
       : ctx.env.DB.prepare("DELETE FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?").bind(ws, workId, target.id),
     ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(at, ws, workId),
-  ], "private");
+  ];
+  if (work.department_id) await departmentWorkBatch(ctx, work, statements, "private");
+  else await ctx.env.DB.batch(statements);
   return readWorkDesk(ctx, workId);
 }
 
