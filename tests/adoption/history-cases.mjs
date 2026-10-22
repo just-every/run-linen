@@ -65,6 +65,25 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
   const report=await ok('/imports/'+restored.id+'/dry-run','POST',{},destination);assert.equal(report.unresolvedReferences,0,JSON.stringify(report));
   const destOwner=(await ok('/session','GET',undefined,destination)).principal.userId;
   assert.equal((await request('/imports/'+restored.id+'/identities','POST',{sourceUserId:archivedEvent.row.actor_id,targetUserId:destOwner},destination)).status,409,'An erased archive alias cannot bind a current account');
+  // Pause the actual stage write at the D1 edge, erase its explicitly mapped
+  // destination identity through the public route, then let that write proceed.
+  const racePerson=await ok('/members','POST',{email:'synthetic-linen-13018@example.test',name:'Concurrent removal',password,roles:['employee']},destination,201);
+  const raced=await ok('/imports','POST',{manifest:fresh.manifest,idempotencyKey:'synthetic-linen-13019'},destination,201);
+  for(const {chunk,bytes}of fresh.chunks)await ok('/imports/'+raced.id+'/chunks/'+chunk.ordinal,'PUT',bytes,destination,200,true);
+  await ok('/imports/'+raced.id+'/identities','POST',{sourceUserId:subject.id,targetUserId:racePerson.id},destination);
+  await ok('/imports/'+raced.id+'/dry-run','POST',{},destination);
+  const raceKey='synthetic-linen-13020';
+  const applying=request('/imports/'+raced.id+'/resume','POST',{acceptSemanticLoss:true},{...destination,extraHeaders:{'X-Test-Archive-Commit':raceKey}});
+  let arrived=false;
+  try{
+    for(let n=0;n<1000;n++){if((await ok('/fixtures/archive-race/'+raceKey+'/arrived','GET',undefined,destination)).arrived){arrived=true;break;}await new Promise(resolve=>setTimeout(resolve,10));}
+    assert.ok(arrived,'Import reaches its first real history write');
+    await ok('/adoption/erase','POST',{identity:racePerson.id},destination);
+  }finally{await ok('/fixtures/archive-race/'+raceKey+'/release','POST',{},destination);}
+  const rejected=await applying;
+  assert.equal(rejected.status,409,'An erasure concurrent with a stage write atomically refuses that write');
+  const raceRecords=await ok('/imports/'+raced.id+'/records','GET',undefined,destination);
+  assert.ok(!JSON.stringify(raceRecords).includes('synthetic-linen-13004'),'A held import cannot restore private source content after erasure');
   const late=await ok('/members','POST',{email:'synthetic-linen-13015@example.test',name:'Late removal',password,roles:['employee']},destination,201);
   await ok('/adoption/erase','POST',{identity:late.id},destination);
   assert.equal((await request('/imports/'+restored.id+'/resume','POST',{acceptSemanticLoss:true},destination)).status,409,'An erasure after dry run fences apply');

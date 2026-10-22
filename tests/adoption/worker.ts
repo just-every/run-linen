@@ -1,3 +1,4 @@
+import { archiveRaceFetch } from './archive-race-fixture';
 import { registerWorkRoutes } from "../../src/features/work";
 import './knowledge-model-edge';
 import { registerConnectionRoutes } from '../../src/features/connections';
@@ -165,4 +166,4 @@ api.post('/fixtures/coexistence', async (c) => {
     return c.json({ poll, dual, conflict, stale, posted, late, boundContext,forged,state: state.state });
 });
 app.route('/api/v1', api);
-export default app;
+export default {fetch:(request:Request,env:any,execution:any)=>archiveRaceFetch(request,env,execution,app)};
