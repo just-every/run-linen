@@ -11,6 +11,7 @@ import { ApiError, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
 const tables = new Set([
   'work_approval_stages',
+  'work_departments',
   'work_canned_responses',
   'work_knowledge_drafts',
   "work_records",
@@ -95,6 +96,11 @@ export async function restoreAdoptionRecord(
         "restore_scalar",
         "Stored SQL fields must be scalar",
       );
+  if(input.table==='work_departments') {
+    if(!['it','hr','facilities','finance','legal','custom'].includes(String(row.kind))||typeof row.name!=='string'||!row.name.trim())throw new ApiError(422,'restore_department','Typed department workspace metadata required');
+    row.active=0;
+  }
+  if(row.department_id!==undefined&&row.department_id!==null&&!await ctx.env.DB.prepare('SELECT 1 FROM work_departments WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,row.department_id).first())throw new ApiError(422,'restore_department','Restore the referenced department workspace first');
   if (
     input.table === "work_records" &&
     !["normal", "hr", "restricted"].includes(String(row.sensitivity))

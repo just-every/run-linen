@@ -22,6 +22,8 @@ export const portabilityPolicy={
    const staged=tables[name];
    if(staged && await db.prepare(`SELECT 1 FROM "${staged.replaceAll('"','""')}" WHERE ${invalid} LIMIT 1`).first())return false;
   }
+  const departmentMembers=tables.work_department_members;
+  if(departmentMembers && await db.prepare(`SELECT 1 FROM "${departmentMembers.replaceAll('"','""')}" WHERE active<>0 LIMIT 1`).first())return false;
   const services=tables.svc_records;
   if(services && await db.prepare(`SELECT 1 FROM "${services.replaceAll('"','""')}" WHERE kind='release' AND (json_extract(data_json,'$.state') IS NOT 'imported-review' OR json_array_length(data_json,'$.decisions') IS NOT 0) LIMIT 1`).first())return false;
   return true;
@@ -34,6 +36,7 @@ export const portabilityPolicy={
   }
   if(table==='work_approval_decisions')return {...row,inert:1}
   if(table==='work_approval_stages')return {...row,active_at:null,remind_at:null,reminded_at:null,sla_at:null,breached_at:null}
+  if(table==='work_department_members')return {...row,active:0,updated_by:null}
   if(table==='work_approval_mail_config')return {...row,enabled:0}
   if(table==='work_approval_tokens')return {...row,state:'expired',token_hash:row.id,sent_to:''}
   if(table==='mcp_credentials')return {...row,secret_hash:null,state:'revoked',invalidated_at:row.invalidated_at||row.created_at}
