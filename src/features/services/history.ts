@@ -37,7 +37,7 @@ export async function serviceHistory(env: Env, p: Principal, r: ServiceRecord) {
     const delivery=projected.changes.find(change=>change.field==='deliveryState');
     return { id: row.id, at: row.created_at, kind: row.kind==='notification-state-changed' ? 'notification' as const : 'change' as const, action: row.kind, visibility: 'private',
       ...(delivery ? {body:`Delivery state: ${delivery.after}`,delivery:{state:delivery.after}} : {}),
-      actor: ('actor' in projected ? projected.actor.name ?? projected.actor.id : row.actor_id), actorKind: ('actor' in projected ? projected.actor.kind : 'person'),
+      actor: (projected.actor ? projected.actor.name ?? projected.actor.id : row.actor_id), actorKind: (projected.actor ? projected.actor.kind : 'person'),
       changes: projected.changes, ...('source' in projected && projected.source ? {source:projected.source} : {}), ...(projected.redacted ? { redacted: projected.redacted, redactedAt: projected.redactedAt,
         redaction: { reason: 'erasure', at: projected.redactedAt, cleared: projected.changes.length === 0 } } : {}) };
   })) };
