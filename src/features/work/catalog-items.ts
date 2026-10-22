@@ -1,3 +1,4 @@
+import { assertDepartmentConfig } from './department-spaces';
 import { normalizeAudience, validateValues, restrictedAudience } from './catalog-audience';
 import { resolveApplication } from './application-catalog';
 import { currentWorkPrincipal } from './identity';
@@ -24,6 +25,7 @@ export async function createCatalogItem(
     form?: unknown;
     audience?: unknown;
     tasks?: unknown;
+    departmentId?: unknown;
   },
 ) {
   await currentWorkPrincipal(ctx);
@@ -48,13 +50,15 @@ export async function createCatalogItem(
       "catalog_invalid",
       "Name, target, owner, kind and nonnegative capacity required",
     );
+  const departmentId = await assertDepartmentConfig(ctx,input.departmentId);
   const itemId = id(), form = normalizeCatalogForm(input.form), audience=normalizeAudience(input.audience), values=await validateValues(ctx,audience), guard=id(),
     tasks=await normalizeTaskPlan(ctx,input.tasks??[]);
   await ctx.env.DB.batch([
     ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN ${values.sql}
+      AND (? IS NULL OR EXISTS(SELECT 1 FROM work_departments WHERE workspace_id=? AND id=? AND active=1))
       AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value='owner') THEN 1 ELSE 0 END)`)
-      .bind(guard,...values.bindings,ctx.principal.workspaceId,ctx.principal.userId),
-    ctx.env.DB.prepare("INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,requires_manager,capacity,revision,application_id,entitlement_id,form_json,audience_json,tasks_json) VALUES(?,?,?,?,?,?,?,?,1,?,?,?,?,?)")
+      .bind(guard,...values.bindings,departmentId,ctx.principal.workspaceId,departmentId,ctx.principal.workspaceId,ctx.principal.userId),
+    ctx.env.DB.prepare("INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,requires_manager,capacity,revision,application_id,entitlement_id,form_json,audience_json,tasks_json,department_id) VALUES(?,?,?,?,?,?,?,?,1,?,?,?,?,?,?)")
     .bind(
       itemId,
       ctx.principal.workspaceId,
@@ -69,6 +73,7 @@ export async function createCatalogItem(
       JSON.stringify(form),
       JSON.stringify(audience),
       JSON.stringify(tasks),
+      departmentId,
     ),
     ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)")
       .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,'catalog.created',itemId,JSON.stringify({revision:1}),now()),
@@ -81,11 +86,14 @@ export async function createCatalogItem(
 export async function editCatalogForm(ctx: WorkContext, catalogId: string, input: Record<string, unknown>) {
   await currentWorkPrincipal(ctx); permit(ctx, ['owner']);
   if (!Number.isInteger(input.revision)) throw new ApiError(422,'catalog_revision','Current item revision required');
+  const saved=await ctx.env.DB.prepare('SELECT department_id FROM work_catalog WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,catalogId).first<{department_id:string|null}>();
+  if(!saved)throw new ApiError(404,'not_found','Catalog item unavailable');
+  const departmentId=await assertDepartmentConfig(ctx,Object.hasOwn(input,'departmentId')?input.departmentId:saved.department_id);
   const form = normalizeCatalogForm(input.form), name = requiredString(input.name,'name',200);
-  const results = await ctx.env.DB.batch([ctx.env.DB.prepare(`UPDATE work_catalog SET name=?,form_json=?,revision=revision+1
-    WHERE workspace_id=? AND id=? AND revision=?`).bind(name,JSON.stringify(form),ctx.principal.workspaceId,catalogId,input.revision),
+  const results = await ctx.env.DB.batch([ctx.env.DB.prepare(`UPDATE work_catalog SET name=?,form_json=?,department_id=?,revision=revision+1
+    WHERE workspace_id=? AND id=? AND revision=? AND (? IS NULL OR EXISTS(SELECT 1 FROM work_departments WHERE workspace_id=? AND id=? AND active=1)) AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=work_catalog.workspace_id AND m.user_id=? AND m.active=1 AND r.value='owner')`).bind(name,JSON.stringify(form),departmentId,ctx.principal.workspaceId,catalogId,input.revision,departmentId,ctx.principal.workspaceId,departmentId,ctx.principal.userId),
     ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'catalog.form_edited',?,?,? WHERE changes()=1")
-      .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,catalogId,JSON.stringify({fromRevision:input.revision,toRevision:Number(input.revision)+1}),now()),
+      .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,catalogId,JSON.stringify({fromRevision:input.revision,toRevision:Number(input.revision)+1,fromDepartmentId:saved.department_id,toDepartmentId:departmentId}),now()),
   ]);
   if (!results[0].meta.changes) throw new ApiError(409,'catalog_changed','Catalog item changed; refresh before editing');
   return {id:catalogId,revision:Number(input.revision)+1};
@@ -108,5 +116,5 @@ export async function catalogRequestSnapshot(ctx: WorkContext, workId: string, c
   const quote=form.quoteRequired ? await ctx.env.DB.prepare(`SELECT id,sha256,size FROM work_attachments WHERE workspace_id=? AND work_id=? AND catalog_id=?
     AND visibility=? AND fulfilment_id IS NULL ORDER BY created_at DESC,id LIMIT 1`).bind(ctx.principal.workspaceId,workId,catalog.id,QUOTE_VISIBILITY).first<{id:string;sha256:string;size:number}>() : null;
   if(form.quoteRequired && !quote)throw new ApiError(422,'catalog_quote_required',quoteRequiredMessage);
-  return {catalogId:catalog.id,revision:catalog.revision,name:catalog.name,submittedBy:ctx.principal.userId,form,answers,...(quote?{quote}:{})};
+  return {catalogId:catalog.id,departmentId:catalog.department_id??null,revision:catalog.revision,name:catalog.name,submittedBy:ctx.principal.userId,form,answers,...(quote?{quote}:{})};
 }

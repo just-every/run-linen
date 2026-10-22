@@ -1,3 +1,5 @@
+import { assertDepartmentConfig,departmentWorkBatch } from './department-spaces';
+import { departmentRows,requireDepartmentStaff } from './department-operations';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { getWork, listWork, permit, type WorkContext } from './core';
@@ -9,10 +11,11 @@ import { getWork, listWork, permit, type WorkContext } from './core';
 const agentMember = "SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND (roles_json LIKE '%\"operator\"%' OR roles_json LIKE '%\"owner\"%')";
 
 async function group(ctx: WorkContext, groupId: string) {
-  const row = await ctx.env.DB.prepare('SELECT id,name FROM work_groups WHERE workspace_id=? AND id=?')
-    .bind(ctx.principal.workspaceId, groupId).first<{ id: string; name: string }>();
+  const row = await ctx.env.DB.prepare('SELECT id,name,department_id FROM work_groups WHERE workspace_id=? AND id=?')
+    .bind(ctx.principal.workspaceId, groupId).first<{ id: string; name: string;department_id:string|null }>();
+  if(row)await requireDepartmentStaff(ctx,row.department_id);
   if (!row) throw new ApiError(404, 'group_not_found', 'Agent group not found');
-  return row;
+  return {...row,departmentId:row.department_id};
 }
 
 const audit = (ctx: WorkContext, type: string, target: string, data: unknown) =>
@@ -23,11 +26,11 @@ export async function listGroups(ctx: WorkContext) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner', 'operator', 'hr']);
   const w = ctx.principal.workspaceId;
-  const groups = (await ctx.env.DB.prepare('SELECT id,name,created_at FROM work_groups WHERE workspace_id=? ORDER BY name').bind(w).all<{ id: string; name: string; created_at: string }>()).results;
+  const groups = (await ctx.env.DB.prepare('SELECT id,name,created_at,department_id,(SELECT name FROM work_departments d WHERE d.workspace_id=work_groups.workspace_id AND d.id=work_groups.department_id) department_name FROM work_groups WHERE workspace_id=? ORDER BY name').bind(w).all<{ id: string; name: string;created_at:string;department_id:string|null }>()).results;
   const members = (await ctx.env.DB.prepare(`SELECT m.group_id,m.user_id,m.lead,u.name FROM work_group_members m JOIN users u ON u.id=m.user_id
     WHERE m.workspace_id=? ORDER BY u.name`).bind(w).all<{ group_id: string; user_id: string; lead: number; name: string }>()).results;
   return {
-    items: groups.map((g) => ({
+    items: (await departmentRows(ctx,groups)).map((g) => ({
       ...g,
       members: members.filter((m) => m.group_id === g.id).map((m) => ({ userId: m.user_id, name: m.name, lead: Boolean(m.lead) })),
     })),
@@ -37,10 +40,10 @@ export async function listGroups(ctx: WorkContext) {
 export async function createGroup(ctx: WorkContext, body: Record<string, unknown>) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner']);
-  const name = requiredString(body.name, 'name', 120), groupId = id();
+  const name = requiredString(body.name, 'name', 120), groupId = id(),departmentId=await assertDepartmentConfig(ctx,body.departmentId);
   try {
     await ctx.env.DB.batch([
-      ctx.env.DB.prepare('INSERT INTO work_groups(id,workspace_id,name,created_by,created_at) VALUES(?,?,?,?,?)').bind(groupId, ctx.principal.workspaceId, name, ctx.principal.userId, now()),
+      ctx.env.DB.prepare('INSERT INTO work_groups(id,workspace_id,name,created_by,created_at,department_id) VALUES(?,?,?,?,?,?)').bind(groupId, ctx.principal.workspaceId, name, ctx.principal.userId, now(),departmentId),
       audit(ctx, 'work.group_created', groupId, { name }),
     ]);
   } catch (error) {
@@ -54,10 +57,11 @@ export async function createGroup(ctx: WorkContext, body: Record<string, unknown
 export async function setGroupMember(ctx: WorkContext, groupId: string, body: Record<string, unknown>) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner']);
-  await group(ctx, groupId);
+  const target=await group(ctx, groupId);
   const userId = requiredString(body.userId, 'userId'), lead = body.lead === true;
   if (!await ctx.env.DB.prepare(agentMember).bind(ctx.principal.workspaceId, userId).first())
     throw new ApiError(422, 'member_not_agent', 'Group members must be active service agents');
+  if(target.department_id && !await ctx.env.DB.prepare(`SELECT 1 FROM memberships m WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND (EXISTS(SELECT 1 FROM json_each(m.roles_json) WHERE value='owner') OR EXISTS(SELECT 1 FROM work_department_members d JOIN work_departments s ON s.workspace_id=d.workspace_id AND s.id=d.department_id WHERE d.workspace_id=m.workspace_id AND d.user_id=m.user_id AND d.department_id=? AND d.active=1 AND s.active=1))`).bind(ctx.principal.workspaceId,userId,target.department_id).first())throw new ApiError(422,'department_member','Choose a current agent of this department');
   await ctx.env.DB.batch([
     ctx.env.DB.prepare(`INSERT INTO work_group_members VALUES(?,?,?,?,?,?)
       ON CONFLICT(workspace_id,group_id,user_id) DO UPDATE SET lead=excluded.lead`).bind(ctx.principal.workspaceId, groupId, userId, Number(lead), ctx.principal.userId, now()),
@@ -92,17 +96,20 @@ export async function setWorkGroup(ctx: WorkContext, workId: string, body: Recor
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner', 'operator']);
   const work = await getWork(ctx, workId), target = await group(ctx, requiredString(body.groupId, 'groupId'));
+  await requireDepartmentStaff(ctx,work.department_id);
+  if((target.department_id??null)!==(work.department_id??null))throw new ApiError(422,'group_department','Choose a group in the ticket department');
   if (typeof body.revision !== 'number') throw new ApiError(422, 'revision_required', 'Send the ticket revision you read');
   const assigneeId = body.assigneeId === null ? null : typeof body.assigneeId === 'string' && body.assigneeId ? body.assigneeId : work.assignee_id;
+  if(assigneeId && target.department_id && !await ctx.env.DB.prepare(`SELECT 1 FROM memberships m WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND (EXISTS(SELECT 1 FROM json_each(m.roles_json) WHERE value='owner') OR EXISTS(SELECT 1 FROM work_department_members dm JOIN work_departments d ON d.workspace_id=dm.workspace_id AND d.id=dm.department_id WHERE dm.workspace_id=m.workspace_id AND dm.user_id=m.user_id AND dm.department_id=? AND dm.active=1 AND d.active=1))`).bind(ctx.principal.workspaceId,assigneeId,target.department_id).first())throw new ApiError(422,'department_assignee','Choose a current agent in this department');
   if (assigneeId && (!await groupMember(ctx, target.id, assigneeId) || !await ctx.env.DB.prepare(agentMember).bind(ctx.principal.workspaceId, assigneeId).first()))
     throw new ApiError(422, 'owner_not_in_group', `The ticket's owner must be an agent in ${target.name}`);
   const t = now();
-  const [changed] = await ctx.env.DB.batch([
+  const [changed] = await departmentWorkBatch(ctx,work,[
     ctx.env.DB.prepare('UPDATE work_records SET group_id=?,assignee_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?')
       .bind(target.id, assigneeId ?? null, t, ctx.principal.workspaceId, workId, body.revision),
     ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'work.group_set',?,?,? WHERE changes()>0")
       .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, workId, JSON.stringify({ from: work.group_id ?? null, to: target.id, assigneeId: assigneeId ?? null }), t),
-  ]);
+  ],'staff');
   if (!changed.meta.changes) throw new ApiError(409, 'revision_conflict', 'Work changed; refresh before deciding');
   return getWork(ctx, workId);
 }

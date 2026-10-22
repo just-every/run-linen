@@ -45,7 +45,7 @@ export async function listBundles(ctx: WorkContext) {
     if(!ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r))) {
       let allowed=true;
       for(const item of bundle.items) {
-        const catalog=await ctx.env.DB.prepare('SELECT audience_json FROM work_catalog WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,item.catalogId).first<{audience_json:string}>();
+        const catalog=await ctx.env.DB.prepare('SELECT id,department_id,audience_json FROM work_catalog WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,item.catalogId).first<{audience_json:string}>();
         if(!catalog || !(await audienceEvaluation(ctx,catalog,ctx.principal.userId)).allowed){allowed=false;break;}
       }
       if(!allowed)continue;
@@ -72,7 +72,8 @@ export async function requestBundle(ctx: WorkContext, bundleId: string, input: R
   if (beneficiaryId !== ctx.principal.userId) permit(ctx, ['owner', 'operator', 'hr']);
   const purpose = requiredString(input.purpose, 'purpose', 2000), expiresAt = typeof input.expiresAt === 'string' ? input.expiresAt : undefined;
   const key = requiredString(input.deduplicationKey, 'deduplicationKey');
-  const workInput = { title: `${bundle.name} bundle`, body: purpose, deduplicationKey: key, kind: 'request', beneficiaryId: beneficiaryId === ctx.principal.userId ? undefined : beneficiaryId };
+  const departmentId=typeof input.departmentId==='string'?input.departmentId:null;
+  const workInput = { departmentId, title: `${bundle.name} bundle`, body: purpose, deduplicationKey: key, kind: 'request', beneficiaryId: beneficiaryId === ctx.principal.userId ? undefined : beneficiaryId };
   const replay = await ctx.env.DB.prepare('SELECT id FROM work_records WHERE workspace_id=? AND requester_id=? AND dedup_key=?').bind(ctx.principal.workspaceId, ctx.principal.userId, key).first();
   const children = bundle.items.map(item => ({ catalogId: item.catalogId, catalogRevision: item.revision, beneficiaryId, purpose, expiresAt }));
   if (replay) {
@@ -83,10 +84,10 @@ export async function requestBundle(ctx: WorkContext, bundleId: string, input: R
   }
   const staff = ctx.principal.roles.some(r => ['owner', 'operator', 'hr'].includes(r)), lines: string[] = [], evaluations: Evaluation[] = [];
   for (const [index, child] of children.entries()) {
-    try { evaluations.push(await evaluateFulfilment(ctx, { id: 'new-bundle-request', revision: 1, state: 'open' }, child, true)); }
+    try { evaluations.push(await evaluateFulfilment(ctx, { id: 'new-bundle-request', revision: 1, state: 'open',department_id:departmentId }, child, true)); }
     catch (error) {
       if (!(error instanceof ApiError) || error.status >= 500) throw error;
-      const row = await ctx.env.DB.prepare('SELECT audience_json FROM work_catalog WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, child.catalogId).first<{ audience_json: string }>();
+      const row = await ctx.env.DB.prepare('SELECT id,department_id,audience_json FROM work_catalog WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, child.catalogId).first<{ audience_json: string }>();
       // An item the filer cannot see is not named; the others are.
       const visible = staff || !row || (await audienceEvaluation(ctx, row, ctx.principal.userId)).allowed;
       lines.push(`${visible ? bundle.items[index].name : 'Unavailable item'}: ${error.message}`);

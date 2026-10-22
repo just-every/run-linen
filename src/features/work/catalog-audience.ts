@@ -1,3 +1,5 @@
+import { departmentStaff } from './department-spaces';
+import { activeCatalogDepartment } from './department-operations';
 import { ApiError, id, now } from '../../platform/http';
 import { personForMember, bindingErasureGuard } from './person-binding';
 import { permit, type WorkContext } from './core';
@@ -51,7 +53,7 @@ export async function validateValues(ctx: WorkContext, values: Partial<Record<At
 
 /** A reviewed pending person's facts count from review; any other person's count from their effective date. */
 const factsKnown = (person: any) => person && (person.source === 'pending-reviewed' ? Date.parse(person.observed_at) : Date.parse(person.effective_at)) <= Date.now();
-export async function evaluateAttributes(ctx: WorkContext, catalog: {audience_json?:string}, person: any) {
+export async function evaluateAttributes(ctx: WorkContext, catalog: {id?:string;department_id?:string|null;audience_json?:string}, person: any) {
   const audience=catalogAudience(catalog), needed=dimensions.filter(d=>audience[d].length);
   const attributes=needed.length && factsKnown(person) ? normalizeAttributes(JSON.parse(person.attributes_json)) : {};
   const failed:Dimension[]=[], unknown:Dimension[]=[];
@@ -60,15 +62,16 @@ export async function evaluateAttributes(ctx: WorkContext, catalog: {audience_js
       .bind(ctx.principal.workspaceId,d,attributes[d]??'').first()){failed.push(d);unknown.push(d);}
     else if(!audience[d].includes(attributes[d]!))failed.push(d);
   }
-  return {audience,person,failed,unknown,allowed:failed.length===0};
+  return {audience,person,failed,unknown,allowed:failed.length===0 && await activeCatalogDepartment(ctx,catalog)};
 }
-export async function audienceEvaluation(ctx: WorkContext, catalog: {audience_json?:string}, memberId: string) {
+export async function audienceEvaluation(ctx: WorkContext, catalog: {id?:string;department_id?:string|null;audience_json?:string}, memberId: string) {
   const needed=restrictedAudience(catalog);
   return evaluateAttributes(ctx,catalog,needed ? await personForMember(ctx,memberId) : null);
 }
-export async function requireCatalogAudience(ctx: WorkContext, catalog: {id:string;name?:string;audience_json?:string}, beneficiaryId:string) {
+export async function requireCatalogAudience(ctx: WorkContext, catalog: {id:string;name?:string;department_id?:string|null;audience_json?:string}, beneficiaryId:string) {
+  if(!await activeCatalogDepartment(ctx,catalog))throw new ApiError(409,'catalog_department_inactive','This catalog department is unavailable');
   // Staff filing on behalf checks the beneficiary only. Employee capacity also checks the filer.
-  const staff=ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r));
+  const staff=ctx.principal.roles.some(r=>['owner','operator','hr'].includes(r)) && await departmentStaff(ctx,catalog.department_id);
   const members=[...new Set([beneficiaryId,...(staff?[]:[ctx.principal.userId])])];
   const evaluations=await Promise.all(members.map(member=>audienceEvaluation(ctx,catalog,member)));
   const failed=[...new Set(evaluations.flatMap(e=>e.failed))];
@@ -83,7 +86,7 @@ export async function requireCatalogAudience(ctx: WorkContext, catalog: {id:stri
         : `${name} isn't available for the beneficiary: ${failed.join(', ')} does not match.`
       : "This item isn't available for you. If you think that's wrong, ask the service desk.");
   }
-  const guards: string[] = [], bindings: (string|number)[] = [];
+  const guards: string[] = [`EXISTS(SELECT 1 FROM work_catalog c WHERE c.workspace_id=? AND c.id=? AND (c.department_id IS NULL OR EXISTS(SELECT 1 FROM work_departments d WHERE d.workspace_id=c.workspace_id AND d.id=c.department_id AND d.active=1)))`], bindings: (string|number)[] = [ctx.principal.workspaceId,catalog.id];
   for (const evaluation of evaluations) if (evaluation.person) {
     const person=evaluation.person, erasure=await bindingErasureGuard(ctx,person,person.member_id,null);
     guards.push(`EXISTS(SELECT 1 FROM work_people p JOIN memberships m ON m.workspace_id=p.workspace_id AND m.user_id=p.member_id

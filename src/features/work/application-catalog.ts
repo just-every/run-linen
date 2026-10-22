@@ -1,8 +1,9 @@
+import { activeCatalogDepartment } from './department-operations';
 import { ApiError } from '../../platform/http';
 import type { WorkContext } from './core';
 import type { ApplicationData } from './application-schema';
 export interface ApplicationSnapshot {
-  applicationId: string; applicationName: string; applicationRevision: number;
+  departmentId?:string|null;applicationId: string; applicationName: string; applicationRevision: number;
   entitlementId: string; entitlementName: string; target: string; ownerId: string;
   approverIds: string[]; connector: string; sensitivity: string;
   costCents: number; billingPeriod: string;
@@ -12,17 +13,18 @@ export async function resolveApplication(ctx: WorkContext, applicationId: string
     .bind(ctx.principal.workspaceId,applicationId).first<{owner_id:string;data_json:string;revision:number}>();
   if (!row) throw new ApiError(404,'application_not_found','Application entitlement is unavailable');
   const data = JSON.parse(row.data_json) as ApplicationData;
+  if(!await activeCatalogDepartment(ctx,{department_id:data.departmentId??null}))throw new ApiError(409,'application_department_inactive','Application department unavailable');
   const entitlement = data.entitlements?.find(e=>e.id===entitlementId);
   if (!entitlement || !Number.isSafeInteger(entitlement.costCents) || !['month','year','one-time'].includes(entitlement.billingPeriod))
     throw new ApiError(409,'application_entitlement_unavailable','Review the application entitlement registration');
   if (!await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId,row.owner_id).first())
     throw new ApiError(409,'application_owner_unavailable','Application owner needs current membership before a new request');
-  return {applicationId,applicationName:data.name,applicationRevision:row.revision,entitlementId,entitlementName:entitlement.name,
+  return {departmentId:data.departmentId??null,applicationId,applicationName:data.name,applicationRevision:row.revision,entitlementId,entitlementName:entitlement.name,
     target:entitlement.target,ownerId:row.owner_id,approverIds:data.approverIds,connector:data.connector,sensitivity:data.sensitivity,
     costCents:entitlement.costCents,billingPeriod:entitlement.billingPeriod};
 }
 export function applicationProjection(ctx: WorkContext, snapshot: ApplicationSnapshot) {
-  return ctx.principal.roles.some(r=>['owner','operator'].includes(r)) ? snapshot : {
+  return ctx.principal.roles.some(r=>['owner','operator'].includes(r)) && (!snapshot.departmentId || ctx.principal.roles.includes('owner') || (ctx.principal as typeof ctx.principal & {departmentIds?:string[]}).departmentIds?.includes(snapshot.departmentId)) ? snapshot : {
     entitlementName:snapshot.entitlementName,costCents:snapshot.costCents,billingPeriod:snapshot.billingPeriod,
   };
 }

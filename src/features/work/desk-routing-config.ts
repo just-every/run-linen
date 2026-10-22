@@ -1,3 +1,5 @@
+import { assertDepartmentConfig } from './department-spaces';
+import { departmentRows } from './department-operations';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { permit, type WorkContext } from './core';
@@ -32,10 +34,12 @@ export async function saveRoutingRule(ctx: WorkContext, body: Record<string, unk
   await existing(ctx, 'SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=?', requesterId, 'routing_requester', 'Choose a workspace member, or omit the requester');
   await existing(ctx, 'SELECT 1 FROM work_requester_groups WHERE workspace_id=? AND id=?', requesterGroupId, 'requester_group_missing', 'Choose an existing requester group, or omit it');
   await existing(ctx, 'SELECT 1 FROM work_groups WHERE workspace_id=? AND id=?', groupId, 'group_not_found', 'Route to an existing agent group');
+  const departmentId=await assertDepartmentConfig(ctx,body.departmentId);
+  if(!await ctx.env.DB.prepare('SELECT 1 FROM work_groups WHERE workspace_id=? AND id=? AND department_id IS ?').bind(ctx.principal.workspaceId,groupId,departmentId).first())throw new ApiError(422,'group_department','Route to a group in the rule department');
   const ruleId = id();
   const [saved] = await ctx.env.DB.batch([
-    ctx.env.DB.prepare(`INSERT OR IGNORE INTO work_routing_rules(id,workspace_id,name,position,category,requester_id,requester_group_id,skill,group_id,created_by,created_at)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?)`).bind(ruleId, ctx.principal.workspaceId, name, position, category, requesterId, requesterGroupId, skill, groupId, ctx.principal.userId, now()),
+    ctx.env.DB.prepare(`INSERT OR IGNORE INTO work_routing_rules(id,workspace_id,name,position,category,requester_id,requester_group_id,skill,group_id,created_by,created_at,department_id)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`).bind(ruleId, ctx.principal.workspaceId, name, position, category, requesterId, requesterGroupId, skill, groupId, ctx.principal.userId, now(),departmentId),
     ctx.env.DB.prepare("INSERT INTO audit_events SELECT ?,?,?,'work.routing_rule_saved',?,?,? WHERE changes()>0")
       .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, ruleId, JSON.stringify({ name, position, category, requesterId, requesterGroupId, skill, groupId }), now()),
   ]);
@@ -111,11 +115,11 @@ export async function listRouting(ctx: WorkContext) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner', 'operator']);
   const w = ctx.principal.workspaceId, db = ctx.env.DB;
-  const rules = (await db.prepare(`SELECT id,name,position,category,requester_id requesterId,requester_group_id requesterGroupId,skill,group_id groupId
-    FROM work_routing_rules WHERE workspace_id=? ORDER BY position`).bind(w).all<{ id: string; name: string; position: number }>()).results;
-  const supportGroups = (await db.prepare('SELECT item_id itemId,group_id groupId FROM work_support_groups WHERE workspace_id=? ORDER BY item_id').bind(w).all()).results;
+  const rules = (await db.prepare(`SELECT id,name,department_id,position,category,requester_id requesterId,requester_group_id requesterGroupId,skill,group_id groupId
+    FROM work_routing_rules WHERE workspace_id=? ORDER BY position`).bind(w).all<{ id: string; name: string;position:number;department_id:string|null }>()).results;
+  const supportGroups = (await db.prepare('SELECT s.item_id itemId,s.group_id groupId,g.department_id FROM work_support_groups s JOIN work_groups g ON g.workspace_id=s.workspace_id AND g.id=s.group_id WHERE s.workspace_id=? ORDER BY s.item_id').bind(w).all()).results;
   const agents = (await db.prepare('SELECT user_id userId,calendar_id calendarId,skills_json FROM work_agent_routing WHERE workspace_id=? ORDER BY user_id').bind(w)
     .all<{ userId: string; calendarId: string | null; skills_json: string }>()).results.map(({ skills_json, ...a }) => ({ ...a, skills: JSON.parse(skills_json) }));
-  const groups = (await db.prepare('SELECT id,name,assignment mode,max_open maxOpen FROM work_groups WHERE workspace_id=? ORDER BY name').bind(w).all()).results;
-  return { rules, supportGroups, agents, groups };
+  const groups = (await db.prepare('SELECT id,name,department_id,assignment mode,max_open maxOpen FROM work_groups WHERE workspace_id=? ORDER BY name').bind(w).all()).results;
+  return { rules:await departmentRows(ctx,rules),supportGroups:await departmentRows(ctx,supportGroups), agents,groups:await departmentRows(ctx,groups) };
 }

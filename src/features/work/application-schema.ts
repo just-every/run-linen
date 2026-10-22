@@ -8,6 +8,7 @@ export interface ApplicationEntitlement {
   billingPeriod: 'month' | 'year' | 'one-time';
 }
 export interface ApplicationData {
+  departmentId?:string|null;
   name: string;
   connector: string;
   sensitivity: 'public' | 'internal' | 'confidential' | 'restricted';

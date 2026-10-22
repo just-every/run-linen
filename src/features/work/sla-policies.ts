@@ -1,3 +1,6 @@
+import { departmentReportScope } from './department-report-scope';
+import { assertDepartmentConfig } from './department-spaces';
+import { departmentRows } from './department-operations';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now, requiredString } from "../../platform/http";
 import { getWork, permit, type WorkContext, type WorkRecord } from "./core";
@@ -64,12 +67,12 @@ export async function saveSlaPolicy(ctx: WorkContext, input: Record<string, unkn
   const pauseOn = Array.isArray(input.pauseOn) ? [...new Set(input.pauseOn)] : [...waitingOn];
   if (!pauseOn.every((w) => waitingOn.includes(w as never)))
     throw new ApiError(422, "sla_pause_on", "Pause on awaiting requester, awaiting vendor, both or neither");
-  const policyId = id();
+  const policyId = id(),departmentId=await assertDepartmentConfig(ctx,input.departmentId);
   const saved = await ctx.env.DB.prepare(
-    "INSERT OR IGNORE INTO work_sla_policies(id,workspace_id,name,position,priority,category,requester_group_id,calendar_id,first_response_minutes,next_response_minutes,resolution_minutes,pause_on_json,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    "INSERT OR IGNORE INTO work_sla_policies(id,workspace_id,name,position,priority,category,requester_group_id,calendar_id,first_response_minutes,next_response_minutes,resolution_minutes,pause_on_json,created_by,created_at,department_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
   ).bind(policyId, ctx.principal.workspaceId, name, position, priority, category, groupId, calendarId,
     minutes(input.firstResponseMinutes, "First response"), minutes(input.nextResponseMinutes, "Next response"),
-    minutes(input.resolutionMinutes, "Resolution"), JSON.stringify(pauseOn), ctx.principal.userId, now()).run();
+    minutes(input.resolutionMinutes, "Resolution"), JSON.stringify(pauseOn), ctx.principal.userId, now(),departmentId).run();
   if (!saved.meta.changes) throw new ApiError(409, "sla_position_taken", "Another policy holds this position");
   return (await listSlaPolicies(ctx)).find((p) => p.id === policyId);
 }
@@ -77,21 +80,23 @@ export async function saveSlaPolicy(ctx: WorkContext, input: Record<string, unkn
 export async function listSlaPolicies(ctx: WorkContext) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "operator", "auditor"]);
-  return (await ctx.env.DB.prepare(
+  return departmentRows(ctx,(await ctx.env.DB.prepare(
     "SELECT p.*,g.name requester_group_name,c.name calendar_name,c.location calendar_location FROM work_sla_policies p LEFT JOIN work_requester_groups g ON g.id=p.requester_group_id AND g.workspace_id=p.workspace_id LEFT JOIN work_calendars c ON c.id=p.calendar_id AND c.workspace_id=p.workspace_id WHERE p.workspace_id=? ORDER BY p.position",
-  ).bind(ctx.principal.workspaceId).all<Record<string, unknown>>()).results;
+  ).bind(ctx.principal.workspaceId).all<Record<string, unknown>>()).results);
 }
 
 /** Binds the first policy, in owner order, whose set criteria all match; unset criteria match anything.
  * Called whenever a classification is applied, so a priority change rebinds from the ticket's opening. */
 export async function bindSlaPolicy(ctx: WorkContext, work: WorkRecord, classification: TicketClassification) {
+  const bound=await ctx.env.DB.prepare('SELECT c.policy_id,p.department_id FROM work_sla_clocks c LEFT JOIN work_sla_policies p ON p.workspace_id=c.workspace_id AND p.id=c.policy_id WHERE c.workspace_id=? AND c.work_id=?').bind(ctx.principal.workspaceId,work.id).first<{policy_id:string;department_id:string|null}>();
+  if(bound && bound.department_id!==(work.department_id??null))return bound.policy_id;
   const policy = await ctx.env.DB.prepare(
     `SELECT p.*,c.timezone,c.weekdays_json,c.start_hour,c.end_hour,c.holidays_json,c.location,c.holiday_catalog FROM work_sla_policies p
      LEFT JOIN work_calendars c ON c.id=p.calendar_id AND c.workspace_id=p.workspace_id
-     WHERE p.workspace_id=? AND (p.priority IS NULL OR p.priority=?) AND (p.category IS NULL OR p.category=?)
+     WHERE p.workspace_id=? AND p.department_id IS ? AND (p.priority IS NULL OR p.priority=?) AND (p.category IS NULL OR p.category=?)
      AND (p.requester_group_id IS NULL OR EXISTS(SELECT 1 FROM work_requester_groups g, json_each(g.members_json) m WHERE g.id=p.requester_group_id AND g.workspace_id=p.workspace_id AND m.value=?))
      ORDER BY p.position LIMIT 1`,
-  ).bind(ctx.principal.workspaceId, classification.priority, classification.category, work.requester_id).first<any>();
+  ).bind(ctx.principal.workspaceId, work.department_id??null,classification.priority, classification.category, work.requester_id).first<any>();
   if (!policy) {
     await ctx.env.DB.prepare("DELETE FROM work_sla_clocks WHERE workspace_id=? AND work_id=?").bind(ctx.principal.workspaceId, work.id).run();
     return null;
@@ -171,9 +176,11 @@ export async function readWorkSla(ctx: WorkContext, workId: string, at = now()) 
 }
 /** Report rows for normal-sensitivity tickets opened in [from,to) with a bound policy, and breach counts per target. */
 export async function slaReport(ctx: WorkContext, from: string, to: string, at = now()) {
+  await currentWorkPrincipal(ctx);
+  const departmentScope=departmentReportScope(ctx);
   const works = (await ctx.env.DB.prepare(
-    "SELECT w.* FROM work_records w JOIN work_sla_clocks c ON c.workspace_id=w.workspace_id AND c.work_id=w.id WHERE w.workspace_id=? AND w.sensitivity='normal' AND w.created_at>=? AND w.created_at<? ORDER BY w.created_at",
-  ).bind(ctx.principal.workspaceId, from, to).all<WorkRecord>()).results;
+    `SELECT w.* FROM work_records w JOIN work_sla_clocks c ON c.workspace_id=w.workspace_id AND c.work_id=w.id WHERE w.workspace_id=? AND w.sensitivity='normal' AND w.created_at>=? AND w.created_at<? AND ${departmentScope.sql} ORDER BY w.created_at`,
+  ).bind(ctx.principal.workspaceId, from, to,...departmentScope.bindings).all<WorkRecord>()).results;
   const rows = await Promise.all(works.map(async (work) => {
     const { clock, pauses, messages } = await slaInputs(ctx, work.id);
     return { workId: work.id, title: work.title, ...evaluate(work, clock!, pauses, messages, at) };

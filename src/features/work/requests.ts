@@ -1,3 +1,5 @@
+import { departmentStaffSql } from './department-spaces';
+import { requireDepartmentStaff } from './department-operations';
 import { requireCatalogAudience } from './catalog-audience';
 import { catalogChanged, catalogRequestSnapshot } from './catalog-items';
 import { taskStatements, describeObligations } from './catalog-tasks';
@@ -39,7 +41,7 @@ export async function requestFulfilment(ctx: WorkContext, workId: string, input:
 }
 export type Evaluation = Awaited<ReturnType<typeof evaluateFulfilment>>;
 /** Every read and refusal for one catalog request. A request that does not exist yet passes `fresh` (bundles). */
-export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord,'id'|'revision'|'state'> & {pending_person_id?:string|null}, input: FulfilmentInput, fresh=false) {
+export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord,'id'|'revision'|'state'> & {pending_person_id?:string|null;department_id?:string|null}, input: FulfilmentInput, fresh=false) {
   const workId = work.id;
   if(await ctx.env.DB.prepare(`SELECT 1 FROM work_pending_people h WHERE h.workspace_id=? AND (h.id=? OR (h.state<>'bound' AND h.email=(SELECT lower(trim(email)) FROM users WHERE id=?)))`).bind(ctx.principal.workspaceId,input.beneficiaryId,input.beneficiaryId).first())
     throw new ApiError(409,'pending_person_unbound','Use the held pending-person request until normal account authentication binds this person');
@@ -60,12 +62,13 @@ export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord
       "invalid_fulfilment",
       "Purpose and future expiry required",
     );
+  if(input.beneficiaryId!==ctx.principal.userId)await requireDepartmentStaff(ctx,work.department_id);
   const catalog = await ctx.env.DB.prepare(
     "SELECT * FROM work_catalog WHERE workspace_id=? AND id=?",
   )
     .bind(ctx.principal.workspaceId, input.catalogId)
     .first<{
-      id: string; name: string; revision: number; form_json: string; audience_json: string; tasks_json: string;
+      id: string; name: string; department_id:string|null; revision: number; form_json: string; audience_json: string; tasks_json: string;
       application_id: string | null;
       entitlement_id: string | null;
       kind: string;
@@ -86,6 +89,7 @@ export async function evaluateFulfilment(ctx: WorkContext, work: Pick<WorkRecord
       purpose: string;
       expires_at: string | null;
     }>();
+  if(!previous && (catalog.department_id??null)!==(work.department_id??null))throw new ApiError(409,'catalog_department_mismatch','Choose a request in the same department as this catalog item');
   // A form already open is tied to the item revision it displayed, including its audience.
   if (!previous && input.catalogRevision !== undefined && input.catalogRevision !== catalog.revision)
     throw new ApiError(409, 'catalog_changed', catalogChanged);
@@ -142,8 +146,10 @@ export function fulfilmentStatements(ctx: WorkContext, e: Evaluation, workId: st
       AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1)
       AND EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND revision=? AND state NOT IN ('closed','cancelled'))
       AND (${audience?.sql??'1'})
+      AND (?=1 OR EXISTS(SELECT 1 FROM work_records r JOIN memberships m ON m.workspace_id=r.workspace_id WHERE r.workspace_id=? AND r.id=? AND m.user_id=? AND m.active=1 AND ${departmentStaffSql('r','m')}))
+      AND (?=1 OR EXISTS(SELECT 1 FROM work_catalog c JOIN work_records r ON r.workspace_id=c.workspace_id AND r.id=? WHERE c.workspace_id=? AND c.id=? AND c.department_id IS r.department_id))
       AND (?=0 OR EXISTS(SELECT 1 FROM work_attachments WHERE workspace_id=? AND id=? AND work_id=? AND catalog_id=? AND visibility='catalog_quote' AND fulfilment_id IS NULL AND sha256=?)) THEN 1 ELSE 0 END)`)
-      .bind(admissionGuard,w,ctx.principal.userId,roles,roles,w,input.beneficiaryId,w,workId,workRevision,...(audience?.bindings??[]),
+      .bind(admissionGuard,w,ctx.principal.userId,roles,roles,w,input.beneficiaryId,w,workId,workRevision,...(audience?.bindings??[]),Number(input.beneficiaryId===ctx.principal.userId),w,workId,ctx.principal.userId,Number(!!previous),workId,w,catalog.id,
         Number(!previous&&!!quote),w,quote?.id??'',workId,catalog.id,quote?.sha256??''),
     ...(catalog.capacity!==null ? [    ctx.env.DB.prepare(
       "INSERT OR IGNORE INTO work_catalog_reservations SELECT ?,?,?,?,?,NULL WHERE (SELECT COUNT(*) FROM work_catalog_reservations WHERE workspace_id=? AND catalog_id=? AND released_at IS NULL)<?",

@@ -55,7 +55,7 @@ export async function publishKnowledgeDraft(ctx:WorkContext,key:string,input:Rec
   const title=requiredString(input.title??row.title,'title',500),body=requiredString(input.body??row.body,'body',20000);
   // Native Knowledge renders structured, permission-checked source links beside the body.
   // Keep portable prose free of embedded source IDs; adoption remaps the structured references.
-  const article:ArticleInput={title,body,scope:input.scope,expiresAt:input.expiresAt,review:true};
+  const article:ArticleInput={departmentId:input.departmentId,title,body,scope:input.scope,expiresAt:input.expiresAt,review:true};
   await validateArticle(ctx,article);
   const fence=await knowledgeDraftFence(ctx,sources),articleId=id(),t=now();
   const predicate=`EXISTS(SELECT 1 FROM work_knowledge_drafts WHERE workspace_id=? AND id=? AND revision=? AND state='draft') AND ${fence.sql}`;

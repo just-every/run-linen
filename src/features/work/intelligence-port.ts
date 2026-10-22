@@ -108,7 +108,7 @@ export const workIntakePort: WorkIntakePort = {
     await currentWorkPrincipal(ctx);
     const rows = (
       await ctx.env.DB.prepare(
-        "SELECT id,name,kind,target,owner_id,revision,audience_json FROM work_catalog WHERE workspace_id=? ORDER BY name",
+        "SELECT id,name,kind,target,owner_id,revision,department_id,audience_json FROM work_catalog WHERE workspace_id=? ORDER BY name",
       )
         .bind(ctx.principal.workspaceId)
         .all<{
@@ -118,7 +118,7 @@ export const workIntakePort: WorkIntakePort = {
           target: string;
           owner_id: string;
           revision: number;
-          audience_json: string;
+          audience_json: string;department_id:string|null;
         }>()
     ).results;
     const eligible=[];

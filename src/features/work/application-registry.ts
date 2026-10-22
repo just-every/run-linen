@@ -1,3 +1,4 @@
+import { assertDepartmentConfig,departmentStaff } from './department-spaces';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { create, getService, list } from '../services/store';
 import { currentWorkPrincipal } from './identity';
@@ -17,12 +18,15 @@ export async function applications(ctx: WorkContext) {
   await currentWorkPrincipal(ctx); permit(ctx,['owner','operator']);
   const items = await list(ctx.env.DB,ctx.principal,'application');
   await audit(ctx,'work.applications_read','registry');
-  return items;
+  const visible=[];
+  for(const item of items)if(await departmentStaff(ctx,(item.data as ApplicationData).departmentId))visible.push(item);
+  return visible;
 }
 export async function saveApplication(ctx: WorkContext, input: Record<string, unknown>, applicationId?: string) {
   await currentWorkPrincipal(ctx); permit(ctx,['owner']);
   const previous = applicationId ? await getService(ctx.env.DB,ctx.principal,applicationId,'application') : null;
   const data = applicationData(input,previous?.data as ApplicationData | undefined);
+  data.departmentId=await assertDepartmentConfig(ctx,Object.hasOwn(input,'departmentId')?input.departmentId:(previous?.data as ApplicationData|undefined)?.departmentId);
   const ownerId = requiredString(input.ownerId,'ownerId');
   await members(ctx,[ownerId,...data.approverIds]);
   let result;

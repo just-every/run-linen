@@ -37,6 +37,7 @@ export async function storeCatalogQuote(ctx: WorkContext, workId: string, input:
   if (['closed', 'cancelled'].includes(work.state)) throw new ApiError(409, 'work_closed', 'Reopen the request before attaching a quote');
   const catalog = await db.prepare('SELECT * FROM work_catalog WHERE workspace_id=? AND id=?').bind(w, input.catalogId).first<any>();
   if (!catalog) throw new ApiError(404, 'not_found', 'Catalog item not found');
+  if((catalog.department_id??null)!==(work.department_id??null))throw new ApiError(409,'catalog_department_mismatch','Choose a request in the same department as this catalog item');
   if (!normalizeCatalogForm(JSON.parse(catalog.form_json)).quoteRequired) throw new ApiError(422, 'catalog_quote_unneeded', 'This item does not take a quote');
   await requireCatalogAudience(ctx, catalog, work.beneficiary_id);
   if (await db.prepare('SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?').bind(w, workId, input.catalogId).first())
@@ -52,8 +53,8 @@ export async function storeCatalogQuote(ctx: WorkContext, workId: string, input:
     db.prepare(`INSERT INTO work_attachments(id,workspace_id,work_id,visibility,blob_key,name,content_type,size,sha256,created_at,catalog_id)
       SELECT ?,?,?,?,?,?,'application/pdf',?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?)
       AND EXISTS(SELECT 1 FROM work_records WHERE workspace_id=? AND id=? AND state NOT IN ('closed','cancelled'))
-      AND EXISTS(SELECT 1 FROM work_catalog WHERE workspace_id=? AND id=? AND revision=?)`)
-      .bind(quoteId, w, workId, QUOTE_VISIBILITY, key, safeFileName(input.name), bytes.length, hash, now(), input.catalogId, w, workId, input.catalogId, w, workId, w, input.catalogId, catalog.revision),
+      AND EXISTS(SELECT 1 FROM work_catalog c JOIN work_records r ON r.workspace_id=c.workspace_id AND r.id=? WHERE c.workspace_id=? AND c.id=? AND c.revision=? AND c.department_id IS r.department_id AND (c.department_id IS NULL OR EXISTS(SELECT 1 FROM work_departments d WHERE d.workspace_id=c.workspace_id AND d.id=c.department_id AND d.active=1)))`)
+      .bind(quoteId, w, workId, QUOTE_VISIBILITY, key, safeFileName(input.name), bytes.length, hash, now(), input.catalogId, w, workId, input.catalogId, w, workId,workId,w,input.catalogId,catalog.revision),
     db.prepare(`DELETE FROM work_attachments WHERE workspace_id=? AND work_id=? AND catalog_id=? AND visibility=? AND fulfilment_id IS NULL AND id<>? AND changes()=1`)
       .bind(w, workId, input.catalogId, QUOTE_VISIBILITY, quoteId),
     // Audits carry ids and size only: never the file name or its contents.

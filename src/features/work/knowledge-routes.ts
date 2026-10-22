@@ -98,7 +98,7 @@ export function registerKnowledgeRoutes(app: Hono<AppEnv>) {
     c.json({
       items: await searchKnowledge(
         { env: c.env, principal: c.get("principal") },
-        c.req.query("q") || "",
+        c.req.query("q") || "",50,c.req.query("departmentId")===undefined?undefined:c.req.query("departmentId")||null,
       ),
     }),
   );

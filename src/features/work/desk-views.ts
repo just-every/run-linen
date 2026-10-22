@@ -1,3 +1,5 @@
+import { assertDepartmentConfig } from './department-spaces';
+import { departmentRows,requireDepartmentStaff } from './department-operations';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { listWork, permit, type WorkContext, type WorkFilter } from './core';
@@ -5,7 +7,7 @@ import { listWork, permit, type WorkContext, type WorkFilter } from './core';
 /** DESK-001: saved and shared queue views. An agent saves filters (state, owner, priority, type, group) and a sort under
  * a name, private to them or shared with every agent in the workspace. Running a view never widens what its reader
  * may read: it narrows the reader's own queue. Only the view's creator or the workspace owner removes it. */
-interface ViewRow { id: string; owner_id: string; name: string; filters_json: string; sort: string; shared: number; created_at: string; updated_at: string }
+interface ViewRow { department_id:string|null; id: string; owner_id: string; name: string; filters_json: string; sort: string; shared: number; created_at: string; updated_at: string }
 const choices = {
   state: ['open', 'closed'], assignee: ['me', 'none'], priority: ['P1', 'P2', 'P3', 'P4'],
   kind: ['incident', 'service_request', 'question', 'request'], sort: ['updated', 'created', 'oldest', 'priority'],
@@ -26,7 +28,7 @@ function viewFilters(value: unknown) {
 }
 
 const shape = (row: ViewRow, me: string) => ({
-  id: row.id, name: row.name, filters: JSON.parse(row.filters_json), sort: row.sort, shared: Boolean(row.shared),
+  id: row.id,departmentId:row.department_id,name: row.name, filters: JSON.parse(row.filters_json), sort: row.sort, shared: Boolean(row.shared),
   mine: row.owner_id === me, ownerId: row.owner_id, createdAt: row.created_at, updatedAt: row.updated_at,
 });
 
@@ -39,27 +41,30 @@ export async function listViews(ctx: WorkContext) {
   await agent(ctx);
   const rows = (await ctx.env.DB.prepare('SELECT * FROM work_views WHERE workspace_id=? AND (owner_id=? OR shared=1) ORDER BY name,created_at')
     .bind(ctx.principal.workspaceId, ctx.principal.userId).all<ViewRow>()).results;
-  return { items: rows.map((r) => shape(r, ctx.principal.userId)) };
+  return { items: (await departmentRows(ctx,rows)).map((r) => shape(r, ctx.principal.userId)) };
 }
 
 async function readView(ctx: WorkContext, viewId: string) {
   const row = await ctx.env.DB.prepare('SELECT * FROM work_views WHERE workspace_id=? AND id=? AND (owner_id=? OR shared=1)')
     .bind(ctx.principal.workspaceId, viewId, ctx.principal.userId).first<ViewRow>();
+  if(row)await requireDepartmentStaff(ctx,row.department_id);
   if (!row) throw new ApiError(404, 'view_not_found', 'Saved view not found');
   return row;
 }
 
 export async function saveView(ctx: WorkContext, body: Record<string, unknown>) {
   await agent(ctx);
+  const departmentId=body.departmentId==null?null:await assertDepartmentConfig(ctx,body.departmentId);
   const name = requiredString(body.name, 'name', 120), filters = viewFilters(body.filters);
   const sort = body.sort === undefined ? 'updated' : String(body.sort);
   if (!choices.sort.includes(sort as never)) throw new ApiError(422, 'view_sort', 'Sort by updated, created, oldest or priority');
   if (filters.groupId && !await ctx.env.DB.prepare('SELECT 1 FROM work_groups WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, filters.groupId).first())
     throw new ApiError(422, 'view_filters', 'Unknown agent group');
+  if(filters.groupId && !await ctx.env.DB.prepare('SELECT 1 FROM work_groups WHERE workspace_id=? AND id=? AND department_id IS ?').bind(ctx.principal.workspaceId,filters.groupId,departmentId).first())throw new ApiError(422,'view_filters','Choose a group in the saved view department');
   const viewId = id(), t = now();
   try {
-    await ctx.env.DB.prepare('INSERT INTO work_views VALUES(?,?,?,?,?,?,?,?,?)')
-      .bind(viewId, ctx.principal.workspaceId, ctx.principal.userId, name, JSON.stringify(filters), sort, Number(body.shared === true), t, t).run();
+    await ctx.env.DB.prepare('INSERT INTO work_views(id,workspace_id,owner_id,name,filters_json,sort,shared,created_at,updated_at,department_id) VALUES(?,?,?,?,?,?,?,?,?,?)')
+      .bind(viewId, ctx.principal.workspaceId, ctx.principal.userId, name, JSON.stringify(filters), sort, Number(body.shared === true), t, t,departmentId).run();
   } catch (error) {
     if (String(error).includes('UNIQUE')) throw new ApiError(409, 'view_exists', 'You already have a view with this name');
     throw error;
@@ -80,5 +85,5 @@ export async function removeView(ctx: WorkContext, viewId: string) {
 export async function runView(ctx: WorkContext, viewId: string) {
   await agent(ctx);
   const row = await readView(ctx, viewId);
-  return { view: shape(row, ctx.principal.userId), items: await listWork(ctx, { ...JSON.parse(row.filters_json), sort: row.sort } as WorkFilter) };
+  return { view: shape(row, ctx.principal.userId), items: await listWork(ctx, { ...JSON.parse(row.filters_json), sort: row.sort,...(row.department_id?{departmentId:row.department_id}:{}) } as WorkFilter) };
 }
