@@ -91,3 +91,38 @@ Native export has an explicit migrated-table policy (`schema.ts`). Fulfilment am
 `POST /adoption/snipeit-imports/dry-run {file:{name,base64},resolutions?}` is owner-only and read-only. `file` is one Snipe-IT Custom Asset Report or asset list CSV export with `Asset Tag` and `Serial` columns (UTF-8, at most 2 MiB and 1,000 rows). The response has `fingerprint`, `counts {rows,ready,conflicts,unresolved,rejected}`, `conflicts [{serial,assetTags,linenAssetIds,resolution}]`, `rejected [{row,assetTag,reason}]` and `omissions`. Serials compare after trimming surrounding spaces and ignoring ASCII letter case. `resolutions` maps a conflicting serial to the asset tag of the one row to import, or `"skip"`; a serial already on a Linen device can only be skipped.
 
 `POST /adoption/snipeit-imports {file,resolutions,reviewedFingerprint,acceptOmissions:true}` returns 201 `{created,conflicts,rejected,assets:[{id,serial,assetTag}]}` after one atomic write of observed stock devices, each with a `record` custody event. It answers 409 `snipeit_review_changed` when the file, resolutions or Linen devices differ from the reviewed fingerprint (including a device recorded since the review), 409 `snipeit_conflicts_unresolved` while a reviewed conflict has no resolution, and 422 `snipeit_input` for malformed files or unaccepted omissions. Snipe-IT check-outs and assignees are never imported as custody, and the export file is not retained.
+
+### Saved ServiceNow incident history
+
+The authenticated owner can POST `/api/v1/adoption/servicenow-imports/dry-run`
+with `{input:{instance,files,departmentId?}}`. `instance` is a stable non-secret
+instance slug. Each file is `{name,format,base64}` containing its exact saved UTF-8
+JSON bytes. Formats are `incidents-json` and `audits-json`, both raw Table API
+responses with one `result` array. Export using `sysparm_display_value=false`
+and `sysparm_exclude_reference_link=true`; display-value objects are refused.
+
+Incident rows require `sys_id`, `number`, `short_description`, `description`,
+`caller_id`, `state`, `priority`, `sys_created_on` and `sys_updated_on`.
+`sys_audit` rows require `sys_id`, `tablename` (`incident`), `documentkey`,
+`fieldname`, `oldvalue`, `newvalue`, `user` and `sys_created_on`. Raw UTC dates
+use `YYYY-MM-DD HH:mm:ss`. `documentkey` must name a supplied incident.
+The audit's `user` and time remain its original attribution, distinct from the
+importing owner. Conflicting source audit identities are refused, including an
+attempt to replace already-redacted original values.
+
+Review the returned fingerprint, omissions and target IDs. POST the same input,
+`reviewedFingerprint`, a fresh `operationKey` and `acceptOmissions:true` to
+`/api/v1/adoption/servicenow-imports`. POST `/:id/apply` or `/:id/resume` until
+completed; GET `/:id` reads its durable state. `/:id/undo` and `/:id/rollback`
+retain the import kit's conflict protection. GET `/:id/artifacts` and
+`/:id/artifacts/:ordinal` inspect metadata or exact original bytes, respectively.
+Related erasure withdraws whole affected originals and refuses unsanitized replay.
+
+Imported incidents are paused, restricted historical records. No account or
+membership is created from the caller or source actor; no approval, notification,
+SLA clock or provider operation is granted. An optional destination department
+must be active. Native ticket activity shows supplied audited field changes;
+priority `3` to `2` is recorded as `P3` to `P2` without changing current priority.
+Only supplied audit rows are included. Saved files do not establish completeness
+or source-side deletion, and journal messages, attachment downloads, CMDB and
+source automations remain outside this importer.
