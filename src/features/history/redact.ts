@@ -16,12 +16,34 @@ async function matchingLabel(label:string,matches:(value:string)=>Promise<boolea
   for(const token of label.split(/[^\p{L}\p{N}@._+-]+/u).filter(v=>v.length>1))if(await matches(token))return true;
   return false;
 }
+/** Legacy payloads have no trustworthy field classification. Identity-bearing
+ * content makes the whole original payload personal, including nested strings. */
+export async function legacyIdentityContent(value:unknown,matches:(value:string)=>Promise<boolean>):Promise<boolean> {
+  if(typeof value==='string'){
+    if(await matches(value))return true;
+    let parsed:unknown;try{parsed=JSON.parse(value);}catch{}
+    if(parsed!==undefined&&parsed!==value&&await legacyIdentityContent(parsed,matches))return true;
+    const words=(value.match(/[\p{L}\p{N}][\p{L}\p{N}@._+:/-]*/gu)??[]).map(v=>v.replace(/[^\p{L}\p{N}]+$/u,''));
+    for(let start=0;start<words.length;start++)for(let end=start+1;end<=words.length;end++)if(await matches(words.slice(start,end).join(' ')))return true;
+    return false;
+  }
+  if(Array.isArray(value)){for(const item of value)if(await legacyIdentityContent(item,matches))return true;}
+  else if(value&&typeof value==='object')for(const [key,item] of Object.entries(value))if(await legacyIdentityContent(key,matches)||await legacyIdentityContent(item,matches))return true;
+  return false;
+}
 /** The sole retained-value policy. Personal and unregistered payloads never gain
  * retention by supplying a tag; the registry validates every field/value pair. */
 export async function redactHistory(payload:unknown,at:string,matches:(value:string)=>Promise<boolean>,actorId?:string,force=false) {
   const envelope=decodeHistory(payload),counts:HistoryCounts={};
   const count=(key:string)=>{counts[key]=(counts[key]||0)+1;};
-  if(!envelope){count('unregistered');return {payload:{redacted:'erasure',redactedAt:at},counts,affected:true,actorErased:actorId?await matches(actorId):false};}
+  if(!envelope){
+    let original=payload;try{if(typeof payload==='string')original=JSON.parse(payload);}catch{}
+    const actorErased=!!actorId&&await matches(actorId);
+    if(original&&typeof original==='object'&&(original as any).redacted==='erasure')return {payload:original,counts,affected:actorErased,actorErased};
+    const affected=force||actorErased||await legacyIdentityContent(original,matches);
+    if(!affected)return {payload:original,counts,affected:false,actorErased:false};
+    count('unregistered');return {payload:{redacted:'erasure',redactedAt:at},counts,affected:true,actorErased};
+  }
   const e=structuredClone(envelope);
   const actorErased=await matches(e.actor.id)||['person','integration'].includes(e.actor.kind)&&!!e.actor.name&&await matches(e.actor.name);
   const initiatorErased=!!e.actor.initiatedBy&&await matches(e.actor.initiatedBy);

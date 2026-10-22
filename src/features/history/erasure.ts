@@ -1,3 +1,4 @@
+import { legacySubjectMatcher } from './legacy-scope';
 import { serviceHistoryRewrite } from './service-erasure';
 import { captureArchiveAliasStatements } from './archive-identities.mjs';
 import type { Env } from '../../platform/types';
@@ -16,14 +17,14 @@ export async function prepareHistoryErasure(ctx:Context,identities:string[],at:s
     for(const p of people){if(p.name&&p.name!=='[erased]')values.add(p.name);try{const a=JSON.parse(p.attributes_json);if(typeof a.email==='string')values.add(a.email);}catch{}}
   }
   const matches=await identityMatcher(ctx.env,w,[...values]);
-  const statements:D1PreparedStatement[]=[],counts:HistoryCounts={};
+  const statements:D1PreparedStatement[]=[],counts:HistoryCounts={},subjectAffected=legacySubjectMatcher(ctx,matches);
   for(const value of values)statements.push(db.prepare('INSERT OR IGNORE INTO history_identity_tombstones VALUES(?,?,?)').bind(w,await historyIdentityDigest(ctx.env,w,value),at));
   for(const email of [...values].filter(v=>v.includes('@')))statements.push(db.prepare("UPDATE audit_events SET target='[erased]' WHERE workspace_id=? AND instr(lower(target),lower(?))>0").bind(w,email));
   for(const store of ['audit','service'] as const){
     const table=store==='audit'?'audit_events':'svc_events',column=store==='audit'?'detail_json':'data_json';
-    const events=(await db.prepare(`SELECT id,actor_id,${column} payload FROM ${table} WHERE workspace_id=?`).bind(w).all<{id:string;actor_id:string;payload:string}>()).results;
+    const events=(await db.prepare(`SELECT id,actor_id,${store==='audit'?'target':'record_id'} target,${column} payload FROM ${table} WHERE workspace_id=?`).bind(w).all<{id:string;actor_id:string;target:string;payload:string}>()).results;
     for(const event of events){
-      const result=await redactHistory(event.payload,at,matches,event.actor_id);if(!result.affected)continue;
+      const result=await redactHistory(event.payload,at,matches,event.actor_id,!decodeHistory(event.payload)&&await subjectAffected(event.target));if(!result.affected)continue;
       const key=historyEventKey(store,event.id,decodeHistory(event.payload));
       const prior=await db.prepare('SELECT envelope_json FROM history_redactions WHERE workspace_id=? AND event_key=?').bind(w,key).first<{envelope_json:string}>();
       const payload=JSON.stringify(prior?intersectRedaction(result.payload,JSON.parse(prior.envelope_json)):result.payload);

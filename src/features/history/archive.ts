@@ -1,3 +1,4 @@
+import { legacySubjectMatcher } from './legacy-scope';
 import { serviceHistoryRewrite } from './service-erasure';
 import { captureKnownArchiveAliasStatements } from './archive-identities.mjs';
 import { ApiError, id } from '../../platform/http';
@@ -26,7 +27,9 @@ export async function historyArchiveRow(ctx:Context,table:string,row:Record<stri
   const matches=await identityMatcher(ctx.env,ctx.principal.workspaceId);
   const count=await ctx.env.DB.prepare('SELECT 1 FROM adoption_tombstones WHERE workspace_id=? UNION ALL SELECT 1 FROM history_identity_tombstones WHERE workspace_id=? LIMIT 1').bind(ctx.principal.workspaceId,ctx.principal.workspaceId).first();
   if(!prior&&!count&&!(ingress&&e?.redacted))return {row,typed:!!e};
-  const at=new Date().toISOString(),result=await redactHistory(ingress&&prior?prior.envelope_json:row[column],at,matches,row.actor_id,ingress&&!prior&&!!e?.redacted);
+  const legacyTarget=!e&&typeof(row.target??row.record_id)==='string'&&await legacySubjectMatcher(ctx,matches)(row.target??row.record_id);
+  const at=new Date().toISOString(),result=await redactHistory(ingress&&prior?prior.envelope_json:row[column],at,matches,row.actor_id,legacyTarget||ingress&&!prior&&!!e?.redacted);
+  if(!e&&!prior&&!result.affected)return {row,typed:false};
   const payload=prior?intersectRedaction(result.payload,JSON.parse(prior.envelope_json)):result.payload;
   if(payload && typeof payload==='object')delete (payload as any).pendingErasure;
   return {row:{...row,[column]:JSON.stringify(payload),...(result.actorErased?{actor_id:'[erased]'}:{})},typed:!!e||!!prior};
@@ -37,6 +40,10 @@ export async function historyArchiveRow(ctx:Context,table:string,row:Record<stri
 export async function readHistoryEvent(ctx:Context,action:string,payload:unknown,actorId?:string,eventId?:string,store:'audit'|'service'='audit') {
   const column=store==='audit'?'detail_json':'data_json';
   const row={id:eventId??'',actor_id:actorId??'',action, [column]:typeof payload==='string'?payload:JSON.stringify(payload)};
+  if(eventId&&!decodeHistory(row[column])){
+    const location=await ctx.env.DB.prepare(`SELECT ${store==='audit'?'target':'record_id'} target FROM ${store==='audit'?'audit_events':'svc_events'} WHERE workspace_id=? AND id=?`).bind(ctx.principal.workspaceId,eventId).first<{target:string}>();
+    if(location)Object.assign(row,{target:location.target});
+  }
   const safe=await historyArchiveRow(ctx,store==='audit'?'audit_events':'svc_events',row);
   if(eventId && safe.row[column]!==row[column]) {
     const table=store==='audit'?'audit_events':'svc_events',w=ctx.principal.workspaceId;
