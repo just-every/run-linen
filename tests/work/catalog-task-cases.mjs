@@ -96,12 +96,14 @@ export async function catalogTaskChecks({ ok, api, db, actor, future }) {
     assert.equal((await waive(step, user)).status, 403, 'CATALOG-003 only the responsibility owner or workspace owner waives it');
   assert.equal((await waive(step, 'owner', ' ')).status, 422, 'CATALOG-003 a waiver needs a reason');
   assert.equal((await waive(task(items, 'seat'), 'owner')).status, 409, 'CATALOG-003 a done task is not waived');
+  const beforeWaiver=(await duties(failing.workId)).find(o=>o.id===step.id);
+  assert.equal(beforeWaiver.state,step.state,'Refused waiver and unrelated task writes leave this responsibility state unchanged');
   assert.equal((await waive(step, 'owner')).status, 200, 'CATALOG-003 the owner waives the failed automated step with a reason');
   assert.equal((await waive(step, 'owner')).status, 409);
   const waivedHistory=(await ok(`/work/${failing.workId}/activity`)).items;
   const waiver=waivedHistory.find(e=>e.action==='obligation waived'&&e.changes.some(c=>c.field==='reason'&&c.after==='The licence is bought outside Linen'));
   assert.ok(waiver,'CATALOG-003 the original waiver reason is visible through the authorized history door');
-  assert.ok(waiver.changes.some(c=>c.field==='state'&&c.before==='failed'&&c.after==='waived'));
+  assert.ok(waiver.changes.some(c=>c.field==='state'&&c.before===beforeWaiver.state&&c.after==='waived'));
   items = await duties(failing.workId, 'employee');
   assert.deepEqual([items.find(o => o.kind === 'access.grant').state, items.find(o => o.kind === 'access.grant').waived_by], ['waived', 'owner'], 'CATALOG-003 a waived step is shown as waived, never as verified');
   assert.equal((await complete(failing.workId, task(items, 'configure'), 'task-net')).status, 200, 'CATALOG-003 a waived step releases the tasks that follow it');
