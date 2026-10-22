@@ -29,6 +29,7 @@ export interface Chunk {
     fullSha256?: string;
 }
 export interface Manifest {
+    privacyRevision?: string;
     format: 'linen-native';
     version: 1;
     sourceWorkspace: string;

@@ -1,13 +1,13 @@
 import { historyRestoreTables,restoreHistoryMetadata } from '../history/adoption';
-import { decodeHistory } from '../history/registry';
 import { historyArchiveRow } from '../history/archive';
+import { archivePrivacyRevision,validateArchivePrivacy } from './archive-privacy';
 import { ApiError, id, now } from '../../platform/http';
-import { check, owner, statement, getRun, sha, encode, erased, identityHash, type AdoptionContext, type Row } from './core';
+import { check, owner, statement, getRun, sha, encode, identityHash, type AdoptionContext, type Row } from './core';
 import { supported, historyOnly, MAX_CHUNK, type Manifest, type Chunk } from './schema';
 import { restoreAdoptionRecord as restoreServices } from '../services/adoption';
 import { restoreExecutionRecord } from '../execution/restore';
 import { restoreAdoptionRecord as restoreIntelligence, restoreTables as intelligenceRestoreTables } from '../intelligence/restore';
-import {preflightImportedTombstone,reconcileImportedTombstones} from './import-erasure';
+import {preflightImportedTombstone,reconcileImportedTombstones,importedTombstoneDigest} from './import-erasure';
 import {queueDelete} from './core';
 import { references, type Reference } from './references';
 import { workRestoreTables, restoreNativeWork, mapId, mapRow } from './restore';
@@ -72,6 +72,7 @@ export async function createImport(ctx: AdoptionContext, input: {
 export async function uploadChunk(ctx: AdoptionContext, runId: string, ordinal: number, bytes: ArrayBuffer) { const run = await getRun(ctx, 'imports', runId); check(run.state === 'uploading', 'import_locked', 409); const manifest = validateManifest(JSON.parse(String(run.manifest_json))), chunk = manifest.chunks.find(x => x.ordinal === ordinal); check(chunk, 'unexpected_chunk'); check(bytes.byteLength === chunk.size && await sha(bytes) === chunk.sha256, 'chunk_hash_mismatch'); const key = `${ctx.principal.workspaceId}/adoption/imports/${runId}/${ordinal}`; await ctx.env.ATTACHMENTS.put(key, bytes); await ctx.env.DB.prepare('INSERT OR REPLACE INTO adoption_chunks VALUES(?,?,?,?,?,?,?,?)').bind(ctx.principal.workspaceId, runId, ordinal, chunk.kind, key, chunk.sha256, chunk.size, JSON.stringify(chunk)).run(); return { ordinal, sha256: chunk.sha256 }; }
 async function bytesFor(ctx: AdoptionContext, runId: string, chunk: Chunk) { const object = await ctx.env.ATTACHMENTS.get(`${ctx.principal.workspaceId}/adoption/imports/${runId}/${chunk.ordinal}`); check(object, 'missing_chunk', 409); check(object.size === chunk.size, 'chunk_size_mismatch'); const bytes = await object.arrayBuffer(); check(await sha(bytes) === chunk.sha256, 'chunk_hash_mismatch'); return bytes; }
 export async function recordsFor(ctx: AdoptionContext, runId: string, chunk: Chunk): Promise<NativeRecord[]> {
+    const run=await getRun(ctx,'imports',runId),manifest=validateManifest(JSON.parse(String(run.manifest_json)));
     const bytes = await bytesFor(ctx, runId, chunk);
     let records: NativeRecord[];
     try {
@@ -85,7 +86,7 @@ export async function recordsFor(ctx: AdoptionContext, runId: string, chunk: Chu
         check(r && typeof r.table === 'string' && typeof r.key === 'string' && r.row && typeof r.row === 'object' && !Array.isArray(r.row), 'invalid_record');
         check(Object.values(r.row).every(v => v === null || typeof v === 'string' || typeof v === 'number'), 'invalid_record_value');
         check(!Object.keys(r.row).some(k => /password|secret|token|encryption_key/i.test(k) && r.row[k] !== null), 'credential_data_forbidden');
-        r.row=(await historyArchiveRow(ctx,r.table,r.row,true)).row;
+        await validateArchivePrivacy(ctx,r,manifest.sourceWorkspace);
     }
     return records;
 }
@@ -106,6 +107,7 @@ export async function attachmentBytes(ctx: AdoptionContext, runId: string, manif
     return data;
 }
 export interface DryReport {
+    privacyRevision?:string;
     counts: Record<string, number>;
     privacy: Record<string, number>;
     unknownMappings: number;
@@ -131,8 +133,6 @@ export interface DryReport {
 async function reasonFor(ctx: AdoptionContext, r: NativeRecord) {
     if (!supported(r.table))
         return 'unknown_mapping';
-    if (!(['audit_events','svc_events'].includes(r.table) && decodeHistory(r.row[r.table==='audit_events'?'detail_json':'data_json'])) && await erased(ctx, r.row))
-        return 'erased_identity';
     if (r.table !== 'identities' && r.table !== 'workspace') {
         const columns = (await ctx.env.DB.prepare(`PRAGMA table_info(${r.table})`).all<{
             name: string;
@@ -156,7 +156,7 @@ export async function dryRun(ctx: AdoptionContext, runId: string) {
     const run = await getRun(ctx, 'imports', runId);
     check(['uploading', 'validated'].includes(String(run.state)), 'import_locked', 409);
     const m = validateManifest(JSON.parse(String(run.manifest_json)));
-    const report: DryReport = { counts: {}, privacy: {}, unknownMappings: 0, identityCollisions: 0, sourceRevisionConflicts: 0, liveIdentityErasures:0, unresolvedReferences: 0, unresolvedRecords: [], erasedRecords: 0, historyOnly: 0, attachmentBytes: 0, sourceCounts: m.tables, targetCounts: {}, samples: [] };
+    const report: DryReport = { privacyRevision:await archivePrivacyRevision(ctx),counts: {}, privacy: {}, unknownMappings: 0, identityCollisions: 0, sourceRevisionConflicts: 0, liveIdentityErasures:0, unresolvedReferences: 0, unresolvedRecords: [], erasedRecords: 0, historyOnly: 0, attachmentBytes: 0, sourceCounts: m.tables, targetCounts: {}, samples: [] };
     const keys = new Set<string>(), refs: Reference[] = [];
     for (const chunk of m.chunks) {
         if (chunk.kind !== 'records') {
@@ -166,13 +166,12 @@ export async function dryRun(ctx: AdoptionContext, runId: string) {
         for (const r of await recordsFor(ctx, runId, chunk)) {
             check(!keys.has(`${r.table}:${r.key}`), 'duplicate_source_identity');
             keys.add(`${r.table}:${r.key}`);
+            if(r.table==='history_archive_aliases')keys.add('@archive-alias:'+r.row.alias);
             report.counts[r.table] = (report.counts[r.table] || 0) + 1;
             const privacy = String(r.row.visibility || r.row.sensitivity || r.row.scope || 'restricted');
             report.privacy[privacy] = (report.privacy[privacy] || 0) + 1;
             const reason = await reasonFor(ctx, r);
-            if (reason === 'erased_identity')
-                report.erasedRecords++;
-            else if (reason)
+            if (reason)
                 report.unknownMappings++;
             if (historyOnly.has(r.table) || !ports.has(r.table))
                 report.historyOnly++;
@@ -186,8 +185,8 @@ export async function dryRun(ctx: AdoptionContext, runId: string) {
                 if (collision)
                     report.identityCollisions++;
             }
-            if(r.table==='work_erasure'&&typeof r.row.person_id==='string')report.liveIdentityErasures+=(await preflightImportedTombstone(ctx,await identityHash(r.row.person_id))).length;
-            if(r.table==='adoption_tombstones')report.liveIdentityErasures+=(await preflightImportedTombstone(ctx,String(r.row.identity_hash))).length;refs.push(...references(r));
+            if(r.table==='work_erasure'&&typeof r.row.person_id==='string')report.liveIdentityErasures+=(await preflightImportedTombstone(ctx,await importedTombstoneDigest(r.row.person_id),m.sourceWorkspace)).length;
+            if(r.table==='adoption_tombstones')report.liveIdentityErasures+=(await preflightImportedTombstone(ctx,String(r.row.identity_hash),m.sourceWorkspace)).length;refs.push(...references(r));
             if (r.table === 'work_attachments' || r.table === 'adoption_artifacts') {
                 const data = await attachmentBytes(ctx, runId, m, String(r.row.id));
                 check(data.byteLength === r.row.size && await sha(data) === r.row.sha256, 'attachment_metadata_mismatch');
@@ -217,14 +216,15 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
         return importStatus(ctx, runId);
     check(['validated', 'applying', 'history_only','erasure_pending'].includes(String(run.state)), 'dry_run_required', 409);
     const report = JSON.parse(String(run.report_json)) as DryReport;
+    check(report.privacyRevision===await archivePrivacyRevision(ctx),'erasure_changed_since_review',409);
     check(acceptSemanticLoss || (!report.liveIdentityErasures&&!report.sourceRevisionConflicts && !report.unknownMappings && !report.identityCollisions && !report.unresolvedReferences && !report.historyOnly), 'semantic_loss_review_required', 409);
     // Recheck the entire incoming erasure set before any mutation: destination
     // identities/mappings may have changed since the review or prior checkpoint.
     const m = validateManifest(JSON.parse(String(run.manifest_json)));
     for (const chunk of (m.tables.adoption_tombstones || m.tables.work_erasure ? m.chunks.filter(c=>c.kind==='records') : [])) {
         for (const r of await recordsFor(ctx,runId,chunk)) {
-            if(r.table==='adoption_tombstones')await preflightImportedTombstone(ctx,String(r.row.identity_hash));
-            if(r.table==='work_erasure'&&typeof r.row.person_id==='string')await preflightImportedTombstone(ctx,await identityHash(r.row.person_id));
+            if(r.table==='adoption_tombstones')await preflightImportedTombstone(ctx,String(r.row.identity_hash),m.sourceWorkspace);
+            if(r.table==='work_erasure'&&typeof r.row.person_id==='string')await preflightImportedTombstone(ctx,await importedTombstoneDigest(r.row.person_id),m.sourceWorkspace);
         }
     }
     const w = ctx.principal.workspaceId;
@@ -241,14 +241,9 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
                 continue;
             }
             const conflict = await ctx.env.DB.prepare('SELECT 1 FROM adoption_history WHERE workspace_id=? AND source_id=? AND table_name=? AND source_key=? AND revision<>? LIMIT 1').bind(w, run.source_id, r.table, r.key, revision).first();
-            if (r.row.id)
+            if (r.row.id && !String(r.row.id).startsWith('erased-a1-'))
                 await mapId(ctx, String(run.source_id), String(r.row.id), r.table === 'identities' ? 'principal' : 'record');
             const reason = await reasonFor(ctx, r) || ((report.unresolvedRecords || []).some(x => x.table === r.table && x.key === r.key) ? 'unresolved_reference' : null);
-            if (reason === 'erased_identity') {
-                if (r.row.id)
-                    await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w, await identityHash(String(r.row.id)), now()).run();
-                continue;
-            }
             let state = reason || conflict ? 'quarantined' : 'history_only';
             let why = reason || (conflict ? 'source_revision_conflict' : null);
             // Records are persisted as restricted history BEFORE domain materialization. Ports must be idempotent.
@@ -256,11 +251,11 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
             await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_history VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(historyId, w, runId, run.source_id, r.table, r.key, revision, JSON.stringify(r.row), state, why, now()).run();
             await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_import_records SELECT workspace_id,?,id FROM adoption_history WHERE workspace_id=? AND source_id=? AND table_name=? AND source_key=? AND revision=?').bind(runId, w, run.source_id, r.table, r.key, revision).run();
             if (r.table === 'work_erasure' && typeof r.row.person_id === 'string') {
-                await preflightImportedTombstone(ctx,await identityHash(r.row.person_id));
-                await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w, await identityHash(r.row.person_id), now()).run();
+                await preflightImportedTombstone(ctx,await importedTombstoneDigest(r.row.person_id),m.sourceWorkspace);
+                await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w, await importedTombstoneDigest(r.row.person_id), now()).run();
             }
             if (r.table === 'adoption_tombstones') {
-                await preflightImportedTombstone(ctx,String(r.row.identity_hash));
+                await preflightImportedTombstone(ctx,String(r.row.identity_hash),m.sourceWorkspace);
                 await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w, r.row.identity_hash, now()).run();
             }
         }
@@ -268,7 +263,7 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
     }
     if (chunks.length)
         return { id: runId, state: 'applying', processedChunks: chunks.length };
-    const privacy=await reconcileImportedTombstones(ctx,runId);if(privacy.pending.length){await ctx.env.DB.prepare("UPDATE adoption_imports SET state='erasure_pending' WHERE workspace_id=? AND id=?").bind(w,runId).run();return {id:runId,state:'erasure_pending',pendingErasures:privacy.pending}}
+    const privacy=await reconcileImportedTombstones(ctx,runId);report.privacyRevision=await archivePrivacyRevision(ctx);await ctx.env.DB.prepare('UPDATE adoption_imports SET report_json=? WHERE workspace_id=? AND id=?').bind(JSON.stringify(report),w,runId).run();if(privacy.pending.length){await ctx.env.DB.prepare("UPDATE adoption_imports SET state='erasure_pending' WHERE workspace_id=? AND id=?").bind(w,runId).run();return {id:runId,state:'erasure_pending',pendingErasures:privacy.pending}}
     // Each supported domain port owns its own authority and invariants; grants are permanently excluded.
     const pending = (await ctx.env.DB.prepare("SELECT * FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state='history_only' ORDER BY created_at,id").bind(w, runId).all<any>()).results;
     const priority = [...historyRestoreTables,'work_departments', 'work_canned_responses', 'work_people', 'work_pending_people', 'work_records', 'work_calendars', 'work_catalog', 'work_assets', 'work_recurring_plans', 'work_recurring_occurrences', 'work_recurring_tasks', 'work_asset_financials', 'work_knowledge', 'work_messages', 'work_attachments', 'work_custody', 'work_lifecycle', 'work_fulfilments','work_approval_stages', 'work_commitments', 'work_obligations', 'work_time_entries', 'work_pending_services', 'work_article_versions', 'svc_records', 'work_knowledge_drafts', 'svc_events', 'work_asset_contracts', 'work_asset_repairs', 'work_classifications', 'execution_plans', 'execution_operations', 'execution_attempts', 'execution_receipts', 'execution_verifications', 'execution_decisions', 'intelligence_commitments', 'intelligence_versions', 'intelligence_observations', 'intelligence_events', 'intelligence_research', 'intelligence_attempts', 'intelligence_engineering_jobs', 'intelligence_capabilities', 'intelligence_reuse', 'intelligence_simplifications'];
@@ -282,15 +277,10 @@ export async function applyImport(ctx: AdoptionContext, runId: string, acceptSem
         }
         const port = ports.get(h.table_name);
         const original = JSON.parse(h.row_json) as Row;
-        if (!(['audit_events','svc_events'].includes(h.table_name) && decodeHistory(original[h.table_name==='audit_events'?'detail_json':'data_json'])) && await erased(ctx, original)) {
-            if (original.id)
-                await ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w, await identityHash(String(original.id)), now()).run();
-            await ctx.env.DB.prepare("UPDATE adoption_history SET row_json='{}',state='erased',reason='erasure tombstone' WHERE workspace_id=? AND id=?").bind(w, h.id).run();
-            continue;
-        }
+        await validateArchivePrivacy(ctx,{table:h.table_name,key:h.source_key,row:original},m.sourceWorkspace);
         if (!port)
             continue;
-        const r = { table: h.table_name, key: h.source_key, row: await mapRow(ctx, h.source_id, original) };
+        const r = { table: h.table_name, key: h.source_key, row: await mapRow(ctx, h.source_id, (await historyArchiveRow(ctx,h.table_name,original,true)).row,h.table_name) };
         if (r.table === 'work_attachments' || r.table === 'adoption_artifacts') {
             const data = await attachmentBytes(ctx, runId, m, String(original.id));
             const key = `${w}/adoption/restored/${String(r.row.id)}`;
