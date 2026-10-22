@@ -96,16 +96,35 @@ export async function approvalChainChecks({db,ok,api,mf}){
  const pdf=new TextEncoder().encode('%PDF-1.7\n% synthetic-linen-734\n%%EOF');
  const upload=await mf.dispatchFetch(`http://localhost/work/${quoteWork.id}/catalog-quote`,{method:'POST',headers:{'x-user':employee,'x-filename':'synthetic-linen-734.pdf','x-catalog-id':quoted.id,'content-type':'application/pdf'},body:pdf});
  assert.equal(upload.status,201);const quote=await upload.json();
- await ok(`/work/${quoteWork.id}/fulfilment`,{catalogId:quoted.id,catalogRevision:2,beneficiaryId:employee,purpose:'synthetic-linen-733',answers:{price:1800}},employee);
+ for(const price of [1000.001,-1,10000000.01]){
+  const refused=await api(`/work/${quoteWork.id}/fulfilment`,{catalogId:quoted.id,catalogRevision:2,beneficiaryId:employee,purpose:'synthetic-linen-733',answers:{price}},employee);
+  assert.equal(refused.status,422);assert.equal(refused.value.code,'catalog_approval_price');
+  assert.equal((await db.prepare('SELECT count(*) n FROM work_fulfilments WHERE work_id=?').bind(quoteWork.id).first()).n,0,'invalid USD leaves no fulfilment');
+ }
+ const submitted=await ok(`/work/${quoteWork.id}/fulfilment`,{catalogId:quoted.id,catalogRevision:2,beneficiaryId:employee,purpose:'synthetic-linen-733',answers:{price:1800.01}},employee);
+ assert.deepEqual(submitted.catalogSnapshot.approvalAmounts.finance,{fieldId:'price',cents:180001});
+ assert.equal(submitted.catalogSnapshot.form.costCents,null,'quote amount comes from the selected saved answer, not item metadata or PDF');
  const read=user=>mf.dispatchFetch(`http://localhost/catalog-quotes/${quote.id}`,{headers:{'x-user':user}});
  assert.equal((await read(finance)).status,200);assert.equal((await read(manager)).status,404);
- assert.equal((await ok('/approval-stages',undefined,finance)).items.find(x=>x.workId===quoteWork.id).costCents,180000,'the requester-entered USD price routes and appears in the approval packet');
+ assert.equal((await ok('/approval-stages',undefined,finance)).items.find(x=>x.workId===quoteWork.id).costCents,180001,'the requester-entered USD price routes and appears in the approval packet');
  await ok(`/work-groups/${team.id}/members/${finance}/remove`,{});
  assert.equal((await read(finance)).status,404,'a holder replaced before deciding loses quote access');
  const quoteDecision=(await ok('/approval-stages',undefined,second)).items.find(x=>x.workId===quoteWork.id);
  await ok(`/work/${quoteWork.id}/approval-stage`,{...quoteDecision,decision:'approved',idempotencyKey:'synthetic-linen-735'},second);
  assert.equal((await read(second)).status,200,'a decided holder keeps the quote revision');
  assert.ok(await db.prepare("SELECT 1 FROM audit_events WHERE action='work.catalog_quote_read' AND actor_id=?").bind(second).first());
+ const priced=await ok('/catalog',{name:'synthetic-linen-738',kind:'service',target:'synthetic-linen-738',ownerId:'owner',form:{costCents:180000,fields:[{id:'price',label:'synthetic-linen-739',type:'number',required:true}]}});
+ await ok(`/catalog/${priced.id}/approvals`,{revision:1,calendarId:calendar.id,approvals:[{...stage,costField:'price'}]});
+ for(const [price,expected] of [[1000,'skipped'],[1000.01,'pending']]){
+  const p=await ok('/work',{title:'synthetic-linen-738',body:'synthetic-linen-738',deduplicationKey:crypto.randomUUID()},employee);
+  const saved=await ok(`/work/${p.id}/fulfilment`,{catalogId:priced.id,catalogRevision:2,beneficiaryId:employee,purpose:'synthetic-linen-738',answers:{price}},employee);
+  assert.equal((await ok(`/work/${p.id}/approvals/${priced.id}`,undefined,employee)).stages[0].state,expected,'the selected USD answer overrides item cost at the exact threshold');
+  assert.equal(saved.catalogSnapshot.approvalAmounts.finance.cents,price===1000?100000:100001);
+ }
+ await ok(`/catalog/${quoted.id}/form`,{revision:2,name:'synthetic-linen-731',form:{costCents:900000,quoteRequired:true,fields:[{id:'price',label:'synthetic-linen-732',type:'number',required:true}]}});
+ const frozen=(await ok(`/work/${quoteWork.id}/catalog-requests`,undefined,employee)).items[0].catalogSnapshot;
+ assert.deepEqual(frozen.approvalAmounts.finance,{fieldId:'price',cents:180001},'item edits retain the submitted routing amount');
+ assert.equal(frozen.answers.price,1800.01);
  await ok('/approval-mail/config',{revision:1,enabled:false});
  const managerOnly=await ok('/catalog',{name:'synthetic-linen-736',kind:'service',target:'synthetic-linen-736',ownerId:'owner',requiresManager:true});
  await ok(`/catalog/${managerOnly.id}/approvals`,{revision:1,calendarId:calendar.id,approvals:[],manager:{remindHours:24,slaHours:24}});

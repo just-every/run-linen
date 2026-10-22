@@ -1,3 +1,4 @@
+import {approvalCostCents,snapshotApprovalCosts,type ApprovalCostSnapshot} from './approval-cost';
 import { ApiError, id, now } from '../../platform/http';
 import type { WorkContext, WorkRecord } from './core';
 import { resolveManager } from './delegation';
@@ -8,16 +9,16 @@ import { stagesOf, type StageDef } from './approval-config';
 export const businessInstant = (calendar: BusinessCalendar, from: string, hours: number) => businessDue(from, hours * 60, calendar);
 
 /** The cost a stage threshold is tested on: the requester's USD answer it names, else the item's recorded cost. Unknown applies. */
-export function stageApplies(def: StageDef, snapshot: { form: { costCents: number | null }; answers: Record<string, unknown> }) {
+export function stageApplies(def: StageDef, snapshot: ApprovalCostSnapshot) {
   if (def.aboveCents === null) return true;
-  const answer = def.costField ? snapshot.answers[def.costField] : null;
-  const cents = def.costField ? (typeof answer === 'number' && answer >= 0 ? answer * 100 : null) : snapshot.form.costCents;
-  return cents === null || !Number.isFinite(cents) ? true : Math.round(cents) > def.aboveCents;
+  const cents = snapshot.approvalAmounts?.[def.key]?.cents ?? approvalCostCents(def,snapshot);
+  return cents === null || cents > def.aboveCents;
 }
 export interface PlannedStage { def: StageDef; ordinal: number; applies: boolean; activeAt: string | null; remindAt: string | null; slaAt: string | null }
 /** The frozen stages of one submission; the first applicable stage opens now when no manager decision comes first. */
-export async function planStages(ctx: WorkContext, catalog: { approvals_json?: string; requires_manager: number;manager_approval_json?:string|null }, snapshot: { form: { costCents: number | null }; answers: Record<string, unknown> }): Promise<PlannedStage[]> {
+export async function planStages(ctx: WorkContext, catalog: { approvals_json?: string; requires_manager: number;manager_approval_json?:string|null }, snapshot: ApprovalCostSnapshot): Promise<PlannedStage[]> {
   const defs = stagesOf(catalog);
+  snapshotApprovalCosts(defs,snapshot);
   const manager=catalog.requires_manager&&catalog.manager_approval_json?JSON.parse(catalog.manager_approval_json) as StageDef:null;
   const at = now();
   let opened = Boolean(catalog.requires_manager);

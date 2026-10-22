@@ -1,3 +1,4 @@
+import {approvalCostCents} from './approval-cost';
 import { ApiError, id, now } from '../../platform/http';
 import type { WorkContext, WorkRecord } from './core';
 import { getWork } from './core';
@@ -39,8 +40,7 @@ export async function listStageDecisions(ctx: WorkContext) {
     const names = new Map((await db.prepare('SELECT id,name FROM users WHERE id IN (?,?)').bind(row.requester_id, row.beneficiary_id).all<{ id: string; name: string }>()).results.map(u => [u.id, u.name]));
     const quote = await db.prepare("SELECT id,name,size,sha256 FROM work_attachments WHERE workspace_id=? AND fulfilment_id=? AND visibility='catalog_quote'").bind(w, f.id).first<any>();
     const snapshot=row.catalog_snapshot_json?JSON.parse(row.catalog_snapshot_json):null,def=JSON.parse(row.definition_json);
-    const price=def.costField?snapshot?.answers?.[def.costField]:null;
-    const costCents=def.costField?(typeof price==='number'&&price>=0?Math.round(price*100):null):snapshot?.form?.costCents??null;
+    const costCents=snapshot?snapshot.approvalAmounts?.[def.key]?.cents??approvalCostCents(def,snapshot):null;
     items.push({ workId: row.work_id, title: row.title, catalogId: row.catalog_id, catalogName: row.catalog_name, stageKey: stage.key, stageName: stage.name, mode: stage.mode,
       beneficiaryName: names.get(row.beneficiary_id) ?? 'Unknown person', requesterName: names.get(row.requester_id) ?? 'Unknown person', purpose: row.purpose,
       expectedWorkRevision: row.w_revision, expectedFulfilmentRevision: row.f_revision, expectedCatalogRevision: row.c_revision, slaAt: stage.slaAt,remindAt:stage.remindAt,remindedAt:stage.remindedAt,breachedAt:stage.breachedAt,costCents, quote: quote ?? null });
