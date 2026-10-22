@@ -2869,8 +2869,8 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 5 | 19 | 0 | 24 |
-| Target and push further | 47 | 43 | 25 | 115 |
-| All | 52 | 62 | 25 | 139 |
+| Target and push further | 48 | 42 | 25 | 115 |
+| All | 53 | 61 | 25 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
