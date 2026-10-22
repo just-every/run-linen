@@ -64,7 +64,7 @@ export async function approvalChainChecks({db,ok,api,mf}){
  const decided=(await chain()).stages[0];assert.equal(decided.state,'approved');assert.equal(decided.decisions[0].comment,'approve\nsynthetic-linen-721');
  assert.equal((await signed({messageId})).value.state,'replayed','provider delivery replay cannot decide twice');
  assert.equal((await signed()).value.code,'approval_token_used');
- await ok(`/work/${request.id}/commands`,{command:'pause',revision:1,reason:'synthetic-linen-723'},employee);
+ await ok(`/work/${request.id}/commands`,{command:'assign',revision:1,assigneeId:'owner',reason:'synthetic-linen-723'});
  assert.equal((await chain()).manager.state,'pending','editing the request invalidates its earlier decisions');
  assert.notEqual((await chain()).stages[0].state,'approved');
  await approveManager();
@@ -108,7 +108,7 @@ export async function approvalChainChecks({db,ok,api,mf}){
  assert.equal((await ok(`/test/readiness/${refusedWork.id}/${parallel.id}`)).ready,false);
  await ok(`/work-groups/${team.id}/members`,{userId:second});
  assert.equal((await ok(`/work/${refusedWork.id}/approvals/${parallel.id}`,undefined,employee)).rejected,true,'restoring the holder also leaves that revision final');
- await ok(`/work/${refusedWork.id}/commands`,{command:'pause',revision:1,reason:'synthetic-linen-782'},employee);
+ await ok(`/work/${refusedWork.id}/commands`,{command:'assign',revision:1,assigneeId:'owner',reason:'synthetic-linen-782'});
  assert.equal((await ok(`/work/${refusedWork.id}/approvals/${parallel.id}`,undefined,employee)).rejected,false,'a revised request starts fresh decisions');
  await decisionOnRefused(finance,'approved');await decisionOnRefused(second,'approved');
  assert.equal((await ok(`/work/${refusedWork.id}/approvals/${parallel.id}`,undefined,employee)).satisfied,true);
