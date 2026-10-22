@@ -1,5 +1,6 @@
 import { WorkActivity } from './work-activity';
 import { SponsorReattest } from "./sponsor-reattest";
+import { LifecycleTaskReminder } from "./lifecycle-templates";
 import { WorkShares } from "./work-shares";
 import { RecurringTasks } from './recurring-work';
 import { WorkaroundSuggestions } from "./workaround-suggestions";
@@ -65,6 +66,9 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
   if (detail.error) return <ErrorNotice error={detail.error} retry={detail.refresh} />;
   if (!work) return null;
   const progress = detail.data?.progress ?? [];
+  const taskReminder = (() => {
+    try { return (JSON.parse(work.context_json || "{}") as { lifecycleTaskReminder?: RecordValue }).lifecycleTaskReminder; } catch { return undefined; }
+  })();
   const sponsorReminder = (() => {
     try { return (JSON.parse(work.context_json || "{}") as { sponsorReminder?: RecordValue }).sponsorReminder; } catch { return undefined; }
   })();
@@ -162,6 +166,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       {!access && <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />}
       <BundleProgress key={`bundle-${work.id}`} workId={work.id} />
       {sponsorReminder && work.beneficiary_id === session.principal.userId && <SponsorReattest context={sponsorReminder} onChanged={changed} />}
+      {taskReminder && work.beneficiary_id === session.principal.userId && <LifecycleTaskReminder context={taskReminder} onChanged={changed} />}
       {operator && <WorkTime workId={work.id} />}
       {!access && <WorkCommands work={work} onChanged={changed} operator={operator} />}
       <details className="evidence">

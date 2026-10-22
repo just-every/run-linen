@@ -245,7 +245,7 @@ export async function listObligations(ctx: WorkContext, workId: string) {
   await getWork(ctx, workId);
   return describeObligations(ctx, workId, (
     await ctx.env.DB.prepare(
-      "SELECT id,kind,target,beneficiary_id,due_at,state,owner_id,operation_id,last_error,revision,title,group_id,catalog_id,after_json,lifecycle_id,completed_by,completed_at,waived_by,waived_at FROM work_obligations WHERE workspace_id=? AND work_id=? ORDER BY due_at,id",
+      "SELECT id,kind,target,beneficiary_id,due_at,state,owner_id,operation_id,last_error,revision,title,group_id,catalog_id,after_json,lifecycle_id,completed_by,completed_at,waived_by,waived_at,remind_at,reminded_at FROM work_obligations WHERE workspace_id=? AND work_id=? ORDER BY due_at,id",
     )
       .bind(ctx.principal.workspaceId, workId)
       .all()

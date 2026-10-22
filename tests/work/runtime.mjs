@@ -19,6 +19,7 @@ import { assetContractChecks } from "./asset-contract-cases.mjs";
 import { classificationChecks, classificationEncryptionKey } from "./classification-cases.mjs";
 import { lifecycleEvidenceChecks } from "./lifecycle-evidence-cases.mjs";
 import { accessPolicyChecks } from "./access-policy-cases.mjs";
+import { lifecycleTemplateChecks } from "./lifecycle-template-cases.mjs";
 import { lifecycleReplayChecks, lifecycleIntegrationChecks, contractorSponsorChecks } from "./lifecycle-regressions.mjs";
 import assert from "node:assert/strict";
 import { readFile, readdir, mkdtemp, rm } from "node:fs/promises";
@@ -439,6 +440,7 @@ try {
   await contractorSponsorChecks(api, db, lifecycle);
   await lifecycleEvidenceChecks(api, db);
   await accessPolicyChecks(api, db);
+  await lifecycleTemplateChecks(api, db);
   const catalog = await api("/catalog", {
     name: "Editor licence",
     kind: "software",

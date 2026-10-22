@@ -53,6 +53,7 @@ const checks = [
   ['pending person browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/pending-person-browser.mjs']],
   ['desk groups and views browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/desk-group-browser.mjs']],
   ['catalog team tasks browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/catalog-task-browser.mjs']],
+  ['lifecycle templates browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/lifecycle-template-journey.mjs']],
   ['desk scenarios and templates browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/desk-scenario-browser.mjs']],
   ['native connected provider journeys', process.execPath, ['tests/ui/connected-run.mjs']],
   ['connection and authority setup', process.execPath, ['tests/ui/setup-run.mjs']],

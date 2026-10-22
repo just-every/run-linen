@@ -4,6 +4,8 @@ import { ApiError, id, now } from "../../platform/http";
 import { createWork, getWork, permit, type WorkContext } from "./core";
 import { assertSponsor } from "./contractor-sponsor";
 import { computeBaseline, policyFingerprint, policyGuardSql, type Baseline } from "./access-policies";
+import { listTemplates, matchingTemplates, templateFingerprint, templateGuardSql, valuesFor } from "./lifecycle-templates";
+import { planTasks, taskStatements } from "./lifecycle-tasks";
 export interface LifecycleInput {
   personId: string;
   kind: "join" | "move" | "leave";
@@ -196,6 +198,12 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
   } : supplied;
   if (material.added.some((x) => material.removed.includes(x) || material.retained.includes(x)) || material.removed.some((x) => material.retained.includes(x)))
     throw new ApiError(422, "overlapping_access", "Retained, added and removed rights must be disjoint; the access policies and the supplied rights disagree");
+  // LIFE-002: every active template whose named reviewed values match becomes dated team tasks, in the same write.
+  const activeTemplates = await listTemplates(ctx, true);
+  const applicable = matchingTemplates(activeTemplates, input.kind, valuesFor(person as never, input.kind, input.baseline));
+  const taskPlan = await planTasks(ctx, { templates: applicable, kind: input.kind, effectiveAt, expiry, timezone: input.timezone, ownerId: input.ownerId, managerId: (person as { manager_id?: string | null }).manager_id ?? null });
+  const lifecycleContext = applicable.length ? { ...material, templates: { applied: applicable.map(t => ({ id: t.id, revision: t.revision, name: t.name })),
+    tasks: taskPlan.planned.map(t => ({ title: t.title, dueAt: t.dueAt, remindAt: t.remindAt, templateId: t.source.templateId })), skipped: taskPlan.skipped } } : material;
   const lifecycleId = id();
   const obligations = [
     ...material.added.map((target) => ({ kind: "access.grant", target })),
@@ -227,7 +235,7 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
     title: `${input.kind}: ${person.name}`,
     body: `${input.kind} effective ${effectiveAt} (${input.timezone}). Physical and security duties are tracked separately.`,
     deduplicationKey: `hr:${input.source}:${input.personId}:${input.sourceRevision}`,
-    sensitivity: "hr", beneficiaryId: input.personId, context: material,
+    sensitivity: "hr", beneficiaryId: input.personId, context: lifecycleContext,
   }, {
     admittedLifecycleBeneficiary: input.personId,
     statements: (workId) => [
@@ -252,13 +260,18 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
         input.personId, expiry, dependsOn, input.ownerId)) : []),
       ...(diff ? [ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN ${policyGuardSql} THEN 1 ELSE 0 END)`)
         .bind(`${lifecycleId}:policies`, ctx.principal.workspaceId, policyFingerprint(snapshot))] : []),
-      ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id IN (?,?)").bind(lifecycleId, `${lifecycleId}:policies`),
+      ...taskStatements(ctx, workId, lifecycleId, input.personId, taskPlan.planned),
+      ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN ${templateGuardSql} THEN 1 ELSE 0 END)`)
+        .bind(`${lifecycleId}:templates`, ctx.principal.workspaceId, templateFingerprint(activeTemplates)),
+      ctx.env.DB.prepare("DELETE FROM work_fulfilment_link_guards WHERE id IN (?,?,?)").bind(lifecycleId, `${lifecycleId}:policies`, `${lifecycleId}:templates`),
     ],
   }); } catch (error) {
     if (String(error).includes("UNIQUE constraint failed: work_lifecycle"))
       throw new ApiError(409, "hr_revision_conflict", "The HR source revision was concurrently admitted; reload its existing record before replay");
     if (diff && /CHECK constraint failed/.test(String(error)))
-      throw new ApiError(409, "access_policy_changed", "An access policy or a newer HR revision changed while this was recorded; review the baseline again");
+      throw new ApiError(409, "access_policy_changed", "An access policy, a lifecycle template or a newer HR revision changed while this was recorded; review the baseline again");
+    if (/CHECK constraint failed/.test(String(error)))
+      throw new ApiError(409, "lifecycle_template_changed", "A lifecycle template or a newer HR revision changed while this was recorded; review it again");
     throw error;
   }
   return { work, lifecycleId };

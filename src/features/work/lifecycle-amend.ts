@@ -2,6 +2,7 @@ import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { createWork, getWork, permit, type WorkContext } from "./core";
 import { effectiveInstant } from "./lifecycle";
+import { redateLifecycleTasks } from "./lifecycle-tasks";
 export async function amendLifecycle(
   ctx: WorkContext,
   id: string,
@@ -27,10 +28,11 @@ export async function amendLifecycle(
   if (!result.meta.changes)
     throw new ApiError(409, "revision_conflict", "Lifecycle changed");
   await ctx.env.DB.prepare(
-    `UPDATE work_obligations SET revision=revision+1,due_at=CASE WHEN is_expiry=1 THEN due_at ELSE COALESCE(?,due_at) END,state=CASE WHEN operation_id IS NOT NULL THEN 'unknown' WHEN ?=1 AND is_expiry=0 THEN 'cancelled' ELSE 'pending' END,last_error=CASE WHEN operation_id IS NOT NULL THEN 'Source changed; reconcile existing effect before replacement or compensation' ELSE NULL END WHERE workspace_id=? AND lifecycle_id=? AND state<>'verified'`,
+    `UPDATE work_obligations SET revision=revision+1,due_at=CASE WHEN is_expiry=1 THEN due_at ELSE COALESCE(?,due_at) END,state=CASE WHEN operation_id IS NOT NULL THEN 'unknown' WHEN ?=1 AND is_expiry=0 THEN 'cancelled' ELSE 'pending' END,last_error=CASE WHEN operation_id IS NOT NULL THEN 'Source changed; reconcile existing effect before replacement or compensation' ELSE NULL END WHERE workspace_id=? AND lifecycle_id=? AND state<>'verified' AND kind<>'task.manual'`,
   )
     .bind(due, Number(cancel), ctx.principal.workspaceId, id)
     .run();
+  await redateLifecycleTasks(ctx, id, { effectiveAt: due, cancel, timezone: row.timezone });
   await ctx.env.DB.prepare(
     "UPDATE work_records SET revision=revision+1,updated_at=? WHERE workspace_id=? AND id=?",
   )

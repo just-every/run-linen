@@ -33,7 +33,7 @@ export async function lifecycleEvidencePack(ctx: WorkContext, lifecycleId: strin
     .bind(workspace, workspace, work.id);
   const results = await db.batch([
     db.prepare(`SELECT id,kind,target,beneficiary_id,due_at,depends_on,state,owner_id,operation_id,revision,is_expiry
-      FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? ORDER BY due_at,id`).bind(workspace,lifecycleId),
+      FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? AND kind<>'task.manual' ORDER BY due_at,id`).bind(workspace,lifecycleId),
     db.prepare(`SELECT o.id,o.plan_id,o.step_json,o.state,o.actor_id,o.parent_id,o.created_at,o.due_at,
       o.cancel_requested,o.last_checked_at,p.work_revision FROM execution_operations o
       JOIN execution_plans p ON p.workspace_id=o.workspace_id AND p.id=o.plan_id
@@ -103,13 +103,16 @@ export async function lifecycleEvidencePack(ctx: WorkContext, lifecycleId: strin
       outstandingDuties.push({ operation_id:effect.id, kind:effect.action, target:effect.target, state:effect.state,
         owner_id:effect.actor_id, due_at:effect.due_at, reason:"Execution or compensation remains unresolved" });
   }
+  // LIFE-002: template tasks are recorded team completions, never provider effects or independent verification.
+  const teamTasks = (await db.prepare(`SELECT id,title,owner_id,group_id,due_at,remind_at,reminded_at,state,completed_by,completed_at,waived_by,waived_at,template_json
+    FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' ORDER BY due_at,id`).bind(workspace,lifecycleId).all<Row>()).results;
   // Revocation/erasure during a long export also closes this read door.
   await currentWorkPrincipal(ctx);
   permit(ctx,["owner","hr"]);
   await checkPrivacy();
   return { exportedAt:now(), workspaceId:workspace, lifecycle,
     work:{ id:work.id, revision:work.revision, state:work.state, createdAt:work.created_at },
-    duties, effects, authority:{ grants, decisions,
+    duties, teamTasks, effects, authority:{ grants, decisions,
       configuredBindings:bindings.map(b => ({ obligationId:b.obligation_id, revision:b.revision,
         grant:grantRef(JSON.parse(b.step_json)), status:"Configured authority; not proof of execution" })) },
     physicalCustody:{ records:custody, limitation:"Matching custody records; the physical admission does not retain its receipt ID. Physical completion does not verify security effects." },

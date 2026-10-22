@@ -4,13 +4,14 @@ import { getWork, permit, type WorkContext } from './core';
 import { groupMember } from './desk-groups';
 import { getFulfilmentReadiness } from './fulfilment-readiness';
 import { normalizeTaskPlan, type CatalogTask } from './catalog-task-plan';
+import { mayDoTask } from './lifecycle-tasks';
 
 /** CATALOG-003: the request's obligations are its item's automated step plus a copy of the item's team task plan.
  * The item's owner is accountable for every obligation; the named team does a task. A done task is a recorded
  * completion by a team member, not independent verification; a waiver is the owner's recorded decision and reason.
  * A request closes only when each of these is verified, done or waived (or cancelled with the request). */
 export const SATISFIED = "('verified','done','waived')";
-const CLOSE_GATED = "kind IN ('access.grant','device.deliver','task.manual') AND lifecycle_id IS NULL";
+const CLOSE_GATED = "((kind IN ('access.grant','device.deliver','task.manual') AND lifecycle_id IS NULL) OR (kind='task.manual' AND lifecycle_id IS NOT NULL))";
 const OPEN = "('pending','blocked','executing','unknown','failed')";
 const audit = (ctx: WorkContext, action: string, target: string, detail: unknown, conditional = false) =>
   ctx.env.DB.prepare(`INSERT INTO audit_events SELECT ?,?,?,?,?,?,? ${conditional ? 'WHERE changes()=1' : ''}`)
@@ -104,11 +105,14 @@ export async function describeObligations(ctx: WorkContext, workId: string, rows
   const groups = new Map((await ctx.env.DB.prepare('SELECT id,name FROM work_groups WHERE workspace_id=?').bind(w).all<{ id: string; name: string }>()).results.map(g => [g.id, g.name]));
   const state = new Map(rows.map(r => [r.id, r.state]));
   const ready = new Map<string, boolean>();
-  for (const row of rows) if (row.kind === 'task.manual' && row.state === 'pending' && !ready.has(row.catalog_id))
+  for (const row of rows) if (row.kind === 'task.manual' && row.state === 'pending' && row.catalog_id && !ready.has(row.catalog_id))
     ready.set(row.catalog_id, (await getFulfilmentReadiness(ctx, workId, row.catalog_id)).ready);
   return Promise.all(rows.map(async row => {
     const { catalog_id, after_json, lifecycle_id, ...visible } = row;
     if (row.kind !== 'task.manual') return { ...visible, can_waive: mayWaive(ctx, row) && waivable(row) };
+    // LIFE-002: a template task of a lifecycle record is done by its team or named person and waived by the owner.
+    if (lifecycle_id) return { ...visible, group_name: staff ? groups.get(row.group_id) ?? null : undefined, waiting_for: [],
+      can_complete: row.state === 'pending' && await mayDoTask(ctx, row), can_waive: row.state === 'pending' && ctx.principal.roles.includes('owner'), lifecycle_task: true };
     const waitingFor = (JSON.parse(after_json || '[]') as string[]).filter(dep => !['verified', 'done', 'waived'].includes(state.get(dep) ?? '')).map(dep => titles.get(dep) ?? 'An earlier step');
     const member = row.state === 'pending' && ctx.principal.roles.some(r => ['owner', 'operator'].includes(r))
       && (ctx.principal.roles.includes('owner') || (row.group_id ? await groupMember(ctx, row.group_id, ctx.principal.userId) : row.owner_id === ctx.principal.userId));

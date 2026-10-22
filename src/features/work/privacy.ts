@@ -1,3 +1,4 @@
+import { eraseLifecycleTaskStatements, lifecycleReminderWork } from './lifecycle-task-privacy';
 import { eraseApplicationSnapshots } from './application-privacy';
 import { privacyPeople, privacyBindingFence, type PrivacyPerson } from './person-privacy';
 import { eraseKnowledgeDraftPerson } from './knowledge-draft-privacy';
@@ -90,9 +91,9 @@ async function eraseSinglePerson(
   }
   const attachments = (
     await ctx.env.DB.prepare(
-      "SELECT a.blob_key FROM work_attachments a JOIN work_records w ON w.id=a.work_id AND w.workspace_id=a.workspace_id WHERE w.workspace_id=? AND (w.requester_id=? OR w.beneficiary_id=?)",
+      `SELECT a.blob_key FROM work_attachments a JOIN work_records w ON w.id=a.work_id AND w.workspace_id=a.workspace_id WHERE w.workspace_id=? AND (w.requester_id=? OR w.beneficiary_id=? OR w.id IN (${lifecycleReminderWork}))`,
     )
-      .bind(ctx.principal.workspaceId, input.personId, input.personId)
+      .bind(ctx.principal.workspaceId, input.personId, input.personId, ctx.principal.workspaceId, ctx.principal.workspaceId, input.personId)
       .all<{ blob_key: string }>()
   ).results;
   const pendingIdentity=await ctx.env.DB.prepare('SELECT email FROM work_pending_people WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,input.personId).first<{email:string}>();
@@ -122,6 +123,7 @@ async function eraseSinglePerson(
       ctx.env.DB.prepare("UPDATE work_pending_people SET email=?,start_date='',team='[erased]',state='withdrawn',withdrawn_at=? WHERE workspace_id=? AND id=?").bind(`erased-${p}@invalid.local`,t,w,p),
       ctx.env.DB.prepare("UPDATE work_pending_services SET purpose='[erased]',reason='Identity erased',state=CASE WHEN state='held' THEN 'cancelled' ELSE state END WHERE workspace_id=? AND person_id=?").bind(w,p),
     ]:[]),
+    ...eraseLifecycleTaskStatements(ctx, p),
     // New task audit payloads are untyped for erasure: keep the approved full-clearing fallback.
     // Do not reconstruct any removed value from the task or a later event.
     ctx.env.DB.prepare("UPDATE audit_events SET detail_json='{}' WHERE workspace_id=? AND action IN ('work.project_task_created','work.project_task_updated','work.project_task_linked')").bind(w),

@@ -16,6 +16,7 @@ import {
 import { Icon } from "./icons";
 import { PendingPeople } from "./pending-people";
 import { AccessPolicies } from "./access-policies";
+import { LifecycleTaskCard, LifecycleTemplates } from "./lifecycle-templates";
 export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
   const [reviewPersonId, setReviewPersonId] = useState('');
   const personName = usePeopleLabels();
@@ -160,17 +161,18 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
             {detail.data.obligations.map((o) => (
               <section className="connection-record" key={text(o.id)}>
                 <div className="section-heading">
-                  <h3>{humanize(o.kind)}</h3>
+                  <h3>{o.kind === "task.manual" ? text(o.title) : humanize(o.kind)}</h3>
                   <Badge value={o.state} />
                 </div>
-                <Facts
+                {o.kind === "task.manual" ? <LifecycleTaskCard task={o} onChanged={detail.refresh} /> : null}
+                {o.kind !== "task.manual" && <Facts
                   entries={[
                     ["Accountable owner", personName(o.owner_id)],
                     ["Due", date(o.due_at)],
                     ["Target", o.target],
                     ["What remains", o.last_error],
                   ]}
-                />
+                />}
                 {String(o.kind).startsWith("device.") && (
                   <ActionForm
                     title="Record the physical handoff"
@@ -273,6 +275,7 @@ export function LifecycleSpace({ selectedId }: { selectedId?: string }) {
             </Empty>
           )}
           <AccessPolicies />
+          <LifecycleTemplates />
           <ActionForm
             title="Record an authoritative HR change"
             path="/lifecycle"

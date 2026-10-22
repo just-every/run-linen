@@ -1,5 +1,6 @@
 import { registerCatalogAudienceRoutes } from './catalog-audience-routes';
 import { registerAccessPolicyRoutes } from './access-policy-routes';
+import { registerLifecycleTemplateRoutes } from './lifecycle-template-routes';
 import { registerApplicationRoutes } from './application-routes';
 import { registerSearchRoutes } from './search';
 import { registerRetentionRoutes } from './retention-routes';
@@ -49,6 +50,7 @@ export function registerWorkRoutes(app: Hono<AppEnv>) {
   registerRelationshipRoutes(app);
   registerCatalogAudienceRoutes(app);
   registerAccessPolicyRoutes(app);
+  registerLifecycleTemplateRoutes(app);
   registerApplicationRoutes(app);
   registerSearchRoutes(app);
   registerConversationRoutes(app);
