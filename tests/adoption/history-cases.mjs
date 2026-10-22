@@ -66,7 +66,7 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
   const destOwner=(await ok('/session','GET',undefined,destination)).principal.userId;
   assert.equal((await request('/imports/'+restored.id+'/identities','POST',{sourceUserId:archivedEvent.row.actor_id,targetUserId:destOwner},destination)).status,409,'An erased archive alias cannot bind a current account');
   // Pause the actual stage write at the D1 edge, erase its explicitly mapped
-  // raceAuth identity through the public route, then let that write proceed.
+  // destination identity through the public route, then let that write proceed.
   const raceTenant=await ok('/fixtures/tenant','POST',{},owner),raceAuth=await auth(await request('/login','POST',{email:raceTenant.email,password:'destination secure password'}));
   const racePerson=await ok('/members','POST',{email:'synthetic-linen-13018@example.test',name:'Concurrent removal',password,roles:['employee']},raceAuth,201);
   const raced=await ok('/imports','POST',{manifest:fresh.manifest,idempotencyKey:'synthetic-linen-13019'},raceAuth,201);
