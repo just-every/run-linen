@@ -180,10 +180,10 @@ export async function remindLifecycleTasks(ctx: WorkContext, at: string) {
     if (!to.length) { results.push({ id: row.id, state: 'reminder_failed', error: 'no_recipient' }); continue; }
     try {
       for (const user of to) await createWork(ctx, {
-        title: `Reminder: ${row.title} for ${row.person_name}, due ${row.due_at.slice(0, 10)}`,
-        body: `${row.title} is due ${row.due_at} for ${row.person_name}'s ${row.kind} (effective ${row.effective_at}). Mark it done when it is, from this reminder.`,
+        title: 'Lifecycle task reminder',
+        body: 'A lifecycle task needs your attention. Open this reminder to review the task if it is currently assigned to you.',
         deduplicationKey: `life-task:${row.id}:${user}`, beneficiaryId: user,
-        context: { lifecycleTaskReminder: { taskId: row.id, title: row.title, person: row.person_name, dueAt: row.due_at, change: row.kind, effectiveAt: row.effective_at } },
+        context: { lifecycleTaskReminder: { taskId: row.id } },
       }, { admittedLifecycleBeneficiary: user, statements: () => {
         const guard = id();
         return [db.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN

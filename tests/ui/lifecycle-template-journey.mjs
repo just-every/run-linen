@@ -11,7 +11,8 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
   const owner=await api('/session');
   const emails=new Map();
   const member=async(name,role)=>{const email=`synthetic-linen-${emails.size+3}-${suffix}@example.test`;const m=await api('/members',{name,email,password,roles:[role],isPerson:true});emails.set(m.id,email);return m;};
-  const manager=await member('Life manager','employee'), hire=await member('Life hire','employee');
+  const subjectMarker='synthetic-linen-7-'+suffix;
+  const manager=await member('Life manager','employee'), hire=await member(subjectMarker,'employee'), unrelated=await member('Life other operator','operator');
   const sales=await api('/catalog-values',{dimension:'department',label:'Life Sales '+suffix}), austin=await api('/catalog-values',{dimension:'location',label:'Life Austin '+suffix});
   const role=await api('/catalog-values',{dimension:'title',label:'Life account executive '+suffix}), employment=await api('/catalog-values',{dimension:'employmentType',label:'Life W-2 '+suffix});
   const it=await api('/work-groups',{name:'Life IT '+suffix});
@@ -76,14 +77,34 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
   await captureJourney(page,{path:out+'/LIFE-002-record-tasks.png',fullPage:true});
   await api('/work/process-due',{});
 
+  const buddyTask=(await api('/lifecycle/'+lifecycle.lifecycleId)).obligations.find(t=>t.title==='Buddy assigned');
+  const forTask=work=>JSON.parse(work.context_json||'{}').lifecycleTaskReminder?.taskId===buddyTask.id;
+  const reminderRecord=(await api('/work')).items.find(w=>w.beneficiary_id===manager.id&&forTask(w));
+  assert.ok(reminderRecord,'LIFE-002 the portal reminder links to the manager task');
+  const otherContext=await browser.newContext({viewport:{width:1440,height:1000}}),otherPage=await otherContext.newPage();
+  try {
+    await signIn(otherPage,base,emails.get(unrelated.id),password);
+    const other=apiFor(otherPage),ordinaryQueue=await other('/work');
+    assert.equal(JSON.stringify(ordinaryQueue).includes(subjectMarker),false,'LIFE-002 ordinary operator work lists reveal no reminder subject');
+    const ordinaryRead=await other('/work/'+reminderRecord.id+'/conversation');
+    assert.equal(JSON.stringify(ordinaryRead).includes(subjectMarker),false,'LIFE-002 ordinary operator reminder reads reveal no subject');
+    assert.equal((await other('/search?q='+encodeURIComponent(subjectMarker)+'&type=ticket')).total,0,'LIFE-002 ordinary operator ticket search reveals no reminder subject');
+    assert.ok(!(await other('/search?q='+encodeURIComponent(subjectMarker))).items.some(item=>item.id===reminderRecord.id),'LIFE-002 unfiltered search cannot associate the subject with the generic reminder');
+    await otherPage.goto(base+'/app#/work/'+reminderRecord.id);
+    await otherPage.getByRole('heading',{name:ordinaryRead.work.title,exact:true}).waitFor();
+    assert.equal(await otherPage.getByText(subjectMarker,{exact:false}).count(),0,'LIFE-002 an unrelated operator sees only the generic reminder');
+    await captureJourney(otherPage,{path:out+'/LIFE-002-generic-reminder.png',fullPage:true});
+  } finally {await otherContext.close();}
+
   // The manager finds the reminder in their own requests and does the task there.
   const context=await browser.newContext({viewport:{width:1440,height:1000}}),mp=await context.newPage();
   try {
     await signIn(mp,base,emails.get(manager.id),password);
-    const mine=apiFor(mp),reminder=(await mine('/work')).items.find(w=>w.title.startsWith('Reminder: Buddy assigned for Life hire'));
+    const mine=apiFor(mp),reminder=(await mine('/work')).items.find(forTask);
     assert.ok(reminder,'LIFE-002 the manager is reminded in their own requests');
     await mp.goto(base+'/app#/work/'+reminder.id);
     const card=mp.getByRole('region',{name:'Lifecycle task',exact:true});
+    await card.getByRole('heading',{name:'Buddy assigned for '+subjectMarker,exact:true}).waitFor();
     await card.getByText('Mark this task done',{exact:true}).click();
     await captureJourney(mp,{path:out+'/LIFE-002-reminder.png',fullPage:true});
     const done=mp.waitForResponse(r=>/\/lifecycle-tasks\/[^/]+\/complete$/.test(r.url())&&r.request().method()==='POST');

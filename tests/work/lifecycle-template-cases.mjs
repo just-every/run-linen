@@ -125,21 +125,39 @@ export async function lifecycleTemplateChecks(api, db) {
 
   // Reminders reach each responsible person in their own requests, once.
   const now = Date.now(), soon = new Date(now + 3600_000).toISOString().replace(/\.\d+Z$/, 'Z');
-  const fern = await person('Life Fern', { department: sales.id, location: austin.id, employmentType: w2.id });
+  const subjectMarker = 'synthetic-linen-20';
+  const fern = await person(subjectMarker, { department: sales.id, location: austin.id, employmentType: w2.id });
   if (!(await db.prepare("SELECT 1 FROM work_calendars WHERE workspace_id='a' AND timezone='UTC'").first()))
     await ok('/calendars', { name: 'synthetic-linen-19', timezone: 'UTC', weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [] });
   const imminent = await admit(fern, 'synthetic-linen-15', { effectiveAt: soon, timezone: 'UTC' });
   assert.equal(imminent.status, 201, JSON.stringify(imminent.value));
+  const fernTasks = await tasksOf(imminent.value.lifecycleId);
+  const fernBuddy = fernTasks.find(t => t.title === 'Buddy assigned'), fernLaptop = fernTasks.find(t => t.title === 'Order the laptop');
   const due = (await api('/work/process-due', {})).value.items.filter(r => r.state === 'task_reminded');
   assert.ok(due.length >= 2, `LIFE-002 imminent starts remind their open tasks: ${JSON.stringify(due)}`);
-  const managerQueue = (await ok('/work', undefined, as('synthetic-linen-3', 'employee'))).items.filter(w => w.title.startsWith('Reminder: Buddy assigned for Life Fern'));
+  const forTask = (work, taskId) => JSON.parse(work.context_json || '{}').lifecycleTaskReminder?.taskId === taskId;
+  const managerQueue = (await ok('/work', undefined, as('synthetic-linen-3', 'employee'))).items.filter(w => forTask(w, fernBuddy.id));
   assert.equal(managerQueue.length, 1, "LIFE-002 the manager is reminded in their own requests");
-  assert.equal(JSON.parse((await ok(`/work/${managerQueue[0].id}`, undefined, as('synthetic-linen-3', 'employee'))).work.context_json).lifecycleTaskReminder.title, 'Buddy assigned');
-  assert.equal((await ok('/work', undefined, as('synthetic-linen-4', 'operator'))).items.filter(w => w.title.startsWith('Reminder: Order the laptop for Life Fern')).length, 1, "LIFE-002 a team task reminds the team's lead");
-  assert.equal((await db.prepare("SELECT COUNT(*) n FROM work_records WHERE beneficiary_id='synthetic-linen-5' AND title LIKE 'Reminder:%'").first()).n, 0, 'LIFE-002 other teams are not reminded');
+  assert.deepEqual(JSON.parse((await ok(`/work/${managerQueue[0].id}`, undefined, as('synthetic-linen-3', 'employee'))).work.context_json),
+    { lifecycleTaskReminder: { taskId: fernBuddy.id } }, 'LIFE-002 normal reminder context retains only the opaque task link');
+  assert.ok((await ok('/lifecycle-tasks', undefined, as('synthetic-linen-3', 'employee'))).items.some(t => t.id === fernBuddy.id && t.person === subjectMarker),
+    'LIFE-002 current assignees obtain task details through the gated task door');
+  assert.equal((await ok('/work', undefined, as('synthetic-linen-4', 'operator'))).items.filter(w => w.beneficiary_id === 'synthetic-linen-4' && forTask(w, fernLaptop.id)).length, 1,
+    "LIFE-002 a team task reminds the team's lead");
+  const unrelated = as('synthetic-linen-5', 'operator');
+  const otherQueue = await ok('/work', undefined, unrelated);
+  assert.equal(JSON.stringify(otherQueue).includes(subjectMarker), false, 'LIFE-002 ordinary operator work lists cannot recover the reminder subject');
+  assert.ok(!otherQueue.items.some(w => w.beneficiary_id === 'synthetic-linen-5' && fernTasks.some(t => forTask(w, t.id))), 'LIFE-002 other teams are not reminded');
+  const otherReminder = await ok(`/work/${managerQueue[0].id}/conversation`, undefined, unrelated);
+  assert.equal(JSON.stringify(otherReminder).includes(subjectMarker), false, 'LIFE-002 ordinary operator reminder reads cannot recover the subject');
+  assert.ok(!otherReminder.work.title.includes('Buddy assigned') && otherReminder.messages.every(m => !m.body.includes('Buddy assigned')),
+    'LIFE-002 normal reminder content contains no private task text');
+  assert.equal((await ok(`/search?q=${encodeURIComponent(subjectMarker)}&type=ticket`, undefined, unrelated)).total, 0,
+    'LIFE-002 ordinary operator ticket search cannot recover the subject through reminder text');
+  assert.ok(!(await ok(`/search?q=${encodeURIComponent(subjectMarker)}`, undefined, unrelated)).items.some(item => item.id === managerQueue[0].id),
+    'LIFE-002 unfiltered search cannot associate the subject marker with the generic reminder');
+  assert.ok(!(await ok('/lifecycle-tasks', undefined, unrelated)).items.some(t => t.id === fernBuddy.id), 'LIFE-002 unrelated operators cannot resolve the opaque task link');
   assert.ok(!(await api('/work/process-due', {})).value.items.some(r => r.state === 'task_reminded' && r.id === due[0].id), 'LIFE-002 one reminder per task');
-  const fernTasks = await tasksOf(imminent.value.lifecycleId);
-  const fernBuddy = fernTasks.find(t => t.title === 'Buddy assigned');
   await ok(`/lifecycle-tasks/${fernBuddy.id}/complete`, { revision: fernBuddy.revision }, as('synthetic-linen-3', 'employee'));
   assert.equal((await open(fernBuddy.id)).state, 'done', 'LIFE-002 the manager completes their reminded task through the task route');
   await db.prepare("UPDATE memberships SET active=0 WHERE workspace_id='a' AND user_id='synthetic-linen-4'").run();
@@ -152,7 +170,7 @@ export async function lifecycleTemplateChecks(api, db) {
   assert.deepEqual(JSON.parse(erasedReminder.work.context_json), {}, 'LIFE-002 erased reminder context cannot retain the subject name or task');
   const erasedConversation = await ok(`/work/${managerQueue[0].id}/conversation`, undefined, as('synthetic-linen-3', 'employee'));
   assert.ok(erasedConversation.messages.every(m => m.body === '[erased]'), 'LIFE-002 the manager cannot recover erased subject content from the reminder conversation');
-  assert.ok(!(await ok('/lifecycle-tasks', undefined, as('synthetic-linen-3', 'employee'))).items.some(t => t.person === 'Life Fern'),
+  assert.ok(!(await ok('/lifecycle-tasks', undefined, as('synthetic-linen-3', 'employee'))).items.some(t => t.person === subjectMarker),
     'LIFE-002 erased subjects disappear from the assignee task door');
   assert.equal((await api(`/lifecycle-tasks/${fernBuddy.id}/complete`, { revision: fernBuddy.revision }, as('synthetic-linen-3', 'employee'))).status, 404,
     'LIFE-002 erased subject tasks cannot be completed or replayed');

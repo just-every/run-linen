@@ -58,8 +58,11 @@ export function LifecycleTaskReminder({ context, onChanged }: { context: RecordV
   const task = mine.data?.items.find((t) => t.id === context.taskId);
   return (
     <section className="detail-section" aria-label="Lifecycle task">
-      <h3>{text(context.title)} for {text(context.person)}</h3>
-      <Facts entries={[["Change", humanize(context.change)], ["Due", date(context.dueAt)]]} />
+      <ErrorNotice error={mine.error} retry={mine.refresh} />
+      {task && <>
+        <h3>{text(task.title)} for {text(task.person)}</h3>
+        <Facts entries={[["Change", humanize(task.change)], ["Effective", date(task.effectiveAt)], ["Due", date(task.dueAt)]]} />
+      </>}
       {task ? <ActionForm title="Mark this task done" path={`/lifecycle-tasks/${text(task.id)}/complete`} defaults={{ revision: task.revision }} fields={[]} submit="Mark done" onSaved={() => { mine.refresh(); onChanged(); }} />
         : mine.data ? <Notice>This task is done, waived, cancelled or not yours to do.</Notice> : null}
     </section>
