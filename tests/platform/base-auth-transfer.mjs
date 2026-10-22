@@ -1,3 +1,4 @@
+import {captureArchiveAliasStatements} from '../../src/features/history/archive-identities.mjs'
 import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {mailEdge} from './mail-edge.mjs'
 // Public rer archive/reset/import flow on disposable actual D1/R2 state.
@@ -125,10 +126,27 @@ try{
   env.DB.prepare('INSERT INTO work_approval_mail_subscriptions VALUES(?,1,?,?)').bind('workspace','synthetic-linen-242','2099-01-01'),
  ]);
  await env.ATTACHMENTS.put('workspace/private-file','Private retained attachment')
+ const erasedArchivePerson='synthetic-linen-13001',erasedArchiveEvent='synthetic-linen-13002';
+ const originalArchiveHistory={schema:'linen.history',version:1,action:'work.assigned',record:{kind:'ticket',id:'work'},actor:{kind:'person',id:erasedArchivePerson,name:'synthetic-linen-13003'},subjects:[],protection:'normal',changes:[{field:'assigneeId',before:erasedArchivePerson,after:'owner'}]};
+ const redactedArchiveHistory={...originalArchiveHistory,actor:{kind:'person',id:'[erased]',name:'Erased person'},changes:[{field:'assigneeId',before:{redacted:'erasure',person:true},after:'owner'}],redacted:'erasure',redactedAt:stamp};
+ const aliasCapture=await captureArchiveAliasStatements({env,principal:{workspaceId:'workspace'}},{eventId:erasedArchiveEvent,store:'audit',payload:originalArchiveHistory,redactedPayload:redactedArchiveHistory,identities:[erasedArchivePerson,'synthetic-linen-13003'],canonicalPersonKey:erasedArchivePerson,personFields:['assigneeId'],at:stamp});
+ await env.DB.batch([...aliasCapture,
+  env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(erasedArchiveEvent,'workspace','[erased]','work.assigned','work',JSON.stringify(redactedArchiveHistory),stamp),
+  env.DB.prepare('INSERT INTO history_redactions VALUES(?,?,?,?,?,?,?)').bind('workspace','audit:'+erasedArchiveEvent,erasedArchiveEvent,'audit',stamp,JSON.stringify(redactedArchiveHistory),'{}'),
+ ]);
  await close()
  await run(['exec','rer','export','--output',archive])
  const mcpRows=[];
  for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='mcp_credentials')mcpRows.push(item.row);
+ let archivedIdentityHistory;
+ for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='audit_events'&&item.row.id===erasedArchiveEvent)archivedIdentityHistory=item.row;
+ assert.ok(archivedIdentityHistory);
+ const archivedIdentityPayload=JSON.parse(archivedIdentityHistory.detail_json),archiveAlias=archivedIdentityPayload.actor.id;
+ assert.match(archiveAlias,/^erased-a1-[a-f0-9]{64}$/);
+ assert.equal(archivedIdentityHistory.actor_id,archiveAlias);
+ assert.equal(archivedIdentityPayload.changes[0].before.alias,archiveAlias,'A6 actor and person value retain one opaque archive identity');
+ assert.ok(!(await readFile(archive,'utf8')).includes(erasedArchivePerson),'A6 archive has no original erased person reference');
+
  assert.equal(mcpRows.length,1,'API-003 actual archive carries credential metadata');
  assert.deepEqual(JSON.parse(mcpRows[0].queue_groups_json),['hardware'],'API-003 export retains the explicit credential queue grant');
  assert.equal(mcpRows[0].grant_version,1);
@@ -240,6 +258,10 @@ try{
  await close()
  const refused=await run(['exec','rer','import','--input',archive,'--yes'],1);assert.match(refused,/erasure_epoch/)
  await run(['exec','rer','export','--output',later])
+ let repeatedIdentityHistory;
+ for await(const record of fileRecords(later))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='audit_events'&&item.row.id===erasedArchiveEvent)repeatedIdentityHistory=item.row;
+ assert.equal(JSON.parse(repeatedIdentityHistory.detail_json).actor.id,archiveAlias,'A6 aliases remain stable after native restore and re-export');
+
  await run(['exec','rer','reset','--yes'])
  const checkpoint=await run(['exec','rer','import','--input',archive,'--journal','exports/after.rer','--yes'],1);assert.match(checkpoint,/erasure_epoch/)
  await run(['exec','rer','import','--input',later,'--yes'])

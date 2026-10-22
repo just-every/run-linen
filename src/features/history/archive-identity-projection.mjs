@@ -2,6 +2,7 @@ import { archiveLocalOrigin,archiveSlotKey,archivePersonPath,isArchiveAlias,eras
 import { unattributedArchiveSlot } from './archive-identity-capture.mjs';
 const quote=value=>'"'+value.replaceAll('"','""')+'"';
 const key=(workspace,origin,alias)=>JSON.stringify([workspace,origin,alias]);
+const parsePayload=value=>{try{return JSON.parse(value);}catch{throw Error('Archive history payload is invalid');}};
 function eventShape(table,row){
  if(table==='audit_events')return {store:'audit',id:row.id,column:'detail_json'};
  if(table==='svc_events')return {store:'service',id:row.id,column:'data_json'};
@@ -32,7 +33,7 @@ async function pageRows(db,table,visit){
 function projector(slots){
  return (table,input)=>{
   const shape=eventShape(table,input);if(!shape)return input;
-  const row={...input},payload=JSON.parse(row[shape.column]);
+  const row={...input},payload=parsePayload(row[shape.column]);
   for(const path of erasedSlots(payload,row.actor_id)){
    const slot=slots.get(archiveSlotKey(row.workspace_id,shape.store,shape.id,path));
    if(!slot)throw Error('Archive erased-reference attribution is not prepared');
@@ -54,7 +55,7 @@ export async function prepareArchiveIdentityProjection(env){
  const slots=new Map(known.map(slot=>[archiveSlotKey(slot.workspace_id,slot.store,slot.event_id,slot.path),slot]));
  for(const table of ['audit_events','svc_events','history_redactions'])await pageRows(env.DB,table,async row=>{
   const shape=eventShape(table,row);if(!shape)return;
-  const payload=JSON.parse(row[shape.column]);
+  const payload=parsePayload(row[shape.column]);
   for(const path of erasedSlots(payload,row.actor_id)){
    const id=archiveSlotKey(row.workspace_id,shape.store,shape.id,path);if(slots.has(id))continue;
    // Already-carried aliases are never reassigned to a different person or origin.
@@ -106,7 +107,7 @@ export async function validateArchiveIdentityStaged({db,tables}){
   await pageRows(db,tables[table],async row=>{
    if(!valid)return;
    const shape=eventShape(table,row);if(!shape)return;
-   let payload;try{payload=JSON.parse(row[shape.column]);}catch{valid=false;return;}
+   let payload;try{payload=parsePayload(row[shape.column]);}catch{valid=false;return;}
    function typedAliases(value,path=[]){
     if(typeof value==='string'&&isArchiveAlias(value))return path.length===2&&path[0]==='actor'&&path[1]==='id';
     if(erasedArchivePerson(value))return Object.keys(value).every(name=>['redacted','person','alias'].includes(name))&&isArchiveAlias(value.alias);

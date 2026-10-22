@@ -1,18 +1,19 @@
+import { prepareArchiveIdentityProjection } from '../features/history/archive-identities.mjs';
 import { historyExportRow,validateHistoryStaged } from '../features/history/portability.mjs';
 // Retain accounts, memberships, all domain history, Freshservice custody and R2
 // bytes. An archive is data custody, never permission to resume remote effects.
 export const portabilityPolicy={
  product:'runeditrun/linen',
  replaceableTables:['platform_auth_policy'],
- excludeTables:['history_write_guards','work_approval_mail_subscriptions','platform_archive_recovery','sessions','login_limits','platform_auth_session_proofs','platform_auth_links','platform_auth_steps','platform_auth_limits','platform_auth_guard','execution_secrets'],
+ excludeTables:['history_archive_origin','history_write_guards','work_approval_mail_subscriptions','platform_archive_recovery','sessions','login_limits','platform_auth_session_proofs','platform_auth_links','platform_auth_steps','platform_auth_limits','platform_auth_guard','execution_secrets'],
  secretColumns:{connections:['secret_ciphertext'],intelligence_engineering_jobs:['claim_token_hash']},
  requiredConfiguration:['OWNER_EMAIL','SESSION_SECRET','SETUP_TOKEN','AUTH_ORIGIN','ENCRYPTION_KEY','MAIL_PROVIDER','MAIL_FROM'],
  buckets:{ATTACHMENTS:{}},
  // Keep the existing archive secret inventory compatible with pre-MCP archives.
  // Export removes the hash below; staged validation refuses any active/hash-bearing
  // credential before native restore can write objects or records.
- async validateStaged({db,tables}){
-  if(!await validateHistoryStaged(db,tables))return false;
+ async validateStaged({db,tables,projectArchiveRow}){
+  if(!await validateHistoryStaged(db,tables,projectArchiveRow))return false;
   const table=tables.mcp_credentials;
   if(table && await db.prepare(`SELECT 1 FROM "${table.replaceAll('"','""')}" WHERE secret_hash IS NOT NULL OR state<>'revoked' LIMIT 1`).first())return false;
   for(const [name,invalid] of [
@@ -69,4 +70,15 @@ export const portabilityPolicy={
   }
   return row
  },
+}
+
+/** RER exportRow is synchronous: prepare the private alias lookup in the seed runner. */
+export async function createLinenPortabilityPolicy(env){
+ const identities=await prepareArchiveIdentityProjection(env);
+ return {...portabilityPolicy,
+  exportRow(table,row){return identities.project(table,portabilityPolicy.exportRow(table,row));},
+  async validateStaged(input){
+   return await identities.validateStaged(input) && await portabilityPolicy.validateStaged({...input,projectArchiveRow:identities.project});
+  },
+ };
 }

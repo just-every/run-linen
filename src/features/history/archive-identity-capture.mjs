@@ -1,5 +1,5 @@
 import { archiveHmac,archiveIdentityDigest,archiveLocalOrigin,archiveSlotKey,archivePersonPath,normalizeArchiveIdentity,isArchiveAlias,erasedArchivePerson } from './archive-identity-crypto.mjs';
-const decoded=value=>typeof value==='string'?JSON.parse(value):value;
+const decoded=value=>{try{return typeof value==='string'?JSON.parse(value):value;}catch{throw Error('Archive history payload is invalid');}};
 const removed=value=>value==='[erased]'||value==='Erased person'||isArchiveAlias(value)||erasedArchivePerson(value);
 /** Only digest/alias associations and typed event slots are persisted. The caller includes these in its erasure CAS batch. */
 export async function captureArchiveAliasStatements(ctx,{eventId,store,payload,redactedPayload,identities,canonicalPersonKey,personFields,at}){

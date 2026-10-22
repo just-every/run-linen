@@ -6,7 +6,7 @@ import { readArchive } from '@runeditrun/rer/modules/portability'
 import { tombstone } from '@runeditrun/rer/modules/portability/journal'
 import { migrationReplay } from '@runeditrun/rer/modules/portability/migration-history'
 import { recordNativeRecovery } from './recovery.mjs'
-import { portabilityPolicy } from '../../src/platform/portability-policy.mjs'
+import { createLinenPortabilityPolicy } from '../../src/platform/portability-policy.mjs'
 const [direction,path,journal]=process.argv.slice(2)
 let archive,later
 if(direction==='import')for await(const record of fileRecords(path,readArchive)){if(record.kind==='manifest')archive={sourceIdentity:record.sourceIdentity,epoch:record.epoch};if(record.kind==='closing')archive.archiveHash=record.archiveHash}
@@ -15,6 +15,7 @@ const proxy=await getPlatformProxy({configPath:'wrangler.jsonc',persist:{path:'.
 try{
  const names=(await proxy.env.DB.prepare('SELECT name FROM d1_migrations ORDER BY id').all()).results.map(r=>r.name)
  const plan=await Promise.all(names.map(async name=>({name,statements:unstable_splitSqlQuery(await readFile(`migrations/${name}`,'utf8'))})))
+ const portabilityPolicy=await createLinenPortabilityPolicy(proxy.env)
  const service=await createPortability({db:proxy.env.DB,buckets:{ATTACHMENTS:proxy.env.ATTACHMENTS},policy:portabilityPolicy,migrations:()=>migrationReplay(plan,portabilityPolicy)})
  // A later export carries the shared value-free redaction checkpoint too, so
  // --journal fences old archives on a different installation.
