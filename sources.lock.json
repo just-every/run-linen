@@ -2427,11 +2427,11 @@
       "executable": false
     },
     "src/features/work/asset-history.ts": {
-      "sha256": "b68e0b8a12ecf9823c8bbb6308960f61745eb8ae3a382d1b6286467eccbf095a",
+      "sha256": "fee5fc4e3fbfd5b4f3dc92a4f05f05e47c3fa562a41cd246fff5504e961a9b23",
       "executable": false
     },
     "src/features/work/assets.ts": {
-      "sha256": "e73303ca635295c7a4d056cc19d94caaa7c3cb97bc76628d8e3e28691c382143",
+      "sha256": "ddb6b3f4b0377aad1d675d7e4a9180acda96b8bb8094523572e9b713e5a039e2",
       "executable": false
     },
     "src/features/work/attachments.ts": {
