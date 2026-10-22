@@ -144,3 +144,26 @@ export async function collaborationJourney({browser,page,api,base,out,errors}) {
   } finally {await sc.close();await ec.close();}
   console.log('PASS DESK-007 native mention, colleague notification, watcher and email side reply as private notes, employee isolation at 1440/390. Slack remains blocked by CHANNEL-001.');
 }
+
+// Focus the existing collaboration journey against the connected worker during development.
+if (process.argv[1] && import.meta.url === new URL('file://' + process.argv[1]).href) {
+ const {chromium}=await import('playwright');
+ const {finishFirstRun}=await import('./connected-helpers.mjs');
+ const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
+ if(!base || !out)throw Error('Use tests/ui/connected-run.mjs');
+ const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+ try {
+  const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];
+  page.on('pageerror',error=>errors.push(String(error)));
+  await page.goto(base+'/app');
+  await page.getByLabel('Your name').fill('Collaboration owner');
+  await page.getByLabel('Workspace name').fill('Collaboration proof');
+  await page.getByLabel('Work email').fill('synthetic-linen-140@example.test');
+  await page.getByLabel('Password',{exact:true}).fill('synthetic-linen-141');
+  await page.getByRole('button',{name:'Create workspace'}).click();
+  await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();
+  await finishFirstRun(page,base);
+  await collaborationJourney({browser,page,api:apiFor(page),base,out,errors});
+  assert.deepEqual(errors,[]);
+ } finally {await browser.close();}
+}
