@@ -75,7 +75,13 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
   await ok('/imports/'+raced.id+'/dry-run','POST',{},raceAuth);
   const raceKey='synthetic-linen-13020';
   let completed;
-  const applying=request('/imports/'+raced.id+'/resume','POST',{acceptSemanticLoss:true},{...raceAuth,extraHeaders:{'X-Test-Archive-Commit':raceKey}}).then(response=>{completed=response;return response;});
+  const applying=(async()=>{
+    for(let n=0;n<200;n++){
+      const response=await request('/imports/'+raced.id+'/resume','POST',{acceptSemanticLoss:true},{...raceAuth,extraHeaders:{'X-Test-Archive-Commit':raceKey}});
+      if(response.status!==200||(await response.clone().json()).state!=='applying')return response;
+    }
+    throw Error('Concurrent-erasure import did not reach its work record');
+  })().then(response=>{completed=response;return response;});
   let arrived=false;
   try{
     for(let n=0;n<1000&&!completed;n++){if((await ok('/fixtures/archive-race/'+raceKey+'/arrived','GET',undefined,raceAuth)).arrived){arrived=true;break;}await new Promise(resolve=>setTimeout(resolve,10));}
