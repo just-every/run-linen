@@ -171,6 +171,8 @@ try{
  assert.equal(mcpRows[0].grant_version,1);
  assert.equal(mcpRows[0].name,'Desk bot');assert.equal(mcpRows[0].secret_hash,null,'API-003 no hash is exported');assert.equal(mcpRows[0].state,'revoked');
 
+ let archivedAccessPolicy;for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='work_access_policies'&&item.row.id==='synthetic-linen-12010')archivedAccessPolicy=item.row;
+ assert.ok(archivedAccessPolicy);assert.equal(archivedAccessPolicy.active,0,'LIFE-003 public rer export carries no active baseline authority');
  await run(['exec','rer','reset','--yes'])
  await run(['exec','rer','import','--input',archive,'--yes'])
  env=await open()
