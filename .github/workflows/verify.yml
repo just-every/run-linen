@@ -27,6 +27,16 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
+      - name: Configure CI package installation
+        run: |
+          # Avoid the throttled Azure mirror observed in cancelled setup steps.
+          sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/sources.list.d/ubuntu.sources
+          # Every verifier starts fresh after installation; unrelated host daemons
+          # need not restart. Ubuntu documents restoring this mode here:
+          # https://discourse.ubuntu.com/t/needrestart-changes-in-ubuntu-24-04-service-restarts/44671
+          sudo sed -i 's/ -m u//g' /etc/apt/apt.conf.d/99needrestart
+          sudo install -d /etc/needrestart/conf.d
+          printf '%s\n' '$nrconf{restart} = "l";' | sudo tee /etc/needrestart/conf.d/linen-ci.conf
       - name: Install Linux engineering sandbox
         run: |
           sudo apt-get update
