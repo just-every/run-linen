@@ -26,6 +26,10 @@ try{
  // Model current sessions for the privacy deletion checks after legacy retirement.
  if(pending.length)for(const [w,u] of [['a','shared'],['b','shared'],['a','local']])await sql('INSERT INTO sessions VALUES(?,?,?,?,?,?,?)','fresh-'+w+u,u,w,'fresh-'+w+u,'fresh-csrf','2099','2026')
  await sql("INSERT INTO platform_auth_session_proofs(session_id,kind,version) SELECT s.id,'password',v.version FROM sessions s JOIN platform_auth_versions v ON v.user_id=s.user_id")
+ for(const w of ['a','b']) {
+  await sql('INSERT INTO work_departments(id,workspace_id,name,kind,created_at,updated_at) VALUES(?,?,?,?,?,?)','department-'+w,w,'Service team','it','2026','2026')
+  await sql('INSERT INTO work_department_members(workspace_id,department_id,user_id,active,updated_by,updated_at) VALUES(?,?,?,?,?,?)',w,'department-'+w,'shared',1,'owner','2026')
+ }
  await call({identity:''},400)
  await call({tombstone:'foreign',workspace:'b'});await call({identity:'foreign'},409)
  await call({identity:'shared'},409)
@@ -36,6 +40,8 @@ try{
  await sql("INSERT INTO audit_events VALUES('account-event','a','shared','member.changed','shared','{}','2026')")
  await call({identity:'shared'})
  assert.equal((await sql("SELECT * FROM memberships WHERE workspace_id='a' AND user_id='shared'")).length,0)
+ assert.equal((await sql("SELECT * FROM work_department_members WHERE workspace_id='a' AND user_id='shared'")).length,0,'Erasure revokes departmental staff metadata before removing its outer membership')
+ assert.equal((await sql("SELECT active FROM work_department_members WHERE workspace_id='b' AND user_id='shared'"))[0].active,1,'Foreign tenant staff membership remains intact')
  assert.equal((await sql("SELECT * FROM sessions WHERE user_id='shared'")).length,1)
  assert.equal((await sql("SELECT name FROM users WHERE id='shared'"))[0].name,'Private shared')
  assert.equal((await sql("SELECT detail_json FROM audit_events WHERE id='bevent'"))[0].detail_json.includes('shared@example.test'),true)

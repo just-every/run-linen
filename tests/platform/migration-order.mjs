@@ -62,7 +62,7 @@ async function check(db,mode,label){
  }
  assert.equal((await db.all('SELECT * FROM d1_migrations')).length,files.length)
  assert.equal((await db.all("SELECT * FROM users WHERE id='employee'"))[0].password_hash,'retained-hash')
- assert.deepEqual((await db.all('SELECT id FROM sessions')).map(row=>row.id),mode==='fresh'?['s']:[],'Upgrade retires sessions without an issued version proof')
+ assert.deepEqual((await db.all('SELECT id FROM sessions')).map(row=>row.id),(mode==='fresh'||mode==='retained-departments')?['s']:[],'Only the authentication upgrade retires sessions without an issued version proof')
  assert.equal((await db.all('SELECT * FROM audit_events'))[0].id,'a')
  await assert.rejects(db.run("INSERT INTO platform_identity_erasures VALUES('w','bad',NULL,'employee','2026')"),/platform_owner_required/)
  await assert.rejects(db.run("INSERT INTO platform_identity_erasures VALUES('w','missing',NULL,'owner','2026')"),/platform_tombstone_required/)
