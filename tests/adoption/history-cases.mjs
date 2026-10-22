@@ -78,13 +78,13 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
   let arrived=false;
   try{
     for(let n=0;n<1000;n++){if((await ok('/fixtures/archive-race/'+raceKey+'/arrived','GET',undefined,raceAuth)).arrived){arrived=true;break;}await new Promise(resolve=>setTimeout(resolve,10));}
-    assert.ok(arrived,'Import reaches its first real history write');
+    assert.ok(arrived,'Import reaches its real private-work history write');
     await ok('/adoption/erase','POST',{identity:racePerson.id},raceAuth);
   }finally{await ok('/fixtures/archive-race/'+raceKey+'/release','POST',{},raceAuth);}
   const rejected=await applying;
-  assert.equal(rejected.status,409,'An erasure concurrent with a stage write atomically refuses that write');
   const raceRecords=await ok('/imports/'+raced.id+'/records','GET',undefined,raceAuth);
   assert.ok(!JSON.stringify(raceRecords).includes('synthetic-linen-13004'),'A held import cannot restore private source content after erasure');
+  assert.equal(rejected.status,409,'An erasure concurrent with a stage write atomically refuses that write');
   const late=await ok('/members','POST',{email:'synthetic-linen-13015@example.test',name:'Late removal',password,roles:['employee']},destination,201);
   await ok('/adoption/erase','POST',{identity:late.id},destination);
   assert.equal((await request('/imports/'+restored.id+'/resume','POST',{acceptSemanticLoss:true},destination)).status,409,'An erasure after dry run fences apply');
