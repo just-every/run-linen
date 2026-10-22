@@ -203,7 +203,7 @@ try{
  const restoredDepartment=(await(await request('/api/v1/departments/admin',{cookie})).json()).items.find(item=>item.id==='retained-facilities');
  assert.equal(restoredDepartment.name,'Facilities service');
  assert.equal(restoredDepartment.members.find(member=>member.userId==='retained-staff').active,false,'Native owner sees that restored staff authority requires fresh confirmation');
- assert.equal((await(await request('/api/v1/work/work',{cookie})).json()).department_id,'retained-facilities','Native owner reads the same departmental ticket after actual export/reset/import');
+ assert.equal((await(await request('/api/v1/work/work',{cookie})).json()).work.department_id,'retained-facilities','Native owner reads the same departmental ticket after actual export/reset/import');
  const authHeaders={'X-Linen-CSRF':session.csrfToken}
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/release',{cookie,body:{revision:hold.revision},headers:authHeaders})).status,409,'Unreconciled retained operation blocks ordinary release')
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/reconcile',{cookie,body:{historyId:records.data[0].id,evidence:'Fixture owner reviewed retained unknown operation before explicitly releasing execution'},headers:authHeaders})).status,200)

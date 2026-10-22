@@ -1,3 +1,5 @@
+import { departmentOpsChecks } from './department-ops-cases.mjs';
+import { departmentReportChecks } from './department-report-cases.mjs';
 import { applicationChecks, catalogAudienceChecks } from './application-cases.mjs';
 import { catalogQuoteChecks } from './catalog-quote-cases.mjs';
 import { searchChecks } from './search-cases.mjs';
@@ -96,6 +98,8 @@ try {
   await db.exec(
     `INSERT INTO workspaces VALUES('a','A','2026-01-01'); INSERT INTO users VALUES('owner','owner@test','Owner','unused','2026-01-01'); INSERT INTO users VALUES('employee','employee@test','Employee','unused','2026-01-01'); INSERT INTO users VALUES('stranger','stranger@test','Stranger','unused','2026-01-01'); INSERT INTO memberships VALUES('a','owner','["owner"]',1); INSERT INTO memberships VALUES('a','employee','["employee"]',1); INSERT INTO memberships VALUES('a','stranger','["employee"]',1);`,
   );
+  await departmentReportChecks(api,db);
+  await departmentOpsChecks(api,db);
   await catalogAudienceChecks(api,db);
   const collaborationProof=await collaborationChecks(api,db);
   await catalogQuoteChecks(api,db,uploadBytes,await mf.getR2Bucket('ATTACHMENTS'));
