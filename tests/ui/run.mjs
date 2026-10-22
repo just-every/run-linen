@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { mkdtemp, rm, mkdir, open, cp, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { tmpdir, userInfo } from "node:os";
 import { join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import { createServer } from "node:net";
@@ -100,7 +100,8 @@ try {
     const child = spawn(process.execPath, [process.argv[2] || "tests/ui/browser.mjs"], {
       cwd: root,
       stdio: "inherit",
-      env: { ...process.env, LINEN_TEST_URL: url, LINEN_TEST_OUTPUT: out },
+      // The browser driver uses the real account home even when RER runs in an isolated home.
+      env: { ...process.env, HOME: userInfo().homedir, LINEN_TEST_URL: url, LINEN_TEST_OUTPUT: out },
     });
     child.on("error", no);
     child.on("exit", (code) =>

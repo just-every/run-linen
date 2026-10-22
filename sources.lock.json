@@ -5355,7 +5355,7 @@
       "executable": false
     },
     "tests/ui/run.mjs": {
-      "sha256": "cb5ddfdcc0509fdb3332c766fc610017f15cade6ce3c4160ffc822998923e672",
+      "sha256": "5a9a619fda3c64a430e8ca4802214210ee178f40c213db4cc503f7f84191211d",
       "executable": false
     },
     "tests/ui/search-browser.mjs": {
