@@ -60,7 +60,7 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
   assert.match(archivedEvent.row.actor_id,/^erased-a1-/,'Actor keeps an opaque archive identity');
   assert.ok(fresh.records.filter(r=>['adoption_tombstones','work_erasure','platform_identity_erasures'].includes(r.table)).every(r=>String(r.row.identity_hash??r.row.person_id).startsWith('ak1:')),'Archive removal markers carry keyed digests only');
   const tenant=await ok('/fixtures/tenant','POST',{},owner),destination=await auth(await request('/login','POST',{email:tenant.email,password:'destination secure password'}));
-  const restored=await ok('/imports','POST',{manifest:fresh.manifest,idempotencyKey:'synthetic-linen-13011'},destination,201);
+  let restored=await ok('/imports','POST',{manifest:fresh.manifest,idempotencyKey:'synthetic-linen-13011'},destination,201);
   for(const {chunk,bytes}of fresh.chunks)await ok('/imports/'+restored.id+'/chunks/'+chunk.ordinal,'PUT',bytes,destination,200,true);
   const report=await ok('/imports/'+restored.id+'/dry-run','POST',{},destination);assert.equal(report.unresolvedReferences,0,JSON.stringify(report));
   const destOwner=(await ok('/session','GET',undefined,destination)).principal.userId;
@@ -68,7 +68,9 @@ export async function historyArchiveChecks(ok,request,auth,owner) {
   const late=await ok('/members','POST',{email:'synthetic-linen-13015@example.test',name:'Late removal',password,roles:['employee']},destination,201);
   await ok('/adoption/erase','POST',{identity:late.id},destination);
   assert.equal((await request('/imports/'+restored.id+'/resume','POST',{acceptSemanticLoss:true},destination)).status,409,'An erasure after dry run fences apply');
-  // A fresh review checks all normalized source records against the new removals.
+  assert.equal((await request('/imports/'+restored.id+'/dry-run','POST',{},destination)).status,409,'An invalidated archive cannot be silently reused');
+  restored=await ok('/imports','POST',{manifest:fresh.manifest,idempotencyKey:'synthetic-linen-13017'},destination,201);
+  for(const {chunk,bytes}of fresh.chunks)await ok('/imports/'+restored.id+'/chunks/'+chunk.ordinal,'PUT',bytes,destination,200,true);
   await ok('/imports/'+restored.id+'/dry-run','POST',{},destination);
 
   for(let n=0;n<200;n++){const r=await ok('/imports/'+restored.id+'/resume','POST',{acceptSemanticLoss:true},destination);if(r.state==='restored'||r.state==='history_only'&&!r.processedChunks)break;assert.notEqual(n,199);}
