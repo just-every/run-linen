@@ -42,6 +42,13 @@ export async function assetFinancialChecks(api,fetchRaw) {
   assert.equal((await fetchRaw(path+'.csv',employee)).status,403);
   assert.equal((await fetchRaw(path+'.csv',{'x-workspace':'b'})).status,404);
   check(await api(path,{...policy,revision:1,method:'declining-balance',costCenter:'=DANGEROUS()'}));
+  const financialEvents=check(await api(`/assets/${device.id}/history`)).events.filter(e=>e.action==='asset_financials_recorded');
+  assert.equal(financialEvents.length,2,'DESK-017 invalid and stale financial edits add no history');
+  assert.deepEqual(financialEvents[1].changes.find(c=>c.field==='method'),{field:'method',before:policy.method,after:'declining-balance'});
+  assert.deepEqual(financialEvents[1].changes.find(c=>c.field==='costCenter'),{field:'costCenter',before:policy.costCenter,after:'=DANGEROUS()'});
+  check(await api(path,{...policy,revision:2,method:'declining-balance',costCenter:'=DANGEROUS()'}));
+  assert.equal(check(await api(`/assets/${device.id}/history`)).events.filter(e=>e.action==='asset_financials_recorded').length,2,'DESK-017 unchanged financial save adds no event');
+
   const declining=check(await api(path+'?asOf=2025-02-28&fiscalStart=2025-01-01'));
   assert.equal(declining.bookCents,226667,'ASSET-008 double declining monthly expense rounds to cents');
   assert.equal(declining.schedule[1].openingCents,226667);

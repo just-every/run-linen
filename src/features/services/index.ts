@@ -1,3 +1,4 @@
+import { serviceHistory } from './history';
 import { registerEmployeeNotices } from './employee-notice-routes';
 import { operationsKpis } from './operations-kpis';
 import { recordOperationsObservation } from './operations-observations';
@@ -144,7 +145,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     app.post('/services/process-due', async (c) => c.json(await processDueServices(c.env, requireRole(c, 'owner', 'operator'))));
     app.post('/service-notifications/:id/reconcile', async (c) => c.json(await reconcileNotification(c.env, requireRole(c, 'owner', 'operator'), c.req.param('id'))));
     app.get('/service-history/:id', async (c) => { const p = c.get('principal'); const record = await getService(c.env.DB, p, c.req.param('id')); if (!staff(p) && !p.roles.includes('auditor'))
-        throw new ApiError(403, 'history', 'Scoped operator history required'); await audit(c, 'service-history-read', record.id); return c.json({ items: (await c.env.DB.prepare('SELECT id,actor_id,kind,data_json,created_at FROM svc_events WHERE workspace_id=? AND record_id=? ORDER BY created_at,id').bind(p.workspaceId, record.id).all()).results }); });
+        return c.json({items:[]}); await audit(c, 'service-history-read', record.id); return c.json(await serviceHistory(c.env,p,record)); });
     app.get('/service-notifications', async (c) => {
         const p = requireRole(c, 'owner', 'operator');
         const rows = await c.env.DB.prepare('SELECT id,record_id,recipient_id,kind,state,attempts,next_at,error,provider_ref FROM svc_outbox WHERE workspace_id=? ORDER BY next_at DESC LIMIT 200').bind(p.workspaceId).all<any>();

@@ -1,3 +1,4 @@
+import { assetEvent, assetEvents } from './asset-history';
 import { currentWorkPrincipal } from "./identity";
 import { ApiError, id, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
@@ -18,6 +19,8 @@ export async function acquireAsset(ctx: WorkContext, input: {
         VALUES(?,?,?,?,?,?,?,?,?)`).bind(assetId,w,input.serial.trim(),input.procured ? "procured" : "stock",input.location || null,input.source,at,eventId,input.assetTag?.trim() || null),
       ctx.env.DB.prepare(`INSERT INTO work_custody(id,workspace_id,asset_id,actor_id,kind,person_id,evidence,created_at)
         VALUES(?,?,?,?,?,NULL,?,?)`).bind(eventId,w,assetId,ctx.principal.userId,input.procured ? "procure" : "record",input.source,at),
+      assetEvent(ctx,assetId,'work.asset_recorded',{}, {serial:input.serial.trim(),assetTag:input.assetTag?.trim() || null,
+        state:input.procured ? 'procured' : 'stock',personId:null,location:input.location || null,source:input.source,observedAt:at,evidence:input.source},at,[],eventId),
     ]);
   } catch (error) {
     if (String(error).includes("UNIQUE constraint failed: work_assets"))
@@ -49,7 +52,7 @@ export async function moveAsset(ctx: WorkContext, assetId: string, input: Custod
   permit(ctx,["owner","operator"]);
   const w=ctx.principal.workspaceId, db=ctx.env.DB;
   const asset=await db.prepare("SELECT * FROM work_assets WHERE workspace_id=? AND id=?")
-    .bind(w,assetId).first<{state:string;person_id:string|null}>();
+    .bind(w,assetId).first<{state:string;person_id:string|null;location:string|null}>();
   if (!asset) throw new ApiError(404,"not_found","Asset not found");
   const allowed:Record<Command,string[]> = {
     reserve:["stock","returned"], assign:["stock","reserved","returned"], loan:["stock","returned"],
@@ -89,6 +92,10 @@ export async function moveAsset(ctx: WorkContext, assetId: string, input: Custod
       SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM work_assets WHERE workspace_id=? AND id=? AND latest_event_id=?)`)
       .bind(eventId,w,assetId,ctx.principal.userId,input.command,input.command === "return" ? asset.person_id : person,
         input.evidence,at,certificate ? JSON.stringify(certificate) : null,w,assetId,eventId),
+    assetEvent(ctx,assetId,'work.asset_custody_changed',
+      {state:asset.state,personId:asset.person_id,location:asset.location},
+      {state:state[input.command],personId:person,custodyPersonId:input.command==='return' ? asset.person_id : person,location:input.location || asset.location,evidence:input.evidence,certificate},
+      at,[asset.person_id,person].filter((value): value is string=>!!value),eventId),
   ]);
   if (!results[0].meta.changes) throw new ApiError(409,"revision_conflict","Custody changed");
   return {id:assetId,state:state[input.command],revision:input.revision+1,custodyEventId:eventId};
@@ -103,5 +110,12 @@ export async function assetHistory(ctx: WorkContext, assetId: string) {
   const rows=await ctx.env.DB.prepare(`SELECT id,actor_id,kind,person_id,evidence,created_at,certificate_json
     FROM work_custody WHERE workspace_id=? AND asset_id=? ORDER BY created_at,rowid`)
     .bind(ctx.principal.workspaceId,assetId).all<{certificate_json:string|null}>();
-  return {asset,items:rows.results.map(({certificate_json,...row})=>({...row,certificate:certificate_json ? JSON.parse(certificate_json) : null}))};
+  const events=await assetEvents(ctx,assetId), byId=new Map(events.map(event=>[event.id,event]));
+  return {asset,events,items:rows.results.map(({certificate_json: _certificate,...row})=>{
+    const event=byId.get(String((row as any).id));
+    const after=new Map(event?.changes.map(change=>[change.field,change.after]) ?? []);
+    // Old untyped custody entries retain their identity/time, never inferred field values.
+    return {...row,actor_id:event?.actor ?? (row as any).actor_id,person_id:after.get('custodyPersonId') ?? after.get('personId') ?? null,
+      evidence:after.get('evidence') ?? null,certificate:after.get('certificate') ?? null};
+  })};
 }

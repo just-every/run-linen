@@ -1,3 +1,4 @@
+import { serviceEvent, serviceSnapshot } from './history';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
 import { hashToken } from '../../platform/crypto';
@@ -111,8 +112,8 @@ export async function detectProblemProposals(env: Env, principal: Principal,
         .bind(JSON.stringify(data), t, p.workspaceId, key, prior.revision, ...fence.values)
       : env.DB.prepare(`INSERT OR IGNORE INTO svc_records SELECT ?,?,'problem-proposal',?,?,?,?,1,?,? WHERE ${fence.sql}`)
         .bind(key, p.workspaceId, p.userId, group.sources.some(s => s.restricted) ? 'restricted' : 'operators', '[]', JSON.stringify(data), t, t, ...fence.values);
-    await env.DB.batch([statement, env.DB.prepare('INSERT INTO svc_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
-      .bind(id(), p.workspaceId, key, p.userId, prior ? 'problem-proposal-evidence-updated' : 'problem-proposed', JSON.stringify({ count: evidence.length }), t)]);
+    const record=prior ? dto(prior) : {id:key,kind:'problem-proposal' as const,ownerId:p.userId,visibility:group.sources.some(s=>s.restricted)?'restricted':'operators',participants:[]};
+    await env.DB.batch([statement,serviceEvent(env.DB,p,record,prior ? serviceSnapshot(dto(prior)) : {},serviceSnapshot({...record,data}),prior ? 'problem-proposal-evidence-updated' : 'problem-proposed',t)]);
   }
   return listProblemProposals(env, p);
 }

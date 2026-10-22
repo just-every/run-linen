@@ -1,6 +1,8 @@
+import { assetEvent } from './asset-history';
+import { sameServiceValues } from '../services/history';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../../platform/types';
-import { ApiError, id, now, requiredString, jsonBody } from '../../platform/http';
+import { ApiError, now, requiredString, jsonBody } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { permit, type WorkContext } from './core';
 import { calendarDate, financialReport, type Financial } from './depreciation';
@@ -8,13 +10,13 @@ import { calendarDate, financialReport, type Financial } from './depreciation';
 async function asset(ctx:WorkContext, assetId:string) {
   await currentWorkPrincipal(ctx);
   permit(ctx,['owner','operator']);
-  const row=await ctx.env.DB.prepare('SELECT id,serial FROM work_assets WHERE workspace_id=? AND id=?')
-    .bind(ctx.principal.workspaceId,assetId).first<{id:string;serial:string}>();
+  const row=await ctx.env.DB.prepare('SELECT id,serial,person_id FROM work_assets WHERE workspace_id=? AND id=?')
+    .bind(ctx.principal.workspaceId,assetId).first<{id:string;serial:string;person_id:string|null}>();
   if (!row) throw new ApiError(404,'not_found','Asset not found');
   return row;
 }
 export async function saveAssetFinancials(ctx:WorkContext,assetId:string,b:Record<string,unknown>) {
-  await asset(ctx,assetId);
+  const device=await asset(ctx,assetId);
   const cents=b.purchaseCents,months=b.usefulMonths,revision=b.revision;
   if (!Number.isSafeInteger(cents) || Number(cents)<=0 || Number(cents)>100000000000
     || !Number.isInteger(months) || Number(months)<2 || Number(months)>600
@@ -23,6 +25,12 @@ export async function saveAssetFinancials(ctx:WorkContext,assetId:string,b:Recor
     throw new ApiError(422,'financial_input','Purchase cost in USD cents, useful life 2–600 months, method and current revision required');
   const start=calendarDate(b.inServiceDate,'In-service date'),center=requiredString(b.costCenter,'costCenter',200),at=now();
   const w=ctx.principal.workspaceId,db=ctx.env.DB;
+  const prior=await db.prepare('SELECT * FROM work_asset_financials WHERE workspace_id=? AND asset_id=?')
+    .bind(w,assetId).first<Financial>();
+  if ((prior?.revision ?? 0)!==revision) throw new ApiError(409,'revision_conflict','Asset financials changed; reload before saving');
+  const before=prior ? {purchaseCents:prior.purchase_cents,inServiceDate:prior.in_service_date,usefulMonths:prior.useful_months,method:prior.method,costCenter:prior.cost_center} : {};
+  const after={purchaseCents:cents,inServiceDate:start,usefulMonths:months,method:b.method,costCenter:center};
+  if (sameServiceValues(before,after)) return {assetId,revision};
   const result=await db.batch([
     db.prepare(`INSERT INTO work_asset_financials SELECT ?,?,?,?,?,?,?,1,?,?
       WHERE ?=0 OR EXISTS(SELECT 1 FROM work_asset_financials WHERE workspace_id=? AND asset_id=? AND revision=?)
@@ -32,9 +40,7 @@ export async function saveAssetFinancials(ctx:WorkContext,assetId:string,b:Recor
       recorded_by=excluded.recorded_by,recorded_at=excluded.recorded_at
       WHERE work_asset_financials.revision=?`)
       .bind(w,assetId,cents,start,months,b.method,center,ctx.principal.userId,at,revision,w,assetId,revision,revision),
-    db.prepare(`INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0`)
-      .bind(id(),w,ctx.principal.userId,'work.asset_financials_recorded',assetId,
-        JSON.stringify({purchaseCents:cents,inServiceDate:start,usefulMonths:months,method:b.method,costCenter:center}),at),
+    assetEvent(ctx,assetId,'work.asset_financials_recorded',before,after,at,device.person_id ? [device.person_id] : []),
   ]);
   if (!result[0].meta.changes) throw new ApiError(409,'revision_conflict','Asset financials changed; reload before saving');
   return {assetId,revision:Number(revision)+1};

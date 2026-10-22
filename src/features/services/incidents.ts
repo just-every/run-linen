@@ -1,3 +1,4 @@
+import { queueNotification } from './notification-history';
 import { currentPrincipal } from '../work/identity';
 import { workReadable, workDepartmentScoped } from '../work/scope';
 import { recurrenceContext } from './recurrence-context';
@@ -66,7 +67,7 @@ export async function updateIncident(db: D1Database, p: Principal, r: ServiceRec
             throw new ApiError(403, 'audience', 'Recipient cannot read this incident');
     }
     const next = await mutate(db, p, r, b.revision, { ...r.data, updates: [...(r.data.updates || []), { id: id(), message, audience, at: now(), author: p.userId }], nextUpdateAt: new Date(Date.now() + r.data.cadenceMs).toISOString() }, 'update-published');
-    await db.batch(audience.map(user => db.prepare('INSERT OR IGNORE INTO svc_outbox(id,workspace_id,record_id,recipient_id,kind,payload_json,next_at) VALUES(?,?,?,?,?,?,?)').bind(id(), p.workspaceId, r.id, user, 'incident-update:' + next.data.updates.at(-1).id, JSON.stringify({ message, revision: next.revision }), next.data.updates.at(-1).at)));
+    await db.batch(audience.flatMap(user=>queueNotification(db,p,next,user,'incident-update:'+next.data.updates.at(-1).id,{message,revision:next.revision},next.data.updates.at(-1).at)));
     return next;
 }
 export async function assignDiagnostic(db: D1Database, p: Principal, r: ServiceRecord, b: Record<string, any>) {

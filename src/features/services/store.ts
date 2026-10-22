@@ -1,3 +1,4 @@
+import { serviceEvent, serviceSnapshot, sameServiceValues } from './history';
 import { assertProblemSources } from './problem-source-access';
 import type { Principal } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
@@ -67,7 +68,7 @@ export async function create(db: D1Database, p: Principal, kind: Kind, data: Rec
     for (const user of [owner, ...participants])
         if (!await db.prepare('SELECT user_id FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(p.workspaceId, user).first())
             throw new ApiError(400, 'member', 'Active workspace member required');
-    await db.batch([db.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,1,?,?)').bind(key, p.workspaceId, kind, owner, visibility, JSON.stringify(participants), JSON.stringify(data), t, t), db.prepare('INSERT INTO svc_events VALUES(?,?,?,?,?,?,?)').bind(id(), p.workspaceId, key, p.userId, 'created', JSON.stringify({ kind }), t)]);
+    await db.batch([db.prepare('INSERT INTO svc_records VALUES(?,?,?,?,?,?,?,1,?,?)').bind(key, p.workspaceId, kind, owner, visibility, JSON.stringify(participants), JSON.stringify(data), t, t), serviceEvent(db,p,{id:key,kind,visibility,ownerId:owner,participants},{},serviceSnapshot({data,ownerId:owner,visibility,participants}),'created',t)]);
     return getService(db, p, key);
 }
 export async function mutate(db: D1Database, p: Principal, r: ServiceRecord, revision: unknown, data: Record<string, any>, event: string, domainAuthorized = false) {
@@ -75,8 +76,13 @@ export async function mutate(db: D1Database, p: Principal, r: ServiceRecord, rev
         throw new ApiError(403, 'forbidden', 'Record owner or scoped operator required');
     if (revision !== r.revision)
         throw new ApiError(409, 'revision_conflict', 'Reload the current revision');
+    if (sameServiceValues(r.data,data)) {
+        const current = await getService(db,p,r.id);
+        if (current.revision !== r.revision) throw new ApiError(409,'revision_conflict','Concurrent update');
+        return current;
+    }
     const t = now();
-    const result = await db.batch([db.prepare('UPDATE svc_records SET data_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?').bind(JSON.stringify(data), t, p.workspaceId, r.id, r.revision), db.prepare('INSERT INTO svc_events SELECT ?,?,?,?,?,?,? WHERE changes()=1').bind(id(), p.workspaceId, r.id, p.userId, event, JSON.stringify({ from: r.revision, to: r.revision + 1 }), t)]);
+    const result = await db.batch([db.prepare('UPDATE svc_records SET data_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?').bind(JSON.stringify(data), t, p.workspaceId, r.id, r.revision), serviceEvent(db,p,r,serviceSnapshot(r),serviceSnapshot({...r,data}),event,t)]);
     if (result[0].meta.changes !== 1)
         throw new ApiError(409, 'revision_conflict', 'Concurrent update');
     return getService(db, p, r.id);

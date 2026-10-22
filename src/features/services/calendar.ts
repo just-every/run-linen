@@ -1,3 +1,4 @@
+import { serviceEvent, serviceSnapshot, sameServiceValues } from './history';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentPrincipal } from '../work/identity';
@@ -68,6 +69,8 @@ export async function saveCalendarWindow(env: Env, principal: Principal, input: 
       .bind(p.workspaceId, user).first()) throw new ApiError(400, 'member', 'Active workspace member required');
   }
   const t = now(), recordId = key || id(), payload = JSON.stringify(data), scope = JSON.stringify([...new Set(participants)]);
+  const record={id:recordId,kind:calendarWindowKind,ownerId:previous?.ownerId ?? p.userId,visibility,participants:[...new Set(participants)] as string[],data};
+  if (previous && sameServiceValues(serviceSnapshot(previous),serviceSnapshot(record))) return previous;
   const statement = previous
     ? env.DB.prepare(`UPDATE svc_records SET data_json=?,visibility=?,participants_json=?,revision=revision+1,updated_at=?
         WHERE workspace_id=? AND id=? AND kind='calendar-window' AND revision=? AND ${ownerFence}`)
@@ -75,9 +78,7 @@ export async function saveCalendarWindow(env: Env, principal: Principal, input: 
     : env.DB.prepare(`INSERT INTO svc_records SELECT ?,?,'calendar-window',?,?,?,?,1,?,? WHERE ${ownerFence}`)
       .bind(recordId, p.workspaceId, p.userId, visibility, scope, payload, t, t, p.workspaceId, p.userId);
   const results = await env.DB.batch([statement,
-    env.DB.prepare('INSERT INTO svc_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
-      .bind(id(), p.workspaceId, recordId, p.userId, previous ? 'calendar-window-amended' : 'created',
-        JSON.stringify({ kind: calendarWindowKind, from: previous?.revision ?? 0, to: (previous?.revision ?? 0) + 1 }), t)]);
+    serviceEvent(env.DB,p,record,previous ? serviceSnapshot(previous) : {},serviceSnapshot(record),previous ? 'calendar-window-amended' : 'created',t)]);
   if (results[0].meta.changes !== 1) {
     await currentOwner(env.DB, p);
     throw new ApiError(409, 'revision_conflict', 'Concurrent calendar update');

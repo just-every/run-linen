@@ -1,3 +1,4 @@
+import { serviceEvent, serviceSnapshot } from './history';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { hashToken } from '../../platform/crypto';
@@ -109,6 +110,7 @@ export async function decideProblemProposal(env: Env, principal: Principal, key:
   const data = { ...proposal.data, state: decision === 'accept' ? 'accepted' : 'rejected',
     decision: { actorId: p.userId, reason, at: t }, problemId };
   const statements = [];
+  let createdProblem: Record<string,unknown> | undefined;
   if (problemId) {
     const serviceIds = [...new Set(evidence.map(e => e.serviceId).filter(Boolean))];
     const problemData = { title: proposal.data.title, serviceId: serviceIds.length === 1 ? serviceIds[0] : null, serviceIds,
@@ -117,6 +119,7 @@ export async function decideProblemProposal(env: Env, principal: Principal, key:
       alertIncidentIds: evidence.filter(e => e.type === 'alert').map(e => e.id),
       evidence, cluster: proposal.data.cluster, sourceProposalId: key, symptoms: 'Recurring recorded incidents; cause requires investigation',
       cause: null, causeState: 'unknown', workarounds: [], preventionChangeId: null, preventionState: 'unverified' };
+    createdProblem=problemData;
     statements.push(env.DB.prepare(`INSERT INTO svc_records SELECT ?,?,'problem',?,?,?,?,1,?,? WHERE EXISTS(SELECT 1 FROM svc_records WHERE workspace_id=? AND id=? AND revision=? AND json_extract(data_json,'$.state')='proposed') AND ${fence.sql}`)
       .bind(problemId, p.workspaceId, proposal.ownerId, proposal.visibility, JSON.stringify(proposal.participants), JSON.stringify(problemData), t, t,
         p.workspaceId, key, input.revision, ...fence.values));
@@ -124,10 +127,8 @@ export async function decideProblemProposal(env: Env, principal: Principal, key:
   statements.push(env.DB.prepare(`UPDATE svc_records SET data_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND json_extract(data_json,'$.state')='proposed' AND ${problemId ? 'changes()=1' : fence.sql}`)
     .bind(JSON.stringify(data), t, p.workspaceId, key, input.revision, ...(problemId ? [] : fence.values)));
   const updateIndex = statements.length - 1;
-  statements.push(env.DB.prepare('INSERT INTO svc_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
-    .bind(id(), p.workspaceId, key, p.userId, 'problem-proposal-' + data.state, JSON.stringify({ reason, problemId }), t));
-  if (problemId) statements.push(env.DB.prepare("INSERT INTO svc_events SELECT ?,?,?,?,?,?,? WHERE changes()=1")
-    .bind(id(), p.workspaceId, problemId, p.userId, 'created', JSON.stringify({ sourceProposalId: key }), t));
+  statements.push(serviceEvent(env.DB,p,proposal,serviceSnapshot(proposal),serviceSnapshot({...proposal,data}),'problem-proposal-'+data.state,t));
+  if (problemId && createdProblem) statements.push(serviceEvent(env.DB,p,{...proposal,id:problemId,kind:'problem'}, {},serviceSnapshot({...proposal,data:createdProblem}),'created',t));
   const results = await env.DB.batch(statements);
   if (!results[updateIndex].meta.changes) throw new ApiError(409, 'revision_conflict', 'Proposal, evidence or current authority changed');
   return getProblemProposal(env, p, key);

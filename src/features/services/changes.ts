@@ -1,3 +1,4 @@
+import { sameServiceValues } from './history';
 import { scoreChange } from './change-risk';
 import { catalogSnapshot, approvedTemplate, assertCatalogApproval, grantReferences } from './change-templates';
 import { currentPrincipal } from '../work/identity';
@@ -88,7 +89,10 @@ export async function editChange(db: D1Database, p: Principal, r: ServiceRecord,
     if ((r.data.invocations || []).some((i: any) => !['verified', 'failed', 'cancelled'].includes(i.state)))
         throw new ApiError(409, 'in_flight', 'Reconcile active effects before changing implementation');
     const amended={...r.data,...b,changeType:b.emergency===true?'emergency':b.changeType==='emergency'?'emergency':r.data.changeType==='standard'?'normal':b.emergency===false?'normal':b.changeType||r.data.changeType};
-    const data={...r.data,...await validateChange(db,p,amended),cabBypass:null,emergencySchedulingActor:emergencySchedulingActor(p,{...b,emergency:b.emergency===true||b.changeType==='emergency'}),implementationRevision:r.data.implementationRevision+1,state:'draft',authorizations:[],priorAuthorizations:[...(r.data.priorAuthorizations||[]),...(r.data.authorizations||[])]};
+    const validated=await validateChange(db,p,amended);
+    if (Object.entries(validated).every(([field,value])=>sameServiceValues(r.data[field],value)))
+        return mutate(db,p,r,b.revision,r.data,'implementation-amended');
+    const data={...r.data,...validated,cabBypass:null,emergencySchedulingActor:emergencySchedulingActor(p,{...b,emergency:b.emergency===true||b.changeType==='emergency'}),implementationRevision:r.data.implementationRevision+1,state:'draft',authorizations:[],priorAuthorizations:[...(r.data.priorAuthorizations||[]),...(r.data.authorizations||[])]};
     await assertCalendarSchedule(db,p,data);
     try { return await mutate(db,p,r,b.revision,data,'implementation-amended'); }
     catch(error) { throw calendarError(error); }

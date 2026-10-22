@@ -1,3 +1,5 @@
+import { notificationEvent, queueNotification } from './notification-history';
+import { serviceEvent, serviceSnapshot } from './history';
 import { deliverNoticeMail } from './employee-notice-mail';
 import { queueNoticeCadence } from './employee-notices';
 import { detectProblemProposals } from './problem-detection';
@@ -57,6 +59,7 @@ export async function ingestMonitoring(env: Env, p: Principal, monitorId: string
     const t = now();
     const result = await env.DB.batch([
  env.DB.prepare("UPDATE svc_records SET data_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND EXISTS(SELECT 1 FROM connections WHERE workspace_id=? AND id=? AND revision=? AND status IN ('active','inbound-unobserved')) AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) role WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND role.value IN ('owner','integration'))").bind(JSON.stringify(data),t,p.workspaceId,monitorId,monitor.revision,p.workspaceId,conn.id,conn.revision,p.workspaceId,p.userId),
+ serviceEvent(env.DB,p,monitor,serviceSnapshot(monitor),serviceSnapshot({...monitor,data}),'monitor-observed',t),
  env.DB.prepare('INSERT INTO svc_receipts SELECT ?,?,?,?,? WHERE changes()=1').bind(p.workspaceId,monitorId,externalId,digest,t),
  env.DB.prepare("UPDATE connections SET status='active' WHERE workspace_id=? AND id=? AND revision=? AND EXISTS(SELECT 1 FROM svc_receipts WHERE workspace_id=? AND source_id=? AND external_id=? AND received_at=?)").bind(p.workspaceId,conn.id,conn.revision,p.workspaceId,monitorId,externalId,t),
  env.DB.prepare("INSERT INTO connection_validations(workspace_id,connection_id,connection_revision,validated_at,state,evidence_json) SELECT ?,?,?,?,'active',? WHERE EXISTS(SELECT 1 FROM svc_receipts WHERE workspace_id=? AND source_id=? AND external_id=? AND received_at=?) AND EXISTS(SELECT 1 FROM connections WHERE workspace_id=? AND id=? AND revision=? AND status='active') ON CONFLICT(workspace_id,connection_id) DO UPDATE SET connection_revision=excluded.connection_revision,validated_at=excluded.validated_at,state=excluded.state,evidence_json=excluded.evidence_json").bind(p.workspaceId,conn.id,conn.revision,t,JSON.stringify({kind:'authenticated-monitoring-event',monitorId,eventId:externalId,digest,observedAt:b.observedAt,receivedAt:t,proves:'Signed source identity and current connection revision; not usable-work recovery'}),p.workspaceId,monitorId,externalId,t,p.workspaceId,conn.id,conn.revision)
@@ -73,7 +76,7 @@ export async function routeOnCall(env: Env, p: Principal, incidentId: string) {
     if (!recipients.length)
         return mutate(env.DB, p, r, r.revision, { ...r.data, routing: 'needs_configuration', routingException: 'No active on-call ownership' }, 'oncall-missing');
     const t = now();
-    await env.DB.batch(recipients.map(user => env.DB.prepare('INSERT OR IGNORE INTO svc_outbox(id,workspace_id,record_id,recipient_id,kind,payload_json,next_at) VALUES(?,?,?,?,?,?,?)').bind(id(), p.workspaceId, r.id, user, 'oncall-page', JSON.stringify({ message: r.data.title, serviceId: r.data.serviceId }), t)));
+    await env.DB.batch(recipients.flatMap(user=>queueNotification(env.DB,p,r,user,'oncall-page',{message:r.data.title,serviceId:r.data.serviceId},t)));
     return mutate(env.DB, p, r, r.revision, { ...r.data, routing: 'pending_delivery', onCallRecipients: recipients }, 'oncall-routed');
 }
 function endpoint(config: any) {
@@ -92,7 +95,9 @@ export async function deliverNotifications(env: Env, p: Principal) {
         const raw = await env.DB.prepare('SELECT * FROM svc_records WHERE workspace_id=? AND id=?').bind(p.workspaceId, job.record_id).first<RecordRow>();
         const recipient: Principal = { userId: job.recipient_id, workspaceId: p.workspaceId, roles: member ? JSON.parse(member.roles_json) : [] };
         if (!member || !raw || !readable(recipient, dto(raw))) {
-            await env.DB.prepare("UPDATE svc_outbox SET state='access_revoked',error='Recipient access unavailable' WHERE id=? AND workspace_id=?").bind(job.id, p.workspaceId).run();
+            const writes=[env.DB.prepare("UPDATE svc_outbox SET state='access_revoked',error='Recipient access unavailable' WHERE id=? AND workspace_id=? AND state='pending'").bind(job.id,p.workspaceId)];
+            if(raw)writes.push(notificationEvent(env.DB,p,dto(raw),job,'pending','access_revoked'));
+            await env.DB.batch(writes);
             continue;
         }
         if(!readable(p,dto(raw)))continue;const sender=await env.DB.prepare('SELECT roles_json FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(p.workspaceId,p.userId).first<{roles_json:string}>();if(!sender||!JSON.parse(sender.roles_json).some((role:string)=>['owner','operator'].includes(role)))throw new ApiError(403,'sender_revoked','Current service sender authority required');
@@ -117,8 +122,9 @@ export async function deliverNotifications(env: Env, p: Principal) {
             continue;
         }
         await assertAdoptionEffectAllowed({ env, principal: p }, { resource: job.record_id, action: 'notification.send' });
-        const claimed = await env.DB.prepare("UPDATE svc_outbox SET state='sending',attempts=attempts+1,connection_id=? WHERE id=? AND workspace_id=? AND state='pending'").bind(connectionId,job.id, p.workspaceId).run();
-        if (!claimed.meta.changes)
+        const claimed = await env.DB.batch([env.DB.prepare("UPDATE svc_outbox SET state='sending',attempts=attempts+1,connection_id=? WHERE id=? AND workspace_id=? AND state='pending'").bind(connectionId,job.id,p.workspaceId),
+          notificationEvent(env.DB,p,dto(raw),job,'pending','sending')]);
+        if (!claimed[0].meta.changes)
             continue;
         let state = 'unknown', error: string | null = null, ref: string | null = null;
         try {
@@ -141,7 +147,8 @@ export async function deliverNotifications(env: Env, p: Principal) {
         catch {
             error = 'Transport outcome unknown; reconciliation required';
         }
-        await env.DB.prepare('UPDATE svc_outbox SET state=?,error=?,provider_ref=? WHERE id=? AND workspace_id=?').bind(state, error, ref, job.id, p.workspaceId).run();
+        await env.DB.batch([env.DB.prepare("UPDATE svc_outbox SET state=?,error=?,provider_ref=? WHERE id=? AND workspace_id=? AND state='sending'").bind(state,error,ref,job.id,p.workspaceId),
+          notificationEvent(env.DB,p,dto(raw),job,'sending',state)]);
         results.push({ id: job.id, state });
     }
     return results;
@@ -191,7 +198,7 @@ export async function processDueServices(env: Env, p: Principal) {
             if (r.kind === 'incident')
                 for (const update of r.data.updates || [])
                     for (const recipient of update.audience)
-                        await env.DB.prepare('INSERT OR IGNORE INTO svc_outbox(id,workspace_id,record_id,recipient_id,kind,payload_json,next_at) VALUES(?,?,?,?,?,?,?)').bind(id(), p.workspaceId, r.id, recipient, 'incident-update:' + update.id, JSON.stringify({ message: update.message }), update.at).run();
+                        await env.DB.batch(queueNotification(env.DB,p,r,recipient,'incident-update:'+update.id,{message:update.message},update.at));
             if (r.kind === 'incident' && !['restored', 'closed'].includes(r.data.status) && Date.parse(r.data.nextUpdateAt) <= Date.now())
                 due.push({ kind: 'update-due', owner: r.ownerId, at: r.data.nextUpdateAt, message: 'Incident update is due' });
             if (r.kind === 'decision' && ['needs-decision', 'deferred'].includes(r.data.state) && Date.parse(r.data.nextDueAt) <= Date.now())
@@ -201,7 +208,7 @@ export async function processDueServices(env: Env, p: Principal) {
                     if (commitment.state !== 'verified' && Date.parse(commitment.dueAt) <= Date.now())
                         due.push({ kind: 'supplier-breach:' + commitment.id, owner: commitment.ownerId, at: commitment.dueAt, message: 'Supplier commitment is overdue' });
             for (const d of due)
-                await env.DB.prepare('INSERT OR IGNORE INTO svc_outbox(id,workspace_id,record_id,recipient_id,kind,payload_json,next_at) VALUES(?,?,?,?,?,?,?)').bind(id(), p.workspaceId, r.id, d.owner, d.kind, JSON.stringify({ message: d.message, recordId: r.id }), d.at).run();
+                await env.DB.batch(queueNotification(env.DB,p,r,d.owner,d.kind,{message:d.message,recordId:r.id},d.at));
         }
         catch (error) {
             failures.push({ id: r.id, error: error instanceof ApiError ? error.code : 'due_obligation_failed' });
@@ -211,7 +218,7 @@ export async function processDueServices(env: Env, p: Principal) {
     return { noticeMail: await deliverNoticeMail(env, p), notifications: await deliverNotifications(env, p), failures, problemProposals: await detectProblemProposals(env, p) };
 }
 export async function reconcileNotification(env: Env, p: Principal, notificationId: string) { const job = await env.DB.prepare('SELECT * FROM svc_outbox WHERE workspace_id=? AND id=?').bind(p.workspaceId, notificationId).first<any>(); if (!job)
-    throw new ApiError(404, 'not_found', 'Notification not found'); await getService(env.DB, p, job.record_id); if (job.kind === 'employee-notice') throw new ApiError(409, 'mail_receipt', 'SendGrid acceptance is not a delivered receipt; generic webhook reconciliation cannot establish it'); if (!['sending', 'submitted', 'unknown'].includes(job.state))
+    throw new ApiError(404, 'not_found', 'Notification not found'); const record=await getService(env.DB,p,job.record_id); if (job.kind === 'employee-notice') throw new ApiError(409, 'mail_receipt', 'SendGrid acceptance is not a delivered receipt; generic webhook reconciliation cannot establish it'); if (!['sending', 'submitted', 'unknown'].includes(job.state))
     return { id: job.id, state: job.state }; const conn = await connection(env, p, job.connection_id, 'notification-webhook'), url = endpoint(conn.config), nonce = id(); url.searchParams.set('id', job.id); url.searchParams.set('nonce', nonce); const start = Date.now(); const response = await fetch(url, { headers: { Authorization: `Bearer ${conn.secret.token}`, 'Cache-Control': 'no-cache' }, redirect: 'manual', signal: AbortSignal.timeout(15000) }); if (!response.ok)
     throw new ApiError(503, 'reconciliation_unavailable', 'Delivery observation unavailable'); const receipt: any = await response.json(); if (receipt.id !== job.id || receipt.nonce !== nonce || !['delivered', 'failed', 'submitted', 'unknown'].includes(receipt.state) || Date.parse(receipt.observedAt) < start || Date.parse(receipt.observedAt) > Date.now() + 1000)
-    throw new ApiError(422, 'receipt_invalid', 'Fresh correlated delivery observation required'); await env.DB.prepare('UPDATE svc_outbox SET state=?,error=? WHERE workspace_id=? AND id=? AND state=?').bind(receipt.state, receipt.state === 'failed' ? 'Provider reported failed delivery' : null, p.workspaceId, job.id, job.state).run(); return { id: job.id, state: receipt.state, observedAt: receipt.observedAt }; }
+    throw new ApiError(422, 'receipt_invalid', 'Fresh correlated delivery observation required'); await env.DB.batch([env.DB.prepare('UPDATE svc_outbox SET state=?,error=? WHERE workspace_id=? AND id=? AND state=? AND state<>?').bind(receipt.state,receipt.state==='failed'?'Provider reported failed delivery':null,p.workspaceId,job.id,job.state,receipt.state),notificationEvent(env.DB,p,record,job,job.state,receipt.state,receipt.observedAt)]); return { id: job.id, state: receipt.state, observedAt: receipt.observedAt }; }

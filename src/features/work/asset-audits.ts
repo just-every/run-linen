@@ -1,3 +1,4 @@
+import { assetEvent } from './asset-history';
 import type { Hono } from "hono";
 import type { AppEnv } from "../../platform/types";
 import { ApiError, id, jsonBody, now, requiredString } from "../../platform/http";
@@ -74,10 +75,19 @@ export async function completeAssetAudit(ctx: WorkContext, auditId: string, inpu
   const report = await readAssetAudit(ctx, auditId), at = now(), completion = id(), me = ctx.principal.userId;
   const completed = "EXISTS(SELECT 1 FROM work_asset_audits WHERE workspace_id=? AND id=? AND completion_id=?)";
   const missing = report.missing.map((e) => ({ ...e, workId: id() }));
+  const observed = await Promise.all(report.found.map(async e=>({assetId:e.assetId,
+    prior:await db.prepare('SELECT observed_at,person_id FROM work_assets WHERE workspace_id=? AND id=?')
+      .bind(w,e.assetId).first<{observed_at:string|null;person_id:string|null}>()})));
   const result = await db.batch([
     db.prepare("UPDATE work_asset_audits SET state='completed',completed_by=?,completed_at=?,completion_id=?,revision=revision+1 WHERE workspace_id=? AND id=? AND state='open' AND revision=? AND (SELECT COUNT(*) FROM work_asset_audit_scans WHERE workspace_id=? AND audit_id=?)=?")
       .bind(me, at, completion, w, auditId, audit.revision, w, auditId, report.scans.length),
-    ...report.found.map((e) => db.prepare(`UPDATE work_assets SET observed_at=? WHERE workspace_id=? AND id=? AND ${completed}`).bind(at, w, e.assetId, w, auditId, completion)),
+    ...observed.flatMap(({assetId,prior}) => [
+      // A concurrent newer observation is not overwritten or given an invented previous value.
+      db.prepare(`UPDATE work_assets SET observed_at=? WHERE workspace_id=? AND id=? AND observed_at IS ? AND ${completed}`)
+        .bind(at,w,assetId,prior?.observed_at ?? null,w,auditId,completion),
+      assetEvent(ctx,assetId,'work.asset_audit_observed',{observedAt:prior?.observed_at ?? null},
+        {observedAt:at,auditId},at,prior?.person_id ? [prior.person_id] : []),
+    ]),
     ...missing.flatMap((e) => [
       db.prepare(`INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,sensitivity,assignee_id,created_at,updated_at,context_json,dedup_key) SELECT ?,?,?,?,'request',?,'normal',?,?,?,?,? WHERE ${completed}`)
         .bind(e.workId, w, me, me, `Find missing device ${label(e)}`, me, at, at, JSON.stringify({ assetAuditId: auditId, assetId: e.assetId, location: audit.location }), `asset-audit:${auditId}:${e.assetId}`, w, auditId, completion),
@@ -85,6 +95,7 @@ export async function completeAssetAudit(ctx: WorkContext, auditId: string, inpu
         .bind(id(), w, e.workId, me, `The physical audit of ${audit.location} completed ${at} expected ${label(e)} (recorded ${e.state}) on the shelf, but it was not scanned. Find the device, or record where it is or that it is missing with evidence on the device.`, at, w, auditId, completion),
       db.prepare(`INSERT INTO work_links(id,workspace_id,work_id,kind,target_id,created_by,created_at) SELECT ?,?,?,'asset',?,?,? WHERE ${completed}`)
         .bind(id(), w, e.workId, e.assetId, me, at, w, auditId, completion),
+      assetEvent(ctx,e.assetId,'work.asset_linked',{}, {link:{kind:'ticket',id:e.workId}},at),
       db.prepare(`INSERT INTO work_asset_audit_followups(workspace_id,audit_id,asset_id,work_id) SELECT ?,?,?,? WHERE ${completed}`)
         .bind(w, auditId, e.assetId, e.workId, w, auditId, completion),
     ]),

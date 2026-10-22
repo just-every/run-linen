@@ -1,3 +1,4 @@
+import { assetEvent } from './asset-history';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../../platform/types';
 import { ApiError, id, now, requiredString, jsonBody } from '../../platform/http';
@@ -11,8 +12,8 @@ type Contract = { id:string; asset_id:string; vendor_id:string; kind:string; nam
 async function asset(ctx:WorkContext, assetId:string) {
   await currentWorkPrincipal(ctx);
   permit(ctx,['owner','operator']);
-  const row=await ctx.env.DB.prepare('SELECT id,serial,state FROM work_assets WHERE workspace_id=? AND id=?')
-    .bind(ctx.principal.workspaceId,assetId).first<{id:string;serial:string;state:string}>();
+  const row=await ctx.env.DB.prepare('SELECT id,serial,state,person_id FROM work_assets WHERE workspace_id=? AND id=?')
+    .bind(ctx.principal.workspaceId,assetId).first<{id:string;serial:string;state:string;person_id:string|null}>();
   if (!row) throw new ApiError(404,'not_found','Asset not found');
   return row;
 }
@@ -29,7 +30,7 @@ function https(value:unknown) {
   return url.href;
 }
 export async function saveAssetContract(ctx:WorkContext,assetId:string,b:Record<string,unknown>) {
-  await asset(ctx,assetId);
+  const device=await asset(ctx,assetId);
   if (!['purchase','lease','warranty','support'].includes(String(b.kind))) throw new ApiError(422,'contract_kind','Purchase, lease, warranty or support required');
   const vendor=await getService(ctx.env.DB,ctx.principal,requiredString(b.vendorId,'vendorId'),'supplier');
   const start=instant(b.startsAt,'startsAt'),end=b.expiresAt ? instant(b.expiresAt,'expiresAt') : null;
@@ -42,7 +43,7 @@ export async function saveAssetContract(ctx:WorkContext,assetId:string,b:Record<
   await ctx.env.DB.batch([
     ctx.env.DB.prepare('INSERT INTO work_asset_contracts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
       .bind(key,ctx.principal.workspaceId,assetId,vendor.id,b.kind,name,reference,coverage,start,end,alertDays,manufacturer,ctx.principal.userId,at),
-    ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),ctx.principal.workspaceId,ctx.principal.userId,'work.asset_contract_recorded',assetId,JSON.stringify({contractId:key,vendorId:vendor.id,kind:b.kind}),at),
+    assetEvent(ctx,assetId,'work.asset_contract_recorded',{}, {contractId:key,vendorId:vendor.id,kind:b.kind,name,reference,coverage,startsAt:start,expiresAt:end,alertDays,manufacturer},at,device.person_id ? [device.person_id] : []),
   ]);
   return {id:key};
 }
@@ -77,8 +78,11 @@ export function registerAssetContractRoutes(app:Hono<AppEnv>) {
     const ctx={env:c.env,principal:c.get('principal')},workId=c.req.param('id'),b=await jsonBody(c);
     await repairScope(ctx,workId);
     const device=await asset(ctx,requiredString(b.assetId,'assetId'));
-    await c.env.DB.prepare('INSERT INTO work_asset_repairs VALUES(?,?,?,?,?) ON CONFLICT DO NOTHING')
-      .bind(ctx.principal.workspaceId,workId,device.id,ctx.principal.userId,now()).run();
+    const at=now();
+    await c.env.DB.batch([c.env.DB.prepare('INSERT INTO work_asset_repairs VALUES(?,?,?,?,?) ON CONFLICT DO NOTHING')
+      .bind(ctx.principal.workspaceId,workId,device.id,ctx.principal.userId,at),
+      assetEvent(ctx,device.id,'work.asset_repair_linked',{}, {link:{kind:'ticket',id:workId}},at,device.person_id ? [device.person_id] : []),
+    ]);
     return c.json({assetId:device.id});
   });
   app.get('/work/:id/repair-assets',async c=>{

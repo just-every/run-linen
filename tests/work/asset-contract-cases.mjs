@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-export async function assetContractChecks(api) {
+export async function assetContractChecks(api,db) {
   const check=(response,status=200)=>{assert.equal(response.status,status,JSON.stringify(response));return response.value;};
   const service=check(await api('/services',{name:'Managed laptops',description:'Employee laptop care',businessImpact:'Work availability',source:'IT service register',observedAt:new Date().toISOString()}),201);
   const vendor=check(await api('/suppliers',{name:'Apple enterprise support',services:[service.id],contract:'AppleCare purchase PO-1042',currency:'USD',cost:249,costPeriod:'annual',renewalAt:new Date(Date.now()+86400000*20).toISOString()}),201);
@@ -30,6 +30,27 @@ export async function assetContractChecks(api) {
   check(await api(repairs,{assetId:device.id}));
   const readback=check(await api(repairs));
   assert.equal(readback.items.length,1,'ASSET-007 repair link is idempotent');
+  const events=check(await api(`/assets/${device.id}/history`)).events;
+  assert.equal(events.filter(e=>e.action==='asset_contract_recorded').length,4);
+  assert.equal(events.filter(e=>e.action==='asset_repair_linked').length,1,'DESK-017 repeated repair link adds no history');
+  assert.deepEqual(events.find(e=>e.action==='asset_repair_linked').changes.find(c=>c.field==='link'),{field:'link',before:null,after:{kind:'ticket',id:work.id}});
+  assert.equal(events.find(e=>e.action==='asset_contract_recorded').changes.find(c=>c.field==='coverage').after,terms.coverage,'DESK-017 contract history retains its original coverage');
+  const restrictedWork=check(await api('/work',{title:'synthetic-linen-706',body:'synthetic-linen-707',sensitivity:'restricted',deduplicationKey:'synthetic-linen-708'}),201);
+  check(await api(`/work/${restrictedWork.id}/repair-assets`,{assetId:device.id}));
+  const ownerEvents=check(await api(`/assets/${device.id}/history`)).events;
+  const privateEvent=ownerEvents.find(e=>e.changes.some(c=>c.field==='link'&&c.after?.id===restrictedWork.id));
+  assert.ok(privateEvent);
+  await db.prepare('UPDATE memberships SET roles_json=? WHERE workspace_id=? AND user_id=?').bind('["operator"]','a','stranger').run();
+  try {
+    const scoped=check(await api(`/assets/${device.id}/history`,undefined,{'x-user':'stranger','x-roles':'["operator"]'})).events;
+    assert.ok(scoped.some(e=>e.changes.some(c=>c.field==='link'&&c.after?.id===work.id)),'DESK-017 current staff can see a normal ticket asset link');
+    assert.ok(!scoped.some(e=>e.id===privateEvent.id),'DESK-017 asset history hides the entire out-of-scope source event, including actor/time');
+    assert.ok(!JSON.stringify(scoped).includes(restrictedWork.id));
+  } finally {
+    await db.prepare('UPDATE memberships SET roles_json=? WHERE workspace_id=? AND user_id=?').bind('["employee"]','a','stranger').run();
+  }
+
+
   assert.equal(readback.items[0].asset.serial,'APPLE-DEN-1042');
   assert.equal(readback.items[0].items.find(c=>c.kind==='warranty').alert,'expiring');
   check(await api(repairs,undefined,employee),403);

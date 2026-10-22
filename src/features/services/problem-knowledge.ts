@@ -1,3 +1,4 @@
+import { serviceEvent, serviceSnapshot } from './history';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import type { Env, Principal } from '../../platform/types';
 import { validateArticle, newArticleWrites, type ArticleInput } from '../work/article-write';
@@ -28,8 +29,7 @@ export async function publishWorkaround(env: Env, p: Principal, r: ServiceRecord
       'EXISTS(SELECT 1 FROM svc_records WHERE workspace_id=? AND id=? AND revision=?)', [p.workspaceId, r.id, r.revision]),
     env.DB.prepare('UPDATE svc_records SET data_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND EXISTS(SELECT 1 FROM work_knowledge WHERE workspace_id=? AND id=?)')
       .bind(JSON.stringify(data), t, p.workspaceId, r.id, r.revision, p.workspaceId, articleId),
-    env.DB.prepare('INSERT INTO svc_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
-      .bind(id(), p.workspaceId, r.id, ctx.principal.userId, 'workaround-published', JSON.stringify({articleId,articleRevision:1}), t),
+    serviceEvent(env.DB,p,r,serviceSnapshot(r),serviceSnapshot({...r,data}),'workaround-published',t),
   ]);
   if (!result[0].meta.changes) throw new ApiError(409, 'revision_conflict', 'Problem changed during publication');
   return getService(env.DB, ctx.principal, r.id, 'problem');

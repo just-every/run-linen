@@ -1,3 +1,5 @@
+import { notificationEvent } from './notification-history';
+import { serviceEvent, serviceSnapshot } from './history';
 import type { Env, Principal } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { currentPrincipal } from '../work/identity';
@@ -75,15 +77,14 @@ async function commit(env: Env, p: Principal, r: ServiceRecord, n: EmployeeNotic
   const writes = [
     env.DB.prepare('UPDATE svc_records SET data_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?')
       .bind(JSON.stringify({ ...r.data, employeeNotices: all }), t, p.workspaceId, r.id, r.revision),
-    env.DB.prepare('INSERT INTO svc_events SELECT ?,?,?,?,?,?,? WHERE changes()=1')
-      .bind(n.eventKey, p.workspaceId, r.id, p.userId, event, JSON.stringify({ noticeId: n.id, state: n.state, version: n.version }), t),
+    serviceEvent(env.DB,p,r,serviceSnapshot(r),serviceSnapshot({...r,data:{...r.data,employeeNotices:all}}),event,t,n.eventKey),
   ];
   if (n.emailConnectionId && n.state !== 'withdrawn') for (const userId of audience) {
     // Publication and its delivery intent commit together. A losing source CAS cannot enqueue mail.
     writes.push(env.DB.prepare(`INSERT OR IGNORE INTO svc_outbox(id,workspace_id,record_id,recipient_id,kind,payload_json,next_at,connection_id)
       SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM svc_events WHERE id=? AND workspace_id=? AND record_id=?)`)
       .bind(`${n.eventKey}:${userId}`, p.workspaceId, r.id, userId, 'employee-notice',
-        JSON.stringify({ noticeId: n.id, eventKey: n.eventKey, version: n.version, publisherId: p.userId }), t, n.emailConnectionId, n.eventKey, p.workspaceId, r.id));
+        JSON.stringify({ noticeId: n.id, eventKey: n.eventKey, version: n.version, publisherId: p.userId }), t, n.emailConnectionId, n.eventKey, p.workspaceId, r.id),notificationEvent(env.DB,p,r,{id:`${n.eventKey}:${userId}`,recipient_id:userId},null,'pending',t));
   }
   const result = await env.DB.batch(writes);
   if (!result[0].meta.changes) throw new ApiError(409, 'revision_conflict', 'Reload the current source before publishing');

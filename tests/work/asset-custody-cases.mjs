@@ -36,6 +36,14 @@ export async function assetCustodyChecks(api, personId) {
   assert.deepEqual(result.value.items.map(e=>e.kind),['procure','receive','assign','receive','repair','return','loan','receive','return','repair','receive','retire','dispose']);
   assert.ok(result.value.items.every(e=>e.actor_id==='owner'&&e.created_at&&e.evidence),'ASSET-004 every receipt remains attributed');
   assert.deepEqual(result.value.items.at(-1).certificate,{partner:certificate.certificatePartner,standard:certificate.certificateStandard,reference:certificate.certificateReference});
+  const assignments=result.value.events.filter(e=>e.changes.some(c=>c.field==='personId'&&c.after===personId));
+  assert.equal(assignments.length,2,'DESK-017 physical assignment and loan preserve original person transitions');
+  assert.deepEqual(assignments[0].changes.find(c=>c.field==='personId'),{field:'personId',before:null,after:personId});
+  const returned=result.value.events.find(e=>e.changes.some(c=>c.field==='state'&&c.before==='repair'&&c.after==='returned'));
+  assert.deepEqual(returned.changes.find(c=>c.field==='personId'),{field:'personId',before:personId,after:null});
+  assert.ok(result.value.events.every(e=>e.actor&&e.at&&e.changes.length),'DESK-017 every successful custody mutation has attributed original fields');
+  assert.equal(result.value.events.length,result.value.items.length,'DESK-017 refused commands and stale replays append no event');
+
   assert.equal((await api(history,undefined,{'x-workspace':'b'})).status,404);
   assert.equal((await api(history,undefined,{'x-user':'employee','x-roles':'["employee"]'})).status,403);
   assert.equal((await api(history,undefined,{'x-user':'employee','x-roles':'["owner"]'})).status,403);

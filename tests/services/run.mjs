@@ -20,6 +20,10 @@ try{
  const schema=await readFile(new URL('../../migrations/0300_services.sql',import.meta.url),'utf8')
  await db.exec('CREATE TABLE memberships(workspace_id TEXT,user_id TEXT,roles_json TEXT,active INTEGER); CREATE TABLE audit_events(id TEXT,workspace_id TEXT,actor_id TEXT,action TEXT,target TEXT,detail_json TEXT,created_at TEXT); CREATE TABLE connections(id TEXT,workspace_id TEXT,provider TEXT,status TEXT,config_json TEXT,secret_ciphertext TEXT,revision INTEGER DEFAULT 1); CREATE TABLE connection_validations(workspace_id TEXT,connection_id TEXT,connection_revision INTEGER,validated_at TEXT,state TEXT,evidence_json TEXT,PRIMARY KEY(workspace_id,connection_id)); CREATE TABLE workspace_settings(workspace_id TEXT,settings_json TEXT); CREATE TABLE adoption_holds(workspace_id TEXT,state TEXT); CREATE TABLE adoption_ownership(workspace_id TEXT,resource TEXT,action TEXT);')
  for(const sql of sqlStatements(schema))await db.prepare(sql).run();
+ for(const migration of ['0500_adoption.sql','0784_typed_history.sql'])
+  for(const sql of sqlStatements(await readFile(new URL('../../migrations/'+migration,import.meta.url),'utf8')))
+   if(/^CREATE TABLE (?:adoption_tombstones|history_redactions|history_identity_tombstones)\b/.test(sql))await db.prepare(sql).run();
+
  for(const sql of sqlStatements(await readFile(new URL('../../migrations/0749_change_calendar.sql',import.meta.url),'utf8')))await db.prepare(sql).run();await db.exec("CREATE TABLE work_records(id TEXT,workspace_id TEXT,requester_id TEXT,beneficiary_id TEXT,sensitivity TEXT,kind TEXT,state TEXT DEFAULT 'open',created_at TEXT DEFAULT '2020-01-01',context_json TEXT DEFAULT '{}',revision INTEGER DEFAULT 1); INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,sensitivity,kind) VALUES('work-1','w1','employee','employee','normal','incident');")
  await db.exec('CREATE TABLE users(id TEXT PRIMARY KEY,email TEXT,name TEXT); CREATE TABLE work_requester_groups(id TEXT PRIMARY KEY,workspace_id TEXT,name TEXT,members_json TEXT,created_at TEXT);');
  for(const [w,u,roles] of [['w1','owner',['owner']],['w1','employee',['employee']],['w1','operator',['operator']],['w1','approver',['approver']],['w2','owner',['owner']]])await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind(w,u,JSON.stringify(roles)).run()
@@ -27,6 +31,7 @@ try{
  async function ok(method,url,body,headers){const r=await request(method,url,body,headers);assert.ok(r.status<300,JSON.stringify(r));return r.json}
  const service=await ok('POST','/services',{name:'Orders',description:'Order entry',businessImpact:'Sales cannot work',source:'owner',observedAt:new Date().toISOString(),visibility:'workspace'})
  const privateService=await ok('POST','/services',{name:'Private',description:'Restricted',businessImpact:'Restricted',source:'owner',observedAt:new Date().toISOString(),visibility:'restricted'})
+ assert.deepEqual((await ok('GET',`/service-history/${service.id}`,undefined,{'x-user':'employee','x-roles':'["employee"]'})).items,[],'DESK-017 readable public service does not expose internal field history');
  assert.equal((await request('GET','/services/'+privateService.id,null,{'x-user':'employee','x-roles':'["employee"]'})).status,404)
  assert.equal((await request('GET','/services/'+service.id,null,{'x-workspace':'w2'})).status,404)
  const edge={from:service.id,to:privateService.id,relationship:'depends_on',provenance:'observed',source:'monitor',sourceRevision:'1',observedAt:'2020-01-01T00:00:00Z',effectiveAt:'2020-01-01T00:00:00Z',freshnessMs:1000,value:true}
@@ -46,6 +51,21 @@ try{
  const revision=change.revision
  change=await ok('PATCH',`/changes/${change.id}`,{revision,title:'Amended repair'})
  assert.equal(change.data.authorizations.length,0);assert.equal(change.data.priorAuthorizations.length,1)
+ const originalHistory=(await ok('GET',`/service-history/${change.id}`)).items;
+ const amendment=originalHistory.find(e=>e.action==='implementation-amended');
+ assert.deepEqual(amendment.changes.find(c=>c.field==='title'),{field:'title',before:changeBody.title,after:change.data.title},'DESK-017 service amendment retains original field values');
+ assert.ok(amendment.actor&&amendment.at);
+ assert.ok(originalHistory.every(e=>!Object.hasOwn(e,'data_json')),'DESK-017 no raw service payload door');
+ assert.equal((await request('GET',`/service-history/${change.id}`,undefined,{'x-user':'employee','x-roles':'["employee"]'})).status,404);
+ const beforeFailed=await ok('GET',`/changes/${change.id}`);
+ await db.prepare(`CREATE TRIGGER synthetic_linen_history_failure BEFORE INSERT ON svc_events WHEN NEW.record_id='${change.id}' BEGIN SELECT RAISE(ABORT,'synthetic-linen-701'); END`).run();
+ assert.equal((await request('PATCH',`/changes/${change.id}`,{revision:change.revision,title:'synthetic-linen-702'})).status,500);
+ await db.exec('DROP TRIGGER synthetic_linen_history_failure');
+ assert.deepEqual(await ok('GET',`/changes/${change.id}`),beforeFailed,'DESK-017 history append failure rolls back service mutation');
+ assert.deepEqual((await ok('GET',`/service-history/${change.id}`)).items,originalHistory);
+ change=await ok('PATCH',`/changes/${change.id}`,{revision:change.revision,title:change.data.title});
+ assert.deepEqual((await ok('GET',`/service-history/${change.id}`)).items,originalHistory,'DESK-017 unchanged change edit preserves authority and adds no event');
+
  assert.equal((await request('POST',`/changes/${change.id}/dispatch`,{revision:change.revision,phase:'canary',idempotencyKey:'first'})).status,409)
  change=await ok('POST',`/changes/${change.id}/authorize`,{revision:change.revision,reason:'Approve amended plan',grantReferences:[{id:'g',version:2}]})
  let conflict=await ok('POST','/changes',changeBody);conflict=await ok('POST',`/changes/${conflict.id}/authorize`,{revision:conflict.revision,reason:'Conflicting plan',grantReferences:[{id:'g',version:1}]})
@@ -76,6 +96,11 @@ try{
  await db.prepare("UPDATE svc_records SET data_json=json_set(data_json,'$.observedAt','2020-01-01T00:00:00Z') WHERE id=?").bind(monitor.id).run();
  await ok('POST','/services/process-due',{});assert.equal((await ok('GET','/monitors/'+monitor.id)).data.status,'unknown');
  let asset=await ok('POST','/software-assets',{name:'Sales seat',serviceId:service.id,assetType:'software',externalId:'seat-1',source:'purchase receipt',currency:'AUD',acquisitionCost:100,observedAt:new Date().toISOString()});asset=await ok('POST',`/software-assets/${asset.id}/assign`,{revision:asset.revision,personId:'employee',workId:'work-1',receipt:'Assignment receipt #1',source:'Provider observation'});assert.equal(asset.data.lifecycle,'assigned');assert.equal((await request('POST',`/software-assets/${asset.id}/transition`,{revision:asset.revision,state:'disposed',evidence:'Requested disposal'})).status,409);asset=await ok('POST',`/software-assets/${asset.id}/return`,{revision:asset.revision,receipt:'Independent return receipt'});asset=await ok('POST',`/software-assets/${asset.id}/transition`,{revision:asset.revision,state:'disposed',evidence:'Disposal receipt #2'});assert.equal(asset.data.lifecycle,'disposed');
+ const softwareHistory=(await ok('GET',`/service-history/${asset.id}`)).items;
+ assert.deepEqual(softwareHistory.find(e=>e.action==='asset-assigned').changes.find(c=>c.field==='state'),{field:'state',before:'acquired',after:'assigned'});
+ assert.deepEqual(softwareHistory.find(e=>e.action==='asset-lifecycle').changes.find(c=>c.field==='state'),{field:'state',before:'returned',after:'disposed'});
+ assert.equal(softwareHistory.filter(e=>e.action==='asset-lifecycle').length,1,'DESK-017 refused software disposal adds no event');
+
  supplier=await ok('GET','/suppliers/'+supplier.id);supplier=await ok('POST',`/suppliers/${supplier.id}/observations`,{revision:supplier.revision,commitmentId:supplier.data.commitments[0].id,outcome:'met',source:'Supplier status',evidence:'Restoration record',observedAt:new Date().toISOString()},{'x-user':'operator','x-roles':'["operator"]'});assert.equal(supplier.data.commitments[0].state,'reported-met');assert.equal((await request('POST',`/suppliers/${supplier.id}/review-outcome`,{revision:supplier.revision,commitmentId:supplier.data.commitments[0].id,evidence:'Same observer'},{'x-user':'operator','x-roles':'["operator"]'})).status,409);supplier=await ok('POST',`/suppliers/${supplier.id}/review-outcome`,{revision:supplier.revision,commitmentId:supplier.data.commitments[0].id,evidence:'Separate contract owner review'});assert.equal(supplier.data.commitments[0].state,'verified');
  const report=await ok('GET','/service-reports');assert.equal(report.incoming,1);assert.equal(report.verified,0);assert.equal(report.pendingCohorts,1);assert.equal(report.recurrence.rate,null)
  await ok('POST','/oncall-rotations',{serviceId:service.id,startsAt:new Date(Date.now()-60000).toISOString(),endsAt:new Date(Date.now()+3600000).toISOString(),recipientIds:['owner']});
@@ -88,6 +113,16 @@ try{
  await db.prepare('INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext) VALUES(?,?,?,?,?,?)').bind('notify','w1','notification-webhook','active',JSON.stringify({url:'https://notification.fixture.test/send',allowedHosts:['notification.fixture.test']}),notificationSecret).run();await db.prepare('INSERT INTO workspace_settings VALUES(?,?)').bind('w1',JSON.stringify({notificationConnectionId:'notify'})).run();
  const delivered=await ok('POST','/services/process-due',{});assert.ok(delivered.notifications.some(n=>n.state==='submitted'),'Configured provider submission uses real notification adapter');
  const submitted=(await ok('GET','/service-notifications')).items.find(n=>n.state==='submitted');assert.ok(submitted);const reconciled=await ok('POST',`/service-notifications/${submitted.id}/reconcile`,{});assert.equal(reconciled.state,'delivered','Fresh provider readback establishes delivery');
+ const deliveredHistory=(await ok('GET',`/service-history/${submitted.record_id}`)).items.filter(e=>e.kind==='notification');
+ const deliveryStates=deliveredHistory.filter(e=>e.changes.some(c=>c.field==='notificationId'&&c.after===submitted.id)||e.changes.some(c=>c.field==='deliveryState'&&c.after==='delivered'));
+ assert.ok(deliveryStates.some(e=>e.delivery.state==='pending'),'DESK-017 immutable queued notification is visible');
+ assert.ok(deliveredHistory.some(e=>e.delivery.state==='sending'));
+ assert.ok(deliveredHistory.some(e=>e.delivery.state==='submitted'));
+ assert.ok(deliveredHistory.some(e=>e.delivery.state==='delivered'),'DESK-017 provider acceptance and verified delivery remain distinct historical states');
+ const beforeReplay=(await ok('GET',`/service-history/${submitted.record_id}`)).items;
+ await ok('POST',`/service-notifications/${submitted.id}/reconcile`,{});
+ assert.deepEqual((await ok('GET',`/service-history/${submitted.record_id}`)).items,beforeReplay,'DESK-017 terminal reconciliation replay adds no event');
+
  await employeeNoticeChecks(request, db);
  await dependencyChecks(request);
  await calendarChecks(request,db);

@@ -303,7 +303,7 @@ try {
   await assetCustodyChecks(api, person.value.id);
   await assetAuditChecks(api, person.value.id);
   await assetStockChecks(api, person.value.id);
-  await assetContractChecks(api);
+  await assetContractChecks(api,db);
   await assetFinancialChecks(api,(path,headers={})=>mf.dispatchFetch(`http://localhost${path}`,{headers}));
   const lifecycle = {
     personId: person.value.id,

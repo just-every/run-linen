@@ -27,6 +27,14 @@ export async function problemChecks(api, db) {
   problem=check(await api(`/problems/${problem.id}/prevention`,{revision:problem.revision,changeId:change.id}));
   assert.equal(problem.data.preventionChangeId,change.id);
   assert.equal(check(await api(`/problems/${problem.id}`)).data.preventionChange.state,change.data.state);
+  const history=check(await api(`/service-history/${problem.id}`)).items;
+  assert.equal(history.filter(e=>e.action==='workaround-published').length,1,'DESK-017 concurrent publication has one historical mutation');
+  assert.equal(history.find(e=>e.action==='known-error-reviewed').changes.find(c=>c.field==='cause').after,problem.data.cause);
+  assert.deepEqual(history.find(e=>e.action==='prevention-linked').changes.find(c=>c.field==='preventionChangeId'),{field:'preventionChangeId',before:null,after:change.id});
+  problem=check(await api(`/problems/${problem.id}/prevention`,{revision:problem.revision,changeId:change.id}));
+  assert.equal(check(await api(`/service-history/${problem.id}`)).items.length,history.length,'DESK-017 unchanged preventive link adds no event');
+  check(await api(`/service-history/${problem.id}`,undefined,employee),404);
+
   async function ticket(title,context={serviceId:service.id,cohorts:['north']}) {return check(await api('/work',{title,body:title,deduplicationKey:crypto.randomUUID(),context},employee),201);}
   async function offers(work,headers=employee){return check(await api(`/work/${work.id}/workarounds`,undefined,headers)).items;}
   const matching=await ticket('Claims stuck in a LOGIN LOOP');
