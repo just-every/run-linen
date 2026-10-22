@@ -112,7 +112,7 @@ export function AdoptionSpace({ selectedId }: { selectedId?: string }) {
           {exportId && (
             <section>
               <h2>Your snapshot</h2>
-              <p>Your snapshot is being prepared.</p>
+              <p>{exportResult?.state === 'ready' ? 'Your snapshot is ready to download.' : 'Your snapshot is being prepared.'}</p>
               <button
                 className="action"
                 disabled={action.pending}
