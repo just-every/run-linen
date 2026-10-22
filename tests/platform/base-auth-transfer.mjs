@@ -1,4 +1,4 @@
-import {captureArchiveAliasStatements} from '../../src/features/history/archive-identities.mjs'
+import {captureArchiveAliasStatements,captureKnownArchiveAliasStatements} from '../../src/features/history/archive-identities.mjs'
 import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {mailEdge} from './mail-edge.mjs'
 // Public rer archive/reset/import flow on disposable actual D1/R2 state.
@@ -134,6 +134,15 @@ try{
   env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(erasedArchiveEvent,'workspace','[erased]','work.assigned','work',JSON.stringify(redactedArchiveHistory),stamp),
   env.DB.prepare('INSERT INTO history_redactions VALUES(?,?,?,?,?,?,?)').bind('workspace','audit:'+erasedArchiveEvent,erasedArchiveEvent,'audit',stamp,JSON.stringify(redactedArchiveHistory),'{}'),
  ]);
+ const erasedInitiatorEvent='synthetic-linen-13004',retainedRule='synthetic-linen-13005';
+ const originalRuleHistory={schema:'linen.history',version:1,action:'work.routed',record:{kind:'ticket',id:'work'},actor:{kind:'rule',id:retainedRule,name:'synthetic-linen-13006',initiatedBy:erasedArchivePerson},subjects:[],protection:'normal',changes:[{field:'priority',before:'P3',after:'P2'}]};
+ const redactedRuleHistory={...originalRuleHistory,actor:{...originalRuleHistory.actor,initiatedBy:'[erased]'},redacted:'erasure',redactedAt:stamp};
+ const knownCapture=await captureKnownArchiveAliasStatements({env,principal:{workspaceId:'workspace'}},{eventId:erasedInitiatorEvent,store:'audit',payload:originalRuleHistory,redactedPayload:redactedRuleHistory,actorId:erasedArchivePerson,redactedActorId:'[erased]',personFields:[],at:stamp});
+ await env.DB.batch([...knownCapture,
+  env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(erasedInitiatorEvent,'workspace','[erased]','work.routed','work',JSON.stringify(redactedRuleHistory),stamp),
+  env.DB.prepare('INSERT INTO history_redactions VALUES(?,?,?,?,?,?,?)').bind('workspace','audit:'+erasedInitiatorEvent,erasedInitiatorEvent,'audit',stamp,JSON.stringify(redactedRuleHistory),'{}'),
+ ]);
+
  await close()
  await run(['exec','rer','export','--output',archive])
  const mcpRows=[];
@@ -145,6 +154,14 @@ try{
  assert.match(archiveAlias,/^erased-a1-[a-f0-9]{64}$/);
  assert.equal(archivedIdentityHistory.actor_id,archiveAlias);
  assert.equal(archivedIdentityPayload.changes[0].before.alias,archiveAlias,'A6 actor and person value retain one opaque archive identity');
+ let archivedRuleHistory;
+ for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='audit_events'&&item.row.id===erasedInitiatorEvent)archivedRuleHistory=item.row;
+ const archivedRulePayload=JSON.parse(archivedRuleHistory.detail_json);
+ assert.equal(archivedRulePayload.actor.id,retainedRule,'DESK-017 erasing a human initiator preserves the actual routing rule');
+ assert.equal(archivedRuleHistory.actor_id,archiveAlias);
+ assert.equal(archivedRulePayload.actor.initiatedBy,archiveAlias,'A6 post-erasure events reuse the existing keyed person association before values are cleared');
+ assert.deepEqual(archivedRulePayload.changes,originalRuleHistory.changes);
+
  assert.ok(!(await readFile(archive,'utf8')).includes(erasedArchivePerson),'A6 archive has no original erased person reference');
 
  assert.equal(mcpRows.length,1,'API-003 actual archive carries credential metadata');

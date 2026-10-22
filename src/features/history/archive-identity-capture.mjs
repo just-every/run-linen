@@ -1,8 +1,8 @@
-import { archiveHmac,archiveIdentityDigest,archiveLocalOrigin,archiveSlotKey,archivePersonPath,normalizeArchiveIdentity,isArchiveAlias,erasedArchivePerson } from './archive-identity-crypto.mjs';
+import { originalArchiveSlots,removedArchiveReference } from './archive-identity-slots.mjs';
+import { archiveHmac,archiveIdentityDigest,archiveLocalOrigin,archiveSlotKey,normalizeArchiveIdentity } from './archive-identity-crypto.mjs';
 const decoded=value=>{try{return typeof value==='string'?JSON.parse(value):value;}catch{throw Error('Archive history payload is invalid');}};
-const removed=value=>value==='[erased]'||value==='Erased person'||isArchiveAlias(value)||erasedArchivePerson(value);
 /** Only digest/alias associations and typed event slots are persisted. The caller includes these in its erasure CAS batch. */
-export async function captureArchiveAliasStatements(ctx,{eventId,store,payload,redactedPayload,identities,canonicalPersonKey,personFields,at}){
+export async function captureArchiveAliasStatements(ctx,{eventId,store,payload,redactedPayload,identities,canonicalPersonKey,personFields,at,actorId,redactedActorId}){
  const original=decoded(payload),safe=decoded(redactedPayload),w=ctx.principal.workspaceId,env=ctx.env;
  if(original?.schema!=='linen.history'||safe?.schema!=='linen.history')return [];
  const origin=await archiveLocalOrigin(env),statements=[],known=new Set(identities.map(normalizeArchiveIdentity));
@@ -12,7 +12,7 @@ export async function captureArchiveAliasStatements(ctx,{eventId,store,payload,r
  if(existing.length>1)throw Error('Archive identity association conflicts; retain the existing redaction');
  const canonical=existing[0]??'erased-a1-'+await archiveHmac(env,'linen/archive/alias/v1',origin,w,normalizeArchiveIdentity(canonicalPersonKey));
  async function slot(path,value,group){
-  if(typeof value!=='string'||!value||removed(value))return;
+  if(typeof value!=='string'||!value||removedArchiveReference(value))return;
   const digest=await archiveIdentityDigest(env,w,value),prior=saved.find(row=>row.digest===digest);
   const alias=group?canonical:prior?.alias??'erased-a1-'+await archiveHmac(env,'linen/archive/alias/v1',origin,w,normalizeArchiveIdentity(value));
   const digests=group?[...new Set([...grouped,digest])]:[digest];
@@ -24,12 +24,7 @@ export async function captureArchiveAliasStatements(ctx,{eventId,store,payload,r
   const guard=crypto.randomUUID();
   statements.push(env.DB.prepare('INSERT INTO history_write_guards SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM history_archive_slots WHERE workspace_id=? AND store=? AND event_id=? AND path=? AND alias=?) THEN 1 ELSE 0 END').bind(guard,w,store,eventId,path,alias),env.DB.prepare('DELETE FROM history_write_guards WHERE id=?').bind(guard));
  }
- if(safe.actor?.id==='[erased]' && !removed(original.actor?.id))await slot('actor',original.actor.id,true);
- for(const change of original.changes??[]){
-  if(!personFields.includes(change.field))continue;
-  const after=safe.changes?.find(candidate=>candidate.field===change.field);
-  for(const side of ['before','after'])if(erasedArchivePerson(after?.[side]))await slot(archivePersonPath(change.field,side),change[side],typeof change[side]==='string'&&known.has(normalizeArchiveIdentity(change[side])));
- }
+ for(const candidate of originalArchiveSlots(original,safe,personFields,actorId,redactedActorId))await slot(candidate.path,candidate.value,candidate.canonical||typeof candidate.value==='string'&&known.has(normalizeArchiveIdentity(candidate.value)));
  return statements;
 }
 /** Earlier-cleared values stay unknown: a distinct stable slot alias never asserts who the person was. */

@@ -1,3 +1,4 @@
+import { erasedArchiveSlots as erasedSlots,archiveSlotValue as slotValue,validArchiveSlotPath } from './archive-identity-slots.mjs';
 import { archiveLocalOrigin,archiveSlotKey,archivePersonPath,isArchiveAlias,erasedArchivePerson } from './archive-identity-crypto.mjs';
 import { unattributedArchiveSlot } from './archive-identity-capture.mjs';
 const quote=value=>'"'+value.replaceAll('"','""')+'"';
@@ -8,19 +9,6 @@ function eventShape(table,row){
  if(table==='svc_events')return {store:'service',id:row.id,column:'data_json'};
  if(table==='history_redactions'&&['audit','service'].includes(row.store))return {store:row.store,id:row.event_id,column:'envelope_json'};
  return null;
-}
-function erasedSlots(payload,actor){
- const paths=[];
- if(actor==='[erased]'||isArchiveAlias(actor)||payload?.actor?.id==='[erased]'||isArchiveAlias(payload?.actor?.id))paths.push('actor');
- for(const change of payload?.changes??[])for(const side of ['before','after'])
-  if(erasedArchivePerson(change[side]))paths.push(archivePersonPath(change.field,side));
- return [...new Set(paths)];
-}
-function slotValue(payload,path){
- if(path==='actor')return payload?.actor?.id;
- const match=/^change:(.*):(before|after)$/.exec(path);
- if(!match)return undefined;
- return payload?.changes?.find(change=>change.field===decodeURIComponent(match[1]))?.[match[2]]?.alias;
 }
 async function pageRows(db,table,visit){
  let after=0;
@@ -40,6 +28,10 @@ function projector(slots){
    if(path==='actor'){
     if(payload?.actor)payload.actor={...payload.actor,id:slot.alias,name:'Erased person'};
     if(Object.hasOwn(row,'actor_id')&&(row.actor_id==='[erased]'||isArchiveAlias(row.actor_id)))row.actor_id=slot.alias;
+   }else if(path==='rowActor'){
+    if(Object.hasOwn(row,'actor_id'))row.actor_id=slot.alias;
+   }else if(path==='initiatedBy'){
+    payload.actor={...payload.actor,initiatedBy:slot.alias};
    }else {
     const match=/^change:(.*):(before|after)$/.exec(path),change=payload.changes.find(value=>value.field===decodeURIComponent(match[1]));
     change[match[2]]={redacted:'erasure',person:true,alias:slot.alias};
@@ -59,7 +51,7 @@ export async function prepareArchiveIdentityProjection(env){
   for(const path of erasedSlots(payload,row.actor_id)){
    const id=archiveSlotKey(row.workspace_id,shape.store,shape.id,path);if(slots.has(id))continue;
    // Already-carried aliases are never reassigned to a different person or origin.
-   const carried=slotValue(payload,path)??(path==='actor'?row.actor_id:null);
+   const carried=slotValue(payload,path,row.actor_id)??(path==='actor'?row.actor_id:null);
    if(isArchiveAlias(carried))throw Error('Archive alias has no retained attribution');
    await env.DB.batch(await unattributedArchiveSlot(env,row.workspace_id,shape.store,shape.id,path,new Date().toISOString(),origin));
    const saved=await env.DB.prepare('SELECT * FROM history_archive_slots WHERE workspace_id=? AND store=? AND event_id=? AND path=?').bind(row.workspace_id,shape.store,shape.id,path).first();
@@ -99,7 +91,7 @@ export async function validateArchiveIdentityStaged({db,tables}){
  const slots=(await db.prepare(`SELECT * FROM ${quote(slotTable)}`).all()).results;
  const indexed=new Map();
  for(const row of slots){
-  if(!['audit','service'].includes(row.store)||typeof row.event_id!=='string'||!row.event_id||!(row.path==='actor'||/^change:.+:(before|after)$/.test(row.path))||!available.has(key(row.workspace_id,row.origin,row.alias)))return false;
+  if(!['audit','service'].includes(row.store)||typeof row.event_id!=='string'||!row.event_id||!validArchiveSlotPath(row.path)||!available.has(key(row.workspace_id,row.origin,row.alias)))return false;
   indexed.set(archiveSlotKey(row.workspace_id,row.store,row.event_id,row.path),row);
  }
  for(const table of ['audit_events','svc_events','history_redactions'])if(tables[table]){
@@ -109,7 +101,7 @@ export async function validateArchiveIdentityStaged({db,tables}){
    const shape=eventShape(table,row);if(!shape)return;
    let payload;try{payload=parsePayload(row[shape.column]);}catch{valid=false;return;}
    function typedAliases(value,path=[]){
-    if(typeof value==='string'&&isArchiveAlias(value))return path.length===2&&path[0]==='actor'&&path[1]==='id';
+    if(typeof value==='string'&&isArchiveAlias(value))return path.length===2&&path[0]==='actor'&&['id','initiatedBy'].includes(path[1]);
     if(erasedArchivePerson(value))return Object.keys(value).every(name=>['redacted','person','alias'].includes(name))&&isArchiveAlias(value.alias);
     if(Array.isArray(value))return value.every((item,index)=>typedAliases(item,[...path,String(index)]));
     return !value||typeof value!=='object'||Object.entries(value).every(([name,item])=>typedAliases(item,[...path,name]));
@@ -118,8 +110,8 @@ export async function validateArchiveIdentityStaged({db,tables}){
    for(const path of erasedSlots(payload,row.actor_id)){
     const slot=indexed.get(archiveSlotKey(row.workspace_id,shape.store,shape.id,path));
     if(!slot){valid=false;return;}
-    const value=slotValue(payload,path)??(path==='actor'?row.actor_id:null);
-    if(value!==slot.alias || path==='actor'&&Object.hasOwn(row,'actor_id')&&row.actor_id!==slot.alias){valid=false;return;}
+    const value=slotValue(payload,path,row.actor_id)??(path==='actor'?row.actor_id:null);
+    if(value!==slot.alias || ['actor','rowActor'].includes(path)&&Object.hasOwn(row,'actor_id')&&row.actor_id!==slot.alias){valid=false;return;}
    }
   });
   if(!valid)return false;
