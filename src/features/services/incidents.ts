@@ -1,3 +1,5 @@
+import { currentPrincipal } from '../work/identity';
+import { workReadable } from '../work/scope';
 import { recurrenceContext } from './recurrence-context';
 import type { Principal } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
@@ -28,9 +30,10 @@ export async function acknowledgeIncident(db: D1Database, p: Principal, r: Servi
     return mutate(db, p, r, b.revision, { ...r.data, acknowledgedAt: now(), acknowledgedBy: p.userId }, 'incident-acknowledged');
 }
 export async function linkIncident(db: D1Database, p: Principal, incidentId: string, revision: number, employeeIncidentId: string, correction = false) {
+    p = await currentPrincipal(db, p);
     const r = await getService(db, p, incidentId, 'incident');
-    const work = await db.prepare('SELECT requester_id,beneficiary_id,sensitivity,kind FROM work_records WHERE workspace_id=? AND id=?').bind(p.workspaceId, employeeIncidentId).first<any>();
-    if (!work || work.kind !== 'incident' || (work.sensitivity === 'hr' && !p.roles.some(x => ['owner', 'hr'].includes(x))) || (!p.roles.some(x => ['owner', 'operator'].includes(x)) && work.requester_id !== p.userId && work.beneficiary_id !== p.userId))
+    const work = await db.prepare('SELECT requester_id,beneficiary_id,sensitivity,kind,department_id FROM work_records WHERE workspace_id=? AND id=?').bind(p.workspaceId, employeeIncidentId).first<any>();
+    if (!work || (work.department_id && !workReadable(p, work)) || work.kind !== 'incident' || (work.sensitivity === 'hr' && !p.roles.some(x => ['owner', 'hr'].includes(x))) || (!p.roles.some(x => ['owner', 'operator'].includes(x)) && work.requester_id !== p.userId && work.beneficiary_id !== p.userId))
         throw new ApiError(404, 'work_scope', 'Accessible employee incident required');
     const links = (r.data.links || []).filter((x: any) => x.employeeIncidentId !== employeeIncidentId);
     if (!correction)

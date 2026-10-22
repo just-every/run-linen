@@ -1,3 +1,4 @@
+import {registerWorkRoutes} from '../../src/features/work'
 import {Hono} from 'hono'
 import type {AppEnv} from '../../src/platform/types'
 import {ApiError} from '../../src/platform/http'
@@ -16,5 +17,5 @@ app.post('/fixture/restore',async c=>c.json(await restoreAdoptionRecord({env:c.e
 app.post('/fixture/erase',async c=>c.json(await eraseServicePerson({env:c.env,principal:c.get('principal')},await c.req.json())))
 app.post('/fixture/secret',async c=>c.json({secret:await encryptSecret(c.env.ENCRYPTION_KEY,JSON.stringify(await c.req.json()))}))
 app.post('/fixture/state',async c=>{const b:any=await c.req.json();if(b.reset){applied.clear();writes=0;}partial=b.partial===true;failDeployment=b.failDeployment===true;if(b.noGoOnRead)noGoOnRead=b.noGoOnRead;return c.json({writes})})
-registerServiceRoutes(app);registerExecutionRoutes(app)
+registerWorkRoutes(app);registerServiceRoutes(app);registerExecutionRoutes(app)
 export default app

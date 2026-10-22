@@ -1,3 +1,4 @@
+import { departmentSourceChecks } from './department-source-cases.mjs';
 import { operationsKpiChecks } from './kpi-cases.mjs';
 import { templateIntegration, templateErasureCheck } from './template-integration.mjs';
 import { changeRiskChecks } from './risk-cases.mjs';
@@ -23,6 +24,7 @@ await db.prepare("INSERT INTO workspace_settings VALUES('w','{}',1)").run()
 async function call(method,path,body,user='owner'){const response=await mf.dispatchFetch('http://localhost'+path,{method,headers:{'content-type':'application/json','x-user':user},body:body===undefined?undefined:JSON.stringify(body)});return {status:response.status,body:await response.json()}}
 async function ok(method,path,body,user){const r=await call(method,path,body,user);assert.ok(r.status<300,JSON.stringify(r));return r.body}
 for(const [id,provider,config] of [['deploy','controlled-deployment',{url:'https://deployment.fixture.test/change',allowedHosts:['deployment.fixture.test'],targets:['orders']}],['probe','workflow-probe',{url:'https://probe.fixture.test/check',allowedHosts:['probe.fixture.test']}]]){const secret=(await ok('POST','/fixture/secret',{token:'fixture'})).secret;await db.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind(id,'w',provider,id,JSON.stringify(config),secret,'active',now,now).run()}
+await departmentSourceChecks({ok,call,db});
 await operationsKpiChecks({ok,call,implementation:{connectionId:'deploy',connectionRevision:1,verifierConnectionRevision:1,target:'orders',beneficiaryId:'sales',verifierConnectionId:'probe',payload:{release:'kpi-proof'}}});
 await ok('POST','/fixture/state',{reset:true});
 const {releaseId}=await releaseChecks({ok,call,db,implementation:{connectionId:'deploy',connectionRevision:1,verifierConnectionRevision:1,target:'orders',beneficiaryId:'sales',verifierConnectionId:'probe',payload:{release:'r2'}}});

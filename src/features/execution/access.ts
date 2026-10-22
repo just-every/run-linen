@@ -1,3 +1,5 @@
+import { currentPrincipal } from '../work/identity';
+import { workReadable } from '../work/scope';
 import { getCommitment } from "../intelligence/commitments";
 import { assert, membership } from "./authority";
 import { getService } from "../services/store";
@@ -34,12 +36,13 @@ export async function accessiblePlan(ctx: CoreContext, planId: string) {
     return p;
   }
   const work: any = await ctx.env.DB.prepare(
-    "SELECT sensitivity,requester_id,beneficiary_id,assignee_id FROM work_records WHERE id=? AND workspace_id=?",
+    "SELECT sensitivity,requester_id,beneficiary_id,assignee_id,department_id FROM work_records WHERE id=? AND workspace_id=?",
   )
     .bind(p.work_id, ctx.principal.workspaceId)
     .first();
+  const principal = await currentPrincipal(ctx.env.DB, ctx.principal);
   assert(
-    work &&
+    work && (!work.department_id || workReadable(principal, work)) &&
       (work.sensitivity === "normal" ||
         roles.includes("owner") ||
         roles.includes("hr") ||

@@ -1,3 +1,6 @@
+import { departmentWorkBatch } from './department-spaces';
+import { departmentReportScope } from './department-report-scope';
+import { workPrivateReadable } from './scope';
 import { ApiError, id, now, requiredString } from "../../platform/http";
 import { currentWorkPrincipal } from "./identity";
 import { getWork, permit, type WorkContext, type WorkRecord } from "./core";
@@ -129,13 +132,14 @@ export async function setWorkField(ctx: WorkContext, workId: string, input: Reco
   await currentWorkPrincipal(ctx);
   const work = await getWork(ctx, workId);
   permit(ctx, ["owner", "operator", "hr"]);
+  if (work.department_id && !workPrivateReadable(ctx.principal, work)) throw new ApiError(403, "department_staff", "Current department staff required");
   const target = (await fields(ctx)).find((f) => f.id === input.fieldId);
   if (!target || !target.kinds.includes(ticketType(work.kind))) throw new ApiError(422, "field_missing", "Choose a field shown on this ticket type");
   if (typeof input.value !== "string" || input.value.length > 2000) throw new ApiError(422, "field_value", "A field value is text of at most 2000 characters");
   const value = input.value.trim();
   if (value && target.type === "dropdown" && !target.options.includes(value)) throw new ApiError(422, "field_value", `Choose one of the ${target.name} options`);
   const at = now(), ws = ctx.principal.workspaceId;
-  await ctx.env.DB.batch([
+  await departmentWorkBatch(ctx, work, [
     ctx.env.DB.prepare(`INSERT INTO audit_events SELECT ?,?,?,'work.field_set',?,
       json_object('field',?,'before',(SELECT value FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?),'value',?),?`)
       .bind(id(), ws, ctx.principal.userId, workId, target.name, ws, workId, target.id, value || null, at),
@@ -144,7 +148,7 @@ export async function setWorkField(ctx: WorkContext, workId: string, input: Reco
         .bind(ws, workId, target.id, value, ctx.principal.userId, at)
       : ctx.env.DB.prepare("DELETE FROM work_field_values WHERE workspace_id=? AND work_id=? AND field_id=?").bind(ws, workId, target.id),
     ctx.env.DB.prepare("UPDATE work_records SET updated_at=? WHERE workspace_id=? AND id=?").bind(at, ws, workId),
-  ]);
+  ], "private");
   return readWorkDesk(ctx, workId);
 }
 
@@ -184,8 +188,10 @@ export async function closeResolution(ctx: WorkContext, work: WorkRecord, code: 
 
 /** REPORT-001: closed normal-sensitivity tickets opened in [from,to), counted by resolution code. */
 export async function resolutionReport(ctx: WorkContext, from: string, to: string) {
-  const counts = (await ctx.env.DB.prepare("SELECT r.code,COUNT(*) count FROM work_records w LEFT JOIN work_resolutions r ON r.workspace_id=w.workspace_id AND r.work_id=w.id WHERE w.workspace_id=? AND w.sensitivity='normal' AND w.state='closed' AND w.created_at>=? AND w.created_at<? GROUP BY r.code ORDER BY count DESC,r.code")
-    .bind(ctx.principal.workspaceId, from, to).all<{ code: string | null; count: number }>()).results;
+  await currentWorkPrincipal(ctx);
+  const scope = departmentReportScope(ctx);
+  const counts = (await ctx.env.DB.prepare(`SELECT r.code,COUNT(*) count FROM work_records w LEFT JOIN work_resolutions r ON r.workspace_id=w.workspace_id AND r.work_id=w.id WHERE w.workspace_id=? AND w.sensitivity='normal' AND w.state='closed' AND w.created_at>=? AND w.created_at<? AND ${scope.sql} GROUP BY r.code ORDER BY count DESC,r.code`)
+    .bind(ctx.principal.workspaceId, from, to, ...scope.bindings).all<{ code: string | null; count: number }>()).results;
   return {
     definition: "Closed normal-sensitivity tickets opened in [from,to), by the resolution code recorded at their latest close; no code means none was required or the ticket closed before codes were recorded.",
     denominator: counts.reduce((sum, c) => sum + c.count, 0),

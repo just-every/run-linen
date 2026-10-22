@@ -93,6 +93,15 @@ try{
   env.DB.prepare('UPDATE work_catalog SET audience_json=?,tasks_json=? WHERE id=?').bind(JSON.stringify({department:['dept-sales'],location:[],employmentType:[]}),JSON.stringify(taskPlan),'catalog-monitor'),
   env.DB.prepare("INSERT INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,state,owner_id,title,group_id,catalog_id,after_json,completed_by,completed_at) VALUES('task-obligation','workspace','work','task.manual','mount','owner',?,'done','owner','Mount the monitor','retained-team','catalog-monitor','[]','owner',?)").bind(stamp,stamp),
  ]);
+ await env.DB.batch([
+  env.DB.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind('retained-staff','staff@example.test','Facilities agent','synthetic-linen-12004',stamp),
+  env.DB.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('workspace','retained-staff','["operator"]'),
+  env.DB.prepare('INSERT INTO work_departments(id,workspace_id,name,kind,created_at,updated_at) VALUES(?,?,?,?,?,?)').bind('retained-facilities','workspace','Facilities service','facilities',stamp,stamp),
+  env.DB.prepare('INSERT INTO work_department_members(workspace_id,department_id,user_id,active,updated_by,updated_at) VALUES(?,?,?,?,?,?)').bind('workspace','retained-facilities','retained-staff',1,'owner',stamp),
+  env.DB.prepare('UPDATE work_records SET department_id=? WHERE id=?').bind('retained-facilities','work'),
+  env.DB.prepare('UPDATE work_catalog SET department_id=? WHERE id=?').bind('retained-facilities','catalog-monitor'),
+  env.DB.prepare('UPDATE work_groups SET department_id=? WHERE id=?').bind('retained-facilities','hardware'),
+ ]);
  const releaseData={title:'Retained release',plan:'Reviewed release candidate',state:'go',changeIds:['retained-change'],services:['retained-ci'],problemIds:[],affectedGroupIds:['retained-cohort'],approverIds:['owner'],phases:{build:{outcome:'passed',reference:'Build 1',recordedBy:'owner'},test:{outcome:'passed',reference:'Test 1',recordedBy:'owner'}},decisions:[{id:'retained-decision',actor:'owner',decision:'go',reason:'Reviewed',revisions:{'retained-change':1},at:stamp}],priorDecisions:[]};
  await env.DB.prepare('INSERT INTO work_requester_groups(id,workspace_id,name,members_json,created_at) VALUES(?,?,?,?,?)').bind('retained-cohort','workspace','Release pilot','["owner"]',stamp).run();
  const retainedChange={title:'Retained member',state:'draft',services:['retained-ci'],window:{start:stamp,end:new Date(Date.now()+3600000).toISOString()},implementationRevision:1,invocations:[]};
@@ -146,6 +155,9 @@ try{
  assert.equal((await env.DB.prepare("SELECT enabled FROM work_approval_mail_config WHERE workspace_id='workspace'").first()).enabled,0);
  assert.equal((await env.DB.prepare('SELECT COUNT(*) n FROM work_approval_mail_subscriptions').first()).n,0);
  assert.deepEqual(await env.DB.prepare("SELECT active_at,remind_at,sla_at FROM work_approval_stages WHERE fulfilment_id='catalog-request'").first(),{active_at:null,remind_at:null,sla_at:null});
+ assert.equal((await env.DB.prepare("SELECT department_id FROM work_records WHERE id='work'").first()).department_id,'retained-facilities','Department handoff and ticket history retain the workspace reference');
+ assert.equal((await env.DB.prepare("SELECT department_id FROM work_catalog WHERE id='catalog-monitor'").first()).department_id,'retained-facilities');
+ assert.equal((await env.DB.prepare("SELECT active FROM work_department_members WHERE department_id='retained-facilities' AND user_id='retained-staff'").first()).active,0,'Archived staff membership is retained as inert metadata');
  const restoredRelease=JSON.parse((await env.DB.prepare("SELECT data_json FROM svc_records WHERE id='retained-release'").first()).data_json);
  assert.equal(restoredRelease.state,'imported-review','CHANGE-007 actual rer archive puts releases into review');
  assert.deepEqual(restoredRelease.decisions,[],'CHANGE-007 no live go decision survives native restore');
@@ -188,6 +200,10 @@ try{
  assert.deepEqual([restoredTask.title,restoredTask.state,restoredTask.completed_by,restoredTask.can_complete],['Mount the monitor','done','owner',false],'CATALOG-003 restored owner reads the completed team task through the native route');
  const restoredForms=await(await request('/api/v1/work/work/catalog-requests',{cookie})).json();
  assert.deepEqual(restoredForms.items[0].catalogSnapshot,catalogSnapshot,'CATALOG-001 restored owner reads the same original submitted form through the native route');
+ const restoredDepartment=(await(await request('/api/v1/departments/admin',{cookie})).json()).items.find(item=>item.id==='retained-facilities');
+ assert.equal(restoredDepartment.name,'Facilities service');
+ assert.equal(restoredDepartment.members.find(member=>member.userId==='retained-staff').active,false,'Native owner sees that restored staff authority requires fresh confirmation');
+ assert.equal((await(await request('/api/v1/work/work',{cookie})).json()).department_id,'retained-facilities','Native owner reads the same departmental ticket after actual export/reset/import');
  const authHeaders={'X-Linen-CSRF':session.csrfToken}
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/release',{cookie,body:{revision:hold.revision},headers:authHeaders})).status,409,'Unreconciled retained operation blocks ordinary release')
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/reconcile',{cookie,body:{historyId:records.data[0].id,evidence:'Fixture owner reviewed retained unknown operation before explicitly releasing execution'},headers:authHeaders})).status,200)
