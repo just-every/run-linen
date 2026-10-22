@@ -34,14 +34,14 @@ export function WorkGroup({ work, onChanged }: { work: WorkRecord; onChanged: ()
       <form className="inline-form" onSubmit={save}>
         <label>
           Accountable group
-          <select value={groupId} onChange={(e) => setGroupId(e.target.value)} required>
+          <select aria-label="Accountable group" value={groupId} onChange={(e) => setGroupId(e.target.value)} required>
             <option value="">Choose…</option>
             {items.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
         </label>
         <label>
           Owner (an agent in the group)
-          <select value={chosen?.members.some((m) => m.userId === assigneeId) ? assigneeId : ""} onChange={(e) => setAssigneeId(e.target.value)}>
+          <select aria-label="Owner (an agent in the group)" value={chosen?.members.some((m) => m.userId === assigneeId) ? assigneeId : ""} onChange={(e) => setAssigneeId(e.target.value)}>
             <option value="">Unassigned</option>
             {(chosen?.members ?? []).map((m) => <option key={m.userId} value={m.userId}>{m.name}{m.lead ? " · lead" : ""}</option>)}
           </select>

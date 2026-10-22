@@ -4891,7 +4891,7 @@
       "executable": false
     },
     "src/ui/work-groups.tsx": {
-      "sha256": "5ea9f3cc060fb17124f53eecb15400d6bf51efe76df63c199231115ddce2100b",
+      "sha256": "39e7d077636452bf573e2062e1c31d8638e46308b5aa5f6fc1c3c830cc5d0094",
       "executable": false
     },
     "src/ui/work-outcome.tsx": {
@@ -5459,7 +5459,7 @@
       "executable": false
     },
     "tests/ui/department-browser.mjs": {
-      "sha256": "38109aae9a43eaf9af6b4fb66c2b7c3b3c2c2a517cc0e270722438fd05add85c",
+      "sha256": "7fa8a02b45137f5cd85800acdff0af7fb935275edfddd934f8d7835a80549b32",
       "executable": false
     },
     "tests/ui/dependency-journey.mjs": {
