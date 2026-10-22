@@ -1,7 +1,8 @@
 import { serviceHistoryRewrite } from './service-erasure';
-import { ApiError } from '../../platform/http';
+import { captureKnownArchiveAliasStatements } from './archive-identities.mjs';
+import { ApiError, id } from '../../platform/http';
 import type { Env } from '../../platform/types';
-import { decodeHistory } from './registry';
+import { decodeHistory,fieldClass } from './registry';
 import { identityMatcher } from './identity';
 import { historyEventKey, intersectRedaction, redactHistory } from './redact';
 import { projectHistoryEvent } from './event';
@@ -39,10 +40,14 @@ export async function readHistoryEvent(ctx:Context,action:string,payload:unknown
   const safe=await historyArchiveRow(ctx,store==='audit'?'audit_events':'svc_events',row);
   if(eventId && safe.row[column]!==row[column]) {
     const table=store==='audit'?'audit_events':'svc_events',w=ctx.principal.workspaceId;
-    const statements=store==='service'?serviceHistoryRewrite(ctx.env.DB,{workspaceId:w,eventId,beforeActor:row.actor_id,beforePayload:row[column],afterActor:safe.row.actor_id,afterPayload:safe.row[column]}):[ctx.env.DB.prepare(`UPDATE ${table} SET ${column}=?,actor_id=? WHERE workspace_id=? AND id=? AND ${column}=? AND actor_id=?`).bind(safe.row[column],safe.row.actor_id,w,eventId,row[column],row.actor_id)];
+    const original=decodeHistory(row[column]),guard=id();
+    const aliases=original?await captureKnownArchiveAliasStatements(ctx,{eventId,store,payload:original,redactedPayload:JSON.parse(safe.row[column]),personFields:original.changes.filter(c=>fieldClass(original.action,c.field)==='person').map(c=>c.field),actorId:row.actor_id,redactedActorId:safe.row.actor_id,at:new Date().toISOString()}):[];
+    const rewrites=store==='service'?serviceHistoryRewrite(ctx.env.DB,{workspaceId:w,eventId,beforeActor:row.actor_id,beforePayload:row[column],afterActor:safe.row.actor_id,afterPayload:safe.row[column]}):[ctx.env.DB.prepare(`UPDATE ${table} SET ${column}=?,actor_id=? WHERE workspace_id=? AND id=? AND ${column}=? AND actor_id=?`).bind(safe.row[column],safe.row.actor_id,w,eventId,row[column],row.actor_id)];
+    const statements=[ctx.env.DB.prepare(`INSERT INTO history_write_guards SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM ${table} WHERE workspace_id=? AND id=? AND ${column}=? AND actor_id=?) THEN 1 ELSE 0 END`).bind(guard,w,eventId,row[column],row.actor_id),...aliases,...rewrites];
     const envelope=decodeHistory(safe.row[column]);
     if(envelope?.redacted || JSON.parse(safe.row[column])?.redacted==='erasure')statements.push(ctx.env.DB.prepare(`INSERT OR IGNORE INTO history_redactions SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM ${table} WHERE workspace_id=? AND id=? AND ${column}=?)`).bind(w,historyEventKey(store,eventId,envelope),eventId,store,envelope?.redactedAt??new Date().toISOString(),safe.row[column],'{}',w,eventId,safe.row[column]));
-    await ctx.env.DB.batch(statements);
+    statements.push(ctx.env.DB.prepare('DELETE FROM history_write_guards WHERE id=?').bind(guard));
+    try {await ctx.env.DB.batch(statements);}catch(error){if(/CHECK constraint failed/i.test(String(error)))throw new ApiError(409,'history_changed','History changed; reload before reading');throw error;}
   }
   return projectHistoryEvent(action,safe.row[column]);
 }

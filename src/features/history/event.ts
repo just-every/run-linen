@@ -1,3 +1,4 @@
+import { isArchiveAlias } from './archive-identities.mjs';
 import { id, now } from '../../platform/http';
 import { decodeHistory, historyActions } from './registry';
 import { erasedPerson, isErased, type HistoryActor, type HistoryEnvelope, type HistoryMetadata, type HistoryRecord, type Protection } from './types';
@@ -15,7 +16,7 @@ export interface HistoryProjection {changes:{field:string;before:unknown;after:u
 export function projectHistoryEvent(action:string,payload:unknown):HistoryProjection {
   const e=decodeHistory(payload);
   if(!e)return {changes:legacyChanges(action,payload),...(cleared(payload)?{redacted:'erasure' as const,redactedAt:clearedAt(payload)}:{})};
-  return {changes:e.changes.map(c=>({field:c.field.startsWith('custom:')?(c.evidence?.label??'Custom field'):c.field,before:display(c.before),after:display(c.after),...(c.beforeEvidence?.label?{beforeLabel:c.beforeEvidence.label}:{}),...(c.afterEvidence?.label?{afterLabel:c.afterEvidence.label}:{}),...(c.field.startsWith('custom:')?{fieldId:c.field.slice(7)}:{})})),actor:e.actor,...(e.source?{source:e.source}:{}),
+  return {changes:e.changes.map(c=>({field:c.field.startsWith('custom:')?(c.evidence?.label??'Custom field'):c.field,before:display(c.before),after:display(c.after),...(c.beforeEvidence?.label?{beforeLabel:c.beforeEvidence.label}:{}),...(c.afterEvidence?.label?{afterLabel:c.afterEvidence.label}:{}),...(c.field.startsWith('custom:')?{fieldId:c.field.slice(7)}:{})})),actor:{...e.actor,...(isArchiveAlias(e.actor.id)?{id:'[erased]',name:'Erased person'}:{}),...(isArchiveAlias(e.actor.initiatedBy)?{initiatedBy:'[erased]'}:{})},...(e.source?{source:e.source}:{}),
     ...(e.redacted?{redacted:e.redacted,redactedAt:e.redactedAt}:{})};
 }
 export function historyChanges(action:string,payload:unknown) {return projectHistoryEvent(action,payload).changes;}

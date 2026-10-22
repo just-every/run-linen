@@ -21,7 +21,7 @@ export async function restoreHistoryMetadata(ctx:AdoptionContext,table:string,ro
     if(old&&old.alias!==row.alias)throw new ApiError(409,'history_alias_conflict','An archived identity association cannot be reassigned');
     await db.prepare('INSERT OR IGNORE INTO history_archive_identity_digests VALUES(?,?,?,?,?)').bind(w,row.origin,row.digest,row.alias,row.created_at).run();
   }else if(table==='history_archive_slots'){
-    check(['audit','service'].includes(String(row.store))&&typeof row.event_id==='string'&&row.event_id&&typeof row.path==='string'&&(row.path==='actor'||/^change:.+:(before|after)$/.test(row.path))&&isArchiveAlias(row.alias));
+    check(['audit','service'].includes(String(row.store))&&typeof row.event_id==='string'&&row.event_id&&typeof row.path==='string'&&(['actor','rowActor','initiatedBy'].includes(row.path)||/^change:.+:(before|after)$/.test(row.path))&&isArchiveAlias(row.alias));
     check(await db.prepare('SELECT 1 FROM history_archive_aliases WHERE workspace_id=? AND origin=? AND alias=?').bind(w,row.origin,row.alias).first());
     const old=await db.prepare('SELECT origin,alias FROM history_archive_slots WHERE workspace_id=? AND store=? AND event_id=? AND path=?').bind(w,row.store,row.event_id,row.path).first<{origin:string;alias:string}>();
     if(old&&(old.origin!==row.origin||old.alias!==row.alias))throw new ApiError(409,'history_alias_conflict','An archived event slot cannot be reassigned');
