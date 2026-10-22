@@ -204,6 +204,9 @@ if(process.argv[1] && import.meta.url===new URL('file://'+process.argv[1]).href)
     await page.goto(base+'/app');await page.getByLabel('Your name').fill('Catalog owner');await page.getByLabel('Workspace name').fill('Audience proof');
     await page.getByLabel('Work email').fill('catalog-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic-Connected-browser-2026');
     await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();await finishFirstRun(page,base);
+    await catalogFormJourney({page,api:apiFor(page),base,out});
     await catalogAudienceJourney({browser,page,api:apiFor(page),base,out});
+    const {catalogQuoteJourney}=await import('./catalog-quote-journey.mjs');
+    await catalogQuoteJourney({browser,page,api:apiFor(page),base,out});
   } finally {await browser.close();}
 }
