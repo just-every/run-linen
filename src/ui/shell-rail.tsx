@@ -60,7 +60,7 @@ export function RailNav({ section }: { section: string }) {
     ["reports", "Reports", "chart", undefined, operator],
     ["connections", "Settings", "gear", undefined, operator],
   ];
-  const current = settingsSections.some(([key]) => key === section) ? "connections" : section,
+  const current = section === "software-licenses" ? "software-assets" : settingsSections.some(([key]) => key === section) ? "connections" : section,
     rail = useRef<HTMLElement>(null);
   // The rail scrolls on its own when the open More list is taller than the screen: keep the current item in view.
   useEffect(() => {
