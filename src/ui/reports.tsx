@@ -40,6 +40,6 @@ export function CustomReports() {
         <ReportBuilder schema={schema.data} members={members.filter(member => member.id !== session.principal.userId)} onSaved={report => { reports.refresh(); setSelected(report.id); }}/>
       </details>}
     </>}
-    <Notice>Slack report delivery needs configuration (CHANNEL-001). Email schedules and downloadable files are separate from Slack delivery.</Notice>
+    <Notice>Slack report delivery is not available in this version. Use email schedules or download your report.</Notice>
   </section>;
 }

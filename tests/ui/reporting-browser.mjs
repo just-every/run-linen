@@ -103,7 +103,7 @@ try {
     await scheduleRoot.getByText('Schedule this report', { exact: true }).click();
     const schedule = scheduleRoot.getByRole('form', { name: 'Schedule report', exact: true });
     await schedule.getByLabel('Delivery channel').selectOption('slack');
-    await schedule.getByText(/Slack delivery needs configuration \(CHANNEL-001\)/).waitFor();
+    await schedule.getByText(/Slack report delivery is not available/).waitFor();
     assert.equal(await schedule.getByRole('button', { name: 'Save delivery schedule', exact: true }).isDisabled(), true);
     await capture('slack-gap', width);
     await schedule.getByLabel('Delivery channel').selectOption('email');

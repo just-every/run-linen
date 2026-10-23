@@ -3,6 +3,7 @@ import { humanize } from './api';
 import { useMutation } from './state';
 import { ErrorNotice, Notice } from './primitives';
 import { ReportResults } from './report-results';
+import { reportColumnName } from './report-types';
 import type { ReportDefinition, ReportMember, ReportResult, ReportSchema, ReportSource, SavedReport } from './report-types';
 
 type Filter = { id: number; field: string; value: string; type: 'text' | 'number' | 'empty' };
@@ -36,12 +37,12 @@ export function ReportBuilder({ schema, members, onSaved }: { schema: ReportSche
     <form className="inline-form" aria-label="Report builder" onSubmit={run}>
       <label>Report source<select value={source} onChange={event => changeSource(event.target.value as ReportSource)}>{Object.keys(schema.sources).map(key => <option key={key} value={key}>{humanize(key)}</option>)}</select></label>
       <fieldset className="checkbox-group"><legend>Report columns</legend>
-        {fields.map(field => <label key={field} className="checkbox-field"><input type="checkbox" checked={columns.includes(field)} onChange={event => setColumns(event.target.checked ? [...columns, field] : columns.filter(column => column !== field))}/><span>{humanize(field)}</span></label>)}
+        {fields.map(field => <label key={field} className="checkbox-field"><input type="checkbox" checked={columns.includes(field)} onChange={event => setColumns(event.target.checked ? [...columns, field] : columns.filter(column => column !== field))}/><span>{reportColumnName(field)}</span></label>)}
       </fieldset>
       <fieldset><legend>Exact value filters</legend>
         <p>All filters must match. Leave this section empty to include every readable record.</p>
         {filters.map((filter, index) => <div key={filter.id} className="field-grid">
-          <label>Filter {index + 1} field<select required value={filter.field} onChange={event => setFilters(rows => rows.map(row => row.id === filter.id ? { ...row, field: event.target.value } : row))}><option value="">Choose a field</option>{fields.map(field => <option key={field} value={field}>{humanize(field)}</option>)}</select></label>
+          <label>Filter {index + 1} field<select required value={filter.field} onChange={event => setFilters(rows => rows.map(row => row.id === filter.id ? { ...row, field: event.target.value } : row))}><option value="">Choose a field</option>{fields.map(field => <option key={field} value={field}>{reportColumnName(field)}</option>)}</select></label>
           <label>Filter {index + 1} value type<select value={filter.type} onChange={event => setFilters(rows => rows.map(row => row.id === filter.id ? { ...row, type: event.target.value as Filter['type'] } : row))}><option value="text">Text</option><option value="number">Number</option><option value="empty">Not recorded</option></select></label>
           {filter.type !== 'empty' && <label>Filter {index + 1} value<input required type={filter.type === 'number' ? 'number' : 'text'} step={filter.type === 'number' ? 'any' : undefined} maxLength={500} value={filter.value} onChange={event => setFilters(rows => rows.map(row => row.id === filter.id ? { ...row, value: event.target.value } : row))}/></label>}
           <div><button className="action secondary small" type="button" onClick={() => setFilters(rows => rows.filter(row => row.id !== filter.id))}>Remove filter {index + 1}</button></div>
@@ -49,7 +50,7 @@ export function ReportBuilder({ schema, members, onSaved }: { schema: ReportSche
         <button className="action secondary small" type="button" disabled={filters.length >= fields.length} onClick={() => setFilters(rows => [...rows, { id: Math.max(0, ...rows.map(row => row.id)) + 1, field: '', value: '', type: 'text' }])}>Add filter</button>
         {!validFilters && <p role="status">Choose a distinct field for each filter and a valid value.</p>}
       </fieldset>
-      <label>Group report by<select value={groupBy} onChange={event => setGroupBy(event.target.value)}><option value="">Individual records</option>{fields.map(field => <option key={field} value={field}>{humanize(field)}</option>)}</select></label>
+      <label>Group report by<select value={groupBy} onChange={event => setGroupBy(event.target.value)}><option value="">Individual records</option>{fields.map(field => <option key={field} value={field}>{reportColumnName(field)}</option>)}</select></label>
       {groupBy && <p>Grouped reports show the group and its record count.</p>}
       <ErrorNotice error={preview.error}/>
       <button className="action primary" disabled={preview.pending || columns.length === 0 || !validFilters}>{preview.pending ? 'Reading report…' : 'Preview report'}</button>
