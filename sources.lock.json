@@ -566,6 +566,10 @@
       "sha256": "a0e27aeeac42d6102f4ff2bce40d8fb011c07e5cb28eff3c9d77e68df29e5dd6",
       "executable": false
     },
+    ".publish-check/config.json": {
+      "sha256": "4828b20956b0e7b1cc4884f45f47f3281f2d655d9d75582cb3954c3e96592d74",
+      "executable": false
+    },
     "ACCEPTANCE.md": {
       "sha256": "9e1b33de1e72a8e2024d53730ad4892fe5c7452f7e325a33f7b61a5ae99bc358",
       "executable": false
