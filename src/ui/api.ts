@@ -10,7 +10,7 @@ export class ApiFailure extends Error {
   }
 }
 export interface Session {
-  principal: { userId: string; workspaceId: string; roles: string[] };
+  principal: { userId: string; workspaceId: string; roles: string[]; departmentRoles?: {id:string;name:string;departmentId:string;permissions:string[];revision:number}[] };
   user: { id: string; email: string; name: string };
   workspace: { id: string; name: string };
   csrfToken: string;

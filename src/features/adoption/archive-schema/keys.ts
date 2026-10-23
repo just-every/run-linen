@@ -7,6 +7,8 @@ export const archiveKeyFields: Readonly<Record<string, readonly string[]>> = {
     history_identity_tombstones: ['workspace_id', 'digest'],
     work_departments: ['id'],
     work_department_members: ['workspace_id', 'department_id', 'user_id'],
+    work_department_roles: ['id'],
+    work_department_role_members: ['workspace_id', 'role_id', 'user_id'],
     work_approval_stages: ['workspace_id', 'fulfilment_id', 'stage_key'],
     work_approval_decisions: ['id'],
     work_approval_mail: ['workspace_id', 'connection_id', 'source_message_id'],

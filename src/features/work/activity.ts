@@ -41,7 +41,7 @@ export async function ticketActivity(ctx: WorkContext, workId: string) {
     visibility: message.visibility, body: message.body, changes: [],
   }));
   // A shared/participant view does not grant the agent's full ticket scope.
-  if (operator(ctx.principal) && workPrivateReadable(ctx.principal,view.work) && !('access' in view.work)) {
+  if (workPrivateReadable(ctx.principal,view.work) && !('access' in view.work)) {
     await getWork(ctx, workId);
     const rows = (await ctx.env.DB.prepare(`SELECT e.*,CASE WHEN EXISTS(SELECT 1 FROM platform_identity_erasures p WHERE p.workspace_id=e.workspace_id AND p.user_id=e.actor_id) THEN '[erased]' ELSE COALESCE(u.name,e.actor_id) END actor_name FROM audit_events e
       LEFT JOIN users u ON u.id=e.actor_id WHERE e.workspace_id=? AND ((e.target=? AND e.action IN (${actions.map(() => '?').join(',')})) OR (e.action='work.fulfilment_amended' AND e.target IN(SELECT id FROM work_fulfilment_amendments WHERE workspace_id=e.workspace_id AND work_id=?)) OR (e.action='work.approval_stage_decided' AND e.target IN(SELECT id FROM work_approval_decisions WHERE workspace_id=e.workspace_id AND work_id=?)) OR (e.action IN ('work.task_created','work.task_completed','work.obligation_waived','work.obligation_changed','lifecycle.task_created','lifecycle.task_rescheduled','lifecycle.task_cancelled','lifecycle.task_completed','lifecycle.task_waived','work.recurring_task_created','work.recurring_task_completed') AND (e.target IN (SELECT id FROM work_obligations WHERE workspace_id=e.workspace_id AND work_id=?) OR e.target IN(SELECT id FROM work_recurring_tasks WHERE workspace_id=e.workspace_id AND work_id=?)))) ORDER BY e.created_at,e.rowid`)

@@ -13,8 +13,10 @@ import type { Department } from './departments';
 export function Composer({
   workId,
   onSent,
+  privateReply,
 }: {
   workId?: string;
+  privateReply?: boolean;
   onSent: () => void;
 }) {
   const [noticeOffer, setNoticeOffer] = useState<{body:string;items:{id:string;message:string}[]} | null>(null);
@@ -34,7 +36,7 @@ export function Composer({
     field = useRef<HTMLTextAreaElement>(null),
     mutation = useMutation(),
     { session } = useSession();
-  const privateAllowed = session.principal.roles.some((r) =>
+  const privateAllowed = privateReply ?? session.principal.roles.some((r) =>
     ["owner", "operator", "hr"].includes(r),
   );
   // The service team can start a request for another person's account; a service chosen for it is theirs.

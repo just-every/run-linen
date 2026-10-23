@@ -8,6 +8,8 @@ export const scalarReferences: Readonly<Record<string, readonly ReferenceSelecto
     history_identity_tombstones: [],
     work_departments: [{ ...business('id'), identity: true }],
     work_department_members: [person('user_id'), person('updated_by'), business('department_id', 'work_departments')],
+    work_department_roles: [person('created_by'), business('department_id', 'work_departments'), { ...business('id'), identity: true }],
+    work_department_role_members: [person('user_id'), person('granted_by'), business('role_id', 'work_department_roles')],
     work_approval_stages: [business('fulfilment_id', 'work_fulfilments'), business('work_id', 'work_records')],
     work_approval_decisions: [person('approver_id'), business('work_id', 'work_records'), business('fulfilment_id', 'work_fulfilments'), { ...business('id'), identity: true }],
     work_approval_mail: [],

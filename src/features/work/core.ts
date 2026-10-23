@@ -1,5 +1,6 @@
+import { scopedTicketPermission } from './department-role-authority';
 import {obligationHistory,ticketHistory} from './work-history';
-import { workReadable, workPrivateReadable, workDepartmentStaff, workDepartmentScoped } from './scope';
+import { workReadable, workPrivateReadable, workDepartmentStaff, workDepartmentScoped, workReplyAllowed, workTransitionAllowed } from './scope';
 import { departmentWorkBatch, requestDepartment, workReadSql, departmentNotHrSql, requireWorkPrivate } from './department-spaces';
 import { preparePendingRequest, pendingRequestSnapshot } from './pending-services';
 import { progressFor, requestProgress } from "./progress";
@@ -82,14 +83,14 @@ export async function getWork(ctx: WorkContext, id: string) {
 
   const p = ctx.principal;
   const row = await ctx.env.DB.prepare(
-    "SELECT w.*,(SELECT name FROM work_departments WHERE workspace_id=w.workspace_id AND id=w.department_id) department_name,(SELECT kind FROM work_departments WHERE workspace_id=w.workspace_id AND id=w.department_id) department_kind FROM work_records w WHERE w.workspace_id=? AND w.id=?",
+    `SELECT w.*,(SELECT name FROM work_departments WHERE workspace_id=w.workspace_id AND id=w.department_id) department_name,(SELECT kind FROM work_departments WHERE workspace_id=w.workspace_id AND id=w.department_id) department_kind FROM work_records w WHERE w.workspace_id=? AND w.id=? AND EXISTS(SELECT 1 FROM memberships m WHERE m.workspace_id=w.workspace_id AND m.user_id=? AND m.active=1 AND ${workReadSql()})`,
   )
-    .bind(p.workspaceId, id)
+    .bind(p.workspaceId, id, p.userId)
     .first<WorkRecord>();
   if (!row || !workReadable(p,row))
     throw new ApiError(404, "not_found", "Work not found");
   if (
-    (operator(p) || Boolean(row.department_id)&&p.roles.includes('hr')) &&
+    (operator(p) || Boolean(row.department_id)&&p.roles.includes('hr') || scopedTicketPermission(p,row,'ticket.read')) &&
     row.requester_id !== p.userId &&
     row.beneficiary_id !== p.userId
   )
@@ -284,10 +285,11 @@ export async function createWork(
 /** The person a request's own words name, recorded once as a fact of the request. It is never an identity or authority. */
 export async function recordRequestedFor(ctx: WorkContext, workId: string, name: string) {
   const work=await getWork(ctx, workId),at=now();
+  if(!workReplyAllowed(ctx.principal,work))throw new ApiError(403,'ticket_reply','Current reply permission required');
   const context = "CASE WHEN json_valid(context_json) AND json_type(context_json)='object' THEN context_json ELSE '{}' END";
   await departmentWorkBatch(ctx,work,[ctx.env.DB.prepare(`UPDATE work_records SET context_json=json_set(${context},'$.requestedFor',?),updated_at=?
     WHERE workspace_id=? AND id=? AND json_extract(${context},'$.requestedFor') IS NULL`)
-    .bind(name, at, ctx.principal.workspaceId, workId),ticketHistory(ctx,work,'work.requested_for_updated',{requestedFor:null},{requestedFor:name},at)]);
+    .bind(name, at, ctx.principal.workspaceId, workId),ticketHistory(ctx,work,'work.requested_for_updated',{requestedFor:null},{requestedFor:name},at)],'reply');
 }
 export async function appendMessage(
   ctx: WorkContext,
@@ -297,7 +299,7 @@ export async function appendMessage(
     visibility: "public" | "private";
     sourceMessageId: string;
   },
-  internalAuthority?: "staff",
+  internalAuthority?: "staff" | "transition",
 ) {
   await currentWorkPrincipal(ctx);
 
@@ -308,7 +310,7 @@ export async function appendMessage(
     return appendSharedReply(ctx, input);
   }
   if (internalAuthority === 'staff' && !workDepartmentStaff(ctx.principal, work)) throw new ApiError(403, 'department_staff', 'Current department staff authority required');
-  if(input.visibility==='private')requireWorkPrivate(ctx,work);
+  if(internalAuthority==='transition'?!workTransitionAllowed(ctx.principal,work,'reopen'):!workReplyAllowed(ctx.principal,work,input.visibility==='private'))throw new ApiError(403,'ticket_reply','This role does not permit this reply');
   const previous = await ctx.env.DB.prepare(
     "SELECT visibility,body FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?",
   )
@@ -372,7 +374,7 @@ export async function appendMessage(
       ).bind(responseAt,responseAt,ctx.principal.workspaceId,input.workId),
       ticketHistory(ctx,work,'work.response_recorded',{responseAt:work.response_at??null},{responseAt},responseAt),
     );
-  await departmentWorkBatch(ctx,work,statements,input.visibility==='private'?'private':internalAuthority??'read');
+  await departmentWorkBatch(ctx,work,statements,internalAuthority==='transition'?'participantTransition':input.visibility==='private'?'privateReply':internalAuthority??'reply');
   return ctx.env.DB.prepare(
     "SELECT * FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?",
   )
@@ -423,7 +425,7 @@ export async function conversation(ctx: WorkContext, workId: string) {
     .bind(work.requester_id, work.assignee_id).first();
   const current=await getWork(ctx,workId);
   if((current.department_id??null)!==(work.department_id??null)||privateAllowed&&!workPrivateReadable(ctx.principal,current))throw new ApiError(409,'department_authority_changed','Ticket workspace or current authority changed; reload');
-  return { work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, quotes: await quotesForRequest(ctx, workId), progress: await requestProgress(ctx, workId) };
+  return { permissions:{reply:workReplyAllowed(ctx.principal,current),privateReply:workReplyAllowed(ctx.principal,current,true),transition:workTransitionAllowed(ctx.principal,current,'close'),participantTransition:workTransitionAllowed(ctx.principal,current,'reopen')}, work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, quotes: await quotesForRequest(ctx, workId), progress: await requestProgress(ctx, workId) };
 }
 // The public line each conversation command records, in words people read.
 const transitionLabels: Record<string, string> = { reopen: "Reopened", cancel: "Cancelled", close: "Closed", pause: "Paused", resume: "Resumed", assign: "Assigned" };
@@ -458,10 +460,7 @@ export async function transitionWork(
   )[command];
   if (!state)
     throw new ApiError(422, "invalid_command", "Unknown work command");
-  if (!["reopen", "cancel"].includes(command)) {
-    permit(ctx, ["owner", "operator", "hr"]);
-    if(!workDepartmentStaff(ctx.principal,work))throw new ApiError(403,"department_staff","Current department staff authority required");
-  }
+  if(!workTransitionAllowed(ctx.principal,work,command))throw new ApiError(403,'ticket_transition','This role does not permit this ticket action');
   if (command === "assign") {
     const member = await ctx.env.DB.prepare(
       "SELECT user_id FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND (roles_json LIKE '%operator%' OR roles_json LIKE '%owner%')",
@@ -516,7 +515,7 @@ export async function transitionWork(
     ...(work.paused_at||command==='pause'?slaPauseStatements(ctx,workId,command,waiting,t,statusId):[]),
   ];
   if(work.revision!==revision)throw new ApiError(409,'revision_conflict','Work changed; refresh before deciding');
-  const [result]=await departmentWorkBatch(ctx,work,transitionStatements,['reopen','cancel'].includes(command)?'read':'staff');
+  const [result]=await departmentWorkBatch(ctx,work,transitionStatements,['reopen','cancel'].includes(command)?'participantTransition':command==='assign'?'staff':'transition');
   if (!result.meta.changes)
     throw new ApiError(
       409,
@@ -539,6 +538,6 @@ export async function transitionWork(
     body: `${transitionLabels[command]}: ${reason}${pendingCancellation ? `; ${pendingCancellation} execution cancellation(s) pending reconciliation` : ""}`,
     visibility: "public",
     sourceMessageId: `transition:${revision + 1}`,
-  });
+  }, 'transition');
   return getWork(ctx, workId);
 }

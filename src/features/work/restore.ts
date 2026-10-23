@@ -9,11 +9,14 @@ import { calendarDate } from './depreciation';
 import { currentWorkPrincipal } from "./identity";
 import { validateCannedBody } from './canned-responses';
 import { prepareKnowledgeDraftRestore } from './knowledge-draft-restore';
+import { rolePermissions } from './department-role-authority';
 import { ApiError, now } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
 const tables = new Set([
   'work_approval_stages',
   'work_departments',
+  'work_department_roles',
+  'work_department_role_members',
   'work_canned_responses',
   'work_knowledge_drafts',
   "work_records",
@@ -101,6 +104,25 @@ export async function restoreAdoptionRecord(
   if(input.table==='work_departments') {
     if(!['it','hr','facilities','finance','legal','custom'].includes(String(row.kind))||typeof row.name!=='string'||!row.name.trim())throw new ApiError(422,'restore_department','Typed department workspace metadata required');
     row.active=0;
+  }
+  if(input.table==='work_department_roles') {
+    let permissions:unknown;
+    try { permissions=JSON.parse(String(row.permissions_json)); }
+    catch { throw new ApiError(422,'restore_role','Valid scoped role permissions required'); }
+    const allowed:string[]=rolePermissions.map(permission=>permission.id);
+    if(!Array.isArray(permissions)||!permissions.length||permissions.some(value=>!allowed.includes(value))||new Set(permissions).size!==permissions.length||!permissions.includes('ticket.read')||permissions.includes('ticket.private.reply')&&(!permissions.includes('ticket.private.read')||!permissions.includes('ticket.reply'))||typeof row.name!=='string'||!row.name.trim()||row.name.length>120||!Number.isSafeInteger(row.revision)||Number(row.revision)<1)
+      throw new ApiError(422,'restore_role','Valid scoped role definition required');
+    if(!await ctx.env.DB.prepare("SELECT 1 FROM work_departments WHERE workspace_id=? AND id=? AND kind<>'hr'").bind(ctx.principal.workspaceId,String(row.department_id)).first())
+      throw new ApiError(422,'restore_role','Restore a non-HR department before its role');
+    row.active=0;
+  }
+  if(input.table==='work_department_role_members') {
+    if(typeof row.user_id!=='string'||!row.user_id||!Number.isSafeInteger(row.role_revision)||Number(row.role_revision)<1||!Number.isSafeInteger(row.revision)||Number(row.revision)<1)
+      throw new ApiError(422,'restore_role','Valid inactive role assignment required');
+    if(!await ctx.env.DB.prepare('SELECT 1 FROM work_department_roles WHERE workspace_id=? AND id=? AND revision>=?').bind(ctx.principal.workspaceId,String(row.role_id),Number(row.role_revision)).first())
+      throw new ApiError(422,'restore_role','Restore the matching role definition before its assignment');
+    row.active=0;
+    row.granted_by=null;
   }
   if(input.table==='work_records'&&row.protected_departments_json!==undefined) {
     if(typeof row.protected_departments_json!=='string')throw new ApiError(422,'restore_department','Typed retained department restrictions required');
@@ -248,6 +270,7 @@ export async function restoreAdoptionRecord(
     if(row.state==='proposing')row.state='restored';
   }
   const subjects = [row.requester_id, row.beneficiary_id, row.author_id, row.actor_id, row.person_id, row.pending_person_id,
+    ...(['work_department_roles','work_department_role_members'].includes(input.table)?[row.created_by,row.user_id]:[]),
     ...(input.table.startsWith('work_recurring_')?[row.creator_id,row.owner_id,row.completed_by]:[]),
     ...(input.table==='work_pending_people'?[row.id]:[])].filter(
     (v): v is string => typeof v === "string",

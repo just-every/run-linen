@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {apiFor,fields,finishFirstRun,signIn} from './connected-helpers.mjs';
+import {departmentRoleJourney} from './department-role-journey.mjs';
 
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 if(!base)throw Error('Start with node tests/ui/run.mjs tests/ui/department-browser.mjs');
@@ -256,7 +257,9 @@ try {
     await ep.waitForURL(/#\/work\/[^/?]+$/);assert.equal((await employeeApi('/work/'+bundled.workId)).work.department_id,departments.it.id,'A same-workspace bundle creates work with its service team');
     await capture(ep,'employee-same-workspace-bundle',width);
   }
-  await itContext.close();await employeeContext.close();await facContext.close();assert.deepEqual(errors,[]);
+  await itContext.close();await employeeContext.close();await facContext.close();
+  await departmentRoleJourney({page,api,base,out,browser,departmentId:departments.facilities.id,otherDepartmentId:departments.it.id});
+  assert.deepEqual(errors,[]);
   console.log('PASS DESK-011 native 1440/390: five service workspaces, explicit staff, scoped catalogs/knowledge/SLA, HR→IT retains original HR restrictions with live dual-membership grant/withdrawal, HR-service staff denied HR records, combined employee catalog, Facilities→IT audited handoff retaining history/restrictions/SLA and withdrawing old staff access.');
 } catch(error) {
   for(const [i,context] of browser.contexts().entries())for(const [j,page] of context.pages().entries())await page.screenshot({path:`${out}/DESK-011-failure-${i}-${j}.png`,fullPage:true}).catch(()=>{});

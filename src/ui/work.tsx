@@ -49,6 +49,7 @@ export interface WorkRecord {
 }
 export interface RequestProgress { needsAction?: boolean; title?: string; dueAt?: string; state: string; happened: string; next: string; ownerId: string | null; ownerLabel: string; }
 export interface Conversation {
+  permissions?:{reply:boolean;privateReply:boolean;transition:boolean;participantTransition:boolean};
   pendingPerson?: PendingPerson | null;
   heldServices?: HeldService[];
   progress?: RequestProgress[];

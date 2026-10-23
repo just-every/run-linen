@@ -1,3 +1,4 @@
+import { workReadable } from './scope';
 import {obligationHistory} from './work-history';
 import { workDepartmentStaffSql } from './department-spaces';
 import { requireWorkDepartmentStaff } from './department-operations';
@@ -33,6 +34,7 @@ export async function requestFulfilment(ctx: WorkContext, workId: string, input:
     return amendFulfilment(ctx,workId,{...input,expectedWorkRevision:input.expectedWorkRevision,
       expectedFulfilmentRevision:input.expectedFulfilmentRevision,idempotencyKey:input.idempotencyKey});
   const work = await getWork(ctx, workId);
+  if(!workReadable({...ctx.principal,departmentRoles:[]},work))throw new ApiError(403,'catalog_request_authority','A custom ticket role does not grant catalog request authority');
   const evaluation = await evaluateFulfilment(ctx, work, input);
   try { await ctx.env.DB.batch(fulfilmentStatements(ctx, evaluation, work.id, work.revision)); } catch(error) {
     if(String(error).includes('CHECK constraint failed'))throw new ApiError(409,'catalog_changed','This item changed while you were filling it in. Review it and submit again.');

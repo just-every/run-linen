@@ -70,6 +70,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
   if (detail.error) return <ErrorNotice error={detail.error} retry={detail.refresh} />;
   if (!work) return null;
   const progress = detail.data?.progress ?? [];
+  const rights=detail.data?.permissions;
   const taskReminder = (() => {
     try { return (JSON.parse(work.context_json || "{}") as { lifecycleTaskReminder?: RecordValue }).lifecycleTaskReminder; } catch { return undefined; }
   })();
@@ -167,17 +168,17 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <p className="agent-note">Linen reads each message against your catalog and services. Effects need a standing grant and are verified separately.</p>
         {access === "team"
           ? <Notice>You see this request because the person it is for reports to you. It is read-only: only the people it is shared with can reply.</Notice>
-          : <Composer workId={work.id} onSent={changed} />}
+          : rights?.reply===false ? <Notice>Your department role gives read-only access to this conversation.</Notice> : <Composer workId={work.id} onSent={changed} privateReply={rights?.privateReply} />}
         {work.requester_id === session.principal.userId && !access && <AskForPerson workId={work.id} onChanged={changed} />}
         {access === "shared" && <Notice>Shared with you. You can read and reply to its public messages.</Notice>}
         <ConversationHistory conversation={detail.data!} />
       </section>
-      {!access && <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />}
+      {!access && (mine || operator) && <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />}
       <BundleProgress key={`bundle-${work.id}`} workId={work.id} />
       {sponsorReminder && work.beneficiary_id === session.principal.userId && <SponsorReattest context={sponsorReminder} onChanged={changed} />}
       {taskReminder && work.beneficiary_id === session.principal.userId && <LifecycleTaskReminder context={taskReminder} onChanged={changed} />}
       {operator && <WorkTime workId={work.id} />}
-      {!access && <WorkCommands work={work} onChanged={changed} operator={operator} />}
+      {!access && rights?.participantTransition!==false && <WorkCommands work={work} onChanged={changed} operator={operator} transition={rights?.transition} />}
       <details className="evidence">
         <summary>Request identity & context</summary>
         <Facts entries={[["Visibility", work.sensitivity === "hr" ? "Restricted HR conversation" : "Request participants and permitted service team"], ["Requested by", work.requester_name ?? personName(work.requester_id)], ["For", forName], ...objectFacts(work.context_json)]} />
@@ -277,7 +278,7 @@ function ConversationHistory({ conversation }: { conversation: Conversation }) {
   );
 }
 
-function WorkCommands({ work, onChanged, operator }: { work: WorkRecord; onChanged: () => void; operator: boolean }) {
+function WorkCommands({ work, onChanged, operator, transition }: { work: WorkRecord; onChanged: () => void; operator: boolean; transition?:boolean }) {
   const [command, setCommand] = useState(""),
     mutation = useMutation(),
     members = useRemote<RecordValue[]>(operator ? "/members" : null),
@@ -312,16 +313,16 @@ function WorkCommands({ work, onChanged, operator }: { work: WorkRecord; onChang
         <button className="action secondary" onClick={() => setCommand("cancel")}>
           Cancel this request
         </button>
-        {operator && (
+        {(operator || transition) && (
           <details className="more-actions">
             <summary>Service controls</summary>
             <div className="button-row">
-              {["assign", work.state === "paused" ? "resume" : "pause", "close"].map((c) => (
+              {[...(operator?["assign"]:[]), work.state === "paused" ? "resume" : "pause", "close"].map((c) => (
                 <button className="action secondary small" key={c} onClick={() => setCommand(c)}>
                   {c === "assign" ? "Assign…" : humanize(c)}
                 </button>
               ))}
-              <a href="#/operations">Effects, takeover & compensation</a>
+              {operator && <a href="#/operations">Effects, takeover & compensation</a>}
             </div>
           </details>
         )}

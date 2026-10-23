@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { departmentRoleChecks } from './department-role-cases.mjs';
 
 /** Department permissions, retained handoff history and private evidence through real public routes. */
 export async function departmentSpaceChecks(api,db,uploadBytes) {
@@ -153,5 +154,6 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   const facilities=(await call('/departments/admin')).items.find(d=>d.id===spaces.facilities.id);
   await call('/departments/'+facilities.id+'/members',{revision:facilities.revision,userId:facUser,active:true},owner,422);
   await call('/departments/admin',undefined,outsider,403);
+  await departmentRoleChecks(api,db,uploadBytes);
   return {workspace,departments:spaces,workId:request.id};
 }

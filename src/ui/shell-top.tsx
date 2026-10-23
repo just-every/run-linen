@@ -42,7 +42,7 @@ export function TopBar({ onSignOut, query }: { onSignOut: () => void; query: str
   const { session } = useSession(),
     { brand } = useBrand(),
     [profile, setProfile] = useState(false),
-    searchAgent = session.principal.roles.some(r => ["owner", "operator", "hr"].includes(r)),
+    searchAgent = session.principal.roles.some(r => ["owner", "operator", "hr"].includes(r)) || Boolean(session.principal.departmentRoles?.length),
     operator = session.principal.roles.some((r) => ["owner", "operator", "hr", "auditor"].includes(r));
   return (
     <header className="topbar">

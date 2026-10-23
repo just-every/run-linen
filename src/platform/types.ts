@@ -1,5 +1,5 @@
 export type Role = 'owner' | 'operator' | 'employee' | 'approver' | 'hr' | 'auditor' | 'integration'
-export interface Principal { userId: string; workspaceId: string; roles: Role[]; departmentIds?: string[] }
+export interface Principal { userId: string; workspaceId: string; roles: Role[]; departmentIds?: string[]; departmentRoles?: import('../features/work/department-role-authority').DepartmentRoleGrant[] }
 export interface Env {
   RER_DEMO?: string
   RER_OWNER_CLAIM_ISSUER?: string

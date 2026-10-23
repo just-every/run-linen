@@ -131,6 +131,9 @@ async function eraseSinglePerson(
     ctx.env.DB.prepare(`DELETE FROM work_field_values WHERE workspace_id=? AND (updated_by=? OR work_id IN(SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))) AND (field_id IN(SELECT id FROM work_custom_fields WHERE workspace_id=? AND (privacy_class<>'nonpersonal' OR field_type NOT IN('dropdown','multiselect','number','boolean','date'))) OR work_id IN(SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?) AND (sensitivity IN('hr','restricted') OR json_array_length(protected_departments_json)>0 OR department_id IN(SELECT id FROM work_departments WHERE workspace_id=? AND kind='hr'))))`).bind(w,p,w,p,p,w,w,p,p,w),
     ctx.env.DB.prepare('DELETE FROM work_department_members WHERE workspace_id=? AND user_id IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify([p,...aliases])),
     ctx.env.DB.prepare('UPDATE work_department_members SET updated_by=NULL WHERE workspace_id=? AND updated_by IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify([p,...aliases])),
+    ctx.env.DB.prepare('DELETE FROM work_department_role_members WHERE workspace_id=? AND user_id IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify([p,...aliases])),
+    ctx.env.DB.prepare('UPDATE work_department_role_members SET granted_by=NULL WHERE workspace_id=? AND granted_by IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify([p,...aliases])),
+    ctx.env.DB.prepare('UPDATE work_department_roles SET created_by=NULL WHERE workspace_id=? AND created_by IN (SELECT value FROM json_each(?))').bind(w,JSON.stringify([p,...aliases])),
     // Tombstone every current identity in this same transaction. A reviewer may
     // unbind an erased record, but cannot rebind either side during cleanup.
     ...[...new Set([p,...aliases,...people.map(p=>`${p.source}:${p.source_id}`)])].map(value =>

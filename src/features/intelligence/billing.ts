@@ -1,3 +1,4 @@
+import { liveDepartmentRoles } from '../work/department-role-authority';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../../platform/types';
 import { jsonBody, now, requiredString } from '../../platform/http';
@@ -33,9 +34,10 @@ export function registerBillingRoutes(app: Hono<AppEnv>) {
     const rateBps = integer(b.tax.rateBps, 10000), taxableBps = integer(b.tax.taxableBps, 10000);
     const jurisdiction = requiredString(b.tax.jurisdiction, 'jurisdiction', 150), basis = requiredString(b.tax.basis, 'basis', 500);
     assert(b.tax.applicable || rateBps === 0, 'nonapplicable_tax_must_be_zero', 422);
-    const members = await c.env.DB.prepare('SELECT roles_json FROM memberships WHERE workspace_id=? AND active=1').bind(ctx.principal.workspaceId).all<{roles_json:string}>();
+    const members = await c.env.DB.prepare('SELECT user_id,roles_json FROM memberships WHERE workspace_id=? AND active=1').bind(ctx.principal.workspaceId).all<{user_id:string;roles_json:string}>();
     const roles = members.results.map(r => JSON.parse(r.roles_json) as string[]);
-    const seats = roles.filter(r => r.some(x => ['owner','operator','hr'].includes(x))).length;
+    const paid = await Promise.all(members.results.map(async (m,i)=>roles[i].some(x=>['owner','operator','hr'].includes(x)) || (await liveDepartmentRoles(c.env.DB,ctx.principal.workspaceId,m.user_id)).length>0));
+    const seats = paid.filter(Boolean).length;
     const freeMembers = roles.length - seats, subtotalCents = seats * plan.agent_seat_cents;
     const taxableCents = Math.round(subtotalCents * taxableBps / 10000);
     const taxCents = b.tax.applicable ? Math.round(taxableCents * rateBps / 10000) : 0;

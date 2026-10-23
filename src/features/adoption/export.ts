@@ -29,7 +29,8 @@ export async function createExport(ctx: AdoptionContext, key: string) {
         const columns = info.map(x => x.name);
         check(columns.includes('workspace_id'), 'unsupported_schema');
         check(columns.every(c => /^[a-z_][a-z0-9_]*$/.test(c)), 'unsupported_schema');
-        const object = `json_object(${columns.map(c => `'${c}',${/password|secret|token|encryption_key/i.test(c) ? 'NULL' : c}`).join(',')})`;
+        const roleMetadata = table==='work_department_roles'||table==='work_department_role_members';
+        const object = `json_object(${columns.map(c => `'${c}',${/password|secret|token|encryption_key/i.test(c) || table==='work_department_role_members'&&c==='granted_by' ? 'NULL' : roleMetadata&&c==='active' ? '0' : c}`).join(',')})`;
         const primary = info.filter(x => x.pk > 0).sort((a, b) => a.pk - b.pk).map(x => x.name);
         const sourceKey = primary.length === 1 ? `CAST(${primary[0]} AS TEXT)` : primary.length ? `json_array(${primary.join(',')})` : object;
         statements.push(db.prepare(`INSERT INTO adoption_snapshot(export_id,workspace_id,table_name,source_key,row_json) SELECT ?,workspace_id,?,${sourceKey},${object} FROM ${table} WHERE workspace_id=?`).bind(run, table, w));

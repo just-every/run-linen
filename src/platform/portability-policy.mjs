@@ -18,6 +18,8 @@ export const portabilityPolicy={
   if(table && await db.prepare(`SELECT 1 FROM "${table.replaceAll('"','""')}" WHERE secret_hash IS NOT NULL OR state<>'revoked' LIMIT 1`).first())return false;
   for(const [name,invalid] of [
    ['work_access_policies','active IS NOT 0'],
+   ['work_department_roles','active IS NOT 0'],
+   ['work_department_role_members','active IS NOT 0 OR granted_by IS NOT NULL'],
    ['work_approval_decisions','inert IS NOT 1'],
    ['work_approval_tokens',"state IS NOT 'expired' OR token_hash IS NOT id OR sent_to IS NOT ''"],
    ['work_approval_mail_config','enabled IS NOT 0'],
@@ -29,6 +31,27 @@ export const portabilityPolicy={
   const departmentMembers=tables.work_department_members;
   if(departmentMembers && await db.prepare(`SELECT 1 FROM "${departmentMembers.replaceAll('"','""')}" WHERE active<>0 LIMIT 1`).first())return false;
   const work=tables.work_records,departments=tables.work_departments;
+  const roles=tables.work_department_roles,roleMembers=tables.work_department_role_members;
+  if(roles){
+   const quoted='"'+roles.replaceAll('"','""')+'"';
+   if(await db.prepare(`SELECT 1 FROM ${quoted} WHERE NOT json_valid(permissions_json) LIMIT 1`).first())return false;
+   if(await db.prepare(`SELECT 1 FROM ${quoted} WHERE
+    json_type(permissions_json)<>'array' OR json_array_length(permissions_json)=0
+    OR EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE type<>'text' OR value NOT IN ('ticket.read','ticket.private.read','ticket.reply','ticket.private.reply','ticket.transition'))
+    OR json_array_length(permissions_json)<>(SELECT COUNT(DISTINCT value) FROM json_each(permissions_json))
+    OR NOT EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.read')
+    OR (EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.private.reply') AND
+      (NOT EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.private.read') OR NOT EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.reply')))
+    OR typeof(revision)<>'integer' OR revision<1 LIMIT 1`).first())return false;
+   if(!departments){if(await db.prepare(`SELECT 1 FROM ${quoted} LIMIT 1`).first())return false;}
+   else if(await db.prepare(`SELECT 1 FROM ${quoted} r WHERE NOT EXISTS(SELECT 1 FROM "${departments.replaceAll('"','""')}" d WHERE d.id=r.department_id AND d.workspace_id=r.workspace_id AND d.kind<>'hr') LIMIT 1`).first())return false;
+  }
+  if(roleMembers){
+   const quoted='"'+roleMembers.replaceAll('"','""')+'"';
+   if(await db.prepare(`SELECT 1 FROM ${quoted} WHERE typeof(role_revision)<>'integer' OR role_revision<1 OR typeof(revision)<>'integer' OR revision<1 LIMIT 1`).first())return false;
+   if(!roles){if(await db.prepare(`SELECT 1 FROM ${quoted} LIMIT 1`).first())return false;}
+   else if(await db.prepare(`SELECT 1 FROM ${quoted} m WHERE NOT EXISTS(SELECT 1 FROM "${roles.replaceAll('"','""')}" r WHERE r.id=m.role_id AND r.workspace_id=m.workspace_id AND m.role_revision<=r.revision) LIMIT 1`).first())return false;
+  }
   if(work){
    const quoted='"'+work.replaceAll('"','""')+'"';
    const columns=await db.prepare(`PRAGMA table_info(${quoted})`).all();
@@ -56,6 +79,8 @@ export const portabilityPolicy={
   if(table==='work_approval_decisions')return {...row,inert:1}
   if(table==='work_approval_stages')return {...row,active_at:null,remind_at:null,reminded_at:null,sla_at:null,breached_at:null}
   if(table==='work_department_members')return {...row,active:0,updated_by:null}
+  if(table==='work_department_roles')return {...row,active:0}
+  if(table==='work_department_role_members')return {...row,active:0,granted_by:null}
   if(table==='work_approval_mail_config')return {...row,enabled:0}
   if(table==='work_approval_tokens')return {...row,state:'expired',token_hash:row.id,sent_to:''}
   if(table==='mcp_credentials')return {...row,secret_hash:null,state:'revoked',invalidated_at:row.invalidated_at||row.created_at}

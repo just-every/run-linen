@@ -1,4 +1,4 @@
-import { workPrivateReadable } from './scope';
+import { workPrivateReadable, workReplyAllowed } from './scope';
 import { departmentWorkBatch } from './department-spaces';
 import { currentWorkPrincipal } from "./identity";
 import { safeFileName, safeContentType, sha256Hex } from "./mail-attachment";
@@ -17,10 +17,7 @@ export async function storeAttachment(
 ) {
   await currentWorkPrincipal(ctx);
   const work = await getWork(ctx, workId);
-  if (
-    input.visibility === "private" &&
-    !workPrivateReadable(ctx.principal,work)
-  )
+  if (!workReplyAllowed(ctx.principal,work,input.visibility==='private'))
     throw new ApiError(403, "private", "Private attachments require operator");
   if (input.bytes.byteLength > 20 * 1024 * 1024 || !input.name)
     throw new ApiError(
@@ -50,7 +47,7 @@ export async function storeAttachment(
         hash,
         now(),
       )
-      ],input.visibility==='private'?'private':'read');
+      ],input.visibility==='private'?'privateReply':'reply');
   } catch (error) {
     await ctx.env.ATTACHMENTS.delete(key);
     throw error;
