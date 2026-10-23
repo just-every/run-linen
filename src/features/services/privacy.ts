@@ -1,4 +1,5 @@
 import { prepareHistoryErasure } from '../history/erasure';
+import { eraseSoftwareLicenseAliases, erasedSoftwareLicense } from './software-license-privacy';
 import { erasedCalendarPolicy } from './calendar-privacy';
 import { eraseProblemArticles } from './problem-privacy';
 import { eraseKnowledgeDraftPerson } from '../work/knowledge-draft-privacy';
@@ -30,6 +31,7 @@ export async function eraseServicePerson(ctx: {
     await env.DB.batch(history.statements);
     const pseudonym = 'erased-' + (await hashToken(p.workspaceId + ':' + input.userId)).slice(0, 24);
     const tokens = [input.userId, person?.email, person?.name].filter((x): x is string => !!x && x.length > 2);
+    await eraseSoftwareLicenseAliases(ctx,input.userId,tokens);
     await eraseKnowledgeDraftPerson(ctx, input.userId, tokens);
     const redact = (value: any): any => {
         if (typeof value === 'string') {
@@ -59,7 +61,7 @@ export async function eraseServicePerson(ctx: {
             continue;
         affectedRecords.add(r.id);
         const original=JSON.parse(r.data_json),redacted=redact(original);
-        const data = r.kind==='calendar-window'?erasedCalendarPolicy(original,redacted):redacted;
+        const data = r.kind==='calendar-window'?erasedCalendarPolicy(original,redacted):erasedSoftwareLicense(original,redacted);
         if(r.kind==='change-template'){data.active=false;data.priorApprovals=[...(data.priorApprovals||[]),...(data.approval?[data.approval]:[])].map((a:any)=>({...a,inert:true}));data.approval=null;}
         if (r.kind === 'change') {
             data.cabBypass=null;

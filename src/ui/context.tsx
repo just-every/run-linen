@@ -1,3 +1,4 @@
+import { SoftwareLicenses, SoftwareLicenseNotices } from './software-licenses';
 import { NotificationSettings } from './notification-settings';
 import { BillingSettings } from './settings';
 import { SearchSpace } from './search';
@@ -55,7 +56,7 @@ export function ContextSpace({
       ) : (
         <div className="layout layout-full">
           <main>
-            {section === "preferences" ? (<><Hero title="Your notifications"/><NotificationSettings/></>) : section === "billing" ? (<BillingSettings />) : section === "lifecycle" ? (
+            {section === "software-licenses" ? (<SoftwareLicenses selectedId={selectedId}/>) : section === "preferences" ? (<><Hero title="Your notifications"/><NotificationSettings/><SoftwareLicenseNotices/></>) : section === "billing" ? (<BillingSettings />) : section === "lifecycle" ? (
               <LifecycleSpace selectedId={selectedId} />
             ) : section === "assets" ? (
               <AssetsSpace selectedId={selectedId} />

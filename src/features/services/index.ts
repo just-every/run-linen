@@ -1,4 +1,6 @@
 import { serviceHistory } from './history';
+import { registerSoftwareLicenseRoutes } from './software-license-routes';
+export { processSoftwareRenewals } from './software-license-routes';
 import { registerEmployeeNotices } from './employee-notice-routes';
 import { operationsKpis } from './operations-kpis';
 import { recordOperationsObservation } from './operations-observations';
@@ -59,6 +61,7 @@ async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
     return { ...r, data: { ...r.data, links, diagnostics: [], recoveries: (r.data.recoveries || []).map((e: any) => ({ cohort: e.cohort, observedAt: e.observedAt, expiresAt: e.expiresAt })), updates: (r.data.updates || []).filter((u: any) => u.audience.includes(p.userId)).map((u: any) => ({ message: u.message, at: u.at })) } };
 }
 export function registerServiceRoutes(app: Hono<AppEnv>) {
+    registerSoftwareLicenseRoutes(app);
     registerEmployeeNotices(app);
     registerCalendarRoutes(app);
     registerTemplateRoutes(app);

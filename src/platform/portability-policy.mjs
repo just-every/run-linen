@@ -5,7 +5,7 @@ import { historyExportRow,validateHistoryStaged } from '../features/history/port
 export const portabilityPolicy={
  product:'runeditrun/linen',
  replaceableTables:['platform_auth_policy'],
- excludeTables:['work_bi_checkpoints','history_service_rewrite_permits','history_archive_origin','history_write_guards','work_approval_mail_subscriptions','platform_archive_recovery','sessions','login_limits','platform_auth_session_proofs','platform_auth_links','platform_auth_steps','platform_auth_limits','platform_auth_guard','execution_secrets'],
+ excludeTables:['svc_software_guards','work_bi_checkpoints','history_service_rewrite_permits','history_archive_origin','history_write_guards','work_approval_mail_subscriptions','platform_archive_recovery','sessions','login_limits','platform_auth_session_proofs','platform_auth_links','platform_auth_steps','platform_auth_limits','platform_auth_guard','execution_secrets'],
  secretColumns:{connections:['secret_ciphertext'],intelligence_engineering_jobs:['claim_token_hash']},
  requiredConfiguration:['OWNER_EMAIL','SESSION_SECRET','SETUP_TOKEN','AUTH_ORIGIN','ENCRYPTION_KEY','MAIL_PROVIDER','MAIL_FROM'],
  buckets:{ATTACHMENTS:{}},
@@ -48,10 +48,16 @@ export const portabilityPolicy={
   }
   const services=tables.svc_records;
   if(services && await db.prepare(`SELECT 1 FROM "${services.replaceAll('"','""')}" WHERE kind='release' AND (json_extract(data_json,'$.state') IS NOT 'imported-review' OR json_array_length(data_json,'$.decisions') IS NOT 0) LIMIT 1`).first())return false;
+  if(services && await db.prepare(`SELECT 1 FROM "${services.replaceAll('"','""')}" WHERE json_extract(data_json,'$.softwareLicense')=1 AND (json_type(data_json,'$.grant') IS NOT 'null' OR json_type(data_json,'$.observation') IS NOT 'null' OR json_array_length(data_json,'$.effectTargets') IS NOT 0) LIMIT 1`).first())return false;
   return true;
  },
  exportRow(table,row){
   row=historyExportRow(table,row);
+  if(table==='svc_records' && row.kind==='asset'){
+   const data=JSON.parse(row.data_json);
+   if(data.softwareLicense)return {...row,data_json:JSON.stringify({...data,observation:null,grant:null,grantVersion:Number(data.grantVersion||0)+1,effectTargets:[],restoredReview:true})};
+  }
+  if(table==='svc_software_effects' && ['sending','submitted'].includes(row.state))return {...row,state:'unknown'};
   if(table==='svc_records' && row.kind==='release'){
    const data=JSON.parse(row.data_json);
    return {...row,data_json:JSON.stringify({...data,importedState:data.importedState||data.state,state:'imported-review',decisions:[],
