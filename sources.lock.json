@@ -2467,7 +2467,7 @@
       "executable": false
     },
     "src/features/services/privacy.ts": {
-      "sha256": "7b7b2b69ceee89404da7c6e845b2b95efdb1cb3eb1ad65be7cc7d5ea0c5ecfca",
+      "sha256": "d97936b6790a8d5bb5db1a007895a43817533ba94f98604397d2fa845c533c98",
       "executable": false
     },
     "src/features/services/problem-detection.ts": {
@@ -5271,11 +5271,11 @@
       "executable": false
     },
     "src/ui/notification-history.tsx": {
-      "sha256": "98b9c45e5e0328580d90c9adc35b54fe19023fe8ce39c8e28bcf9dc3a61c739a",
+      "sha256": "f9239d395b6a05978622006f34d1b8fdd23a2cf7862b12ca003c358be0a7ee8a",
       "executable": false
     },
     "src/ui/notification-settings.tsx": {
-      "sha256": "96a89cc36d0c4f895d38a919a37aef01985d2358b01d59fe57184a35af1a5a40",
+      "sha256": "e10721bdcd86a08fada9d597044797f1dbe7be5ee5efda3d06893062912b15e7",
       "executable": false
     },
     "src/ui/obligation-actions.tsx": {
@@ -6183,7 +6183,7 @@
       "executable": false
     },
     "tests/ui/notification-browser.mjs": {
-      "sha256": "2a3d165a307a53e88eb95b99f64d3f82184c7baf9c0e1423b44bec17cc34e922",
+      "sha256": "fcc26fe195c396910b932cee3ea7121cf152df71f72483c573c3768f57ae31d0",
       "executable": false
     },
     "tests/ui/pending-person-browser.mjs": {
