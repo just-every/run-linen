@@ -1,3 +1,4 @@
+import {notifyWorkEvent} from './notification-port';
 import {obligationHistory} from './work-history';
 import { hashToken } from "../../platform/crypto";
 import { currentWorkPrincipal } from "./identity";
@@ -275,6 +276,8 @@ export async function createLifecycle(ctx: WorkContext, input: LifecycleInput) {
       throw new ApiError(409, "lifecycle_template_changed", "A lifecycle template or a newer HR revision changed while this was recorded; review it again");
     throw error;
   }
+  if(input.kind==='leave')await notifyWorkEvent(ctx,{workId:work.id,event:'leaver.task',sourceId:'lifecycle:'+lifecycleId});
+  if(obligations.some(o=>/^(identity\.|sessions\.|access\.)/.test(o.kind)))await notifyWorkEvent(ctx,{workId:work.id,event:'security.task',sourceId:'lifecycle:'+lifecycleId});
   return { work, lifecycleId };
 }
 
