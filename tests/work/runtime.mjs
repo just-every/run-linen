@@ -113,10 +113,10 @@ try {
   await biReadChecks(api,db,reporting);
   await biExportChecks(api,db,reporting);
   await biAdapterChecks(api,db,reporting);
-  await reportScheduleChecks(api,db,reporting);
   await departmentOpsChecks(api,db);
   await catalogAudienceChecks(api,db);
   const collaborationProof=await collaborationChecks(api,db);
+  await reportScheduleChecks(api,db,reporting);
   await mailChannelChecks(api,db);
   await walkupPhoneChecks(api,db);
   await handoffChecks(api,db);
