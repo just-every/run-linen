@@ -42,7 +42,7 @@ export function ReportSchedules({ reportId, members }: { reportId: string; membe
           <label>Delivery channel<select value={channel} onChange={event => setChannel(event.target.value)}><option value="email">Email</option><option value="slack">Slack</option></select></label>
           <label>Delivery frequency<select name="frequency" defaultValue="weekly"><option value="weekly">Weekly</option><option value="nightly">Nightly</option></select></label>
         </div>
-        {channel === 'slack' ? <Notice>Slack delivery needs configuration (CHANNEL-001). No Slack schedule or delivery will be created.</Notice> : <>
+        {channel === 'slack' ? <Notice>Slack report delivery is not available in this version. Choose email or download the report.</Notice> : <>
           <label>Email recipient<select name="recipient" required defaultValue=""><option value="">Choose a report reader</option>{members.map(member => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
           <p>Reports run at midnight UTC using the recipient's current source permissions. Email delivery needs a configured SendGrid sender; provider acceptance does not confirm inbox delivery.</p>
           <label className="checkbox-field"><input type="checkbox" name="consent" required/><span>I authorize recurring report emails to this recipient.</span></label>
