@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b389b77cb1ce8929b7a8d37059026d365126c4064259ae2eb9502656a1402cc9",
+      "sha256": "382829cc43805f640ff3ccdd45fe51510f6f3ae7df8fa67d397a0c806c56c364",
       "executable": false
     },
     "DEMO.md": {
@@ -631,7 +631,7 @@
       "executable": false
     },
     "docs/development-context.md": {
-      "sha256": "5686de1534aa3c5df2b003536ea0d87d720690a91aaf5c794cf0a1e7b1add6a4",
+      "sha256": "41131329778409e1bdd22046549e68da7de9aeeb32651e57278aa1d4484de88f",
       "executable": false
     },
     "docs/FRESHSERVICE-MIGRATION.md": {
@@ -5495,7 +5495,7 @@
       "executable": false
     },
     "tests/adoption/runtime.mjs": {
-      "sha256": "9f5f25a801406181edf14f0f43d9a25a7698d406432a4b57bf596b0c6e868d7a",
+      "sha256": "86c47409e70c43ecabed0e0eb5183a6303cd22010a992d5046c16714e084134c",
       "executable": false
     },
     "tests/adoption/servicenow-import-cases.mjs": {

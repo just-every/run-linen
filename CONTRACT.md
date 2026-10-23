@@ -1767,7 +1767,10 @@ INC-004 inherit the source identity and recovery boundaries.
   recovery. Revocation, owner loss, erasure and inactive restore refuse events.
   No issue creation or outbound comment is authorized by this binding. Jira,
   Linear, Vector and incident-level escalation retain the same privacy and
-  authority obligation when built. Ct approved this inbound-only consent policy with current-owner consent, private notes, no outbound or execution authority, revoked secrets on owner erasure, and inert restore. The remaining engineering adapters and outbound behavior are unbuilt.
+  authority obligation when built. Ct approved this inbound-only consent policy
+  with current-owner consent, private notes, no outbound or execution authority,
+  revoked secrets on owner erasure, and inert restore. The remaining engineering
+  adapters and outbound behavior are unbuilt.
 
 - **PROB-001 — Problem management.** Problem records link incidents, carry root
   cause analysis, a known-error database and workarounds published to knowledge
@@ -1916,7 +1919,9 @@ INC-004 inherit the source identity and recovery boundaries.
   GitHub references from numeric PR and run identifiers supplied in its payload.
   The event grants no execution rights and proves neither deployment success nor
   usable recovery. Other development providers inherit this separation. Binding
-  authority is inactive after restore. Ct approved this inbound-only consent policy with current-owner consent, private notes, no outbound or execution authority, revoked secrets on owner erasure, and inert restore. The remaining engineering adapters and outbound behavior are unbuilt.
+  authority is inactive after restore; owner erasure revokes it and clears its
+  secret. Ct approved this inbound-only policy with exact approved templates and
+  no outbound or execution authority. Other development context remains unbuilt.
 
 - **CHANGE-007 — Release management.** Releases group related changes (e.g. "Okta
   MFA rollout") with a plan, build/test/deploy phases, a release calendar shared

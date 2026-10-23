@@ -4,7 +4,8 @@ The owner can bind an existing GitHub issue to a normal ticket, or bind producti
 GitHub deployments to an exact preapproved standard-change template. This release
 receives events only. It does not create GitHub issues, send comments, run a
 workflow or grant deployment authority. Jira, Linear and Vector remain unbuilt.
-The owner-only consent policy is provisional pending ct review.
+The inbound consent policy was approved on 23 October with current-owner consent,
+private issue notes, separate execution authority and inert restore.
 
 Use the authenticated API to POST `/api/v1/development-bindings` with:
 
@@ -41,7 +42,10 @@ A deployment event does not prove successful execution or employee recovery.
 GET `/api/v1/development-bindings` lists owner-visible metadata. POST
 `/api/v1/development-bindings/{id}/revoke` immediately disables the binding and
 clears its secret. An inactive issuing owner prevents further intake. Subject
-erasure revokes affected ticket bindings. Archives carry bindings inactive and
-without secrets; restored bindings cannot resume intake. There is no reactivation
+erasure revokes affected ticket bindings. Erasing the consenting owner also revokes
+both kinds of binding and clears their secrets. Full-installation archives carry
+bindings inactive and without secrets; restored bindings cannot resume intake even
+after the recovery hold is released. Workspace archives exclude the local bindings
+and replay receipts entirely. There is no reactivation
 door in this release. A replacement binding for an existing unique target needs a
 future owner-reviewed replacement flow.
