@@ -21,6 +21,7 @@ export const scalarReferences: Readonly<Record<string, readonly ReferenceSelecto
     work_calls: [person('user_id'), business('work_id', 'work_records')],
     work_handoff_config: [person('actor_id'), business('calendar_id', 'work_calendars')],
     work_agent_presence: [person('user_id')],
+    work_portal_brand: [person('actor_id')],
     work_handoffs: [person('requester_id'), person('agent_id'), business('work_id', 'work_records'), { ...business('id'), identity: true }],
     work_mail_deliveries: [business('work_id', 'work_records'), business('message_id', 'work_messages'), { ...business('id'), identity: true }],
     work_side_receipts: [business('work_id', 'work_records'), business('conversation_id', 'work_side_conversations'), business('message_id', 'work_messages')],

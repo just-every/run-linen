@@ -23,6 +23,7 @@ export const archiveKeyFields: Readonly<Record<string, readonly string[]>> = {
     work_handoff_config: ['workspace_id'],
     work_agent_presence: ['workspace_id', 'user_id'],
     work_handoffs: ['id'],
+    work_portal_brand: ['workspace_id'],
     mcp_credentials: ['id'],
     work_canned_responses: ['id'],
     work_knowledge_drafts: ['id'],

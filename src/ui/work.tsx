@@ -1,6 +1,7 @@
 import { PortalCatalog } from './portal-catalog';
 import { CollaborationInbox } from './work-collaboration';
 import { HandoffDesk } from './handoff';
+import { MyDevices } from './my-devices';
 import { ServiceNotices } from './service-notices';
 import { RecurringWork } from './recurring-work';
 import { TeamRequests, managerDisclosure } from "./work-shares";
@@ -111,6 +112,7 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
             </section>
             <Bundles onRequested={queue.refresh} />
             <PortalCatalog />
+            <MyDevices />
             <section className="decision-card">
               <Icon name="approve" size={24} />
               <div>
