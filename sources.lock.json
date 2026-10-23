@@ -1523,7 +1523,7 @@
       "executable": false
     },
     "scripts/verify.mjs": {
-      "sha256": "fd4afeece0886e07c411069a276d4859d67729d5685ba0fce58bdecaf2df5adb",
+      "sha256": "4c9d484a07d747da762ab43a0065815fdbfccd76c536f7b6b6d0201f1f0b48b1",
       "executable": false
     },
     "seed.json": {
