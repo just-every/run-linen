@@ -149,7 +149,7 @@ try {
       await reader.setViewportSize({ width, height: 1000 });
       await reader.goto(base + '/app#/reports');
       const root = reader.getByRole('region', { name: 'Custom reports', exact: true });
-      await root.getByLabel('Saved report').selectOption(reports[0].id);
+      await root.getByRole('combobox',{name:/^Saved report/}).selectOption(reports[0].id);
       await root.getByRole('region', { name: 'Saved report view table', exact: true }).getByRole('row', { name: 'Denver 2', exact: true }).waitFor();
       assert.equal(await root.getByText('Build a custom report', { exact: true }).count(), 0);
       assert.equal(await root.getByText('Schedule this report', { exact: true }).count(), 0);
