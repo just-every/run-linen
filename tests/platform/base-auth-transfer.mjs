@@ -80,6 +80,7 @@ try{
   env.DB.prepare('INSERT INTO intelligence_engineering_grants VALUES(?,?,?,?,?,?,?,?,?)').bind('grant','workspace',1,'owner','synthetic-bearer','{}','2099-01-01',null,stamp),
   env.DB.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind('connection','workspace','sendgrid','Fixture','{}','synthetic-encrypted-secret','verified',stamp,stamp),
   env.DB.prepare('INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,created_at,updated_at,dedup_key) VALUES(?,?,?,?,?,?,?,?,?)').bind('work','workspace','owner','owner','request','Retained real record',stamp,stamp,'transfer'),
+  env.DB.prepare('INSERT INTO svc_development_bindings(id,workspace_id,owner_id,repository_id,repository_name,kind,target_id,issue_number,secret_ciphertext,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind('development-binding','workspace','owner',42001,['synthetic-linen','issues'].join('/'),'issue','work',42,'synthetic-linen-42016',stamp),
   env.DB.prepare('INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,revision,form_json) VALUES(?,?,?,?,?,?,?,?)').bind('catalog-monitor','workspace','Monitor for training','device','training-monitor','owner',2,JSON.stringify(catalogForm)),
   env.DB.prepare('INSERT INTO work_fulfilments(id,workspace_id,work_id,catalog_id,beneficiary_id,purpose,revision,catalog_snapshot_json) VALUES(?,?,?,?,?,?,?,?)').bind('catalog-request','workspace','work','catalog-monitor','owner','Training room display',1,JSON.stringify(catalogSnapshot)),
 
@@ -181,6 +182,7 @@ try{
  assert.equal(JSON.parse((await env.DB.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id="workspace"').first()).settings_json).executionHeld,true)
  assert.equal((await env.DB.prepare('SELECT password_hash FROM users WHERE id="owner"').first()).password_hash,'!restored-email-link')
  assert.equal((await env.DB.prepare('SELECT secret_ciphertext FROM connections').first()).secret_ciphertext,null)
+ assert.deepEqual(await env.DB.prepare('SELECT active,secret_ciphertext FROM svc_development_bindings WHERE id=?').bind('development-binding').first(),{active:0,secret_ciphertext:null},'Development bindings survive actual archive restore without inbound authority or secret');
  assert.ok((await env.DB.prepare('SELECT revoked_at FROM intelligence_engineering_grants').first()).revoked_at)
  const restoredMcp=await env.DB.prepare('SELECT name,secret_hash,state,invalidated_at,queue_groups_json,grant_version FROM mcp_credentials WHERE id="mcp-grant"').first();
  assert.deepEqual(JSON.parse(restoredMcp.queue_groups_json),['hardware'],'API-003 restore retains inert queue metadata');
