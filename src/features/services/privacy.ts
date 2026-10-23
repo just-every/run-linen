@@ -61,7 +61,7 @@ export async function eraseServicePerson(ctx: {
             continue;
         affectedRecords.add(r.id);
         const original=JSON.parse(r.data_json),redacted=redact(original);
-        const data = r.kind==='calendar-window'?erasedCalendarPolicy(original,redacted):erasedSoftwareLicense(original,redacted);
+        const data:Record<string,any> = r.kind==='calendar-window'?erasedCalendarPolicy(original,redacted):erasedSoftwareLicense(original,redacted);
         if(r.kind==='change-template'){data.active=false;data.priorApprovals=[...(data.priorApprovals||[]),...(data.approval?[data.approval]:[])].map((a:any)=>({...a,inert:true}));data.approval=null;}
         if (r.kind === 'change') {
             data.cabBypass=null;
