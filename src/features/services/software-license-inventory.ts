@@ -2,6 +2,8 @@ import { now } from '../../platform/http';
 import { hashToken } from '../../platform/crypto';
 import { check, normalizedSoftware, type SoftwareBinding, type SoftwareContext, type SoftwareInstallation } from './software-license-core';
 import { softwareClient } from './software-license-connections';
+import { currentSoftwareDeviceUser } from './software-license-device-users';
+import type { ServiceRecord } from './store';
 
 type Client = Awaited<ReturnType<typeof softwareClient>>;
 export async function graphPages(client: Client, path: string) {
@@ -29,17 +31,13 @@ export async function readEntra(ctx: SoftwareContext, row: any, binding: Softwar
   check(rows.every(u=>u.appId===binding.appId && u.status?.errorCode===0 && Date.parse(u.createdDateTime)>=Date.parse(from) && Date.parse(u.createdDateTime)<Date.parse(to) && typeof u.userPrincipalName==='string'),'software_signin_schema',502);
   return [...new Set(rows.map(u=>u.userPrincipalName.toLowerCase()))];
 }
-async function localUser(ctx: SoftwareContext, email: unknown) {
-  if (typeof email!=='string' || !email) return null;
-  const matches=await ctx.env.DB.prepare('SELECT u.id FROM users u JOIN memberships m ON m.user_id=u.id WHERE m.workspace_id=? AND m.active=1 AND lower(u.email)=lower(?)').bind(ctx.principal.workspaceId,email).all<{id:string}>();
-  return matches.results.length===1 ? matches.results[0].id : null;
-}
 function matches(title: string, publisher: string, productId: string, binding: SoftwareBinding, canonical: {name:string;publisher:string}) {
   if (normalizedSoftware(title)===normalizedSoftware(canonical.name) && normalizedSoftware(publisher)===normalizedSoftware(canonical.publisher)) return true;
   return (binding.aliases||[]).some(a=>normalizedSoftware(a.title)===normalizedSoftware(title) && normalizedSoftware(a.publisher)===normalizedSoftware(canonical.publisher)
     && (publisher ? normalizedSoftware(publisher)===normalizedSoftware(a.publisher) : (a as any).productId===productId));
 }
-export async function readDesktop(ctx: SoftwareContext, row: any, binding: SoftwareBinding, canonical: {name:string;publisher:string}) {
+export async function readDesktop(ctx: SoftwareContext, row: any, binding: SoftwareBinding, record:ServiceRecord) {
+  const canonical={name:record.data.name,publisher:record.data.publisher};
   const client=await softwareClient(ctx,row), devices: any[]=[], installations: SoftwareInstallation[]=[];
   if (binding.kind==='intune') {
     await graphAccount(client,row);
@@ -47,7 +45,7 @@ export async function readDesktop(ctx: SoftwareContext, row: any, binding: Softw
     for (const d of all) {
       check(typeof d.id==='string'&&typeof d.serialNumber==='string'&&Number.isFinite(Date.parse(d.lastSyncDateTime)), 'software_inventory_schema',502);
       const apps=await graphPages(client,`/v1.0/deviceManagement/managedDevices/${encodeURIComponent(d.id)}/detectedApps`);
-      const personId=await localUser(ctx,d.userPrincipalName);
+      const personId=(await currentSoftwareDeviceUser(ctx,record,row,d.id))?.userId||null;
       devices.push({connectionId:row.id,deviceId:d.id,serial:d.serialNumber,userId:personId,observedAt:d.lastSyncDateTime});
       for (const a of apps) {
         check(typeof a.displayName==='string'&&typeof a.id==='string','software_inventory_schema',502);
@@ -66,7 +64,7 @@ export async function readDesktop(ctx: SoftwareContext, row: any, binding: Softw
     for(const d of rows) {
       const deviceId=String(d.id),serial=d.hardware?.serialNumber,observedAt=d.general?.reportDate;
       check(typeof serial==='string'&&Number.isFinite(Date.parse(observedAt))&&Array.isArray(d.applications),'software_inventory_schema',502);
-      const personId=await localUser(ctx,d.userAndLocation?.email);
+      const personId=(await currentSoftwareDeviceUser(ctx,record,row,deviceId))?.userId||null;
       devices.push({connectionId:row.id,deviceId,serial,userId:personId,observedAt});
       for(const a of d.applications) {
         check(typeof a.name==='string','software_inventory_schema',502);

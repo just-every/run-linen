@@ -48,14 +48,14 @@ export const portabilityPolicy={
   }
   const services=tables.svc_records;
   if(services && await db.prepare(`SELECT 1 FROM "${services.replaceAll('"','""')}" WHERE kind='release' AND (json_extract(data_json,'$.state') IS NOT 'imported-review' OR json_array_length(data_json,'$.decisions') IS NOT 0) LIMIT 1`).first())return false;
-  if(services && await db.prepare(`SELECT 1 FROM "${services.replaceAll('"','""')}" WHERE json_extract(data_json,'$.softwareLicense')=1 AND (json_type(data_json,'$.grant') IS NOT 'null' OR json_type(data_json,'$.observation') IS NOT 'null' OR json_array_length(data_json,'$.effectTargets') IS NOT 0) LIMIT 1`).first())return false;
+  if(services && await db.prepare(`SELECT 1 FROM "${services.replaceAll('"','""')}" WHERE json_extract(data_json,'$.softwareLicense')=1 AND (json_type(data_json,'$.grant') IS NOT 'null' OR json_type(data_json,'$.observation') IS NOT 'null' OR json_array_length(data_json,'$.effectTargets') IS NOT 0 OR json_array_length(data_json,'$.deviceUsers') IS NOT 0 OR json_type(data_json,'$.lastDeviceUserChange') IS NOT 'null') LIMIT 1`).first())return false;
   return true;
  },
  exportRow(table,row){
   row=historyExportRow(table,row);
   if(table==='svc_records' && row.kind==='asset'){
    const data=JSON.parse(row.data_json);
-   if(data.softwareLicense)return {...row,data_json:JSON.stringify({...data,observation:null,grant:null,grantVersion:Number(data.grantVersion||0)+1,effectTargets:[],restoredReview:true})};
+   if(data.softwareLicense)return {...row,data_json:JSON.stringify({...data,observation:null,grant:null,grantVersion:Number(data.grantVersion||0)+1,effectTargets:[],deviceUsers:[],lastDeviceUserChange:null,restoredReview:true})};
   }
   if(table==='svc_software_effects' && ['sending','submitted'].includes(row.state))return {...row,state:'unknown'};
   if(table==='svc_records' && row.kind==='release'){

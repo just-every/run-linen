@@ -8,16 +8,18 @@ import { registerSoftwareConnection } from './software-license-connections';
 import { executeSoftwareEffect, grantSoftwareEffect, reconcileSoftwareEffect, revokeSoftwareGrant } from './software-license-effects';
 import { processSoftwareRenewals, queueSoftwareRenewals, softwareLicenseNotices } from './software-license-work';
 import { softwareCommit } from './software-license-store';
+import { bindSoftwareDeviceUser } from './software-license-device-users';
 export { processSoftwareRenewals };
 
 async function softwareOptions(ctx:SoftwareContext) {
-  await softwarePrincipal(ctx);
-  const people=(await ctx.env.DB.prepare('SELECT u.id,u.name,m.roles_json FROM users u JOIN memberships m ON m.user_id=u.id WHERE m.workspace_id=? AND m.active=1').bind(ctx.principal.workspaceId).all<any>()).results
-    .map(p=>({id:p.id,name:p.name,roles:JSON.parse(p.roles_json)})).filter(p=>p.roles.some((r:string)=>['owner','operator'].includes(r)));
+  await softwarePrincipal(ctx,true);
+  const members=(await ctx.env.DB.prepare('SELECT u.id,u.name,m.roles_json FROM users u JOIN memberships m ON m.user_id=u.id WHERE m.workspace_id=? AND m.active=1').bind(ctx.principal.workspaceId).all<any>()).results
+    .map(p=>({id:p.id,name:p.name,roles:JSON.parse(p.roles_json)}));
+  const people=members.filter(p=>p.roles.some((r:string)=>['owner','operator'].includes(r)));
   const connections=(await ctx.env.DB.prepare("SELECT id,name,provider,revision,status,config_json FROM connections WHERE workspace_id=? AND provider IN ('zoom','jamf','microsoft-graph')").bind(ctx.principal.workspaceId).all<any>()).results
     .map(({config_json,...c})=>{const cfg=JSON.parse(config_json);return {...c,config:{...(cfg.origin?{origin:cfg.origin}:{}),...(cfg.accountId?{accountId:cfg.accountId}:{}),...(cfg.tenantId?{tenantId:cfg.tenantId}:{})}};});
   const services=(await list(ctx.env.DB,ctx.principal,'service')).map(s=>({id:s.id,name:s.data.name}));
-  return {people,connections,services,currentUserId:ctx.principal.userId};
+  return {people,members,connections,services,currentUserId:ctx.principal.userId};
 }
 export function registerSoftwareLicenseRoutes(app:Hono<AppEnv>) {
   const ctx=(c:any):SoftwareContext=>({env:c.env,principal:c.get('principal')});
@@ -33,6 +35,7 @@ export function registerSoftwareLicenseRoutes(app:Hono<AppEnv>) {
   app.post('/software-licenses',async c=>c.json(await newSoftwareLicense(ctx(c),await jsonBody(c)),201));
   app.get('/software-licenses/:id',async c=>c.json(await presentSoftwareLicense(ctx(c),c.req.param('id'))));
   app.patch('/software-licenses/:id',async c=>c.json(await editSoftwareLicense(ctx(c),c.req.param('id'),await jsonBody(c))));
+  app.post('/software-licenses/:id/device-users',async c=>{const context=ctx(c);await bindSoftwareDeviceUser(context,c.req.param('id'),await jsonBody(c));return c.json(await presentSoftwareLicense(context,c.req.param('id')));});
   for(const [path,fn] of [['sync',syncSoftwareLicense],['grants',grantSoftwareEffect],['revoke-grant',revokeSoftwareGrant],['renewal-reminders',async(context:SoftwareContext,key:string,b:any)=>{
     const result=await queueSoftwareRenewals(context,key,b.revision);return {...await presentSoftwareLicense(context,key),queued:result.queued};
   }]] as const)app.post(`/software-licenses/:id/${path}`,async c=>c.json(await fn(ctx(c),c.req.param('id'),await jsonBody(c))));

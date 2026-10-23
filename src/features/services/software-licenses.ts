@@ -42,7 +42,7 @@ export async function newSoftwareLicense(ctx: SoftwareContext,b:Record<string,an
   check(!existing,'software_title_exists');
   const r=await create(ctx.env.DB,p,'asset',{softwareLicense:true,name,publisher,titleOwnerId:ownerId,serviceId:service.id,metric:b.metric,policy:b.policy,contract,sourceBindings,
     assetType:'license',externalId:name,source:'owner-recorded contract',lifecycle:'acquired',currency:'USD',acquisitionCost:contract.annualCostUsd,renewalAt:contract.renewalAt,
-    assignments:[],usage:[],costs:[],decisions:[],history:[],observation:null,freshnessMs,grant:null,grantVersion:0,effectTargets:[],reminders:[],complianceWork:[]}, {visibility:'restricted',ownerId});
+    assignments:[],usage:[],costs:[],decisions:[],history:[],observation:null,deviceUsers:[],freshnessMs,grant:null,grantVersion:0,effectTargets:[],reminders:[],complianceWork:[]}, {visibility:'restricted',ownerId});
   return presentSoftwareLicense(ctx,r.id);
 }
 export async function presentSoftwareLicense(ctx:SoftwareContext,key:string) {
@@ -69,7 +69,7 @@ export async function syncSoftwareLicense(ctx:SoftwareContext,key:string,b:Recor
       const conn=await softwareConnection(ctx,binding.connectionId,binding.kind==='intune'||binding.kind==='entra-signins'?'microsoft-graph':binding.kind);
       if(binding.kind==='zoom')users.push(...await readZoom(ctx,conn,start,end));
       else if(binding.kind==='entra-signins')for(const email of await readEntra(ctx,conn,binding,start,end))signins.add(email);
-      else {const inventory=await readDesktop(ctx,conn,binding,{name:r.data.name,publisher:r.data.publisher});installations.push(...inventory.installations);devices.push(...inventory.devices);}
+      else {const inventory=await readDesktop(ctx,conn,binding,r);installations.push(...inventory.installations);devices.push(...inventory.devices);}
       await completeConnectionRead(ctx,conn);sources.push({connectionId:conn.id,revision:conn.revision,kind:binding.kind});
     }
     for(const user of users){user.active=user.active||signins.has(user.email);await assertPlatformAdmission(ctx.env.DB,ctx.principal.workspaceId,user.id,user.email);}

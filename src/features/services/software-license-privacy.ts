@@ -15,6 +15,8 @@ export async function eraseSoftwareLicenseAliases(ctx:{env:Env;principal:Princip
     for(const i of [...o?.devices||[],...o?.installations||[]])for(const v of [i.id,i.deviceId,i.serial])if(v)aliases.add(v);
     for(const target of data.effectTargets||[])if(target.targetId)aliases.add(target.targetId);
     for(const target of data.grant?.targets||[])if(target)aliases.add(target);
+    for(const mapping of data.deviceUsers||[])if(mapping.deviceId)aliases.add(mapping.deviceId);
+    if(data.lastDeviceUserChange?.deviceId)aliases.add(data.lastDeviceUserChange.deviceId);
   }
   if(aliases.size) {
     const history=await prepareHistoryErasure(ctx,[userId,...aliases],now());
@@ -24,6 +26,6 @@ export async function eraseSoftwareLicenseAliases(ctx:{env:Env;principal:Princip
 export function erasedSoftwareLicense(original:Record<string,any>,redacted:Record<string,any>) {
   if(original.softwareLicense!==true)return redacted;
   return {...redacted,observation:null,grant:null,grantVersion:(original.grantVersion||0)+1,
-    effectTargets:[],complianceWork:[],usage:[],decisions:[],history:[],executionHeld:true,
+    deviceUsers:[],lastDeviceUserChange:null,effectTargets:[],complianceWork:[],usage:[],decisions:[],history:[],executionHeld:true,
     softwarePrivacyReview:true,softwareConsentRevokedAt:now()};
 }

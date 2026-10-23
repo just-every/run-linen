@@ -1,3 +1,4 @@
+import {SoftwareDeviceUsers} from './software-licenses-device-users';
 import { useState } from 'react';
 import { date, humanize } from './api';
 import { ActionForm } from './forms';
@@ -93,6 +94,7 @@ function SoftwareLicenseDetail({ license, options, onChanged, onEffectSettled, c
         explanation="Explicitly queue any due 90-, 60- or 30-day renewal review for the title owner. This may create an outbound notification; delivery is not established by queuing." />}
       {canEdit && <SoftwareLicenseTerms license={license} onChanged={onChanged} />}
     </section>
+    {canEdit&&<SoftwareDeviceUsers license={license} options={options} onChanged={onChanged}/>}
     <SoftwareLicenseAuthority license={license} options={options} onChanged={onChanged} onEffectSettled={onEffectSettled} />
     <section className="connection-record" aria-label="License observations">
       <h2>Sources & observations</h2>
