@@ -37,12 +37,27 @@ try {
   const role=await api('/department-roles',{name,departmentId:department.id,permissions:['ticket.read']});
   grants.push(await api(`/department-roles/${role.id}/members`,{roleRevision:role.revision,userId:custom.id,active:true,revision:0}));
  }
+ const captureSeats=async(seats,freeMembers,state)=>{
+  for(const width of [1440,390]) {
+   await page.setViewportSize({width,height:1000});await page.goto(base+'/app#/billing');
+   const form=page.getByRole('region',{name:'Invoice preview'}).locator('form');
+   for(const [name,value] of Object.entries({street:'100 Main Street',city:'Austin',state:'TX',postalCode:'78701'}))await form.locator(`[name="${name}"]`).fill(value);
+   const received=page.waitForResponse(r=>r.url().endsWith('/billing/invoice-preview')&&r.request().method()==='POST');
+   await form.getByRole('button',{name:'Preview invoice',exact:true}).click();assert.equal((await received).status(),200);
+   const estimate=page.getByRole('region',{name:'Invoice estimate'});await estimate.waitFor();
+   assert.match(await estimate.innerText(),new RegExp(`Agent seats\\s+${seats}`));assert.match(await estimate.innerText(),new RegExp(`Free requesters and approvers\\s+${freeMembers}`));
+   await estimate.scrollIntoViewIfNeeded();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   await page.screenshot({path:`${out}/ROLE-001-billing-${state}-${width}.png`});
+  }
+ };
  const invoice=()=>api('/billing/invoice-preview',{address:{street:'100 Main Street',city:'Austin',state:'TX',postalCode:'78701',country:'US'},tax:{applicable:false,rateBps:0,taxableBps:0,jurisdiction:'Owner determination',basis:'No tax in this preview'}});
  let preview=await invoice();assert.equal(preview.seats,3,'Multiple current department roles count one agent seat');assert.equal(preview.freeMembers,2,'Unassigned requester and approver remain free');
+ await captureSeats(3,2,'assigned');
  for(const [index,role] of grants.entries()) {
   await api(`/department-roles/${role.id}/members`,{roleRevision:role.revision,userId:custom.id,active:false,revision:role.members.find(m=>m.userId===custom.id).revision});
   preview=await invoice();assert.equal(preview.seats,index===0?3:2,'Only withdrawal of the final live grant releases the custom agent seat');
  }
  assert.equal(preview.freeMembers,3,'The former custom agent returns to free requester membership');
+ await captureSeats(2,3,'withdrawn');
  assert.deepEqual(errors,[]);console.log('PASS monthly budget and Texas seat invoice native UI 1440/390; free requester and approver seats, persistence and icon tooltips');
 }finally{await browser.close()}
