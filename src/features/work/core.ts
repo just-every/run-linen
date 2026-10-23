@@ -425,7 +425,7 @@ export async function conversation(ctx: WorkContext, workId: string) {
     .bind(work.requester_id, work.assignee_id).first();
   const current=await getWork(ctx,workId);
   if((current.department_id??null)!==(work.department_id??null)||privateAllowed&&!workPrivateReadable(ctx.principal,current))throw new ApiError(409,'department_authority_changed','Ticket workspace or current authority changed; reload');
-  return { permissions:{reply:workReplyAllowed(ctx.principal,current),privateReply:workReplyAllowed(ctx.principal,current,true),transition:workTransitionAllowed(ctx.principal,current,'close'),participantTransition:workTransitionAllowed(ctx.principal,current,'reopen')}, work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, quotes: await quotesForRequest(ctx, workId), progress: await requestProgress(ctx, workId) };
+  return { permissions:{reply:workReplyAllowed(ctx.principal,current),privateReply:workReplyAllowed(ctx.principal,current,true),transition:workTransitionAllowed(ctx.principal,current,'close'),participantTransition:workTransitionAllowed(ctx.principal,current,'reopen')}, work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, quotes: workReadable({...ctx.principal,departmentRoles:[]},current)?await quotesForRequest(ctx, workId):[], progress: await requestProgress(ctx, workId) };
 }
 // The public line each conversation command records, in words people read.
 const transitionLabels: Record<string, string> = { reopen: "Reopened", cancel: "Cancelled", close: "Closed", pause: "Paused", resume: "Resumed", assign: "Assigned" };
