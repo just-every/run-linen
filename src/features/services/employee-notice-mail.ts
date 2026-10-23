@@ -5,6 +5,7 @@ import { ApiError } from '../../platform/http';
 import { connection } from '../execution/connectors';
 import { assertAdoptionEffectAllowed } from '../adoption/authority';
 import { sendSendGrid, SendGridSendError } from '../execution/mail/sender';
+import { brandedHtml } from '../work/brand';
 import { noticeMailGate, noticePublisher } from './employee-notices';
 
 /** Only a generic authenticated link leaves Linen. 202 means provider acceptance, never delivery. */
@@ -34,6 +35,7 @@ export async function deliverNoticeMail(env: Env, principal: Principal) {
       // No retry of an uncertain or interrupted send. The durable sending intent remains visible.
       const sent = await sendSendGrid({ apiKey: c.secret.apiKey, message: { from: c.config.from, to: [user.email],
         subject: 'Linen service notice', text: `A service notice is available. Sign in to Linen to read it: ${origin.origin}/app#/work?notice=${encodeURIComponent(notice.id)}`,
+        html: await brandedHtml(env, p.workspaceId, `A service notice is available. Sign in to read it: ${origin.origin}/app#/work?notice=${encodeURIComponent(notice.id)}`),
         deliveryId: job.id } });
       await env.DB.batch([env.DB.prepare("UPDATE svc_outbox SET state='accepted',provider_ref=?,error=NULL WHERE workspace_id=? AND id=? AND state='sending'").bind(sent.providerMessageId,p.workspaceId,job.id),notificationEvent(env.DB,actor,record,job,'sending','accepted')]);
       results.push({ id: job.id, state: 'accepted' });

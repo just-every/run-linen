@@ -19,6 +19,7 @@ import { IdentityReview } from "./identity-review";
 import { objectFacts, providerLabel } from "./labels";
 import { Icon } from "./icons";
 import { MailboxPanel } from "./mailbox";
+import { BrandSettings } from "./brand";
 export function Connections() {
   const connections = useRemote<RecordValue[]>("/connections"),
     settings = useRemote<{ settings: RecordValue; revision: number }>(
@@ -121,6 +122,7 @@ export function Connections() {
             verify an employee outcome.
           </p>
         </details>
+        <BrandSettings onSaved={() => setVersion((v) => v + 1)} />
         <ActionForm
           title="Reasoning spending limit"
           path="/intelligence/budget"

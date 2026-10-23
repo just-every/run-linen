@@ -2,7 +2,7 @@ import { useState } from "react";
 import { text, type RecordValue } from "./api";
 import { useRemote, useSession } from "./state";
 import { Icon } from "./icons";
-import { Mark } from "./Mark";
+import { BrandMark, useBrand } from "./brand";
 import { roleList } from "./labels";
 
 /** "4 min ago" for the most recent change among the connections. */
@@ -40,14 +40,15 @@ function ConnectionDots() {
 
 export function TopBar({ onSignOut, query }: { onSignOut: () => void; query: string }) {
   const { session } = useSession(),
+    { brand } = useBrand(),
     [profile, setProfile] = useState(false),
     searchAgent = session.principal.roles.some(r => ["owner", "operator", "hr"].includes(r)),
     operator = session.principal.roles.some((r) => ["owner", "operator", "hr", "auditor"].includes(r));
   return (
     <header className="topbar">
       <a className="brand" href="#/work">
-        <Mark size={46} />
-        <span data-rer-name>Linen</span>
+        <BrandMark brand={brand} />
+        <span data-rer-name={brand ? undefined : true}>{brand?.portalName ?? "Linen"}</span>
       </a>
       <form
         className="top-search"
