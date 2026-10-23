@@ -1,5 +1,5 @@
 import { ApiError, id, now } from "../../platform/http";
-import { assert, authorize, privileged } from "./authority";
+import { assert, authorize, membership, privileged } from "./authority";
 import { getOperation, acting } from "./state";
 import { runOperation } from "./runner";
 import type { CoreContext, Step } from "./types";
@@ -15,6 +15,13 @@ export async function cancelOrTakeover(
   },
 ) {
   const o = await getOperation(ctx, input.operationId);
+  // Service staff or the operation's own actor stop it; other integration accounts cannot.
+  assert(
+    o.actor_id === ctx.principal.userId ||
+      (await membership(ctx)).some((r) => ["owner", "operator"].includes(r)),
+    "operation_authority_required",
+    403,
+  );
   assert(
     typeof input.reason === "string" && input.reason.trim(),
     "reason_required",
