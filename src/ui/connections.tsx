@@ -18,6 +18,7 @@ import { DiscoveryReview } from "./discovery";
 import { IdentityReview } from "./identity-review";
 import { objectFacts, providerLabel } from "./labels";
 import { Icon } from "./icons";
+import { MailboxPanel } from "./mailbox";
 export function Connections() {
   const connections = useRemote<RecordValue[]>("/connections"),
     settings = useRemote<{ settings: RecordValue; revision: number }>(
@@ -95,6 +96,7 @@ export function Connections() {
             }}
           />
         )}
+        {session.principal.roles.includes("owner") && <MailboxPanel key={version} />}
         <DiscoveryReview revision={version} onChanged={refresh} />
         <IdentityReview key={version} />
         <Applications />
@@ -142,6 +144,8 @@ const providerIcons: Record<string, string> = {
   freshservice: "monitor",
   openai: "file",
   sendgrid: "mail",
+  gmail: "mail",
+  "exchange-online": "mail",
 };
 function ConnectionCard({
   connection,

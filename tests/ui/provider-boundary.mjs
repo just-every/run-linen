@@ -35,6 +35,20 @@ globalThis.fetch = async (input, init = {}) => {
     }
     throw Error('Unexpected synthetic-linen-45 provider path');
   }
+  // CHANNEL-003: Gmail, its OAuth token endpoint and public DNS. Mailbox content and DNS answers come from the fixture state; every send is recorded.
+  if (host === 'oauth2.googleapis.com') return Response.json({ access_token: 'synthetic-linen-token' });
+  if (host === 'cloudflare-dns.com') {
+    const name = url.searchParams.get('name'), type = url.searchParams.get('type'), values = config.mailbox?.dns?.[type + ':' + name];
+    return values ? Response.json({ Status: 0, Answer: values.map(data => ({ name: name + '.', type: type === 'TXT' ? 16 : 5, data: type === 'TXT' ? JSON.stringify(data) : data })) }) : Response.json({ Status: 3 });
+  }
+  if (host === 'gmail.googleapis.com') {
+    const mailbox = config.mailbox ?? {}, path = url.pathname;
+    if (path.endsWith('/profile')) return Response.json({ emailAddress: mailbox.profile });
+    if (path.endsWith('/messages/send')) { await event('mail-send', { raw: JSON.parse(init.body).raw }); return Response.json({ id: 'synthetic-linen-sent' }); }
+    if (path.endsWith('/messages')) return Response.json({ messages: Object.keys(mailbox.gmail ?? {}).reverse().map(id => ({ id })) });
+    const id = path.split('/messages/')[1];
+    return mailbox.gmail?.[id] ? Response.json({ id, raw: mailbox.gmail[id] }) : new Response('missing', { status: 404 });
+  }
   if (host === 'login.microsoftonline.com') { await event('token', {}); return Response.json({ access_token: 'test-only-token' }); }
   if (host === 'graph.microsoft.com') {
     await event('directory', { path: url.pathname, method: init.method || 'GET' });

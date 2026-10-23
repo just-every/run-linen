@@ -1,5 +1,6 @@
 import { WorkDepartment } from './work-department';
 import { WorkCollaboration } from './work-collaboration';
+import { WorkMail } from './work-mail';
 import { WorkActivity } from './work-activity';
 import { SponsorReattest } from "./sponsor-reattest";
 import { LifecycleTaskReminder } from "./lifecycle-templates";
@@ -149,6 +150,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       {session.principal.roles.some(r => ["owner", "operator", "auditor"].includes(r)) && <WorkRelationships workId={work.id} messages={(detail.data?.messages ?? []) as never} onChanged={changed} />}
       {session.principal.roles.some(r => ["owner","operator"].includes(r)) && <RepairCoverage workId={work.id} />}
       {!access && work.sensitivity === "normal" && (mine || operator) && <WorkShares workId={work.id} canShare={mine} canRevoke />}
+      {!mine && session.principal.roles.some(r => ['owner', 'operator'].includes(r)) && <WorkMail workId={work.id} />}
       {!access && work.sensitivity === 'normal' && session.principal.roles.includes('owner') && <WorkCollaboration workId={work.id} onChanged={changed} />}
       {!access && session.principal.roles.includes('owner')&&<WorkDepartment key={`${work.id}:${work.revision}`} work={work} onChanged={changed}/>}
       <WorkaroundSuggestions workId={work.id} />

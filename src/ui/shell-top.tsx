@@ -63,7 +63,7 @@ export function TopBar({ onSignOut, query }: { onSignOut: () => void; query: str
       </form>
       {operator && <ConnectionDots />}
       <div className="account">
-        <button className="profile" aria-label="Your workspace and account" aria-expanded={profile} onClick={() => setProfile(!profile)}>
+        <button className="profile" aria-label="Your workspace and account" data-tip="Your account" aria-expanded={profile} onClick={() => setProfile(!profile)}>
           <span className="avatar">{initials(session.user.name)}</span>
           <span className="who">
             <strong>{session.user.name}</strong>

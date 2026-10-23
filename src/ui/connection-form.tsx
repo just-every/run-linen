@@ -11,6 +11,8 @@ export const providers = [
   { value: "controlled-deployment", label: "Owned release endpoint" },
   { value: "notification-webhook", label: "Notification delivery" },
   { value: "sendgrid", label: "SendGrid email delivery" },
+  { value: "gmail", label: "Gmail support mailbox" },
+  { value: "exchange-online", label: "Exchange Online support mailbox" },
   { value: "monitoring-webhook", label: "Monitoring events" },
 ];
 export function ConnectionForm({
@@ -59,6 +61,17 @@ export function ConnectionForm({
             },
             { name: "apiKey", label: "API key", type: "password", required },
           ]
+        : provider === "gmail" || provider === "exchange-online"
+          ? [
+              { name: "mailbox", label: "Support mailbox address", type: "email", required: true, value: old.mailbox,
+                hint: "The one address employees write to, in lower case." },
+              { name: "mode", label: "How Linen receives its mail", type: "select", required: true, value: old.mode ?? "oauth",
+                options: [{ value: "oauth", label: "Read the mailbox with a sign-in" }, { value: "forwarding", label: "A forwarding rule delivers each message" }] },
+              ...(provider === "exchange-online" ? [{ name: "tenantId", label: "Microsoft tenant ID", required: true, value: old.tenantId }] : []),
+              { name: "clientId", label: "Application client ID", hint: "Needed to read the mailbox; leave blank for forwarding." },
+              { name: "clientSecret", label: "Application client secret", type: "password" },
+              ...(provider === "gmail" ? [{ name: "refreshToken", label: "Refresh token", type: "password" as const, hint: "Granted by the mailbox owner for read-only mail and sending." }] : []),
+            ]
         : provider === "sendgrid"
           ? [
               { name: "from", label: "Exact verified sender", required: true, value: old.from,
@@ -184,6 +197,9 @@ export function ConnectionForm({
     } else if (provider === "freshservice") {
       config = { domain: values.domain };
       secret = values.apiKey;
+    } else if (provider === "gmail" || provider === "exchange-online") {
+      config = { mailbox: String(values.mailbox ?? "").trim().toLowerCase(), mode: values.mode, ...(provider === "exchange-online" ? { tenantId: values.tenantId } : {}) };
+      secret = values.clientSecret ? JSON.stringify({ clientId: values.clientId, clientSecret: values.clientSecret, ...(provider === "gmail" ? { refreshToken: values.refreshToken } : {}) }) : undefined;
     } else if (provider === "sendgrid") {
       config = { ...old, from: values.from, webhookPublicKey: values.webhookPublicKey };
       secret = values.apiKey ? JSON.stringify({ apiKey: values.apiKey }) : undefined;
