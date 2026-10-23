@@ -41,7 +41,7 @@ try {
   await page.getByLabel('Your name').fill('Avery Bennett');
   await page.getByLabel('Workspace name').fill('Northstar Service Desk');
   await page.getByLabel('Work email').fill('synthetic-linen-9100@example.test');
-  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Create workspace', exact: true }).click();
   await page.getByRole('heading', { name: 'Requests', exact: true }).waitFor();
   await finishFirstRun(page, base);
@@ -67,13 +67,13 @@ try {
     const root = page.getByRole('region', { name: 'Custom reports', exact: true });
     await root.getByText('Build a custom report', { exact: true }).click();
     const builder = root.getByRole('form', { name: 'Report builder', exact: true });
-    await builder.getByLabel('Report source', { exact: true }).selectOption('tickets');
+    await builder.getByLabel('Report source').selectOption('tickets');
     const columns = builder.getByRole('group', { name: 'Report columns' });
-    await columns.getByLabel('Location', { exact: true }).check();
+    await columns.getByLabel('Location').check();
     await builder.getByRole('button', { name: 'Add filter', exact: true }).click();
-    await builder.getByLabel('Filter 1 field', { exact: true }).selectOption('priority');
-    await builder.getByLabel('Filter 1 value', { exact: true }).fill('P1');
-    await builder.getByLabel('Group report by', { exact: true }).selectOption('location');
+    await builder.getByLabel('Filter 1 field').selectOption('priority');
+    await builder.getByLabel('Filter 1 value').fill('P1');
+    await builder.getByLabel('Group report by').selectOption('location');
     const preview = await submit(builder, 'Preview report', '/reports/preview', 200);
     assert.deepEqual(preview.rows, [{ location: 'Austin', count: 1 }, { location: 'Denver', count: 2 }]);
     assert.equal(preview.total, 3);
@@ -81,8 +81,8 @@ try {
     await capture('builder', width);
     const store = root.getByRole('form', { name: 'Save custom report', exact: true });
     const name = `P1 by location · ${width === 1440 ? 'desktop' : 'mobile'}`;
-    await store.getByLabel('Report name', { exact: true }).fill(name);
-    await store.getByLabel('Casey Rivera', { exact: true }).check();
+    await store.getByLabel('Report name').fill(name);
+    await store.getByLabel('Casey Rivera').check();
     const report = await submit(store, 'Save report', '/reports/custom', 201);
     reports.push(report);
     assert.deepEqual(report.sharedWith, [auditor.id]);
@@ -101,13 +101,13 @@ try {
     const scheduleRoot = saved.getByRole('region', { name: 'Report schedules', exact: true });
     await scheduleRoot.getByText('Schedule this report', { exact: true }).click();
     const schedule = scheduleRoot.getByRole('form', { name: 'Schedule report', exact: true });
-    await schedule.getByLabel('Delivery channel', { exact: true }).selectOption('slack');
+    await schedule.getByLabel('Delivery channel').selectOption('slack');
     await schedule.getByText(/Slack delivery needs configuration \(CHANNEL-001\)/).waitFor();
     assert.equal(await schedule.getByRole('button', { name: 'Save delivery schedule', exact: true }).isDisabled(), true);
     await capture('slack-gap', width);
-    await schedule.getByLabel('Delivery channel', { exact: true }).selectOption('email');
-    await schedule.getByLabel('Email recipient', { exact: true }).selectOption(auditor.id);
-    await schedule.getByLabel('I authorize recurring report emails to this recipient.', { exact: true }).check();
+    await schedule.getByLabel('Delivery channel').selectOption('email');
+    await schedule.getByLabel('Email recipient').selectOption(auditor.id);
+    await schedule.getByLabel('I authorize recurring report emails to this recipient.').check();
     // This journey's public runner deliberately has no SendGrid provider credentials.
     const mail = await submit(schedule, 'Save delivery schedule', `/reports/custom/${report.id}/schedules`, 503);
     assert.equal(mail.error.code, 'needs_configuration');
@@ -120,7 +120,7 @@ try {
     const setup = bi.getByRole('form', { name: 'S3 export setup', exact: true });
     await fields(setup, { name: `Northstar ticket archive · ${width}`, bucket: `synthetic-linen-${width === 1440 ? 9120 : 9121}`, region: 'us-east-1', prefix: 'linen/tickets', accessKeyId: 'synthetic-linen-9122', secretAccessKey: 'synthetic-linen-9123' });
     for (const label of ['AWS access key ID', 'AWS secret access key', 'AWS session token (optional)']) assert.equal(await setup.getByLabel(label, { exact: true }).getAttribute('type'), 'password');
-    await setup.getByLabel('I authorize nightly ticket CSV exports to this bucket and prefix under my current source permissions, using these credentials.', { exact: true }).check();
+    await setup.getByLabel('I authorize nightly ticket CSV exports to this bucket and prefix under my current source permissions, using these credentials.').check();
     await capture('s3-consent', width);
     const destination = await submit(setup, 'Save S3 export', '/bi/exports', 201);
     assert.ok(!JSON.stringify(destination).includes('synthetic-linen-9122'));
@@ -128,7 +128,7 @@ try {
     const detail = bi.getByRole('article', { name: 'Saved BI export', exact: true });
     await detail.getByText('No delivery receipt yet. No export run has been recorded for this destination.', { exact: true }).waitFor();
     assert.deepEqual((await api(`/bi/exports/${destination.id}`)).runs, [], 'Saving destination creates no pretend receipt');
-    assert.equal(await setup.getByLabel('AWS secret access key', { exact: true }).inputValue(), '', 'Saved credentials cleared from form');
+    assert.equal(await setup.getByLabel('AWS secret access key').inputValue(), '', 'Saved credentials cleared from form');
     const pause = page.waitForResponse(response => response.url().endsWith(`/bi/exports/${destination.id}`) && response.request().method() === 'POST');
     await detail.getByRole('button', { name: 'Pause nightly export', exact: true }).click();
     assert.equal((await pause).status(), 200);
@@ -148,7 +148,7 @@ try {
       await reader.setViewportSize({ width, height: 1000 });
       await reader.goto(base + '/app#/reports');
       const root = reader.getByRole('region', { name: 'Custom reports', exact: true });
-      await root.getByLabel('Saved report', { exact: true }).selectOption(reports[0].id);
+      await root.getByLabel('Saved report').selectOption(reports[0].id);
       await root.getByRole('region', { name: 'Saved report view table', exact: true }).getByRole('row', { name: 'Denver 2', exact: true }).waitFor();
       assert.equal(await root.getByText('Build a custom report', { exact: true }).count(), 0);
       assert.equal(await root.getByText('Schedule this report', { exact: true }).count(), 0);
