@@ -4855,7 +4855,7 @@
       "executable": false
     },
     "src/styles/base.css": {
-      "sha256": "953e27d5f83fa48b175d265bef974e02c428f53438991655e1e0cc2684ac0bee",
+      "sha256": "c81ddb4d31d1cd5b87d7e60b2a0be1921761ecc841b3225c2adb05376f1f2664",
       "executable": false
     },
     "src/styles/forms.css": {
@@ -5791,7 +5791,7 @@
       "executable": false
     },
     "tests/ui/billing-browser.mjs": {
-      "sha256": "1fe0a00cce57cf7920b3cff4e2ad20088504f7999fa396a88d11efb8537c8ece",
+      "sha256": "3fbe3174e00f883f41c8c3edda23e4ead628cdbcea9439b6041ff8ca33c04485",
       "executable": false
     },
     "tests/ui/browser.mjs": {

@@ -200,7 +200,7 @@ svg {
 }
 [data-tip]:focus-visible::after {
   opacity: 1;
-  transition-delay: 0s;
+  transition: none;
 }
 .button-row {
   display: flex;

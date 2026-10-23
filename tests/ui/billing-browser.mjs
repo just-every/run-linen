@@ -23,9 +23,10 @@ try {
   await form.getByLabel('Sales tax applies',{exact:true}).check();
   const received=page.waitForResponse(r=>r.url().endsWith('/billing/invoice-preview')&&r.request().method()==='POST');await form.getByRole('button',{name:'Preview invoice',exact:true}).click();assert.equal((await received).status(),200);
   const estimate=page.getByRole('region',{name:'Invoice estimate'});await estimate.getByText('$53.30',{exact:true}).waitFor();assert.match(await estimate.innerText(),/Agent seats\s+2/);assert.match(await estimate.innerText(),/Free requesters and approvers\s+2/);
-  const profile=page.getByRole('button',{name:'Your workspace and account'});await profile.focus();
+  const profile=page.getByRole('button',{name:'Your workspace and account'});await page.keyboard.press('Tab');await profile.focus();
+  assert.equal(await profile.evaluate(e=>e.matches(':focus-visible')),true);
   assert.equal(await profile.getAttribute('data-tip'),'Your account');assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
-  await page.locator('h1').focus();await profile.hover();await page.waitForTimeout(420);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
+  await profile.evaluate(e=>e.blur());await page.mouse.move(0,0);await profile.hover();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');await page.waitForTimeout(420);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
   await page.screenshot({path:`${out}/billing-invoice-${width}.png`,fullPage:true});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No horizontal overflow');
   await page.reload();await page.getByRole('heading',{name:'Pricing & budgets',exact:true}).waitFor();assert.equal((await api('/billing/plan')).agent_seat_cents,2500);assert.equal((await api('/intelligence/budget')).limit_usd,50);
