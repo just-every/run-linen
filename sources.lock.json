@@ -6299,7 +6299,7 @@
       "executable": false
     },
     "tests/ui/software-license-connected.mjs": {
-      "sha256": "81ecf49e5931b9960bf1e6c457d7a85f8dc46f4f957e0df966c70b203e4a4459",
+      "sha256": "88956f970223c79980a5630431318ad22667a2ba08272f3e96c84cef5ca680f6",
       "executable": false
     },
     "tests/ui/software-license-run.mjs": {
