@@ -28,6 +28,7 @@ export const scalarReferences: Readonly<Record<string, readonly ReferenceSelecto
     work_mail_deliveries: [business('work_id', 'work_records'), business('message_id', 'work_messages'), { ...business('id'), identity: true }],
     work_side_receipts: [business('work_id', 'work_records'), business('conversation_id', 'work_side_conversations'), business('message_id', 'work_messages')],
     mcp_credentials: [person('grant_updated_by'), business('principal_id'), person('created_by'), { ...business('id'), identity: true }],
+    rest_credentials: [business('principal_id'), person('created_by'), { ...business('id'), identity: true }],
     work_canned_responses: [{ ...business('id'), identity: true }],
     work_knowledge_drafts: [person('generated_by'), person('creator_id'), person('reviewer_id'), business('model_attempt_id', 'intelligence_attempts'), business('article_id', 'work_knowledge'), { ...business('id'), identity: true }],
     work_time_entries: [person('actor_id'), business('work_id', 'work_records'), business('obligation_id', 'work_obligations'), { ...business('id'), identity: true }],
