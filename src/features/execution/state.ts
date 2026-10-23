@@ -10,7 +10,7 @@ export async function getOperation(ctx: CoreContext, operationId: string) {
     .bind(operationId, ctx.principal.workspaceId)
     .first<Operation>();
   assert(o, "operation_missing", 404);
-  await accessiblePlan(ctx, o.plan_id);
+  await accessiblePlan(ctx, o.plan_id, o.actor_id);
   return o;
 }
 export async function acting(ctx: CoreContext, o: Operation) {

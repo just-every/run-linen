@@ -4,7 +4,9 @@ import { getCommitment } from "../intelligence/commitments";
 import { assert, membership } from "./authority";
 import { getService } from "../services/store";
 import type { CoreContext, Plan } from "./types";
-export async function accessiblePlan(ctx: CoreContext, planId: string) {
+/** Execution records follow their ticket's current readers. An operation's own actor keeps the
+ * plan it executes, except where a department restricts the ticket. */
+export async function accessiblePlan(ctx: CoreContext, planId: string, actorId?: string) {
   const roles = await membership(ctx);
   const p = await ctx.env.DB.prepare(
     "SELECT * FROM execution_plans WHERE id=? AND workspace_id=?",
@@ -40,9 +42,11 @@ export async function accessiblePlan(ctx: CoreContext, planId: string) {
   )
     .bind(p.work_id, ctx.principal.workspaceId)
     .first();
+  assert(work, "plan_missing", 404);
   const principal = await currentPrincipal(ctx.env.DB, ctx.principal);
   assert(
-    work && (!workDepartmentScoped(work) || workReadable(principal, work)) &&
+    (workReadable(principal, work) ||
+      (actorId === ctx.principal.userId && !workDepartmentScoped(work))) &&
       (work.sensitivity === "normal" ||
         roles.includes("owner") ||
         roles.includes("hr") ||

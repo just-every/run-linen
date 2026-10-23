@@ -129,7 +129,11 @@ app.use("*", async (c, next) => {
           ? ["employee"]
           : user === "automation"
             ? ["integration"]
-            : ["operator"],
+            : user === "approver"
+              ? ["approver"]
+              : user === "auditor"
+                ? ["auditor"]
+                : ["operator"],
   });
   await next();
 });
