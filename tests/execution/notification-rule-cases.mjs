@@ -44,8 +44,9 @@ export async function notificationRuleChecks({call,db,time}) {
   assert.equal((await call('/notification-preferences',{event:'approval.requested',channel:'portal',enabled:false},'actor')).status,422);
   assert.equal((await call('/notification-rules',{...optional,id:undefined,revision:0,event:'approval.requested',mandatory:false,consent:true,reason:key()},'issuer')).status,422);
   const approvalTemplate=await template('Approval {{ticket.number}}');await rule(approvalTemplate,'approval.requested',{mandatory:true,recipients:[{type:'person',value:'other'}]});
+  const calendar=await ok('/calendars',{name:key(),timezone:'America/Chicago',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]},'issuer',201);
   const item=await ok('/catalog',{name:key(),kind:'service',target:key(),ownerId:'issuer'},'issuer',201);
-  await ok(`/catalog/${item.id}/approvals`,{revision:1,approvals:[{key:'review',name:key(),mode:'any',approvers:[{type:'member',userId:'other'}],remindHours:24,slaHours:24}]});
+  await ok(`/catalog/${item.id}/approvals`,{revision:1,calendarId:calendar.id,approvals:[{key:'review',name:key(),mode:'any',approvers:[{type:'member',userId:'other'}],remindHours:24,slaHours:24}]});
   const approvalWork=await work();
   await ok(`/work/${approvalWork.id}/fulfilment`,{catalogId:item.id,catalogRevision:2,beneficiaryId:'actor',purpose:key()},'actor');
   assert.ok((await inbox('other')).some(i=>i.workId===approvalWork.id&&i.event==='approval.requested'),'a real pending approval bypasses optional-update opt-out');

@@ -82,6 +82,12 @@ export async function biExportChecks(api,db,{tickets}) {
 export async function reportScheduleChecks(api,db,{report}) {
   check(await api(`/reports/custom/${report.id}/schedules`,{channel:'slack',recipientUserId:'report-reader',frequency:'weekly',consent:true}),422);
   const schedule=check(await api(`/reports/custom/${report.id}/schedules`,{channel:'email',recipientUserId:'report-reader',frequency:'weekly',consent:true}),201);
+  const beforeHold=check(await api('/test/side-mail')).calls.length;
+  const settings=await db.prepare("SELECT settings_json FROM workspace_settings WHERE workspace_id='a'").first();
+  await db.prepare("INSERT INTO workspace_settings(workspace_id,settings_json) VALUES('a','{\"executionHeld\":true}') ON CONFLICT(workspace_id) DO UPDATE SET settings_json=excluded.settings_json").run();
+  check(await api(`/reports/schedules/${schedule.id}/run`,{}),409);
+  assert.equal(check(await api('/test/side-mail')).calls.length,beforeHold,'Installation restore hold prevents report email');
+  if(settings)await db.prepare("UPDATE workspace_settings SET settings_json=? WHERE workspace_id='a'").bind(settings.settings_json).run();else await db.prepare("DELETE FROM workspace_settings WHERE workspace_id='a'").run();
   const run=check(await api(`/reports/schedules/${schedule.id}/run`,{}));assert.equal(run.state,'accepted');assert.ok(run.providerRef);
   const mail=check(await api('/test/side-mail')).calls.at(-1);assert.equal(mail.personalizations[0].to[0].email,'report-reader@example.test');
   assert.ok(Buffer.from(mail.attachments[0].content,'base64').toString().includes('Denver'));

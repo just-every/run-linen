@@ -1,3 +1,5 @@
+import {assertAdoptionEffectAllowed} from '../adoption/authority';
+import {assertPlatformAdmission} from '../../platform/privacy';
 import type { Env } from '../../platform/types';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { SendGridSendError, sendSendGrid } from '../execution/mail/sender';
@@ -57,6 +59,10 @@ export async function runReportSchedule(ctx:WorkContext,key:string) {
     const fresh=await recipient(ctx,row.report_id,row.recipient_id),view=await buildReport(fresh.target,JSON.parse(fresh.report.definition_json));
     if(!live?.active||live.revision!==row.revision||fresh.member.email!==target.member.email||JSON.stringify(view)!==JSON.stringify(result))throw new ApiError(409,'report_scope_changed','Recipient, scope or report changed before dispatch');
     await currentWorkPrincipal(ctx);
+    const owner=await ctx.env.DB.prepare('SELECT email FROM users WHERE id=?').bind(ctx.principal.userId).first<{email:string}>();
+    if(!owner)throw new ApiError(409,'report_owner_unavailable','Report schedule owner is unavailable');
+    await assertPlatformAdmission(ctx.env.DB,ctx.principal.workspaceId,ctx.principal.userId,owner.email);
+    await assertAdoptionEffectAllowed(ctx,{resource:row.id,action:'report.email'});
   }catch(e){await ctx.env.DB.prepare("UPDATE work_report_deliveries SET state='rejected',error='preflight_changed',finished_at=? WHERE id=?").bind(now(),deliveryId).run();throw e;}
   try {
     const response=await sendSendGrid({apiKey:ctx.env.MAIL_API_KEY,message:{from:ctx.env.MAIL_FROM,to:[target.member.email],subject:`Linen report: ${target.report.name}`,text:`${target.report.name}\n${result.rows.length} report rows, computed under your current Linen permissions. The CSV is attached. Provider acceptance is recorded separately from inbox delivery.`,attachments:[{filename:'linen-report.csv',type:'text/csv',content:base64(reportCsv(result.columns,result.rows))}],deliveryId}});
