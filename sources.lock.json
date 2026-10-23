@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "5f48d9af34a06d507e6fd3c1a9cf944e8e627b7f47a4502544d79c2210a6cd23",
+      "sha256": "9e1b33de1e72a8e2024d53730ad4892fe5c7452f7e325a33f7b61a5ae99bc358",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ec00157f1cd268c4026a5f2d6f6246a9a862cd8b87a4e02c1fa0b56997a6d06d",
+      "sha256": "972a19064e07254a93f360e9db4cfed4bab516e90b64226fee395a311be10917",
       "executable": false
     },
     "DEMO.md": {
@@ -2518,20 +2518,24 @@
       "sha256": "b5fb08450ac8a73d038494833278c218344410c3b9382e5364f70abb2f504290",
       "executable": false
     },
+    "src/features/services/software-license-device-users.ts": {
+      "sha256": "2a6bff7d3ca5eba68f6d5a752fe40105f62d2a49e30ef2e89c6b2941b15452e2",
+      "executable": false
+    },
     "src/features/services/software-license-effects.ts": {
-      "sha256": "7c00fd616db1e8dc18a5e3c55e6626c360709899171ee7b1dea9f97287aaca38",
+      "sha256": "e735fc3f62f59156f5bc58f42f47bd6b8edb7a6927ac9d0cb2352265bef4b4b4",
       "executable": false
     },
     "src/features/services/software-license-inventory.ts": {
-      "sha256": "13ec34eb748555df3c637445cfa5643919e3519df99135f41544f427914e329a",
+      "sha256": "0302843c1ce59cb790ca8d3282085dfcdc69cac2bc1df24b33e9a7526edde257",
       "executable": false
     },
     "src/features/services/software-license-privacy.ts": {
-      "sha256": "3825e1d419f76682669ea357c7b87695fcf1309c3fb9a303d309476caddd8782",
+      "sha256": "6592ead9235945ed6eac26b7d4516c9e18e5ffc0fa7e38c3192024b2b804d66a",
       "executable": false
     },
     "src/features/services/software-license-routes.ts": {
-      "sha256": "93bd256a5218c42df0e5e8ce61a8ec9c6e6c4ce9e5c1a87329674390384ccb5d",
+      "sha256": "c1784fc81c92aa0ec69f755e583732d53d6969d2264c57dbe648add8de45b11c",
       "executable": false
     },
     "src/features/services/software-license-store.ts": {
@@ -2539,11 +2543,11 @@
       "executable": false
     },
     "src/features/services/software-license-summary.ts": {
-      "sha256": "17fe54f0bef813676c43f96e6975f49a6b75e0443d50e6c41012d72045d9940a",
+      "sha256": "1e3b856890ddecb63be5b0110ea030131b74cffdbe996dff963ecfa50fb19ba6",
       "executable": false
     },
     "src/features/services/software-license-work.ts": {
-      "sha256": "af173ed8b27a6482fe6a52a82ec87ca3ac7a20d40ba27abd57607dbc4c63ac08",
+      "sha256": "ff5c1cf239cf4aa7c79b0342f7ae500ac6ab78cf02b7f5fe2c3fdb1debb3f3fa",
       "executable": false
     },
     "src/features/services/software-license-zoom.ts": {
@@ -2551,7 +2555,7 @@
       "executable": false
     },
     "src/features/services/software-licenses.ts": {
-      "sha256": "6d649a6e3c269d61c4f8e7c89db4ec6db429489e29d1aa54b7584fc52062efa6",
+      "sha256": "741b18d2c068da9d65b6958c56f49887fdd9c8d339fcd5068c62f6183a77c3b9",
       "executable": false
     },
     "src/features/services/store.ts": {
@@ -4795,7 +4799,7 @@
       "executable": false
     },
     "src/platform/portability-policy.mjs": {
-      "sha256": "6b06f603be572eafac61925e6ae5784ea4b23c83da8ade5b0e0832aee563c4f6",
+      "sha256": "98090e7d616fc09a9ec1e06e37d740da62917fc21a09a6015c78d43ce3601cc1",
       "executable": false
     },
     "src/platform/privacy.ts": {
@@ -5418,6 +5422,10 @@
       "sha256": "d319e46b8178f364e9fd88eacde7a528852e614a3f59d9a07a0ae0e1af18bd63",
       "executable": false
     },
+    "src/ui/software-licenses-device-users.tsx": {
+      "sha256": "0459aeda564a2b9f4ab84035ca7c78123dc594b9b8f0abea67e57d48825ad878",
+      "executable": false
+    },
     "src/ui/software-licenses-effects.tsx": {
       "sha256": "8e5009c761a241fa95d7007cb44b4fd9a57566e8dec78bb34a4c8774223c3950",
       "executable": false
@@ -5431,11 +5439,11 @@
       "executable": false
     },
     "src/ui/software-licenses-types.ts": {
-      "sha256": "14cc60a690d7449f76656583412be37f586fbbc679b05aa21759bf88c9632d86",
+      "sha256": "e19ede6d79edd97c5b813091d0eb3d95fdbdbc7b443599fda537dfe89e98185c",
       "executable": false
     },
     "src/ui/software-licenses.tsx": {
-      "sha256": "0c3f2167ccb93e35c1c62cd87ee8ee48302d9085409a9a8d11d52dc38fe8ea0a",
+      "sha256": "42e2eb28b4455eb7e18a2fc197a026a44b9e5aca4331677d6357fff42f8240d2",
       "executable": false
     },
     "src/ui/sponsor-reattest.tsx": {
@@ -5895,7 +5903,7 @@
       "executable": false
     },
     "tests/platform/software-license-transfer-cases.mjs": {
-      "sha256": "bb26e077307e0b5ad8fb8c056835134e2b30c6d91503109f93de539b109628bf",
+      "sha256": "2ea185e7e9e6f8dbe447304f0f91bf4e88952016a0d13a5172db8eee0327d976",
       "executable": false
     },
     "tests/platform/tombstone-race-fixture.ts": {
@@ -5967,7 +5975,7 @@
       "executable": false
     },
     "tests/services/software-license-cases.mjs": {
-      "sha256": "76367f63ffc7f2794bc65525ea64d4da43f7496997618f57ae8c0689255a02cd",
+      "sha256": "9202a2d12e5951219204a90e8ec06b976a2ca334b0de8c0c502b17749d6ffe2b",
       "executable": false
     },
     "tests/services/software-license-fixture.ts": {
