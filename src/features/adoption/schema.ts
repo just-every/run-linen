@@ -45,6 +45,7 @@ export function supported(table: string) { return (nativeTables as readonly stri
 // Deliberate exclusions are checked against the actual migrated schema in tests.
 // Credentials, live authority, locks and derivative recovery indexes are never restored.
 export const excludedTables: Record<string,string> = {
+ billing_plans:'installation billing configuration; retained in full-installation archives',
  work_approval_tokens:'single-use approval reply credentials; require fresh issuance',
  work_approval_mail_config:'local authenticated inbound custody and outbound consent; require fresh configuration',
  work_approval_mail_subscriptions:'local provider subscription confirmation authority; never portable',

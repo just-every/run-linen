@@ -104,7 +104,7 @@ export async function callModel(ctx: IntelligenceContext, input: {
         assert(reservation <= conn.config.maxAttemptUsd, 'attempt_budget_exceeded', 429);
         await refreshBudget(ctx);
         const hold = await db.batch([
-            db.prepare('UPDATE intelligence_budgets SET reserved_usd=reserved_usd+?,revision=revision+1 WHERE workspace_id=? AND spent_usd+reserved_usd+?<=limit_usd').bind(reservation,ctx.principal.workspaceId,reservation),
+            db.prepare('UPDATE intelligence_budgets SET reserved_usd=reserved_usd+?,revision=revision+1 WHERE workspace_id=? AND ROUND(spent_usd+reserved_usd+?,9)<=ROUND(limit_usd,9)').bind(reservation,ctx.principal.workspaceId,reservation),
             db.prepare("UPDATE intelligence_attempts SET reserved_usd=?,model=?,connection_revision=?,state='dispatching' WHERE id=? AND changes()=1").bind(reservation,conn.config.model,conn.revision,attempt),
         ]);
         assert(hold[0].meta.changes===1,'intelligence_budget_exhausted',429);
