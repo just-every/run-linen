@@ -1,3 +1,4 @@
+import {biDestinationJourney} from './bi-destination-journey.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
@@ -131,6 +132,7 @@ try {
     assert.equal((await pause).status(), 200);
     await detail.getByRole('button', { name: 'Resume nightly export', exact: true }).waitFor();
     await capture('s3-saved-without-receipt', width);
+    await biDestinationJourney({page,bi,api,out,width});
   }
   const readerContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), reader = await readerContext.newPage();
   try {

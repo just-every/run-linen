@@ -1,3 +1,4 @@
+import {NotificationHistory} from './notification-history';
 import { useState } from 'react';
 import { useRemote, useSession, useMutation } from './state';
 import { ActionForm } from './forms';
@@ -47,7 +48,7 @@ export function NotificationSettings() {
     {name:'consent',label:'I authorize this notification branding',type:'checkbox',required:true},{name:'reason',label:'Reason for branding change',required:true}
    ]} transform={v=>({...v,logoUrl:v.logoUrl||null,senderConnectionId:v.senderConnectionId||null})} submit="Save notification branding" onSaved={refresh}/>
    {Boolean(branding.data?.branding?.senderDomain)&&<p>Verified sender domain: {String(branding.data?.branding?.senderDomain)}</p>}
-   <details className="evidence"><summary>Notification change history</summary>{(history.data?.changes??[]).map((h,i)=><section key={i}><h4>{humanize(String(h.action))}</h4><Facts entries={[["When",h.at],["Reason",h.reason]]}/><p>Before: {JSON.stringify(h.before)}</p><p>After: {JSON.stringify(h.after)}</p></section>)}</details>
+   <NotificationHistory changes={history.data?.changes??[]}/>
   </>}
   <section aria-label="Your notification inbox"><h3>Your notifications</h3>{!(inbox.data?.items??[]).length&&<p>No notifications to show.</p>}{(inbox.data?.items??[]).map(n=><article className="connection-record" key={String(n.id)}><h4>{String(n.subject)}</h4><p>{String(n.body)}</p><a href={String(n.url??`#/work/${n.workId}`)}>{n.event==='approval.requested'?'Open decision':'Open ticket'}</a><p>{String(n.state)}</p></article>)}</section>
  </section>;
