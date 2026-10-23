@@ -1,3 +1,5 @@
+import { registerBillingRoutes } from './billing';
+import { refreshBudget } from './budgets';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../../platform/types';
 import { jsonBody, now } from '../../platform/http';
@@ -21,6 +23,7 @@ export * from './scheduler';
 export * from './intake';
 export * from './restore';
 export function registerIntelligenceRoutes(app: Hono<AppEnv>) {
+    registerBillingRoutes(app);
     const ctx = (c: any) => ({ env: c.env, principal: c.get('principal') });
     app.get('/commitments', async (c) => c.json(await listCommitments(ctx(c))));
     app.post('/commitments', async (c) => c.json(await saveCommitment(ctx(c), await jsonBody(c)), 201));
@@ -38,10 +41,11 @@ export function registerIntelligenceRoutes(app: Hono<AppEnv>) {
     });
     app.get('/intelligence/budget', async (c) => {
         const x = await current(ctx(c), ['owner', 'operator', 'auditor']);
-        return c.json(await c.env.DB.prepare('SELECT * FROM intelligence_budgets WHERE workspace_id=?').bind(x.principal.workspaceId).first());
+        return c.json(await refreshBudget(x));
     });
     app.put('/intelligence/budget', async (c) => {
         const x = await current(ctx(c), ['owner']), b = await jsonBody(c);
+        await refreshBudget(x);
         await c.env.DB.prepare('INSERT INTO intelligence_budgets(workspace_id,limit_usd) VALUES(?,?) ON CONFLICT(workspace_id) DO UPDATE SET limit_usd=excluded.limit_usd,revision=revision+1').bind(x.principal.workspaceId, num(b.limitUsd, 0, 100000)).run();
         await audit(x, 'intelligence.budget.changed', x.principal.workspaceId);
         return c.json({ updated: true });

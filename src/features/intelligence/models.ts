@@ -1,3 +1,4 @@
+import { refreshBudget } from './budgets';
 import { id, now, requiredString } from '../../platform/http';
 import { decryptSecret } from '../../platform/crypto';
 import { assert, audit, current, errorCode, num } from './access';
@@ -101,6 +102,7 @@ export async function callModel(ctx: IntelligenceContext, input: {
         const upperInput = new TextEncoder().encode(instructions + prompt + JSON.stringify(input.schema)).length + 1024;
         const reservation = (upperInput * conn.config.inputUsdPerMillion + conn.config.maxOutputTokens * conn.config.outputUsdPerMillion) / 1e6;
         assert(reservation <= conn.config.maxAttemptUsd, 'attempt_budget_exceeded', 429);
+        await refreshBudget(ctx);
         const hold = await db.batch([
             db.prepare('UPDATE intelligence_budgets SET reserved_usd=reserved_usd+?,revision=revision+1 WHERE workspace_id=? AND spent_usd+reserved_usd+?<=limit_usd').bind(reservation,ctx.principal.workspaceId,reservation),
             db.prepare("UPDATE intelligence_attempts SET reserved_usd=?,model=?,connection_revision=?,state='dispatching' WHERE id=? AND changes()=1").bind(reservation,conn.config.model,conn.revision,attempt),
@@ -142,7 +144,7 @@ export async function callModel(ctx: IntelligenceContext, input: {
     }
     async function finish(state: string, error: string | null) {
         const release = !dispatched || cost !== null;
-        await db.batch([db.prepare("UPDATE intelligence_attempts SET state=?,cost_usd=?,charge_status=?,usage_json=?,elapsed_ms=?,error_code=?,request_id=?,finished_at=? WHERE id=? AND state NOT IN ('completed','failed')").bind(state, cost, !dispatched ? 'not_dispatched' : cost === null ? 'unknown' : 'estimated', JSON.stringify(usage), Date.now() - start, error, requestId, now(), attempt), ...(release && reserved > 0 ? [db.prepare('UPDATE intelligence_budgets SET reserved_usd=MAX(0,reserved_usd-?),spent_usd=spent_usd+?,revision=revision+1 WHERE workspace_id=? AND changes()=1').bind(reserved, cost || 0, ctx.principal.workspaceId)] : [])]);
+        await db.batch([db.prepare("UPDATE intelligence_attempts SET state=?,cost_usd=?,charge_status=?,usage_json=?,elapsed_ms=?,error_code=?,request_id=?,finished_at=? WHERE id=? AND state NOT IN ('completed','failed')").bind(state, cost, !dispatched ? 'not_dispatched' : cost === null ? 'unknown' : 'estimated', JSON.stringify(usage), Date.now() - start, error, requestId, now(), attempt), ...(release && reserved > 0 ? [db.prepare('UPDATE intelligence_budgets SET reserved_usd=MAX(0,reserved_usd-?),spent_usd=spent_usd+CASE WHEN period_start<=? THEN ? ELSE 0 END,revision=revision+1 WHERE workspace_id=? AND changes()=1').bind(reserved, new Date(start).toISOString(), cost || 0, ctx.principal.workspaceId)] : [])]);
     }
 }
 export async function proposeIntake(ctx: IntelligenceContext, b: any) {

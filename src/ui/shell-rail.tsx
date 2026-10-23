@@ -9,6 +9,7 @@ import type { FulfilmentDecision } from "./fulfilment-decisions";
 /** Sections the Settings item stands for; Settings opens on Connections & setup. */
 export const settingsSections = [
   ["connections", "Connections & setup"],
+  ["billing", "Pricing & budgets"],
   ["members", "People & permissions"],
   ["grants", "Standing authority"],
   ["operations", "Effects & takeover"],

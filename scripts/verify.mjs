@@ -63,6 +63,7 @@ const checks = [
   ['live handoff browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/handoff-journey.mjs']],
   ['walk-up browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/walkup-journey.mjs']],
   ['mailbox browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/mailbox-journey.mjs']],
+  ['pricing and budgets browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/billing-browser.mjs']],
   ['operations KPI browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/kpi-journey.mjs']],
   ['MCP native conversation', process.execPath, ['tests/ui/run.mjs', 'tests/ui/mcp-journey.mjs']],
 ]
