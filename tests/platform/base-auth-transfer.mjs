@@ -7,7 +7,7 @@ import {spawn} from 'node:child_process'
 import {cp,mkdtemp,symlink,rm,writeFile,readFile,mkdir,readdir} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join,resolve} from 'node:path'
-import {createHash} from 'node:crypto'
+import {createHash,createHmac} from 'node:crypto'
 import {createServer} from 'node:net'
 import {createRequire} from 'node:module'
 import {pathToFileURL} from 'node:url'
@@ -81,6 +81,7 @@ try{
   env.DB.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind('connection','workspace','sendgrid','Fixture','{}','synthetic-encrypted-secret','verified',stamp,stamp),
   env.DB.prepare('INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,created_at,updated_at,dedup_key) VALUES(?,?,?,?,?,?,?,?,?)').bind('work','workspace','owner','owner','request','Retained real record',stamp,stamp,'transfer'),
   env.DB.prepare('INSERT INTO svc_development_bindings(id,workspace_id,owner_id,repository_id,repository_name,kind,target_id,issue_number,secret_ciphertext,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind('development-binding','workspace','owner',42001,['synthetic-linen','issues'].join('/'),'issue','work',42,'synthetic-linen-42016',stamp),
+  env.DB.prepare('INSERT INTO svc_development_bindings(id,workspace_id,owner_id,repository_id,repository_name,kind,target_id,template_version,secret_ciphertext,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind('development-deployment','workspace','owner',42001,['synthetic-linen','issues'].join('/'),'deployment','retained-template',1,'synthetic-linen-43004',stamp),
   env.DB.prepare('INSERT INTO work_catalog(id,workspace_id,name,kind,target,owner_id,revision,form_json) VALUES(?,?,?,?,?,?,?,?)').bind('catalog-monitor','workspace','Monitor for training','device','training-monitor','owner',2,JSON.stringify(catalogForm)),
   env.DB.prepare('INSERT INTO work_fulfilments(id,workspace_id,work_id,catalog_id,beneficiary_id,purpose,revision,catalog_snapshot_json) VALUES(?,?,?,?,?,?,?,?)').bind('catalog-request','workspace','work','catalog-monitor','owner','Training room display',1,JSON.stringify(catalogSnapshot)),
 
@@ -280,6 +281,18 @@ try{
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/reconcile',{cookie,body:{historyId:records.data[0].id,evidence:'Fixture owner reviewed retained unknown operation before explicitly releasing execution'},headers:authHeaders})).status,200)
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/release',{cookie,body:{revision:hold.revision},headers:authHeaders})).status,200)
  assert.equal(JSON.parse((await db.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id="workspace"').first()).settings_json).executionHeld,false,'Only explicit native reconciliation and release clears hold')
+ const restoredBindings=await(await request('/api/v1/development-bindings',{cookie})).json();
+ for(const [key,type,event,secret] of [
+  ['development-binding','issues',{action:'closed',repository:{id:42001,full_name:['synthetic-linen','issues'].join('/')},issue:{number:42,state:'closed',updated_at:new Date().toISOString()}},'synthetic-linen-42016'],
+  ['development-deployment','deployment',{repository:{id:42001,full_name:['synthetic-linen','issues'].join('/')},deployment:{id:43005,environment:'production',production_environment:true,created_at:new Date().toISOString(),payload:{pullRequestNumber:42,runId:43006}}},'synthetic-linen-43004'],
+ ]) {
+  assert.equal(restoredBindings.items.find(binding=>binding.id===key).active,0,'Current owner sees restored inbound consent as inactive');
+  assert.deepEqual(await db.prepare('SELECT active,secret_ciphertext FROM svc_development_bindings WHERE id=?').bind(key).first(),{active:0,secret_ciphertext:null});
+  const response=await request('/api/v1/webhooks/development/'+key,{body:event,headers:{'x-github-event':type,'x-github-delivery':'synthetic-linen-43007','x-hub-signature-256':'sha256='+createHmac('sha256',secret).update(JSON.stringify(event)).digest('hex')}});
+  assert.equal(response.status,404,'Signed development events remain refused after actual archive restore and explicit recovery release');
+ }
+ assert.equal((await db.prepare('SELECT COUNT(*) n FROM svc_development_receipts').first()).n,0,'Restored inbound events cannot record a new receipt');
+
  const releaseView=await(await request('/api/v1/releases/retained-release',{cookie})).json();
  assert.equal(releaseView.data.state,'imported-review','CHANGE-007 native owner reads the restored release as inert history');
  const restoredGo=await request('/api/v1/releases/retained-release/decisions',{cookie,headers:authHeaders,body:{revision:releaseView.revision,decision:'go',reason:'Attempt to reuse archived authority'}});

@@ -82,7 +82,18 @@ async function developmentChecks() {
  await db.prepare("UPDATE memberships SET active=1 WHERE workspace_id='development' AND user_id='owner'").run();
  template=await devOk('PATCH','/change-templates/'+template.id,{revision:template.revision,active:false});
  assert.equal((await send(deploymentBinding.id,{...deployment,deployment:{...deployment.deployment,id:42012}},'deployment')).status,409);
- console.log('PASS developmentChecks: signed issue closure and private comments, replay and scope refusals, production standard change with PR and run, no effect authority');
+ // A different current owner erases the consenting owner through the public door.
+ await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind('dev-successor','successor@example.test','Successor','synthetic-linen-43001',at).run();
+ await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('development','dev-successor','["owner"]').run();
+ const ownerWork=await devOk('POST','/work',{title:'Owner consent erasure',body:'Normal incident',deduplicationKey:'synthetic-linen-43002'},'dev-successor');
+ const ownerBinding=await devOk('POST','/development-bindings',{...bindingBody,targetId:ownerWork.id});
+ await devOk('POST','/people/owner/erase',{revision:0,reason:'Authorized owner erasure'},'dev-successor');
+ for(const key of [ownerBinding.id,deploymentBinding.id]) {
+  assert.deepEqual(await db.prepare('SELECT active,secret_ciphertext,owner_id FROM svc_development_bindings WHERE id=?').bind(key).first(),{active:0,secret_ciphertext:null,owner_id:'[erased]'},'Owner erasure clears both kinds of inbound credential');
+ }
+ assert.equal((await send(ownerBinding.id,comment,'issue_comment')).status,404,'Erased owner issue binding refuses signed events');
+ assert.equal((await send(deploymentBinding.id,{...deployment,deployment:{...deployment.deployment,id:43003}},'deployment')).status,404,'Erased owner deployment binding refuses signed events');
+ console.log('PASS developmentChecks: signed issue closure and private comments, replay and scope refusals, production standard change with PR and run, no effect authority; owner erasure revokes both binding kinds and clears secrets');
 }
 await developmentChecks();
 await departmentSourceChecks({ok,call,db});
