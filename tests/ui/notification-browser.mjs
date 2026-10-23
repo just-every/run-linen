@@ -27,9 +27,9 @@ try {
   await api(`/work/${work.id}/commands`,{revision:work.revision,command:'close',reason:'Requester confirmed a working display'});
   await page.getByText('Notification change history',{exact:true}).click();
   await page.getByText('Include the request title and the first name',{exact:true}).first().waitFor();
-  assert.ok((await page.getByRole('region',{name:'Notification rules and preferences'}).innerText()).includes('Before:'));
+  await page.getByRole('heading',{name:'Before',exact:true}).first().waitFor();await page.getByRole('heading',{name:'After',exact:true}).first().waitFor();
   const profile=page.getByRole('button',{name:'Your workspace and account'});await page.keyboard.press('Tab');await profile.focus();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');await page.screenshot({path:`${out}/notification-rules-${width}.png`,fullPage:true});
-  await ep.goto(base+'/app#/preferences');
+  await ep.goto(base+'/app#/work');await ep.getByRole('button',{name:'Your workspace and account'}).click();await ep.getByRole('link',{name:'Notification preferences',exact:true}).click();await ep.getByRole('heading',{name:'Your notifications',exact:true}).waitFor();
   await ep.getByRole('region',{name:'Your notification inbox'}).getByText(`All set, Jordan: Denver monitor restored ${width}.`,{exact:true}).waitFor();
   await action(ep,'Your notification preferences',{event:'ticket.public_update',channel:'portal',enabled:false},'/notification-preferences','Save preference');
   await ep.getByText(/Ticket.public update|Ticket public update/i).first().waitFor();

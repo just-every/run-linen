@@ -5199,7 +5199,7 @@
       "executable": false
     },
     "src/ui/notification-settings.tsx": {
-      "sha256": "9096eae0dc00ad3595729f376a06ae33be8f63ec83a5c14419322aa7af906998",
+      "sha256": "77c4f96b847da475a46bebb5e39c15914084307d59006c01e0c44b1c56aeae4d",
       "executable": false
     },
     "src/ui/obligation-actions.tsx": {
@@ -6063,7 +6063,7 @@
       "executable": false
     },
     "tests/ui/notification-browser.mjs": {
-      "sha256": "eee6381c54e4993cb9c455c68fb4a0309e3d0e2952be4d75f47e69e5c089ef5e",
+      "sha256": "9a5caa8e4a59b4cb937f2536f571ae319f0d6559d9c929f16e90c8823fc764fd",
       "executable": false
     },
     "tests/ui/pending-person-browser.mjs": {
@@ -6107,7 +6107,7 @@
       "executable": false
     },
     "tests/ui/reporting-browser.mjs": {
-      "sha256": "61bc1e36f8596fe72722a81c9bf37d841c584442ad9e41b95557e3d341de30c3",
+      "sha256": "a7b2b5da897202c1176a16a0a27e9257a982cbec75dc1f4b9e2a24df6d3b40ec",
       "executable": false
     },
     "tests/ui/request-status-render.mjs": {
