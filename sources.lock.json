@@ -1523,7 +1523,7 @@
       "executable": false
     },
     "scripts/verify.mjs": {
-      "sha256": "cf25d3650e58c476f9aafbec84d752425bb5e23688b45883b4515cbf0982eefe",
+      "sha256": "fd4afeece0886e07c411069a276d4859d67729d5685ba0fce58bdecaf2df5adb",
       "executable": false
     },
     "seed.json": {
@@ -2547,7 +2547,7 @@
       "executable": false
     },
     "src/features/services/software-license-summary.ts": {
-      "sha256": "1e3b856890ddecb63be5b0110ea030131b74cffdbe996dff963ecfa50fb19ba6",
+      "sha256": "3c3504f1234af69f35fb9292c7ef0dba00f40d6eb313d72f2e0c95ec05f51d6e",
       "executable": false
     },
     "src/features/services/software-license-work.ts": {
@@ -6123,7 +6123,7 @@
       "executable": false
     },
     "tests/ui/connected-run.mjs": {
-      "sha256": "58e8c0fd749391d2ef9549b2b99f3687c95def9021c46fe4e61745d1aa5a6fc5",
+      "sha256": "7b70bf129375fb309220b2ffa924817e69b7a9229432745c7ecb921a6fe36c3f",
       "executable": false
     },
     "tests/ui/connected-setup.mjs": {
@@ -6291,7 +6291,7 @@
       "executable": false
     },
     "tests/ui/software-license-browser.mjs": {
-      "sha256": "8bf8753a578488ee357cb89bdcad89acf2364c956441de0ce86ac3abf22da839",
+      "sha256": "fa9e3d63947dddf6100ef53b0d55f46352fcc204b89cab4cc86d1f073bbb9d46",
       "executable": false
     },
     "tests/ui/template-browser.mjs": {

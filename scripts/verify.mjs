@@ -64,6 +64,7 @@ const checks = [
   ['live handoff browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/handoff-journey.mjs']],
   ['walk-up browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/walkup-journey.mjs']],
   ['mailbox browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/mailbox-journey.mjs']],
+  ['software provider browser', process.execPath, ['tests/ui/software-license-run.mjs']],
   ['software license browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/software-license-browser.mjs']],
   ['report builder and exports browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/reporting-browser.mjs']],
   ['notification rules browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/notification-browser.mjs']],
@@ -96,7 +97,7 @@ const measuredSeconds = {
   'work and lifecycle': 32, 'service notice browser': 32, 'mailbox browser': 35, 'walk-up browser': 35, 'live handoff browser': 35, 'branding browser': 35, 'emitted Worker': 30,
   'ordinary intake and independent evidence': 29, 'work integration regressions': 28,
   'Freshservice and Snipe-IT native migration': 26,
-  'report builder and exports browser': 45, 'notification rules browser': 45, 'pricing and budgets browser': 35, 'software license browser': 45,
+  'report builder and exports browser': 45, 'notification rules browser': 45, 'pricing and budgets browser': 35, 'software license browser': 45, 'software provider browser': 100,
 }
 function shardChecks(count) {
   const loads = Array(count).fill(0), shards = Array.from({ length: count }, () => [])

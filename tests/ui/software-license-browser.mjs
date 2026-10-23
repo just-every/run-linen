@@ -16,7 +16,7 @@ export async function softwareLicenseJourney({ page, api, base, out }) {
   ]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto(base + '/app#/software-assets');
-    await page.getByRole('link',{name:'Software licenses & renewals',exact:true}).waitFor();await page.screenshot({path:`${out}/ASSET-006-entry-${width}.png`,fullPage:true});
+    await page.getByRole('link',{name:'Software licenses & renewals',exact:true}).waitFor();await page.getByText('No records yet.',{exact:true}).waitFor();await page.screenshot({path:`${out}/ASSET-006-entry-${width}.png`,fullPage:true});
     await page.getByRole('link',{name:'Software licenses & renewals',exact:true}).click();
     await page.getByRole('heading', { name: 'Software licenses', exact: true }).waitFor();
     const connection = page.locator('details[data-action-path="/software-license-connections"]');
@@ -103,6 +103,7 @@ export async function softwareLicenseJourney({ page, api, base, out }) {
     await page.getByRole('link', { name: 'Notification preferences', exact: true }).click();
     await page.getByRole('heading', { name: 'Your software notices', exact: true }).waitFor();
     await page.getByText('No software notices are recorded for you.', { exact: true }).waitFor();
+    await page.screenshot({path:`${out}/ASSET-006-empty-notices-${width}.png`,fullPage:true});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `Software notices fit ${width}px`);
   }
 }

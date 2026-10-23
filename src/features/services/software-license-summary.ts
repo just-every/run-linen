@@ -40,6 +40,6 @@ export async function softwareSummary(ctx: SoftwareContext, r: ServiceRecord) {
   const reclaimable=fresh&&saas?o.users.filter((u:any)=>u.licensed&&!u.active).length:null;
   return {entitled,consumed,overLicensed:consumed===null?null:Math.max(0,consumed-entitled),underLicensed:consumed===null?null:Math.max(0,entitled-consumed),activeUsers,reclaimable,
     trueUpUsd:consumed===null?null:Math.round(Math.max(0,consumed-entitled)*r.data.contract.trueUpUnitUsd*100)/100, fresh,unknowns:[...new Set(unknowns)],
-    basis:r.data.metric==='concurrent'?'Owner-recorded peak, not inferred from installations':desktop?'Complete provider installed-application inventories':'Zoom assigned licenses; activity is union of SaaS admin report and configured IdP sign-ins',
+    basis:r.data.metric==='concurrent'?'Owner-recorded peak, not inferred from installations':desktop?'Complete provider installed-application inventories':saas?'Zoom assigned licenses; activity is union of SaaS admin report and configured IdP sign-ins':'No consumption source configured',
     observedAt:o?.observedAt||null};
 }
