@@ -72,7 +72,7 @@ try {
     await columns.getByLabel('Location').check();
     await builder.getByRole('button', { name: 'Add filter', exact: true }).click();
     await builder.getByLabel('Filter 1 field').selectOption('priority');
-    await builder.getByLabel('Filter 1 value').fill('P1');
+    await builder.getByRole('textbox', {name:'Filter 1 value',exact:true}).fill('P1');
     await builder.getByLabel('Group report by').selectOption('location');
     const preview = await submit(builder, 'Preview report', '/reports/preview', 200);
     assert.deepEqual(preview.rows, [{ location: 'Austin', count: 1 }, { location: 'Denver', count: 2 }]);
