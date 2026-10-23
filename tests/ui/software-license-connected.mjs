@@ -19,7 +19,7 @@ try {
  const zoom=await connection('zoom',{accountId:'synthetic-linen-18002'}),graph=await connection('microsoft-graph',{tenantId:'00000000-0000-0000-0000-000000000001'}),jamf=await connection('jamf',{origin:'https://synthetic-linen.jamfcloud.com'});
  const create=(name,publisher,metric,seats,sources,policy='managed')=>api('/software-licenses',{name,publisher,ownerId:owner,serviceId:service.id,metric,policy,contract:{seats,currency:'USD',renewalAt:new Date(Date.now()+89*86400000).toISOString(),annualCostUsd:24000,trueUpUnitUsd:100,reference:'PO-SOFTWARE-2026'},sourceBindings:sources});
  const get=id=>api('/software-licenses/'+id);
- const visit=async(id,title)=>{await page.goto(base+'/app#/software-licenses/'+id);await page.getByRole('heading',{name:title,exact:true}).waitFor();await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();};
+ const visit=async(id,title)=>{await page.goto(base+'/app#/software-licenses');await page.getByRole('link',{name:`Review ${title}`,exact:true}).click();await page.getByRole('heading',{name:title,exact:true}).waitFor();await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();};
  const sync=async(id)=>{await action(page,'Sync provider observations',{},`/software-licenses/${id}/sync`,'Sync license sources');await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();return get(id);};
  const shot=async(name,scope=page)=>{for(const width of [1440,390]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name} fits ${width}`);await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${out}/ASSET-006-${name}-${width}.png`,fullPage:true});}};
  let license=await create('Zoom Workplace','Zoom','per-user',120,[{connectionId:zoom.id,kind:'zoom'},{connectionId:graph.id,kind:'entra-signins',appId:'00000000-0000-0000-0000-000000000002'}]);
@@ -44,6 +44,7 @@ try {
  let prohibited=await create('Unapproved Tool','Synthetic Publisher','per-device',0,[{connectionId:jamf.id,kind:'jamf',aliases:[{title:'Unapproved Tool.app',publisher:'Synthetic Publisher',productId:'com.synthetic-linen.unapproved'}],removalGroupId:'20',removalPolicyId:'21',removalPackageId:'22'}],'prohibited');
  await visit(prohibited.id,'Unapproved Tool');prohibited=await sync(prohibited.id);
  await action(page,"Confirm a device's user",{connectionId:jamf.id,deviceId:'1',userId:employee.id,confirmed:true,reason:'Owner confirmed device ACROBAT-1 is currently assigned to Avery'},`/software-licenses/${prohibited.id}/device-users`,'Confirm device user');
+ await page.getByRole('region',{name:'Unapproved Tool license position'}).getByText('No provider observations have been synced.',{exact:false}).waitFor();
  prohibited=await sync(prohibited.id);const installationId=prohibited.data.observation.installations[0].id;
  await action(page,'Authorize app removal',{principalId:owner,targets:[installationId],expiresAt:local(3600000),reason:'Remove prohibited title under this exact owner grant',confirmed:true},`/software-licenses/${prohibited.id}/grants`,'Grant app removal');
  await page.getByText('Use app removal grant',{exact:true}).waitFor();await shot('prohibited-authorized');
