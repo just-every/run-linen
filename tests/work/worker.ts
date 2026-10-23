@@ -4,6 +4,7 @@ import { eraseServicePerson } from '../../src/features/services/privacy';
 import { registerServiceRoutes } from "../../src/features/services";
 import { registerConnectionRoutes } from "../../src/features/connections";
 import { createGrant } from "../../src/features/execution/grants";
+import { registerCustomRoleRoutes } from '../../src/platform/custom-roles';
 import { Hono } from "hono";
 import {
   registerWorkRoutes,
@@ -22,6 +23,7 @@ app.use("*", async (c, next) => {
   });
   await next();
 });
+registerCustomRoleRoutes(app);
 registerMcpFieldClassificationRoutes(app);
 // Test-only scheduling seam: change real D1 state after route evaluation, before its batch commits.
 for(const seam of ['/work/:id/fulfilment','/catalog-bundles/:id/request'])app.use(seam,async(c,next)=>{

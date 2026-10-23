@@ -147,6 +147,10 @@ try{
   env.DB.prepare('INSERT INTO history_redactions VALUES(?,?,?,?,?,?,?)').bind('workspace','audit:'+erasedInitiatorEvent,erasedInitiatorEvent,'audit',stamp,JSON.stringify(redactedRuleHistory),'{}'),
  ]);
 
+ await env.DB.batch([
+  env.DB.prepare('INSERT INTO platform_custom_roles VALUES(?,?,?,?,1,1,?)').bind('synthetic-linen-11440','workspace','Facilities public reader','retained-facilities',stamp),
+  env.DB.prepare('INSERT INTO platform_custom_role_members VALUES(?,?,?,1)').bind('workspace','synthetic-linen-11440','retained-staff'),
+ ]);
  await seedReportingNotifications(env,stamp);
  await seedSoftwareLicensing(env,stamp);
  await close()
@@ -184,6 +188,8 @@ try{
  assert.equal(await(await env.ATTACHMENTS.get('workspace/private-file')).text(),'Private retained attachment')
  assert.equal(JSON.parse((await env.DB.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id="workspace"').first()).settings_json).executionHeld,true)
  assert.equal((await env.DB.prepare('SELECT password_hash FROM users WHERE id="owner"').first()).password_hash,'!restored-email-link')
+ assert.equal((await env.DB.prepare("SELECT active FROM platform_custom_role_members WHERE role_id='synthetic-linen-11440'").first()).active,0,'Restored custom role assignments require fresh owner review');
+ assert.equal((await env.DB.prepare("SELECT name FROM platform_custom_roles WHERE id='synthetic-linen-11440'").first()).name,'Facilities public reader');
  await assertRestoredReportingNotifications(env);
  await assertRestoredSoftwareLicensing(env);
  assert.equal((await env.DB.prepare('SELECT secret_ciphertext FROM connections').first()).secret_ciphertext,null)
@@ -263,6 +269,8 @@ try{
  assert.deepEqual([restoredTask.title,restoredTask.state,restoredTask.completed_by,restoredTask.can_complete],['Mount the monitor','done','owner',false],'CATALOG-003 restored owner reads the completed team task through the native route');
  const restoredForms=await(await request('/api/v1/work/work/catalog-requests',{cookie})).json();
  assert.deepEqual(restoredForms.items[0].catalogSnapshot,catalogSnapshot,'CATALOG-001 restored owner reads the same original submitted form through the native route');
+ const restoredRoles=await(await request('/api/v1/custom-roles',{cookie})).json();
+ assert.equal(JSON.parse(restoredRoles.items.find(r=>r.id==='synthetic-linen-11440').members_json)[0].active,0,'Fresh owner session sees custom role metadata without restored authority');
  const restoredDepartment=(await(await request('/api/v1/departments/admin',{cookie})).json()).items.find(item=>item.id==='retained-facilities');
  assert.equal(restoredDepartment.name,'Facilities service');
  assert.equal(restoredDepartment.members.find(member=>member.userId==='retained-staff').active,false,'Native owner sees that restored staff authority requires fresh confirmation');

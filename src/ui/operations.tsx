@@ -1,3 +1,4 @@
+import { CustomRoles } from './custom-roles';
 import { CustomReports, BiExports } from './reports';
 import { NotificationSettings } from './notification-settings';
 import {DepartmentManagement} from './department-management';
@@ -69,7 +70,7 @@ export function OperationsSpace({ section }: { section: string }) {
       )}
       {section==="notifications"&&owner&&<ApprovalMailSettings/>}
       {section==="notifications"&&<NotificationSettings/>}
-      {section==='members'&&owner&&<DepartmentManagement/>}
+      {section==='members'&&owner&&<><DepartmentManagement/><CustomRoles/></>}
       <div className={section === "members" ? "split" : "stack"}>
       {list.loading ? (
         <Loading />

@@ -1,3 +1,4 @@
+import { customRoleList, customRoleConversation } from './custom-role-read';
 import { notifyWorkEvent } from './notification-port';
 import {obligationHistory,ticketHistory} from './work-history';
 import { workReadable, workPrivateReadable, workDepartmentStaff, workDepartmentScoped } from './scope';
@@ -141,7 +142,7 @@ export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
     UNION ALL SELECT h.work_id,c.name,c.kind FROM work_pending_services h JOIN work_catalog c ON c.workspace_id=h.workspace_id AND c.id=h.catalog_id WHERE h.workspace_id=? AND h.work_id IN (SELECT value FROM json_each(?)) AND h.state='held' ORDER BY c.name`)
     .bind(p.workspaceId, ids,p.workspaceId,ids).all<{ work_id: string; name: string; kind: string }>()).results;
   const seesAttention = operator(p) || p.roles.includes('hr');
-  return Promise.all(rows.map(async (row: any) => {
+  const ordinary = await Promise.all(rows.map(async (row: any) => {
     const staff = !workDepartmentScoped(row) || workPrivateReadable(p,row);
     const progress = flagged.has(row.id) ? await progressFor(ctx, row) : [];
     const item = { ...row, progress, services: services.filter(s => s.work_id === row.id).map(({ name, kind }) => ({ name, kind })) };
@@ -154,6 +155,8 @@ export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
         (entry.ownerLabel === 'Service team — assignment needed' && operator(p))
       )))) };
   }));
+  const custom = (await customRoleList(ctx,filter.departmentId)).filter((row:any)=>!ordinary.some(item=>item.id===row.id));
+  return [...ordinary,...custom].slice(0,200);
 }
 export async function createWork(
   ctx: WorkContext,
@@ -405,7 +408,7 @@ export async function conversation(ctx: WorkContext, workId: string) {
   let work: WorkRecord;
   try { work = await getWork(ctx, workId); } catch (error) {
     // CHANNEL-009: a shared colleague or the beneficiary's manager gets the public thread only.
-    const shared = await participantView(ctx, workId) ?? await sharedView(ctx, workId);
+    const shared = await participantView(ctx, workId) ?? await sharedView(ctx, workId) ?? await customRoleConversation(ctx,workId);
     if (!shared) throw error;
     return shared;
   }

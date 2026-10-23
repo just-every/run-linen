@@ -571,7 +571,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "e65c4ac566ae8e3a54645fad06b599eda5c86629f6dc1847e9a283083dee91eb",
+      "sha256": "fd2102a3160300fa2641c66253e61944649502e301bfd67a30cc5f008063d539",
       "executable": false
     },
     "ADOPTION.md": {
@@ -599,7 +599,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "6b97a48ebf3e789dc67db9a8d1a761c4e2aa8d7ad5fc328230e0f63144ddb0fb",
+      "sha256": "4e864f9d96411d059b5d940a63844c1e07b509f388b3b731041abd04ab0d29b6",
       "executable": false
     },
     "DEMO.md": {
@@ -1138,6 +1138,10 @@
       "sha256": "f0c2dca3b201abca02e150675320e3d678fe5cfed9c820c5e2a2ce86f4d34498",
       "executable": false
     },
+    "migrations/0904_custom_roles.sql": {
+      "sha256": "ab55714ce614648710845b6073fe24633bf89781632c94f95ebd86d391cbe921",
+      "executable": false
+    },
     "ONBOARDING.md": {
       "sha256": "bb2638772c83081938fe706542d4c7a884e8b928717abf3a371c52208e80d82c",
       "executable": false
@@ -1523,7 +1527,7 @@
       "executable": false
     },
     "scripts/verify.mjs": {
-      "sha256": "4c9d484a07d747da762ab43a0065815fdbfccd76c536f7b6b6d0201f1f0b48b1",
+      "sha256": "a149d7b64a9ad2a7a1a8061f302ba161d2f69e67548399ced608e462ad10b9c5",
       "executable": false
     },
     "seed.json": {
@@ -2823,7 +2827,11 @@
       "executable": false
     },
     "src/features/work/core.ts": {
-      "sha256": "82ee005dc87f0a984f3300734aab0f7e82f84da3d367874afdf02b1361e91d60",
+      "sha256": "12c2933843efc1ee5b2e766536f587e145a8d4fefd6fa42506815c3e73373df0",
+      "executable": false
+    },
+    "src/features/work/custom-role-read.ts": {
+      "sha256": "6c86c9eeb377cf605864a8935dedcb95ac1e39d4a2705a536be593c067cc2df8",
       "executable": false
     },
     "src/features/work/deflection.ts": {
@@ -4790,6 +4798,10 @@
       "sha256": "6374c0d76ba26b039862857541b93cce118188813bc888528ff362c8d88605d8",
       "executable": false
     },
+    "src/platform/custom-roles.ts": {
+      "sha256": "c041437222087796b8cd0b829a25113508185f8980e5f6fd5bd4b151e81f4ee0",
+      "executable": false
+    },
     "src/platform/document-response.ts": {
       "sha256": "8a0760a836346553e85026a06259e9edafb168f95323ee243e90b3fd2c409370",
       "executable": false
@@ -4803,7 +4815,7 @@
       "executable": false
     },
     "src/platform/portability-policy.mjs": {
-      "sha256": "7f3774870d0607c04ac5c7308c5b1bc684b1d00ad287b43265a2b74e95931824",
+      "sha256": "f5604ccd5600106e8db13f399b269c784c39d102086f1ce2e6c644dcf7efc65a",
       "executable": false
     },
     "src/platform/privacy.ts": {
@@ -4811,7 +4823,7 @@
       "executable": false
     },
     "src/platform/routes.ts": {
-      "sha256": "5612b1378c3c8655430ae7df00bd5636643c2d65e20e871f62e53eea8b6df43a",
+      "sha256": "dcf406a5b8e8cbae6e25f4a00a1b3012c8fab1aba53b6f79d01cdbd308b333d9",
       "executable": false
     },
     "src/platform/session-status.ts": {
@@ -5162,6 +5174,10 @@
       "sha256": "31928c5a07c37338abd81ffa23dfdf65e2a884317ac96b0c3a25f0d4e40e8181",
       "executable": false
     },
+    "src/ui/custom-roles.tsx": {
+      "sha256": "22e957e8338b7c2ec33dfcd248fb21a355e69b639682d009df0140bba47f7f2f",
+      "executable": false
+    },
     "src/ui/decisions.tsx": {
       "sha256": "6cf884655456b3404e71167a392ff56da436150d164b83ea64af0ed52bc786b6",
       "executable": false
@@ -5295,7 +5311,7 @@
       "executable": false
     },
     "src/ui/operations.tsx": {
-      "sha256": "96dbf6d4b2a6c19144b77ba259e754b4c38635151a7a248f196d881eafaa216c",
+      "sha256": "bbfaa3cfe64859008507914c2a3bbca357ae06dd1d242fa900590c43120d4ce4",
       "executable": false
     },
     "src/ui/pending-people.tsx": {
@@ -5491,7 +5507,7 @@
       "executable": false
     },
     "src/ui/work-detail.tsx": {
-      "sha256": "abc56a687ace4f5a87d4c48f8a75792957a08641542b1e4c8f0c71ccbd931a15",
+      "sha256": "d7d0d298a6cf180f2dd4537c0ff368c28fe2f569c4302c320ed4d830401451bb",
       "executable": false
     },
     "src/ui/work-fields.tsx": {
@@ -5859,7 +5875,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "7af002b267bbbbce8553c363b3c91d077801a30c95653b2c1ada88e5b8d24677",
+      "sha256": "9af85e9c5a3394345aa1602b6404a9291f47250eb5823c8ce5072025089bf6e8",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
@@ -5903,7 +5919,7 @@
       "executable": false
     },
     "tests/platform/runtime.mjs": {
-      "sha256": "c25a329d2eb6be22e7e2e97adaba093013c11e25848f439e1fa5f1d6dbff5305",
+      "sha256": "28b7e14280ac8c999addbc126d5b3b935635a2ee10fdf1328cd190f79c7ff893",
       "executable": false
     },
     "tests/platform/software-license-transfer-cases.mjs": {
@@ -6135,7 +6151,7 @@
       "executable": false
     },
     "tests/ui/department-browser.mjs": {
-      "sha256": "b8681d0509f00e81d614b9c97edc3b15197e136180e84019ccfd36dd202e4fae",
+      "sha256": "b7d78d22daa1df129f2a70f54faac2203873eebcc4f81fbe9f23807e73d91b1b",
       "executable": false
     },
     "tests/ui/dependency-journey.mjs": {
@@ -6399,7 +6415,7 @@
       "executable": false
     },
     "tests/work/catalog-quote-cases.mjs": {
-      "sha256": "62eb89b34f8bccce5e07f0f90a79dbab57d4ec70ff25e5b0c86d5b7976e80316",
+      "sha256": "7591925013a2a78c515de0183b564fb9dffaa127bd1d5ec137cb218ef0542a99",
       "executable": false
     },
     "tests/work/catalog-task-cases.mjs": {
@@ -6427,7 +6443,7 @@
       "executable": false
     },
     "tests/work/department-space-cases.mjs": {
-      "sha256": "8168da30ad1e335492ba188f3af0ec472febdc2125fe8d1f1bcb510ab1a744d4",
+      "sha256": "6727930ed3bd2903c414eea6f8e336b8b707c4784a9f3b072548a5019fab813f",
       "executable": false
     },
     "tests/work/desk-field-cases.mjs": {
@@ -6587,7 +6603,7 @@
       "executable": false
     },
     "tests/work/worker.ts": {
-      "sha256": "a9c76fc22aa7a4897f17ff8f19bad32ef792611343368bf4e91bf2b6b9d14a74",
+      "sha256": "874b28e99501f9e486589b6427bd7e9dc4273a524702c5a97d856b95686704ba",
       "executable": false
     },
     "tsconfig.json": {

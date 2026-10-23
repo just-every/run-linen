@@ -18,6 +18,9 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
     await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind(user, `${user}@example.test`, user, 'unused', '2026-01-01').run();
     await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('a', user, JSON.stringify([role])).run();
   }
+  const roleDepartment=await ok('/departments',{name:'synthetic-linen-11410',kind:'facilities'});
+  const reader=await ok('/custom-roles',{name:'synthetic-linen-11411',departmentId:roleDepartment.id});
+  await ok('/custom-roles/'+reader.id+'/members',{revision:1,userId:'q-out',active:true},{},200);
   const sales = await ok('/catalog-values', { dimension: 'department', label: 'Quote Sales' });
   for (const [user, attributes] of [['q-req', { department: sales.id }], ['q-ben', { department: sales.id }]])
     await db.prepare(`INSERT INTO work_people(id,workspace_id,source,source_id,name,manager_id,active,merged_into,revision,observed_at,effective_at,member_id,binding_id,attributes_json)
@@ -135,6 +138,7 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
   const queue = (await ok('/fulfilment-decisions', undefined, as('q-mgr', 'approver'))).items.find(i => i.workId === work.id);
   assert.equal(queue.quote.id, quoteId, 'CATALOG-001 the approval view carries the quote the approver reads');
   assert.equal(queue.quote.sha256, sha(quoteBytes));
+  assert.equal((await api(`/work/${work.id}/commands`,{revision:1,command:'close',reason:'synthetic-linen-11450'},as('q-mgr','approver'))).status,404,'An approver has no agent ticket mutation authority');
   await ok(`/work/${work.id}/fulfilment/approve`, { ...queue, expectedHolderId: queue.holderId, idempotencyKey: 'q-decision' }, as('q-mgr', 'approver'), 200);
   assert.equal((await db.prepare("SELECT detail_json FROM audit_events WHERE action='work.fulfilment_approved' AND instr(detail_json,?)>0").bind(sha(quoteBytes)).first()) !== null, true, 'CATALOG-001 the decision records the quote hash it covered');
   await db.exec("UPDATE work_people SET manager_id='q-mgr2',revision=2 WHERE id='q-req-person'");
