@@ -21,7 +21,7 @@ try {
  const get=id=>api('/software-licenses/'+id);
  const visit=async(id,title)=>{await page.goto(base+'/app#/software-licenses/'+id);await page.getByRole('heading',{name:title,exact:true}).waitFor();await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();};
  const sync=async(id)=>{await action(page,'Sync provider observations',{},`/software-licenses/${id}/sync`,'Sync license sources');await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();return get(id);};
- const shot=async(name,scope=page)=>{for(const width of [1440,390]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name} fits ${width}`);await scope.screenshot({path:`${out}/ASSET-006-${name}-${width}.png`,fullPage:scope===page});}};
+ const shot=async(name,scope=page)=>{for(const width of [1440,390]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name} fits ${width}`);await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${out}/ASSET-006-${name}-${width}.png`,fullPage:true});}};
  let license=await create('Zoom Workplace','Zoom','per-user',120,[{connectionId:zoom.id,kind:'zoom'},{connectionId:graph.id,kind:'entra-signins',appId:'00000000-0000-0000-0000-000000000002'}]);
  await visit(license.id,'Zoom Workplace');license=await sync(license.id);
  assert.equal(license.summary.consumed,120);assert.equal(license.summary.activeUsers,95);assert.equal(license.summary.reclaimable,25);
@@ -54,6 +54,10 @@ try {
  const control=await fetch(base+'/__fixture/software-control',{method:'POST',body:JSON.stringify({advanceInventory:true})});assert.ok(control.ok);
  await action(page,'Read back this action',{},`/effects/${removal.operationIds[0]}/reconcile`,'Reconcile provider outcome');
  assert.equal((await get(prohibited.id)).effects[0].state,'verified');await shot('prohibited-verified');
+ let concurrent=await create('Concurrent design licenses','Design tools','concurrent',5,[{connectionId:jamf.id,kind:'jamf',aliases:[{title:'Adobe Acrobat Pro.app',publisher:'Adobe',productId:'com.adobe.Acrobat.Pro'}]}]);
+ await visit(concurrent.id,'Concurrent design licenses');concurrent=await sync(concurrent.id);assert.equal(concurrent.summary.consumed,null);
+ await action(page,'Record a concurrent usage peak',{peak:7,source:'Owner-reviewed license server peak report',evidence:'Seven simultaneous sessions in the current signed reporting period',observedAt:local(-60000)},`/software-licenses/${concurrent.id}/concurrency-observations`,'Record measured peak');
+ assert.equal((await get(concurrent.id)).summary.overLicensed,2);await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();await shot('attributed-concurrent-peak');
  const memberContext=await browser.newContext({timezoneId:'UTC'}),memberPage=await memberContext.newPage();
  try {await signIn(memberPage,base,'employee@example.test','synthetic-linen-2');const memberApi=apiFor(memberPage);const notices=await memberApi('/software-license-notices');assert.ok(notices.items.length>=5);assert.ok(notices.items.every(n=>!Object.hasOwn(n,'contract')));
  for(const width of [1440,390]){await memberPage.setViewportSize({width,height:1000});await memberPage.goto(base+'/app#/preferences');await memberPage.getByRole('heading',{name:'Your software notices',exact:true}).waitFor();await memberPage.getByText('This installation needs a license review.',{exact:false}).first().waitFor();assert.equal(await memberPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await memberPage.screenshot({path:`${out}/ASSET-006-member-notices-${width}.png`,fullPage:true});}
