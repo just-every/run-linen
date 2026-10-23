@@ -14,7 +14,7 @@ try {
  const employeeContext=await browser.newContext(),ep=await employeeContext.newPage();await signIn(ep,base,'jordan@northstar.example',password);const employeeApi=apiFor(ep);
  for(const width of [1440,390]){
   await page.setViewportSize({width,height:1000});await ep.setViewportSize({width,height:1000});
-  await page.goto(base+'/app#/notifications');
+  await page.goto(base+'/app#/work');await page.getByRole('link',{name:'Settings',exact:true}).click();await page.getByRole('link',{name:'Delivery & notifications',exact:true}).click();
   await page.getByRole('heading',{name:'Rules, templates & preferences'}).waitFor();
   const created=await action(page,'New notification template',{name:`Resolved ${width}`,language:'en-US',subject:'Resolution {{ticket.number}}',body:'Your request is complete, {{requester.first_name}}.',reason:'Use a clear personal resolution notice'},'/notification-templates','Save notification template',201);
   await page.getByLabel('Edit an existing template').selectOption(created.id);
