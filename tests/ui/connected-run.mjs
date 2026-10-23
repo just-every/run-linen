@@ -51,7 +51,7 @@ try {
   if (!url) {
     await command("pnpm", ["build"]);
     await cp(join(root, "dist"), join(scratch, "dist"), { recursive: true });
-    await cp(join(root, 'tests/ui/provider-boundary.mjs'), join(scratch, 'dist/server/provider-boundary.mjs'));
+    await cp(resolve(root, process.env.LINEN_TEST_PROVIDER_BOUNDARY || 'tests/ui/provider-boundary.mjs'), join(scratch, 'dist/server/provider-boundary.mjs'));
     await writeFile(join(scratch, 'dist/server/fixture-wrapper.js'), `import product from './index.js';
 import {bind, fixtureRequest} from './provider-boundary.mjs';
 export default {...product, async fetch(request, env, ctx) { bind(env); if (new URL(request.url).pathname === '/__fixture/tick') { await product.scheduled({scheduledTime:Date.now(),cron:'* * * * *'},env,ctx); return Response.json({ticked:true}); } return await fixtureRequest(request, env) || product.fetch(request, env, ctx); }};
