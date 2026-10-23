@@ -5967,7 +5967,7 @@
       "executable": false
     },
     "tests/services/software-license-cases.mjs": {
-      "sha256": "46a8efcd37f3a418b9195bc6d68574074540b54161f46fd85e4102a8666e165f",
+      "sha256": "76367f63ffc7f2794bc65525ea64d4da43f7496997618f57ae8c0689255a02cd",
       "executable": false
     },
     "tests/services/software-license-fixture.ts": {
