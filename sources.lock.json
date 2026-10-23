@@ -1114,6 +1114,10 @@
       "sha256": "42357bfd94feb6044dc708e7104641e87fc53ca3cdc1d55276db5c1957aa895a",
       "executable": false
     },
+    "migrations/0902_billing.sql": {
+      "sha256": "a636022540942690b38340643d83a3c7d7feeccff8fc0aab8ce84a0deb8103e6",
+      "executable": false
+    },
     "ONBOARDING.md": {
       "sha256": "bb2638772c83081938fe706542d4c7a884e8b928717abf3a371c52208e80d82c",
       "executable": false
@@ -1499,7 +1503,7 @@
       "executable": false
     },
     "scripts/verify.mjs": {
-      "sha256": "e5de9e6af68ed48eda1abb8690f5b6ad5d1461c1e1308a0fdb1bdba614b66a4f",
+      "sha256": "616307e6ffdc9a4662e9994d1f7877250f7b669a6cb1d3c27a0f72c52b7461d5",
       "executable": false
     },
     "seed.json": {
@@ -2138,6 +2142,14 @@
       "sha256": "d305e7d17e390110521a575c8049b852da6f35c190b9bfd2182d7e5366e5cd00",
       "executable": false
     },
+    "src/features/intelligence/billing.ts": {
+      "sha256": "5fa0186135cbc6c552e9e52d7116b940643443eb2a6fb0a8f06196bd0ab4e0ae",
+      "executable": false
+    },
+    "src/features/intelligence/budgets.ts": {
+      "sha256": "650a402d65776bca0a9820b0c45fd603e0a05fa6b22aa4ea5860693cd7f470d5",
+      "executable": false
+    },
     "src/features/intelligence/capabilities.ts": {
       "sha256": "76b9cfeebe880759435be79e116aeafe7acf3e067b65066638a4a0b2b4a5429d",
       "executable": false
@@ -2171,7 +2183,7 @@
       "executable": false
     },
     "src/features/intelligence/index.ts": {
-      "sha256": "29804fa89e34161b86e1bcddb05c5c30eac15be0f889042b5adfe8d67402f9d8",
+      "sha256": "dc949c452cd3f3a8fe0a7978934db1224f50849355fb7598480ab2a3d7b72660",
       "executable": false
     },
     "src/features/intelligence/intake-execution.ts": {
@@ -2211,7 +2223,7 @@
       "executable": false
     },
     "src/features/intelligence/models.ts": {
-      "sha256": "09614f32e80f5af5c144694aed34daeb1d3f4e47cf79455ee6da914b9011447e",
+      "sha256": "3df1ebaa8fce55366e8b46b9310f1983cf54eb5eae099c9ae7dfae29b09a7414",
       "executable": false
     },
     "src/features/intelligence/pending-fulfilments.ts": {
@@ -4967,7 +4979,7 @@
       "executable": false
     },
     "src/ui/context.tsx": {
-      "sha256": "ec9d85fceb968d2a9ea44e877aba438eb3abe4cda0518f3071232ccf2cf43c50",
+      "sha256": "c9540674c2bff08f252711691c5e2c987d4a090c80dbccbd72dac14524bbb1e4",
       "executable": false
     },
     "src/ui/decisions.tsx": {
@@ -5174,6 +5186,10 @@
       "sha256": "fdd11cc8d3bc8013814588426927d7e4b764d5be3de7e5ce919a2da02f3e0e27",
       "executable": false
     },
+    "src/ui/settings.tsx": {
+      "sha256": "4e50a110d39cdcd4285842b67e62310c45bfb2541b05d4ae0452cae546d23cb5",
+      "executable": false
+    },
     "src/ui/setup-advanced-grant.tsx": {
       "sha256": "90d41990fa09f2ca20960bd6d99a82d25164441ca5e7b55a0d4fe9ac3d508404",
       "executable": false
@@ -5187,7 +5203,7 @@
       "executable": false
     },
     "src/ui/shell-rail.tsx": {
-      "sha256": "cc7cab8f63f2af0778d899f05c2841cfafa62c3d578f884fb72d0bf5832e352f",
+      "sha256": "b2c968edd9e48cae5611d12da433fb173dc8f528634d2509555d1a3b213112cf",
       "executable": false
     },
     "src/ui/shell-top.tsx": {
@@ -5575,11 +5591,11 @@
       "executable": false
     },
     "tests/intelligence/runtime.mjs": {
-      "sha256": "2ab2d4d64b4c9a9b4429ffd936ba183d81583dd508ba800fc3eb575faa398b08",
+      "sha256": "b89f9c8d99aef7af31cce1477a4b9532fbfda7ff72aabc8ad0e312aaf15e1a27",
       "executable": false
     },
     "tests/intelligence/worker.ts": {
-      "sha256": "936b0323d74df8b901639c5bb25e3207dcd9c56feb8e45c053c7c33e42861886",
+      "sha256": "8c1cec8cc51685e607f63459d89a38acb1a4f7c2df13e630721189dd432f812b",
       "executable": false
     },
     "tests/intelligence/wrangler.jsonc": {
@@ -5772,6 +5788,10 @@
     },
     "tests/ui/asset-financial-journey.mjs": {
       "sha256": "59c9e98ecfba18f6813528e7125b036a9311ffed385c5d04c3c4fcf7e3268d28",
+      "executable": false
+    },
+    "tests/ui/billing-browser.mjs": {
+      "sha256": "1fe0a00cce57cf7920b3cff4e2ad20088504f7999fa396a88d11efb8537c8ece",
       "executable": false
     },
     "tests/ui/browser.mjs": {
