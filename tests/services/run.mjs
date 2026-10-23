@@ -166,7 +166,7 @@ try{
  }
  const publicCause=await ok('POST','/incidents',{title:'Public interruption',serviceId:service.id,impact:'Public service interruption',cohorts:['employee'],visibility:'workspace'});
  const employeeCause=await ok('GET','/incidents/'+publicCause.id,undefined,{'x-user':'employee','x-roles':'["employee"]'});
- assert.ok(!Object.hasOwn(employeeCause.data,'suspectedChanges')&&!Object.hasOwn(employeeCause.data,'changeCause')&&!Object.hasOwn(employeeCause.data,'monitorEvents'),'Employee projection excludes internal monitoring and causal evidence');
+ assert.ok(!Object.hasOwn(employeeCause.data,'suspectedChanges')&&!Object.hasOwn(employeeCause.data,'changeCause')&&!Object.hasOwn(employeeCause.data,'monitorEvents')&&!Object.hasOwn(employeeCause.data,'monitorId')&&!Object.hasOwn(employeeCause.data,'monitorAlertKey'),'Employee projection excludes internal monitoring and causal evidence');
  await employeeNoticeChecks(request, db);
  await dependencyChecks(request);
  await calendarChecks(request,db);

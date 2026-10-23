@@ -58,7 +58,7 @@ async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
     for (const link of r.data.links || [])
         if (workPort && await workPort.canLink(env, p, link.employeeIncidentId))
             links.push(link);
-    const { suspectedChanges: _suspects, changeCause: _cause, monitorEvents: _events, monitorRecovery: _recovery, ...publicData } = r.data;
+    const { suspectedChanges: _suspects, changeCause: _cause, monitorEvents: _events, monitorRecovery: _recovery, monitorId: _monitor, monitorEpisodeKey: _episode, monitorStartedAt: _started, monitorAlertKey: _alert, monitorEventKey: _eventKey, ...publicData } = r.data;
     return { ...r, data: { ...publicData, links, diagnostics: [], recoveries: (r.data.recoveries || []).map((e: any) => ({ cohort: e.cohort, observedAt: e.observedAt, expiresAt: e.expiresAt })), updates: (r.data.updates || []).filter((u: any) => u.audience.includes(p.userId)).map((u: any) => ({ message: u.message, at: u.at })) } };
 }
 export function registerServiceRoutes(app: Hono<AppEnv>) {
