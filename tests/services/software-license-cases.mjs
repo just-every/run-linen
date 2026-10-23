@@ -62,7 +62,7 @@ export async function softwareLicenseChecks(request,db) {
 
   const jamfBinding={connectionId:jamf.id,kind:'jamf',aliases:[{title:'Adobe Acrobat Pro.app',publisher:'Adobe',productId:'com.adobe.Acrobat.Pro'}]};
   let acrobat=await create('Adobe Acrobat Pro','Adobe','per-device',25,[jamfBinding,{connectionId:graph.id,kind:'intune'}]);
-  acrobat=await sync(acrobat.id);assert.equal(acrobat.summary.consumed,30);assert.equal(acrobat.summary.overLicensed,5);assert.equal(acrobat.summary.trueUpUsd,500);
+  acrobat=await sync(acrobat.id);assert.equal(acrobat.summary.consumed,30,JSON.stringify(acrobat.summary));assert.equal(acrobat.summary.overLicensed,5);assert.equal(acrobat.summary.trueUpUsd,500);
   assert.equal(acrobat.data.complianceWork.length,5);assert.ok(acrobat.data.complianceWork.every(w=>w.personId==='employee'&&w.ownerId==='owner'));
   const obligation=await db.prepare('SELECT owner_id,state FROM work_obligations WHERE work_id=?').bind(acrobat.data.complianceWork[0].workId).first();assert.equal(obligation.owner_id,'owner');assert.equal(obligation.state,'pending');
   await fixture({staleInventory:true});acrobat=await sync(acrobat.id);assert.equal(acrobat.summary.consumed,null);assert.equal(acrobat.summary.fresh,false);
