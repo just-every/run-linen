@@ -4803,7 +4803,7 @@
       "executable": false
     },
     "src/platform/portability-policy.mjs": {
-      "sha256": "98090e7d616fc09a9ec1e06e37d740da62917fc21a09a6015c78d43ce3601cc1",
+      "sha256": "7f3774870d0607c04ac5c7308c5b1bc684b1d00ad287b43265a2b74e95931824",
       "executable": false
     },
     "src/platform/privacy.ts": {
