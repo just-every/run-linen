@@ -1,3 +1,4 @@
+import { processDueReporting, processDueBiExports } from './features/work';
 import { expireMcpCredentials } from './features/mcp/credentials'
 import type { Env, Principal, Role } from './platform/types'
 import { ApiError, id, now } from './platform/http'
@@ -64,6 +65,8 @@ export async function processScheduledWork(env: Env) {
     ...work,
     runLane(env, 'mcp-credentials', null, () => expireMcpCredentials(env)),
     runLane(env, 'intelligence', null, () => processDueIntelligence(env)),
+    runLane(env, 'reporting', null, () => processDueReporting(env)),
+    runLane(env, 'bi-exports', null, () => processDueBiExports(env)),
     runLane(env, 'retention', null, () => processDueRetention(env)),
     runLane(env, 'adoption', null, () => processDueAdoption(env)),
   ])
