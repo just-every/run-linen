@@ -16,7 +16,7 @@ export async function softwareLicenseJourney({ page, api, base, out }) {
   ]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto(base + '/app#/software-assets');
-    await page.getByRole('link',{name:'Software licenses & renewals',exact:true}).waitFor();await page.getByText('No records yet.',{exact:true}).waitFor();await page.screenshot({path:`${out}/ASSET-006-entry-${width}.png`,fullPage:true});
+    await page.getByRole('link',{name:'Software licenses & renewals',exact:true}).waitFor();await page.getByText('Add software context',{exact:true}).waitFor();await page.screenshot({path:`${out}/ASSET-006-entry-${width}.png`,fullPage:true});
     await page.getByRole('link',{name:'Software licenses & renewals',exact:true}).click();
     await page.getByRole('heading', { name: 'Software licenses', exact: true }).waitFor();
     const connection = page.locator('details[data-action-path="/software-license-connections"]');

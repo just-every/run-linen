@@ -6295,7 +6295,7 @@
       "executable": false
     },
     "tests/ui/software-license-browser.mjs": {
-      "sha256": "70501efb638da2c83cacdad8df1c131a6b54fb6349be54f59d82b29f6e94e289",
+      "sha256": "af752bfcd116130c787ea5871cbedb516f0dff5a1568b096e861c0de7a422e2c",
       "executable": false
     },
     "tests/ui/software-license-connected.mjs": {
