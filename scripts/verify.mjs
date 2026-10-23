@@ -64,6 +64,10 @@ const checks = [
   ['live handoff browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/handoff-journey.mjs']],
   ['walk-up browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/walkup-journey.mjs']],
   ['mailbox browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/mailbox-journey.mjs']],
+  ['software provider browser', process.execPath, ['tests/ui/software-license-run.mjs']],
+  ['software license browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/software-license-browser.mjs']],
+  ['report builder and exports browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/reporting-browser.mjs']],
+  ['notification rules browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/notification-browser.mjs']],
   ['pricing and budgets browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/billing-browser.mjs']],
   ['operations KPI browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/kpi-journey.mjs']],
   ['MCP native conversation', process.execPath, ['tests/ui/run.mjs', 'tests/ui/mcp-journey.mjs']],
@@ -80,20 +84,76 @@ if (shardValue !== undefined) {
   }
   shard = { number, count }
 }
-// CI seconds: baseline Verify 39658205193; department browser 39721605432.
-// Unlisted checks count as 10.
-// Heaviest first onto the lightest shard keeps every shard inside its job limit.
+// Timing weights from branch Verify 39925624291; custom-role browser adds 30 seconds.
+// Verify 39956669194 measured native transfer at 560 seconds and setup at 76;
+// reserve 600 and 80 seconds so their shard retains setup and cleanup headroom.
+// Every check remains present, and the workflow retains its 15 minute limit.
 const measuredSeconds = {
-  'Native archive transfer': 447, 'browser journeys': 249, 'native connected provider journeys': 246,
-  'department workspaces browser': 146, 'identity erasure': 143, 'operations KPI browser': 100, 'Base native auth': 78,
-  'desk scenarios and templates browser': 74, 'connection and authority setup': 69, 'release browser': 56,
-  'pending person browser': 55, 'MCP native conversation': 51, 'desk groups and views browser': 49,
-  'Legacy session retirement': 46, 'service integration': 37, 'adoption and recovery': 36,
-  'pending person services': 35, 'migration order and retained history': 33, 'catalog team tasks browser': 33,
-  'work and lifecycle': 32, 'service notice browser': 32, 'mailbox browser': 35, 'walk-up browser': 35, 'live handoff browser': 35, 'branding browser': 35, 'emitted Worker': 30,
-  'ordinary intake and independent evidence': 29, 'work integration regressions': 28,
-  'Freshservice and Snipe-IT native migration': 26,
-}
+  "erasure admission races": 8,
+  "work and lifecycle": 71,
+  "request progress and accountable owner": 3,
+  "pending person services": 34,
+  "current manager decisions": 23,
+  "current effect authority": 54,
+  "service integration": 13,
+  "email provider configuration": 10,
+  "intelligence runtime": 18,
+  "ordinary intake and independent evidence": 35,
+  "desk groups and views browser": 58,
+  "desk scenarios and templates browser": 116,
+  "native connected provider journeys": 304,
+  "mailbox browser": 62,
+  "emitted Worker": 38,
+  "knowledge drafts": 6,
+  "fulfilment binding": 14,
+  "decision queue names the beneficiary": 2,
+  "named setup read scope": 9,
+  "native network transport": 9,
+  "connected frontier journey": 15,
+  "Freshservice and Snipe-IT native migration": 51,
+  "department workspaces browser": 257,
+  "connection and authority setup": 80,
+  "branding browser": 46,
+  "report builder and exports browser": 64,
+  "pricing and budgets browser": 50,
+  "operations KPI browser": 96,
+  "MCP native conversation": 58,
+  "browser journeys": 415,
+  "native admission": 6,
+  "stale remote response ordering": 1,
+  "work integration regressions": 29,
+  "reviewed person member flow": 16,
+  "execution and reconciliation": 17,
+  "connection discovery": 10,
+  "engineering companion": 1,
+  "adoption and recovery": 80,
+  "pending person browser": 61,
+  "catalog team tasks browser": 58,
+  "lifecycle templates browser": 57,
+  "release browser": 62,
+  "walk-up browser": 48,
+  "Base native auth": 79,
+  "Legacy session retirement": 38,
+  "TypeScript": 17,
+  "platform": 17,
+  "configuration": 10,
+  "migration order and retained history": 54,
+  "identity erasure": 144,
+  "request status static UI": 1,
+  "fulfilment correction and restart": 13,
+  "historical person erasure": 3,
+  "services": 25,
+  "intelligence contracts": 2,
+  "run site": 3,
+  "service notice browser": 56,
+  "live handoff browser": 52,
+  "software provider browser": 66,
+  "notification rules browser": 60,
+  "Native archive transfer": 600,
+  "coexistence and imported erasure": 14,
+  "software license browser": 55
+};
+
 function shardChecks(count) {
   const loads = Array(count).fill(0), shards = Array.from({ length: count }, () => [])
   const order = checks.slice(1).map((check, index) => ({ check, index, seconds: measuredSeconds[check[0]] ?? 10 }))

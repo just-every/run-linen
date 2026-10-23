@@ -154,8 +154,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
       {!mine && session.principal.roles.some(r => ['owner', 'operator'].includes(r)) && <WorkMail workId={work.id} />}
       {!access && work.sensitivity === 'normal' && session.principal.roles.includes('owner') && <WorkCollaboration workId={work.id} onChanged={changed} />}
       {!access && session.principal.roles.includes('owner')&&<WorkDepartment key={`${work.id}:${work.revision}`} work={work} onChanged={changed}/>}
-      <WorkaroundSuggestions workId={work.id} />
-      <RecurringTasks workId={work.id} />
+      {access!=="custom-read"&&<><WorkaroundSuggestions workId={work.id} /><RecurringTasks workId={work.id} /></>}
       <Progress items={progress} exception={exception} operator={operator} />
       <HeldServices person={detail.data?.pendingPerson} services={detail.data?.heldServices} />
       <ErrorNotice error={detail.backgroundError} />
@@ -165,7 +164,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
           Linen
         </h3>
         <p className="agent-note">Linen reads each message against your catalog and services. Effects need a standing grant and are verified separately.</p>
-        {access === "team"
+        {access === "custom-read" ? <Notice>Read-only department role. Only public messages are available.</Notice> : access === "team"
           ? <Notice>You see this request because the person it is for reports to you. It is read-only: only the people it is shared with can reply.</Notice>
           : <Composer workId={work.id} onSent={changed} />}
         {work.requester_id === session.principal.userId && !access && <AskForPerson workId={work.id} onChanged={changed} />}
@@ -173,7 +172,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <ConversationHistory conversation={detail.data!} />
       </section>
       {!access && <WorkOutcome key={work.id} work={work} onChanged={changed} pendingPerson={detail.data?.pendingPerson} />}
-      <BundleProgress key={`bundle-${work.id}`} workId={work.id} />
+      {access!=="custom-read"&&<BundleProgress key={`bundle-${work.id}`} workId={work.id} />}
       {sponsorReminder && work.beneficiary_id === session.principal.userId && <SponsorReattest context={sponsorReminder} onChanged={changed} />}
       {taskReminder && work.beneficiary_id === session.principal.userId && <LifecycleTaskReminder context={taskReminder} onChanged={changed} />}
       {operator && <WorkTime workId={work.id} />}
