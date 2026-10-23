@@ -63,7 +63,8 @@ try {
   const reports = [];
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto(base + '/app#/reports');
+    await page.goto(base + '/app#/work');
+    await page.getByRole('link', {name:'Reports',exact:true}).click();
     const root = page.getByRole('region', { name: 'Custom reports', exact: true });
     await root.getByText('Build a custom report', { exact: true }).click();
     const builder = root.getByRole('form', { name: 'Report builder', exact: true });
