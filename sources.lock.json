@@ -5747,7 +5747,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "c9bcc5dec052bdd9eb1845f991a8bb3158c8e85c5b821732b1836bd750638e07",
+      "sha256": "38909da7a17ef7cc716b8578e2604862e754218a407d224c59d7328b4bdd6eec",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
@@ -5784,6 +5784,10 @@
     },
     "tests/platform/privacy-worker.ts": {
       "sha256": "967b8a1e9ddbfeafb32015d8d1d7e00d101a762e10fac4f0f0ffae86b1b7effc",
+      "executable": false
+    },
+    "tests/platform/reporting-transfer-cases.mjs": {
+      "sha256": "5453bd21ccd9ed64aaa65c948a489775cfe5b14d0d911795b93f508c3ffc0073",
       "executable": false
     },
     "tests/platform/runtime.mjs": {
