@@ -193,5 +193,7 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   assert.ok(await auditCount()>countBeforeDenials,'Confirmed role changes retain an owner audit trail');
   await call('/people/'+agentId+'/erase',{revision:0,reason:'synthetic-linen-18079'});
   assert.ok(!(await call('/department-roles')).items.flatMap(item=>item.members).some(member=>member.userId===agentId),'Erasure removes custom role assignments');
+  const retainedAudit=(await db.prepare('SELECT detail_json FROM audit_events WHERE workspace_id=? AND target=?').bind(workspace,role.id).all()).results;
+  assert.ok(retainedAudit.length&&!JSON.stringify(retainedAudit).includes(agentId),'Role audit history does not retain the erased member identity');
   await call(rolePath+'/members',{roleRevision:role.revision,userId:agentId,active:true,revision:0},owner,422);
 }
