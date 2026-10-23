@@ -1,3 +1,5 @@
+import { reportBuilderChecks, biReadChecks, biExportChecks, reportScheduleChecks } from './report-cases.mjs';
+import { biAdapterChecks } from './bi-adapter-cases.mjs';
 import { historyErasureChecks } from './history-erasure-cases.mjs';
 import { departmentSpaceChecks } from './department-space-cases.mjs';
 import { departmentOpsChecks } from './department-ops-cases.mjs';
@@ -69,7 +71,7 @@ const options = {
       compatibilityDate: "2026-09-01",
       d1Databases: { DB: "work-test" },
       r2Buckets: ["ATTACHMENTS"],
-      bindings: { ENCRYPTION_KEY: classificationEncryptionKey },
+      bindings: { ENCRYPTION_KEY: classificationEncryptionKey, MAIL_PROVIDER: 'sendgrid', MAIL_API_KEY: 'synthetic-linen-2', MAIL_FROM: 'reports@example.test' },
     },
   ],
   d1Persist: join(dir, "d1"),
@@ -106,6 +108,11 @@ try {
   await historyErasureChecks(api,db);
   await departmentSpaceChecks(api,db,uploadBytes);
   await departmentReportChecks(api,db);
+  const reporting = await reportBuilderChecks(api,db,mf);
+  await biReadChecks(api,db,reporting);
+  await biExportChecks(api,db,reporting);
+  await biAdapterChecks(api,db,reporting);
+  await reportScheduleChecks(api,db,reporting);
   await departmentOpsChecks(api,db);
   await catalogAudienceChecks(api,db);
   const collaborationProof=await collaborationChecks(api,db);

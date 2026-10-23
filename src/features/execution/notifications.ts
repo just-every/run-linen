@@ -1,7 +1,7 @@
 import { providerFetch } from "./transport";
 import type { Env } from "../../platform/types";
 import { id, now } from "../../platform/http";
-import { decryptSecret } from "../../platform/crypto";
+import { notificationRuleMessage } from './notification-dispatch';
 import { assert, membership, privileged } from "./authority";
 import { getWork } from "../work/core";
 import { assertAdoptionEffectAllowed } from "../adoption/authority";
@@ -109,7 +109,8 @@ export async function processNotifications(ctx: CoreContext) {
         },
         o.work_id,
       );
-      const message: any = await ctx.env.DB.prepare(
+      const configured = await notificationRuleMessage(ctx, o.id);
+      const message: any = configured ? {body:configured.body} : await ctx.env.DB.prepare(
         "SELECT body FROM work_messages WHERE workspace_id=? AND work_id=? AND id=? AND visibility='public'",
       )
         .bind(o.workspace_id, o.work_id, o.message_id)
@@ -134,7 +135,7 @@ export async function processNotifications(ctx: CoreContext) {
         resource: o.work_id,
         action: "notification.send",
       });
-      const c = await connection(ctx, o.connection_id, "sendgrid");
+      const c = await connection(ctx, o.connection_id, "sendgrid", true, configured?.connectionRevision ?? undefined);
       assert(c.config.from && c.secret.apiKey, "needs_configuration", 503);
       const claim = await ctx.env.DB.prepare(
         "UPDATE execution_outbox SET state='sending' WHERE id=? AND workspace_id=? AND state IN ('queued','rate_limited','needs_configuration')",
@@ -145,19 +146,26 @@ export async function processNotifications(ctx: CoreContext) {
       claimed = true;
       const sent = await sendSendGrid({
         apiKey: c.secret.apiKey,
-        fetch: ((input: any, init: any) =>
-          providerFetch(
+        fetch: (async (input: any, init: any) => {
+          // Configuration, consent, preferences and record readership are checked again at the network edge.
+          if (configured) {
+            const current = await notificationRuleMessage(ctx, o.id);
+            assert(current&&current.subject===configured.subject&&current.body===configured.body&&current.html===configured.html,'notification_content_changed',403);
+          }
+          return providerFetch(
             ctx,
             o.connection_id,
             "notification",
             input,
             init,
-          )) as typeof fetch,
+          );
+        }) as typeof fetch,
         message: {
           from: c.config.from,
           to: [recipient.email],
-          subject: "Linen service update",
+          subject: configured?.subject ?? "Linen service update",
           text: message.body,
+          html: configured?.html,
           deliveryId: o.id,
         },
       });
