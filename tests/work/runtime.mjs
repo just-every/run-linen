@@ -1,3 +1,4 @@
+import { departmentRoleChecks } from './department-role-cases.mjs';
 import { historyErasureChecks } from './history-erasure-cases.mjs';
 import { departmentSpaceChecks } from './department-space-cases.mjs';
 import { departmentOpsChecks } from './department-ops-cases.mjs';
@@ -804,6 +805,7 @@ try {
   assert.ok(!JSON.stringify(anonymizedTaskHistory).includes('search-agent'),'Erased account identifier is absent from the public history projection');
   await restartedDb.prepare("UPDATE work_project_tasks SET title='synthetic-linen-91' WHERE id=(SELECT target FROM audit_events WHERE id=?)").bind(creation.id).run();
   assert.deepEqual((await api(taskHistoryProof.historyPath)).value.items,anonymizedTaskHistory,'Removed task title is never reconstructed from mutable current state');
+  await departmentRoleChecks(api,restartedDb,uploadBytes);
   console.log(
     "WORK runtime passed: D1/R2 restart, scoped/revoked membership, restricted/HR/private data, dedup/CAS, custody, DST/holidays, JML dependencies/cancellation, identity and distinct mapped-subject intents, knowledge/escalation, leased intake, native held restore and member erasure/replay denial",
   );
