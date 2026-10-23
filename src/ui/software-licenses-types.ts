@@ -12,6 +12,7 @@ export interface SoftwareConnection {
   config: { origin?: string; accountId?: string; tenantId?: string };
 }
 export interface SoftwareOptions {
+  members: { id: string; name: string; roles: string[] }[];
   people: { id: string; name: string; roles?: string[] }[]; services: { id: string; name: string }[]; connections: SoftwareConnection[];
 }
 export interface SoftwareInstallation {
@@ -27,6 +28,7 @@ export interface SoftwareLicense {
   data: {
     name: string; publisher: string; titleOwnerId: string; serviceId: string;
     metric: 'per-user' | 'per-device' | 'concurrent'; policy: SoftwarePolicy; contract: SoftwareContract;
+    deviceUsers: {connectionId:string;connectionRevision:number;deviceId:string;userId:string;issuerId:string;reason:string}[];
     sourceBindings: SoftwareBinding[]; grant: SoftwareGrant | null; grantVersion: number;
     effectTargets?: { operationId: string; targetId: string }[];
     observation: null | {

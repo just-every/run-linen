@@ -6,6 +6,8 @@ import { softwareCommit } from './software-license-store';
 import { softwareSummary } from './software-license-summary';
 import { check, livePerson, softwareEffectAllowed, softwareRecord, type SoftwareContext, type SoftwareInstallation } from './software-license-core';
 import { list, type RecordRow, dto, type ServiceRecord } from './store';
+import { currentSoftwareDeviceUser } from './software-license-device-users';
+import { softwareConnection } from './software-license-connections';
 
 export async function openSoftwareComplianceWork(ctx:SoftwareContext,r:ServiceRecord) {
   if(r.data.policy==='ignored')return r;
@@ -23,11 +25,16 @@ export async function openSoftwareComplianceWork(ctx:SoftwareContext,r:ServiceRe
   }
   const work=[...r.data.complianceWork];
   for(const installation of offending) {
-    if(work.some(w=>w.installationId===installation.id))continue;
+    // No provider-reported email, name or username can select a beneficiary.
+    if(!installation.userId)continue;
+    const conn=await softwareConnection(ctx,installation.connectionId);
+    const mapping=await currentSoftwareDeviceUser(ctx,r,conn,installation.deviceId);
+    if(!mapping||mapping.userId!==installation.userId)continue;
+    if(work.some(w=>w.installationId===installation.id&&w.personId===mapping.userId&&w.mappingVersion===mapping.version))continue;
     await softwareEffectAllowed(ctx,r);
     if(installation.userId)await livePerson(ctx,installation.userId);
     const reason=r.data.policy==='prohibited'?'prohibited':'unlicensed',personId=installation.userId||r.ownerId;
-    const taskId=id(), taskTarget=`software:${r.id}:${installation.id}`;
+    const taskId=id(), taskTarget=`software:${r.id}:${installation.id}:${mapping.userId}:${mapping.version}`;
     const finding=reason==='prohibited'?`${r.data.name} by ${r.data.publisher} is prohibited on device ${installation.serial}.`:
       `${r.data.name} by ${r.data.publisher} exceeds its recorded entitlement. Device ${installation.serial} is an excess-installation review candidate; the aggregate contract does not identify which individual device owns a license.`;
     const ticket=await createWork(ctx,{title:`${r.data.name}: ${reason==='prohibited'?'prohibited installation':'license compliance review'}`,body:`${finding} The software owner is responsible for reviewing this installation. Removal requires a current scoped grant and later inventory verification.`,
@@ -39,7 +46,7 @@ export async function openSoftwareComplianceWork(ctx:SoftwareContext,r:ServiceRe
     // The native notification engine uses configured rules. A portal notice is
     // available below even when no external notification transport is configured.
     await notifyWorkEvent(ctx,{workId:ticket.id,event:'security.task',sourceId:taskTarget});
-    work.push({installationId:installation.id,workId:ticket.id,reason,personId:installation.userId,ownerId:r.ownerId,noticeAvailableAt:now()});
+    work.push({installationId:installation.id,connectionId:installation.connectionId,deviceId:installation.deviceId,mappingVersion:mapping.version,workId:ticket.id,reason,personId:installation.userId,ownerId:r.ownerId,noticeAvailableAt:now()});
   }
   return work.length===r.data.complianceWork.length?r:softwareCommit(ctx,r,{...r.data,complianceWork:work},'software-compliance-work-opened');
 }
@@ -54,10 +61,13 @@ export async function softwareLicenseNotices(ctx:SoftwareContext) {
     for(const notice of r.data.complianceWork||[]) {
       if(notice.personId!==ctx.principal.userId)continue;
       try {
+        const conn=await softwareConnection(ctx,notice.connectionId);
+        const mapping=await currentSoftwareDeviceUser(ctx,r,conn,notice.deviceId);
+        if(!mapping||mapping.userId!==ctx.principal.userId||mapping.version!==notice.mappingVersion)continue;
         const work=await getWork(ctx,notice.workId);
         if(work.sensitivity==='hr'||work.beneficiary_id!==ctx.principal.userId)continue;
         items.push({workId:work.id,title:r.data.name,publisher:r.data.publisher,reason:notice.reason,availableAt:notice.noticeAvailableAt,state:work.state});
-      }catch(error){if(!(error instanceof ApiError)||![403,404].includes(error.status))throw error;}
+      }catch(error){if(!(error instanceof ApiError)||(![403,404].includes(error.status)&&error.code!=='software_connection_unavailable'))throw error;}
     }
   }
   return {items};

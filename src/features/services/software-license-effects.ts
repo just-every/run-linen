@@ -7,6 +7,7 @@ import { check, livePerson, softwareEffectAllowed, softwareRecord, softwareTarge
 import { jamfRemovalPolicy, readDesktop, removeJamf } from './software-license-inventory';
 import { readZoom, reclaimZoom } from './software-license-zoom';
 import type { ServiceRecord } from './store';
+import { currentSoftwareDeviceUser } from './software-license-device-users';
 
 function targetsInput(input:unknown) {
   check(Array.isArray(input)&&input.length>0&&input.length<=100&&input.every(t=>typeof t==='string'),'software_targets_required',422);
@@ -23,6 +24,8 @@ async function eligibleTargets(ctx:SoftwareContext,r:ServiceRecord,action:string
     for(const t of targets) {
       const installation=r.data.observation.installations.find((i:any)=>i.id===t);
       check(installation.userId,'software_device_user_unmapped');await livePerson(ctx,installation.userId);
+      const conn=await softwareConnection(ctx,installation.connectionId);
+      check((await currentSoftwareDeviceUser(ctx,r,conn,installation.deviceId))?.userId===installation.userId,'software_device_user_unmapped');
       check(r.data.complianceWork.some((w:any)=>w.installationId===t),'software_compliance_work_required');
     }
   }
@@ -131,7 +134,7 @@ export async function reconcileSoftwareEffect(ctx:SoftwareContext,key:string,ope
   } else {
     const installation=targetSnapshot.installation;check(installation,'software_installation_missing');
     const binding=r.data.sourceBindings.find((s:any)=>s.connectionId===op.connection_id) as SoftwareBinding;
-    const fresh=await readDesktop(ctx,conn,binding,{name:r.data.name,publisher:r.data.publisher});
+    const fresh=await readDesktop(ctx,conn,binding,r);
     const device=fresh.devices.find(d=>d.deviceId===installation.deviceId&&d.serial===installation.serial);
     // Missing/offline/replaced devices cannot prove app absence. The inventory
     // report timestamp must advance past the original attempted effect.

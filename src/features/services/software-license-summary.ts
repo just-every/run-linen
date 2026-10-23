@@ -1,6 +1,8 @@
 import type { ServiceRecord } from './store';
 import { softwareConnection } from './software-license-connections';
 import type { SoftwareContext } from './software-license-core';
+import { currentSoftwareDeviceUser } from './software-license-device-users';
+import { ApiError } from '../../platform/http';
 
 export async function softwareSummary(ctx: SoftwareContext, r: ServiceRecord) {
   const o=r.data.observation, unknowns:string[]=[];
@@ -19,6 +21,16 @@ export async function softwareSummary(ctx: SoftwareContext, r: ServiceRecord) {
   if(r.data.metric==='concurrent'&&!o?.concurrency)unknowns.push('Concurrent usage requires a dated peak observation; installations are not concurrent usage');
   if(o?.concurrency&&Date.parse(o.concurrency.observedAt)+r.data.freshnessMs<=Date.now())unknowns.push('Concurrent peak observation is stale');
   if(desktop&&r.data.metric==='per-user'&&o?.installations.some((i:any)=>!i.userId))unknowns.push('Some installations have no mapped current user');
+  if(desktop&&r.data.metric==='per-user')for(const i of o?.installations||[]) {
+    if(!i.userId)continue;
+    try {
+      const conn=await softwareConnection(ctx,i.connectionId);
+      if((await currentSoftwareDeviceUser(ctx,r,conn,i.deviceId))?.userId!==i.userId)unknowns.push('A device-user confirmation is no longer current');
+    } catch(error) {
+      if(!(error instanceof ApiError))throw error;
+      unknowns.push('A device-user confirmation is unavailable');
+    }
+  }
   if(o?.conflictingSerials?.length)unknowns.push('Device serial appears in multiple MDM sources; reconcile before acting');
   const fresh=unknowns.length===0;
   const consumed=!fresh?null:r.data.metric==='concurrent'?o.concurrency.peak:saas?o.users.filter((u:any)=>u.licensed).length:
