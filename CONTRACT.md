@@ -248,6 +248,27 @@ that product and marks how close the current code is (see [Status](#status)).
   a mail client and from Linen, and see one thread, the CC watcher, a suppressed
   out-of-office loop and a quarantined unknown sender.
 
+  *Mailbox semantic (adopted default, pending ct approval).* A mailbox connection
+  is read by OAuth polling or fed by a forwarding rule, never both. A message is
+  trusted only when its From address is mapped by the owner to an active member for
+  that connection **and** the receiving provider's own Authentication-Results show
+  DMARC pass aligned with the From domain; any other sender is held with its address
+  and subject only, its content is never stored, and the owner may map or dismiss
+  it (held mail is not re-read; the sender resends). Automatic mail (Auto-Submitted,
+  bulk/list headers, bounces, out-of-office subjects), Linen's own messages, the
+  connected mailboxes themselves and a burst of ten messages from one sender in ten
+  minutes are suppressed, never ticketed. Replies thread by In-Reply-To then
+  References against received message ids and Linen's own sent ids; a reply from a
+  sender who cannot read the referenced request is held. A CC'd person becomes a
+  watcher only if mapped for that connection and already able to read the request
+  (normal sensitivity, not HR or restricted); mail never widens who can read.
+  Linen replies only to the mapped requester, only with a public staff message,
+  from the mailbox itself, and only after the domain's SPF, DKIM and DMARC records
+  were read back as present for the connection's current revision; an unconfirmed
+  send is never repeated. Other Linen mail doors (SendGrid notices, approval mail,
+  side conversations) inherit the same domain-alignment obligation before they are
+  claimed to meet it.
+
 - **CHANNEL-004 — Employee portal.** A branded portal shows a home page with
   search, the service catalog, "my requests" and "my approvals", knowledge
   articles, my devices and current service notices. Admins set the buyer's logo,
@@ -2883,7 +2904,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `E7` | Knowledge and management review | published | partial | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs` | No federated knowledge or dashboards; hosted and owner acceptance unproven. |
 | `CHANNEL-001` | Slack as a primary employee channel | target | missing |  | No Slack app or connector: no DM, help-channel, reaction, shortcut, modal or App Home intake. |
 | `CHANNEL-002` | Microsoft Teams as a primary employee channel | target | missing |  | No Teams app or connector: no personal chat, channel, message-extension, Adaptive Card or tab intake. |
-| `CHANNEL-003` | Email mailboxes | target | partial | `src/features/work/intake.ts`, `src/features/execution/mail/sender.ts`, `tests/connections/sendgrid-runtime.mjs` | No Gmail/Exchange mailbox connector or threading by headers. |
+| `CHANNEL-003` | Email mailboxes | target | partial | (1) Connect a Gmail and an Exchange Online mailbox (read-only credential check, exact mailbox, buyer-domain SPF/DKIM/DMARC readback): `tests/work/mail-cases.mjs` mailChannelChecks via `tests/work/runtime.mjs`; native setup, forwarding mailbox and read-back at 1440/390: `tests/ui/mailbox-journey.mjs` mailboxJourney. (2) Request with attachment and CC, one ticket, kept file, CC watcher limited to existing readers: mailChannelChecks (Gmail and Exchange Graph polling, forwarding door) and mailboxJourney. (3) Reply from a mail client threads by headers and drops quoted history; reply from Linen goes out threaded from the mailbox once and only after aligned domain authentication: mailChannelChecks (Gmail raw send, Graph MIME send, replay, private note, unaligned refusal) and mailboxJourney. (4) Out-of-office, bounce, list, own-mailbox, own-message and burst loops suppressed: mailChannelChecks and mailboxJourney. (5) Unknown and unauthenticated senders quarantined, mappable and dismissible by the owner, erasure clears addresses/subjects/ids: mailChannelChecks and mailboxJourney. (6) Icon-only account control tooltip (300 ms hover, immediate focus): mailboxJourney. | Network edges (Gmail, Microsoft Graph, OAuth token, DNS) use fixtures; no live Gmail or Exchange Online mailbox receipt and no live OAuth consent are claimed, and Exchange's handling of a client-set Message-ID is unproven (threading relies on the References chain). Policy defaults above (DMARC-aligned mapped senders only, CC watchers limited to existing readers, content of held mail not stored, requester-only replies) are adopted pending ct approval. Gmail/Exchange OAuth app registration and consent remain owner-held. Other outbound mail doors inherit the domain-alignment obligation. |
 | `CHANNEL-004` | Employee portal | target | partial | `src/ui/work.tsx`, `src/ui/knowledge.tsx`, `tests/ui/browser.mjs`, `tests/ui/connected-request.mjs` | No "my devices", notices, branding or custom domain. |
 | `CHANNEL-005` | Mobile for employees, approvers and technicians | target | partial | `tests/ui/viewport-evidence.mjs` | No native iOS/Android apps, push or quiet hours. |
 | `CHANNEL-006` | Conversational help that acts | target | partial | `src/features/intelligence/intake.ts`, `src/features/intelligence/intake-execution.ts`, `tests/ui/connected-request.mjs` | Portal only; no Slack/Teams or live agent handoff. |

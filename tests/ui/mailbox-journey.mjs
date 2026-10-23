@@ -95,7 +95,7 @@ export async function mailboxJourney({ browser, page, api, base, out, errors }) 
   await held.getByText('Held for review · Unknown or deactivated sender', { exact: false }).waitFor();
   const visitor = list.getByRole('listitem').filter({ hasText: 'visitor@elsewhere.test' });
   const dismissed = page.waitForResponse(r => r.url().includes('/dismiss')); await visitor.getByRole('button', { name: 'Dismiss and forget sender' }).click(); assert.equal((await dismissed).status(), 200);
-  assert.equal(await page.getByText('visitor@elsewhere.test').count(), 0, 'a dismissed sender is forgotten');
+  await page.getByText('visitor@elsewhere.test').waitFor({ state: 'detached' }); // a dismissed sender is forgotten
   await held.getByRole('button', { name: 'Map to a colleague' }).click();
   await held.getByLabel('Colleague this address belongs to').selectOption({ label: vera.name });
   const mapped = page.waitForResponse(r => r.url().endsWith('/mail/senders')); await held.getByRole('button', { name: 'Map sender' }).click(); assert.equal((await mapped).status(), 200);

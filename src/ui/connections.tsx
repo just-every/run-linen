@@ -96,7 +96,7 @@ export function Connections() {
             }}
           />
         )}
-        {session.principal.roles.includes("owner") && <MailboxPanel key={version} />}
+        {session.principal.roles.includes("owner") && <MailboxPanel revision={version} />}
         <DiscoveryReview revision={version} onChanged={refresh} />
         <IdentityReview key={version} />
         <Applications />

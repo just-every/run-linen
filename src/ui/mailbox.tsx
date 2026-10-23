@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { date, text, type RecordValue } from "./api";
 import { useMutation, useRemote } from "./state";
 import { Badge, Empty, ErrorNotice, Loading, Notice } from "./primitives";
@@ -17,8 +17,9 @@ const reasonLabel: Record<string, string> = {
 const authLabel = (value: string) => (value === "pass" ? "pass" : value === "missing" ? "not found" : "unknown");
 
 /** Owner view of the Gmail and Exchange Online support mailboxes, their recent mail and the senders waiting for a decision. */
-export function MailboxPanel() {
+export function MailboxPanel({ revision }: { revision: number }) {
   const remote = useRemote<MailStatus>("/mail/status", 15000), mutation = useMutation(), [mapping, setMapping] = useState<string | null>(null);
+  useEffect(() => { if (revision) remote.refresh(); }, [revision]); // eslint-disable-line react-hooks/exhaustive-deps
   async function run(path: string, body: RecordValue) {
     if (await mutation.mutate(path, body)) { setMapping(null); remote.refresh(); }
   }
