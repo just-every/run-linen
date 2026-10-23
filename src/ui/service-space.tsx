@@ -257,8 +257,8 @@ export function ServiceSpace({
                       return (
                         <div className="record-row" key={cohort}>
                           <span>
-                            <strong>{personName(cohort)}</strong>
-                            <small>
+                            <strong style={{ gridArea: "auto" }}>{personName(cohort)}</strong>
+                            <small style={{ gridArea: "auto" }}>
                               {evidence.length
                                 ? `Observed ${date(evidence.at(-1)?.observedAt)}`
                                 : "No fresh independently admitted recovery evidence"}

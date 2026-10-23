@@ -119,6 +119,20 @@ export async function monitoringJourney({page,api,base,out}) {
   await page.getByRole('heading',{name:'SSO HTTPS check: failed',exact:true}).waitFor();
   await page.getByText('Sources, observations and complete record',{exact:true}).click();
   await page.getByText('synthetic-linen-803',{exact:false}).last().waitFor();
+  for(const width of [1440,390]) {
+    await page.setViewportSize({width,height:1000});
+    const cohort=page.locator('.record-row').filter({hasText:'No fresh independently admitted recovery evidence'});
+    const name=await cohort.locator('strong').boundingBox(),detail=await cohort.locator('small').boundingBox();
+    assert.ok(name&&detail&&name.y+name.height<=detail.y+0.5,'Cohort name and recovery evidence occupy separate rows');
+    const unnamed=await page.locator('button,a[href]').evaluateAll(items=>items.filter(e=>e.checkVisibility()&&!e.textContent.trim()&&!e.getAttribute('data-tip')).map(e=>e.outerHTML));
+    assert.deepEqual(unnamed,[],'Visible icon-only controls carry tooltips');
+    const control=page.locator('[data-tip="Your account"]');await control.hover();await page.waitForTimeout(420);
+    assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');
+    await page.screenshot({path:`${out}/INC-002-tooltip-hover-${width}.png`});
+    await page.mouse.move(0,0);await control.focus();await page.keyboard.press('Tab');await page.keyboard.press('Shift+Tab');
+    assert.equal(await control.evaluate(e=>e.matches(':focus-visible')),true);assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').transitionDuration),'0s');
+    await page.screenshot({path:`${out}/INC-002-tooltip-focus-${width}.png`});
+  }
   await captureJourney(page,{path:out+'/INC-002-signed-failure.png',fullPage:true});
   await send('recovery','synthetic-linen-804',failedAt+1);await api('/services/process-due',{});
   const recovered=await api('/incidents/'+incident.id);assert.equal(recovered.data.monitorRecovery.id,'synthetic-linen-804');assert.equal(recovered.data.status,'investigating');
