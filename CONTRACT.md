@@ -1760,6 +1760,18 @@ INC-004 inherit the source identity and recovery boundaries.
   GitHub Issues; closing the issue posts a private note and moves the ticket to
   "verify with employee".
 
+  *Approved inbound GitHub boundary (ct, 23 October):* an owner explicitly
+  consents to an inbound binding for one repository identity and existing issue
+  number on a normal ticket. Native signed status and comment events become
+  private notes; closure waits for employee verification and never certifies
+  recovery. Revocation, owner loss, erasure and inactive restore refuse events.
+  No issue creation or outbound comment is authorized by this binding. Jira,
+  Linear, Vector and incident-level escalation retain the same privacy and
+  authority obligation when built. Ct approved this inbound-only consent policy
+  with current-owner consent, private notes, no outbound or execution authority,
+  revoked secrets on owner erasure, and inert restore. The remaining engineering
+  adapters and outbound behavior are unbuilt.
+
 - **PROB-001 — Problem management.** Problem records link incidents, carry root
   cause analysis, a known-error database and workarounds published to knowledge
   with expiry, and track the preventive change. **Acceptance evidence:** create a
@@ -1900,6 +1912,16 @@ INC-004 inherit the source identity and recovery boundaries.
   and deployments, GitHub Actions runs, and Jira or Vector issues; a deployment
   can raise a standard change automatically. **Acceptance evidence:** a GitHub
   deployment to production creates a standard change linked to its PR and run.
+
+  *Approved inbound GitHub boundary (ct, 23 October):* an owner explicitly
+  consents to a repository identity and exact active preapproved template version.
+  A fresh signed production deployment records one standard change with canonical
+  GitHub references from numeric PR and run identifiers supplied in its payload.
+  The event grants no execution rights and proves neither deployment success nor
+  usable recovery. Other development providers inherit this separation. Binding
+  authority is inactive after restore; owner erasure revokes it and clears its
+  secret. Ct approved this inbound-only policy with exact approved templates and
+  no outbound or execution authority. Other development context remains unbuilt.
 
 - **CHANGE-007 — Release management.** Releases group related changes (e.g. "Okta
   MFA rollout") with a plan, build/test/deploy phases, a release calendar shared
@@ -2945,8 +2967,8 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 6 | 18 | 0 | 24 |
-| Target and push further | 49 | 42 | 24 | 115 |
-| All | 55 | 60 | 24 | 139 |
+| Target and push further | 49 | 43 | 23 | 115 |
+| All | 55 | 61 | 23 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -3022,7 +3044,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `INC-001` | Major incidents | target | partial | `src/features/services/incidents.ts`, `tests/services/run.mjs` | No war room or Oncall/PagerDuty connector. |
 | `INC-002` | Monitoring and alert intake | target | partial | `src/features/services/integrations.ts`, `tests/services/run.mjs` | Native signed Uptime and PagerDuty intake, owner-bound signed Datadog and Spool relay envelopes, per-alert outage deduplication, rotation queueing and recovery-without-ticket-closure are proved in `tests/services/run.mjs` (signed monitoring source lifecycle) and `tests/ui/service-notice-journey.mjs` (monitoringJourney). Gap: native Datadog and Spool adapters, cross-source incident correlation, live Oncall paging and owner confirmation of the conservative named-source binding semantic; relay labels do not prove native provider acceptance. |
 | `INC-003` | Status communication | target | partial | `src/features/services/integrations.ts`, `tests/services/run.mjs` | No Lamp or Statuspage connector. |
-| `INC-004` | Engineering escalation | target | missing |  | No Jira/GitHub/Linear/Vector escalation. |
+| `INC-004` | Engineering escalation | target | partial | `tests/services/integration.mjs` developmentChecks proves signed existing-issue closure, private comments, duplicate rejection, current owner, subject erasure and owner-erasure secret revocation boundaries; `tests/ui/connected-change.mjs` developmentJourney proves the native verification state at 1440 and 390; `tests/platform/base-auth-transfer.mjs` proves both binding kinds stay inactive and refuse signed events after actual restore and explicit recovery release. | Missing issue creation, outbound status and comments, incident escalation, and Jira, Linear and Vector adapters. Inbound consent approved by ct on 23 October; owner erasure and inert restore are asserted in push Verify. |
 | `PROB-001` | Problem management | target | done | `src/features/services/problems.ts`, `src/features/services/problem-knowledge.ts`, `tests/work/problem-cases.mjs`, `tests/ui/problem-journey.mjs`, `tests/adoption/problem-cases.mjs` | Local public-route and 1440/390 browser proof: three incident links, reviewed root cause/known error, versioned expiring Knowledge publication and preventive change; a later request is offered guidance matched by reviewer phrases and service/cohort context. Scoped, reviewed, current and unexpired content only; request stays open. Native archive links and authorized erasure are proved. |
 | `PROB-002` | Proactive problem detection | target | done | `tests/work/problem-detection-cases.mjs`, `tests/ui/problem-detection-journey.mjs`, `tests/adoption/problem-cases.mjs` | Public routes and 1440/390 journey prove eight floor Wi-Fi incidents, retained rejection without re-proposal after ninth/restart/restore, native acceptance and source links, service/app/model ticket and alert grouping, deduplication, concurrent decisions and current source/tenant/role boundaries. ct-approved restricted detector-only aggregation, including after acceptance. Local evidence only. |
 | `CHANGE-001` | Change types and templates | target | done | `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs` | Local public-route and native 1440/390 evidence: exact-version owner preapproval, standard catalog CAB bypass with separate grant checks, normal/ECAB decisions, retained snapshots and explicit withdrawal, amendment invalidation and inactive restored templates. No CAB meeting, vote, live provider or owner acceptance claimed. |
@@ -3030,7 +3052,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `CHANGE-003` | Change advisory board | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` retain versioned change authorization only; no CAB membership, meetings, agenda, votes, quorum or minutes assertion passes. | CAB foundations remain seed-owned work. DONE additionally needs explicit Teams votes reaching quorum through CHANNEL-002: an authorized M365 tenant, Entra app and tenant-admin consent have not been supplied. Portal approval cannot substitute for that point. |
 | `CHANGE-004` | Change calendar and freeze windows | target | done | `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs` | Public routes and connected execution prove scoped calendar/maintenance/freeze/ICS, half-open CI/workspace bounds, schedule/edit/later-dispatch refusal, owner emergency scheduling with separate effect grants, current role and generic hidden conflicts. Native archive preserves links with windows inactive until owner review; native 1440/390 calendar, editor, emergency and inactive states are inspected. Local evidence only. |
 | `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | Automatic suspected-cause correlation from implementation start, evidenced human confirmation or rejection and confirmed-cause failure reporting are proved in `tests/services/integration.mjs` (signed failure during implementation). Gap: watching-check configuration, continuous healthy observation gate, PIR closure, full restricted-source correlation and live Oncall acceptance. Execution verification alone still does not prove this clause. |
-| `CHANGE-006` | Development-tool context | target | partial | `src/features/intelligence/engineering.ts` | No GitHub/Jira/Vector links or deployment-raised changes. |
+| `CHANGE-006` | Development-tool context | target | partial | `tests/services/integration.mjs` developmentChecks proves signed production deployment creates one standard change linked to PR and run, duplicate races, exact template and separate execution authority; `tests/ui/connected-change.mjs` developmentJourney proves native references at 1440 and 390; `tests/platform/base-auth-transfer.mjs` proves both binding kinds stay inactive and refuse signed events after actual restore and explicit recovery release. | Missing Jira and Vector context, automatic PR and run discovery beyond owner-configured deployment payload metadata, and general manual context linking. Inbound consent approved by ct on 23 October; owner erasure and inert restore are asserted in push Verify. |
 | `CHANGE-007` | Release management | target | done | (1) Three related changes, build/test references, shared calendar/ICS and ticket/problem/CI links: `tests/services/release-cases.mjs` releaseChecks via `tests/services/integration.mjs`; `tests/ui/release-journey.mjs` native release journey. (2) Named go/no-go, canary then rollout with live revision/role/grant fences: releaseChecks and the native release journey. (3) Cohort-only release notes: the native release journey asserts member visibility and outsider refusal. (4) Failed member holds completion until verified backout: releaseChecks and native release journey. Every native state is inspected at 1440/390. (5) Inert native archive decisions: `tests/platform/base-auth-transfer.mjs`. | None for this clause. Network deployment/probe edges are fixtures; notes inherit CHANNEL-008’s future Slack/Teams delivery before those channels ship. No live provider, hosted or owner acceptance claimed. |
 | `PROJECT-001` | IT team projects | target | done | `src/features/work/projects.ts`, `src/ui/projects.tsx`, `tests/work/project-cases.mjs` | Public-route proof: "Denver office move" with 12 owned tasks across two milestones as a board and due-date timeline; a dependency due after its dependent task is flagged blocked and done is refused until it closes; 30 asset relocations, two changes and a ticket link (an HR ticket is refused); an employee is refused every project route and the workload API, changing nothing; the agent's workload shows assigned tickets beside six project tasks. |
 | `KB-001` | Knowledge base | target | done | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs` |  |
