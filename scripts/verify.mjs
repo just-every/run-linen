@@ -84,7 +84,9 @@ if (shardValue !== undefined) {
   }
   shard = { number, count }
 }
-// Timing weights from completed branch Verify 39925624291; custom-role browser adds 30 seconds.
+// Timing weights from branch Verify 39925624291; custom-role browser adds 30 seconds.
+// Verify 39956669194 measured native transfer at 560 seconds and setup at 76;
+// reserve 600 and 80 seconds so their shard retains setup and cleanup headroom.
 // Every check remains present, and the workflow retains its 15 minute limit.
 const measuredSeconds = {
   "erasure admission races": 8,
@@ -110,7 +112,7 @@ const measuredSeconds = {
   "connected frontier journey": 15,
   "Freshservice and Snipe-IT native migration": 51,
   "department workspaces browser": 257,
-  "connection and authority setup": 4,
+  "connection and authority setup": 80,
   "branding browser": 46,
   "report builder and exports browser": 64,
   "pricing and budgets browser": 50,
@@ -147,7 +149,7 @@ const measuredSeconds = {
   "live handoff browser": 52,
   "software provider browser": 66,
   "notification rules browser": 60,
-  "Native archive transfer": 417,
+  "Native archive transfer": 600,
   "coexistence and imported erasure": 14,
   "software license browser": 55
 };
