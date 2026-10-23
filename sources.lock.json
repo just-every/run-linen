@@ -571,7 +571,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "fd2102a3160300fa2641c66253e61944649502e301bfd67a30cc5f008063d539",
+      "sha256": "06dbcf7d971106859f61d669c812d799250191eb9944fe4a9fb77901ea8196f3",
       "executable": false
     },
     "ADOPTION.md": {
@@ -599,7 +599,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4e864f9d96411d059b5d940a63844c1e07b509f388b3b731041abd04ab0d29b6",
+      "sha256": "7c45087665d2f673c381e813e4289bb0b1013bccb01b77c73ae3380e87e56fc1",
       "executable": false
     },
     "DEMO.md": {
@@ -1887,7 +1887,7 @@
       "executable": false
     },
     "src/features/adoption/schema.ts": {
-      "sha256": "b96072445b2037f8faff6b9cc8a980a998803bd32ded8b7b8f5ffd2d93572838",
+      "sha256": "fe2ed00864c58a9049ea1779e33c27c7221628a3bf96b6fc34b970a041c3236e",
       "executable": false
     },
     "src/features/adoption/servicenow-import/context.ts": {
@@ -5699,7 +5699,7 @@
       "executable": false
     },
     "tests/adoption/runtime.mjs": {
-      "sha256": "9f5f25a801406181edf14f0f43d9a25a7698d406432a4b57bf596b0c6e868d7a",
+      "sha256": "7c857c7aa1d9fd2dda95a6f69a259005cbe451358f1052cdd27d7cd9f80647f1",
       "executable": false
     },
     "tests/adoption/servicenow-import-cases.mjs": {
