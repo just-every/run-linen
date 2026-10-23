@@ -343,7 +343,7 @@ function WorkCommands({ work, onChanged, operator, transition }: { work: WorkRec
           {command === "close" && (
             <label>
               Resolution code{work.kind === "incident" ? " (required for an incident)" : ""}
-              <select name="resolutionCode" defaultValue="">
+              <select aria-label="Resolution code" name="resolutionCode" defaultValue="">
                 <option value="">Choose…</option>
                 {(desk.data?.resolutionCodes.codes ?? []).map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -352,7 +352,7 @@ function WorkCommands({ work, onChanged, operator, transition }: { work: WorkRec
           {command === "pause" && Boolean(desk.data?.statuses.length) && (
             <label>
               Status
-              <select name="statusId" defaultValue="">
+              <select aria-label="Status" name="statusId" defaultValue="">
                 <option value="">No named status</option>
                 {desk.data!.statuses.map((s) => <option key={s.id} value={s.id}>{s.name}{s.waitingOn ? ` · waits on the ${s.waitingOn}` : ""}</option>)}
               </select>
@@ -361,7 +361,7 @@ function WorkCommands({ work, onChanged, operator, transition }: { work: WorkRec
           {command === "pause" && (
             <label>
               Waiting on
-              <select name="waitingOn" defaultValue="">
+              <select aria-label="Waiting on" name="waitingOn" defaultValue="">
                 <option value="">Nobody outside the desk (SLA clock keeps running)</option>
                 <option value="requester">The requester</option>
                 <option value="vendor">A vendor</option>
