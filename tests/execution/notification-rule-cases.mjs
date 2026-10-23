@@ -54,6 +54,19 @@ export async function notificationRuleChecks({call,db,time}) {
   assert.equal((await call('/work/'+approvalWork.id,undefined,'other')).status,404,'An approval notification grants no general ticket read');
   await db.prepare("UPDATE memberships SET roles_json='[\"operator\"]' WHERE workspace_id='w' AND user_id='other'").run();
 
+  // Locale is selected explicitly; English is never silently substituted for Spanish.
+  const spanish=await ok('/notification-templates',{revision:0,name:key(),language:'es-US',subject:'Resuelto {{ticket.number}}',body:'Listo, {{requester.first_name}}.',reason:key()},'issuer',201);
+  await rule(spanish);
+  await ok('/notification-preferences',{event:'ticket.resolved',channel:'portal',language:'es-US',enabled:true},'actor');
+  const localized=await work();await close(localized);
+  const spanishNotices=(await inbox()).filter(n=>n.workId===localized.id&&n.event==='ticket.resolved');
+  assert.equal(spanishNotices.length,1);assert.equal(spanishNotices[0].body,'Listo, actor.');
+  await ok('/notification-preferences',{event:'ticket.resolved',channel:'portal',language:'en-US',enabled:true},'actor');
+  assert.equal((await call('/notification-preferences',{event:'ticket.waiting_on_you',channel:'portal',enabled:false},'actor')).status,422);
+  await rule(await template('Waiting {{ticket.number}}'),'ticket.waiting_on_you',{mandatory:true});
+  const waiting=await work();await ok(`/work/${waiting.id}/commands`,{revision:waiting.revision,command:'pause',waitingOn:'requester',reason:key()});
+  assert.ok((await inbox()).some(n=>n.workId===waiting.id&&n.event==='ticket.waiting_on_you'),'a real request for employee input remains mandatory');
+
   // A P1 Facilities condition and current lead recipient are evaluated against the native ticket.
   const department=await ok('/departments',{name:key(),kind:'facilities'},'issuer',201);
   await ok('/departments/'+department.id+'/members',{revision:department.revision,userId:'other',active:true});
