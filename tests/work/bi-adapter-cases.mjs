@@ -119,8 +119,7 @@ async function googleCredentialChecks(api,db) {
   for(const config of [configurations[0],configurations[4]]) {
     const job=check(await api('/bi/exports',{...config,credentialMode:'service_account',clientEmail:'synthetic-linen-40@synthetic-linen-1.iam.gserviceaccount.com',privateKey,name:'Renewable Google credential',consent:true}),201);
     const before=(await providerCalls(api,'google')).length;
-    const firstGoogle=await api(`/bi/exports/${job.id}/run`,{});if(firstGoogle.status!==200)console.log('Google token fixture phase:',check(await api('/test/bi-providers')).googlePhase);
-    assert.equal(check(firstGoogle).state,'delivered');assert.equal(check(await api(`/bi/exports/${job.id}/run`,{})).state,'delivered');
+    assert.equal(check(await api(`/bi/exports/${job.id}/run`,{})).state,'delivered');assert.equal(check(await api(`/bi/exports/${job.id}/run`,{})).state,'delivered');
     assert.equal((await providerCalls(api,'google')).length,before+2,'Each scheduled dispatch obtains a fresh signed Google token');
     assert.ok(!JSON.stringify(check(await api(`/bi/exports/${job.id}`))).includes(der.slice(0,40)));
     await mode(api,'google','rejected');const count=(await providerCalls(api,config.provider)).length;

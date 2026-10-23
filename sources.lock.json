@@ -6239,7 +6239,7 @@
       "executable": false
     },
     "tests/work/bi-adapter-cases.mjs": {
-      "sha256": "c0ffc0a8b09e42cdb3397b1bf070920cbd7e473938a8175dcfa24d024a2ed2b8",
+      "sha256": "9cf71d02f5ee3a634d7fd2f54410985bd0b857bc5ae26c7cee189700caac5ffd",
       "executable": false
     },
     "tests/work/bundle-cases.mjs": {
@@ -6259,7 +6259,7 @@
       "executable": false
     },
     "tests/work/classification-worker.ts": {
-      "sha256": "1618c779b56f7993f82f9379984d5235a307928bd5d8c4c36fea0631de216335",
+      "sha256": "908b96e43b40e9f9c34f24df8334cbdbc856f2008ad55c1868febc117f7060a8",
       "executable": false
     },
     "tests/work/decision-queue-beneficiary-runtime.mjs": {
@@ -6435,7 +6435,7 @@
       "executable": false
     },
     "tests/work/worker.ts": {
-      "sha256": "8483ebd11c95e3317d63a8ceb4b5d6ede00893cf65fd6b23ddba3b6c69ebed08",
+      "sha256": "a9c76fc22aa7a4897f17ff8f19bad32ef792611343368bf4e91bf2b6b9d14a74",
       "executable": false
     },
     "tsconfig.json": {
