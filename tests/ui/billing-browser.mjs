@@ -41,7 +41,7 @@ try {
   for(const width of [1440,390]) {
    await page.setViewportSize({width,height:1000});await page.goto(base+'/app#/billing');
    const form=page.getByRole('region',{name:'Invoice preview'}).locator('form');
-   for(const [name,value] of Object.entries({street:'100 Main Street',city:'Austin',state:'TX',postalCode:'78701'}))await form.locator(`[name="${name}"]`).fill(value);
+   for(const [name,value] of Object.entries({street:'100 Main Street',city:'Austin',state:'TX',postalCode:'78701',rate:'0',taxable:'0',jurisdiction:'Owner determination',basis:'No tax in this preview'}))await form.locator(`[name="${name}"]`).fill(value);
    const received=page.waitForResponse(r=>r.url().endsWith('/billing/invoice-preview')&&r.request().method()==='POST');
    await form.getByRole('button',{name:'Preview invoice',exact:true}).click();assert.equal((await received).status(),200);
    const estimate=page.getByRole('region',{name:'Invoice estimate'});await estimate.waitFor();
