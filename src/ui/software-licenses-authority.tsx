@@ -20,7 +20,8 @@ export function SoftwareLicenseAuthority({ license, options, onChanged, onEffect
   const openEffects = license.effects?.filter(effect => ['unknown', 'submitted', 'sending'].includes(effect.state)) ?? [];
   const liveGrant = grant && !grant.revokedAt && Date.parse(grant.expiresAt) > Date.now();
   const matchingObservation = Boolean(grant && grant.observationAt === data.observation?.observedAt);
-  const canUseGrant = Boolean(liveGrant && matchingObservation && data.policy !== 'ignored' && grant?.principalId === session.principal.userId && license.summary.fresh && !openEffects.length);
+  const hasGrantedTargets = Boolean(grant?.targets.some(id => grant.action === 'reclaim' ? users.some(user => user.id === id) : removable.some(installation => installation.id === id)));
+  const canUseGrant = Boolean(hasGrantedTargets && liveGrant && matchingObservation && data.policy !== 'ignored' && grant?.principalId === session.principal.userId && license.summary.fresh && !openEffects.length);
   return <section className="connection-record" aria-label="License action authority">
     <h2>Reclaim & remove</h2>
     <p>Only the title owner can grant an exact set of targets to a named operator. Linen checks the current grant and source revisions at the provider action, then reads the result back.</p>

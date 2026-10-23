@@ -5423,7 +5423,7 @@
       "executable": false
     },
     "src/ui/software-licenses-authority.tsx": {
-      "sha256": "d319e46b8178f364e9fd88eacde7a528852e614a3f59d9a07a0ae0e1af18bd63",
+      "sha256": "3a72d599f48de08fa7a21c69b103e9d8cfe8678bc4a42c7d80ff6d243a1eb214",
       "executable": false
     },
     "src/ui/software-licenses-device-users.tsx": {
@@ -6299,7 +6299,7 @@
       "executable": false
     },
     "tests/ui/software-license-connected.mjs": {
-      "sha256": "7d0d8d322a4dd688d9c4b20568da161d66e816d5bd50ec8af6ea61e956c6c563",
+      "sha256": "9ba6f92d1f5d1e24160d8147e0837c1cf5b136464e9d8f231186f72dce7f1ffb",
       "executable": false
     },
     "tests/ui/software-license-run.mjs": {

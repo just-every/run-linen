@@ -35,7 +35,7 @@ try {
  assert.equal(submitted.operationIds.length,10);await page.getByText('Provider actions & readback',{exact:true}).waitFor();await shot('zoom-awaiting-readback');
  for(const id of submitted.operationIds){await action(page,'Read back this action',{},`/effects/${id}/reconcile`,'Reconcile provider outcome');await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();}
  license=await get(license.id);assert.equal(license.summary.consumed,110);assert.equal(license.summary.reclaimable,15);assert.ok(license.effects.every(e=>e.state==='verified'));
- await shot('zoom-verified');
+ await page.getByText('Use seat reclamation grant',{exact:true}).waitFor({state:'hidden'});await shot('zoom-verified');
  let acrobat=await create('Adobe Acrobat Pro','Adobe','per-device',25,[{connectionId:jamf.id,kind:'jamf',aliases:[{title:'Adobe Acrobat Pro.app',publisher:'Adobe',productId:'com.adobe.Acrobat.Pro'}]},{connectionId:graph.id,kind:'intune'}]);
  await visit(acrobat.id,'Adobe Acrobat Pro');acrobat=await sync(acrobat.id);assert.equal(acrobat.summary.consumed,30);assert.equal(acrobat.summary.overLicensed,5);assert.equal(acrobat.data.complianceWork.length,0);
  await action(page,"Confirm a device's user",{connectionId:jamf.id,deviceId:'1',userId:employee.id,confirmed:true,reason:'Owner checked managed Mac serial ACROBAT-1 against current employee assignment'},`/software-licenses/${acrobat.id}/device-users`,'Confirm device user');
@@ -54,7 +54,7 @@ try {
  assert.equal((await get(prohibited.id)).effects[0].state,'submitted');await shot('prohibited-unverified');
  const control=await fetch(base+'/__fixture/software-control',{method:'POST',body:JSON.stringify({advanceInventory:true})});assert.ok(control.ok);
  await action(page,'Read back this action',{},`/effects/${removal.operationIds[0]}/reconcile`,'Reconcile provider outcome');
- assert.equal((await get(prohibited.id)).effects[0].state,'verified');await shot('prohibited-verified');
+ assert.equal((await get(prohibited.id)).effects[0].state,'verified');await page.getByText('Use app removal grant',{exact:true}).waitFor({state:'hidden'});await shot('prohibited-verified');
  let concurrent=await create('Concurrent design licenses','Design tools','concurrent',5,[{connectionId:jamf.id,kind:'jamf',aliases:[{title:'Adobe Acrobat Pro.app',publisher:'Adobe',productId:'com.adobe.Acrobat.Pro'}]}]);
  await visit(concurrent.id,'Concurrent design licenses');concurrent=await sync(concurrent.id);assert.equal(concurrent.summary.consumed,null);
  await action(page,'Record a concurrent usage peak',{peak:7,source:'Owner-reviewed license server peak report',evidence:'Seven simultaneous sessions in the current signed reporting period',observedAt:local(-60000)},`/software-licenses/${concurrent.id}/concurrency-observations`,'Record measured peak');
