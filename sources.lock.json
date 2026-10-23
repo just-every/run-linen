@@ -6151,7 +6151,7 @@
       "executable": false
     },
     "tests/ui/department-browser.mjs": {
-      "sha256": "b7d78d22daa1df129f2a70f54faac2203873eebcc4f81fbe9f23807e73d91b1b",
+      "sha256": "b9e78797cb295d6af9cf0dc65d14a6f1ef0ef6fec1092740adfaab595a3d0bfb",
       "executable": false
     },
     "tests/ui/dependency-journey.mjs": {

@@ -51,7 +51,7 @@ try {
   const rolePanel=page.getByRole('region',{name:'Custom roles',exact:true});
   const customRole=await formAction(page,rolePanel,'Add custom role','/custom-roles',{name:'Facilities agent',departmentId:departments.facilities.id},'Create role',201,'custom-role-create');
   await formAction(page,rolePanel,'Assign custom role',`/custom-roles/${customRole.id}/members`,{userId:customReader.id,active:true},'Save role assignment',200,'custom-role-assign');
-  await rolePanel.getByText(customReader.name,{exact:true}).waitFor();
+  await rolePanel.getByRole('listitem').filter({hasText:customReader.name}).waitFor();
   await captureBoth(page,'custom-role-assigned');
   const roleWork=await api('/work',{departmentId:departments.facilities.id,title:'synthetic-linen-11421 Facilities request',body:'synthetic-linen-11422 public Facilities message',deduplicationKey:'synthetic-linen-11423'});
   await api('/work/'+roleWork.id+'/messages',{body:'synthetic-linen-11424 private evidence',visibility:'private',sourceMessageId:'synthetic-linen-11425'});
