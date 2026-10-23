@@ -99,6 +99,7 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   assert.equal((await call('/search?q='+privateText,undefined,agent)).total,0,'A read-only role cannot match hidden private text');
   assert.equal((await call('/search?q='+requesterId+'&type=person',undefined,agent)).total,0,'Scoped agents acquire no global people discovery');
   await call('/people',undefined,agent,403);
+  await call(path+'/command-options',undefined,agent,403);
   await call(path+'/messages',{body:'synthetic-linen-18031',visibility:'public',sourceMessageId:'synthetic-linen-18032'},agent,403);
   await call(path+'/messages',{body:'synthetic-linen-18033',visibility:'private',sourceMessageId:'synthetic-linen-18034'},agent,403);
   await call(path+'/commands',{revision:read.work.revision,command:'pause',reason:'synthetic-linen-18035'},agent,403);
@@ -123,6 +124,8 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   await call(path+'/messages',{body:'synthetic-linen-18042',visibility:'private',sourceMessageId:'synthetic-linen-18043'},agent,403);
   await call(path+'/commands',{revision:(await call(path)).work.revision,command:'pause',reason:'synthetic-linen-18044'},agent,403);
   await edit(['ticket.read','ticket.transition']);await assign();
+  assert.ok((await call(path+'/command-options',undefined,agent)).resolutionCodes.codes.length,'A scoped status editor receives the available resolution choices');
+  await call('/work/'+hidden[0].id+'/command-options',undefined,agent,404);
   await call(path+'/messages',{body:'synthetic-linen-18045',visibility:'public',sourceMessageId:'synthetic-linen-18046'},agent,403);
   await call(path+'/commands',{revision:(await call(path)).work.revision,command:'pause',reason:'synthetic-linen-18047'},agent);
   assert.equal((await call(path)).work.state,'paused');

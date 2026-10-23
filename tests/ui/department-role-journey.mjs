@@ -174,6 +174,18 @@ export async function departmentRoleJourney({page,api,base,out,browser,departmen
     assert.equal((await saved).status(),200);
     await memberPage.getByText('Work is paused. Your request and its remaining obligations are preserved.',{exact:true}).waitFor();
     await captureBoth(memberPage,'member-status-saved',memberPage.locator('.detail-title'));
+    await memberPage.getByRole('button',{name:'Close',exact:true}).click();
+    await command.getByLabel('Close notes',{exact:true}).fill('The building manager restored power to the display and confirmed the room is usable.');
+    const resolutions=command.getByLabel('Resolution code',{exact:false});
+    const choice=await resolutions.locator('option').evaluateAll(options=>options.find(option=>option.value)?.value);
+    assert.ok(choice,'The scoped status editor can select an actual configured resolution');
+    await resolutions.selectOption(choice);
+    await captureBoth(memberPage,'member-close-edit',command);
+    saved=memberPage.waitForResponse(response=>response.url().endsWith(`/work/${facilities.id}/commands`)&&response.request().method()==='POST');
+    await command.getByRole('button',{name:'Save to this conversation',exact:true}).click();
+    assert.equal((await saved).status(),200);
+    await memberPage.getByText('This conversation is closed. Closure alone does not verify that your work is restored.',{exact:true}).waitFor();
+    await captureBoth(memberPage,'member-closed',memberPage.locator('.detail-title'));
     await page.goto(base+'/app#/members');
     panel=await openRole('Facilities agent');
     const assignmentsDisclosure=panel.locator('details').filter({has:page.locator(':scope > summary').getByText('Manage role assignments',{exact:true})}).first();

@@ -282,7 +282,7 @@ function WorkCommands({ work, onChanged, operator, transition }: { work: WorkRec
   const [command, setCommand] = useState(""),
     mutation = useMutation(),
     members = useRemote<RecordValue[]>(operator ? "/members" : null),
-    desk = useRemote<DeskSettings>(operator ? "/desk-settings" : null),
+    desk = useRemote<DeskSettings>(operator ? "/desk-settings" : transition ? `/work/${work.id}/command-options` : null),
     assignees = (members.data ?? []).filter((m) => m.active && /"(owner|operator)"/.test(text(m.roles_json))),
     { session } = useSession();
   // DESK-001: a assigns the open ticket to oneself; s opens the status change and c the close.
