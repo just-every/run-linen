@@ -163,7 +163,8 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   // A named approver decides through their own queue without receiving any agent readership.
   const calendar=await call('/calendars',{name:'synthetic-linen-18060',timezone:'America/New_York',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]},owner,201);
   const catalog=await call('/catalog',{name:'synthetic-linen-18061',kind:'service',target:'synthetic-linen-18062',ownerId,departmentId:it.id},owner,201);
-  const configured=await call('/catalog/'+catalog.id+'/approvals',{revision:catalog.revision,calendarId:calendar.id,approvals:[{key:'approval',name:'synthetic-linen-18063',mode:'any',approvers:[{type:'member',userId:approverId}]}]});
+  const catalogRow=(await call('/catalog')).items.find(item=>item.id===catalog.id);
+  const configured=await call('/catalog/'+catalog.id+'/approvals',{revision:catalogRow.revision,calendarId:calendar.id,approvals:[{key:'approval',name:'synthetic-linen-18063',mode:'any',approvers:[{type:'member',userId:approverId}]}]});
   const approvalWork=await make(it.id,'synthetic-linen-18064');
   await call('/work/'+approvalWork.id+'/fulfilment',{catalogId:catalog.id,catalogRevision:configured.revision,beneficiaryId:requesterId,purpose:'synthetic-linen-18065'},requester);
   await call('/work/'+approvalWork.id,undefined,approver,404);
