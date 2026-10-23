@@ -1,4 +1,3 @@
-import { liveDepartmentRoles } from '../features/work/department-role-authority';
 import { authenticatePendingPerson } from '../features/work/pending-binding';
 import { devAdmitted } from '../modules/operator-auth/dev-admission.mjs'
 import type { Context, MiddlewareHandler } from 'hono'
@@ -13,7 +12,7 @@ export async function session(c:Context<AppEnv>) {
  if(!row||row.version!==row.current_version||row.kind==='dev'&&(c.env.AUTH_LOCAL!=='true'||!await devAdmitted(c.req.raw)))throw new ApiError(401,'unauthenticated','Session expired or access revoked')
  await assertPlatformAdmission(c.env.DB,row.workspace_id,row.user_id,row.email)
  await authenticatePendingPerson(c.env,{workspaceId:row.workspace_id,userId:row.user_id,sessionId:row.id})
- const principal={userId:row.user_id,workspaceId:row.workspace_id,roles:JSON.parse(row.roles_json) as Role[],departmentRoles:await liveDepartmentRoles(c.env.DB,row.workspace_id,row.user_id)};c.set('principal',principal)
+ const principal={userId:row.user_id,workspaceId:row.workspace_id,roles:JSON.parse(row.roles_json) as Role[]};c.set('principal',principal)
  return {principal,user:{id:row.user_id,email:row.email,name:row.name},workspace:{id:row.workspace_id,name:row.workspace_name},csrfToken:row.csrf_token,sessionId:row.id}
 }
 export const authenticated:MiddlewareHandler<AppEnv>=async(c,next)=>{const s=await session(c);if(!['GET','HEAD','OPTIONS'].includes(c.req.method)){checkOrigin(c);if(c.req.header('X-Linen-CSRF')!==s.csrfToken)throw new ApiError(403,'csrf_denied','CSRF token required')}await next()}

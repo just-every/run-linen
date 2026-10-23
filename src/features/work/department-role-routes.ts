@@ -1,4 +1,5 @@
 import { getWork } from './core';
+import { liveDepartmentRoles } from './department-role-authority';
 import { workTransitionAllowed } from './scope';
 import { resolutionCodes } from './desk-fields';
 import type { Hono } from 'hono';
@@ -12,6 +13,11 @@ export function registerDepartmentRoleRoutes(app:Hono<AppEnv>) {
     if(!workTransitionAllowed(ctx.principal,work,'close'))throw new ApiError(403,'ticket_transition','Current status permission required');
     const statuses=(await ctx.env.DB.prepare('SELECT id,name,waiting_on waitingOn FROM work_custom_statuses WHERE workspace_id=? ORDER BY created_at,name').bind(ctx.principal.workspaceId).all()).results;
     return c.json({statuses,resolutionCodes:await resolutionCodes(ctx)});
+  });
+  app.get('/department-roles/current',async c=>{
+    c.header('Cache-Control','private, no-store');
+    const p=c.get('principal');
+    return c.json({items:await liveDepartmentRoles(c.env.DB,p.workspaceId,p.userId)});
   });
   app.get('/department-roles',async c=>c.json(await departmentRoles(context(c))));
   app.post('/department-roles',async c=>c.json(await createDepartmentRole(context(c),await jsonBody(c)),201));
