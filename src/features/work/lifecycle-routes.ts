@@ -6,6 +6,8 @@ import { registerAssetContractRoutes } from "./asset-contracts";
 import { assetHistory } from "./assets";
 import { lifecycleEvidencePack } from "./lifecycle-evidence";
 import { reviewPersonBinding } from './person-binding';
+import { currentWorkPrincipal } from "./identity";
+import { workReadable, type WorkScope } from "./scope";
 import { delegateManager } from "./delegation";
 import type { Hono } from "hono";
 import type { AppEnv } from "../../platform/types";
@@ -93,16 +95,28 @@ export function registerLifecycleRoutes(app: Hono<AppEnv>) {
   });
   app.get("/lifecycle", async (c) => {
     const ctx = { env: c.env, principal: c.get("principal") };
+    await currentWorkPrincipal(ctx);
     permit(ctx, ["owner", "hr"]);
-    return c.json({
-      items: (
-        await c.env.DB.prepare(
-          "SELECT * FROM work_lifecycle WHERE workspace_id=? ORDER BY effective_at",
-        )
-          .bind(ctx.principal.workspaceId)
-          .all()
-      ).results,
-    });
+    const w = ctx.principal.workspaceId;
+    // A lifecycle is listed only to current readers of its ticket, retained departments included.
+    const tickets = (
+      await c.env.DB.prepare(
+        "SELECT id,sensitivity,requester_id,beneficiary_id,department_id,protected_departments_json FROM work_records WHERE workspace_id=? AND id IN (SELECT work_id FROM work_lifecycle WHERE workspace_id=?)",
+      )
+        .bind(w, w)
+        .all<WorkScope & { id: string }>()
+    ).results;
+    const readable = new Set(
+      tickets.filter((t) => workReadable(ctx.principal, t)).map((t) => t.id),
+    );
+    const items = (
+      await c.env.DB.prepare(
+        "SELECT * FROM work_lifecycle WHERE workspace_id=? ORDER BY effective_at",
+      )
+        .bind(w)
+        .all<{ work_id: string }>()
+    ).results;
+    return c.json({ items: items.filter((l) => readable.has(l.work_id)) });
   });
   app.get("/lifecycle/:id/evidence", async (c) => {
     const pack = await lifecycleEvidencePack(
