@@ -25,7 +25,8 @@ try {
   const work=await employeeApi('/work',{title:`Denver monitor restored ${width}`,body:'The display is working again after the replacement cable.',deduplicationKey:`notify-${width}`});
   await action(page,'Notification branding',{logoUrl:'',primaryColor:'#23483b',textColor:'#17251d',senderConnectionId:'',consent:true,reason:'Use Northstar colors in reviewed notifications'},'/notification-branding','Save notification branding');
   await action(page,'Preview with a ticket',{workId:work.id},`/notification-templates/${edited.id}/preview`,'Preview template');
-  await page.getByText(`All set, Jordan: Denver monitor restored ${width}.`,{exact:true}).waitFor();
+  await page.getByRole('region',{name:'Branded message preview'}).getByText(`All set, Jordan: Denver monitor restored ${width}.`,{exact:true}).waitFor();
+  assert.equal(await page.getByRole('region',{name:'Branded message preview'}).evaluate(e=>getComputedStyle(e).borderLeftColor),'rgb(35, 72, 59)');
   await api(`/work/${work.id}/commands`,{revision:work.revision,command:'close',reason:'Requester confirmed a working display'});
   await page.getByText('Notification change history',{exact:true}).click();
   await page.locator('details.evidence p').filter({hasText:'Include the request title and the first name'}).first().waitFor();
