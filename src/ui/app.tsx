@@ -27,7 +27,7 @@ export function LinenApp() {
         <Loading label="Opening your workspace…" />
       </div></HydrationUnit>
     );
-  if (auth.error || roleAccess.error)
+  if (auth.error || (auth.data?.authenticated && roleAccess.error))
     return (
       <HydrationUnit><div className="boot">
         <ErrorNotice error={auth.error || roleAccess.error} retry={() => { auth.refresh(); roleAccess.refresh(); }} />
