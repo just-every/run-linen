@@ -85,7 +85,7 @@ export async function notificationRuleChecks({call,db,time}) {
   const duties=(await inbox('issuer')).filter(n=>n.workId===leave.work.id&&['security.task','leaver.task'].includes(n.event));
   assert.deepEqual(new Set(duties.map(n=>n.event)),new Set(['security.task','leaver.task']));
   await ok('/lifecycle',leaveInput,'issuer',201);
-  assert.equal((await inbox('issuer')).filter(n=>duties.some(d=>d.id===n.id)).length,duties.length,'Source replay creates no new responsibility notice');
+  assert.equal((await inbox('issuer')).filter(n=>n.workId===leave.work.id&&['security.task','leaver.task'].includes(n.event)).length,duties.length,'Source replay creates no new responsibility notice');
 
   // Exact sender validation, escaped branding and real provider acceptance through the existing outbox.
   const connectionId=key(),encrypted=(await ok('/fixture/secret',{apiKey:key()})).secret;
