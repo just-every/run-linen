@@ -567,7 +567,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "b8aaf4e30bcc0b4eae03479ada8c6adcf005cfb2264fedcb831922f1e06231f2",
+      "sha256": "7c0995cdeb62cae1a2b533145f5145f42f6bd698fd25ce5dd3e1e0d3a13d1a4b",
       "executable": false
     },
     "ADOPTION.md": {
@@ -595,7 +595,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ac0108be162e81bfb3d62b0b8f7528b4ffe59bb58289cda4d487e3ee361bb1b3",
+      "sha256": "b389b77cb1ce8929b7a8d37059026d365126c4064259ae2eb9502656a1402cc9",
       "executable": false
     },
     "DEMO.md": {
@@ -5755,7 +5755,7 @@
       "executable": false
     },
     "tests/services/integration-worker.ts": {
-      "sha256": "b30b62bc061591acfd7ae61cbe58f2731d97e324eb516e95c3a4e75eccada421",
+      "sha256": "e3b6bf6646dc99b2cb346913260c072bb75e81ebcf5fe73d2d78fd53fc053083",
       "executable": false
     },
     "tests/services/integration.mjs": {
