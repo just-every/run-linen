@@ -5,8 +5,10 @@ export async function handoffChecks(api, db) {
   const ana = { 'x-user': 'synthetic-linen-9701', 'x-roles': '["employee"]' }, ben = { 'x-user': 'synthetic-linen-9702', 'x-roles': '["employee"]' }, agent = { 'x-user': 'synthetic-linen-9703', 'x-roles': '["operator"]' }, late = { 'x-user': 'synthetic-linen-9704', 'x-roles': '["operator"]' };
   for (const [id, name, role] of [['synthetic-linen-9701', 'Ana Ruiz', 'employee'], ['synthetic-linen-9702', 'Ben Cole', 'employee'], ['synthetic-linen-9703', 'Agent Rowan', 'operator'], ['synthetic-linen-9704', 'Agent Late', 'operator']])
     await db.batch([db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind(id, id + '@example.test', name, 'unused', '2026-01-01'), db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('a', id, JSON.stringify([role]))]);
-  const open = ok(await api('/calendars', { name: 'synthetic-linen-9705 always', timezone: 'UTC', weekdays: [0, 1, 2, 3, 4, 5, 6], startHour: 0, endHour: 24, holidays: [] }), 201);
-  const today = new Date().toISOString().slice(0, 10), closed = ok(await api('/calendars', { name: 'synthetic-linen-9706 closed today', timezone: 'UTC', weekdays: [0, 1, 2, 3, 4, 5, 6], startHour: 9, endHour: 17, holidays: [today] }), 201);
+  // A zone no other flow in this suite uses, so no "one unambiguous calendar" lookup elsewhere sees these.
+  const zone = 'Pacific/Kiritimati';
+  const open = ok(await api('/calendars', { name: 'synthetic-linen-9705 always', timezone: zone, weekdays: [0, 1, 2, 3, 4, 5, 6], startHour: 0, endHour: 24, holidays: [] }), 201);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: zone }).format(new Date()), closed = ok(await api('/calendars', { name: 'synthetic-linen-9706 closed today', timezone: zone, weekdays: [0, 1, 2, 3, 4, 5, 6], startHour: 9, endHour: 17, holidays: [today] }), 201);
   const ask = async (headers, text) => { const t = ok(await api('/work', { title: text, body: text + ' body', deduplicationKey: crypto.randomUUID() }, headers), 201); return t.id; };
   const calendarId = r => r.calendarId ?? r.id;
   let workId = await ask(ana, 'synthetic-linen-9707 laptop slow');
@@ -48,7 +50,7 @@ export async function handoffChecks(api, db) {
   ok(await api('/handoff-config', { ...config, calendarId: calendarId(closed) }));
   workId = await ask(ana, 'synthetic-linen-9713 badge reader');
   const after = ok(await api(`/work/${workId}/handoff`, {}, ana), 201); assert.equal(after.state, 'ticketed');
-  assert.ok(Date.parse(after.expected_at) > Date.parse(today + 'T23:59:59Z'), 'the promised reply is after the next opening, not today');
+  assert.ok(Date.parse(after.expected_at) > Date.parse(today + 'T23:59:59+14:00'), 'the promised reply is after the next opening, not today');
   assert.ok(ok(await api(`/work/${workId}`, undefined, ana)).messages.some(m => m.body.startsWith('Linen: The service desk is outside its business hours.')));
   assert.equal((await api('/handoffs', undefined, agent)).value.items.length, 0);
   // Erasure removes presence and the person from handoff records.

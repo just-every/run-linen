@@ -11,7 +11,7 @@ const address = /^[^\s@<>"\r\n]+@[^\s@<>"\r\n]+\.[^\s@<>"\r\n]+$/;
 /** The reply as RFC 822: threaded by In-Reply-To and References, from the mailbox itself, asking recipients' auto-responders to stay silent. */
 export function composeReply(input: { from: string; to: string; subject: string; text: string; messageId: string; thread: string[] }) {
   if (!address.test(input.from) || !address.test(input.to)) throw new ApiError(422, 'mail_address', 'A single valid address is required');
-  const lines = [`From: ${input.from}`, `To: ${input.to}`, `Subject: ${word(input.subject)}`, `Date: ${new Date().toUTCString()}`, `Message-ID: ${input.messageId}`,
+  const lines = [`From: ${input.from}`, `To: ${input.to}`, `Subject: ${word(input.subject.replace(/[\x00-\x1f\x7f]+/g, ' ').trim())}`, `Date: ${new Date().toUTCString()}`, `Message-ID: ${input.messageId}`,
     ...(input.thread.length ? [`In-Reply-To: ${input.thread.at(-1)}`, `References: ${input.thread.slice(-20).join(' ')}`] : []),
     'MIME-Version: 1.0', 'Content-Type: text/plain; charset=utf-8', 'Content-Transfer-Encoding: base64', 'X-Auto-Response-Suppress: All', '',
     wrapped(new TextEncoder().encode(input.text))];
