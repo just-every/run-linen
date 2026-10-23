@@ -12,11 +12,11 @@ export async function biDestinationJourney({page,bi,api,out,width}) {
   ['bigquery',{project:'northstar-service',dataset:'service_desk',table:'tickets',location:'US'}],
  ];
  for(const [provider,values]of configurations){
-  await form.getByLabel('Provider',{exact:true}).selectOption(provider);
-  if(['gcs','bigquery'].includes(provider))await form.getByLabel('Google authentication',{exact:true}).selectOption('oauth');
+  await form.getByLabel('Provider').selectOption(provider);
+  if(['gcs','bigquery'].includes(provider))await form.getByLabel('Google authentication').selectOption('oauth');
   await fields(form,{name:`Northstar ${provider} · ${width}`,...values,accessToken:'synthetic-linen-9130'});
-  assert.equal(await form.getByLabel('Provider access token',{exact:true}).getAttribute('type'),'password');
-  await form.getByLabel('I authorize nightly exports to this destination under my current permissions.',{exact:true}).check();
+  assert.equal(await form.getByLabel('Provider access token').getAttribute('type'),'password');
+  await form.getByLabel('I authorize nightly exports to this destination under my current permissions.').check();
   await form.screenshot({path:`${out}/bi-setup-${provider}-${width}.png`});
   const response=page.waitForResponse(r=>r.url().endsWith('/bi/exports')&&r.request().method()==='POST');
   await form.getByRole('button',{name:'Save BI destination',exact:true}).click();
