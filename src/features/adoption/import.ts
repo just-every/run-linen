@@ -342,7 +342,7 @@ async function applyFencedImport(ctx:AdoptionContext,runId:string,acceptSemantic
       AND EXISTS(SELECT 1 FROM work_people p WHERE p.workspace_id=work_pending_people.workspace_id AND p.id=work_pending_people.id AND p.member_id IS NULL)`)
       .bind(w));
     const permittedHistory = [...historyOnly, 'identities', 'workspace'];
-    const remaining = await ctx.env.DB.prepare(`SELECT COUNT(*) n FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state NOT IN ('restored','erased') AND table_name NOT IN (${permittedHistory.map(()=>'?').join(',')})`).bind(w, runId,...permittedHistory).first<{n:number}>();
+    const remaining = await ctx.env.DB.prepare(`SELECT COUNT(*) n FROM adoption_history WHERE workspace_id=? AND id IN (SELECT history_id FROM adoption_import_records WHERE import_id=?) AND state NOT IN ('restored','erased') AND table_name NOT IN (SELECT value FROM json_each(?))`).bind(w, runId, JSON.stringify(permittedHistory)).first<{n:number}>();
     const state = remaining?.n ? 'history_only' : 'restored';
     report.privacyRevision=await archivePrivacyStateRevision(ctx,privacyState().rows);
     const privateInput=await ctx.env.DB.prepare('SELECT 1 FROM history_identity_tombstones WHERE workspace_id=? LIMIT 1').bind(w).first();
