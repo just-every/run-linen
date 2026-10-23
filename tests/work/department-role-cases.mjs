@@ -39,6 +39,7 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
     {permissions:['ticket.read','ticket.private.reply']},
     {permissions:['ticket.read','ticket.reply','ticket.private.reply']},
     {permissions:['ticket.read','ticket.private.read','ticket.private.reply']},
+    {permissions:['ticket.read','ticket.attachment.write']},
   ])await call('/department-roles',{...definition,...invalid},owner,422);
   await call('/department-roles',{...definition,departmentId:null},owner,400);
   let role=await call('/department-roles',definition,owner,201);
@@ -82,6 +83,9 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   const upload=await uploadBytes(path+'/attachments',new TextEncoder().encode('synthetic-linen-18029'),{...owner,'content-type':'text/plain','x-filename':'synthetic-linen-18030.txt','x-visibility':'private'});
   assert.equal(upload.status,201,JSON.stringify(upload.value));
   const attachmentPath='/attachments/'+upload.value.id;
+  const publicFile=await uploadBytes(path+'/attachments',new TextEncoder().encode('synthetic-linen-18083'),{...owner,'x-filename':'synthetic-linen-18084.txt','x-visibility':'public'});
+  assert.equal(publicFile.status,201);
+  await call('/attachments/'+publicFile.value.id,undefined,agent,404);
   const read=await call(path,undefined,agent);
   assert.equal(read.work.id,ticket.id,'A base employee receives scoped readership without an operator role');
   assert.ok(read.messages.every(message=>message.visibility==='public'));
@@ -113,8 +117,8 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   await assign();
   const privateRead=await call(path,undefined,agent);
   assert.ok(privateRead.messages.some(message=>message.body===privateText));
-  assert.ok(privateRead.attachments.some(attachment=>attachment.id===upload.value.id));
-  await call(attachmentPath,undefined,agent);
+  assert.deepEqual(privateRead.attachments,[],'Private notes alone never grant attachments');
+  await call(attachmentPath,undefined,agent,404);
   assert.ok((await call('/search?q='+privateText,undefined,agent)).items.some(item=>item.id===ticket.id));
   await call(path+'/messages',{body:'synthetic-linen-18036',visibility:'private',sourceMessageId:'synthetic-linen-18037'},agent,403);
   await call(path+'/messages',{body:'synthetic-linen-18038',visibility:'public',sourceMessageId:'synthetic-linen-18039'},agent,403);
@@ -129,10 +133,15 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   await call(path+'/messages',{body:'synthetic-linen-18045',visibility:'public',sourceMessageId:'synthetic-linen-18046'},agent,403);
   await call(path+'/commands',{revision:(await call(path)).work.revision,command:'pause',reason:'synthetic-linen-18047'},agent);
   assert.equal((await call(path)).work.state,'paused');
-  await edit(['ticket.read','ticket.private.read','ticket.reply','ticket.private.reply','ticket.transition']);await assign();
+  await edit(['ticket.read','ticket.private.read','ticket.reply','ticket.private.reply','ticket.transition','ticket.attachment.read','ticket.attachment.write']);await assign();
   await call(path+'/messages',{body:'synthetic-linen-18048',visibility:'private',sourceMessageId:'synthetic-linen-18049'},agent,201);
   await call(path+'/commands',{revision:(await call(path)).work.revision,command:'resume',reason:'synthetic-linen-18050'},agent);
   for(const work of hidden)await call('/work/'+work.id,undefined,agent,404);
+  await call(attachmentPath,undefined,agent);
+  await call('/attachments/'+publicFile.value.id,undefined,agent);
+  assert.ok((await call(path,undefined,agent)).attachments.some(file=>file.id===upload.value.id),'Explicit attachment and private permissions allow the private file');
+  const contributed=await uploadBytes(path+'/attachments',new TextEncoder().encode('synthetic-linen-18085'),{...agent,'x-filename':'synthetic-linen-18086.txt','x-visibility':'private'});
+  assert.equal(contributed.status,201,'Explicit attachment and private reply permissions allow this upload');
 
   await call(path+'/time',{source:'manual',minutes:15,deduplicationKey:'synthetic-linen-18080',note:'synthetic-linen-18081'},owner,201);
   assert.deepEqual((await call(path+'/time',undefined,agent)).items,[],'Private-note permission does not expose other people’s effort records');

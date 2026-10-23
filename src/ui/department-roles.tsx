@@ -78,6 +78,8 @@ function RoleDefinition({ admin, role, onSaved }: { admin: RoleAdmin; role?: Dep
         next.add('ticket.private.read');
         next.add('ticket.reply');
       }
+      if(id==='ticket.attachment.write'&&checked){next.add('ticket.attachment.read');next.add('ticket.reply');}
+      if(!checked&&['ticket.attachment.read','ticket.reply'].includes(id))next.delete('ticket.attachment.write');
       if (!checked && ['ticket.private.read', 'ticket.reply'].includes(id)) next.delete('ticket.private.reply');
       return [...next];
     });
@@ -105,7 +107,7 @@ function RoleDefinition({ admin, role, onSaved }: { admin: RoleAdmin; role?: Dep
       </label>)}
     </fieldset>
     <details className="action-disclosure"><summary>{role ? 'Before changing this role' : 'About these capabilities'}</summary>
-      <p>Private replies also require reading private notes and replying publicly. {role ? 'Saving any change withdraws all current assignments. Review the new capabilities before granting access again.' : 'A new role has no assignments. Choose the people who may use it after creation.'}</p>
+      <p>Private replies also require reading private notes and replying publicly. Adding attachments also requires attachment reading and public replies. {role ? 'Saving any change withdraws all current assignments. Review the new capabilities before granting access again.' : 'A new role has no assignments. Choose the people who may use it after creation.'}</p>
     </details>
     {role && <label className="checkbox-field"><input type="checkbox" name="active" defaultChecked={role.active} /><span>Role is active</span></label>}
     <ErrorNotice error={mutation.error} />

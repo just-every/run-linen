@@ -1,6 +1,6 @@
 import { scopedTicketPermission } from './department-role-authority';
 import {obligationHistory,ticketHistory} from './work-history';
-import { workReadable, workPrivateReadable, workDepartmentStaff, workDepartmentScoped, workReplyAllowed, workTransitionAllowed } from './scope';
+import { workReadable, workPrivateReadable, workDepartmentStaff, workDepartmentScoped, workReplyAllowed, workTransitionAllowed, workAttachmentAllowed } from './scope';
 import { departmentWorkBatch, requestDepartment, workReadSql, departmentNotHrSql } from './department-spaces';
 import { preparePendingRequest, pendingRequestSnapshot } from './pending-services';
 import { progressFor, requestProgress } from "./progress";
@@ -410,9 +410,9 @@ export async function conversation(ctx: WorkContext, workId: string) {
   }
   const privateAllowed = workPrivateReadable(ctx.principal,work);
   const attachments = await ctx.env.DB.prepare(
-    "SELECT id,name,content_type,size,sha256,visibility,created_at FROM work_attachments WHERE workspace_id=? AND work_id=? AND (visibility='public' OR (visibility='private' AND ?=1))",
+    "SELECT id,name,content_type,size,sha256,visibility,created_at FROM work_attachments WHERE workspace_id=? AND work_id=? AND ((visibility='public' AND ?=1) OR (visibility='private' AND ?=1))",
   )
-    .bind(ctx.principal.workspaceId, workId, Number(privateAllowed))
+    .bind(ctx.principal.workspaceId, workId, Number(workAttachmentAllowed(ctx.principal,work)), Number(workAttachmentAllowed(ctx.principal,work,true)))
     .all();
   const messages = await ctx.env.DB.prepare(
     "SELECT * FROM work_messages WHERE workspace_id=? AND work_id=? AND (visibility='public' OR ?=1) ORDER BY created_at,id",
@@ -424,8 +424,8 @@ export async function conversation(ctx: WorkContext, workId: string) {
     (SELECT name FROM users WHERE id=?) assignee_name`)
     .bind(work.requester_id, work.assignee_id).first();
   const current=await getWork(ctx,workId);
-  if((current.department_id??null)!==(work.department_id??null)||privateAllowed&&!workPrivateReadable(ctx.principal,current))throw new ApiError(409,'department_authority_changed','Ticket workspace or current authority changed; reload');
-  return { permissions:{reply:workReplyAllowed(ctx.principal,current),privateReply:workReplyAllowed(ctx.principal,current,true),transition:workTransitionAllowed(ctx.principal,current,'close'),participantTransition:workTransitionAllowed(ctx.principal,current,'reopen')}, work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, quotes: workReadable({...ctx.principal,departmentRoles:[]},current)?await quotesForRequest(ctx, workId):[], progress: await requestProgress(ctx, workId) };
+  if((current.department_id??null)!==(work.department_id??null)||privateAllowed&&!workPrivateReadable(ctx.principal,current)||attachments.results.some((file:any)=>!workAttachmentAllowed(ctx.principal,current,file.visibility==='private')))throw new ApiError(409,'department_authority_changed','Ticket workspace or current authority changed; reload');
+  return { permissions:{attachment:workAttachmentAllowed(ctx.principal,current,false,true),privateAttachment:workAttachmentAllowed(ctx.principal,current,true,true),reply:workReplyAllowed(ctx.principal,current),privateReply:workReplyAllowed(ctx.principal,current,true),transition:workTransitionAllowed(ctx.principal,current,'close'),participantTransition:workTransitionAllowed(ctx.principal,current,'reopen')}, work: { ...work, ...names }, ...await pendingRequestSnapshot(ctx,work), messages: messages.results, attachments: attachments.results, quotes: workReadable({...ctx.principal,departmentRoles:[]},current)?await quotesForRequest(ctx, workId):[], progress: await requestProgress(ctx, workId) };
 }
 // The public line each conversation command records, in words people read.
 const transitionLabels: Record<string, string> = { reopen: "Reopened", cancel: "Cancelled", close: "Closed", pause: "Paused", resume: "Resumed", assign: "Assigned" };

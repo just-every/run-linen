@@ -37,11 +37,13 @@ export const portabilityPolicy={
    if(await db.prepare(`SELECT 1 FROM ${quoted} WHERE NOT json_valid(permissions_json) LIMIT 1`).first())return false;
    if(await db.prepare(`SELECT 1 FROM ${quoted} WHERE
     json_type(permissions_json)<>'array' OR json_array_length(permissions_json)=0
-    OR EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE type<>'text' OR value NOT IN ('ticket.read','ticket.private.read','ticket.reply','ticket.private.reply','ticket.transition'))
+    OR EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE type<>'text' OR value NOT IN ('ticket.read','ticket.private.read','ticket.reply','ticket.private.reply','ticket.transition','ticket.attachment.read','ticket.attachment.write'))
     OR json_array_length(permissions_json)<>(SELECT COUNT(DISTINCT value) FROM json_each(permissions_json))
     OR NOT EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.read')
     OR (EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.private.reply') AND
       (NOT EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.private.read') OR NOT EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.reply')))
+    OR (EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.attachment.write') AND
+      (NOT EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.attachment.read') OR NOT EXISTS(SELECT 1 FROM json_each(permissions_json) WHERE value='ticket.reply')))
     OR typeof(revision)<>'integer' OR revision<1 LIMIT 1`).first())return false;
    if(!departments){if(await db.prepare(`SELECT 1 FROM ${quoted} LIMIT 1`).first())return false;}
    else if(await db.prepare(`SELECT 1 FROM ${quoted} r WHERE NOT EXISTS(SELECT 1 FROM "${departments.replaceAll('"','""')}" d WHERE d.id=r.department_id AND d.workspace_id=r.workspace_id AND d.kind<>'hr') LIMIT 1`).first())return false;

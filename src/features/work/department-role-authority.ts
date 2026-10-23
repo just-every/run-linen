@@ -6,6 +6,8 @@ export const rolePermissions = [
   {id:'ticket.reply',label:'Reply publicly'},
   {id:'ticket.private.reply',label:'Reply privately'},
   {id:'ticket.transition',label:'Update ticket status'},
+  {id:'ticket.attachment.read',label:'Read ticket attachments'},
+  {id:'ticket.attachment.write',label:'Add ticket attachments'},
 ] as const;
 export type TicketPermission = typeof rolePermissions[number]['id'];
 export interface DepartmentRoleGrant {id:string;name:string;departmentId:string;permissions:TicketPermission[];revision:number}

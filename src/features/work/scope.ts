@@ -45,3 +45,10 @@ export function workTransitionAllowed(p:Principal,row:WorkScope,command:string) 
   if(['reopen','cancel'].includes(command)&&workReadable(base,row))return true;
   return workDepartmentStaff(base,row)&&p.roles.some(r=>['owner','operator','hr'].includes(r)) || command!=='assign'&&scopedTicketPermission(p,row,'ticket.transition');
 }
+
+/** The approved initial public-reader floor excludes all attachment metadata and bytes. */
+export function workAttachmentAllowed(p:Principal,row:WorkScope,privateFile=false,write=false) {
+  const base={...p,departmentRoles:[]};
+  if(write)return workReplyAllowed(base,row,privateFile)||scopedTicketPermission(p,row,'ticket.attachment.write')&&workReplyAllowed(p,row,privateFile);
+  return (privateFile?workPrivateReadable(base,row):workReadable(base,row)) || scopedTicketPermission(p,row,'ticket.attachment.read')&&(!privateFile||scopedTicketPermission(p,row,'ticket.private.read'));
+}

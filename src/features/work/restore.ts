@@ -110,7 +110,7 @@ export async function restoreAdoptionRecord(
     try { permissions=JSON.parse(String(row.permissions_json)); }
     catch { throw new ApiError(422,'restore_role','Valid scoped role permissions required'); }
     const allowed:string[]=rolePermissions.map(permission=>permission.id);
-    if(!Array.isArray(permissions)||!permissions.length||permissions.some(value=>!allowed.includes(value))||new Set(permissions).size!==permissions.length||!permissions.includes('ticket.read')||permissions.includes('ticket.private.reply')&&(!permissions.includes('ticket.private.read')||!permissions.includes('ticket.reply'))||typeof row.name!=='string'||!row.name.trim()||row.name.length>120||!Number.isSafeInteger(row.revision)||Number(row.revision)<1)
+    if(!Array.isArray(permissions)||!permissions.length||permissions.some(value=>!allowed.includes(value))||new Set(permissions).size!==permissions.length||!permissions.includes('ticket.read')||permissions.includes('ticket.private.reply')&&(!permissions.includes('ticket.private.read')||!permissions.includes('ticket.reply'))||permissions.includes('ticket.attachment.write')&&(!permissions.includes('ticket.attachment.read')||!permissions.includes('ticket.reply'))||typeof row.name!=='string'||!row.name.trim()||row.name.length>120||!Number.isSafeInteger(row.revision)||Number(row.revision)<1)
       throw new ApiError(422,'restore_role','Valid scoped role definition required');
     if(!await ctx.env.DB.prepare("SELECT 1 FROM work_departments WHERE workspace_id=? AND id=? AND kind<>'hr'").bind(ctx.principal.workspaceId,String(row.department_id)).first())
       throw new ApiError(422,'restore_role','Restore a non-HR department before its role');

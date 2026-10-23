@@ -14,9 +14,11 @@ export function Composer({
   workId,
   onSent,
   privateReply,
+  attachmentAccess,
 }: {
   workId?: string;
   privateReply?: boolean;
+  attachmentAccess?:{public:boolean;private:boolean};
   onSent: () => void;
 }) {
   const [noticeOffer, setNoticeOffer] = useState<{body:string;items:{id:string;message:string}[]} | null>(null);
@@ -210,7 +212,7 @@ export function Composer({
       {!workId&&Boolean(departments.data?.items.length||departmentId)&&<label>Service workspace (optional)<select aria-label="Service workspace (optional)" value={departmentId} onChange={e=>{setDepartmentId(e.target.value);updateDraft(body,visibility,attachmentName,e.target.value);}}><option value="">Let the shared service desk route this</option>{departmentId&&!departments.data?.items.some(d=>d.id===departmentId&&d.active)&&<option value={departmentId} disabled>Previously selected workspace is unavailable</option>}{departments.data?.items.filter(d=>d.active).map(d=><option key={d.id} value={d.id}>{d.name}</option>)}</select></label>}
       <ErrorNotice error={departments.error} retry={departments.refresh}/>
       <div className="composer-tools">
-        <label className="file-picker">
+        {(attachmentAccess?.[visibility==='private'?'private':'public']??true) && <label className="file-picker">
           <Icon name="attachment" />
           <span>{file?.name || attachmentName || "Attach a file"}</span>
           <input
@@ -224,7 +226,7 @@ export function Composer({
               updateDraft(body, visibility, selected?.name ?? "");
             }}
           />
-        </label>
+        </label>}
         {(file || attachmentName) && (
           <button
             type="button"

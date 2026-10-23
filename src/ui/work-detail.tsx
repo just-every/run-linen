@@ -168,7 +168,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         <p className="agent-note">Linen reads each message against your catalog and services. Effects need a standing grant and are verified separately.</p>
         {access === "team"
           ? <Notice>You see this request because the person it is for reports to you. It is read-only: only the people it is shared with can reply.</Notice>
-          : rights?.reply===false ? <Notice>Your department role gives read-only access to this conversation.</Notice> : <Composer workId={work.id} onSent={changed} privateReply={rights?.privateReply} />}
+          : rights?.reply===false ? <Notice>Your department role gives read-only access to this conversation.</Notice> : <Composer workId={work.id} onSent={changed} privateReply={rights?.privateReply} attachmentAccess={rights?{public:rights.attachment,private:rights.privateAttachment}:undefined} />}
         {work.requester_id === session.principal.userId && !access && <AskForPerson workId={work.id} onChanged={changed} />}
         {access === "shared" && <Notice>Shared with you. You can read and reply to its public messages.</Notice>}
         <ConversationHistory conversation={detail.data!} />

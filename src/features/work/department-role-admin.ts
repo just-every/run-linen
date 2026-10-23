@@ -5,7 +5,7 @@ import { rolePermissions } from './department-role-authority';
 interface Definition {id:string;department_id:string;name:string;permissions_json:string;revision:number;active:number}
 const conflict=()=>new ApiError(409,'role_changed','Role, assignment or owner authority changed; reload');
 function permissions(value:unknown) {
-  if(!Array.isArray(value)||!value.length||value.some(v=>typeof v!=='string'||!rolePermissions.some(p=>p.id===v))||new Set(value).size!==value.length||!value.includes('ticket.read')||value.includes('ticket.private.reply')&&(!value.includes('ticket.private.read')||!value.includes('ticket.reply')))
+  if(!Array.isArray(value)||!value.length||value.some(v=>typeof v!=='string'||!rolePermissions.some(p=>p.id===v))||new Set(value).size!==value.length||!value.includes('ticket.read')||value.includes('ticket.private.reply')&&(!value.includes('ticket.private.read')||!value.includes('ticket.reply'))||value.includes('ticket.attachment.write')&&(!value.includes('ticket.attachment.read')||!value.includes('ticket.reply')))
     throw new ApiError(422,'role_permissions','Choose read access and the explicit ticket permissions this role needs');
   return [...value].sort();
 }
