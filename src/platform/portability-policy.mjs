@@ -55,7 +55,7 @@ export const portabilityPolicy={
   row=historyExportRow(table,row);
   if(table==='svc_records' && row.kind==='asset'){
    const data=JSON.parse(row.data_json);
-   if(data.softwareLicense)return {...row,data_json:JSON.stringify({...data,observation:null,grant:null,grantVersion:Number(data.grantVersion||0)+1,effectTargets:[],deviceUsers:[],lastDeviceUserChange:null,restoredReview:true})};
+   if(data.softwareLicense)return {...row,data_json:JSON.stringify({...data,observation:null,grant:null,grantVersion:Number(data.grantVersion||0),effectTargets:[],deviceUsers:[],lastDeviceUserChange:null,restoredReview:true})};
   }
   if(table==='svc_software_effects' && ['sending','submitted'].includes(row.state))return {...row,state:'unknown'};
   if(table==='svc_records' && row.kind==='release'){
