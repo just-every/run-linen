@@ -1,7 +1,7 @@
 import { scopedTicketPermission } from './department-role-authority';
 import {obligationHistory,ticketHistory} from './work-history';
 import { workReadable, workPrivateReadable, workDepartmentStaff, workDepartmentScoped, workReplyAllowed, workTransitionAllowed } from './scope';
-import { departmentWorkBatch, requestDepartment, workReadSql, departmentNotHrSql, requireWorkPrivate } from './department-spaces';
+import { departmentWorkBatch, requestDepartment, workReadSql, departmentNotHrSql } from './department-spaces';
 import { preparePendingRequest, pendingRequestSnapshot } from './pending-services';
 import { progressFor, requestProgress } from "./progress";
 import { hashToken } from "../../platform/crypto";

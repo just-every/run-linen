@@ -149,6 +149,7 @@ export async function departmentRoleJourney({page,api,base,out,browser,departmen
     assert.equal((await saved).status(),200);
     assert.equal(await memberPage.evaluate(async id=>(await fetch(`/api/v1/work/${id}`)).status,facilities.id),404,'Changed capabilities withdraw the previous confirmation');
     panel=await openRole('Facilities agent');
+    await panel.getByText('No active assignments',{exact:true}).waitFor();
     await panel.getByText('Manage role assignments',{exact:true}).click();
     const regrant=panel.getByRole('form',{name:'Facilities agent assignments',exact:true});
     await regrant.getByLabel('Person',{exact:true}).selectOption(member.id);
@@ -163,6 +164,7 @@ export async function departmentRoleJourney({page,api,base,out,browser,departmen
     saved=memberPage.waitForResponse(response=>response.url().endsWith(`/work/${facilities.id}/messages`)&&response.request().method()==='POST');
     await composer.getByRole('button',{name:'Send message',exact:true}).click();
     assert.equal((await saved).status(),201);
+    await memberPage.getByText('The wall switch is working. Schedule a Facilities visit to inspect the display power supply.',{exact:true}).waitFor();
     await memberPage.getByText('Service controls',{exact:true}).click();
     await memberPage.getByRole('button',{name:'Pause',exact:true}).click();
     const command=memberPage.locator('.work-controls form');

@@ -134,6 +134,10 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   await call(path+'/commands',{revision:(await call(path)).work.revision,command:'resume',reason:'synthetic-linen-18050'},agent);
   for(const work of hidden)await call('/work/'+work.id,undefined,agent,404);
 
+  await call(path+'/time',{source:'manual',minutes:15,deduplicationKey:'synthetic-linen-18080',note:'synthetic-linen-18081'},owner,201);
+  assert.deepEqual((await call(path+'/time',undefined,agent)).items,[],'Private-note permission does not expose other people’s effort records');
+  await call(path+'/time',{source:'manual',minutes:5,deduplicationKey:'synthetic-linen-18082'},agent,403);
+
   // A scoped ticket grant never inherits the separate catalog audience or quote readership.
   const quoteItem=await call('/catalog',{name:'synthetic-linen-18070',kind:'service',target:'synthetic-linen-18071',ownerId,departmentId:facilities.id,form:{quoteRequired:true}},owner,201);
   const quote=await uploadBytes(path+'/catalog-quote',new TextEncoder().encode('%PDF-1.7\nsynthetic-linen-18072\n%%EOF'),{...requester,'content-type':'application/pdf','x-filename':'synthetic-linen-18073.pdf','x-catalog-id':quoteItem.id});
