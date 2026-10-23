@@ -1,3 +1,4 @@
+import { monitoringEvent, verifyPagerDuty } from './monitoring-source';
 import { notificationEvent, queueNotification } from './notification-history';
 import { serviceEvent, serviceSnapshot } from './history';
 import { deliverNoticeMail } from './employee-notice-mail';
@@ -31,7 +32,7 @@ export async function ingestMonitoring(env: Env, p: Principal, monitorId: string
         throw new ApiError(403, 'integration', 'Integration principal required');
     const monitor = await getService(env.DB, p, monitorId, 'monitor');
     const conn = await connection(env, p, monitor.data.connectionId, 'monitoring-webhook');
-    if (!await verifySignature(conn.secret.signingSecret, timestamp, raw, signature))
+    if (!(monitor.data.source === 'pagerduty' ? await verifyPagerDuty(conn.secret.signingSecret, raw, signature) : await verifySignature(conn.secret.signingSecret, timestamp, raw, signature)))
         throw new ApiError(401, 'signature', 'Invalid or expired monitoring signature');
     let b: any;
     try {
@@ -41,6 +42,7 @@ export async function ingestMonitoring(env: Env, p: Principal, monitorId: string
         throw new ApiError(400, 'json', 'Invalid monitoring event');
     }
     ;
+    b = monitoringEvent(monitor, b);
     const externalId = requiredString(b.id, 'id');
     const digest = await hashToken(raw);
     const existing = await env.DB.prepare('SELECT digest FROM svc_receipts WHERE workspace_id=? AND source_id=? AND external_id=?').bind(p.workspaceId, monitorId, externalId).first<{
@@ -54,8 +56,10 @@ export async function ingestMonitoring(env: Env, p: Principal, monitorId: string
     if (!['healthy', 'degraded', 'failed', 'unknown'].includes(b.status) || typeof b.observedAt !== 'string' || !Number.isFinite(Date.parse(b.observedAt)) || Date.parse(b.observedAt) > Date.now() + 1000 || b.serviceId !== monitor.data.serviceId)
         throw new ApiError(400, 'telemetry', 'Status, target and observation time required');
     const stale = Date.now() - Date.parse(b.observedAt) > monitor.data.freshnessMs;
+    const alertKey = typeof b.alertKey === 'string' && b.alertKey ? b.alertKey : monitor.id;
+    const outOfOrder = (monitor.data.observations || []).some((o: any) => (o.alertKey || monitor.id) === alertKey && Date.parse(o.observedAt) >= Date.parse(b.observedAt));
     const newer = !monitor.data.observedAt || Date.parse(b.observedAt) > Date.parse(monitor.data.observedAt);
-    const data = { ...monitor.data, ...(newer ? { status: stale ? 'unknown' : b.status, observedAt: b.observedAt, lastEventId: externalId } : {}), lastReceivedAt: now(), observations: [...(monitor.data.observations || []).slice(-99), { id: externalId, status: b.status, observedAt: b.observedAt, receivedAt: now(), stale, outOfOrder: !newer }] };
+    const data = { ...monitor.data, ...(newer ? { status: stale ? 'unknown' : b.status, observedAt: b.observedAt, lastEventId: externalId } : {}), lastReceivedAt: now(), observations: [...(monitor.data.observations || []).slice(-99), { id: externalId, status: b.status, observedAt: b.observedAt, receivedAt: now(), stale, outOfOrder, alertKey, source: b.source, priority: b.priority === 'P1' ? 'P1' : 'unspecified' }] };
     const t = now();
     const result = await env.DB.batch([
  env.DB.prepare("UPDATE svc_records SET data_json=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=? AND EXISTS(SELECT 1 FROM connections WHERE workspace_id=? AND id=? AND revision=? AND status IN ('active','inbound-unobserved')) AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) role WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND role.value IN ('owner','integration'))").bind(JSON.stringify(data),t,p.workspaceId,monitorId,monitor.revision,p.workspaceId,conn.id,conn.revision,p.workspaceId,p.userId),
@@ -66,7 +70,7 @@ export async function ingestMonitoring(env: Env, p: Principal, monitorId: string
  ]);
     if (!result[0].meta.changes)
         throw new ApiError(409, 'revision_conflict', 'Monitoring observation raced; reconcile stored event');
-    return { duplicate: false, status: data.status, outOfOrder: !newer, stale };
+    return { duplicate: false, status: data.status, outOfOrder, stale };
 }
 export async function routeOnCall(env: Env, p: Principal, incidentId: string) {
     const r = await getService(env.DB, p, incidentId, 'incident');
@@ -75,7 +79,7 @@ export async function routeOnCall(env: Env, p: Principal, incidentId: string) {
     const recipients = [...new Set(selected.flatMap(x => x.data.recipientIds as string[]))];
     if (!recipients.length)
         return mutate(env.DB, p, r, r.revision, { ...r.data, routing: 'needs_configuration', routingException: 'No active on-call ownership' }, 'oncall-missing');
-    const t = now();
+    const t = r.createdAt;
     await env.DB.batch(recipients.flatMap(user=>queueNotification(env.DB,p,r,user,'oncall-page',{message:r.data.title,serviceId:r.data.serviceId},t)));
     return mutate(env.DB, p, r, r.revision, { ...r.data, routing: 'pending_delivery', onCallRecipients: recipients }, 'oncall-routed');
 }
@@ -153,6 +157,52 @@ export async function deliverNotifications(env: Env, p: Principal) {
     }
     return results;
 }
+/** Receipts are replayed in admitted order, including failure followed by recovery between ticks. */
+async function applyMonitorObservations(env: Env, p: Principal, monitor: ReturnType<typeof dto>) {
+    const rows = await env.DB.prepare("SELECT * FROM svc_records WHERE workspace_id=? AND kind='incident' AND json_extract(data_json,'$.monitorId')=? ORDER BY created_at,rowid")
+        .bind(p.workspaceId, monitor.id).all<RecordRow>();
+    const incidents = rows.results.map(dto);
+    const observations = monitor.data.observations || [];
+    const cursor = observations.findIndex((o: any) => o.id === monitor.data.projectionCursor);
+    for (const observation of observations.slice(cursor + 1)) {
+        if (observation.stale || observation.outOfOrder || observation.status === 'unknown') continue;
+        if (incidents.some(r => (r.data.monitorEvents || []).some((e: any) => e.id === observation.id))) continue;
+        const alertKey = observation.alertKey || monitor.id;
+        let incident = incidents.filter(i => (i.data.monitorAlertKey || monitor.id) === alertKey).at(-1);
+        if (observation.status === 'healthy') {
+            if (!incident || incident.data.monitorRecovery || Date.parse(observation.observedAt) < Date.parse(incident.data.monitorStartedAt)) continue;
+        } else if (!incident || incident.data.monitorRecovery) {
+            // The unique episode key fences competing scheduler workers.
+            try {
+                incident = await newIncident(env.DB, p, { title: `${monitor.data.name}: ${observation.status}`, serviceId: monitor.data.serviceId,
+                    impact: 'Observed service interruption; affected coverage requires confirmation', cohorts: monitor.data.cohorts || ['unassessed'],
+                    visibility: 'operators', priority: observation.priority, monitorEventKey: monitor.id + ':' + observation.id,
+                    monitorId: monitor.id, monitorAlertKey: alertKey, monitorStartedAt: observation.observedAt, monitorEpisodeKey: monitor.id + ':' + observation.id, context: monitor.data.context });
+            } catch (error) {
+                const existing = await env.DB.prepare("SELECT * FROM svc_records WHERE workspace_id=? AND kind='incident' AND json_extract(data_json,'$.monitorEpisodeKey')=?")
+                    .bind(p.workspaceId, monitor.id + ':' + observation.id).first<RecordRow>();
+                if (!existing) throw error;
+                incident = dto(existing);
+            }
+            incidents.push(incident);
+        }
+        if (!incident) continue;
+        const evidence = { id: observation.id, status: observation.status, observedAt: observation.observedAt, source: observation.source || 'generic' };
+        incident = await mutate(env.DB, p, incident, incident.revision, { ...incident.data,
+            monitorEvents: [...(incident.data.monitorEvents || []), evidence],
+            ...(observation.status !== 'healthy' ? { monitorEventKey: monitor.id + ':' + observation.id } : {}),
+            ...(observation.status === 'healthy' ? { monitorRecovery: evidence } : {}) }, 'monitor-incident-observed');
+        incidents[incidents.findIndex(i => i.id === incident!.id)] = incident;
+        if ((!incident.data.routing || incident.data.routing === 'needs_configuration') && observation.status !== 'healthy') {
+            incident = await routeOnCall(env, p, incident.id);
+            incidents[incidents.findIndex(i => i.id === incident!.id)] = incident;
+        }
+    }
+    if (observations.length && monitor.data.projectionCursor !== observations.at(-1).id) {
+        const current = await getService(env.DB, p, monitor.id, 'monitor');
+        await mutate(env.DB, p, current, current.revision, { ...current.data, projectionCursor: observations.at(-1).id }, 'monitor-projected');
+    }
+}
 export async function processDueServices(env: Env, p: Principal) {
     const failures: {
         id: string;
@@ -173,17 +223,8 @@ export async function processDueServices(env: Env, p: Principal) {
             if (r.kind === 'monitor') {
                 const stale = !r.data.observedAt || Date.now() - Date.parse(r.data.observedAt) > r.data.freshnessMs;
                 if (stale && r.data.status !== 'unknown')
-                    await mutate(env.DB, p, r, r.revision, { ...r.data, status: 'unknown', exception: 'Monitoring observations expired' }, 'monitor-stale');
-                if (!stale && ['failed', 'degraded'].includes(r.data.status)) {
-                    const eventKey = r.id + ':' + r.data.lastEventId;
-                    const existing = await env.DB.prepare("SELECT id FROM svc_records WHERE workspace_id=? AND kind='incident' AND json_extract(data_json,'$.monitorEventKey')=?").bind(p.workspaceId, eventKey).first<{
-                        id: string;
-                    }>();
-                    if (!existing) {
-                        const incident = await newIncident(env.DB, p, { title: `${r.data.name}: ${r.data.status}`, serviceId: r.data.serviceId, impact: 'Observed service interruption; affected coverage requires confirmation', cohorts: r.data.cohorts || ['unassessed'], visibility: 'operators', monitorEventKey: eventKey, context:r.data.context });
-                        await routeOnCall(env, p, incident.id);
-                    }
-                }
+                    await mutate(env.DB, p, r, r.revision, { ...r.data, status: 'unknown', projectionCursor: r.data.observations?.at(-1)?.id || null, exception: 'Monitoring observations expired' }, 'monitor-stale');
+                if (!stale) await applyMonitorObservations(env, p, r);
             }
             if (r.kind === 'incident') {
                 try { r = await observeIncidentRecovery(env, p, r); }

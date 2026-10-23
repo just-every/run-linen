@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -103,6 +103,32 @@ export async function serviceNoticeJourney({browser,page,api,base,out,errors}) {
   } finally {await salesContext.close();await otherContext.close();await executorContext.close();}
   console.log('PASS CHANNEL-008 native 1440/390/320: publisher controls, pre-recovery refusal, Sales-only banner, matching ticket offer and filing, independently admitted all-clear, individual ticket stays open, named withdrawal and planned change notice.');
 }
+/** Native incident evidence remains separate from independently verified recovery. */
+export async function monitoringJourney({page,api,base,out}) {
+  const owner=(await api('/session')).principal.userId,signingSecret='synthetic-linen-801';
+  const connection=await api('/connections',{provider:'monitoring-webhook',name:'Signed SSO monitoring',config:{},secret:JSON.stringify({signingSecret})});
+  const checked=await api(`/connections/${connection.id}/test`,{revision:1});assert.equal(checked.status,'inbound-unobserved');
+  const service=await api('/services',{name:'Monitored SSO',description:'New employee sign-ins',businessImpact:'Employees cannot sign in',source:'Owner register',observedAt:new Date().toISOString()});
+  const monitor=await api('/monitors',{name:'SSO HTTPS check',source:'uptime',externalMonitorId:'synthetic-linen-802',priority:'P1',serviceId:service.id,connectionId:connection.id,freshnessMs:60000,cohorts:[owner]});
+  await api('/oncall-rotations',{serviceId:service.id,startsAt:new Date(Date.now()-60000).toISOString(),endsAt:new Date(Date.now()+3600000).toISOString(),recipientIds:[owner]});
+  const send=async(kind,id,observedAt)=>{const body=JSON.stringify({schemaVersion:2,id,monitorId:'synthetic-linen-802',kind,observedAt}),timestamp=String(Math.floor(Date.now()/1000));const response=await fetch(base+`/api/v1/webhooks/monitoring/${monitor.id}`,{method:'POST',headers:{'Content-Type':'application/json','x-lamp-timestamp':timestamp,'x-lamp-signature':createHmac('sha256',signingSecret).update(timestamp+'.'+body).digest('base64url')},body});assert.equal(response.status,200,await response.clone().text());return response.json();};
+  const failedAt=Date.now()-1000;await send('trigger','synthetic-linen-803',failedAt);assert.equal((await send('trigger','synthetic-linen-803',failedAt)).duplicate,true);
+  await api('/services/process-due',{});
+  const incident=(await api('/incidents')).items.find(i=>i.data.monitorId===monitor.id);assert.ok(incident);
+  await page.goto(base+'/app#/incidents/'+incident.id);
+  await page.getByRole('heading',{name:'SSO HTTPS check: failed',exact:true}).waitFor();
+  await page.getByText('Sources, observations and complete record',{exact:true}).click();
+  await page.getByText('synthetic-linen-803',{exact:false}).last().waitFor();
+  await captureJourney(page,{path:out+'/INC-002-signed-failure.png',fullPage:true});
+  await send('recovery','synthetic-linen-804',failedAt+1);await api('/services/process-due',{});
+  const recovered=await api('/incidents/'+incident.id);assert.equal(recovered.data.monitorRecovery.id,'synthetic-linen-804');assert.equal(recovered.data.status,'investigating');
+  await page.reload();await page.getByRole('heading',{name:'What is known about recovery',exact:true}).waitFor();
+  await page.getByText('Sources, observations and complete record',{exact:true}).click();
+  await page.getByText('synthetic-linen-804',{exact:false}).last().waitFor();
+  await page.getByText('No fresh independently admitted recovery evidence',{exact:true}).waitFor();
+  await captureJourney(page,{path:out+'/INC-002-source-recovery-unverified.png',fullPage:true});
+  console.log('PASS INC-002 native 1440 and 390: signed Uptime failure, duplicate, incident source evidence, source recovery and independent-recovery boundary');
+}
 if (process.argv[1]===fileURLToPath(import.meta.url)) {
   const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
   if(!base||!out)throw Error('Run through tests/ui/connected-run.mjs');
@@ -115,6 +141,7 @@ if (process.argv[1]===fileURLToPath(import.meta.url)) {
     await page.getByLabel('Work email').fill('notice-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic-Connected-browser-2026');
     await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();
     await finishFirstRun(page,base);
+    await monitoringJourney({page,api:apiFor(page),base,out});
     await serviceNoticeJourney({browser,page,api:apiFor(page),base,out,errors});assert.deepEqual(errors,[]);
   } catch(error) {
     for(const [i,c]of browser.contexts().entries())for(const [j,p]of c.pages().entries())await p.screenshot({path:`${out}/CHANNEL-008-failure-${i}-${j}.png`,fullPage:true}).catch(()=>{});

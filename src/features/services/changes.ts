@@ -73,7 +73,7 @@ export async function newChange(db: D1Database, p: Principal, b: Record<string, 
         b={...template.data,window:b.window,changeType:'standard',visibility:b.visibility,participants:b.participants};
         cabBypass={templateId:template.id,version:template.data.version,approvalId:template.data.approval.id,implementationRevision:1,snapshot:catalogSnapshot(template.data)};
     }
-    const data={...await validateChange(db,p,b),cabBypass,implementationRevision:1,state:cabBypass?'preapproved':'draft',authorizations:[],invocations:[]};
+    const data={...await validateChange(db,p,b),observationWindowMs:86400000,cabBypass,implementationRevision:1,state:cabBypass?'preapproved':'draft',authorizations:[],invocations:[]};
     await assertCalendarSchedule(db,p,data);
     try { return await create(db,p,'change',data,{visibility:b.visibility,participants:b.participants}); }
     catch(error) { throw calendarError(error); }
@@ -92,7 +92,7 @@ export async function editChange(db: D1Database, p: Principal, r: ServiceRecord,
     const validated=await validateChange(db,p,amended);
     if (Object.entries(validated).every(([field,value])=>sameServiceValues(r.data[field],value)))
         return mutate(db,p,r,b.revision,r.data,'implementation-amended');
-    const data={...r.data,...validated,cabBypass:null,emergencySchedulingActor:emergencySchedulingActor(p,{...b,emergency:b.emergency===true||b.changeType==='emergency'}),implementationRevision:r.data.implementationRevision+1,state:'draft',authorizations:[],priorAuthorizations:[...(r.data.priorAuthorizations||[]),...(r.data.authorizations||[])]};
+    const data={...r.data,...validated,cabBypass:null,emergencySchedulingActor:emergencySchedulingActor(p,{...b,emergency:b.emergency===true||b.changeType==='emergency'}),implementationRevision:r.data.implementationRevision+1,implementationStartedAt:null,state:'draft',authorizations:[],priorAuthorizations:[...(r.data.priorAuthorizations||[]),...(r.data.authorizations||[])]};
     await assertCalendarSchedule(db,p,data);
     try { return await mutate(db,p,r,b.revision,data,'implementation-amended'); }
     catch(error) { throw calendarError(error); }
@@ -161,7 +161,7 @@ export async function dispatchChange(env: Env, p: Principal, r: ServiceRecord, b
             throw new ApiError(409, 'resource_busy', 'Affected service is fenced by another change');
     }
     let next:ServiceRecord;
-    try {next=await mutate(env.DB,p,r,b.revision,{...r.data,state:'dispatching',invocations:[...r.data.invocations,{...invocation,state:'dispatching'}]},'execution-intent');}
+    try {next=await mutate(env.DB,p,r,b.revision,{...r.data,implementationStartedAt:r.data.implementationStartedAt || now(),state:'dispatching',invocations:[...r.data.invocations,{...invocation,state:'dispatching'}]},'execution-intent');}
     catch(error) {
         if(/calendar_frozen|release_go/.test(String(error)))await env.DB.prepare(`DELETE FROM svc_change_locks WHERE workspace_id=? AND change_id=?
           AND EXISTS(SELECT 1 FROM svc_records r WHERE r.workspace_id=svc_change_locks.workspace_id AND r.id=svc_change_locks.change_id

@@ -119,6 +119,54 @@ try{
  await ok('POST',`/service-notifications/${submitted.id}/reconcile`,{});
  assert.deepEqual((await ok('GET',`/service-history/${submitted.record_id}`)).items,beforeReplay,'DESK-017 terminal reconciliation replay adds no event');
 
+ // Signed monitoring sources share the public intake lifecycle, not provider success claims.
+ const monitoringService=await ok('POST','/services',{name:'SSO monitoring',description:'New sign-ins',businessImpact:'Employees cannot sign in',source:'owner',observedAt:new Date().toISOString()});
+ await ok('POST','/oncall-rotations',{serviceId:monitoringService.id,startsAt:new Date(Date.now()-60000).toISOString(),endsAt:new Date(Date.now()+3600000).toISOString(),recipientIds:['owner']});
+ for(const [index,source] of ['uptime','pagerduty','datadog','spool','generic'].entries()) {
+  const externalMonitorId='synthetic-linen-'+(600+index);
+  const input={name:source+' SSO check',serviceId:monitoringService.id,connectionId:'monitor-connection',source,externalMonitorId,priority:'P1',freshnessMs:60000,cohorts:['employee']};
+  if(source!=='generic')assert.equal((await request('POST','/monitors',input,{'x-user':'operator','x-roles':'["operator"]'})).status,403,'Only an owner binds a named source');
+  const bound=await ok('POST','/monitors',input);
+  const instant=Date.now()-5000;
+  function wire(sequence,status,at=instant+sequence) {
+   const id='synthetic-linen-'+index+'-'+sequence;
+   if(source==='uptime')return {schemaVersion:2,id,kind:status==='healthy'?'recovery':'trigger',monitorId:externalMonitorId,observedAt:at};
+   if(source==='pagerduty')return {event:{id,event_type:status==='healthy'?'incident.resolved':'incident.triggered',occurred_at:new Date(at).toISOString(),data:{id:'synthetic-linen-incident-'+index,service:{id:externalMonitorId}}}};
+   return {id,source,monitorId:externalMonitorId,serviceId:monitoringService.id,status,observedAt:new Date(at).toISOString(),priority:'P1'};
+  }
+  function headers(body) {
+   const raw=JSON.stringify(body);
+   if(source==='uptime')return {'x-lamp-timestamp':timestamp,'x-lamp-signature':createHmac('sha256','fixture-signing-secret').update(timestamp+'.'+raw).digest('base64url')};
+   if(source==='pagerduty')return {'x-pagerduty-signature':'v1='+createHmac('sha256','fixture-signing-secret').update(raw).digest('hex')};
+   return {'x-linen-timestamp':timestamp,'x-linen-signature':sig(body)};
+  }
+  const url='/webhooks/monitoring/'+bound.id,first=wire(1,'failed');
+  assert.equal((await request('POST',url,first,{})).status,401,'Unsigned provider payload refused');
+  const bad=structuredClone(first);
+  if(source==='pagerduty')bad.event.data.service.id='synthetic-linen-other';else if(source==='generic')bad.serviceId='synthetic-linen-other';else bad.monitorId='synthetic-linen-other';
+  assert.ok((await request('POST',url,bad,headers(bad))).status>=400,'Signed event cannot choose a different service or monitor');
+  await ok('POST',url,first,headers(first));
+  assert.equal((await ok('POST',url,first,headers(first))).duplicate,true);
+  const again=wire(2,'failed'),recovery=wire(3,'healthy');
+  await ok('POST',url,again,headers(again));await ok('POST',url,recovery,headers(recovery));
+  await ok('POST','/services/process-due',{});
+  const episodes=()=>ok('GET','/incidents').then(v=>v.items.filter(i=>i.data.monitorId===bound.id));
+  let observed=await episodes();assert.equal(observed.length,1,'Repeated alerts and recovery before a scheduler tick establish one outage');
+  assert.equal(observed[0].data.monitorEvents.length,3);assert.equal(observed[0].data.monitorRecovery.status,'healthy');assert.equal(observed[0].data.status,'investigating','Source recovery alone is not independently verified usable-work recovery');
+  const episodeId=observed[0].id;
+  await ok('POST','/services/process-due',{});assert.equal((await episodes())[0].revision,observed[0].revision,'Projection and paging replay add no event');
+  assert.equal((await db.prepare("SELECT state FROM work_records WHERE id='work-1'").first()).state,'open','Monitoring recovery never closes employee tickets');
+  const older=wire(4,'failed',instant-1000);await ok('POST',url,older,headers(older));await ok('POST','/services/process-due',{});assert.equal((await episodes()).length,1,'Out-of-order failure cannot reopen an outage');
+  const stale=wire(5,'failed',Date.now()-120000);await ok('POST',url,stale,headers(stale));await ok('POST','/services/process-due',{});assert.equal((await episodes()).length,1,'Expired source observation cannot open an incident');
+  const next=wire(6,'failed');await ok('POST',url,next,headers(next));
+  await Promise.all([ok('POST','/services/process-due',{}),ok('POST','/services/process-due',{})]);await ok('POST','/services/process-due',{});
+  observed=await episodes();assert.equal(observed.length,2,'Concurrent scheduler workers establish one new outage after recovery');
+  const pages=(await ok('GET','/service-notifications')).items.filter(n=>observed.some(i=>i.id===n.record_id)&&n.kind==='oncall-page');
+  assert.equal(pages.length,2,'Each outage pages its rotation once');assert.ok(observed.some(i=>i.id===episodeId));
+ }
+ const publicCause=await ok('POST','/incidents',{title:'Public interruption',serviceId:service.id,impact:'Public service interruption',cohorts:['employee'],visibility:'workspace'});
+ const employeeCause=await ok('GET','/incidents/'+publicCause.id,undefined,{'x-user':'employee','x-roles':'["employee"]'});
+ assert.ok(!Object.hasOwn(employeeCause.data,'suspectedChanges')&&!Object.hasOwn(employeeCause.data,'changeCause')&&!Object.hasOwn(employeeCause.data,'monitorEvents'),'Employee projection excludes internal monitoring and causal evidence');
  await employeeNoticeChecks(request, db);
  await dependencyChecks(request);
  await calendarChecks(request,db);

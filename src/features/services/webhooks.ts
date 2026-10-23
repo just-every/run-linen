@@ -1,3 +1,4 @@
+import { monitoringSignature } from './monitoring-source';
 import type { Hono } from 'hono';
 import type { AppEnv, Principal } from '../../platform/types';
 import { ApiError } from '../../platform/http';
@@ -16,6 +17,7 @@ export function registerServiceWebhooks(app: Hono<AppEnv>) {
         if (!member)
             throw new ApiError(403, 'integration_revoked', 'Monitor integration principal is inactive');
         const principal: Principal = { userId, workspaceId: row.workspace_id, roles: JSON.parse(member.roles_json) };
-        return c.json(await ingestMonitoring(c.env, principal, row.id, await c.req.text(), c.req.header('X-Linen-Timestamp') || '', c.req.header('X-Linen-Signature') || ''));
+        const signed = monitoringSignature(data.source || 'generic', c.req.header());
+        return c.json(await ingestMonitoring(c.env, principal, row.id, await c.req.text(), signed.timestamp, signed.signature));
     });
 }

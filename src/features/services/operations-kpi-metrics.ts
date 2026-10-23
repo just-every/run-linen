@@ -67,10 +67,12 @@ export function incidentMetrics(incidents: ServiceRecord[], services: ServiceRec
   return { metrics, incidentGroups };
 }
 export function changeProblemMetrics(changes: ServiceRecord[], incidents: ServiceRecord[], problems: ServiceRecord[], observedAt: string) {
-  const successes = changes.filter(successfulChange), emergency = changes.filter(r => r.data.changeType === 'emergency' || r.data.emergency === true);
-  const failed = (r: ServiceRecord) => ['failed', 'compensated', 'compensation-incomplete'].includes(r.data.state)
+  const caused = (r: ServiceRecord) => incidents.some(i => i.data.changeCause?.state === 'confirmed' && i.data.changeCause?.evidenceIds?.length && i.data.changeCause.changeId === r.id);
+  const succeeded = (r: ServiceRecord) => successfulChange(r) && !caused(r);
+  const successes = changes.filter(succeeded), emergency = changes.filter(r => r.data.changeType === 'emergency' || r.data.emergency === true);
+  const failed = (r: ServiceRecord) => caused(r) || ['failed', 'compensated', 'compensation-incomplete'].includes(r.data.state)
     || (r.data.invocations || []).some((i: any) => i.implementationRevision === r.data.implementationRevision && ['canary', 'rollout'].includes(i.phase) && i.state === 'failed');
-  const changeRows = changes.map(r => reference(r, { status: r.data.state, successful: successfulChange(r), emergency: emergency.includes(r), outcome: successfulChange(r) ? 'verified-success' : failed(r) ? 'failed' : 'unknown' }));
+  const changeRows = changes.map(r => reference(r, { status: r.data.state, successful: succeeded(r), emergency: emergency.includes(r), outcome: succeeded(r) ? 'verified-success' : failed(r) ? 'failed' : 'unknown' }));
   // An absent causal investigation cannot be treated as proof that no change caused an incident.
   const attributed = incidents.filter(r => r.data.changeCause?.state === 'confirmed' && r.data.changeCause?.evidenceIds?.length && changes.some(c => c.id === r.data.changeCause.changeId));
   const assessed = incidents.filter(r => (r.data.changeCause?.state === 'not-change-related' && r.data.changeCause?.evidenceIds?.length) || attributed.includes(r));
@@ -78,8 +80,8 @@ export function changeProblemMetrics(changes: ServiceRecord[], incidents: Servic
   const errors = backlog.filter(r => r.data.causeState === 'known-error');
   const problemRows = (items: ServiceRecord[]) => items.map(r => reference(r, { ageMs: Math.max(0, Date.parse(observedAt) - Date.parse(r.createdAt)), causeState: r.data.causeState, preventionState: r.data.preventionState || 'unverified' }));
   return [metric('change.success', 'Change success rate', changes.length ? successes.length / changes.length * 100 : null, '%',
-    'Current independently verified rollout successes / all readable changes created in [start,end), ×100. Failed, pending and unknown changes remain in the denominator. Canary success or manual closure does not count.', changeRows,
-    { numerator: successes.length, denominator: changes.length, unknown: changes.filter(r => !successfulChange(r) && !failed(r)).length }),
+    'Current independently verified rollouts without a confirmed change-caused incident / all readable changes created in [start,end), ×100. Failed, pending and unknown changes remain in the denominator. Canary success or manual closure does not count.', changeRows,
+    { numerator: successes.length, denominator: changes.length, unknown: changes.filter(r => !succeeded(r) && !failed(r)).length }),
   metric('change.emergency', 'Emergency change share', changes.length ? emergency.length / changes.length * 100 : null, '%',
     'Changes explicitly designated emergency / all readable changes created in [start,end), ×100.', changeRows, { numerator: emergency.length, denominator: changes.length, unknown: changes.filter(r => typeof r.data.emergency !== 'boolean' && !r.data.changeType).length }),
   metric('change.caused-incidents', 'Change-caused incident rate', assessed.length ? attributed.length / assessed.length * 100 : null, '%',

@@ -1,3 +1,5 @@
+import { reviewChangeCause } from './change-causes';
+import { monitoringBinding, monitoringSignature } from './monitoring-source';
 import { serviceHistory } from './history';
 import { registerEmployeeNotices } from './employee-notice-routes';
 import { operationsKpis } from './operations-kpis';
@@ -56,7 +58,8 @@ async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
     for (const link of r.data.links || [])
         if (workPort && await workPort.canLink(env, p, link.employeeIncidentId))
             links.push(link);
-    return { ...r, data: { ...r.data, links, diagnostics: [], recoveries: (r.data.recoveries || []).map((e: any) => ({ cohort: e.cohort, observedAt: e.observedAt, expiresAt: e.expiresAt })), updates: (r.data.updates || []).filter((u: any) => u.audience.includes(p.userId)).map((u: any) => ({ message: u.message, at: u.at })) } };
+    const { suspectedChanges: _suspects, changeCause: _cause, monitorEvents: _events, monitorRecovery: _recovery, ...publicData } = r.data;
+    return { ...r, data: { ...publicData, links, diagnostics: [], recoveries: (r.data.recoveries || []).map((e: any) => ({ cohort: e.cohort, observedAt: e.observedAt, expiresAt: e.expiresAt })), updates: (r.data.updates || []).filter((u: any) => u.audience.includes(p.userId)).map((u: any) => ({ message: u.message, at: u.at })) } };
 }
 export function registerServiceRoutes(app: Hono<AppEnv>) {
     registerEmployeeNotices(app);
@@ -92,6 +95,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     app.get('/service-graph', async (c) => c.json(await serviceGraph(c.env.DB, c.get('principal'))));
     app.post('/service-graph/edges', async (c) => c.json(await addEdge(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     app.post('/incidents', async (c) => c.json(await newIncident(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
+    app.post('/incidents/:id/change-cause', async c => { const p = requireRole(c, 'owner', 'operator'); return c.json(await reviewChangeCause(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'incident'), await jsonBody(c))); });
     app.post('/incidents/:id/acknowledge', async c => { const p = requireRole(c, 'owner', 'operator'); return c.json(await acknowledgeIncident(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'incident'), await jsonBody(c))); });
     app.get('/incidents/candidates/:serviceId', async (c) => c.json({ items: await incidentCandidates(c.env.DB, c.get('principal'), c.req.param('serviceId')) }));
     app.post('/incidents/:id/link', async (c) => {
@@ -130,8 +134,8 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     app.post('/software-assets', async (c) => c.json(await newAsset(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     for (const [path, fn] of [['assign', assignAsset], ['return', returnAsset], ['charges', recordCharge], ['transition', assetTransition], ['usage', assetUsage], ['reclamation', reclamationDecision]] as const)
         app.post(`/software-assets/:id/${path}`, async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await fn(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'asset'), await jsonBody(c))); });
-    app.post('/monitors', async (c) => { const p = requireRole(c, 'owner', 'operator'), b = await jsonBody(c), service = await getService(c.env.DB, p, requiredString(b.serviceId, 'serviceId'), 'service'); return c.json(await create(c.env.DB, p, 'monitor', { name: requiredString(b.name, 'name'), serviceId: service.id, connectionId: requiredString(b.connectionId, 'connectionId'), freshnessMs: number(b.freshnessMs, 'freshnessMs', 1000), cohorts: strings(b.cohorts, 'cohorts'), context: recurrenceContext(b.context), status: 'unknown', observations: [] }, { visibility: 'operators', participants: b.participants as string[] }), 201); });
-    app.post('/monitors/:id/events', async (c) => c.json(await ingestMonitoring(c.env, c.get('principal'), c.req.param('id'), await c.req.text(), c.req.header('X-Linen-Timestamp') || '', c.req.header('X-Linen-Signature') || '')));
+    app.post('/monitors', async (c) => { const p = requireRole(c, 'owner', 'operator'), b = await jsonBody(c), service = await getService(c.env.DB, p, requiredString(b.serviceId, 'serviceId'), 'service'); if (b.source && b.source !== 'generic' && !p.roles.includes('owner')) throw new ApiError(403, 'owner_required', 'Only the owner binds a named monitoring source'); return c.json(await create(c.env.DB, p, 'monitor', { ...monitoringBinding(b), name: requiredString(b.name, 'name'), serviceId: service.id, connectionId: requiredString(b.connectionId, 'connectionId'), freshnessMs: number(b.freshnessMs, 'freshnessMs', 1000), cohorts: strings(b.cohorts, 'cohorts'), context: recurrenceContext(b.context), status: 'unknown', observations: [] }, { visibility: 'operators', participants: b.participants as string[] }), 201); });
+    app.post('/monitors/:id/events', async (c) => { const monitor = await getService(c.env.DB, c.get('principal'), c.req.param('id'), 'monitor'); const signed = monitoringSignature(monitor.data.source || 'generic', c.req.header()); return c.json(await ingestMonitoring(c.env, c.get('principal'), monitor.id, await c.req.text(), signed.timestamp, signed.signature)); });
     app.post('/oncall-rotations', async (c) => {
         const p = requireRole(c, 'owner', 'operator'), b = await jsonBody(c);
         await getService(c.env.DB, p, requiredString(b.serviceId, 'serviceId'), 'service');

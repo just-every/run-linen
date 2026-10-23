@@ -5,7 +5,7 @@ import { changeRiskChecks } from './risk-cases.mjs';
 import { releaseChecks } from './release-cases.mjs';
 import { applyMigrations } from '../sql-migrations.mjs';
 import assert from 'node:assert/strict'
-import {createHash} from 'node:crypto'
+import {createHash,createHmac} from 'node:crypto'
 import {createRequire} from 'node:module'
 import {readFile,mkdtemp,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
@@ -21,7 +21,7 @@ await applyMigrations(db)
 const now=new Date().toISOString();await db.prepare("INSERT INTO workspaces VALUES('w','Service integration fixture',?)").bind(now).run()
 for(const user of ['owner','operator']){await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind(user,user+'@fixture.test',user,'fixture',now).run();await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('w',user,JSON.stringify([user])).run()}
 await db.prepare("INSERT INTO workspace_settings VALUES('w','{}',1)").run()
-async function call(method,path,body,user='owner',workspace='w'){const response=await mf.dispatchFetch('http://localhost'+path,{method,headers:{'content-type':'application/json','x-user':user,'x-workspace':workspace},body:body===undefined?undefined:JSON.stringify(body)});return {status:response.status,body:await response.json()}}
+async function call(method,path,body,user='owner',workspace='w',headers={}){const response=await mf.dispatchFetch('http://localhost'+path,{method,headers:{'content-type':'application/json','x-user':user,'x-workspace':workspace,...headers},body:body===undefined?undefined:JSON.stringify(body)});return {status:response.status,body:await response.json()}}
 async function ok(method,path,body,user){const r=await call(method,path,body,user);assert.ok(r.status<300,JSON.stringify(r));return r.body}
 for(const [id,provider,config] of [['deploy','controlled-deployment',{url:'https://deployment.fixture.test/change',allowedHosts:['deployment.fixture.test'],targets:['orders']}],['probe','workflow-probe',{url:'https://probe.fixture.test/check',allowedHosts:['probe.fixture.test']}]]){const secret=(await ok('POST','/fixture/secret',{token:'fixture'})).secret;await db.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind(id,'w',provider,id,JSON.stringify(config),secret,'active',now,now).run()}
 await departmentSourceChecks({ok,call,db});
@@ -49,6 +49,25 @@ await ok('POST','/change-windows/'+freeze.id,{...frozenBody,revision:freeze.revi
 await ok('POST','/fixture/state',{partial:true});change=await ok('POST',`/changes/${change.id}/verify`,{revision:change.revision,invocationId:change.data.invocations[0].id},'operator');assert.notEqual(change.data.state,'canary-verified','partial cohort cannot certify canary');await ok('POST','/services/process-due',{});assert.equal((await ok('GET','/incidents/'+automaticIncident.id)).data.status,'investigating','Partial unadmitted execution cannot restore a cohort')
 await ok('POST','/fixture/state',{});change=await ok('POST',`/changes/${change.id}/verify`,{revision:change.revision,invocationId:change.data.invocations[0].id},'operator');assert.equal(change.data.state,'canary-verified')
 change=await ok('POST',`/changes/${change.id}/dispatch`,{revision:change.revision,phase:'rollout',idempotencyKey:'rollout-1'},'operator');change=await ok('POST',`/changes/${change.id}/verify`,{revision:change.revision,invocationId:change.data.invocations.at(-1).id},'operator');assert.equal(change.data.state,'verified')
+// A signed failure during implementation links automatically; causal attribution still needs a human.
+const monitorSecret=(await ok('POST','/fixture/secret',{signingSecret:'synthetic-linen-710'})).secret;
+await db.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind('causal-monitor','w','monitoring-webhook','SSO evidence','{}',monitorSecret,'inbound-unobserved',now,now).run();
+const causalMonitor=await ok('POST','/monitors',{name:'SSO Uptime check',serviceId:service.id,source:'uptime',externalMonitorId:'synthetic-linen-711',priority:'P1',connectionId:'causal-monitor',freshnessMs:60000,cohorts:['a','b']});
+await ok('POST','/oncall-rotations',{serviceId:service.id,startsAt:new Date(Date.now()-60000).toISOString(),endsAt:new Date(Date.now()+3600000).toISOString(),recipientIds:['owner']});
+const failure={schemaVersion:2,id:'synthetic-linen-712',monitorId:'synthetic-linen-711',kind:'trigger',observedAt:Date.now()};
+const signedAt=String(Math.floor(Date.now()/1000));
+const alert=await call('POST',`/monitors/${causalMonitor.id}/events`,failure,'owner','w',{'x-lamp-timestamp':signedAt,'x-lamp-signature':createHmac('sha256','synthetic-linen-710').update(signedAt+'.'+JSON.stringify(failure)).digest('base64url')});assert.equal(alert.status,200,JSON.stringify(alert));
+await ok('POST','/services/process-due',{});
+let caused=(await ok('GET','/incidents')).items.find(i=>i.data.monitorId===causalMonitor.id);assert.ok(caused);
+assert.equal(caused.data.suspectedChanges.find(c=>c.changeId===change.id).state,'suspected','No manual cause entry is needed');
+assert.ok(!caused.data.suspectedChanges.some(c=>c.changeId===ordinary.id),'A draft with no implementation start is not a suspected cause');
+assert.equal((await call('POST',`/incidents/${caused.id}/change-cause`,{revision:caused.revision,changeId:change.id,decision:'confirmed',reason:'Temporal proximity alone'})).status,422,'A causal review needs evidence references');
+caused=await ok('POST',`/incidents/${caused.id}/change-cause`,{revision:caused.revision,changeId:change.id,decision:'confirmed',reason:'The observed Uptime failure followed the admitted deployment',evidenceIds:[failure.id,change.data.invocations[0].executionId]});
+assert.equal(caused.data.changeCause.state,'confirmed');
+const causalReport=await ok('GET','/operations-kpis?start='+encodeURIComponent(new Date(Date.now()-3600000).toISOString())+'&end='+encodeURIComponent(new Date(Date.now()+60000).toISOString())+'&timezone=UTC');
+assert.equal(causalReport.metrics.find(m=>m.key==='change.success').records.find(r=>r.id===change.id).outcome,'failed','A confirmed change-caused incident defeats deployment-only success');
+assert.equal(causalReport.metrics.find(m=>m.key==='change.caused-incidents').numerator,1);
+caused=await ok('POST',`/incidents/${caused.id}/change-cause`,{revision:caused.revision,changeId:change.id,decision:'rejected',reason:'Independent review identifies a separate upstream failure',evidenceIds:[failure.id]});assert.equal(caused.data.changeCause,null);assert.equal(caused.data.suspectedChanges.find(c=>c.changeId===change.id).state,'rejected');
 await ok('POST','/services/process-due',{});
 const recoveredIncident=await ok('GET','/incidents/'+automaticIncident.id);assert.equal(recoveredIncident.data.status,'restored');assert.deepEqual(recoveredIncident.data.unresolvedCohorts,[]);assert.ok(recoveredIncident.data.recoveries.every(e=>e.source==='probe'));
 assert.equal((await ok('GET','/incidents/'+unrelatedIncident.id)).data.status,'investigating','Unrelated service cannot borrow valid Orders evidence');
