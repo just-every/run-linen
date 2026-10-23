@@ -343,7 +343,7 @@ function WorkCommands({ work, onChanged, operator, transition }: { work: WorkRec
           {command === "close" && (
             <label>
               Resolution code{work.kind === "incident" ? " (required for an incident)" : ""}
-              <select aria-label="Resolution code" name="resolutionCode" defaultValue="">
+              <select name="resolutionCode" defaultValue="">
                 <option value="">Choose…</option>
                 {(desk.data?.resolutionCodes.codes ?? []).map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
