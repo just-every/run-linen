@@ -1,3 +1,4 @@
+import { notifyWorkEvent } from './notification-port';
 import {obligationHistory} from './work-history';
 import { workDepartmentStaffSql } from './department-spaces';
 import { requireWorkDepartmentStaff } from './department-operations';
@@ -231,6 +232,7 @@ export async function finishFulfilment(ctx: WorkContext, e: Evaluation, workId: 
     const taskId=id(),at=now();
     await ctx.env.DB.batch([ctx.env.DB.prepare('INSERT OR IGNORE INTO work_obligations(id,workspace_id,work_id,kind,target,beneficiary_id,due_at,owner_id) VALUES(?,?,?,?,?,?,?,?)').bind(taskId,w,workId,'access.revoke',catalog.target,input.beneficiaryId,input.expiresAt,catalog.owner_id),obligationHistory(ctx,{id:taskId,work_id:workId,beneficiary_id:input.beneficiaryId,owner_id:catalog.owner_id},'work.task_created',null,{state:'pending',kind:'access.revoke',dueAt:input.expiresAt,owner:catalog.owner_id},at)]);
   }
+  if(blocked && /approval|manager/i.test(blocked))await notifyWorkEvent(ctx,{workId,event:'approval.requested',sourceId:'approval:'+workId+':'+input.catalogId+':'+(e.previous?.revision??1)});
   return {
     workId,
     state: blocked ? "blocked" : "pending",

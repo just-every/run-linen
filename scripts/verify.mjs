@@ -64,6 +64,10 @@ const checks = [
   ['live handoff browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/handoff-journey.mjs']],
   ['walk-up browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/walkup-journey.mjs']],
   ['mailbox browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/mailbox-journey.mjs']],
+  ['software provider browser', process.execPath, ['tests/ui/software-license-run.mjs']],
+  ['software license browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/software-license-browser.mjs']],
+  ['report builder and exports browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/reporting-browser.mjs']],
+  ['notification rules browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/notification-browser.mjs']],
   ['pricing and budgets browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/billing-browser.mjs']],
   ['operations KPI browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/kpi-journey.mjs']],
   ['MCP native conversation', process.execPath, ['tests/ui/run.mjs', 'tests/ui/mcp-journey.mjs']],
@@ -80,11 +84,12 @@ if (shardValue !== undefined) {
   }
   shard = { number, count }
 }
-// CI seconds: baseline Verify 39658205193; department browser 39721605432.
+// Timing weights: baseline Verify 39658205193; department browser 39721605432;
+// native archive transfer measured 581s in remote job 20261023T080729878173Z-heavy-slot-96f77d28.
 // Unlisted checks count as 10.
 // Heaviest first onto the lightest shard keeps every shard inside its job limit.
 const measuredSeconds = {
-  'Native archive transfer': 447, 'browser journeys': 249, 'native connected provider journeys': 246,
+  'Native archive transfer': 590, 'browser journeys': 249, 'native connected provider journeys': 246,
   'department workspaces browser': 146, 'identity erasure': 143, 'operations KPI browser': 100, 'Base native auth': 78,
   'desk scenarios and templates browser': 74, 'connection and authority setup': 69, 'release browser': 56,
   'pending person browser': 55, 'MCP native conversation': 51, 'desk groups and views browser': 49,
@@ -93,6 +98,7 @@ const measuredSeconds = {
   'work and lifecycle': 32, 'service notice browser': 32, 'mailbox browser': 35, 'walk-up browser': 35, 'live handoff browser': 35, 'branding browser': 35, 'emitted Worker': 30,
   'ordinary intake and independent evidence': 29, 'work integration regressions': 28,
   'Freshservice and Snipe-IT native migration': 26,
+  'report builder and exports browser': 45, 'notification rules browser': 45, 'pricing and budgets browser': 35, 'software license browser': 45, 'software provider browser': 100,
 }
 function shardChecks(count) {
   const loads = Array(count).fill(0), shards = Array.from({ length: count }, () => [])

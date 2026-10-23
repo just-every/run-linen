@@ -1,3 +1,4 @@
+import { registerReportRoutes } from './report-routes';
 import { registerDepartmentRoutes } from './department-routes';
 import { registerCollaborationRoutes } from './collaboration-routes';
 import { registerMailRoutes } from './mail-routes';
@@ -50,6 +51,7 @@ export { processDueRetention } from "./retention";
 export function registerWorkRoutes(app: Hono<AppEnv>) {
   setWorkIntakePort(workIntakePort);
   // Before /work/:id so the literal retention paths win.
+  registerReportRoutes(app);
   registerRetentionRoutes(app);
   registerDepartmentRoutes(app);
   registerCollaborationRoutes(app);
@@ -96,3 +98,6 @@ export { approveFulfilment, assertWorkFulfilmentAuthority, recordWorkManagerGran
 export { listFulfilmentDecisions } from "./fulfilment-decisions";
 export type { FulfilmentDecision } from "./fulfilment-decisions";
 export { getFulfilmentReadiness } from "./fulfilment-readiness";
+
+export { processDueReporting } from './report-schedules';
+export { processDueBiExports } from './bi-exports';

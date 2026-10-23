@@ -1,3 +1,5 @@
+import {seedSoftwareLicensing,assertRestoredSoftwareLicensing} from './software-license-transfer-cases.mjs';
+import {seedReportingNotifications,assertRestoredReportingNotifications} from './reporting-transfer-cases.mjs';
 import {captureArchiveAliasStatements,captureKnownArchiveAliasStatements} from '../../src/features/history/archive-identities.mjs'
 import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {mailEdge} from './mail-edge.mjs'
@@ -145,6 +147,8 @@ try{
   env.DB.prepare('INSERT INTO history_redactions VALUES(?,?,?,?,?,?,?)').bind('workspace','audit:'+erasedInitiatorEvent,erasedInitiatorEvent,'audit',stamp,JSON.stringify(redactedRuleHistory),'{}'),
  ]);
 
+ await seedReportingNotifications(env,stamp);
+ await seedSoftwareLicensing(env,stamp);
  await close()
  await run(['exec','rer','export','--output',archive])
  const mcpRows=[];
@@ -180,6 +184,8 @@ try{
  assert.equal(await(await env.ATTACHMENTS.get('workspace/private-file')).text(),'Private retained attachment')
  assert.equal(JSON.parse((await env.DB.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id="workspace"').first()).settings_json).executionHeld,true)
  assert.equal((await env.DB.prepare('SELECT password_hash FROM users WHERE id="owner"').first()).password_hash,'!restored-email-link')
+ await assertRestoredReportingNotifications(env);
+ await assertRestoredSoftwareLicensing(env);
  assert.equal((await env.DB.prepare('SELECT secret_ciphertext FROM connections').first()).secret_ciphertext,null)
  assert.ok((await env.DB.prepare('SELECT revoked_at FROM intelligence_engineering_grants').first()).revoked_at)
  const restoredMcp=await env.DB.prepare('SELECT name,secret_hash,state,invalidated_at,queue_groups_json,grant_version FROM mcp_credentials WHERE id="mcp-grant"').first();

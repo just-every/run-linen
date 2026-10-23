@@ -1,9 +1,10 @@
+import { processDueReporting, processDueBiExports } from './features/work';
 import { expireMcpCredentials } from './features/mcp/credentials'
 import type { Env, Principal, Role } from './platform/types'
 import { ApiError, id, now } from './platform/http'
 import { processDueWork, processDueRetention, executionPort, pollMailboxes, pollPhoneLines, processDueHandoffs } from './features/work'
 import { processDueExecution, processNotifications } from './features/execution'
-import { processDueServices } from './features/services'
+import { processDueServices, processSoftwareRenewals } from './features/services'
 import { processDueIntelligence } from './features/intelligence'
 import { processDueAdoption } from './features/adoption'
 
@@ -54,6 +55,7 @@ export async function processScheduledWork(env: Env) {
       runLane(env, 'work', principal.workspaceId, () => processDueWork(ctx, executionPort)),
       runLane(env, 'execution', principal.workspaceId, () => processDueExecution(ctx)),
       runLane(env, 'services', principal.workspaceId, () => processDueServices(env, principal)),
+      runLane(env, 'software-renewals', principal.workspaceId, () => processSoftwareRenewals(ctx)),
       runLane(env, 'notifications', principal.workspaceId, () => processNotifications(ctx)),
       runLane(env, 'mail', principal.workspaceId, () => pollMailboxes(ctx)),
       runLane(env, 'phone', principal.workspaceId, () => pollPhoneLines(ctx)),
@@ -64,6 +66,8 @@ export async function processScheduledWork(env: Env) {
     ...work,
     runLane(env, 'mcp-credentials', null, () => expireMcpCredentials(env)),
     runLane(env, 'intelligence', null, () => processDueIntelligence(env)),
+    runLane(env, 'reporting', null, () => processDueReporting(env)),
+    runLane(env, 'bi-exports', null, () => processDueBiExports(env)),
     runLane(env, 'retention', null, () => processDueRetention(env)),
     runLane(env, 'adoption', null, () => processDueAdoption(env)),
   ])
