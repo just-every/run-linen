@@ -160,7 +160,7 @@ try{
   const stale=wire(5,'failed',Date.now()-120000);await ok('POST',url,stale,headers(stale));await ok('POST','/services/process-due',{});assert.equal((await episodes()).length,1,'Expired source observation cannot open an incident');
   const next=wire(6,'failed');await ok('POST',url,next,headers(next));
   await Promise.all([ok('POST','/services/process-due',{}),ok('POST','/services/process-due',{})]);await ok('POST','/services/process-due',{});
-  observed=await episodes();assert.equal(observed.length,2,'Concurrent scheduler workers establish one new outage after recovery');
+  observed=await episodes();assert.equal(observed.length,2,'Concurrent scheduler workers establish one new outage after recovery');assert.ok(observed.every(i=>new Set(i.data.monitorEvents.map(e=>e.id)).size===i.data.monitorEvents.length),'Concurrent projection never duplicates an event reference');
   const pages=(await ok('GET','/service-notifications')).items.filter(n=>observed.some(i=>i.id===n.record_id)&&n.kind==='oncall-page');
   assert.equal(pages.length,2,'Each outage pages its rotation once');assert.ok(observed.some(i=>i.id===episodeId));
  }

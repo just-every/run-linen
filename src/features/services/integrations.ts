@@ -186,7 +186,7 @@ async function applyMonitorObservations(env: Env, p: Principal, monitor: ReturnT
             }
             incidents.push(incident);
         }
-        if (!incident) continue;
+        if (!incident || (incident.data.monitorEvents || []).some((e: any) => e.id === observation.id)) continue;
         const evidence = { id: observation.id, status: observation.status, observedAt: observation.observedAt, source: observation.source || 'generic' };
         incident = await mutate(env.DB, p, incident, incident.revision, { ...incident.data,
             monitorEvents: [...(incident.data.monitorEvents || []), evidence],
@@ -198,6 +198,7 @@ async function applyMonitorObservations(env: Env, p: Principal, monitor: ReturnT
             incidents[incidents.findIndex(i => i.id === incident!.id)] = incident;
         }
     }
+    for (const incident of incidents.filter(i => !i.data.routing || i.data.routing === 'needs_configuration')) await routeOnCall(env, p, incident.id);
     if (observations.length && monitor.data.projectionCursor !== observations.at(-1).id) {
         const current = await getService(env.DB, p, monitor.id, 'monitor');
         await mutate(env.DB, p, current, current.revision, { ...current.data, projectionCursor: observations.at(-1).id }, 'monitor-projected');
