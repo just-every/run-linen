@@ -33,6 +33,9 @@ const service=await ok('POST','/services',{name:'Orders',description:'Usable ord
 const automaticIncident=await ok('POST','/incidents',{title:'Automatic cohort recovery',serviceId:service.id,impact:'Sales cannot work',cohorts:['a','b']});
 const unrelatedService=await ok('POST','/services',{name:'Unrelated service',description:'Another workflow',businessImpact:'Separate cohort',source:'fixture',observedAt:now});
 const unrelatedIncident=await ok('POST','/incidents',{title:'Must not borrow Orders evidence',serviceId:unrelatedService.id,impact:'Different workflow',cohorts:['a','b']});
+const monitorSecret=(await ok('POST','/fixture/secret',{signingSecret:'synthetic-linen-710'})).secret;
+await db.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind('causal-monitor','w','monitoring-webhook','SSO evidence','{}',monitorSecret,'inbound-unobserved',now,now).run();
+const causalMonitor=await ok('POST','/monitors',{name:'SSO Uptime check',serviceId:service.id,source:'uptime',externalMonitorId:'synthetic-linen-711',priority:'P1',connectionId:'causal-monitor',freshnessMs:60000,cohorts:['a','b']});
 const implementation={connectionId:'deploy',connectionRevision:1,verifierConnectionRevision:1,target:'orders',beneficiaryId:'sales',verifierConnectionId:'probe',payload:{release:'r2'}}
 let change=await ok('POST','/changes',{title:'Fix Orders',emergency:true,emergencyReason:'Current owner authorizes an urgent Orders repair',risk:'Bounded',impact:'Sales',services:[service.id],window:{start:new Date(Date.now()-60000).toISOString(),end:new Date(Date.now()+3600000).toISOString()},cohorts:['a','b'],canaryCohorts:['a','b'],implementation,compensation:{...implementation,payload:{release:'r1'}}})
 const references=[]
@@ -50,9 +53,6 @@ await ok('POST','/fixture/state',{partial:true});change=await ok('POST',`/change
 await ok('POST','/fixture/state',{});change=await ok('POST',`/changes/${change.id}/verify`,{revision:change.revision,invocationId:change.data.invocations[0].id},'operator');assert.equal(change.data.state,'canary-verified')
 change=await ok('POST',`/changes/${change.id}/dispatch`,{revision:change.revision,phase:'rollout',idempotencyKey:'rollout-1'},'operator');change=await ok('POST',`/changes/${change.id}/verify`,{revision:change.revision,invocationId:change.data.invocations.at(-1).id},'operator');assert.equal(change.data.state,'verified')
 // A signed failure during implementation links automatically; causal attribution still needs a human.
-const monitorSecret=(await ok('POST','/fixture/secret',{signingSecret:'synthetic-linen-710'})).secret;
-await db.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind('causal-monitor','w','monitoring-webhook','SSO evidence','{}',monitorSecret,'inbound-unobserved',now,now).run();
-const causalMonitor=await ok('POST','/monitors',{name:'SSO Uptime check',serviceId:service.id,source:'uptime',externalMonitorId:'synthetic-linen-711',priority:'P1',connectionId:'causal-monitor',freshnessMs:60000,cohorts:['a','b']});
 await ok('POST','/oncall-rotations',{serviceId:service.id,startsAt:new Date(Date.now()-60000).toISOString(),endsAt:new Date(Date.now()+3600000).toISOString(),recipientIds:['owner']});
 const failure={schemaVersion:2,id:'synthetic-linen-712',monitorId:'synthetic-linen-711',kind:'trigger',observedAt:Date.now()};
 const signedAt=String(Math.floor(Date.now()/1000));
@@ -81,6 +81,47 @@ await ok('POST','/services/process-due',{});decision=await ok('GET',`/decisions/
 await ok('POST',`/grants/${references[0].id}/revoke`,{version:references[0].version});
 let blocked=await ok('POST','/changes',{title:'Missing authority release',risk:'Bounded',impact:'Sales',services:[service.id],window:{start:new Date(Date.now()-60000).toISOString(),end:new Date(Date.now()+3600000).toISOString()},cohorts:['a','b'],canaryCohorts:['a','b'],implementation,compensation:{...implementation,payload:{release:'r1'}}});blocked=await ok('POST',`/changes/${blocked.id}/authorize`,{revision:blocked.revision,reason:'Decision is not a grant',grantReferences:references});
 let blockedDecision=await ok('POST','/decisions',{...packet,contextId:blocked.id,options:[{...packet.options[0],effect:{...packet.options[0].effect,changeId:blocked.id}},packet.options[1]]});blockedDecision=await ok('POST',`/decisions/${blockedDecision.id}/choose`,{revision:blockedDecision.revision,optionId:'release',reason:'Still requires grant'});assert.equal(blockedDecision.data.fulfilment.state,'needs-authority-or-evidence');assert.equal(blockedDecision.data.fulfilment.error,'grant_revoked');assert.equal((await ok('POST','/fixture/state',{})).writes,4);
+// A separate watched release preserves the original causal journey's default 24-hour window.
+const healthService=await ok('POST','/services',{name:'synthetic-linen-5150',description:'Synthetic health-gate service',businessImpact:'Synthetic health gate',source:'fixture',observedAt:new Date().toISOString()});
+const healthMonitor=await ok('POST','/monitors',{name:'synthetic-linen-5151',serviceId:healthService.id,source:'uptime',externalMonitorId:'synthetic-linen-5152',connectionId:'causal-monitor',freshnessMs:60000,cohorts:['a','b']});
+const healthImplementation={...implementation,payload:{release:'synthetic-linen-5153'}};
+let watchedTemplate=await ok('POST','/change-templates',{title:'synthetic-linen-5154',risk:'Bounded',impact:'Synthetic service',services:[healthService.id],cohorts:['a','b'],canaryCohorts:['a','b'],monitorIds:[healthMonitor.id],observationWindowMs:20,implementation:healthImplementation,compensation:{...implementation,payload:{release:'r1'}},implementationPlan:'Synthetic exact release',testPlan:'Signed health window',backoutPlan:'Synthetic prior release',active:true});
+watchedTemplate=await ok('POST',`/change-templates/${watchedTemplate.id}/approve`,{revision:watchedTemplate.revision,version:watchedTemplate.data.version,reason:'Exact watching checks and declared window'});
+let watched=await ok('POST','/changes',{changeType:'standard',templateId:watchedTemplate.id,templateVersion:watchedTemplate.data.version,window:{start:new Date(Date.now()-60000).toISOString(),end:new Date(Date.now()+3600000).toISOString()}},'operator');
+assert.deepEqual(watched.data.cabBypass.snapshot.monitorIds,[healthMonitor.id]);assert.equal(watched.data.cabBypass.snapshot.observationWindowMs,20,'Standard preapproval freezes the actual monitoring obligation');
+assert.deepEqual(watched.data.monitorIds,[healthMonitor.id]);
+assert.equal((await call('PATCH',`/changes/${watched.id}`,{revision:watched.revision,monitorIds:[causalMonitor.id]})).body.error.code,'change_monitors','Unrelated checks cannot certify the affected service');
+const healthGrants=[];
+for(const phase of ['canary','rollout','compensate']){const payload={...(phase==='compensate'?{release:'r1'}:healthImplementation.payload),phase,cohorts:['a','b'],implementationRevision:1};const g=await ok('POST','/grants',{principalId:'operator',beneficiaryId:'sales',action:'deployment.'+phase,actionVersion:1,target:'orders',connectionId:'deploy',validFrom:new Date(Date.now()-60000).toISOString(),validUntil:new Date(Date.now()+3600000).toISOString(),maxUses:10,conditions:{payloadHash:createHash('sha256').update(JSON.stringify(payload)).digest('hex')}});healthGrants.push({id:g.id,version:g.version,phase});}
+watched=await ok('POST',`/changes/${watched.id}/grants`,{revision:watched.revision,grantReferences:healthGrants},'operator');
+for(const phase of ['canary','rollout']){
+ watched=await ok('POST',`/changes/${watched.id}/dispatch`,{revision:watched.revision,phase,idempotencyKey:'synthetic-linen-5155-'+phase},'operator');
+ if(phase==='canary'){watched=await ok('POST',`/changes/${watched.id}/verify`,{revision:watched.revision,invocationId:watched.data.invocations.at(-1).id},'operator');assert.equal(watched.data.state,'canary-verified',JSON.stringify(watched));}
+}
+const verifyWatched=()=>call('POST',`/changes/${watched.id}/verify`,{revision:watched.revision,invocationId:watched.data.invocations.at(-1).id},'operator');
+assert.equal((await verifyWatched()).body.error.code,'change_health_unready','Unknown check refuses rollout success');
+assert.equal((await call('POST',`/changes/${watched.id}/review`,{revision:watched.revision,summary:'synthetic-linen-5160'})).body.error.code,'change_review_unready','Execution without a verified rollout cannot close PIR');
+async function signedHealth(id,kind='recovery',observedAt=Date.now()){
+ const event={schemaVersion:2,id,monitorId:'synthetic-linen-5152',kind,observedAt},timestamp=String(Math.floor(Date.now()/1000));
+ const result=await call('POST',`/monitors/${healthMonitor.id}/events`,event,'owner','w',{'x-lamp-timestamp':timestamp,'x-lamp-signature':createHmac('sha256','synthetic-linen-710').update(timestamp+'.'+JSON.stringify(event)).digest('base64url')});assert.equal(result.status,200,JSON.stringify(result));
+}
+await signedHealth('synthetic-linen-5156');assert.equal((await verifyWatched()).body.error.code,'change_health_unready','One healthy sample does not prove the whole window');
+await new Promise(resolve=>setTimeout(resolve,25));await signedHealth('synthetic-linen-5157');
+await db.prepare(`CREATE TRIGGER synthetic_linen_health_race AFTER UPDATE ON svc_records WHEN NEW.id='${watched.id}' BEGIN UPDATE svc_records SET revision=revision+1 WHERE id='${healthMonitor.id}'; END`).run();
+assert.equal((await verifyWatched()).body.error.code,'change_health_unready','A monitor changed during the outcome write rolls back success');
+assert.equal((await ok('GET','/changes/'+watched.id)).data.state,'effect_verified');await db.prepare('DROP TRIGGER synthetic_linen_health_race').run();
+watched=(await verifyWatched()).body;assert.equal(watched.data.state,'verified');assert.deepEqual(watched.data.healthEvidence.checks[0].eventIds,['synthetic-linen-5157','synthetic-linen-5156']);
+await signedHealth('synthetic-linen-5158','trigger');assert.equal((await verifyWatched()).body.error.code,'change_health_unready','Red check refuses success');
+await signedHealth('synthetic-linen-5161');await new Promise(resolve=>setTimeout(resolve,25));await signedHealth('synthetic-linen-5162');
+watched=(await verifyWatched()).body;assert.equal(watched.data.state,'verified');
+const reviewed=await ok('POST',`/changes/${watched.id}/review`,{revision:watched.revision,summary:'synthetic-linen-5163'});
+assert.equal(reviewed.data.reviewState,'closed');assert.equal(reviewed.data.postImplementationReview.outcome,'successful');assert.deepEqual(reviewed.data.postImplementationReview.incidentIds,[]);assert.equal(reviewed.data.postImplementationReview.backoutOutcome,'not-attempted');assert.ok(reviewed.data.healthEvidence.checks[0].eventIds.includes('synthetic-linen-5162'));
+assert.equal((await ok('POST',`/changes/${watched.id}/review`,{revision:reviewed.revision,summary:'synthetic-linen-5163'})).revision,reviewed.revision,'Review replay preserves the same closed record');
+assert.equal((await call('PATCH',`/changes/${watched.id}`,{revision:reviewed.revision,title:'synthetic-linen-5164'})).body.error.code,'change_review_closed','Closed review cannot be silently amended');
+assert.equal((await call('POST',`/changes/${watched.id}/verify`,{revision:reviewed.revision,invocationId:watched.data.invocations.at(-1).id},'operator')).body.error.code,'change_review_closed','Closed review evidence cannot be silently replaced');assert.ok(reviewed.data.postImplementationReview.healthEvidence.checks.length);
+assert.equal((await call('POST',`/changes/${watched.id}/grants`,{revision:reviewed.revision,grantReferences:healthGrants},'operator')).body.error.code,'change_review_closed','Closed review cannot acquire another effect binding');
+assert.equal((await ok('POST','/fixture/state',{})).writes,6,'Exactly two additional admitted deployment writes for the watched release');
+console.log('PASS CHANGE-005 watching-check configuration, signed continuous-health gate, unknown, red and short-window refusals transactional monitor race and evidenced PIR closure');
 const {personalTemplateId}=await templateIntegration({ok,call,db,implementation});
 await changeRiskChecks({ok,call,db,implementation,references});
 await db.prepare("UPDATE workspace_settings SET settings_json='{\"executionHeld\":true}' WHERE workspace_id='w'").run();
@@ -92,5 +133,5 @@ const restoredRelease=await ok('GET','/releases/restored-release');assert.equal(
 const erased=await ok('POST','/fixture/erase',{userId:'operator',reason:'Authorised fixture erasure'});assert.ok(erased.erasedRecords>0);
 const afterErasure=await ok('GET',`/decisions/${decision.id}`);assert.equal(afterErasure.data.executorId,erased.subject);assert.equal(afterErasure.participants.includes('operator'),false);
 await templateErasureCheck(ok,personalTemplateId);
-console.log('SERVICES integration: actual execution port + D1 grant binding, persisted canary/deployment intent, controlled HTTP adapter fixture, independent full-cohort verification, partial-cohort rejection, rollout, service-fence release, decision-to-granted-release scheduling and revoked-grant refusal, inert native restore and domain erasure passed (four fixture writes; no external provider writes).')
+console.log('SERVICES integration: actual execution port + D1 grant binding, persisted canary and deployment intent, controlled HTTP adapter fixture, independent full-cohort verification, partial-cohort rejection, rollout, service-fence release, decision-to-granted-release scheduling and revoked-grant refusal, inert native restore and domain erasure passed (six fixture writes; no external provider writes).')
 }finally{await mf?.dispose();await rm(dir,{recursive:true,force:true})}

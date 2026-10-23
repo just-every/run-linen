@@ -1896,6 +1896,29 @@ INC-004 inherit the source identity and recovery boundaries.
   events and the Oncall incident, and REPORT-005 counts the change as failed with
   one change-caused incident.
 
+  *Current implementation boundary (23 October).* Owner and operator change
+  routes accept explicit watching-check ids and a positive declared observation
+  window, defaulting to 24 hours. Every affected service needs a check when this
+  configuration is supplied. Rollout verification then refuses missing, red,
+  stale, truncated or interrupted evidence and unreviewed suspected causes. The
+  signed healthy observations must span the window with no gap longer than the
+  check's freshness bound. Live monitor and connection revisions and pending
+  causes are fenced again in the outcome transaction. The short-window local
+  journey proves those refusals and a successful measured window; it does not
+  prove a representative 24-hour observation or live Oncall acceptance. Legacy
+  unconfigured changes still expose execution verification only. A current owner
+  or operator closes an evidenced review through `POST /changes/:id/review`:
+  it freezes a summary, current health evidence, linked incident revisions and
+  the verified backout outcome, or explicitly records that none was attempted.
+  Unresolved effects or unreadable source incidents refuse closure. Source
+  revisions and the complete linked-incident set are fenced in the transaction.
+  Standard-template approval snapshots retain the exact watching checks and window;
+  earlier snapshots without checks retain their original comparison semantics.
+  `reviewState` records closure separately from execution `state`; closure grants
+  no provider authority. Replay preserves the review, while silent amendment and
+  further dispatch are refused. Native review and watching-check editing remain
+  unbuilt; the full acceptance above stands.
+
 - **CHANGE-006 — Development-tool context.** Changes link to GitHub pull requests
   and deployments, GitHub Actions runs, and Jira or Vector issues.
   A deployment raising a standard change automatically is CHANGE-008.
@@ -2216,6 +2239,27 @@ INC-004 inherit the source identity and recovery boundaries.
   create a ticket through the API with a scoped token; a subscribed webhook
   receives the signed event; a failing endpoint is retried and logged.
   REST tokens authorize `/api/v1/*` only and are refused by API-003.
+
+  *REST token foundation (23 October; conservative default pending ct).* Only a
+  current owner mints a token for an active automation principal whose sole role
+  is integration. The workspace-bound secret is shown once, stored only as a
+  SHA-256 hash, expires within 365 days, and can be revoked by a current owner.
+  This release exposes only `work.create`: `POST /api/v1/work` files a normal
+  ticket for the principal itself, with title, body, kind and a stable
+  deduplication key. Other bearer routes and extra fields are refused, including
+  catalog, quotes, HR, restricted records and filing for another person. A
+  bearer never falls back to a browser session. Creation does not start model
+  interpretation, notifications or provider effects. Live membership, sole
+  integration role, automation state, issuing-owner authority, expiry, scope and
+  erasure are checked again in the database transaction. Replays preserve one
+  ticket, initial message and typed history event; changed material is refused.
+  Minting, expiry, revocation and calls are audited without secrets or argument
+  bodies. Erasure clears the principal's hashes; native archives retain metadata
+  revoked and hash-free, with staged active credentials refused. Wider scopes
+  and outbound webhooks remain unbuilt; these defaults await ct approval and do
+  not narrow the clause's acceptance. API-002 and future API-001 doors inherit
+  live authority, explicit scope, archive inertness and CATALOG-001's duties.
+
 
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
@@ -3058,7 +3102,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `CHANGE-002` | Risk scoring | target | done | `src/features/services/change-risk.ts`, `tests/services/risk-cases.mjs`, `tests/ui/connected-change.mjs` | Local public-route and inspected 1440/390 proof: questionnaire, production/test configuration items, business-calendar schedule and prior failed changes score the change; an SSO change with a prior failed change scores high and takes CAB, the same change on a test item scores low and takes one independent change-manager approval; edits recompute and withdraw approval. |
 | `CHANGE-003` | Change advisory board | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` retain versioned change authorization only; no CAB membership, meetings, agenda, votes, quorum or minutes assertion passes. | CAB foundations remain seed-owned work. DONE additionally needs explicit Teams votes reaching quorum through CHANNEL-002: an authorized M365 tenant, Entra app and tenant-admin consent have not been supplied. Portal approval cannot substitute for that point. |
 | `CHANGE-004` | Change calendar and freeze windows | target | done | `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs` | Public routes and connected execution prove scoped calendar/maintenance/freeze/ICS, half-open CI/workspace bounds, schedule/edit/later-dispatch refusal, owner emergency scheduling with separate effect grants, current role and generic hidden conflicts. Native archive preserves links with windows inactive until owner review; native 1440/390 calendar, editor, emergency and inactive states are inspected. Local evidence only. |
-| `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | Automatic suspected-cause correlation from implementation start, evidenced human confirmation or rejection and confirmed-cause failure reporting are proved in `tests/services/integration.mjs` (signed failure during implementation). Gap: watching-check configuration, continuous healthy observation gate, PIR closure, full restricted-source correlation and live Oncall acceptance. Execution verification alone still does not prove this clause. |
+| `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | Automatic suspected-cause correlation, evidenced human review and confirmed-cause failure reporting: `tests/services/integration.mjs` (signed failure during implementation). Declared watching checks for each affected service, signed healthy-window evidence, unknown or red check refusal, insufficient-window refusal and atomic monitor-revision fences: the same journey (CHANGE-005 watching-check configuration, signed continuous-health gate, transactional monitor race and evidenced PIR closure). Gap: Complete restricted-source correlation, live Oncall acceptance, representative sustained-window proof and the combined failure, recovery and verified-backout PIR journey. Native editing of watching checks and PIR is unbuilt. Existing changes without configured watching checks retain execution-verification semantics only; they do not prove successful post-implementation review. |
 | `CHANGE-006` | Development-tool context | target | partial | `src/features/intelligence/engineering.ts` | No GitHub pull request, GitHub deployment, GitHub Actions run, Jira or Vector issue links on changes. |
 | `CHANGE-007` | Release management | target | done | (1) Three related changes, build/test references, shared calendar/ICS and ticket/problem/CI links: `tests/services/release-cases.mjs` releaseChecks via `tests/services/integration.mjs`; `tests/ui/release-journey.mjs` native release journey. (2) Named go/no-go, canary then rollout with live revision/role/grant fences: releaseChecks and the native release journey. (3) Cohort-only release notes: the native release journey asserts member visibility and outsider refusal. (4) Failed member holds completion until verified backout: releaseChecks and native release journey. Every native state is inspected at 1440/390. (5) Inert native archive decisions: `tests/platform/base-auth-transfer.mjs`. | None for this clause. Network deployment/probe edges are fixtures; notes inherit CHANNEL-008’s future Slack/Teams delivery before those channels ship. No live provider, hosted or owner acceptance claimed. |
 | `CHANGE-008` | Deployment-raised changes | target | missing |  | No GitHub deployment intake and no automatically raised standard change. |
@@ -3076,7 +3120,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `ROLE-001` | Roles and permissions | target | partial | Facilities-only access, independent capabilities, current revocation and catalog boundaries: `tests/work/department-role-cases.mjs` — departmentRoleChecks; approver without agent access: `tests/ui/native-regressions.mjs` — namedApproverJourney; native owner configuration and scoped member use at 1440 and 390: `tests/ui/department-role-journey.mjs` — departmentRoleJourney; free requester and approver seats with unique live custom-agent billing: `tests/ui/billing-browser.mjs`; inactive native transfer: `tests/platform/base-auth-transfer.mjs`; workspace transfer keeps definitions inactive and assignments as history only: `tests/adoption/runtime.mjs`. | Ct approval pending for explicit acting-role grants, revision reconfirmation and the custom-agent seat default. The approved public-read floor excludes attachments and staff actions. Custom roles that assign tickets or approve, delegated workspace administration and custom HR roles remain unbuilt; department administration stays owner-only. |
 | `SSO-001` | Sign-in, SSO and SCIM | target | partial | `src/platform/sso.ts`, `src/platform/base-auth`, `tests/platform/runtime.mjs`, `tests/platform/base-auth-runtime.mjs` | No SAML/OIDC with named IdPs, SCIM or MFA enforcement. |
 | `AUDIT-001` | Audit log | target | done | `src/platform/privacy.ts`, `tests/platform/privacy-runtime.mjs`, `tests/platform/config-runtime.mjs` |  |
-| `API-001` | REST API and webhooks | target | partial | `src/features/work/index.ts`, `src/features/execution/index.ts`, `tests/work/runtime.mjs` | Scoped automation REST tokens and outbound signed event webhooks are unbuilt; session-authenticated REST routes do not prove token authentication. |
+| `API-001` | REST API and webhooks | target | partial | Ticket creation and cross-audience refusals: `tests/platform/base-auth-runtime.mjs` (API-001 scoped REST creation, audience isolation, one-time hash, expiry, revocation, live authority and transactional replay fences). Actual hash-free revoked archive export and restore: `tests/platform/base-auth-transfer.mjs` (REST actual export is inert; REST actual native restore carries no credential authority). | Scoped ordinary self-ticket creation is proved; outbound signed ticket, approval, asset and change webhooks, subscription delivery, retries and delivery logs remain unbuilt. The ct-required maintained egress transport and qualified service binding are absent from this checkout; unrestricted fetch is not a substitute. Conservative REST foundation defaults above await ct approval. Wider scopes are unbuilt; catalog and quote payloads remain refused. |
 | `API-002` | No-code workflow automator | target | partial | `src/features/execution/automation.ts`, `src/features/execution/plans.ts`, `tests/ui/connected-request.mjs` | No no-code builder. |
 | `API-003` | Agent access by MCP | target | done | `src/features/mcp/credentials.ts`; `src/features/mcp/authority.ts`; `src/features/mcp/tools.ts`; `src/features/mcp/projection.ts`; `src/features/mcp/writes.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/mcp-tools-cases.mjs`; `tests/platform/base-auth-transfer.mjs`; `tests/ui/mcp-journey.mjs` | Native owner and MCP public-door assertions cover six closed tools, explicit versioned queue grants, narrowing/remint, live issuer/principal/scope checks, filtered reads/search/history, normal own-ticket creation, internal revision-checked comments without effects, content-free auditing, erasure and actual inert archive restore. Native 1440/390 views retain the internal-comment employee boundary. No external agent/provider acceptance claim. |
 | `PORT-001` | Portable native archive | target | done | `src/features/adoption/export.ts`, `src/features/adoption/import.ts`, `tests/adoption/runtime.mjs` |  |

@@ -14,6 +14,8 @@ export const portabilityPolicy={
  // credential before native restore can write objects or records.
  async validateStaged({db,tables,projectArchiveRow}){
   if(!await validateHistoryStaged(db,tables,projectArchiveRow))return false;
+  const rest=tables.rest_credentials;
+  if(rest && await db.prepare(`SELECT 1 FROM "${rest.replaceAll('"','""')}" WHERE secret_hash IS NOT NULL OR state<>'revoked' LIMIT 1`).first())return false;
   const table=tables.mcp_credentials;
   if(table && await db.prepare(`SELECT 1 FROM "${table.replaceAll('"','""')}" WHERE secret_hash IS NOT NULL OR state<>'revoked' LIMIT 1`).first())return false;
   for(const [name,invalid] of [
@@ -85,7 +87,7 @@ export const portabilityPolicy={
   if(table==='work_department_role_members')return {...row,active:0,granted_by:null}
   if(table==='work_approval_mail_config')return {...row,enabled:0}
   if(table==='work_approval_tokens')return {...row,state:'expired',token_hash:row.id,sent_to:''}
-  if(table==='mcp_credentials')return {...row,secret_hash:null,state:'revoked',invalidated_at:row.invalidated_at||row.created_at}
+  if(table==='mcp_credentials'||table==='rest_credentials')return {...row,secret_hash:null,state:'revoked',invalidated_at:row.invalidated_at||row.created_at}
   if(table==='work_time_entries')return {...row,state:'completed',last_seen_at:null,sequence:Number(row.sequence||0)+1}
   if(table==='work_people')return {...row,member_id:null,binding_id:null,manager_id:null}
   if(table==='work_fulfilment_approvals')return {...row,person_id:null,binding_id:null}

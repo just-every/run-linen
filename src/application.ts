@@ -1,3 +1,4 @@
+import { restBearer, registerRestCredentialRoutes } from './features/rest'
 import { handleApprovalMail } from './features/work/approval-mail-provider'
 import { mcpProtocol, registerMcpCredentialRoutes } from './features/mcp'
 import { deploymentHealth } from './base/deployment-health'
@@ -36,6 +37,10 @@ export function createApplication() {
   app.get('/health', c => c.json({ status: 'ok', ...deploymentHealth(c.env) }))
 
   app.all('/api/mcp',mcpProtocol)
+  app.use('/api/v1/*',async(c,next)=>{
+    if(/^Bearer linen_(?:rest|mcp)_/.test(c.req.header('Authorization')??''))return restBearer(c,next)
+    await next()
+  })
   app.use('/api/v1/*',async (c,next) => {
     if (c.req.header('Authorization')?.startsWith('Bearer linen_mcp_'))
       throw new ApiError(401,'credential_audience','MCP credentials do not authorize REST')
@@ -51,9 +56,11 @@ export function createApplication() {
   integrations.post('/notifications/webhooks/:connectionId', async c =>
     c.json(await handleNotificationWebhook(c.env, c.req.param('connectionId'), c.req.raw)))
   app.route('/api/v1', integrations)
+  app.use('/api/v1/*',restBearer)
 
   const authenticated = platformApp()
   registerMcpCredentialRoutes(authenticated)
+  registerRestCredentialRoutes(authenticated)
   registerWorkRoutes(authenticated)
   registerExecutionRoutes(authenticated)
   registerServiceRoutes(authenticated)

@@ -1,3 +1,4 @@
+import { watchingChecks, recordObservedVerification } from './change-health';
 import { sameServiceValues } from './history';
 import { scoreChange } from './change-risk';
 import { catalogSnapshot, approvedTemplate, assertCatalogApproval, grantReferences } from './change-templates';
@@ -57,12 +58,13 @@ export async function validateChange(db: D1Database, p: Principal, b: Record<str
     const dependencies = Array.isArray(b.dependencies) ? b.dependencies : [];
     for (const d of dependencies)
         await getService(db, p, d, 'change');
+    const monitoring=await watchingChecks(db,p,b,services);
     const changeType=b.changeType ?? (b.emergency ? 'emergency' : 'normal');
     if (!['standard','normal','emergency'].includes(changeType)) throw new ApiError(400,'change_type','Choose standard, normal or emergency');
     const emergency=changeType==='emergency';
     // CHANGE-002: the scored band selects the path; low takes one independent change-manager approval.
     const riskScore=await scoreChange(db,p,{services,window,calendarId:b.calendarId,riskAnswers:b.riskAnswers});
-    return { changeType, riskScore, riskAnswers:Object.fromEntries(Object.entries(riskScore.answers).filter(([,v])=>v!==null)), calendarId: typeof b.calendarId==='string'&&b.calendarId?b.calendarId:null, approvalPath:changeType==='standard'?'catalog':emergency?'ecab':riskScore.band==='low'?'change-manager':'cab', implementationPlan:b.implementationPlan||null,testPlan:b.testPlan||null,backoutPlan:b.backoutPlan||null, title: requiredString(b.title, 'title'), risk: requiredString(b.risk, 'risk'), impact: requiredString(b.impact, 'impact'), services, window, cohorts, canaryCohorts: canary, dependencies, implementation: b.implementation, compensation: b.compensation, emergency, emergencyReason: emergency ? requiredString(b.emergencyReason, 'emergencyReason') : null, emergencySchedulingActor: emergencySchedulingActor(p,{...b,emergency}) };
+    return { ...monitoring, changeType, riskScore, riskAnswers:Object.fromEntries(Object.entries(riskScore.answers).filter(([,v])=>v!==null)), calendarId: typeof b.calendarId==='string'&&b.calendarId?b.calendarId:null, approvalPath:changeType==='standard'?'catalog':emergency?'ecab':riskScore.band==='low'?'change-manager':'cab', implementationPlan:b.implementationPlan||null,testPlan:b.testPlan||null,backoutPlan:b.backoutPlan||null, title: requiredString(b.title, 'title'), risk: requiredString(b.risk, 'risk'), impact: requiredString(b.impact, 'impact'), services, window, cohorts, canaryCohorts: canary, dependencies, implementation: b.implementation, compensation: b.compensation, emergency, emergencyReason: emergency ? requiredString(b.emergencyReason, 'emergencyReason') : null, emergencySchedulingActor: emergencySchedulingActor(p,{...b,emergency}) };
 }
 export async function newChange(db: D1Database, p: Principal, b: Record<string, any>) {
     p=await currentPrincipal(db,p);
@@ -73,7 +75,7 @@ export async function newChange(db: D1Database, p: Principal, b: Record<string, 
         b={...template.data,window:b.window,changeType:'standard',visibility:b.visibility,participants:b.participants};
         cabBypass={templateId:template.id,version:template.data.version,approvalId:template.data.approval.id,implementationRevision:1,snapshot:catalogSnapshot(template.data)};
     }
-    const data={...await validateChange(db,p,b),observationWindowMs:86400000,cabBypass,implementationRevision:1,state:cabBypass?'preapproved':'draft',authorizations:[],invocations:[]};
+    const data={...await validateChange(db,p,b),cabBypass,implementationRevision:1,state:cabBypass?'preapproved':'draft',authorizations:[],invocations:[]};
     await assertCalendarSchedule(db,p,data);
     try { return await create(db,p,'change',data,{visibility:b.visibility,participants:b.participants}); }
     catch(error) { throw calendarError(error); }
@@ -86,6 +88,7 @@ function calendarError(error:unknown) {
 }
 export async function editChange(db: D1Database, p: Principal, r: ServiceRecord, b: Record<string, any>) {
     p=await currentPrincipal(db,p);
+    if(r.data.reviewState==='closed')throw new ApiError(409,'change_review_closed','The post-implementation review is closed');
     if ((r.data.invocations || []).some((i: any) => !['verified', 'failed', 'cancelled'].includes(i.state)))
         throw new ApiError(409, 'in_flight', 'Reconcile active effects before changing implementation');
     const amended={...r.data,...b,changeType:b.emergency===true?'emergency':b.changeType==='emergency'?'emergency':r.data.changeType==='standard'?'normal':b.emergency===false?'normal':b.changeType||r.data.changeType};
@@ -110,6 +113,7 @@ export async function authorizeChange(db: D1Database, p: Principal, r: ServiceRe
 }
 export async function changeGate(db: D1Database, p: Principal, r: ServiceRecord, phase: string, at = Date.now()) {
     const d = r.data;
+    if(d.reviewState==='closed')throw new ApiError(409,'change_review_closed','The post-implementation review is closed');
     if(d.changeType==='standard')await assertCatalogApproval(db,p,r);
     if(phase!=='compensate')await assertCalendarSchedule(db,p,d);
     await assertReleaseGo(db,p,r,phase);
@@ -179,6 +183,7 @@ export async function dispatchChange(env: Env, p: Principal, r: ServiceRecord, b
     return next;
 }
 export async function verifyChange(env: Env, p: Principal, r: ServiceRecord, b: Record<string, any>) {
+    if(r.data.reviewState==='closed')throw new ApiError(409,'change_review_closed','The post-implementation review is closed');
     if (!execution)
         throw new ApiError(503, 'configuration', 'Execution adapter not configured');
     const invocation = r.data.invocations.find((i: any) => i.id === b.invocationId);
@@ -188,7 +193,10 @@ export async function verifyChange(env: Env, p: Principal, r: ServiceRecord, b: 
     const complete = result.independent && result.evidenceIds.length > 0 && result.failedCohorts.length === 0 && result.unknownCohorts.length === 0 && invocation.cohorts.every((c: string) => result.verifiedCohorts.includes(c));
     const state = complete ? 'verified' : result.failedCohorts.length ? 'failed' : 'unresolved';
     const invocations = r.data.invocations.map((i: any) => i.id === invocation.id ? { ...i, state, evidenceIds: result.evidenceIds, verifiedCohorts: result.verifiedCohorts, failedCohorts: result.failedCohorts, unknownCohorts: result.unknownCohorts } : i);
-    const updated = await mutate(env.DB, p, r, b.revision, { ...r.data, invocations, state: complete ? (invocation.phase === 'rollout' ? 'verified' : invocation.phase === 'compensate' ? 'compensated' : 'canary-verified') : invocation.phase === 'compensate' ? 'compensation-incomplete' : state }, 'execution-verification');
+    const data={ ...r.data, invocations, state: complete ? (invocation.phase === 'rollout' ? 'verified' : invocation.phase === 'compensate' ? 'compensated' : 'canary-verified') : invocation.phase === 'compensate' ? 'compensation-incomplete' : state };
+    const updated = complete && invocation.phase==='rollout' && r.data.monitorIds?.length
+        ? await recordObservedVerification(env.DB,p,r,b.revision,data)
+        : await mutate(env.DB,p,r,b.revision,data,'execution-verification');
     if (complete && ['rollout', 'compensate'].includes(invocation.phase))
         await env.DB.prepare('DELETE FROM svc_change_locks WHERE workspace_id=? AND change_id=?').bind(p.workspaceId, r.id).run();
     return updated;

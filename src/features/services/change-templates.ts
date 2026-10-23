@@ -1,3 +1,4 @@
+import { watchingChecks } from './change-health';
 import type { Hono } from 'hono';
 import type { AppEnv, Principal } from '../../platform/types';
 import { ApiError, id, jsonBody, now, requiredString } from '../../platform/http';
@@ -8,7 +9,7 @@ const planFields = ['implementationPlan', 'testPlan', 'backoutPlan'] as const;
 /** Only approved content participates; operational fields and scheduling are separate. */
 export function catalogSnapshot(data: Record<string, any>) {
     return Object.fromEntries(['title','risk','impact','services','cohorts','canaryCohorts','dependencies',
-        'implementation','compensation',...planFields].map(name=>[name,data[name]]));
+        'implementation','compensation',...planFields,...(data.monitorIds?.length?['monitorIds','observationWindowMs']:[])].map(name=>[name,data[name]]));
 }
 function retainedApprovals(data: Record<string,any>) {
     return [...(data.priorApprovals||[]),...(data.approval?[data.approval]:[])];
@@ -24,7 +25,8 @@ export async function templateContent(db: D1Database, p: Principal, b: Record<st
     }
     const dependencies = b.dependencies === undefined || (Array.isArray(b.dependencies)&&!b.dependencies.length) ? [] : strings(b.dependencies,'dependencies');
     for (const dependency of dependencies) await getService(db,p,dependency,'change');
-    return { title: requiredString(b.title,'title'), risk: requiredString(b.risk,'risk'), impact: requiredString(b.impact,'impact'),
+    const monitoring=await watchingChecks(db,p,b,services);
+    return { ...monitoring,title: requiredString(b.title,'title'), risk: requiredString(b.risk,'risk'), impact: requiredString(b.impact,'impact'),
         services, cohorts, canaryCohorts, dependencies, implementation:b.implementation, compensation:b.compensation,
         ...Object.fromEntries(planFields.map(name=>[name,requiredString(b[name],name)])) };
 }
@@ -52,6 +54,7 @@ export function grantReferences(value: unknown) {
     return value.map(x=>({id:x.id,version:x.version,...(x.phase?{phase:x.phase}:{})}));
 }
 export async function bindChangeGrants(db: D1Database,p: Principal,r: ServiceRecord,b: Record<string,any>) {
+    if(r.data.reviewState==='closed')throw new ApiError(409,'change_review_closed','The post-implementation review is closed');
     p=await currentPrincipal(db,p);
     if (!p.roles.some(role=>['owner','operator'].includes(role))) throw new ApiError(403,'authority','Current operator required');
     if (r.data.changeType!=='standard') throw new ApiError(409,'change_type','Catalog grant binding is for standard changes');

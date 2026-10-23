@@ -16,7 +16,7 @@ await writeFile(config,JSON.stringify({name:'linen-base-auth-test',main:entry,co
 const file=join(dir,'schema.sql');await writeFile(file,(await Promise.all((await readdir('migrations')).filter(f=>f.endsWith('.sql')).sort().map(f=>readFile('migrations/'+f,'utf8')))).join('\n'))
 const migrate=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--config',config,'--local','--persist-to',dir,'--file',file],{encoding:'utf8'});assert.equal(migrate.status,0,migrate.stdout+migrate.stderr)
 let worker,output=''
-const request=(path,{method='GET',body,cookie,headers={}}={})=>fetch(origin+path,{method,redirect:'manual',headers:{Host:new URL(origin).host,Origin:origin,...(body?{'content-type':'application/json'}:{}),...(cookie?{cookie}:{}),...headers},...(body?{body:typeof body==='string'?body:JSON.stringify(body)}:{})})
+const request=(path,{method='GET',body,cookie,headers={}}={})=>fetch(origin+path,{method,redirect:'manual',headers:{Connection:'close',Host:new URL(origin).host,Origin:origin,...(body?{'content-type':'application/json'}:{}),...(cookie?{cookie}:{}),...headers},...(body?{body:typeof body==='string'?body:JSON.stringify(body)}:{})})
 const cookieOf=r=>r.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ')
 const read=r=>r.json()
 try{
@@ -118,6 +118,48 @@ try{
   const result=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--config',config,'--local','--persist-to',dir,'--json','--command',command],{encoding:'utf8'});
   assert.equal(result.status,0,result.stdout+result.stderr);return JSON.parse(result.stdout).flatMap(x=>x.results);
  };
+ // API-001 REST authority through the same native owner and real HTTP doors.
+ const restGrant={principalId:bot.id,name:'Ticket filer',scopes:['work.create'],expiresAt:new Date(Date.now()+30*86400000).toISOString()};
+ const mintRest=async(patch={})=>ownerApi('/rest-credentials',{...restGrant,...patch});
+ const restCall=async(secret,body,path='/work',cookie)=>{
+  const response=await request('/api/v1'+path,{method:body===undefined?'GET':'POST',body,cookie,headers:{Authorization:'Bearer '+secret}});
+  return {status:response.status,value:await response.json()};
+ };
+ for(const patch of [{principalId:member.id},{principalId:session.principal.userId},{principalId:'synthetic-linen-absent'},{scopes:['work.read']},{scopes:[]},{scopes:['work.create','work.create']},{expiresAt:'bad'},{expiresAt:new Date(Date.now()-1000).toISOString()},{expiresAt:new Date(Date.now()+366*86400000).toISOString()}])assert.ok((await mintRest(patch)).status>=400);
+ assert.equal((await request('/api/v1/rest-credentials',{method:'POST',cookie:ownerCookie,body:restGrant})).status,403,'REST mint retains native CSRF');
+ const restMint=await mintRest();assert.equal(restMint.status,201);const rest=restMint.value;
+ assert.equal(sql("SELECT secret_hash FROM rest_credentials WHERE id='"+rest.id+"'")[0].secret_hash,createHash('sha256').update(rest.secret).digest('hex'));
+ const restMetadata=JSON.stringify((await ownerApi('/rest-credentials')).value);
+ assert.ok(!restMetadata.includes(rest.secret)&&!restMetadata.includes('secret_hash'),'REST management never shows the secret again');
+ assert.equal((await rpc(rest.secret)).status,401,'Real REST token cannot authorize MCP');
+ assert.equal((await restCall(credential.secret,{},'/work',ownerCookie)).status,401,'MCP bearer cannot fall back to an owner session');
+ for(const path of ['/session','/members','/rest-credentials','/mcp-credentials','/catalog','/connections','/exports'])assert.equal((await restCall(rest.secret,undefined,path,ownerCookie)).status,403,'REST bearer cannot widen into a native session');
+ const restBody={title:'synthetic-linen-5101',body:'synthetic-linen-5102',deduplicationKey:'synthetic-linen-5103'};
+ for(const patch of [{sensitivity:'hr'},{sensitivity:'restricted'},{beneficiaryId:member.id},{catalogIds:['synthetic-linen-quote']},{context:{quoteId:'synthetic-linen-quote'}},{groupId:hardware.id},{title:''},{kind:'approval'}])assert.ok((await restCall(rest.secret,{...restBody,...patch})).status>=400,'Unproved or privileged REST payload is refused');
+ const restCreated=await restCall(rest.secret,restBody);assert.equal(restCreated.status,201,JSON.stringify(restCreated.value));
+ assert.equal((await restCall(rest.secret,restBody)).value.id,restCreated.value.id,'Same REST request is idempotent');
+ assert.equal((await restCall(rest.secret,{...restBody,title:'synthetic-linen-5104'})).status,409);
+ const storedRest=sql("SELECT requester_id,beneficiary_id,sensitivity FROM work_records WHERE id='"+restCreated.value.id+"'")[0];assert.deepEqual(storedRest,{requester_id:bot.id,beneficiary_id:bot.id,sensitivity:'normal'});
+ assert.equal(sql("SELECT count(*) n FROM work_messages WHERE work_id='"+restCreated.value.id+"'")[0].n,1);
+ assert.equal(sql("SELECT count(*) n FROM work_intake_events WHERE work_id='"+restCreated.value.id+"'")[0].n,0,'REST filing starts no automatic interpretation or provider effects');
+ assert.equal(sql("SELECT count(*) n FROM audit_events WHERE target='"+restCreated.value.id+"' AND action='work.created'")[0].n,1,'Replay adds no duplicate typed history');
+ assert.ok((await ownerApi('/rest-credentials')).value.items.find(x=>x.id===rest.id).last_used_at);
+ sql("UPDATE memberships SET active=0 WHERE user_id='"+bot.id+"'");assert.equal((await restCall(rest.secret,restBody)).status,401);sql("UPDATE memberships SET active=1 WHERE user_id='"+bot.id+"'");
+ sql("UPDATE memberships SET roles_json='[\"integration\",\"operator\"]' WHERE user_id='"+bot.id+"'");assert.equal((await restCall(rest.secret,restBody)).status,401);sql("UPDATE memberships SET roles_json='[\"integration\"]' WHERE user_id='"+bot.id+"'");
+ const restIssuer=(await ownerApi('/members',{email:'synthetic-linen-5120@example.test',name:'REST issuer',password:'synthetic-linen-5121',roles:['owner']})).value;
+ const restIssuerLogin=await request('/api/v1/login',{method:'POST',body:{email:'synthetic-linen-5120@example.test',password:'synthetic-linen-5121'}});
+ const restIssuerCookie=cookieOf(restIssuerLogin),restIssuerSession=await read(await request('/api/v1/session',{cookie:restIssuerCookie}));
+ const issuedResponse=await request('/api/v1/rest-credentials',{method:'POST',cookie:restIssuerCookie,headers:{'X-Linen-CSRF':restIssuerSession.csrfToken},body:restGrant});assert.equal(issuedResponse.status,201);
+ const issuerRest=await read(issuedResponse);sql("UPDATE memberships SET active=0 WHERE user_id='"+restIssuer.id+"'");assert.equal((await restCall(issuerRest.secret,restBody)).status,401,'Losing issuer authority refuses the next call');
+ sql("CREATE TRIGGER synthetic_linen_rest_race BEFORE INSERT ON work_records WHEN NEW.dedup_key='synthetic-linen-5105' BEGIN UPDATE rest_credentials SET state='revoked',secret_hash=NULL WHERE id='"+rest.id+"'; END");
+ assert.equal((await restCall(rest.secret,{...restBody,deduplicationKey:'synthetic-linen-5105'})).status,409,'REST authority withdrawn inside write rolls back the transaction');
+ assert.equal(sql("SELECT count(*) n FROM work_records WHERE dedup_key='synthetic-linen-5105'")[0].n,0);sql('DROP TRIGGER synthetic_linen_rest_race');
+ const expiredRest=(await mintRest()).value;sql("UPDATE rest_credentials SET expires_at='2000-01-01' WHERE id='"+expiredRest.id+"'");assert.equal((await restCall(expiredRest.secret,restBody)).status,401);assert.equal(sql("SELECT state FROM rest_credentials WHERE id='"+expiredRest.id+"'")[0].state,'expired');
+ assert.equal((await ownerApi('/rest-credentials/'+rest.id+'/revoke',{})).status,200);assert.equal((await restCall(rest.secret,restBody)).status,401);
+ assert.deepEqual(sql("SELECT state,secret_hash FROM rest_credentials WHERE id='"+rest.id+"'")[0],{state:'revoked',secret_hash:null});
+ const restAudit=sql("SELECT detail_json FROM audit_events WHERE action LIKE 'rest.%'").map(x=>x.detail_json).join('');assert.ok(!restAudit.includes(rest.secret)&&!restAudit.includes(restBody.body),'REST audit omits credentials and request bodies');
+ const erasedRest=(await mintRest()).value;
+ console.log('PASS API-001 scoped REST creation, audience isolation, one-time hash, expiry, revocation, live authority and transactional replay fences');
  await mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,session,member,request});
  // A second authenticated owner cannot see, mint for, or revoke another workspace's grant.
  sql("INSERT INTO workspaces VALUES('mcp-other-workspace','Other','2026-01-01')");
@@ -181,9 +223,10 @@ try{
  assert.equal((await rpc(erasing.secret)).status,401,'API-003 erasure invalidates next call');
  assert.equal((await ownerApi('/mcp-credentials',grant)).status,403,'API-003 erased principal cannot mint another grant');
  assert.ok(sql("SELECT state,secret_hash FROM mcp_credentials WHERE principal_id='"+bot.id+"'").every(row=>row.state==='revoked'&&row.secret_hash===null),'API-003 erasure clears all principal credential hashes');
+ assert.equal((await restCall(erasedRest.secret,restBody)).status,401);assert.deepEqual(sql("SELECT state,secret_hash FROM rest_credentials WHERE id='"+erasedRest.id+"'")[0],{state:'revoked',secret_hash:null},'REST principal erasure clears hash');
  console.log('PASS API-003 native owner mint/list/revoke; SHA-256 one-time secret; closed scopes/tools and expiry; separate audiences; filtered discovery and scoped ticket tools; live roles/membership; audit without bodies or secret; principal erasure/hash removal');
  console.log('PASS Base native claim race, Lobby/setup, ordinary provider email-link replay, native membership/password/session retention and revocation, bound step-up proof, CSRF/origin, dev gate and production denial')
-}finally{
+}catch(error){console.error(output.slice(-12000));throw error;}finally{
  if(worker){worker.kill('SIGTERM');await Promise.race([new Promise(r=>worker.once('exit',r)),new Promise(r=>setTimeout(r,5000))]);if(worker.exitCode===null)worker.kill('SIGKILL')}
  await rm(dir,{recursive:true,force:true})
 }

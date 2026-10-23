@@ -1,3 +1,4 @@
+import { closeChangeReview } from './change-health';
 import { reviewChangeCause } from './change-causes';
 import { monitoringBinding, monitoringSignature } from './monitoring-source';
 import { serviceHistory } from './history';
@@ -126,6 +127,7 @@ export function registerServiceRoutes(app: Hono<AppEnv>) {
     app.post('/changes/:id/grants', async c => { const p=requireRole(c,'owner','operator'); return c.json(await bindChangeGrants(c.env.DB,p,await getService(c.env.DB,p,c.req.param('id'),'change'),await jsonBody(c))); });
     app.post('/changes/:id/authorize', async (c) => { const p = requireRole(c, 'owner', 'approver'); return c.json(await authorizeChange(c.env.DB, p, await getService(c.env.DB, p, c.req.param('id'), 'change'), await jsonBody(c))); });
     app.post('/changes/:id/dispatch', async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await dispatchChange(c.env, p, await getService(c.env.DB, p, c.req.param('id'), 'change'), await jsonBody(c))); });
+    app.post('/changes/:id/review',async c=>{const p=requireRole(c,'owner','operator');return c.json(await closeChangeReview(c.env.DB,p,await getService(c.env.DB,p,c.req.param('id'),'change'),await jsonBody(c)));});
     app.post('/changes/:id/verify', async (c) => { const p = requireRole(c, 'owner', 'operator'); return c.json(await verifyChange(c.env, p, await getService(c.env.DB, p, c.req.param('id'), 'change'), await jsonBody(c))); });
     app.post('/suppliers', async (c) => c.json(await newSupplier(c.env.DB, requireRole(c, 'owner', 'operator'), await jsonBody(c)), 201));
     for (const [path, fn] of [['observations',supplierObservation],['review-outcome',reviewSupplierOutcome],['charges', recordCharge], ['commitments', supplierCommitment], ['handoffs', supplierHandoff], ['accept-handoff', acceptHandoff]] as const)

@@ -79,6 +79,7 @@ try{
   env.DB.prepare('INSERT INTO execution_automation_principals VALUES(?,?,?,?,?,NULL)').bind('workspace','desk-bot','Desk bot','API-003-transfer',stamp),
   env.DB.prepare('INSERT INTO work_groups(id,workspace_id,name,created_by,created_at) VALUES(?,?,?,?,?)').bind('hardware','workspace','Hardware','owner',stamp),
   env.DB.prepare("INSERT INTO mcp_credentials(id,workspace_id,principal_id,name,scopes_json,tools_json,expires_at,secret_hash,state,created_by,created_at,queue_groups_json,grant_version,grant_updated_by) VALUES(?,?,?,?,?,?,?,?, 'active',?,?,?,1,?)").bind('mcp-grant','workspace','desk-bot','Desk bot','["work.read"]','["work.list"]',new Date(Date.now()+30*86400000).toISOString(),createHash('sha256').update('linen_mcp_'+('1'.repeat(36))+('2'.repeat(36))).digest('hex'),'owner',stamp,'["hardware"]','owner'),
+  env.DB.prepare("INSERT INTO rest_credentials(id,workspace_id,principal_id,name,scopes_json,expires_at,secret_hash,state,created_by,created_at) VALUES('synthetic-linen-5110','workspace','desk-bot','Ticket filer','[\"work.create\"]',?,?,'active','owner',?)").bind(new Date(Date.now()+30*86400000).toISOString(),createHash('sha256').update('synthetic-linen-5111').digest('hex'),stamp),
   env.DB.prepare('INSERT INTO intelligence_engineering_grants VALUES(?,?,?,?,?,?,?,?,?)').bind('grant','workspace',1,'owner','synthetic-bearer','{}','2099-01-01',null,stamp),
   env.DB.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind('connection','workspace','sendgrid','Fixture','{}','synthetic-encrypted-secret','verified',stamp,stamp),
   env.DB.prepare('INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,created_at,updated_at,dedup_key) VALUES(?,?,?,?,?,?,?,?,?)').bind('work','workspace','owner','owner','request','Retained real record',stamp,stamp,'transfer'),
@@ -152,8 +153,9 @@ try{
 
  await close()
  await run(['exec','rer','export','--output',archive])
- const mcpRows=[],roleRows=[],roleMemberRows=[];
+ const restRows=[],mcpRows=[],roleRows=[],roleMemberRows=[];
  for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'){
+  if(item.table==='rest_credentials')restRows.push(item.row);
   if(item.table==='mcp_credentials')mcpRows.push(item.row);
   if(item.table==='work_department_roles')roleRows.push(item.row);
   if(item.table==='work_department_role_members')roleMemberRows.push(item.row);
@@ -177,6 +179,7 @@ try{
 
  assert.ok(!(await readFile(archive,'utf8')).includes(erasedArchivePerson),'A6 archive has no original erased person reference');
 
+ assert.equal(restRows.length,1);assert.equal(restRows[0].secret_hash,null);assert.equal(restRows[0].state,'revoked','REST actual export is inert');
  assert.equal(mcpRows.length,1,'API-003 actual archive carries credential metadata');
  assert.deepEqual(JSON.parse(mcpRows[0].queue_groups_json),['hardware'],'API-003 export retains the explicit credential queue grant');
  assert.equal(mcpRows[0].grant_version,1);
@@ -193,6 +196,7 @@ try{
  assert.equal((await env.DB.prepare('SELECT password_hash FROM users WHERE id="owner"').first()).password_hash,'!restored-email-link')
  assert.equal((await env.DB.prepare('SELECT secret_ciphertext FROM connections').first()).secret_ciphertext,null)
  assert.ok((await env.DB.prepare('SELECT revoked_at FROM intelligence_engineering_grants').first()).revoked_at)
+ assert.deepEqual(await env.DB.prepare("SELECT state,secret_hash FROM rest_credentials WHERE id='synthetic-linen-5110'").first(),{state:'revoked',secret_hash:null},'REST actual native restore carries no credential authority');
  const restoredMcp=await env.DB.prepare('SELECT name,secret_hash,state,invalidated_at,queue_groups_json,grant_version FROM mcp_credentials WHERE id="mcp-grant"').first();
  assert.deepEqual(JSON.parse(restoredMcp.queue_groups_json),['hardware'],'API-003 restore retains inert queue metadata');
  assert.equal(restoredMcp.grant_version,1);
