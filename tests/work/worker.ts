@@ -70,7 +70,6 @@ const biCalls:{provider:string;method:string;path:string;body?:string;conditiona
 const biObjects=new Map<string,string>(),biWarehouseRows=new Map<string,Map<string,unknown>>();
 const biJobs=new Map<string,Record<string,any>>(),biStatements=new Map<string,{statementHandle:string;code:string;sqlState:string}>();
 let biGooglePublicKey:JsonWebKey|null=null;
-let biGooglePhase='not_started';
 function biApplyRows(provider:string,rows:Record<string,unknown>[]) {
   const table=biWarehouseRows.get(provider)??new Map<string,unknown>();
   for(const row of rows){if(typeof row.id!=='string')throw new Error('Fixture row id missing');table.set(row.id,row);}
@@ -84,19 +83,14 @@ async function biProviderFetch(url:URL,init?:RequestInit):Promise<Response|null>
   biCalls.push({provider,method,path:url.pathname,...(body&&provider!=='google'?{body}:{}),conditional:headers.get('if-none-match')==='*'||headers.get('x-goog-if-generation-match')==='0',auth});
   if(auth==='invalid')throw new Error('Fixture expected synthetic scoped provider credential');
   if(provider==='google') {
-    biGooglePhase='parameters';
     const parameters=new URLSearchParams(body),assertion=parameters.get('assertion')??'';
     if(method!=='POST'||url.pathname!=='/token'||parameters.get('grant_type')!=='urn:ietf:params:oauth:grant-type:jwt-bearer'||assertion.split('.').length!==3)throw new Error('Fixture expected Google JWT grant');
-    biGooglePhase='claims';
     const decode=(s:string)=>JSON.parse(atob(s.replace(/-/g,'+').replace(/_/g,'/'))),claims=decode(assertion.split('.')[1]);
     if(claims.aud!=='https://oauth2.googleapis.com/token'||claims.exp-claims.iat!==3600||!['https://www.googleapis.com/auth/devstorage.read_write','https://www.googleapis.com/auth/bigquery'].includes(claims.scope))throw new Error('Fixture JWT audience, lifetime or scope incorrect');
-    biGooglePhase='key';
     if(!biGooglePublicKey)throw new Error('Fixture Google verification key missing');
     const publicKey=await crypto.subtle.importKey('jwk',biGooglePublicKey,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['verify']);
-    biGooglePhase='signature';
     const parts=assertion.split('.'),signature=Uint8Array.from(atob(parts[2].replace(/-/g,'+').replace(/_/g,'/')),s=>s.charCodeAt(0));
     if(!await crypto.subtle.verify('RSASSA-PKCS1-v1_5',publicKey,signature,new TextEncoder().encode(parts.slice(0,2).join('.'))))throw new Error('Fixture Google JWT signature failed');
-    biGooglePhase='complete';
     if(mode==='rejected')return Response.json({error:'synthetic-linen-32'},{status:401});
     return Response.json({access_token:'synthetic-linen-31',token_type:'Bearer',expires_in:3600});
   }
@@ -167,7 +161,7 @@ globalThis.fetch=(async(input:RequestInfo|URL,init?:RequestInit)=>{
 }) as typeof fetch;
 app.get('/test/reporting-provider',c=>c.json({calls:s3Calls}));
 app.post('/test/reporting-provider',async c=>{s3Mode=(await c.req.json()).mode;return c.json({mode:s3Mode});});
-app.get('/test/bi-providers',c=>c.json({googlePhase:biGooglePhase,calls:biCalls,rows:Object.fromEntries([...biWarehouseRows].map(([provider,rows])=>[provider,[...rows.values()]]))}));
+app.get('/test/bi-providers',c=>c.json({calls:biCalls,rows:Object.fromEntries([...biWarehouseRows].map(([provider,rows])=>[provider,[...rows.values()]]))}));
 app.post('/test/bi-providers',async c=>{const value=await c.req.json();if(!Object.hasOwn(biModes,value.provider))return c.json({error:'unknown provider'},422);biModes[value.provider]=value.mode;return c.json({changed:true});});
 app.post('/test/bi-google-key',async c=>{biGooglePublicKey=await c.req.json();return c.json({configured:true});});
 app.post('/test/reporting-tick',async c=>{await processDueReporting(c.env);await processDueBiExports(c.env);return c.json({processed:true});});
