@@ -6290,8 +6290,20 @@
       "sha256": "1a5cc9d027a3f4ea7633983c08a237b51bb8b83f0ab32a20b1d61e74689114fd",
       "executable": false
     },
+    "tests/ui/software-license-boundary.ts": {
+      "sha256": "b560ad35b84a013c5d49ebed7ada9e3f0d9a700c41c95d33f77810f3401b49a0",
+      "executable": false
+    },
     "tests/ui/software-license-browser.mjs": {
-      "sha256": "fa9e3d63947dddf6100ef53b0d55f46352fcc204b89cab4cc86d1f073bbb9d46",
+      "sha256": "70501efb638da2c83cacdad8df1c131a6b54fb6349be54f59d82b29f6e94e289",
+      "executable": false
+    },
+    "tests/ui/software-license-connected.mjs": {
+      "sha256": "23886c986f0c393e7e02c86d61fbd6d74c790c8ca6bc46e397420851505a8428",
+      "executable": false
+    },
+    "tests/ui/software-license-run.mjs": {
+      "sha256": "09c7b30e027d2e2edba239b4544dbc96f2af413cf8dfb6880f4b09ef1f9c7584",
       "executable": false
     },
     "tests/ui/template-browser.mjs": {

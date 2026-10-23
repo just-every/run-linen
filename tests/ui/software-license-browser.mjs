@@ -45,7 +45,8 @@ export async function softwareLicenseJourney({ page, api, base, out }) {
     await fields(create, { 'source-0-kind': provider, 'source-0-connectionId': configured.id });
     if (provider === 'jamf') await fields(create, { 'source-0-title': 'Adobe Acrobat Pro', 'source-0-publisher': 'Adobe', 'source-0-productId': 'com.adobe.Acrobat.Pro' });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `Create form fits ${width}px`);
-    await create.screenshot({ path: `${out}/ASSET-006-contract-form-${width}.png` });
+    await page.evaluate(()=>scrollTo(0,0));
+    await page.screenshot({ path: `${out}/ASSET-006-contract-form-${width}.png`,fullPage:true });
     const recorded = page.waitForResponse(result => result.url().endsWith('/software-licenses') && result.request().method() === 'POST');
     await create.getByRole('button', { name: 'Record software license', exact: true }).click();
     const createdResponse = await recorded;
