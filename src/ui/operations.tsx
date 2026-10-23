@@ -1,4 +1,5 @@
 import {DepartmentManagement} from './department-management';
+import {DepartmentRoles} from './department-roles';
 import {ApprovalMailSettings} from './approval-mail-settings';
 import { OperationsKpis } from './operations-kpis';
 import { EffortReport, type EffortReportData } from "./effort-report";
@@ -67,6 +68,7 @@ export function OperationsSpace({ section }: { section: string }) {
       )}
       {section==="notifications"&&owner&&<ApprovalMailSettings/>}
       {section==='members'&&owner&&<DepartmentManagement/>}
+      {section==='members'&&owner&&<DepartmentRoles/>}
       <div className={section === "members" ? "split" : "stack"}>
       {list.loading ? (
         <Loading />

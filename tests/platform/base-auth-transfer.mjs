@@ -56,6 +56,8 @@ try{
 
  let env=await open();const stamp=new Date().toISOString()
  const retainedHrDepartment={id:'synthetic-linen-12005',workspace_id:'workspace',name:'synthetic-linen-12006',kind:'hr',active:1,revision:1,created_at:stamp,updated_at:stamp};
+ const retainedRole={id:'synthetic-linen-12014',workspace_id:'workspace',department_id:'retained-facilities',name:'synthetic-linen-12015',permissions_json:JSON.stringify(['ticket.read','ticket.reply']),revision:3,active:1,created_by:'owner',created_at:stamp,updated_at:stamp};
+ const retainedRoleMember={workspace_id:'workspace',role_id:retainedRole.id,user_id:'retained-staff',role_revision:3,revision:2,active:1,granted_by:'owner',created_at:stamp,updated_at:stamp};
  const protectedHistory={id:'synthetic-linen-12007',body:'synthetic-linen-12008',source:'synthetic-linen-12009'};
  const catalogForm={fields:[{id:'mount',label:'Monitor mounting',type:'select',required:true,options:['Desk','Wall']}],costCents:30000,deliveryHours:72};
  const taskPlan=[{key:'mount',title:'Mount the monitor',groupId:'retained-team',after:[],dueHours:24}];
@@ -104,6 +106,9 @@ try{
   env.DB.prepare('INSERT INTO work_departments(id,workspace_id,name,kind,active,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)').bind(...Object.values(retainedHrDepartment)),
   env.DB.prepare('INSERT INTO work_department_members(workspace_id,department_id,user_id,active,updated_by,updated_at) VALUES(?,?,?,?,?,?)').bind('workspace','retained-facilities','retained-staff',1,'owner',stamp),
   env.DB.prepare('INSERT INTO work_department_members(workspace_id,department_id,user_id,active,updated_by,updated_at) VALUES(?,?,?,?,?,?)').bind('workspace',retainedHrDepartment.id,'retained-staff',1,'owner',stamp),
+  env.DB.prepare('INSERT INTO work_department_roles(id,workspace_id,department_id,name,permissions_json,revision,active,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(...Object.values(retainedRole)),
+  env.DB.prepare('INSERT INTO work_department_role_members(workspace_id,role_id,user_id,role_revision,revision,active,granted_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)').bind(...Object.values(retainedRoleMember)),
+  env.DB.prepare('INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,department_id,created_at,updated_at,dedup_key) VALUES(?,?,?,?,?,?,?,?,?,?)').bind('synthetic-linen-12016','workspace','owner','owner','request','synthetic-linen-12017','retained-facilities',stamp,stamp,'synthetic-linen-12018'),
   env.DB.prepare('UPDATE work_records SET department_id=?,protected_departments_json=? WHERE id=?').bind('retained-facilities',JSON.stringify([retainedHrDepartment.id]),'work'),
   env.DB.prepare('INSERT INTO work_messages VALUES(?,?,?,?,?,?,?,?)').bind(protectedHistory.id,'workspace','work','owner','private',protectedHistory.body,protectedHistory.source,stamp),
   env.DB.prepare('UPDATE work_catalog SET department_id=? WHERE id=?').bind('retained-facilities','catalog-monitor'),
@@ -147,8 +152,14 @@ try{
 
  await close()
  await run(['exec','rer','export','--output',archive])
- const mcpRows=[];
- for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='mcp_credentials')mcpRows.push(item.row);
+ const mcpRows=[],roleRows=[],roleMemberRows=[];
+ for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'){
+  if(item.table==='mcp_credentials')mcpRows.push(item.row);
+  if(item.table==='work_department_roles')roleRows.push(item.row);
+  if(item.table==='work_department_role_members')roleMemberRows.push(item.row);
+ }
+ assert.deepEqual(roleRows,[{...retainedRole,active:0}],'ROLE-001 actual rer export retains scoped permissions and revision without active role authority');
+ assert.deepEqual(roleMemberRows,[{...retainedRoleMember,active:0,granted_by:null}],'ROLE-001 actual rer export retains inactive versioned assignment metadata');
  let archivedIdentityHistory;
  for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'&&item.table==='audit_events'&&item.row.id===erasedArchiveEvent)archivedIdentityHistory=item.row;
  assert.ok(archivedIdentityHistory);
@@ -205,6 +216,8 @@ try{
  assert.deepEqual(await env.DB.prepare('SELECT * FROM work_departments WHERE id=?').bind(retainedHrDepartment.id).first(),retainedHrDepartment,'Actual rer transfer preserves typed retained-HR workspace metadata');
  assert.deepEqual(JSON.parse((await env.DB.prepare("SELECT protected_departments_json FROM work_records WHERE id='work'").first()).protected_departments_json),[retainedHrDepartment.id],'Actual rer transfer retains the prior HR readership boundary');
  assert.deepEqual((await env.DB.prepare("SELECT department_id,user_id,active,updated_by FROM work_department_members WHERE user_id='retained-staff' ORDER BY department_id").all()).results,['retained-facilities',retainedHrDepartment.id].sort().map(department_id=>({department_id,user_id:'retained-staff',active:0,updated_by:null})),'Every restored current and retained department membership is inert');
+ assert.deepEqual(await env.DB.prepare('SELECT * FROM work_department_roles WHERE id=?').bind(retainedRole.id).first(),{...retainedRole,active:0},'ROLE-001 actual rer import restores the scoped definition inactive');
+ assert.deepEqual(await env.DB.prepare('SELECT * FROM work_department_role_members WHERE workspace_id=? AND role_id=? AND user_id=?').bind('workspace',retainedRole.id,retainedRoleMember.user_id).first(),{...retainedRoleMember,active:0,granted_by:null},'ROLE-001 actual rer import retains the assignment revision without restoring access');
  const restoredAccessPolicy=await env.DB.prepare("SELECT name,match_json,grants_json,active,revision FROM work_access_policies WHERE id='synthetic-linen-12010'").first();
  assert.equal(restoredAccessPolicy.active,0,'LIFE-003 actual rer archive retains access policies as inactive history');
  assert.equal(restoredAccessPolicy.name,'Sales app baseline');assert.equal(restoredAccessPolicy.revision,3);
@@ -273,6 +286,7 @@ try{
  const staffSessionResponse=await request('/api/v1/session',{cookie:staffCookie});assert.equal(staffSessionResponse.status,200);
  const staffSession=await staffSessionResponse.json();assert.equal(staffSession.principal.userId,'retained-staff');assert.equal(staffSession.principal.workspaceId,'workspace');assert.deepEqual(staffSession.principal.roles,['operator']);
  assert.equal((await request('/api/v1/work/work',{cookie:staffCookie})).status,404,'Fresh Base staff sign-in cannot revive archived department or retained-HR authority');
+ assert.equal((await request('/api/v1/work/synthetic-linen-12016',{cookie:staffCookie})).status,404,'ROLE-001 fresh Base sign-in cannot revive the archived custom role on ordinary Facilities work');
  const authHeaders={'X-Linen-CSRF':session.csrfToken}
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/release',{cookie,body:{revision:hold.revision},headers:authHeaders})).status,409,'Unreconciled retained operation blocks ordinary release')
  assert.equal((await request('/api/v1/adoption/holds/'+hold.id+'/reconcile',{cookie,body:{historyId:records.data[0].id,evidence:'Fixture owner reviewed retained unknown operation before explicitly releasing execution'},headers:authHeaders})).status,200)

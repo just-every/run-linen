@@ -14,27 +14,28 @@ import { RailNav } from "./shell-rail";
 import { TopBar } from "./shell-top";
 export function LinenApp() {
   const auth = useRemote<{ authenticated: false } | { authenticated: true; session: Session }>("/session-status");
+  const roleAccess = useRemote<{items: NonNullable<Session["principal"]["departmentRoles"]>}>(auth.data?.authenticated ? "/department-roles/current" : null);
   useEffect(() => {
     if (auth.data?.authenticated === false) {
       try { clearDrafts(sessionStorage); } catch { /* Storage may be unavailable. */ }
     }
   }, [auth.data]);
-  if (auth.loading)
+  if (auth.loading || (auth.data?.authenticated && !roleAccess.data && !roleAccess.error))
     return (
       <HydrationUnit><div className="boot">
         <Mark size={56} />
         <Loading label="Opening your workspace…" />
       </div></HydrationUnit>
     );
-  if (auth.error)
+  if (auth.error || (auth.data?.authenticated && roleAccess.error))
     return (
       <HydrationUnit><div className="boot">
-        <ErrorNotice error={auth.error} retry={auth.refresh} />
+        <ErrorNotice error={auth.error || roleAccess.error} retry={() => { auth.refresh(); roleAccess.refresh(); }} />
       </div></HydrationUnit>
     );
   if (!auth.data?.authenticated) return <SignIn onSignedIn={auth.refresh} />;
   return (
-    <SessionProvider session={auth.data.session} refreshSession={auth.refresh}>
+    <SessionProvider session={{...auth.data.session, principal:{...auth.data.session.principal, departmentRoles:roleAccess.data!.items}}} refreshSession={auth.refresh}>
       <Workspace />
     </SessionProvider>
   );

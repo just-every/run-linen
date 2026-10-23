@@ -1,3 +1,4 @@
+import { scopedTicketSql } from './department-role-authority';
 import { ApiError, id } from '../../platform/http';
 import { currentWorkPrincipal } from './identity';
 import { departmentStaffPrincipal, workPrivateReadable, type WorkScope } from './scope';
@@ -43,19 +44,19 @@ export function workDepartmentStaffSql(work:string,member:string) {
       SELECT 1 FROM work_department_members dm JOIN work_departments d ON d.workspace_id=dm.workspace_id AND d.id=dm.department_id
       WHERE dm.workspace_id=${work}.workspace_id AND dm.department_id=protected.value AND dm.user_id=${member}.user_id AND dm.active=1 AND d.active=1 AND d.kind='hr'))))`;
 }
-export function workReadSql(work='w',member='m') {
+export function workReadSql(work='w',member='m',custom=true) {
   const roles=(list:string)=>`EXISTS(SELECT 1 FROM json_each(${member}.roles_json) WHERE value IN (${list}))`;
   const own=`(${work}.requester_id=${member}.user_id OR ${work}.beneficiary_id=${member}.user_id)`;
-  return `(${roles("'owner'")} OR (${work}.sensitivity='hr' AND (${roles("'hr'")} AND ${workDepartmentStaffSql(work,member)} OR ${roles("'integration'")} AND ${work}.requester_id=${member}.user_id)) OR
+  return `(${custom?scopedTicketSql(work,member,'ticket.read'):'0'} OR ${roles("'owner'")} OR (${work}.sensitivity='hr' AND (${roles("'hr'")} AND ${workDepartmentStaffSql(work,member)} OR ${roles("'integration'")} AND ${work}.requester_id=${member}.user_id)) OR
     (${work}.sensitivity<>'hr' AND (${own} OR (${work}.sensitivity='normal' AND ${workDepartmentStaffSql(work,member)} AND (${work}.department_id IS NOT NULL OR json_array_length(${work}.protected_departments_json)>0 OR ${roles("'operator'")})))))`;
 }
-export function workPrivateSql(work='w',member='m') {
-  return `(${workDepartmentStaffSql(work,member)} AND (EXISTS(SELECT 1 FROM json_each(${member}.roles_json) WHERE value IN ('owner','operator')) OR ${work}.sensitivity='hr' AND EXISTS(SELECT 1 FROM json_each(${member}.roles_json) WHERE value='hr')))`;
+export function workPrivateSql(work='w',member='m',custom=true) {
+  return `(${custom?scopedTicketSql(work,member,'ticket.private.read'):'0'} OR ${workDepartmentStaffSql(work,member)} AND (EXISTS(SELECT 1 FROM json_each(${member}.roles_json) WHERE value IN ('owner','operator')) OR ${work}.sensitivity='hr' AND EXISTS(SELECT 1 FROM json_each(${member}.roles_json) WHERE value='hr')))`;
 }
 /** Handoff and revocation between evaluation and commit must refuse the entire write. */
-export async function departmentWorkBatch(ctx:WorkContext,work:WorkRecord & {department_id?:string|null},statements:D1PreparedStatement[],authority:'read'|'private'|'staff'='read') {
+export async function departmentWorkBatch(ctx:WorkContext,work:WorkRecord & {department_id?:string|null},statements:D1PreparedStatement[],authority:'read'|'private'|'staff'|'reply'|'privateReply'|'transition'|'participantTransition'|'attachment'|'privateAttachment'='read') {
   const guard=id(),w=ctx.principal.workspaceId;
-  const rule=authority==='private'?workPrivateSql():authority==='staff'?`${workReadSql()} AND ${workDepartmentStaffSql('w','m')}`:workReadSql();
+  const rule=authority==='attachment'?`(${workReadSql('w','m',false)} OR ${scopedTicketSql('w','m','ticket.attachment.write')} AND ${scopedTicketSql('w','m','ticket.reply')})`:authority==='privateAttachment'?`(${workPrivateSql('w','m',false)} OR ${scopedTicketSql('w','m','ticket.attachment.write')} AND ${scopedTicketSql('w','m','ticket.private.reply')})`:authority==='reply'?`(${workReadSql('w','m',false)} OR ${scopedTicketSql('w','m','ticket.reply')})`:authority==='privateReply'?`(${workPrivateSql('w','m',false)} OR ${scopedTicketSql('w','m','ticket.private.reply')})`:authority==='transition'?`((${workReadSql('w','m',false)} AND ${workDepartmentStaffSql('w','m')}) OR ${scopedTicketSql('w','m','ticket.transition')})`:authority==='participantTransition'?`(${workReadSql('w','m',false)} OR ${scopedTicketSql('w','m','ticket.transition')})`:authority==='private'?workPrivateSql():authority==='staff'?`${workReadSql()} AND ${workDepartmentStaffSql('w','m')}`:workReadSql();
   try { const result=await ctx.env.DB.batch([
     ctx.env.DB.prepare(`INSERT INTO work_fulfilment_link_guards VALUES(?,CASE WHEN EXISTS(SELECT 1 FROM work_records w JOIN memberships m ON m.workspace_id=w.workspace_id
       WHERE w.workspace_id=? AND w.id=? AND w.revision=? AND w.department_id IS ? AND w.protected_departments_json=? AND m.user_id=? AND m.active=1 AND ${rule}) THEN 1 ELSE 0 END)`)

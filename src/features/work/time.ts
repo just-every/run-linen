@@ -1,4 +1,4 @@
-import { workPrivateReadable, workDepartmentScoped } from './scope';
+import { workPrivateReadable, workDepartmentScoped, workReadable } from './scope';
 import { departmentWorkBatch } from './department-spaces';
 import { ApiError, id, now } from '../../platform/http';
 import { getWork, operator, type WorkContext } from './core';
@@ -16,6 +16,7 @@ const roles = ['owner', 'operator', 'hr', 'approver', 'employee'];
 export const touchKinds = ['request_work', 'sign_in_consent', 'setup_gap', 'correction', 'physical_custody', 'vendor_technician', 'takeover', 'recovery'] as const;
 export async function timeTarget(ctx: WorkContext, workId: string, obligationId?: string | null) {
   const work = await getWork(ctx, workId);
+  if(!workReadable({...ctx.principal,departmentRoles:[]},work))throw new ApiError(403,'time_authority','A custom ticket role does not grant effort recording authority');
   if (obligationId && !await ctx.env.DB.prepare('SELECT 1 FROM work_obligations WHERE workspace_id=? AND work_id=? AND id=?')
     .bind(ctx.principal.workspaceId, workId, obligationId).first())
     throw new ApiError(404, 'task_not_found', 'Task not found on this request');
@@ -24,7 +25,7 @@ export async function timeTarget(ctx: WorkContext, workId: string, obligationId?
 export async function listTime(ctx: WorkContext, workId: string) {
   const work=await getWork(ctx, workId);
   // Notes and other people's effort are service-team records, not conversation messages.
-  const team = workDepartmentScoped(work) ? workPrivateReadable(ctx.principal,work) : operator(ctx.principal)||ctx.principal.roles.includes('hr');
+  const team = workDepartmentScoped(work) ? workPrivateReadable({...ctx.principal,departmentRoles:[]},work) : operator(ctx.principal)||ctx.principal.roles.includes('hr');
   return (await ctx.env.DB.prepare(`SELECT * FROM work_time_entries WHERE workspace_id=? AND work_id=? AND (?=1 OR actor_id=?) ORDER BY created_at,id`)
     .bind(ctx.principal.workspaceId, workId, Number(team), ctx.principal.userId).all<TimeEntry>()).results;
 }

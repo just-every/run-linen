@@ -1,3 +1,4 @@
+import { registerDepartmentRoleRoutes } from './department-role-routes';
 import { registerDepartmentRoutes } from './department-routes';
 import { registerCollaborationRoutes } from './collaboration-routes';
 import { registerMailRoutes } from './mail-routes';
@@ -52,6 +53,7 @@ export function registerWorkRoutes(app: Hono<AppEnv>) {
   // Before /work/:id so the literal retention paths win.
   registerRetentionRoutes(app);
   registerDepartmentRoutes(app);
+  registerDepartmentRoleRoutes(app);
   registerCollaborationRoutes(app);
   registerMailRoutes(app);
   registerWalkupRoutes(app);

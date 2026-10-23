@@ -48,6 +48,7 @@ export async function searchDocuments(ctx: WorkContext): Promise<SearchDocument[
     out.push({id:row.id,type:'ticket',title:row.title,summary:`${row.state} · ${row.requester_name || 'Requester unavailable'}`,
       href:`#/work/${encodeURIComponent(row.id)}`,fields:strings(row.id,row.title,row.requester_name,...content,...related)});
   }
+  if(!p.roles.some(r=>['owner','operator','hr'].includes(r)))return out;
   for (const a of deviceRows) out.push({id:a.id,type:'asset',title:a.serial,summary:strings(a.asset_tag,a.state,a.location).join(' · '),
     href:`#/assets/${encodeURIComponent(a.id)}`,fields:strings(a.id,a.serial,a.asset_tag)});
   const boundMembers=new Map<string,{id:string;name:string}>();

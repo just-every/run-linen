@@ -8,7 +8,7 @@ import { searchDocuments, searchTypes, type SearchType } from './search-sources'
 
 export async function globalSearch(ctx:WorkContext, query:string, type:string, offsetText:string) {
   await currentWorkPrincipal(ctx);
-  permit(ctx,['owner','operator','hr']);
+  if(!ctx.principal.departmentRoles?.length)permit(ctx,['owner','operator','hr']);
   if (query.length>200 || (type && !searchTypes.includes(type as SearchType)) || !/^(0|[1-9]\d*)$/.test(offsetText) || !Number.isSafeInteger(Number(offsetText)))
     throw new ApiError(422,'search_input','Use a query of at most 200 characters, a supported type and a nonnegative offset');
   const counts=Object.fromEntries(searchTypes.map(t=>[t,0])) as Record<SearchType,number>;
@@ -18,9 +18,9 @@ export async function globalSearch(ctx:WorkContext, query:string, type:string, o
   matches.sort((a,b)=>b.score-a.score||a.type.localeCompare(b.type)||a.title.localeCompare(b.title)||a.id.localeCompare(b.id));
   for (const result of matches) counts[result.type]++;
   // A role change during a read cannot return an earlier, broader projection.
-  const roles=JSON.stringify([[...ctx.principal.roles].sort(),[...(ctx.principal.departmentIds??[])].sort()]);
+  const roles=JSON.stringify([[...ctx.principal.roles].sort(),[...(ctx.principal.departmentIds??[])].sort(),ctx.principal.departmentRoles]);
   await currentWorkPrincipal(ctx);
-  if (roles!==JSON.stringify([[...ctx.principal.roles].sort(),[...(ctx.principal.departmentIds??[])].sort()])) throw new ApiError(409,'search_scope_changed','Your permissions changed; search again');
+  if (roles!==JSON.stringify([[...ctx.principal.roles].sort(),[...(ctx.principal.departmentIds??[])].sort(),ctx.principal.departmentRoles])) throw new ApiError(409,'search_scope_changed','Your permissions changed; search again');
   await ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)')
     .bind(id(),ctx.principal.workspaceId,ctx.principal.userId,'search.privileged_read','global-search','{}',now()).run();
   return {query,type,offset,pageSize,total:matches.length,counts,

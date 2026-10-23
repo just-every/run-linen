@@ -1,10 +1,10 @@
-import { workPrivateReadable } from './scope';
+import { workAttachmentAllowed } from './scope';
 import { departmentWorkBatch } from './department-spaces';
 import { currentWorkPrincipal } from "./identity";
 import { safeFileName, safeContentType, sha256Hex } from "./mail-attachment";
 import { ApiError, id, now } from "../../platform/http";
 import { QUOTE_VISIBILITY, readCatalogQuote } from "./catalog-quotes";
-import { getWork, operator, type WorkContext } from "./core";
+import { getWork, type WorkContext } from "./core";
 export async function storeAttachment(
   ctx: WorkContext,
   workId: string,
@@ -17,11 +17,8 @@ export async function storeAttachment(
 ) {
   await currentWorkPrincipal(ctx);
   const work = await getWork(ctx, workId);
-  if (
-    input.visibility === "private" &&
-    !workPrivateReadable(ctx.principal,work)
-  )
-    throw new ApiError(403, "private", "Private attachments require operator");
+  if (!workAttachmentAllowed(ctx.principal,work,input.visibility==='private',true))
+    throw new ApiError(403, "private", "This role does not permit this attachment");
   if (input.bytes.byteLength > 20 * 1024 * 1024 || !input.name)
     throw new ApiError(
       422,
@@ -50,7 +47,7 @@ export async function storeAttachment(
         hash,
         now(),
       )
-      ],input.visibility==='private'?'private':'read');
+      ],input.visibility==='private'?'privateAttachment':'attachment');
   } catch (error) {
     await ctx.env.ATTACHMENTS.delete(key);
     throw error;
@@ -73,10 +70,7 @@ export async function readAttachment(ctx: WorkContext, attachmentId: string) {
   // The generic attachment door applies the quote reader rules too.
   if (row.visibility === QUOTE_VISIBILITY) return readCatalogQuote(ctx, attachmentId);
   const work = await getWork(ctx, row.work_id);
-  if (
-    row.visibility === "private" &&
-    !workPrivateReadable(ctx.principal,work)
-  )
+  if (!workAttachmentAllowed(ctx.principal,work,row.visibility==='private'))
     throw new ApiError(404, "not_found", "Attachment not found");
   const blob = await ctx.env.ATTACHMENTS.get(row.blob_key);
   if (!blob)
@@ -86,6 +80,6 @@ export async function readAttachment(ctx: WorkContext, attachmentId: string) {
       "Attachment bytes unavailable",
     );
   const current=await getWork(ctx,row.work_id);
-  if(row.visibility==='private'&&!workPrivateReadable(ctx.principal,current))throw new ApiError(404,'not_found','Attachment not found');
+  if(!workAttachmentAllowed(ctx.principal,current,row.visibility==='private'))throw new ApiError(404,'not_found','Attachment not found');
   return { blob, name: row.name };
 }

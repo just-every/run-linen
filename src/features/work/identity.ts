@@ -1,3 +1,4 @@
+import { liveDepartmentRoles } from './department-role-authority';
 import { ApiError } from "../../platform/http";
 import type { Principal } from '../../platform/types';
 import type { WorkContext } from "./core";
@@ -15,6 +16,7 @@ export async function currentPrincipal(db: D1Database, principal: Principal) {
   return {
     ...principal,
     departmentIds: departments.results.map(d=>d.id),
+    departmentRoles: await liveDepartmentRoles(db,principal.workspaceId,principal.userId),
     roles: principal.roles.filter((role) => roles.includes(role)),
   };
 }
