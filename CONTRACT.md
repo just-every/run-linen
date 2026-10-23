@@ -206,6 +206,15 @@ that product and marks how close the current code is (see [Status](#status)).
   LIFE-002, KB-003, KB-005, API-002 and L10N-001. A display name in a Slack reply
   needs a further ct ruling; it is not an exception to the notice-only rule.
 
+  Adopted authority semantic (sx-linen-c38, 23 October; ct approval pending):
+  only a current workspace owner configures rules, templates and branding; enabled
+  rules require explicit audited consent. Recipient selection never grants record
+  access. Rendering and delivery recheck current readership and subscription; an
+  approval-only recipient receives only the existing decision projection. Test
+  sends are self-only, sender domains require exact current provider validation,
+  unknown sends are never automatically repeated, and restored rules and sender
+  authority remain inactive. Catalog/private/quote placeholders are refused.
+
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
   each new door must prove the inherited audience and quote rules.
@@ -2050,6 +2059,13 @@ that product and marks how close the current code is (see [Status](#status)).
   and exportable as CSV and XLSX. **Acceptance evidence:** build "P1 by
   location", schedule it weekly to Slack, and export CSV that matches the view.
 
+  Adopted sharing semantic (sx-linen-c38, 23 October; ct approval pending):
+  only a current owner saves or shares definitions and explicitly authorizes a
+  recurring email to a named current reader. Every view, download and send uses
+  that reader's current source scope. An unknown send is not repeated; restored
+  schedules and sharing are inactive. Slack refuses with CHANNEL-001 until its
+  adapter exists.
+
 - **REPORT-003 — Data access for BI.** A read API and scheduled exports (CSV or
   Parquet to Amazon S3, Google Cloud Storage or Azure Blob, and direct loads to
   Snowflake and BigQuery) for Power BI, Looker Studio and warehouses, honoring
@@ -2057,6 +2073,17 @@ that product and marks how close the current code is (see [Status](#status)).
   as an auditor and see restricted HR tickets excluded; schedule a nightly
   incremental export to an S3 bucket and see the next run deliver only changed
   rows, under the export principal's scope, with a delivery receipt.
+
+  Adopted destination semantic (sx-linen-c38, 23 October; ct approval pending):
+  only a current owner explicitly consents to an encrypted destination. Every run
+  rechecks that original principal and current ticket scope. Nightly UTC exports
+  contain changed scoped rows; checkpoints advance only after provider readback.
+  Unknown writes require reconciliation and are never blindly repeated. Warehouse
+  loads are upserts into an owner-provisioned table, with no automatic deletion;
+  retention and deletion of earlier external copies remain the destination
+  owner's responsibility. Erasure removes local snapshots and checkpoints, and
+  restored destinations retain no credentials or active consent. Future broader
+  sources and external deletion doors inherit these authority and custody checks.
 
 - **REPORT-004 — Human work saved.** Per request type, touches and active minutes
   of employees, agents, approvers and vendors before and after automation, with
@@ -2933,8 +2960,8 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 6 | 18 | 0 | 24 |
-| Target and push further | 49 | 42 | 24 | 115 |
-| All | 55 | 60 | 24 | 139 |
+| Target and push further | 49 | 44 | 22 | 115 |
+| All | 55 | 62 | 22 | 139 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2978,7 +3005,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `DESK-016` | Global agent search | target | done | `src/features/work/search.ts`, `tests/work/search-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/search-journey.mjs` | Local public-route and 1440/390 browser evidence: all eight current record types, filters, typo matching, serial-linked asset/ticket/person, native ticket ID, subject/content/requester, recorded asset tags, scoped visible counts and pages. HR/private/restricted/article/current-role fences and generated-source withdrawal are asserted. |
 | `DESK-017` | Ticket activity history | target | partial | `tests/work/desk-scenario-cases.mjs` deskActivityChecks and `tests/execution/runtime.mjs`: agent/scenario/rule original changes and employee public-only history. `tests/work/project-cases.mjs`, `tests/work/catalog-task-cases.mjs`, `tests/work/lifecycle-template-cases.mjs`, `tests/work/desk-field-cases.mjs`: typed task, approval, field and SLA mutations. `tests/work/history-erasure-cases.mjs` historyErasureChecks: Alice/Bob/Carol/Dave, classified values, singleton groups, HR restriction, unlinkable people, dates, search and auditor scope. `tests/services/run.mjs`, `tests/services/integration.mjs`, `tests/work/asset-contract-cases.mjs`: original service/asset changes, rollback and private reverse-link scope. `tests/adoption/servicenow-import-cases.mjs` serviceNowImportChecks: original imported priority/actor/time, immutable identity, native scope, retained bytes and erasure/replay. `tests/adoption/history-cases.mjs`: typed export/restore and old-archive refusal. `tests/platform/base-auth-transfer.mjs` actual rer export/reset/import: stable opaque registered-person aliases, preserved rule identities and second-generation re-export without live credential authority. `tests/platform/mcp-tools-cases.mjs`: actor-only retained MCP history with unchanged subject erasure refusal. `tests/ui/typed-history-journey.mjs` via `tests/ui/desk-scenario-browser.mjs`: typed editors and record/source timelines at 1440/390. | Legacy admission/source-custody tombstones still use plain SHA-256. Cross-generation foreign custom/group classification proof, historical erasure dates/associations absent from already-cleared legacy payloads, and complete every-door custody proof remain unproved; no earlier-cleared values may be rebuilt. |
 | `NOTIFY-001` | Default notifications by role and event | target | partial | `src/features/execution/notifications.ts`, `tests/execution/runtime.mjs` | Explicit per-message only; no event-driven default set, chat or push delivery, or actionable agent notifications. |
-| `NOTIFY-002` | Admin-configured rules, templates and preferences | target | missing |  | No notification rules, templates, branding or preferences. |
+| `NOTIFY-002` | Admin-configured rules, templates and preferences | target | partial | (1) Edited resolution with filled placeholders and versioned before/after audit: `tests/execution/notification-rule-cases.mjs` notificationRuleChecks. (2) P1 Facilities current group lead, revocation and private/catalog refusal: the same function Facilities and scope checks. (3) Public-update opt-out with mandatory approval, waiting/security/leaver protection and real approval/lifecycle events: the same function preference and responsibility checks. (4) Sender validation, escaped branding, self-only preview/test, current queued preference and unknown-send fences: the same function SendGrid network-edge checks. (5) Native edit, branding, audit and employee preferences at 1440/390: `tests/ui/notification-browser.mjs`. (6) Inactive rule/sender authority after actual restore: `tests/platform/reporting-transfer-cases.mjs` assertRestoredReportingNotifications. | ct approval pending for the adopted owner-only explicit rule consent, current-reader projection, self-only test, verified sender and inactive restore semantic. L10N-001 owns expanded locale selection; catalog/quote placeholders remain refused and inherit CATALOG-001 before any such door ships. |
 | `ACCESS-001` | Microsoft Entra ID | target | done | `src/features/execution/connectors.ts`, `src/features/execution/identity.ts`, `tests/execution/runtime.mjs`, `tests/ui/connected-lifecycle.mjs` |  |
 | `ACCESS-002` | Okta | target | missing |  | No Okta connector. |
 | `ACCESS-003` | Google Workspace | target | missing |  | No Google Workspace connector. |
@@ -3027,8 +3054,8 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `KB-004` | Articles from resolved work | target | done | `src/features/work/knowledge-drafts.ts`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/knowledge-draft-journey.mjs`, `tests/adoption/knowledge-draft-cases.mjs` | Local public-route and paid-model-edge fixtures prove three-source and known-error drafts, all-source citations, explicit generation/budget, reviewer publication/rejection and durable suppression; current scope/source/reopen/erasure gates, native restore and inspected 1440/390 journeys. No live-model quality claim. |
 | `KB-005` | Article feedback, attachments and templates | target | missing |  | No article feedback, attachments or templates. |
 | `REPORT-001` | Service desk dashboards | target | partial | `src/features/work/knowledge.ts`, `src/features/services/economics.ts`, `tests/adoption/prior-data-upgrade.mjs`, `tests/services/run.mjs` | No dashboards, CSAT, per-agent views or reporting on imported history. |
-| `REPORT-002` | Custom and scheduled reports | target | missing |  | No report builder or scheduling. |
-| `REPORT-003` | Data access for BI | target | partial | `src/features/work/index.ts`, `tests/work/runtime.mjs` | No scheduled BI or warehouse export. |
+| `REPORT-002` | Custom and scheduled reports | target | partial | (1) P1 by location, saved/shared scoped view, matching CSV and XLSX: `tests/work/report-cases.mjs` reportBuilderChecks. (2) Explicit weekly email, recipient revocation/hold and unknown-send refusal: the same file reportScheduleChecks. (3) Native builder, sharing, downloads and named Slack gap at 1440/390: `tests/ui/reporting-browser.mjs` native reports journey. (4) Inactive sharing/schedules after actual restore: `tests/platform/reporting-transfer-cases.mjs` assertRestoredReportingNotifications. | Weekly Slack delivery depends on missing CHANNEL-001 adapter. ct approval pending for the adopted owner-only named-reader sharing, explicit recurring email consent and inactive restore semantic. |
+| `REPORT-003` | Data access for BI | target | partial | (1) Auditor read excludes restricted/retained HR: `tests/work/report-cases.mjs` biReadChecks. (2) Nightly S3 changed-only rows, original-principal revocation, receipt, unknown reconciliation and checkpoint: the same file biExportChecks. (3) GCS/Azure/Snowflake/BigQuery requests, readback, authentication, hold/scope fences: `tests/work/bi-adapter-cases.mjs` biAdapterChecks. (4) Inert actual archive restore: `tests/platform/reporting-transfer-cases.mjs` assertRestoredReportingNotifications. (5) Native masked destination/consent screens: `tests/ui/reporting-browser.mjs` and `tests/ui/bi-destination-journey.mjs` biDestinationJourney at 1440/390. | ct approval pending for the adopted owner-only explicit destination consent, original-principal scope, upsert-only external custody and inactive restore semantic. |
 | `REPORT-004` | Human work saved | target | done | `src/features/work/effort-report.ts`, `src/features/work/effort-window.ts`, `src/features/work/labor-rates.ts`, `src/ui/work-saved.tsx`, `tests/work/work-saved-cases.mjs`, `tests/work/fulfilment-link-runtime.mjs`, `tests/ui/time-journey.mjs` | Public work/report/execution doors: a request type handled by people in a baseline window and automated in the current window, with role touches/minutes, owner-declared role rates, request-attributed estimated model charges, unknown provider charges, known cost per verified outcome and the failure in the same period; 1440/390 report journey. Live provider invoices are not received, so provider charges stay unknown by design. |
 | `REPORT-005` | IT operations and asset KPIs | target | done | `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/kpi-journey.mjs` | Public routes and native 1440/390 journey: 40 incidents, 25 actual-engine changes (2 terminal failures, 3 emergency), 300 assets, 92% success and 12% emergency; defined timing groups, major durations, problem/known-error age, physical/software state and age, recorded compliance, utilization/known USD invoices, renewals and refreshes, every tile drill-through, Denver DST and current source scopes. Missing observations and provider capabilities remain explicit unknowns; no live-provider outcome claimed. |
 | `ROLE-001` | Roles and permissions | target | partial | `src/platform/auth.ts`, `tests/ui/browser.mjs`, `tests/platform/runtime.mjs` | Fixed roles; no custom roles. |
