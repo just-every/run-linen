@@ -1897,9 +1897,11 @@ INC-004 inherit the source identity and recovery boundaries.
   one change-caused incident.
 
 - **CHANGE-006 — Development-tool context.** Changes link to GitHub pull requests
-  and deployments, GitHub Actions runs, and Jira or Vector issues; a deployment
-  can raise a standard change automatically. **Acceptance evidence:** a GitHub
-  deployment to production creates a standard change linked to its PR and run.
+  and deployments, GitHub Actions runs, and Jira or Vector issues.
+  A deployment raising a standard change automatically is CHANGE-008.
+  **Acceptance evidence:** a change links to a GitHub pull request, a GitHub
+  deployment, a GitHub Actions run and a Jira or Vector issue, and each link
+  reads back on the change.
 
 - **CHANGE-007 — Release management.** Releases group related changes (e.g. "Okta
   MFA rollout") with a plan, build/test/deploy phases, a release calendar shared
@@ -1939,6 +1941,11 @@ INC-004 inherit the source identity and recovery boundaries.
   (successful) or compensated (explicitly backed out), recording each outcome.
   Native and domain restore keep go/no-go decisions as inert history and put the release in
   review; erasing a person in a release withdraws its decisions.
+
+- **CHANGE-008 — Deployment-raised changes.** A deployment can raise a standard
+  change automatically. The PR and run it links are CHANGE-006's change links.
+  **Acceptance evidence:** a GitHub deployment to production creates a standard
+  change linked to its PR and run.
 
 ### IT projects
 
@@ -2945,8 +2952,8 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 6 | 18 | 0 | 24 |
-| Target and push further | 49 | 42 | 24 | 115 |
-| All | 55 | 60 | 24 | 139 |
+| Target and push further | 49 | 42 | 25 | 116 |
+| All | 55 | 60 | 25 | 140 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -3030,8 +3037,9 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `CHANGE-003` | Change advisory board | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` retain versioned change authorization only; no CAB membership, meetings, agenda, votes, quorum or minutes assertion passes. | CAB foundations remain seed-owned work. DONE additionally needs explicit Teams votes reaching quorum through CHANNEL-002: an authorized M365 tenant, Entra app and tenant-admin consent have not been supplied. Portal approval cannot substitute for that point. |
 | `CHANGE-004` | Change calendar and freeze windows | target | done | `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs` | Public routes and connected execution prove scoped calendar/maintenance/freeze/ICS, half-open CI/workspace bounds, schedule/edit/later-dispatch refusal, owner emergency scheduling with separate effect grants, current role and generic hidden conflicts. Native archive preserves links with windows inactive until owner review; native 1440/390 calendar, editor, emergency and inactive states are inspected. Local evidence only. |
 | `CHANGE-005` | Rollback, change-caused incidents and post-implementation review | target | partial | `src/features/services/changes.ts`, `tests/services/integration.mjs` | Automatic suspected-cause correlation from implementation start, evidenced human confirmation or rejection and confirmed-cause failure reporting are proved in `tests/services/integration.mjs` (signed failure during implementation). Gap: watching-check configuration, continuous healthy observation gate, PIR closure, full restricted-source correlation and live Oncall acceptance. Execution verification alone still does not prove this clause. |
-| `CHANGE-006` | Development-tool context | target | partial | `src/features/intelligence/engineering.ts` | No GitHub/Jira/Vector links or deployment-raised changes. |
+| `CHANGE-006` | Development-tool context | target | partial | `src/features/intelligence/engineering.ts` | No GitHub pull request, GitHub deployment, GitHub Actions run, Jira or Vector issue links on changes. |
 | `CHANGE-007` | Release management | target | done | (1) Three related changes, build/test references, shared calendar/ICS and ticket/problem/CI links: `tests/services/release-cases.mjs` releaseChecks via `tests/services/integration.mjs`; `tests/ui/release-journey.mjs` native release journey. (2) Named go/no-go, canary then rollout with live revision/role/grant fences: releaseChecks and the native release journey. (3) Cohort-only release notes: the native release journey asserts member visibility and outsider refusal. (4) Failed member holds completion until verified backout: releaseChecks and native release journey. Every native state is inspected at 1440/390. (5) Inert native archive decisions: `tests/platform/base-auth-transfer.mjs`. | None for this clause. Network deployment/probe edges are fixtures; notes inherit CHANNEL-008’s future Slack/Teams delivery before those channels ship. No live provider, hosted or owner acceptance claimed. |
+| `CHANGE-008` | Deployment-raised changes | target | missing |  | No GitHub deployment intake and no automatically raised standard change. |
 | `PROJECT-001` | IT team projects | target | done | `src/features/work/projects.ts`, `src/ui/projects.tsx`, `tests/work/project-cases.mjs` | Public-route proof: "Denver office move" with 12 owned tasks across two milestones as a board and due-date timeline; a dependency due after its dependent task is flagged blocked and done is refused until it closes; 30 asset relocations, two changes and a ticket link (an HR ticket is refused); an employee is refused every project route and the workload API, changing nothing; the agent's workload shows assigned tickets beside six project tasks. |
 | `KB-001` | Knowledge base | target | done | `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs` |  |
 | `KB-002` | Federated knowledge sources | target | missing |  | No federated sources (Confluence, Slate, Google Drive, SharePoint, Notion). |

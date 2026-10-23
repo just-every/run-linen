@@ -16,7 +16,12 @@ export async function typedHistoryJourney({page,base,out}) {
    const current=type==='multiselect'?await input.evaluate(e=>[...e.selectedOptions].map(o=>o.value)):await input.inputValue();
    const desired=width===1440?after:before;
    if(['dropdown','boolean','multiselect'].includes(type))await input.selectOption(type==='multiselect'?desired:String(desired));else await input.fill(String(desired));
-   const response=page.waitForResponse(r=>r.url().endsWith(`/work/${work.id}/fields`)&&r.request().method()==='POST');await form.getByRole('button',{name:`Save ${name}`,exact:true}).click();assert.equal((await response).status(),200);await page.getByRole('form',{name:`Edit ${name}`,exact:true}).waitFor();assert.notDeepEqual(current,desired);assert.deepEqual((await api(`/work/${work.id}/desk`)).fields.find(f=>f.name===name).value,desired);
+   const previousForm=await form.elementHandle();assert.ok(previousForm);
+   const response=page.waitForResponse(r=>r.url().endsWith(`/work/${work.id}/fields`)&&r.request().method()==='POST');await form.getByRole('button',{name:`Save ${name}`,exact:true}).click();assert.equal((await response).status(),200);
+   // A successful save refreshes the entire fields section. Finish that refresh
+   // before editing another field, whose draft would otherwise be discarded.
+   await previousForm.waitForElementState('hidden');await previousForm.dispose();await form.waitFor();
+   assert.notDeepEqual(current,desired);assert.deepEqual((await api(`/work/${work.id}/desk`)).fields.find(f=>f.name===name).value,desired);
   }
   const history=page.getByRole('list',{name:'Ticket activity',exact:true});await history.getByText(width===1440?'Office: Austin → Denver':'Office: Denver → Austin',{exact:true}).waitFor();await history.scrollIntoViewIfNeeded();
   await fitCapture(page,out,'ticket-typed-fields',width);
