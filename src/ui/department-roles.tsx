@@ -93,7 +93,7 @@ function RoleDefinition({ admin, role, onSaved }: { admin: RoleAdmin; role?: Dep
   return <form className="inline-form" aria-label={role ? `Edit ${role.name}` : 'Create custom role'} onSubmit={save}>
     <div className="field-grid">
       <label>Role name<input name="name" required defaultValue={role?.name ?? ''} /></label>
-      {role ? <p>Department: {role.departmentName}</p> : <label>Department<select name="departmentId" required defaultValue="">
+      {role ? <p>Department: {role.departmentName}</p> : <label>Department<select aria-label="Department" name="departmentId" required defaultValue="">
         <option value="">Choose…</option>
         {admin.departments.filter(d => d.kind !== 'hr').map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
       </select></label>}
@@ -130,8 +130,8 @@ function RoleAssignment({ role, people, onSaved }: { role: DepartmentRole; peopl
   }
   return <details className="action-disclosure"><summary>Manage role assignments</summary>
     <form className="inline-form" aria-label={`${role.name} assignments`} onSubmit={save}>
-      <label>Assignment action<select value={operation} onChange={event => setOperation(event.target.value)}><option value="grant">Grant role</option><option value="withdraw">Withdraw role</option></select></label>
-      <label>Person<select key={operation} name="userId" required defaultValue=""><option value="">Choose…</option>{available.map(person => <option key={person.id} value={person.id}>{person.name} · {person.email}</option>)}</select></label>
+      <label>Assignment action<select aria-label="Assignment action" value={operation} onChange={event => setOperation(event.target.value)}><option value="grant">Grant role</option><option value="withdraw">Withdraw role</option></select></label>
+      <label>Person<select aria-label="Person" key={operation} name="userId" required defaultValue=""><option value="">Choose…</option>{available.map(person => <option key={person.id} value={person.id}>{person.name} · {person.email}</option>)}</select></label>
       {!role.active && <p>This role is inactive. Activate it before granting access.</p>}
       <ErrorNotice error={mutation.error} />
       <button className="action secondary" disabled={mutation.pending || !available.length || (!role.active && operation === 'grant')}>{mutation.pending ? 'Saving…' : operation === 'grant' ? 'Grant role' : 'Withdraw role'}</button>
