@@ -47,9 +47,12 @@ export async function notificationRuleChecks({call,db,time}) {
   const calendar=await ok('/calendars',{name:key(),timezone:'America/Chicago',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]},'issuer',201);
   const item=await ok('/catalog',{name:key(),kind:'service',target:key(),ownerId:'issuer'},'issuer',201);
   await ok(`/catalog/${item.id}/approvals`,{revision:1,calendarId:calendar.id,approvals:[{key:'review',name:key(),mode:'any',approvers:[{type:'member',userId:'other'}],remindHours:24,slaHours:24}]});
+  await db.prepare("UPDATE memberships SET roles_json='[\"approver\"]' WHERE workspace_id='w' AND user_id='other'").run();
   const approvalWork=await work();
-  await ok(`/work/${approvalWork.id}/fulfilment`,{catalogId:item.id,catalogRevision:2,beneficiaryId:'actor',purpose:key()},'actor');
+  await ok(`/work/${approvalWork.id}/fulfilment`,{catalogId:item.id,catalogRevision:2,beneficiaryId:'actor',purpose:key()},'actor',201);
   assert.ok((await inbox('other')).some(i=>i.workId===approvalWork.id&&i.event==='approval.requested'),'a real pending approval bypasses optional-update opt-out');
+  assert.equal((await call('/work/'+approvalWork.id,undefined,'other')).status,404,'An approval notification grants no general ticket read');
+  await db.prepare("UPDATE memberships SET roles_json='[\"operator\"]' WHERE workspace_id='w' AND user_id='other'").run();
 
   // A P1 Facilities condition and current lead recipient are evaluated against the native ticket.
   const department=await ok('/departments',{name:key(),kind:'facilities'},'issuer',201);

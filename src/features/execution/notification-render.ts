@@ -1,7 +1,7 @@
 import { ApiError, now } from '../../platform/http';
 import { getWork, type WorkRecord } from '../work/core';
 import { currentWorkPrincipal } from '../work/identity';
-import { workPrivateReadable } from '../work/scope';
+import { workReadable, workPrivateReadable } from '../work/scope';
 import { slaFor } from '../work/sla-policies';
 import { assert, membership } from './authority';
 import { mandatoryEvents, type NotificationRule, type NotificationTemplate, type RecipientSelector } from './notification-schema';
@@ -15,11 +15,21 @@ export async function notificationReader(ctx:CoreContext,userId:string) {
   await currentWorkPrincipal(reader);
   return reader;
 }
-export async function readableNotificationWork(ctx:CoreContext,workId:string):Promise<WorkRecord> {
-  const work=await getWork(ctx,workId);
-  assert(!await ctx.env.DB.prepare('SELECT 1 FROM work_erasure WHERE workspace_id=? AND person_id IN(?,?,?)').bind(ctx.principal.workspaceId,ctx.principal.userId,work.requester_id,work.beneficiary_id).first(),'notification_erased',403);
-  assert(!await ctx.env.DB.prepare('SELECT 1 FROM platform_identity_erasures WHERE workspace_id=? AND user_id IN(?,?,?)').bind(ctx.principal.workspaceId,ctx.principal.userId,work.requester_id,work.beneficiary_id).first(),'notification_erased',403);
-  return work;
+export type NotificationWork = WorkRecord & {approvalProjection?:{title:string;requesterName:string}};
+export async function readableNotificationWork(ctx:CoreContext,workId:string,approval=false):Promise<NotificationWork> {
+  await currentWorkPrincipal(ctx);
+  const row=await ctx.env.DB.prepare('SELECT * FROM work_records WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId,workId).first<WorkRecord>();
+  assert(row,'notification_record_missing',404);
+  assert(!await ctx.env.DB.prepare('SELECT 1 FROM work_erasure WHERE workspace_id=? AND person_id IN(?,?,?)').bind(ctx.principal.workspaceId,ctx.principal.userId,row.requester_id,row.beneficiary_id).first(),'notification_erased',403);
+  assert(!await ctx.env.DB.prepare('SELECT 1 FROM platform_identity_erasures WHERE workspace_id=? AND user_id IN(?,?,?)').bind(ctx.principal.workspaceId,ctx.principal.userId,row.requester_id,row.beneficiary_id).first(),'notification_erased',403);
+  if(workReadable(ctx.principal,row))return getWork(ctx,workId);
+  assert(approval,'notification_record_scope',404);
+  // Inherit the existing CATALOG-001 decision projection, without granting ticket or quote access.
+  const [{listStageDecisions},{listFulfilmentDecisions}]=await Promise.all([import('../work/approval-views'),import('../work/fulfilment-decisions')]);
+  const [stages,managers]=await Promise.all([listStageDecisions(ctx),listFulfilmentDecisions(ctx)]);
+  const decision=[...stages.items,...managers.items].find(d=>d.workId===workId&&d.expectedWorkRevision===row.revision);
+  assert(decision,'notification_approval_scope',404);
+  return {...row,approvalProjection:{title:decision.title,requesterName:decision.requesterName}};
 }
 export async function ruleMatches(ctx:CoreContext,rule:NotificationRule,work:WorkRecord) {
   const c=JSON.parse(rule.conditions_json),classification=await ctx.env.DB.prepare('SELECT current_json FROM work_classifications WHERE workspace_id=? AND work_id=?').bind(ctx.principal.workspaceId,work.id).first<{current_json:string|null}>();
@@ -55,19 +65,22 @@ export async function recipientPreference(ctx:CoreContext,rule:NotificationRule)
   return {enabled:Boolean(rule.mandatory)||mandatoryEvents.includes(rule.event)||preference?.enabled!==0,language:preference?.language??'en-US'};
 }
 /** Only core fields are projected. Never inspect context_json, catalog snapshots, messages or attachments. */
-export async function renderNotification(ctx:CoreContext,template:NotificationTemplate,work:WorkRecord) {
+export async function renderNotification(ctx:CoreContext,template:NotificationTemplate,work:NotificationWork) {
   const content=template.subject+'\n'+template.body,values:Record<string,string>={
-    'ticket.number':work.id,'ticket.title':work.title,'ticket.state':work.state,
-    'ticket.url':`/app#/work/${encodeURIComponent(work.id)}`,
+    'ticket.number':work.id,'ticket.title':work.approvalProjection?.title??work.title,...(!work.approvalProjection?{'ticket.state':work.state}:{}),
+    'ticket.url':work.approvalProjection?'/app#/decisions':`/app#/work/${encodeURIComponent(work.id)}`,
   };
   if(content.includes('requester.first_name')) {
+    if(work.approvalProjection){values['requester.first_name']=work.approvalProjection.requesterName.trim().split(/\s+/)[0];}
+    else {
     assert(ctx.principal.userId===work.requester_id||workPrivateReadable(ctx.principal,work),'notification_placeholder_scope',403);
     const requester=await ctx.env.DB.prepare('SELECT u.name FROM users u JOIN memberships m ON m.user_id=u.id WHERE m.workspace_id=? AND m.user_id=? AND m.active=1').bind(ctx.principal.workspaceId,work.requester_id).first<{name:string}>();
     assert(requester?.name?.trim(),'notification_placeholder_unavailable',409);
     values['requester.first_name']=requester!.name.trim().split(/\s+/)[0];
+    }
   }
   if(content.includes('sla.due_at')) {
-    assert(workPrivateReadable(ctx.principal,work),'notification_placeholder_scope',403);
+    assert(!work.approvalProjection&&workPrivateReadable(ctx.principal,work),'notification_placeholder_scope',403);
     const sla=await slaFor(ctx,work,now());
     assert(sla?.resolution.dueAt,'notification_placeholder_unavailable',409);
     values['sla.due_at']=sla.resolution.dueAt;

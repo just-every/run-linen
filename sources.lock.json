@@ -2023,11 +2023,11 @@
       "executable": false
     },
     "src/features/execution/notification-dispatch.ts": {
-      "sha256": "3444e69c72ea27bcb08b6194cd79d6e33d695e3a01c12d2e7f78021efdc33db4",
+      "sha256": "f022715876a5f828bef8fb0f6be3716867382535d2bf707a3dfea6e7016cf1fc",
       "executable": false
     },
     "src/features/execution/notification-render.ts": {
-      "sha256": "7b5992e86843437e3ce69a203b761e82b48e273bd984e4de9f18cab35768d6f1",
+      "sha256": "50e6c8192600b9d1614e44519f8de8bdedee8397fd585d753033372c7a44400b",
       "executable": false
     },
     "src/features/execution/notification-routes.ts": {
@@ -5199,7 +5199,7 @@
       "executable": false
     },
     "src/ui/notification-settings.tsx": {
-      "sha256": "d8bf8c677d86defdb92c50f6240f07aa352155a7909177d78d17980d7e29fde8",
+      "sha256": "9096eae0dc00ad3595729f376a06ae33be8f63ec83a5c14419322aa7af906998",
       "executable": false
     },
     "src/ui/obligation-actions.tsx": {
@@ -5627,7 +5627,7 @@
       "executable": false
     },
     "tests/execution/notification-rule-cases.mjs": {
-      "sha256": "7c0bf7c1be1052621ad867b7ae478676e7b9391a58f2195682ca97e4287cbc45",
+      "sha256": "6ebf6d508af2ab5d854d43494dc181ee5370abfe48b34a712251e5ac59dcdb87",
       "executable": false
     },
     "tests/execution/README.md": {

@@ -17,7 +17,7 @@ async function deliveryAllowed(ctx:CoreContext,rule:NotificationRule,workId:stri
   const owner=await consentOwner(ctx,rule),work=await readableNotificationWork(owner,workId);
   assert(await ruleMatches(owner,rule,work),'notification_condition_changed',403);
   const reader=await notificationReader(ctx,recipientId);
-  const readable=await readableNotificationWork(reader,workId);
+  const readable=await readableNotificationWork(reader,workId,rule.event==='approval.requested');
   if(isTest)assert(recipientId===rule.consented_by,'notification_test_owner_changed',403);
   else assert((await ruleRecipients(owner,rule,work)).has(recipientId),'notification_recipient_changed',403);
   const preference=await recipientPreference(reader,rule);
@@ -106,7 +106,7 @@ export async function notificationInbox(ctx:CoreContext) {
   for(const row of rows) {
     try {
       const rendered=await notificationRuleMessage(ctx,row.id);
-      if(rendered)items.push({id:row.id,workId:row.work_id,event:row.event,subject:rendered.subject,body:rendered.body,state:row.state,createdAt:row.created_at});
+      if(rendered)items.push({id:row.id,workId:row.work_id,event:row.event,url:row.event==='approval.requested'?'/app#/decisions':`/app#/work/${encodeURIComponent(row.work_id)}`,subject:rendered.subject,body:rendered.body,state:row.state,createdAt:row.created_at});
     } catch(error) { if(!(error instanceof ApiError))throw error; }
   }
   return {items};
