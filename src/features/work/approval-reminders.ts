@@ -1,3 +1,4 @@
+import { notifyWorkEvent } from './notification-port';
 import { ApiError, id, now } from '../../platform/http';
 import type { WorkContext, WorkRecord } from './core';
 import { createWork } from './core';
@@ -61,7 +62,7 @@ async function openPendingStages(ctx:WorkContext,at:string){
   const chain=await chainStatus(ctx,work,catalog,f,managerApproved);
   const pending=!managerApproved&&managerRow&&!await managerRejected(ctx,work,catalog,f)?[{key:'manager',activeAt:managerRow.active_at}]:chain.pendingStages;
   const statements=await activateStageStatements(ctx,f.id,pending,at);
-  if(statements.length)await db.batch(statements);
+  if(statements.length){await db.batch(statements);await notifyWorkEvent(ctx,{workId:work.id,event:'approval.requested',sourceId:'approval-stage:'+f.id+':'+work.revision+':'+f.revision+':'+pending.map(p=>p.key).join(',')});}
 
  }
 }

@@ -1,3 +1,6 @@
+import { CustomRoles } from './custom-roles';
+import { CustomReports, BiExports } from './reports';
+import { NotificationSettings } from './notification-settings';
 import {DepartmentManagement} from './department-management';
 import {ApprovalMailSettings} from './approval-mail-settings';
 import { OperationsKpis } from './operations-kpis';
@@ -66,7 +69,8 @@ export function OperationsSpace({ section }: { section: string }) {
         </Notice>
       )}
       {section==="notifications"&&owner&&<ApprovalMailSettings/>}
-      {section==='members'&&owner&&<DepartmentManagement/>}
+      {section==="notifications"&&<NotificationSettings/>}
+      {section==='members'&&owner&&<><DepartmentManagement/><CustomRoles/></>}
       <div className={section === "members" ? "split" : "stack"}>
       {list.loading ? (
         <Loading />
@@ -300,6 +304,8 @@ export function ReportSpace() {
           coverage alongside every count.
         </p>
       </Hero>
+      <CustomReports />
+      {session.principal.roles.includes("owner") && <BiExports />}
       <OperationsKpis />
       <form className="inline-form" onSubmit={run}>
         <div className="field-grid">

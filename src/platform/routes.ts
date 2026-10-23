@@ -1,3 +1,4 @@
+import { registerCustomRoleRoutes } from './custom-roles'
 import { Hono } from 'hono'
 import type { AppEnv } from './types'
 import { authenticated, createSession, logout, session } from './auth'
@@ -42,6 +43,7 @@ export function platformApp(){
   await createSession(c,p.userId,p.workspaceId,user.version+1);return c.json({changed:true})
  })
  app.get('/workspace',async c=>c.json(await c.env.DB.prepare('SELECT id,name,created_at FROM workspaces WHERE id=?').bind(c.get('principal').workspaceId).first()))
+ registerCustomRoleRoutes(app)
  registerSettingsRoutes(app)
  return app
 }
