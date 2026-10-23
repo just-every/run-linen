@@ -2158,6 +2158,19 @@ INC-004 inherit the source identity and recovery boundaries.
   **Acceptance evidence:** a custom "Facilities agent" role reads Facilities
   tickets only; an approver approves without agent access.
 
+  **Adopted default, pending ct (23 October):** only an owner defines and assigns
+  a custom department role, with an audit event for each change. Grants name
+  explicit ticket capabilities and a current role revision. Editing a definition
+  withdraws its assignments; each person needs fresh confirmation. Custom grants
+  apply only to normal tickets in the named active non-HR department, never
+  restricted tickets, retained HR history, legacy unscoped tickets, catalog
+  audiences, vendor quotes or external execution authority. Existing participant
+  and fixed-role rights apply independently. Restored definitions and assignments
+  are inactive. A member with any live custom ticket role counts as one agent
+  seat; an unassigned requester or approver remains free. Department administration
+  stays owner-only while delegated workspace administration and custom HR roles
+  await implementation and a ct ruling.
+
   Catalog audience and `catalog_quote` surfaces inherit CATALOG-001's
   *Approved audience and quote semantic (ct, 21 October)* before they ship;
   each new door must prove the inherited audience and quote rules.
@@ -3051,7 +3064,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `REPORT-003` | Data access for BI | target | partial | `src/features/work/index.ts`, `tests/work/runtime.mjs` | No scheduled BI or warehouse export. |
 | `REPORT-004` | Human work saved | target | done | `src/features/work/effort-report.ts`, `src/features/work/effort-window.ts`, `src/features/work/labor-rates.ts`, `src/ui/work-saved.tsx`, `tests/work/work-saved-cases.mjs`, `tests/work/fulfilment-link-runtime.mjs`, `tests/ui/time-journey.mjs` | Public work/report/execution doors: a request type handled by people in a baseline window and automated in the current window, with role touches/minutes, owner-declared role rates, request-attributed estimated model charges, unknown provider charges, known cost per verified outcome and the failure in the same period; 1440/390 report journey. Live provider invoices are not received, so provider charges stay unknown by design. |
 | `REPORT-005` | IT operations and asset KPIs | target | done | `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/kpi-journey.mjs` | Public routes and native 1440/390 journey: 40 incidents, 25 actual-engine changes (2 terminal failures, 3 emergency), 300 assets, 92% success and 12% emergency; defined timing groups, major durations, problem/known-error age, physical/software state and age, recorded compliance, utilization/known USD invoices, renewals and refreshes, every tile drill-through, Denver DST and current source scopes. Missing observations and provider capabilities remain explicit unknowns; no live-provider outcome claimed. |
-| `ROLE-001` | Roles and permissions | target | partial | `src/platform/auth.ts`, `tests/ui/browser.mjs`, `tests/platform/runtime.mjs` | Fixed roles; no custom roles. |
+| `ROLE-001` | Roles and permissions | target | partial | Facilities-only access, independent capabilities, current revocation, catalog boundaries and approver-only decisions: `tests/work/department-role-cases.mjs` — `departmentRoleChecks`; native owner configuration and scoped member use at 1440 and 390: `tests/ui/department-role-journey.mjs` — `departmentRoleJourney`; free requester and approver seats with unique live custom-agent billing: `tests/ui/billing-browser.mjs`; inactive native transfer: `tests/platform/base-auth-transfer.mjs`. | Ct approval pending for the adopted owner-only audited positive grants, revision reconfirmation, non-HR normal-ticket scope, inactive restore and custom-agent seat default. Delegated workspace administration and custom HR roles remain unbuilt; department administration stays owner-only. |
 | `SSO-001` | Sign-in, SSO and SCIM | target | partial | `src/platform/sso.ts`, `src/platform/base-auth`, `tests/platform/runtime.mjs`, `tests/platform/base-auth-runtime.mjs` | No SAML/OIDC with named IdPs, SCIM or MFA enforcement. |
 | `AUDIT-001` | Audit log | target | done | `src/platform/privacy.ts`, `tests/platform/privacy-runtime.mjs`, `tests/platform/config-runtime.mjs` |  |
 | `API-001` | REST API and webhooks | target | partial | `src/features/work/index.ts`, `src/features/execution/index.ts`, `tests/work/runtime.mjs` | Scoped automation REST tokens and outbound signed event webhooks are unbuilt; session-authenticated REST routes do not prove token authentication. |

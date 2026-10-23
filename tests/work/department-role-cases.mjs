@@ -132,7 +132,7 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   for(const work of hidden)await call('/work/'+work.id,undefined,agent,404);
 
   // A scoped ticket grant never inherits the separate catalog audience or quote readership.
-  const quoteItem=await call('/catalog',{name:'synthetic-linen-18070',kind:'service',target:'synthetic-linen-18071',ownerId,form:{quoteRequired:true}},owner,201);
+  const quoteItem=await call('/catalog',{name:'synthetic-linen-18070',kind:'service',target:'synthetic-linen-18071',ownerId,departmentId:facilities.id,form:{quoteRequired:true}},owner,201);
   const quote=await uploadBytes(path+'/catalog-quote',new TextEncoder().encode('%PDF-1.7\nsynthetic-linen-18072\n%%EOF'),{...requester,'content-type':'application/pdf','x-filename':'synthetic-linen-18073.pdf','x-catalog-id':quoteItem.id});
   assert.equal(quote.status,201,JSON.stringify(quote.value));
   const quoteDefinition=(await call('/catalog')).items.find(item=>item.id===quoteItem.id);
@@ -189,4 +189,7 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   await call('/work/'+approvalWork.id,undefined,approver,404);
   assert.ok(!(await call('/work',undefined,approver)).items.some(item=>item.id===approvalWork.id));
   assert.ok(await auditCount()>countBeforeDenials,'Confirmed role changes retain an owner audit trail');
+  await call('/people/'+agentId+'/erase',{revision:0,reason:'synthetic-linen-18079'});
+  assert.ok(!(await call('/department-roles')).items.flatMap(item=>item.members).some(member=>member.userId===agentId),'Erasure removes custom role assignments');
+  await call(rolePath+'/members',{roleRevision:role.revision,userId:agentId,active:true,revision:0},owner,422);
 }
