@@ -11,7 +11,7 @@ export function registerBillingRoutes(app: Hono<AppEnv>) {
     return c.json(await c.env.DB.prepare('SELECT * FROM billing_plans WHERE workspace_id=?').bind(ctx.principal.workspaceId).first());
   });
   app.put('/billing/plan', async c => {
-    const ctx = await current(context(c), ['owner']), b = await jsonBody(c);
+    const ctx = await current(context(c), ['owner']), b: any = await jsonBody(c);
     const cents = integer(b.agentSeatCents, 10000000), revision = integer(b.revision, 1000000000), name = requiredString(b.name, 'name', 100);
     const before = await c.env.DB.prepare('SELECT * FROM billing_plans WHERE workspace_id=?').bind(ctx.principal.workspaceId).first();
     const result = revision === 0
@@ -22,7 +22,7 @@ export function registerBillingRoutes(app: Hono<AppEnv>) {
     return c.json({ updated: true, revision: revision + 1 });
   });
   app.post('/billing/invoice-preview', async c => {
-    const ctx = await current(context(c), ['owner']), b = await jsonBody(c);
+    const ctx = await current(context(c), ['owner']), b: any = await jsonBody(c);
     const plan = await c.env.DB.prepare('SELECT * FROM billing_plans WHERE workspace_id=?').bind(ctx.principal.workspaceId).first<any>();
     assert(plan, 'billing_plan_required', 409);
     const address = b.address;
