@@ -35,6 +35,13 @@ globalThis.fetch = async (input, init = {}) => {
     }
     throw Error('Unexpected synthetic-linen-45 provider path');
   }
+  // CHANNEL-007: a RingCentral sandbox extension and its inbound call log. Records come from the fixture state.
+  if (host === 'platform.devtest.ringcentral.com') {
+    if (url.pathname.endsWith('/oauth/token')) { await event('rc-token', {}); return Response.json({ access_token: 'synthetic-linen-rc' }); }
+    if (url.pathname.endsWith('/extension/~')) return Response.json({ id: 1234, account: { id: 5678 } });
+    if (url.pathname.endsWith('/call-log')) return Response.json({ records: config.rc ?? [] });
+    return new Response('missing', { status: 404 });
+  }
   // CHANNEL-003: Gmail, its OAuth token endpoint and public DNS. Mailbox content and DNS answers come from the fixture state; every send is recorded.
   if (host === 'oauth2.googleapis.com') return Response.json({ access_token: 'synthetic-linen-token' });
   if (host === 'cloudflare-dns.com') {

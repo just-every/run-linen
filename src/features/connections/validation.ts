@@ -5,9 +5,11 @@ import {auditStatement,check,connection,current,revision,type ConnectionContext}
 import {controlledHealth,providerReader} from './providers'
 import {verifySendGridConnection} from './sendgrid'
 import {verifyMailboxConnection} from './mailbox'
+import {verifyRingCentralConnection} from './ringcentral'
 export async function testConnection(ctx:ConnectionContext,key:string,rev:number){const row=await connection(ctx,key,rev);let state='active',evidence:Record<string,unknown>={readOnly:true,workflowVerified:false,writeAuthority:'not-established'};
  if(row.provider==='openai')evidence={...evidence,...await validateModel(ctx,key)};
  else if(row.provider==='sendgrid')evidence={...evidence,...await verifySendGridConnection(ctx,row)};
+ else if(row.provider==='ringcentral')evidence={...evidence,...await verifyRingCentralConnection(ctx,row)};
  else if(row.provider==='gmail'||row.provider==='exchange-online')evidence={...evidence,...await verifyMailboxConnection(ctx,row)};
  else if(row.provider==='monitoring-webhook'){check(row.secret_ciphertext,'credential_required',503);let secret:any;try{secret=JSON.parse(await decryptSecret(ctx.env.ENCRYPTION_KEY,row.secret_ciphertext))}catch{check(false,'credential_invalid',400)}check(typeof secret.signingSecret==='string'&&secret.signingSecret.length>=16,'signing_secret_required',400);state='inbound-unobserved';evidence={...evidence,coverage:'Awaiting first authenticated event'}}
  else if(['controlled-deployment','workflow-probe','notification-webhook'].includes(row.provider))evidence={...evidence,...await controlledHealth(ctx,row)};

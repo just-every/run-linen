@@ -9,6 +9,7 @@ import { IntelligenceSpace } from "./intelligence";
 import { KnowledgeSpace } from "./knowledge";
 import { OperationsSpace, ReportSpace } from "./operations";
 import { ProjectsSpace } from "./projects";
+import { WalkUpSpace } from "./walkup";
 export function ContextSpace({
   section,
   selectedId,
@@ -64,6 +65,8 @@ export function ContextSpace({
               <AdoptionSpace selectedId={selectedId} />
             ) : section === "reports" ? (
               <ReportSpace />
+            ) : section === "walkup" ? (
+              <WalkUpSpace />
             ) : section === "projects" ? (
               <ProjectsSpace selectedId={selectedId} />
             ) : serviceSections.includes(section) ? (

@@ -1,16 +1,23 @@
 import type { Hono } from 'hono';
 import type { AppEnv } from '../../src/platform/types';
 // TEST ONLY: the Gmail, Microsoft Graph, OAuth token and public DNS network edges. The product code under test is unmodified.
-interface State { profile: string; gmail: Record<string, string>; graph: Record<string, string>; dns: Record<string, string[]>; tokenStatus: number; sendStatus: number }
-const fresh = (): State => ({ profile: '', gmail: {}, graph: {}, dns: {}, tokenStatus: 200, sendStatus: 0 });
+interface State { rc: unknown[]; profile: string; gmail: Record<string, string>; graph: Record<string, string>; dns: Record<string, string[]>; tokenStatus: number; sendStatus: number }
+const fresh = (): State => ({ rc: [], profile: '', gmail: {}, graph: {}, dns: {}, tokenStatus: 200, sendStatus: 0 });
 let state = fresh();
 const calls: Record<string, unknown>[] = [];
 export async function mailProvider(url: URL, init?: RequestInit): Promise<Response | null> {
-  const body = typeof init?.body === 'string' ? init.body : '';
+  const body = typeof init?.body === 'string' ? init.body : init?.body instanceof URLSearchParams ? init.body.toString() : '';
   const auth = new Headers(init?.headers).get('authorization');
   if (url.hostname === 'oauth2.googleapis.com' || url.hostname === 'login.microsoftonline.com') {
     calls.push({ kind: 'token', host: url.hostname, grant: new URLSearchParams(body).get('grant_type') });
     return state.tokenStatus === 200 ? Response.json({ access_token: 'synthetic-linen-9300' }) : new Response('denied', { status: state.tokenStatus });
+  }
+  if (url.hostname === 'platform.devtest.ringcentral.com') {
+    if (url.pathname.endsWith('/oauth/token')) { calls.push({ kind: 'rc-token', grant: new URLSearchParams(body).get('grant_type'), basic: new Headers(init?.headers).get('authorization')?.startsWith('Basic ') }); return state.tokenStatus === 200 ? Response.json({ access_token: 'synthetic-linen-9301' }) : new Response('denied', { status: state.tokenStatus }); }
+    if (new Headers(init?.headers).get('authorization') !== 'Bearer synthetic-linen-9301') return new Response('unauthenticated', { status: 401 });
+    if (url.pathname.endsWith('/extension/~')) return Response.json({ id: 1234, account: { id: 5678 } });
+    if (url.pathname.endsWith('/call-log')) { calls.push({ kind: 'rc-log', direction: url.searchParams.get('direction'), recordings: url.searchParams.get('withRecording') }); return Response.json({ records: state.rc }); }
+    return new Response('missing', { status: 404 });
   }
   if (url.hostname === 'cloudflare-dns.com') {
     const name = url.searchParams.get('name')!, type = url.searchParams.get('type')!, values = state.dns[`${type}:${name}`];

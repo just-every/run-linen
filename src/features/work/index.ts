@@ -1,6 +1,7 @@
 import { registerDepartmentRoutes } from './department-routes';
 import { registerCollaborationRoutes } from './collaboration-routes';
 import { registerMailRoutes } from './mail-routes';
+import { registerWalkupRoutes } from './walkup-routes';
 import { registerCatalogAudienceRoutes } from './catalog-audience-routes';
 import { registerAccessPolicyRoutes } from './access-policy-routes';
 import { registerLifecycleTemplateRoutes } from './lifecycle-template-routes';
@@ -38,6 +39,7 @@ export * from "./calendar";
 export * from "./execution";
 export * from "./intake";
 export { pollMailboxes } from "./mail-poll";
+export { pollPhoneLines } from "./phone-poll";
 export { restoreAdoptionRecord } from "./restore";
 export { erasePerson, processBlobErasure } from "./privacy";
 export { processDueRetention } from "./retention";
@@ -48,6 +50,7 @@ export function registerWorkRoutes(app: Hono<AppEnv>) {
   registerDepartmentRoutes(app);
   registerCollaborationRoutes(app);
   registerMailRoutes(app);
+  registerWalkupRoutes(app);
   registerBundleRoutes(app);
   registerSlaRoutes(app);
   registerDeskFieldRoutes(app);

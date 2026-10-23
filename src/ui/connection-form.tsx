@@ -11,6 +11,7 @@ export const providers = [
   { value: "controlled-deployment", label: "Owned release endpoint" },
   { value: "notification-webhook", label: "Notification delivery" },
   { value: "sendgrid", label: "SendGrid email delivery" },
+  { value: "ringcentral", label: "RingCentral IT phone line" },
   { value: "gmail", label: "Gmail support mailbox" },
   { value: "exchange-online", label: "Exchange Online support mailbox" },
   { value: "monitoring-webhook", label: "Monitoring events" },
@@ -61,6 +62,14 @@ export function ConnectionForm({
             },
             { name: "apiKey", label: "API key", type: "password", required },
           ]
+        : provider === "ringcentral"
+          ? [
+              { name: "line", label: "IT line number", required: true, value: old.line },
+              { name: "environment", label: "Environment", type: "select", required: true, value: old.environment ?? "sandbox", options: [{ value: "sandbox", label: "Developer sandbox" }, { value: "production", label: "Production" }] },
+              { name: "clientId", label: "Application client ID", required },
+              { name: "clientSecret", label: "Application client secret", type: "password", required },
+              { name: "jwt", label: "JWT credential for the extension", type: "password", required, hint: "Read-only access to this extension's inbound call log and recordings." },
+            ]
         : provider === "gmail" || provider === "exchange-online"
           ? [
               { name: "mailbox", label: "Support mailbox address", type: "email", required: true, value: old.mailbox,
@@ -197,6 +206,9 @@ export function ConnectionForm({
     } else if (provider === "freshservice") {
       config = { domain: values.domain };
       secret = values.apiKey;
+    } else if (provider === "ringcentral") {
+      config = { line: values.line, environment: values.environment };
+      secret = values.jwt ? JSON.stringify({ clientId: values.clientId, clientSecret: values.clientSecret, jwt: values.jwt }) : undefined;
     } else if (provider === "gmail" || provider === "exchange-online") {
       config = { mailbox: String(values.mailbox ?? "").trim().toLowerCase(), mode: values.mode, ...(provider === "exchange-online" ? { tenantId: values.tenantId } : {}) };
       secret = values.clientSecret ? JSON.stringify({ clientId: values.clientId, clientSecret: values.clientSecret, ...(provider === "gmail" ? { refreshToken: values.refreshToken } : {}) }) : undefined;

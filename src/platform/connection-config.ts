@@ -32,6 +32,8 @@ const schemas: Record<string, Record<string, Check>> = {
  'notification-webhook': endpoint,
  'monitoring-webhook': {}, // Inbound HMAC signingSecret belongs only in encrypted secret.
  sendgrid: {from:email,webhookPublicKey:publicKey},
+ // CHANNEL-007: the IT phone line on a RingCentral account (sandbox or production).
+ ringcentral: {line:v => text(40)(v) && /^\+?[\d ()-]{7,20}$/.test(v as string),environment:v => v === 'sandbox' || v === 'production'},
  // CHANNEL-003: one support mailbox, read by OAuth polling or fed by a forwarding rule.
  gmail: {mailbox:plainEmail,mode:mailboxMode},
  'exchange-online': {mailbox:plainEmail,mode:mailboxMode,tenantId:v => typeof v === 'string' && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v)},

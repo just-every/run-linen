@@ -171,6 +171,9 @@ async function eraseSinglePerson(
     ctx.env.DB.prepare(
       "DELETE FROM work_sender_identities WHERE workspace_id=? AND user_id=?",
     ).bind(w, p),
+    ctx.env.DB.prepare("DELETE FROM work_contact_points WHERE workspace_id=? AND user_id=?").bind(w, p),
+    ctx.env.DB.prepare("UPDATE work_calls SET caller=NULL,recording_url=NULL,user_id=NULL,state=CASE WHEN state='unmatched' THEN 'dismissed' ELSE state END WHERE workspace_id=? AND (user_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(w, p, w, p, p),
+    ctx.env.DB.prepare("UPDATE work_walkups SET outcome=NULL,person_id='[erased]' WHERE workspace_id=? AND (person_id=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))").bind(w, p, w, p, p),
     ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)").bind(
       id(),
       w,

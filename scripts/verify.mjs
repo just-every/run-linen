@@ -60,6 +60,7 @@ const checks = [
   ['connection and authority setup', process.execPath, ['tests/ui/setup-run.mjs']],
   ['release browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/release-journey.mjs']],
   ['service notice browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/service-notice-journey.mjs']],
+  ['walk-up browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/walkup-journey.mjs']],
   ['mailbox browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/mailbox-journey.mjs']],
   ['operations KPI browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/kpi-journey.mjs']],
   ['MCP native conversation', process.execPath, ['tests/ui/run.mjs', 'tests/ui/mcp-journey.mjs']],
@@ -86,7 +87,7 @@ const measuredSeconds = {
   'pending person browser': 55, 'MCP native conversation': 51, 'desk groups and views browser': 49,
   'Legacy session retirement': 46, 'service integration': 37, 'adoption and recovery': 36,
   'pending person services': 35, 'migration order and retained history': 33, 'catalog team tasks browser': 33,
-  'work and lifecycle': 32, 'service notice browser': 32, 'mailbox browser': 35, 'emitted Worker': 30,
+  'work and lifecycle': 32, 'service notice browser': 32, 'mailbox browser': 35, 'walk-up browser': 35, 'emitted Worker': 30,
   'ordinary intake and independent evidence': 29, 'work integration regressions': 28,
   'Freshservice and Snipe-IT native migration': 26,
 }

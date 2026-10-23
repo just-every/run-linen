@@ -51,6 +51,7 @@ export function RailNav({ section }: { section: string }) {
     ["decisions", "Decisions", "approve", waiting, true],
     ["lifecycle", "People", "user", undefined, operator],
     ["assets", "Devices", "laptop", undefined, operator],
+    ["walkup", "Walk-up desk", "user", undefined, operator],
     ["software-assets", "Software", "cube", undefined, operator],
     ["incidents", "Incidents", "alert", undefined, true],
     ["changes", "Changes", "swap", undefined, operator],
