@@ -15,8 +15,10 @@ page.on('pageerror', error => errors.push(String(error)));
 
 async function capture(name, width) {
   await page.evaluate(() => document.fonts.ready);
+  const account=page.getByRole('button',{name:'Your workspace and account'});await page.keyboard.press('Tab');await account.focus();assert.equal(await account.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');await account.evaluate(e=>e.blur());await page.evaluate(()=>window.scrollTo(0,0));await page.mouse.move(0,0);await account.hover();assert.equal(await account.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');await page.waitForTimeout(420);assert.equal(await account.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
   await page.waitForFunction(() => !document.querySelector('.loading'));
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${name} fits ${width}`);
+  await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({ path: `${out}/reporting-${name}-${width}.png`, fullPage: true });
 }
 async function savedDownload(root, name) {

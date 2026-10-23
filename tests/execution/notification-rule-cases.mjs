@@ -74,6 +74,19 @@ export async function notificationRuleChecks({call,db,time}) {
   await close(restricted);
   assert.ok(!(await inbox('other')).some(i=>i.workId===restricted.id));
 
+  // Real leaver/security responsibilities have mandatory event protection and no replay send.
+  for(const event of ['security.task','leaver.task']) {
+    assert.equal((await call('/notification-preferences',{event,channel:'portal',enabled:false},'issuer')).status,422);
+    await rule(await template('Responsibility {{ticket.number}}'),event,{mandatory:true,recipients:[{type:'role',value:'owner'}]});
+  }
+  const hrPerson=await ok('/people',{source:key(),sourceId:key(),name:'Riley Contractor',observedAt:new Date().toISOString(),effectiveAt:new Date().toISOString()},'issuer',201);
+  const leaveInput={personId:hrPerson.id,kind:'leave',effectiveAt:new Date(Date.now()+3600000).toISOString(),timezone:'UTC',source:key(),sourceRevision:1,ownerId:'issuer',retained:[],added:[],removed:[key()],deviceIds:[],identityTarget:'synthetic-linen-20800@example.test'};
+  const leave=await ok('/lifecycle',leaveInput,'issuer',201);
+  const duties=(await inbox('issuer')).filter(n=>n.workId===leave.work.id&&['security.task','leaver.task'].includes(n.event));
+  assert.deepEqual(new Set(duties.map(n=>n.event)),new Set(['security.task','leaver.task']));
+  await ok('/lifecycle',leaveInput,'issuer',201);
+  assert.equal((await inbox('issuer')).filter(n=>duties.some(d=>d.id===n.id)).length,duties.length,'Source replay creates no new responsibility notice');
+
   // Exact sender validation, escaped branding and real provider acceptance through the existing outbox.
   const connectionId=key(),encrypted=(await ok('/fixture/secret',{apiKey:key()})).secret;
   const baseConfig=JSON.parse((await db.prepare("SELECT config_json FROM connections WHERE id='mail'").first()).config_json);
