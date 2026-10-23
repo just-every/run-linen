@@ -1807,7 +1807,7 @@
       "executable": false
     },
     "src/features/adoption/import.ts": {
-      "sha256": "9e7c48fcea662f785ee0f789dd9562044020626e1e37f4cb9810ea6871b9ffa9",
+      "sha256": "fb2fb0fc33566430f25e01d88e3327e225eabb53f19eaa9e09c1cc76eaadb98c",
       "executable": false
     },
     "src/features/adoption/index.ts": {
@@ -2931,7 +2931,7 @@
       "executable": false
     },
     "src/features/work/mail-send.ts": {
-      "sha256": "41e46cda1f3a044f46ade4d6b6f10adbfcd609465129597381db157fbc472acd",
+      "sha256": "e32d17548689bd9374b5c0b1874da547228d0472ef4d84dc297e806745b8a4d7",
       "executable": false
     },
     "src/features/work/pending-binding.ts": {
@@ -6135,7 +6135,7 @@
       "executable": false
     },
     "tests/work/handoff-cases.mjs": {
-      "sha256": "fd36f805432b81dec1591559f7fcb1ada9b23891cccc2e0d58b91638d6e4e387",
+      "sha256": "90bd35f06062722ccb62f881ef54d32fbd86e760681e15c5411f9e0c1b326596",
       "executable": false
     },
     "tests/work/historical-runtime.mjs": {
