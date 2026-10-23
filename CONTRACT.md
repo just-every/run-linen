@@ -2346,6 +2346,17 @@ that product and marks how close the current code is (see [Status](#status)).
   and see discretionary research held while routine work continues; an invoice
   preview shows seats and sales tax for a Texas address.
 
+  Cost semantics (implementation, 23 October): the installation owner records the
+  agreed USD monthly agent-seat price. An active owner, operator or HR agent is
+  counted once, including a member with several roles; requester-only and
+  approver-only members have zero seat price. An invoice preview uses integer
+  cents and the owner's explicit address, tax applicability, jurisdiction,
+  combined rate, taxable proportion and determination source; it does not issue
+  an invoice or take payment. Budgets use UTC calendar months and configured-price
+  model-provider estimates; uncertain provider charges retain their maximum
+  reservation across month boundaries. Ordinary ticket creation and public
+  conversation remain available when discretionary model research is held.
+
 - **A11Y-001 — Accessibility.** Portal, console and apps meet WCAG 2.2 AA,
   supporting Section 508 buyers, with keyboard paths and screen-reader labels.
   **Acceptance evidence:** automated and manual audits of six core journeys at
@@ -3021,7 +3032,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `ERASURE-001` | Authorized erasure | target | done | `src/features/adoption/core.ts`, `src/features/work/privacy.ts`, `tests/adoption/runtime.mjs`, `tests/work/person-binding-runtime.mjs`, `tests/platform/privacy-runtime.mjs` |  |
 | `RETENTION-001` | Retention policies | target | done | `src/features/adoption/retention.ts`, `src/features/work/retention.ts`, `tests/adoption/retention-cases.mjs`, `tests/ui/connected-setup.mjs` | Public-route proof: no hidden default; a 365-day closed-ticket policy is previewed and needs the owner to confirm the exact counts; the run deletes a ticket closed 400 days ago and its attachment bytes with a content-free receipt the owner and auditor read, keeping tickets closed 300 days ago and open tickets. Owner preview/confirm form inspected at 1440/390. |
 | `BASE-001` | Base platform replacements | target | done | `src/platform/base-auth`, `src/base`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/mail-edge.mjs` |  |
-| `COST-001` | US pricing and budgets | target | partial | `src/features/intelligence`, `tests/intelligence/runtime.mjs` | No seat pricing or sales-tax invoices. |
+| `COST-001` | US pricing and budgets | target | done | (1) Owner $50 monthly budget, exact exhaustion, held discretionary research and continuing routine ticket/comment: `tests/intelligence/runtime.mjs` monthly model reservation and routine-work checks. (2) Unknown-charge reservation survives restart and monthly rollover: the same runtime A7 and rollover checks. (3) USD agent seats, free requester/approver memberships, Texas applicability/tax/cents preview, owner-only/stale-price refusal: the same runtime seat-billing checks. (4) Native price/budget editing, Texas invoice, persistence and 300 ms hover/immediate keyboard icon tooltip at 1440/390: `tests/ui/billing-browser.mjs` monthly budget and Texas seat invoice native UI journey. |  |
 | `A11Y-001` | Accessibility | target | partial | `tests/ui/viewport-evidence.mjs`, `tests/ui/browser.mjs` | No WCAG audit. |
 | `L10N-001` | US English and Spanish for employees | target | missing |  | English only. |
 | `SANDBOX-001` | Sub-production workspace and configuration promotion | target | missing |  | No sandbox workspace or configuration promotion. |
