@@ -4855,7 +4855,7 @@
       "executable": false
     },
     "src/styles/base.css": {
-      "sha256": "c81ddb4d31d1cd5b87d7e60b2a0be1921761ecc841b3225c2adb05376f1f2664",
+      "sha256": "46de1992ee55b9133b946c77bbfb56364671593725ce5d1406ac7eeecc1c65e4",
       "executable": false
     },
     "src/styles/forms.css": {
@@ -5187,7 +5187,7 @@
       "executable": false
     },
     "src/ui/settings.tsx": {
-      "sha256": "4e50a110d39cdcd4285842b67e62310c45bfb2541b05d4ae0452cae546d23cb5",
+      "sha256": "5b12274c7084b6722968f8e234dbf59306ee80f982195129cfb8d4750cad8def",
       "executable": false
     },
     "src/ui/setup-advanced-grant.tsx": {
@@ -5791,7 +5791,7 @@
       "executable": false
     },
     "tests/ui/billing-browser.mjs": {
-      "sha256": "3fbe3174e00f883f41c8c3edda23e4ead628cdbcea9439b6041ff8ca33c04485",
+      "sha256": "6ce6e671724311a8b7a476a4cd57d2ff049991e67e2b2e7dc195cda358f67236",
       "executable": false
     },
     "tests/ui/browser.mjs": {

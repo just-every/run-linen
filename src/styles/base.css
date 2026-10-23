@@ -187,7 +187,7 @@ svg {
   padding: 4px 8px;
   border-radius: 6px;
   background: var(--ink);
-  color: var(--app-ground);
+  color: var(--surface);
   font: 500 13px/1.2 var(--font-body);
   white-space: nowrap;
   pointer-events: none;

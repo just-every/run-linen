@@ -44,7 +44,7 @@ export function BillingSettings() {
           <button className="action primary" disabled={mutation.pending||!plan.data}>Preview invoice</button>
         </form>
         <ErrorNotice error={mutation.error}/>
-        {invoice&&<section aria-label="Invoice estimate" className="connection-record"><h3>{String(invoice.plan)} · {String(invoice.period)}</h3><Facts entries={[["Agent seats",invoice.seats],["Monthly price per agent",usd(invoice.agentSeatCents)],["Free requesters and approvers",invoice.freeMembers],["Seat subtotal",usd(invoice.subtotalCents)],["Taxable amount",usd(invoice.taxableCents)],["Sales tax",usd(invoice.taxCents)],["Total · USD",usd(invoice.totalCents)]]}/><p>{String(invoice.note)}</p></section>}
+        {invoice&&<section aria-label="Invoice estimate" className="history"><h3>{String(invoice.plan)} · {String(invoice.period)}</h3><Facts entries={[["Agent seats",invoice.seats],["Monthly price per agent",usd(invoice.agentSeatCents)],["Free requesters and approvers",invoice.freeMembers],["Seat subtotal",usd(invoice.subtotalCents)],["Taxable amount",usd(invoice.taxableCents)],["Sales tax",usd(invoice.taxCents)],["Total · USD",usd(invoice.totalCents)]]}/><p>{String(invoice.note)}</p></section>}
       </section>
     </div>
   </>;
