@@ -21,21 +21,22 @@ try {
  const get=id=>api('/software-licenses/'+id);
  const visit=async(id,title)=>{await page.goto(base+'/app#/software-licenses');await page.getByRole('link',{name:`Review ${title}`,exact:true}).click();await page.getByRole('heading',{name:title,exact:true}).waitFor();await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();};
  const sync=async(id)=>{await action(page,'Sync provider observations',{},`/software-licenses/${id}/sync`,'Sync license sources');await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();return get(id);};
- const shot=async(name,scope=page)=>{for(const width of [1440,390]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name} fits ${width}`);await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${out}/ASSET-006-${name}-${width}.png`,fullPage:true});}};
+ const showReadback=async()=>{const history=page.locator('details.evidence').filter({has:page.getByText('Provider actions & readback',{exact:true})});if(!await history.evaluate(e=>e.open))await history.locator(':scope > summary').click();await page.getByText('Provider readback verified this action.',{exact:true}).first().waitFor();};
+ const shot=async(name)=>{for(const width of [1440,390]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name} fits ${width}`);await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${out}/ASSET-006-${name}-${width}.png`,fullPage:true});}};
  let license=await create('Zoom Workplace','Zoom','per-user',120,[{connectionId:zoom.id,kind:'zoom'},{connectionId:graph.id,kind:'entra-signins',appId:'00000000-0000-0000-0000-000000000002'}]);
  await visit(license.id,'Zoom Workplace');license=await sync(license.id);
  assert.equal(license.summary.consumed,120);assert.equal(license.summary.activeUsers,95);assert.equal(license.summary.reclaimable,25);
  await shot('zoom-observed');
  const selected=Array.from({length:10},(_,i)=>`zoom-${96+i}`);
  const grantForm=page.locator(`details[data-action-path$="/${license.id}/grants"]`).filter({has:page.getByText('Authorize seat reclamation',{exact:true})});
- await grantForm.locator(':scope > summary').click();await fields(grantForm,{principalId:owner,targets:selected,expiresAt:local(3600000),reason:'Reclaim ten observed inactive paid seats for the renewal',confirmed:true});await shot('zoom-exact-grant',grantForm);
+ await grantForm.locator(':scope > summary').click();await fields(grantForm,{principalId:owner,targets:selected,expiresAt:local(3600000),reason:'Reclaim ten observed inactive paid seats for the renewal',confirmed:true});await shot('zoom-exact-grant');
  await action(page,'Authorize seat reclamation',{},`/software-licenses/${license.id}/grants`,'Grant seat reclamation');
  await page.getByText('Use seat reclamation grant',{exact:true}).waitFor();
  const submitted=await action(page,'Use seat reclamation grant',{userIds:selected},`/software-licenses/${license.id}/reclaim`,'Reclaim selected seats');
  assert.equal(submitted.operationIds.length,10);await page.getByText('Provider actions & readback',{exact:true}).waitFor();await shot('zoom-awaiting-readback');
  for(const id of submitted.operationIds){await action(page,'Read back this action',{},`/effects/${id}/reconcile`,'Reconcile provider outcome');await page.getByRole('heading',{name:'Sources & observations',exact:true}).waitFor();}
  license=await get(license.id);assert.equal(license.summary.consumed,110);assert.equal(license.summary.reclaimable,15);assert.ok(license.effects.every(e=>e.state==='verified'));
- await page.getByText('Use seat reclamation grant',{exact:true}).waitFor({state:'hidden'});await shot('zoom-verified');
+ await page.getByText('Use seat reclamation grant',{exact:true}).waitFor({state:'hidden'});await showReadback();await shot('zoom-verified');
  let acrobat=await create('Adobe Acrobat Pro','Adobe','per-device',25,[{connectionId:jamf.id,kind:'jamf',aliases:[{title:'Adobe Acrobat Pro.app',publisher:'Adobe',productId:'com.adobe.Acrobat.Pro'}]},{connectionId:graph.id,kind:'intune'}]);
  await visit(acrobat.id,'Adobe Acrobat Pro');acrobat=await sync(acrobat.id);assert.equal(acrobat.summary.consumed,30);assert.equal(acrobat.summary.overLicensed,5);assert.equal(acrobat.data.complianceWork.length,0);
  await action(page,"Confirm a device's user",{connectionId:jamf.id,deviceId:'1',userId:employee.id,confirmed:true,reason:'Owner checked managed Mac serial ACROBAT-1 against current employee assignment'},`/software-licenses/${acrobat.id}/device-users`,'Confirm device user');
@@ -54,7 +55,7 @@ try {
  assert.equal((await get(prohibited.id)).effects[0].state,'submitted');await shot('prohibited-unverified');
  const control=await fetch(base+'/__fixture/software-control',{method:'POST',body:JSON.stringify({advanceInventory:true})});assert.ok(control.ok);
  await action(page,'Read back this action',{},`/effects/${removal.operationIds[0]}/reconcile`,'Reconcile provider outcome');
- assert.equal((await get(prohibited.id)).effects[0].state,'verified');await page.getByText('Use app removal grant',{exact:true}).waitFor({state:'hidden'});await shot('prohibited-verified');
+ assert.equal((await get(prohibited.id)).effects[0].state,'verified');await page.getByText('Use app removal grant',{exact:true}).waitFor({state:'hidden'});await showReadback();await shot('prohibited-verified');
  let concurrent=await create('Concurrent design licenses','Design tools','concurrent',5,[{connectionId:jamf.id,kind:'jamf',aliases:[{title:'Adobe Acrobat Pro.app',publisher:'Adobe',productId:'com.adobe.Acrobat.Pro'}]}]);
  await visit(concurrent.id,'Concurrent design licenses');concurrent=await sync(concurrent.id);assert.equal(concurrent.summary.consumed,null);
  await action(page,'Record a concurrent usage peak',{peak:7,source:'Owner-reviewed license server peak report',evidence:'Seven simultaneous sessions in the current signed reporting period',observedAt:local(-60000)},`/software-licenses/${concurrent.id}/concurrency-observations`,'Record measured peak');
