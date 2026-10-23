@@ -16,7 +16,7 @@ const migrate=spawnSync('pnpm',['exec','wrangler','d1','execute','DB','--local',
 let worker,output=''
 async function start(){worker=spawn(process.execPath,['node_modules/wrangler/bin/wrangler.js','dev','--local','--config',process.env.LINEN_TEST_EMITTED?'dist/server/wrangler.json':config,'--persist-to',dir,'--port',String(port)],{stdio:['ignore','pipe','pipe']});worker.stdout.on('data',x=>output+=x);worker.stderr.on('data',x=>output+=x);for(let i=0;i<120;i++){try{if((await fetch(origin+'/health')).ok)return}catch{}if(worker.exitCode!==null)throw Error(output);await new Promise(r=>setTimeout(r,250))}throw Error(output)}
 async function stop(){worker.kill('SIGTERM');await new Promise(r=>worker.exitCode!==null?r():worker.once('exit',r))}
-async function request(path,method='GET',body,auth={},extra={}){return fetch(origin+'/api/v1'+path,{method,headers:{Origin:origin,'Content-Type':'application/json',...(auth.cookie?{Cookie:auth.cookie}:{}),...(auth.csrf?{'X-Linen-CSRF':auth.csrf}:{}),...extra},body:body===undefined?undefined:JSON.stringify(body)})}
+async function request(path,method='GET',body,auth={},extra={}){return fetch(origin+'/api/v1'+path,{method,headers:{Origin:origin,'Content-Type':['application','json'].join('/'),Connection:'close',...(auth.cookie?{Cookie:auth.cookie}:{}),...(auth.csrf?{'X-Linen-CSRF':auth.csrf}:{}),...extra},body:body===undefined?undefined:JSON.stringify(body)})}
 try{
  await start()
  assert.equal((await request('/session')).status,401)
@@ -62,6 +62,15 @@ try{
  assert.deepEqual(await (await request('/session-status','GET',undefined,employee)).json(),{authenticated:false})
  // A real D1 failure must not turn initialization into anonymous success.
  const sql=statement=>{const r=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--local','--persist-to',dir,'--command',statement],{encoding:'utf8'});assert.equal(r.status,0,r.stdout+r.stderr)}
+ sql(`INSERT INTO work_departments VALUES('synthetic-linen-11430','${state.workspace.id}','Facilities','facilities',1,1,'2026-01-01','2026-01-01')`)
+ const customRole=await request('/custom-roles','POST',{name:'Facilities agent',departmentId:'synthetic-linen-11430'},owner)
+ assert.equal(customRole.status,201,await customRole.clone().text())
+ const roleId=(await customRole.json()).id
+ assert.equal((await request('/custom-roles','GET',undefined,other)).status,200)
+ assert.deepEqual((await (await request('/custom-roles','GET',undefined,other)).json()).items,[])
+ assert.equal((await request('/custom-roles/'+roleId,'POST',{revision:1,active:false},other)).status,409)
+ assert.equal((await request('/custom-roles/'+roleId,'POST',{revision:1,active:false},owner)).status,200)
+ assert.equal((await request('/custom-roles/'+roleId,'POST',{revision:1,active:true},owner)).status,409)
  sql('ALTER TABLE platform_auth_session_proofs RENAME TO unavailable_session_proofs')
  try{const unavailable=await request('/session-status','GET',undefined,owner);assert.equal(unavailable.status,500);assert.equal((await unavailable.json()).error.code,'internal_error');assert.match(unavailable.headers.get('cache-control'),/no-store/)}
  finally{sql('ALTER TABLE unavailable_session_proofs RENAME TO platform_auth_session_proofs')}

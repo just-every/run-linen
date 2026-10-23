@@ -57,6 +57,37 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   // Facilities hands the same request to IT; the former agent loses staff access and IT gets the full retained record.
   const request=await make(spaces.facilities.id,'synthetic-linen-11221');
   const path='/work/'+request.id;
+  // A custom role grants only this department's public projection, with no staff authority.
+  await call('/custom-roles',{name:'Facilities agent',departmentId:spaces.facilities.id,permission:'owner'},owner,422);
+  await call('/custom-roles',{name:'No HR custom role',departmentId:spaces.hr.id},owner,409);
+  await call('/custom-roles',{name:'No employee administration',departmentId:spaces.facilities.id},outsider,403);
+  const custom=await call('/custom-roles',{name:'Facilities agent',departmentId:spaces.facilities.id},owner,201);
+  await call('/custom-roles',{name:'Facilities agent',departmentId:spaces.facilities.id},owner,409);
+  await call('/custom-roles/'+custom.id+'/members',{revision:1,userId:'stranger',active:true});
+  await call('/custom-roles/'+custom.id+'/members',{revision:1,userId:'stranger',active:true},owner,409);
+  const publicView=await call(path,undefined,outsider);
+  assert.equal(publicView.work.access,'custom-read');
+  assert.equal(publicView.work.context_json,'{}');
+  assert.deepEqual(publicView.attachments,[]);assert.deepEqual(publicView.quotes,[]);
+  assert.ok((await call('/work',undefined,outsider)).items.some(w=>w.id===request.id));
+  assert.ok(!(await call('/work?departmentId='+spaces.it.id,undefined,outsider)).items.some(w=>w.id===request.id));
+  await call(hrPath,undefined,outsider,404);
+  await call(path+'/messages',{body:'synthetic-linen-11400',sourceMessageId:'synthetic-linen-11401'},outsider,404);
+  await call(path+'/commands',{revision:1,command:'close',reason:'synthetic-linen-11402'},outsider,404);
+  const privateCase=await call(path+'/messages',{body:'synthetic-linen-11403',visibility:'private',sourceMessageId:'synthetic-linen-11404'},owner,201);
+  assert.ok(!(await call(path,undefined,outsider)).messages.some(m=>m.id===privateCase.id));
+  const restrictedRoleWork=await make(spaces.facilities.id,'synthetic-linen-11405',owner,{sensitivity:'restricted'});
+  await call('/work/'+restrictedRoleWork.id,undefined,outsider,404);
+  const outsideRoleWork=await make(spaces.it.id,'synthetic-linen-11406');
+  await call('/work/'+outsideRoleWork.id,undefined,outsider,404);
+  await call('/custom-roles/'+custom.id+'/members',{revision:2,userId:'stranger',active:false});
+  await call(path,undefined,outsider,404);
+  assert.ok(!(await call('/work',undefined,outsider)).items.some(w=>w.id===request.id));
+  await call('/custom-roles/'+custom.id+'/members',{revision:3,userId:'stranger',active:true});
+  await call('/custom-roles/'+custom.id,{revision:4,active:false});
+  await call(path,undefined,outsider,404);
+  assert.ok((await db.prepare("SELECT action FROM audit_events WHERE workspace_id=? AND action LIKE 'custom_role.%'").bind(workspace).all()).results.length>=5);
+
   await call(path+'/messages',{body:'synthetic-linen-11222 private repair history',visibility:'private',sourceMessageId:'synthetic-linen-11223'},fac,201);
   assert.equal(typeof uploadBytes,'function','Department proof requires the native attachment transport');
   let attachment;

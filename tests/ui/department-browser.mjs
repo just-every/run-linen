@@ -46,6 +46,40 @@ try {
     await form.getByRole('button',{name:'Save staff membership',exact:true}).click();assert.equal((await saved).status(),200);
     await panel.getByText(person.name,{exact:false}).first().waitFor();
   }
+  const customReader=await member(11420,'Taylor Facilities',['employee']);
+  await page.reload();
+  const rolePanel=page.getByRole('region',{name:'Custom roles',exact:true});
+  const customRole=await formAction(page,rolePanel,'Add custom role','/custom-roles',{name:'Facilities agent',departmentId:departments.facilities.id},'Create role',201,'custom-role-create');
+  await formAction(page,rolePanel,'Assign custom role',`/custom-roles/${customRole.id}/members`,{userId:customReader.id,active:true},'Save role assignment',200,'custom-role-assign');
+  await rolePanel.getByText(customReader.name,{exact:true}).waitFor();
+  await captureBoth(page,'custom-role-assigned');
+  const roleWork=await api('/work',{departmentId:departments.facilities.id,title:'synthetic-linen-11421 Facilities request',body:'synthetic-linen-11422 public Facilities message',deduplicationKey:'synthetic-linen-11423'});
+  await api('/work/'+roleWork.id+'/messages',{body:'synthetic-linen-11424 private evidence',visibility:'private',sourceMessageId:'synthetic-linen-11425'});
+  const readerContext=await browser.newContext({viewport:{width:1440,height:1000}});
+  try {
+   const readerPage=await readerContext.newPage();readerPage.on('pageerror',e=>errors.push(String(e)));
+   await signIn(readerPage,base,customReader.email,password);
+   await readerPage.goto(base+'/app#/work/'+roleWork.id);
+   await readerPage.getByRole('heading',{name:roleWork.title??'synthetic-linen-11421 Facilities request',exact:true}).waitFor();
+   await readerPage.getByText('Read-only department role. Only public messages are available.',{exact:true}).waitFor();
+   assert.equal(await readerPage.getByText('synthetic-linen-11424 private evidence',{exact:true}).count(),0);
+   assert.equal(await readerPage.getByLabel('Keep the conversation going').count(),0);
+   for(const width of [1440,390]) {
+    await capture(readerPage,'custom-role-public-reader',width);
+    for(const name of ['Your workspace and account','Refresh conversations']) {
+     if(name==='Refresh conversations')await readerPage.goto(base+'/app#/work');
+     const control=readerPage.getByRole('button',{name,exact:true});
+     await readerPage.keyboard.press('Tab');await control.focus();assert.equal(await control.evaluate(e=>e.matches(':focus-visible')),true);
+     assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
+     await control.evaluate(e=>e.blur());await readerPage.mouse.move(0,0);await readerPage.waitForFunction(e=>getComputedStyle(e,'::after').opacity==='0',await control.elementHandle());
+     await control.hover();assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');await readerPage.waitForTimeout(420);assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
+     await capture(readerPage,'custom-role-tooltip-'+(name.startsWith('Refresh')?'refresh':'account'),width);
+    }
+    await readerPage.goto(base+'/app#/work/'+roleWork.id);await readerPage.getByText('Read-only department role. Only public messages are available.',{exact:true}).waitFor();
+   }
+   await formAction(page,rolePanel,'Assign custom role',`/custom-roles/${customRole.id}/members`,{userId:customReader.id,active:false},'Save role assignment',200,'custom-role-revoke');
+   await readerPage.reload();await readerPage.getByRole('alert').first().waitFor();await captureBoth(readerPage,'custom-role-revoked');
+  } finally {await readerContext.close();}
   // Remove and restore a staff membership through the owner's native controls, retaining no implicit role access.
   let itPanel=await openDepartment('IT'),staffForm=itPanel.getByRole('form',{name:'IT staff membership'});
   await staffForm.getByLabel('Membership action',{exact:true}).selectOption('remove');await staffForm.getByLabel('Staff member',{exact:true}).selectOption(itAgent.id);

@@ -17,6 +17,7 @@ export const portabilityPolicy={
   const table=tables.mcp_credentials;
   if(table && await db.prepare(`SELECT 1 FROM "${table.replaceAll('"','""')}" WHERE secret_hash IS NOT NULL OR state<>'revoked' LIMIT 1`).first())return false;
   for(const [name,invalid] of [
+   ['platform_custom_role_members','active IS NOT 0'],
    ['work_reports',"shared_json IS NOT '[]'"],
    ['work_report_schedules','active IS NOT 0'],
    ['work_bi_exports',"active IS NOT 0 OR credential_cipher IS NOT NULL AND credential_cipher IS NOT ''"],
@@ -74,6 +75,7 @@ export const portabilityPolicy={
   if(table==='work_access_policies')return {...row,active:0}
   if(table==='work_approval_decisions')return {...row,inert:1}
   if(table==='work_approval_stages')return {...row,active_at:null,remind_at:null,reminded_at:null,sla_at:null,breached_at:null}
+  if(table==='platform_custom_role_members')return {...row,active:0}
   if(table==='work_department_members')return {...row,active:0,updated_by:null}
   if(table==='work_approval_mail_config')return {...row,enabled:0}
   if(table==='work_approval_tokens')return {...row,state:'expired',token_hash:row.id,sent_to:''}
