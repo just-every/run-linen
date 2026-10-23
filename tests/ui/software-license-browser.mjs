@@ -15,7 +15,9 @@ export async function softwareLicenseJourney({ page, api, base, out }) {
     [2, 390, 'Adobe Acrobat Pro', 'Adobe', 25, 6000, 'jamf'],
   ]) {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto(base + '/app#/software-licenses');
+    await page.goto(base + '/app#/software-assets');
+    await page.getByRole('link',{name:'Software licenses & renewals',exact:true}).waitFor();await page.screenshot({path:`${out}/ASSET-006-entry-${width}.png`,fullPage:true});
+    await page.getByRole('link',{name:'Software licenses & renewals',exact:true}).click();
     await page.getByRole('heading', { name: 'Software licenses', exact: true }).waitFor();
     const connection = page.locator('details[data-action-path="/software-license-connections"]');
     await connection.locator(':scope > summary').click();

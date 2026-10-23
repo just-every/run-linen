@@ -3,13 +3,13 @@ import type { AppEnv } from '../../src/platform/types';
 
 /** Only network edges are faked. Production connection/route/grant/D1 code runs. */
 export function installSoftwareLicenseFixture(app:Hono<AppEnv>) {
-  let control:any={},db:D1Database|undefined,inventoryAt=new Date(Date.now()-1000).toISOString();
+  let control:any={},db:D1Database|undefined,inventoryAt='';
   const users=Array.from({length:120},(_,i)=>({id:`zoom-${i+1}`,email:`member${i+1}@example.test`,type:2}));
   const calls:any[]=[],group=new Set<string>(),absent=new Set<string>();
   const native=globalThis.fetch;
   const tenant='00000000-0000-0000-0000-000000000001';
   app.post('/fixture/software-license',async c=>{
-    const b=await c.req.json();control={...control,...b};db=c.env.DB;
+    const b=await c.req.json();if(!inventoryAt)inventoryAt=new Date(Date.now()-1000).toISOString();control={...control,...b};db=c.env.DB;
     if(b.advanceInventory){inventoryAt=new Date().toISOString();for(const deviceId of group)absent.add(deviceId);}
     return c.json({calls,users:users.map(u=>({id:u.id,type:u.type})),inventoryAt});
   });

@@ -40,6 +40,7 @@ try {
   // Mandatory preference refusal stays visible in the native form.
   const pref=ep.locator('details[data-action-path="/notification-preferences"]');await pref.getByRole('combobox',{name:/^Notification event/}).selectOption('approval.requested');
   const denied=ep.waitForResponse(r=>r.url().endsWith('/notification-preferences')&&r.request().method()==='POST');await pref.getByRole('button',{name:'Save preference',exact:true}).click();assert.equal((await denied).status(),422);await pref.getByRole('alert').waitFor();
+  await ep.keyboard.press('Tab');const employeeAccount=ep.getByRole('button',{name:'Your workspace and account'});await employeeAccount.focus();assert.equal(await employeeAccount.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
   await ep.screenshot({path:`${out}/notification-preferences-${width}.png`,fullPage:true});
   assert.ok(await ep.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   const ruleCard=page.locator('section.connection-record').filter({has:page.getByRole('heading',{name:`Resolved requester ${width}`,exact:true})});
