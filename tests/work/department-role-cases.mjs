@@ -131,6 +131,20 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   await call(path+'/commands',{revision:(await call(path)).work.revision,command:'resume',reason:'synthetic-linen-18050'},agent);
   for(const work of hidden)await call('/work/'+work.id,undefined,agent,404);
 
+  // A scoped ticket grant never inherits the separate catalog audience or quote readership.
+  const quoteItem=await call('/catalog',{name:'synthetic-linen-18070',kind:'service',target:'synthetic-linen-18071',ownerId,form:{quoteRequired:true}},owner,201);
+  const quote=await uploadBytes(path+'/catalog-quote',new TextEncoder().encode('%PDF-1.7\nsynthetic-linen-18072\n%%EOF'),{...requester,'content-type':'application/pdf','x-filename':'synthetic-linen-18073.pdf','x-catalog-id':quoteItem.id});
+  assert.equal(quote.status,201,JSON.stringify(quote.value));
+  const quoteDefinition=(await call('/catalog')).items.find(item=>item.id===quoteItem.id);
+  await call(path+'/fulfilment',{catalogId:quoteItem.id,catalogRevision:quoteDefinition.revision,beneficiaryId:requesterId,purpose:'synthetic-linen-18074'},requester,201);
+  await call('/catalog-quotes/'+quote.value.id,undefined,agent,404);
+  await call('/attachments/'+quote.value.id,undefined,agent,404);
+  assert.deepEqual((await call(path,undefined,agent)).quotes,[],'Private ticket notes do not include vendor quotes');
+  await call(path+'/fulfilment',{catalogId:quoteItem.id,catalogRevision:quoteDefinition.revision,beneficiaryId:agentId,purpose:'synthetic-linen-18075'},agent,403);
+  const audience=await call('/catalog-values',{dimension:'department',label:'synthetic-linen-18076'},owner,201);
+  const limited=await call('/catalog',{name:'synthetic-linen-18077',kind:'service',target:'synthetic-linen-18078',ownerId,audience:{department:[audience.id]}},owner,201);
+  assert.ok(!(await call('/catalog',undefined,agent)).items.some(item=>item.id===limited.id),'Custom ticket roles do not bypass the catalog audience');
+
   // Requester authority survives role withdrawal and remains a public conversation in another department.
   const own=await make(it.id,'synthetic-linen-18051',agent),ownPath='/work/'+own.id;
   await call(ownPath+'/messages',{body:'synthetic-linen-18052',visibility:'private',sourceMessageId:'synthetic-linen-18053'},owner,201);
@@ -166,7 +180,7 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   const catalogRow=(await call('/catalog')).items.find(item=>item.id===catalog.id);
   const configured=await call('/catalog/'+catalog.id+'/approvals',{revision:catalogRow.revision,calendarId:calendar.id,approvals:[{key:'approval',name:'synthetic-linen-18063',mode:'any',approvers:[{type:'member',userId:approverId}]}]});
   const approvalWork=await make(it.id,'synthetic-linen-18064');
-  await call('/work/'+approvalWork.id+'/fulfilment',{catalogId:catalog.id,catalogRevision:configured.revision,beneficiaryId:requesterId,purpose:'synthetic-linen-18065'},requester);
+  await call('/work/'+approvalWork.id+'/fulfilment',{catalogId:catalog.id,catalogRevision:configured.revision,beneficiaryId:requesterId,purpose:'synthetic-linen-18065'},requester,201);
   await call('/work/'+approvalWork.id,undefined,approver,404);
   const queued=(await call('/approval-stages',undefined,approver)).items.find(item=>item.workId===approvalWork.id);
   assert.ok(queued,'An approver without a custom or fixed agent role receives the independent decision');
