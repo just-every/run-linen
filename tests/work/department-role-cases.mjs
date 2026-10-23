@@ -181,20 +181,6 @@ export async function departmentRoleChecks(api, db, uploadBytes) {
   await call(attachmentPath,undefined,agent,404);
   assert.ok(!(await call('/work',undefined,agent)).items.some(item=>item.id===ticket.id));
 
-  // A named approver decides through their own queue without receiving any agent readership.
-  const calendar=await call('/calendars',{name:'synthetic-linen-18060',timezone:'America/New_York',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]},owner,201);
-  const catalog=await call('/catalog',{name:'synthetic-linen-18061',kind:'service',target:'synthetic-linen-18062',ownerId,departmentId:it.id},owner,201);
-  const catalogRow=(await call('/catalog')).items.find(item=>item.id===catalog.id);
-  const configured=await call('/catalog/'+catalog.id+'/approvals',{revision:catalogRow.revision,calendarId:calendar.id,approvals:[{key:'approval',name:'synthetic-linen-18063',mode:'any',approvers:[{type:'member',userId:approverId}]}]});
-  const approvalWork=await make(it.id,'synthetic-linen-18064');
-  await call('/work/'+approvalWork.id+'/fulfilment',{catalogId:catalog.id,catalogRevision:configured.revision,beneficiaryId:requesterId,purpose:'synthetic-linen-18065'},requester,201);
-  await call('/work/'+approvalWork.id,undefined,approver,404);
-  const queued=(await call('/approval-stages',undefined,approver)).items.find(item=>item.workId===approvalWork.id);
-  assert.ok(queued,'An approver without a custom or fixed agent role receives the independent decision');
-  await call('/work/'+approvalWork.id+'/approval-stage',{...queued,decision:'approved',idempotencyKey:'synthetic-linen-18066'},approver);
-  assert.equal((await call('/work/'+approvalWork.id+'/approvals/'+catalog.id,undefined,requester)).stages.find(stage=>stage.key==='approval').state,'approved');
-  await call('/work/'+approvalWork.id,undefined,approver,404);
-  assert.ok(!(await call('/work',undefined,approver)).items.some(item=>item.id===approvalWork.id));
   assert.ok(await auditCount()>countBeforeDenials,'Confirmed role changes retain an owner audit trail');
   await call('/people/'+agentId+'/erase',{revision:0,reason:'synthetic-linen-18079'});
   assert.ok(!(await call('/department-roles')).items.flatMap(item=>item.members).some(member=>member.userId===agentId),'Erasure removes custom role assignments');

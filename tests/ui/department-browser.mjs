@@ -3,6 +3,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {apiFor,fields,finishFirstRun,signIn} from './connected-helpers.mjs';
 import {departmentRoleJourney} from './department-role-journey.mjs';
+import {namedApproverJourney} from './native-regressions.mjs';
 
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 if(!base)throw Error('Start with node tests/ui/run.mjs tests/ui/department-browser.mjs');
@@ -259,6 +260,8 @@ try {
   }
   await itContext.close();await employeeContext.close();await facContext.close();
   await departmentRoleJourney({page,api,base,out,browser,departmentId:departments.facilities.id,otherDepartmentId:departments.it.id});
+  const approvalContext=await api('/services',{name:'Facilities coverage',description:'Facilities support for meeting rooms',businessImpact:'Available meeting rooms',source:'synthetic-linen-12090',observedAt:new Date().toISOString(),visibility:'workspace',participants:[]});
+  await namedApproverJourney(browser,page,api,base,approvalContext.id,out);
   assert.deepEqual(errors,[]);
   console.log('PASS DESK-011 native 1440/390: five service workspaces, explicit staff, scoped catalogs/knowledge/SLA, HR→IT retains original HR restrictions with live dual-membership grant/withdrawal, HR-service staff denied HR records, combined employee catalog, Facilities→IT audited handoff retaining history/restrictions/SLA and withdrawing old staff access.');
 } catch(error) {
