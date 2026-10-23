@@ -2635,7 +2635,7 @@
       "executable": false
     },
     "src/features/work/bi-auth.ts": {
-      "sha256": "9d40d1217cb54a2f978dddcae4df28a7cfa208c78721b80096557dfc7b18b972",
+      "sha256": "8ca60953b2e1479f35ed0b7cdb2a79b10928928aefd3d9a91349f037205af311",
       "executable": false
     },
     "src/features/work/bi-bigquery.ts": {
@@ -6239,7 +6239,7 @@
       "executable": false
     },
     "tests/work/bi-adapter-cases.mjs": {
-      "sha256": "9cf71d02f5ee3a634d7fd2f54410985bd0b857bc5ae26c7cee189700caac5ffd",
+      "sha256": "c0ffc0a8b09e42cdb3397b1bf070920cbd7e473938a8175dcfa24d024a2ed2b8",
       "executable": false
     },
     "tests/work/bundle-cases.mjs": {
@@ -6435,7 +6435,7 @@
       "executable": false
     },
     "tests/work/worker.ts": {
-      "sha256": "a9c76fc22aa7a4897f17ff8f19bad32ef792611343368bf4e91bf2b6b9d14a74",
+      "sha256": "8483ebd11c95e3317d63a8ceb4b5d6ede00893cf65fd6b23ddba3b6c69ebed08",
       "executable": false
     },
     "tsconfig.json": {
