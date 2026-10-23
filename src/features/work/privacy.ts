@@ -165,8 +165,9 @@ async function eraseSinglePerson(
       "DELETE FROM work_attachments WHERE workspace_id=? AND work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))",
     ).bind(w, w, p, p),
     ctx.env.DB.prepare(
-      "UPDATE work_intake_events SET result_json=NULL,error='Identity erased',sender=NULL,state='erased',lease_token=NULL,lease_until=NULL WHERE workspace_id=? AND (sender=? OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))",
-    ).bind(w, p, w, p, p),
+      "UPDATE work_intake_events SET result_json=NULL,error='Identity erased',sender=NULL,subject=NULL,rfc_message_id=NULL,state='erased',lease_token=NULL,lease_until=NULL WHERE workspace_id=? AND (sender=? OR sender IN (SELECT email FROM work_sender_identities WHERE workspace_id=? AND user_id=?) OR work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?)))",
+    ).bind(w, p, w, p, w, p, p),
+    ctx.env.DB.prepare("UPDATE work_mail_deliveries SET state=CASE WHEN state IN ('sending','unknown') THEN 'unknown' ELSE 'failed' END,provider_ref=NULL,error='erased',mail_message_id=id WHERE workspace_id=? AND work_id IN (SELECT id FROM work_records WHERE workspace_id=? AND (requester_id=? OR beneficiary_id=?))").bind(w, w, p, p),
     ctx.env.DB.prepare(
       "DELETE FROM work_sender_identities WHERE workspace_id=? AND user_id=?",
     ).bind(w, p),

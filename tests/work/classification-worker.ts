@@ -1,6 +1,8 @@
 import app from './worker';
 import { responseProvider, registerResponseProvider } from './response-provider';
+import { mailProvider, registerMailProvider } from './mail-provider';
 registerResponseProvider(app);
+registerMailProvider(app);
 // Paid provider interception is confined to this test Worker. Product classification uses callModel.
 const providerFetch = globalThis.fetch;
 let release: (() => void) | null = null;
@@ -14,6 +16,8 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     if(sideMailMode==='unknown') throw new Error('synthetic-linen-1 network interruption');
     return new Response(null,{status:sideMailMode==='failed'?400:202,headers:{'x-message-id':'synthetic-linen-2'}});
   }
+  const mail = await mailProvider(url, init);
+  if (mail) return mail;
   if (url.hostname !== 'api.openai.com') return providerFetch(input, init);
   const request = JSON.parse(String(init?.body)), packet = JSON.parse(request.input);
   if (['ticket_reply','ticket_summary'].includes(packet.purpose)) return responseProvider(packet);

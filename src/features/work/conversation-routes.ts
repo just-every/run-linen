@@ -32,6 +32,7 @@ import { storeAttachment, readAttachment } from "./attachments";
 import { storeCatalogQuote, readCatalogQuote } from "./catalog-quotes";
 import { erasePerson } from "./privacy";
 import { mapMailSender, receiveMail } from "./intake";
+import { deliverMailReply } from "./mail-send";
 import {
   requestFulfilment,
   createCatalogItem,
@@ -122,19 +123,17 @@ export function registerConversationRoutes(app: Hono<AppEnv>) {
       );
     });
   app.post("/work/:id/messages", async (c) => {
-    const b = await jsonBody(c);
-    return c.json(
-      await appendMessage(
-        { env: c.env, principal: c.get("principal") },
-        {
-          workId: c.req.param("id"),
-          body: requiredString(b.body, "body", 50000),
-          visibility: b.visibility === "private" ? "private" : "public",
-          sourceMessageId: requiredString(b.sourceMessageId, "sourceMessageId"),
-        },
-      ),
-      201,
-    );
+    const b = await jsonBody(c), ctx = { env: c.env, principal: c.get("principal") };
+    const message = await appendMessage(ctx, {
+      workId: c.req.param("id"),
+      body: requiredString(b.body, "body", 50000),
+      visibility: b.visibility === "private" ? "private" : "public",
+      sourceMessageId: requiredString(b.sourceMessageId, "sourceMessageId"),
+    });
+    // CHANNEL-003: a public staff reply on a mailbox ticket also goes back by mail; its outcome never fails the reply.
+    if (message && (message as { visibility: string }).visibility === "public" && !String((message as { source_key: string }).source_key).startsWith("mail:"))
+      await deliverMailReply(ctx, c.req.param("id"), (message as { id: string }).id).catch(() => null);
+    return c.json(message, 201);
   });
   app.post("/work/:id/commands", async (c) => {
     const b = await jsonBody(c);

@@ -17,6 +17,8 @@ const email: Check = v => {
  const match = (v as string).trim().match(/^(?:(.*?)\s*<([^<>]+)>|([^<>]+))$/)
  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test((match?.[2] ?? match?.[3] ?? '').trim())
 }
+const plainEmail: Check = v => text(254)(v) && /^[^\s@<>"]+@[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(v as string) && v === (v as string).toLowerCase()
+const mailboxMode: Check = v => v === 'oauth' || v === 'forwarding'
 // The signature consumer expects base64 SPKI, not a PEM envelope.
 const publicKey: Check = v => {
  if (typeof v !== 'string' || v.length > 2000 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(v)) return false
@@ -30,6 +32,9 @@ const schemas: Record<string, Record<string, Check>> = {
  'notification-webhook': endpoint,
  'monitoring-webhook': {}, // Inbound HMAC signingSecret belongs only in encrypted secret.
  sendgrid: {from:email,webhookPublicKey:publicKey},
+ // CHANNEL-003: one support mailbox, read by OAuth polling or fed by a forwarding rule.
+ gmail: {mailbox:plainEmail,mode:mailboxMode},
+ 'exchange-online': {mailbox:plainEmail,mode:mailboxMode,tenantId:v => typeof v === 'string' && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v)},
  freshservice: {domain:v => typeof v === 'string' && v.length <= 253 && /^[a-z0-9][a-z0-9-]*\.freshservice\.com$/.test(v)},
 }
 // Admission is not activation: incomplete drafts remain unverified until the

@@ -40,7 +40,9 @@ export async function projectWork(table: string, row: Row, subjects: ContentSubj
         }
         case 'work_intake_events':
             return await subjects.person(row.sender) || await subjects.work(row.work_id)
-                ? contentJson(columns(row, { error: 'Identity erased' }), 'result_json', [['title'], ['body'], ['message']]) : row;
+                ? contentJson(columns(row, { error: 'Identity erased', subject: null, rfc_message_id: null }), 'result_json', [['title'], ['body'], ['message']]) : row;
+        case 'work_mail_deliveries':
+            return await subjects.work(row.work_id) ? columns(row, { provider_ref: null, error: 'erased' }) : row;
         case 'work_recurring_plans': {
             const tasks = array(json(row.tasks_json));
             if (!await subjects.people(row.creator_id, row.owner_id, ...tasks.map(task => object(task)?.ownerId))) return row;

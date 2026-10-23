@@ -1,6 +1,7 @@
 import { registerMcpFieldClassificationRoutes } from '../../src/features/mcp/field-classification';
 import { eraseServicePerson } from '../../src/features/services/privacy';
 import { registerServiceRoutes } from "../../src/features/services";
+import { registerConnectionRoutes } from "../../src/features/connections";
 import { createGrant } from "../../src/features/execution/grants";
 import { Hono } from "hono";
 import {
@@ -46,6 +47,7 @@ app.onError((e, c) =>
 );
 registerWorkRoutes(app);
 registerServiceRoutes(app);
+registerConnectionRoutes(app);
 app.post('/test/erase-service-person',async c=>c.json(await eraseServicePerson({env:c.env,principal:c.get('principal')},await c.req.json())));
 app.post("/test/grant", async (c) =>
   c.json(

@@ -1,7 +1,7 @@
 import { expireMcpCredentials } from './features/mcp/credentials'
 import type { Env, Principal, Role } from './platform/types'
 import { ApiError, id, now } from './platform/http'
-import { processDueWork, processDueRetention, executionPort } from './features/work'
+import { processDueWork, processDueRetention, executionPort, pollMailboxes } from './features/work'
 import { processDueExecution, processNotifications } from './features/execution'
 import { processDueServices } from './features/services'
 import { processDueIntelligence } from './features/intelligence'
@@ -55,6 +55,7 @@ export async function processScheduledWork(env: Env) {
       runLane(env, 'execution', principal.workspaceId, () => processDueExecution(ctx)),
       runLane(env, 'services', principal.workspaceId, () => processDueServices(env, principal)),
       runLane(env, 'notifications', principal.workspaceId, () => processNotifications(ctx)),
+      runLane(env, 'mail', principal.workspaceId, () => pollMailboxes(ctx)),
     ])
   })
   return Promise.allSettled([
