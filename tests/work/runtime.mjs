@@ -20,6 +20,7 @@ import { relationshipChecks, sharingChecks, collaborationChecks } from './relati
 import { mailChannelChecks } from './mail-cases.mjs';
 import { walkupPhoneChecks } from './walkup-cases.mjs';
 import { handoffChecks } from './handoff-cases.mjs';
+import { brandChecks } from './brand-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
 import { timeChecks } from "./time-cases.mjs";
 import { problemChecks } from "./problem-cases.mjs";
@@ -71,7 +72,7 @@ const options = {
       compatibilityDate: "2026-09-01",
       d1Databases: { DB: "work-test" },
       r2Buckets: ["ATTACHMENTS"],
-      bindings: { ENCRYPTION_KEY: classificationEncryptionKey, MAIL_PROVIDER: 'sendgrid', MAIL_API_KEY: 'synthetic-linen-2', MAIL_FROM: 'reports@example.test' },
+      bindings: { ENCRYPTION_KEY: classificationEncryptionKey, APP_ORIGIN: 'https://help.example.test', MAIL_PROVIDER: 'sendgrid', MAIL_API_KEY: 'synthetic-linen-2', MAIL_FROM: 'reports@example.test' },
     },
   ],
   d1Persist: join(dir, "d1"),
@@ -119,6 +120,7 @@ try {
   await mailChannelChecks(api,db);
   await walkupPhoneChecks(api,db);
   await handoffChecks(api,db);
+  await brandChecks(api,db);
   await catalogQuoteChecks(api,db,uploadBytes,await mf.getR2Bucket('ATTACHMENTS'));
   await applicationChecks(api,db);
   const proposalProof=await problemDetectionChecks(api,db);

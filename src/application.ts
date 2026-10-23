@@ -5,7 +5,7 @@ import { Hono } from 'hono'
 import type { AppEnv } from './platform/types'
 import { ApiError, requireRole } from './platform/http'
 import { platformApp } from './platform/routes'
-import { registerWorkRoutes } from './features/work'
+import { registerWorkRoutes, brandLogo } from './features/work'
 import { registerExecutionRoutes, handleNotificationWebhook, standingIntakeExecution } from './features/execution'
 import { registerServiceRoutes, registerServiceWebhooks } from './features/services'
 import { registerIntelligenceRoutes, setStandingIntakeExecution } from './features/intelligence'
@@ -45,6 +45,7 @@ export function createApplication() {
   // These integrations authenticate each request themselves. They do not mint a user session.
   const integrations = new Hono<AppEnv>()
   integrations.post('/approval-mail/webhooks/:workspaceId',async c=>c.json(await handleApprovalMail(c.env,c.req.param('workspaceId'),c.req.raw)))
+  integrations.get('/branding/:workspaceId/logo', c => brandLogo(c.env, c.req.param('workspaceId')))
   registerEngineeringAgentRoutes(integrations)
   registerServiceWebhooks(integrations)
   integrations.post('/notifications/webhooks/:connectionId', async c =>

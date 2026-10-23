@@ -91,7 +91,7 @@ export function Queue({ selectedId }: { selectedId?: string }) {
             <span className="chip-count">{items.filter(test).length}</span>
           </button>
         ))}
-        <button className="chip-refresh" type="button" onClick={remote.refresh} aria-label="Refresh conversations">
+        <button className="chip-refresh" type="button" onClick={remote.refresh} aria-label="Refresh conversations" data-tip="Refresh list">
           <Icon name="refresh" size={18} />
         </button>
       </div>

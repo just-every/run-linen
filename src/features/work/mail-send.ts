@@ -2,6 +2,7 @@ import { ApiError, id, now } from '../../platform/http';
 import { assertAdoptionEffectAllowed } from '../adoption/authority';
 import { MailboxSendError, mailboxAccess, sendRaw } from '../connections/mailbox-provider';
 import { getWork, type WorkContext } from './core';
+import { brandedHtml } from './brand';
 import { MAIL_PROVIDERS } from './mail-ingest';
 
 const word = (value: string) => /^[\x20-\x7e]*$/.test(value) ? value : `=?UTF-8?B?${btoa(String.fromCharCode(...new TextEncoder().encode(value)))}?=`;
@@ -9,12 +10,15 @@ const wrapped = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).repla
 const address = /^[^\s@<>"\r\n]+@[^\s@<>"\r\n]+\.[^\s@<>"\r\n]+$/;
 
 /** The reply as RFC 822: threaded by In-Reply-To and References, from the mailbox itself, asking recipients' auto-responders to stay silent. */
-export function composeReply(input: { from: string; to: string; subject: string; text: string; messageId: string; thread: string[] }) {
+export function composeReply(input: { from: string; to: string; subject: string; text: string; html?: string | null; messageId: string; thread: string[] }) {
   if (!address.test(input.from) || !address.test(input.to)) throw new ApiError(422, 'mail_address', 'A single valid address is required');
   const lines = [`From: ${input.from}`, `To: ${input.to}`, `Subject: ${word(input.subject.replace(/[\x00-\x1f\x7f]+/g, ' ').trim())}`, `Date: ${new Date().toUTCString()}`, `Message-ID: ${input.messageId}`,
     ...(input.thread.length ? [`In-Reply-To: ${input.thread.at(-1)}`, `References: ${input.thread.slice(-20).join(' ')}`] : []),
-    'MIME-Version: 1.0', 'Content-Type: text/plain; charset=utf-8', 'Content-Transfer-Encoding: base64', 'X-Auto-Response-Suppress: All', '',
-    wrapped(new TextEncoder().encode(input.text))];
+    'MIME-Version: 1.0', 'X-Auto-Response-Suppress: All'];
+  if (input.html) {
+    const boundary = `linen-${crypto.randomUUID()}`, part = (type: string, value: string) => [`--${boundary}`, `Content-Type: ${type}; charset=utf-8`, 'Content-Transfer-Encoding: base64', '', wrapped(new TextEncoder().encode(value))];
+    lines.push(`Content-Type: multipart/alternative; boundary="${boundary}"`, '', ...part('text/plain', input.text), ...part('text/html', input.html), `--${boundary}--`);
+  } else lines.push('Content-Type: text/plain; charset=utf-8', 'Content-Transfer-Encoding: base64', '', wrapped(new TextEncoder().encode(input.text)));
   return new TextEncoder().encode(lines.join('\r\n'));
 }
 
@@ -53,7 +57,7 @@ export async function deliverMailReply(ctx: WorkContext, workId: string, message
       UNION SELECT mail_message_id,created_at FROM work_mail_deliveries WHERE workspace_id=? AND work_id=? AND state IN ('accepted','unknown') AND id<>?) ORDER BY created_at`).bind(w, workId, w, workId, deliveryId).all<{ id: string }>()).results.map(r => r.id);
     const subject = origin.subject?.trim() || work.title;
     const access = await mailboxAccess(ctx, row);
-    const mime = composeReply({ from: access.mailbox, to: origin.sender, subject: /^re:/i.test(subject) ? subject : `Re: ${subject}`, text: message.body, messageId: mailMessageId, thread });
+    const mime = composeReply({ from: access.mailbox, to: origin.sender, subject: /^re:/i.test(subject) ? subject : `Re: ${subject}`, text: message.body, html: await brandedHtml(ctx.env, w, message.body), messageId: mailMessageId, thread });
     const claim = await db.prepare("UPDATE work_mail_deliveries SET state='sending' WHERE workspace_id=? AND id=? AND state='prepared' AND EXISTS(SELECT 1 FROM connections c WHERE c.workspace_id=? AND c.id=? AND c.revision=? AND c.status='active')").bind(w, deliveryId, w, row.id, row.revision).run();
     if (!claim.meta.changes) throw new ApiError(409, 'mail_changed', 'The mailbox connection changed; reload');
     claimed = true;

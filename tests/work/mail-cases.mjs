@@ -135,6 +135,13 @@ export async function mailChannelChecks(api, db) {
   ok(await api(`/work/${graphWork.work_id}/messages`, { body: 'synthetic-linen-9293 we will replace it.', visibility: 'public', sourceMessageId: 'synthetic-linen-9294' }, staff), 201);
   const graphSent = await calls('graph-send'); assert.equal(graphSent.length, 1); assert.equal(graphSent[0].contentType, 'text/plain'); assert.ok(graphSent[0].path.includes('/users/helpdesk@example.test/sendMail'));
   assert.match(Buffer.from(graphSent[0].raw, 'base64').toString(), /In-Reply-To: <synthetic-linen-9291@example\.test>/);
+  // With the portal branded, the next reply carries the logo and colors as an HTML alternative beside the unchanged text.
+  ok(await api('/branding', { portalName: 'Acme Help', primaryColor: '#f5a623', accentColor: '#1d4f91', revision: 0, logo: { type: 'image/png', base64: Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from('synthetic-linen-9296 logo')]).toString('base64') } }));
+  ok(await api(`/work/${row.work_id}/messages`, { body: 'synthetic-linen-9297 <b>thanks</b>', visibility: 'public', sourceMessageId: 'synthetic-linen-9298b' }, staff), 201);
+  const branded = Buffer.from((await calls('gmail-send')).at(-1).raw, 'base64url').toString(), alt = /boundary="(linen-[^"]+)"/.exec(branded)[1];
+  const [plainPart, htmlPart] = branded.split(`--${alt}`).slice(1, 3).map(p => Buffer.from(p.split('\r\n\r\n')[1].replaceAll('\r\n', ''), 'base64').toString());
+  assert.equal(plainPart, 'synthetic-linen-9297 <b>thanks</b>');
+  assert.ok(htmlPart.includes('border-top:6px solid #f5a623') && htmlPart.includes('color:#1d4f91') && htmlPart.includes('src="https://help.example.test/api/v1/branding/a/logo?v=1"') && htmlPart.includes('synthetic-linen-9297 &lt;b&gt;thanks&lt;/b&gt;'), 'CHANNEL-004 the mail carries the logo and colors and escapes the message');
   // Forwarding: the original bytes arrive through the authenticated adapter door and are authenticated the same way.
   const forwarded = rfc822({ from: 'requester@example.test', to: 'forward@example.test', subject: 'synthetic-linen-9295 monitor flicker', id: '<synthetic-linen-9296@example.test>', body: 'synthetic-linen-9297' });
   const door = { connectionId: connections.forwarding[0], sourceMessageId: 'synthetic-linen-9298', raw: Buffer.from(forwarded).toString('base64') };
