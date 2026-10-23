@@ -126,7 +126,7 @@ export async function monitoringJourney({page,api,base,out}) {
     assert.ok(name&&detail&&name.y+name.height<=detail.y+0.5,'Cohort name and recovery evidence occupy separate rows');
     const unnamed=await page.locator('button,a[href]').evaluateAll(items=>items.filter(e=>e.checkVisibility()&&!e.textContent.trim()&&!e.getAttribute('data-tip')).map(e=>e.outerHTML));
     assert.deepEqual(unnamed,[],'Visible icon-only controls carry tooltips');
-    const control=page.locator('[data-tip="Your account"]');await control.hover();await page.waitForTimeout(420);
+    const control=page.locator('[data-tip="Your account"]');await control.evaluate(e=>e.blur());await page.mouse.move(0,0);await control.hover();await page.waitForTimeout(420);
     assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');
     await page.screenshot({path:`${out}/INC-002-tooltip-hover-${width}.png`});
     await page.mouse.move(0,0);await control.focus();await page.keyboard.press('Tab');await page.keyboard.press('Shift+Tab');
