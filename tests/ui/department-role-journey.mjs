@@ -176,6 +176,8 @@ export async function departmentRoleJourney({page,api,base,out,browser,departmen
     assert.equal((await saved).status(),200);
     await memberPage.getByText('Work is paused. Your request and its remaining obligations are preserved.',{exact:true}).waitFor();
     await captureBoth(memberPage,'member-status-saved',memberPage.locator('.detail-title'));
+    const serviceControls=memberPage.locator('.work-controls details.more-actions');
+    if(!await serviceControls.evaluate(element=>element.open))await serviceControls.locator(':scope > summary').click();
     await memberPage.getByRole('button',{name:'Close',exact:true}).click();
     await command.getByLabel('Close notes',{exact:true}).fill('The building manager restored power to the display and confirmed the room is usable.');
     const resolutions=command.getByLabel('Resolution code',{exact:false});
