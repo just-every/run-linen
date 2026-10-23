@@ -64,7 +64,7 @@ export async function validateChange(db: D1Database, p: Principal, b: Record<str
     const riskScore=await scoreChange(db,p,{services,window,calendarId:b.calendarId,riskAnswers:b.riskAnswers});
     return { changeType, riskScore, riskAnswers:Object.fromEntries(Object.entries(riskScore.answers).filter(([,v])=>v!==null)), calendarId: typeof b.calendarId==='string'&&b.calendarId?b.calendarId:null, approvalPath:changeType==='standard'?'catalog':emergency?'ecab':riskScore.band==='low'?'change-manager':'cab', implementationPlan:b.implementationPlan||null,testPlan:b.testPlan||null,backoutPlan:b.backoutPlan||null, title: requiredString(b.title, 'title'), risk: requiredString(b.risk, 'risk'), impact: requiredString(b.impact, 'impact'), services, window, cohorts, canaryCohorts: canary, dependencies, implementation: b.implementation, compensation: b.compensation, emergency, emergencyReason: emergency ? requiredString(b.emergencyReason, 'emergencyReason') : null, emergencySchedulingActor: emergencySchedulingActor(p,{...b,emergency}) };
 }
-export async function newChange(db: D1Database, p: Principal, b: Record<string, any>) {
+export async function prepareChange(db: D1Database, p: Principal, b: Record<string, any>) {
     p=await currentPrincipal(db,p);
     let cabBypass=null;
     if (b.changeType==='standard') {
@@ -75,6 +75,11 @@ export async function newChange(db: D1Database, p: Principal, b: Record<string, 
     }
     const data={...await validateChange(db,p,b),observationWindowMs:86400000,cabBypass,implementationRevision:1,state:cabBypass?'preapproved':'draft',authorizations:[],invocations:[]};
     await assertCalendarSchedule(db,p,data);
+    return data as Record<string,any>;
+}
+export async function newChange(db:D1Database,p:Principal,b:Record<string,any>) {
+    p=await currentPrincipal(db,p);
+    const data=await prepareChange(db,p,b);
     try { return await create(db,p,'change',data,{visibility:b.visibility,participants:b.participants}); }
     catch(error) { throw calendarError(error); }
 }

@@ -307,6 +307,13 @@ export function ServiceSpace({
                       ["Canary cohorts", d.canaryCohorts?.join(", ")],
                     ]}
                   />
+                  {d.developmentContext?.provider === 'github' && <section aria-label="Development context"><h3>Development context</h3><ul>
+                    {(['pullRequest','run','deployment'] as const).map(key => {
+                      const url = d.developmentContext[key];
+                      return typeof url === 'string' && /^https:\/\/github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9_.-]+\/(?:pull|actions\/runs|deployments)\/[1-9][0-9]*$/.test(url)
+                        ? <li key={key}><a href={url} rel="noreferrer">{({pullRequest:'GitHub pull request',run:'GitHub Actions run',deployment:'GitHub deployment'})[key]}</a></li> : null;
+                    })}
+                  </ul><p>Deployment reported by GitHub. Execution and recovery still require their own evidence.</p></section>}
                   {['implementationPlan','testPlan','backoutPlan'].filter(name=>d[name]).map((name,i)=><section key={name}><h3>{({implementationPlan:'Implementation plan',testPlan:'Test plan',backoutPlan:'Backout plan'} as Record<string,string>)[name]}</h3><p>{text(d[name])}</p></section>)}
                   <Notice>
                     Source edits invalidate affected decisions. A submission,
