@@ -17,6 +17,7 @@ import { projectChecks } from './project-cases.mjs';
 import { relationshipChecks, sharingChecks, collaborationChecks } from './relationship-cases.mjs';
 import { mailChannelChecks } from './mail-cases.mjs';
 import { walkupPhoneChecks } from './walkup-cases.mjs';
+import { handoffChecks } from './handoff-cases.mjs';
 import { assetFinancialChecks } from './asset-financial-cases.mjs';
 import { timeChecks } from "./time-cases.mjs";
 import { problemChecks } from "./problem-cases.mjs";
@@ -110,6 +111,7 @@ try {
   const collaborationProof=await collaborationChecks(api,db);
   await mailChannelChecks(api,db);
   await walkupPhoneChecks(api,db);
+  await handoffChecks(api,db);
   await catalogQuoteChecks(api,db,uploadBytes,await mf.getR2Bucket('ATTACHMENTS'));
   await applicationChecks(api,db);
   const proposalProof=await problemDetectionChecks(api,db);

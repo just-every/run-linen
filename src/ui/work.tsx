@@ -1,5 +1,6 @@
 import { PortalCatalog } from './portal-catalog';
 import { CollaborationInbox } from './work-collaboration';
+import { HandoffDesk } from './handoff';
 import { ServiceNotices } from './service-notices';
 import { RecurringWork } from './recurring-work';
 import { TeamRequests, managerDisclosure } from "./work-shares";
@@ -96,6 +97,7 @@ export function WorkSpace({ selectedId }: { selectedId?: string }) {
         <TeamRequests />
       </div>
       <div className="workbench-detail">
+        <HandoffDesk />
         <CollaborationInbox />
         <ServiceNotices />
         {selectedId ? (

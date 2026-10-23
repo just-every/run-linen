@@ -1,6 +1,7 @@
 import { WorkDepartment } from './work-department';
 import { WorkCollaboration } from './work-collaboration';
 import { WorkMail } from './work-mail';
+import { AskForPerson } from './handoff';
 import { WorkActivity } from './work-activity';
 import { SponsorReattest } from "./sponsor-reattest";
 import { LifecycleTaskReminder } from "./lifecycle-templates";
@@ -167,6 +168,7 @@ export function RequestDetail({ selectedId, onChanged }: { selectedId: string; o
         {access === "team"
           ? <Notice>You see this request because the person it is for reports to you. It is read-only: only the people it is shared with can reply.</Notice>
           : <Composer workId={work.id} onSent={changed} />}
+        {work.requester_id === session.principal.userId && !access && <AskForPerson workId={work.id} onChanged={changed} />}
         {access === "shared" && <Notice>Shared with you. You can read and reply to its public messages.</Notice>}
         <ConversationHistory conversation={detail.data!} />
       </section>
