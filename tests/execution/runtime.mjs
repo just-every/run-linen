@@ -242,6 +242,75 @@ try {
       "UPDATE workspace_settings SET settings_json='{}' WHERE workspace_id='w'",
     )
     .run();
+  // Execution records follow the ticket's readers; only the operation's actor or service staff stop it.
+  for (const [user, role] of [
+    ["approver", "approver"],
+    ["auditor", "auditor"],
+    ["automation", "integration"],
+  ])
+    await db.batch([
+      db
+        .prepare("INSERT INTO users VALUES(?,?,?,?,?)")
+        .bind(user, user + "@example.test", user, "none", time),
+      db
+        .prepare("INSERT INTO memberships VALUES(?,?,?,1)")
+        .bind("w", user, JSON.stringify([role])),
+    ]);
+  for (const user of ["approver", "auditor", "automation"])
+    for (const path of ["/plans", "/operations", "/authority-decisions"])
+      assert.deepEqual(
+        (await call(path, undefined, user)).body,
+        [],
+        `${user} outside the ticket lists no ${path.slice(1)}`,
+      );
+  assert.equal(
+    (
+      await call(
+        `/operations/${ops2.body[0].id}/cancel`,
+        { expectedRevision: 3, reason: "synthetic-linen-1" },
+        "automation",
+      )
+    ).status,
+    404,
+    "integration account cannot cancel an operation on a ticket it cannot read",
+  );
+  await db
+    .prepare(
+      "INSERT INTO work_records(id,workspace_id,requester_id,beneficiary_id,kind,title,created_at,updated_at,dedup_key) VALUES('automation-work','w','automation','person','request','Integration request',?,?,'automation')",
+    )
+    .bind(time, time)
+    .run();
+  const requested = await call("/plans", {
+    workId: "automation-work",
+    revision: 1,
+    idempotencyKey: "automation-requested",
+    steps: [step],
+  });
+  assert.equal(requested.status, 201, JSON.stringify(requested));
+  const [requestedOp] = (
+    await call(`/plans/${requested.body.id}/dispatch`, { expectedRevision: 1 })
+  ).body;
+  assert.equal(
+    (
+      await call(
+        `/operations/${requestedOp.id}/takeover`,
+        { expectedRevision: requestedOp.revision, reason: "synthetic-linen-2" },
+        "automation",
+      )
+    ).status,
+    403,
+    "integration requester cannot take over another actor's operation",
+  );
+  assert.equal(
+    (
+      await call(`/operations/${requestedOp.id}/cancel`, {
+        expectedRevision: requestedOp.revision,
+        reason: "synthetic-linen-3",
+      })
+    ).body.state,
+    "cancelled",
+    "the operation's own actor still cancels it",
+  );
   const cancel = await call(`/operations/${ops2.body[0].id}/cancel`, {
     expectedRevision: 3,
     reason: "fixture",

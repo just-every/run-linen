@@ -142,6 +142,19 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   await call('/departments/'+hrSpace.id,{revision:hrSpace.revision,name:hrSpace.name,active:false});
   await member('hr2',itUser);
   await call(hrPath,undefined,it,404);
+  // A departure handed to an HR workspace leaves the lifecycle list of HR staff outside that workspace.
+  const leaver=await call('/people',{source:'synthetic-linen-11243',sourceId:'synthetic-linen-11244',name:'synthetic-linen-11245',effectiveAt:'2026-01-01T00:00:00.000Z',observedAt:'2026-01-01T00:00:00.000Z'},owner,201);
+  const departure=await call('/lifecycle',{personId:leaver.id,kind:'leave',effectiveAt:'2026-11-01T09:00:00Z',timezone:'UTC',source:'synthetic-linen-11246',sourceRevision:1,ownerId:'owner',retained:[],added:[],removed:[],deviceIds:[]},owner,201);
+  const listsDeparture=async headers=>(await call('/lifecycle',undefined,headers)).items.some(l=>l.id===departure.lifecycleId);
+  assert.ok(await listsDeparture(hr),'HR staff list a departure outside any department');
+  spaces.payroll=await call('/departments',{name:'synthetic-linen-11247',kind:'hr'},owner,201);
+  await move('/work/'+departure.work.id,spaces.payroll.id);
+  await call('/work/'+departure.work.id,undefined,hr,404);
+  assert.ok(!await listsDeparture(hr),'HR staff outside the departure\'s HR workspace cannot list it');
+  assert.ok(await listsDeparture(owner));
+  await member('payroll',hrUser);
+  assert.ok(await listsDeparture(hr),'HR staff in the departure\'s HR workspace still list it');
+  await member('payroll',hrUser,false);
   // A foreign tenant's HR id is refused before any restored record can be admitted.
   const foreign=await api('/departments',{name:'synthetic-linen-11237',kind:'hr'});
   assert.equal(foreign.status,201);
