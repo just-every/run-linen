@@ -42,7 +42,7 @@ export async function lifecycleEvidenceChecks(api, db) {
     grants.set(duty.kind,result.value);
     const bound = await api(`/obligations/${duty.id}/execution`,{action:actions[duty.kind],actionVersion:1,
       target:duty.target,beneficiaryId:base.personId,connectionId:'life-pack-connection',verifierConnectionId:'life-pack-verifier',
-      grantId:result.value.id,grantVersion:result.value.version,payload:{password:'private-payload-marker'}});
+      grantId:result.value.id,grantVersion:result.value.version,payload:{password:'synthetic-linen-1'}});
     assert.equal(bound.status,200,JSON.stringify(bound));
   }
   assert.equal((await api('/work/process-due',{})).status,200);
@@ -61,7 +61,7 @@ export async function lifecycleEvidenceChecks(api, db) {
       .bind('life-pack-receipt','a',effect.id,'life-pack-attempt','submitted',204,observed),
     db.prepare('INSERT INTO execution_verifications VALUES(?,?,?,?,?,?,?,?,?,?)')
       .bind('life-pack-readback','a',effect.id,1,1,effect.target,base.personId,'effect_verified',
-        JSON.stringify({matches:true,present:true,observedAt:observed,secret:'private-readback-marker'}),observed),
+        JSON.stringify({matches:true,present:true,observedAt:observed,secret:'synthetic-linen-2'}),observed),
     db.prepare("UPDATE execution_operations SET state='effect_verified' WHERE id=?").bind(effect.id),
   ]);
   let pack = (await api(path)).value;
@@ -71,7 +71,7 @@ export async function lifecycleEvidenceChecks(api, db) {
     db.prepare('INSERT INTO execution_verifications VALUES(?,?,?,?,?,?,?,?,?,?)')
       .bind('life-pack-workflow','a',effect.id,1,1,effect.target,base.personId,'verified',JSON.stringify({
         effect:{matches:true,present:true,observedAt:observed},
-        workflow:{observedAt:observed,negativeControl:true,usableWorkflow:true,cohort:['unrelated-private-person'],secret:'private-probe-marker'},
+        workflow:{observedAt:observed,negativeControl:true,usableWorkflow:true,cohort:['unrelated-private-person'],secret:'synthetic-linen-3'},
       }),observed),
     db.prepare("UPDATE execution_operations SET state='verified' WHERE id=?").bind(effect.id),
     db.prepare("UPDATE work_obligations SET state='verified' WHERE id=?").bind(duty.id),
@@ -99,7 +99,7 @@ export async function lifecycleEvidenceChecks(api, db) {
   assert.ok(pack.authority.decisions.some(d=>d.grant_id===grant.id && d.allowed===1 && d.created_at));
   const serialized = JSON.stringify(pack);
   for (const marker of ['private-credential-marker','private-verifier-marker','private-conversation-marker',
-    'private-payload-marker','private-readback-marker','private-probe-marker','unrelated-private-person','other-tenant-target'])
+    'synthetic-linen-1','synthetic-linen-2','synthetic-linen-3','unrelated-private-person','other-tenant-target'])
     assert.ok(!serialized.includes(marker),`LIFE-007 excludes restricted content: ${marker}`);
   assert.equal((await api(path,undefined,{'x-user':'life-pack-hr','x-roles':'["hr"]'})).status,200);
   assert.equal((await api(path,undefined,{'x-user':'employee','x-roles':'["owner"]'})).status,403,'LIFE-007 refreshes asserted owner role');

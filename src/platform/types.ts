@@ -18,6 +18,7 @@ export interface Env {
   SETUP_TOKEN?: string
   MAIL_PROVIDER?: string
   MAIL_FROM?: string
+  MAIL_RELAY_URL?: string
   MAIL_API_KEY?: string
   MAIL_ACCOUNT_ID?: string
   RER_DEV_ORIGIN?: string

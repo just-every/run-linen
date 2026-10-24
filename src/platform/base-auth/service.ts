@@ -13,7 +13,7 @@ export function localEnabled(env:Env){
 export function operatorAuth(env:Env){
  const store=nativeStore(env),local=localEnabled(env)
  const mailSender=!env.MAIL_PROVIDER||env.MAIL_PROVIDER==='development'&&!local&&env.RER_DEMO!=='1'?undefined:{async send(message: import('../../modules/operator-auth/index.mjs').MailMessage){
-  const sender=env.MAIL_PROVIDER==='development'?createMailSender({provider:'development',mode:'development'}):createMailSender({provider:env.MAIL_PROVIDER,mode:'production',apiKey:env.MAIL_API_KEY,...(env.MAIL_ACCOUNT_ID?{accountId:env.MAIL_ACCOUNT_ID}:{})})
+  const sender=env.MAIL_PROVIDER==='development'?createMailSender({provider:'development',mode:'development'}):createMailSender({provider:env.MAIL_PROVIDER,mode:'production',apiKey:env.MAIL_API_KEY,relayUrl:env.MAIL_RELAY_URL,...(env.MAIL_ACCOUNT_ID?{accountId:env.MAIL_ACCOUNT_ID}:{})})
   return sender.send(message)
  }}
  return createOperatorAuth({db:env.DB,accounts:nativeAccounts(store),proofs:nativeProofs(store),config:{origin:originBindings(env).AUTH_ORIGIN,OWNER_EMAIL:env.OWNER_EMAIL||'owner@localhost.test',SESSION_SECRET:env.SESSION_SECRET,SETUP_TOKEN:env.SETUP_TOKEN||env.BOOTSTRAP_TOKEN,local,MAIL_FROM:env.MAIL_FROM||'auth@localhost.test',branding:{productName:theme.productName,accentColor:theme.accentColor,signInPath:'/signin',theme:theme.href}},mailSender,clientIp:request=>local?'local-loopback':request.headers.get('CF-Connecting-IP')||''})

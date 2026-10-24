@@ -10,6 +10,7 @@ import { assertion, authorized, fenced, lineage, loadSnapshot, planRow, snapshot
 import { text } from './uploads.ts';
 import { approvalCaption, failedPlan, recordApplyFailure, requireNewPlan } from './failures.ts';
 import { sizeLimitError } from './limits.ts';
+import { D1RequestLimitError } from '../d1/budget.ts';
 
 /** Whether this kit job holds the plan the owner reviewed. A person's erasure
  * re-fingerprints the job's plan and keeps the reviewed fingerprint inside it. */
@@ -55,7 +56,10 @@ export async function apply(request: DoorRequest, input: Record<string,unknown>)
   // The kit asserts the snapshot is still held at both ends of every batch.
   const result = await fenced(request,row.id,snapshotHeld(row.id),async()=>{
     await reserveApply(request,snapshot);
-    const job = await createD1ImportJob(snapshot.plan,context);
+    // Only creation selects the policy; a resume, even after a remount with
+    // another policy, continues with the job's durable one.
+    const policy = row.job_id ? undefined : request.options.reversalPolicy;
+    const job = await createD1ImportJob(snapshot.plan,policy ? {...context,reversalPolicy:policy} : context);
     await transact(request.options.database,request.authority,[
       sql('UPDATE ik_door_plans SET job_id=? WHERE id=? AND (job_id IS NULL OR job_id=?)',job.id,row.id,job.id),
       assertion(sql('EXISTS(SELECT 1 FROM ik_door_plans WHERE id=? AND job_id=?)',row.id,job.id)),
@@ -65,6 +69,10 @@ export async function apply(request: DoorRequest, input: Record<string,unknown>)
     // 410 (snapshot_withdrawn or erased_during_request) answers instead.
     try { return await applyD1ImportBatches(job.id,context); }
     catch (error) {
+      // A large job created in this request can leave too little of its budget
+      // for a first batch: that batch refused before writing, so the queued job
+      // answers and the next apply continues it.
+      if (!row.job_id && error instanceof D1RequestLimitError) return job;
       // A kit size or request limit refuses before its batch writes anything: it
       // answers the named 413 and is not an apply failure.
       if (sizeLimitError(error)) throw error;
@@ -103,12 +111,23 @@ export async function undo(request: DoorRequest, input: Record<string,unknown>) 
     await transact(request.options.database,request.authority,[
       assertion(sql('NOT EXISTS(SELECT 1 FROM ik_jobs WHERE destination=? AND principal_id=? AND operation_key=?)',request.options.destination,request.options.ownerPrincipalId,'door:'+id)),
       sql('UPDATE ik_door_namespaces SET pending_id=NULL WHERE installation_id=? AND namespace=? AND pending_id=?',request.access.installationId,request.access.namespace,id),
+      // A large job's creation staged in part is private custody, never a job: it goes too.
+      sql('DELETE FROM ik_d1_staging WHERE destination=? AND principal_id=? AND operation_key=?',request.options.destination,request.options.ownerPrincipalId,'door:'+id),
       sql('DELETE FROM ik_door_plan_chunks WHERE plan_id=?',id),sql('DELETE FROM ik_door_approvals WHERE plan_id=?',id),sql('DELETE FROM ik_door_plans WHERE id=? AND job_id IS NULL',id),
     ]);
     return {planId:id,state:'cancelled'};
   }
   const context = await jobContext(request,{...row,job_id:row.job_id}), job = await readD1ImportJob(row.job_id,context);
-  const result = ['completed','undoing','undone'].includes(job.state)?await undoD1Import(job.id,context):await rollbackD1Import(job.id,context);
+  const result = await (['completed','undoing','undone'].includes(job.state)?undoD1Import(job.id,context):rollbackD1Import(job.id,context)).catch(error=>{throw undoRefusal(error) ?? error;});
   await lineage(request);
   return {planId:id,job:result};
+}
+/** The kit's undo refusals an owner can act on, by name, never a bare conflict. */
+const undoRefusals: Record<string,[string,string]> = {
+  IMPORT_SUPERSEDED: ['import_superseded','A newer import of this source still holds records this import wrote. Undo the newer import first.'],
+  NATIVE_EDIT_CONFLICT: ['native_edit_conflict','Records this import wrote were changed in the seed since, and its undo is strict, so nothing more was undone.'],
+};
+function undoRefusal(error: unknown): DoorError | undefined {
+  const known = error instanceof Error && !(error instanceof DoorError) && Object.hasOwn(undoRefusals,error.message) ? undoRefusals[error.message] : undefined;
+  return known && new DoorError(known[0],409,{reason:known[1]});
 }

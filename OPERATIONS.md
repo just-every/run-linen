@@ -208,3 +208,25 @@ Local flows and remaining acceptance boundaries are recorded in
 and CI result; results from earlier source snapshots are not current proof. No hosted
 release, full provider journey, owner UX budget or comparative economics
 acceptance is claimed.
+
+## Hosted delivery packaging
+
+Maintainers build the real application with `pnpm run build`, then run
+`pnpm delivery:spec` to refresh the committed deployment specification.
+`pnpm check:deployment-spec` refuses a stale specification. The seed-owned
+`packaging.json` declares the existing DB and ATTACHMENTS bindings, unchanged
+migration bytes, AUTH_ORIGIN and the recovery procedure above.
+
+`node scripts/delivery/base/cli.mjs package --config packaging.json --output rer-package`
+produces the hosted descriptor, digest-bound setup manifest, dispatch-only Managed
+workflow and Worker artifact. The artifact-only command is
+`node scripts/delivery/base/cli.mjs artifact --config packaging.json`. These
+commands prepare local files; hosting still requires an approved installation.
+
+Hosted sign-in mail supports RER managed mail, SendGrid, Resend and Cloudflare.
+RER assigns MAIL_PROVIDER, MAIL_FROM, MAIL_RELAY_URL and the private MAIL_API_KEY
+for Managed hosting. Assisted hosting asks for the selected provider's verified
+sender and credential; Cloudflare also needs MAIL_ACCOUNT_ID. The local
+development choice suppresses email and cannot deliver hosted sign-in messages.
+Service mailbox and external action connections retain their separate consent
+and credential requirements.
