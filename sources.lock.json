@@ -5815,7 +5815,7 @@
       "executable": false
     },
     "tests/site/site.test.mjs": {
-      "sha256": "3cb3f10c4e7fc5bc6b4e9a431fddebcf969ec60afc07a6b30e73153ca8c8e716",
+      "sha256": "0f7dcead0cb9e7069bdea43f9364630b34ebcc5ffd427c18c693b0568d233044",
       "executable": false
     },
     "tests/sql-migrations.mjs": {
