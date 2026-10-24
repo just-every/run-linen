@@ -575,7 +575,7 @@
   ],
   "files": {
     ".github/workflows/rer-managed.yml": {
-      "sha256": "f495bbb529aa79c36de22c25cf0235710f01bb32f5e127af41cc5bf9309acdb2",
+      "sha256": "aa2861c9983f2ab90dadcc6f455b0b5c3e1bbeae0b9d9fec9bd27e9de591cb9a",
       "executable": false
     },
     ".github/workflows/run-demo.yml": {
@@ -1187,7 +1187,7 @@
       "executable": false
     },
     "packaging.json": {
-      "sha256": "d54905a16138fe505c8a9bbd201184c51e2326aaca110c2cec29380a9eff9a60",
+      "sha256": "17815c3a10da2a61b959013c413a878cd779f432ac85db54e3f4bf61ed92f5ff",
       "executable": false
     },
     "pnpm-lock.yaml": {
@@ -1523,7 +1523,7 @@
       "executable": false
     },
     "scripts/delivery/base/packaging.json": {
-      "sha256": "d54905a16138fe505c8a9bbd201184c51e2326aaca110c2cec29380a9eff9a60",
+      "sha256": "17815c3a10da2a61b959013c413a878cd779f432ac85db54e3f4bf61ed92f5ff",
       "executable": false
     },
     "scripts/delivery/base/paths.mjs": {

@@ -31,7 +31,7 @@
     }
   },
   "managed": {
-    "workflowRef": "runeditrun/platform/.github/workflows/trusted-build.yml@86c8b37399c901bffd9a240dbd1148a65ec83b34",
+    "workflowRef": "runeditrun/delivery/.github/workflows/trusted-build.yml@86c8b37399c901bffd9a240dbd1148a65ec83b34",
     "artifactFile": "rer-worker-artifact.json",
     "buildProfile": "project",
     "verificationProfiles": [
