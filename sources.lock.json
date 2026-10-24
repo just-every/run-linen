@@ -5539,7 +5539,7 @@
       "executable": false
     },
     "src/ui/state.tsx": {
-      "sha256": "5c05b5d06a44cfc1f9f677a1ea61b582de51afc51f33be36a7ed7dee94c081f1",
+      "sha256": "a5910f2dfbc163068dd57ff72e4bf65c6f4658f6ec1d1cc2081eb4c4cb215067",
       "executable": false
     },
     "src/ui/stock.tsx": {
@@ -6295,7 +6295,7 @@
       "executable": false
     },
     "tests/ui/remote-response-runtime.mjs": {
-      "sha256": "c821fd9dbf7cf2937137fc9231776b07b383ae205f01698a0c0ba5cd1499f0d8",
+      "sha256": "f9c2828bd05eac4883f100e6339966fb94a6cb320fe25b75ce8d50089c6b1225",
       "executable": false
     },
     "tests/ui/request-status-render.mjs": {
