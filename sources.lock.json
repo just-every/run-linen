@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "23ebb4e686bc56171f70fc62a52920998cadb0ee392decb0bc4f778db6ef332a",
+      "sha256": "13cb00a00356d042e35a214db2f6e8282c784fbed63f4b7cbccdef240604952b",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "8e30b248be98086efe71794c692155cec62cf3978771da9b52ee0069166649ad",
+      "sha256": "fb00f313ab03e14fc90c055efa266d32f5a8445f8eae0379bd6f479f540a9be0",
       "executable": false
     },
     "DEMO.md": {
@@ -1170,6 +1170,10 @@
       "sha256": "8fcc0d96c8fd163f3c74e16013f6aa31972fb26bd55175e885346ee67189fd65",
       "executable": false
     },
+    "migrations/0905_configuration_sandbox.sql": {
+      "sha256": "f4fb9e95092947ccd224072d316b136f38796652f596824e5aff8e3260838247",
+      "executable": false
+    },
     "ONBOARDING.md": {
       "sha256": "bb2638772c83081938fe706542d4c7a884e8b928717abf3a371c52208e80d82c",
       "executable": false
@@ -1179,7 +1183,7 @@
       "executable": false
     },
     "OPERATIONS.md": {
-      "sha256": "15cfd5b04ce48abc01ad21093a2c8c4c783345809c24c206503de6a240faee5a",
+      "sha256": "2f3d32272efe27c44a3ba42638718d47cee2ef9087fba8f5251dce09776b35b9",
       "executable": false
     },
     "package.json": {
@@ -2051,7 +2055,7 @@
       "executable": false
     },
     "src/features/adoption/schema.ts": {
-      "sha256": "1e27b986636dbceed4bafbd8ddcf9d76f6065c6fc00239bb38a20f940dc57eab",
+      "sha256": "f3baf722babc356678d25edabe4dd7585888361721fcd9425786b8ae01595559",
       "executable": false
     },
     "src/features/adoption/servicenow-import/context.ts": {
@@ -5007,7 +5011,7 @@
       "executable": false
     },
     "src/platform/portability-policy.mjs": {
-      "sha256": "3830fd2b0b38ab4e8a688463a7a5ccff162b19f5a810e5fe7b9d096938c62f8d",
+      "sha256": "d2f83ef51305288eaf4b17a547b1e0ac619456a0f18706ae1c8b0a5e23840eca",
       "executable": false
     },
     "src/platform/privacy.ts": {
@@ -5015,7 +5019,11 @@
       "executable": false
     },
     "src/platform/routes.ts": {
-      "sha256": "5612b1378c3c8655430ae7df00bd5636643c2d65e20e871f62e53eea8b6df43a",
+      "sha256": "417cb02af96979a475222126658c5883c46025b17ccf8d18706aa4276d24fadd",
+      "executable": false
+    },
+    "src/platform/sandboxes.ts": {
+      "sha256": "3c8c58c0f18f17434f6cbf23ac07f80790c637b6bf3a323ac21335bbd248aaf0",
       "executable": false
     },
     "src/platform/session-status.ts": {
@@ -5999,15 +6007,15 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "8e59da96b84d5034b3664a8c9809978df42311aa1ec9d51e9c788765592304d3",
+      "sha256": "1d75fc2cbdb25c6b174f1cd4c485d99c532d7f1949452d69652de252aa62800b",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
-      "sha256": "4490760ef79cd18a3fc6e5d47709bc1f0a2e1631c30eacbb99cc06e5b98960fa",
+      "sha256": "e78b1db786f7893ace10324bc5c4c0fd0bd4d48482b291285a8419690e9d873f",
       "executable": false
     },
     "tests/platform/config-worker.ts": {
-      "sha256": "53655370e2a6530a16c3830ad0d39c6e92835302dbecd9bbe2da647e57a467e0",
+      "sha256": "9b2b5dd2b0ece800d0542c4aaf3a80d1356f929f51f2d540c7ebc5e24e98c4b2",
       "executable": false
     },
     "tests/platform/deploy-edge.mjs": {
@@ -6040,6 +6048,10 @@
     },
     "tests/platform/runtime.mjs": {
       "sha256": "c25a329d2eb6be22e7e2e97adaba093013c11e25848f439e1fa5f1d6dbff5305",
+      "executable": false
+    },
+    "tests/platform/sandbox-cases.mjs": {
+      "sha256": "6251ac1851f7fb7ebe3d17d0a2883092a6a81f09ee35f4d4e47b565dde33f3a3",
       "executable": false
     },
     "tests/platform/tombstone-race-fixture.ts": {
