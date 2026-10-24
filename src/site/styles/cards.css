@@ -222,9 +222,11 @@
 .lights { flex: none; display: flex; gap: 7px; }
 .lights i { width: 12px; height: 12px; border-radius: 50%; background: #ef5a55; }
 .lights i:nth-child(2) { background: #f5bd2f; } .lights i:nth-child(3) { background: #3fc14c; }
-.terminal pre { margin: 0; min-width: 0; padding-left: 2ch; text-indent: -2ch; font: 400 16px/1.5 var(--font-mono); white-space: pre-wrap; }
+.terminal pre { margin: 0; min-width: 0; font: 400 16px/1.5 var(--font-mono); white-space: pre-wrap; }
+.terminal .line { display: block; padding-left: 2ch; text-indent: -2ch; }
 .terminal .nowrap { white-space: nowrap; }
 .terminal .prompt { color: #9fb4d6; }
+.terminal .comment { color: #9fb4d6; }
 .import-card { padding: 28px 30px 28px; }
 .import-card .card-title { font-size: 29px; font-weight: 700; }
 .progress { display: flex; align-items: center; gap: 16px; margin-top: 14px; color: var(--ink); font-size: 18px; }
