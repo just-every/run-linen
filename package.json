@@ -1,6 +1,6 @@
 {
   "name": "@linen-foundation/linen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "license": "MIT",
   "repository": "https://github.com/just-every/run-linen",
@@ -34,7 +34,9 @@
     "build:app": "vite build",
     "verify:app": "node scripts/verify.mjs",
     "deps": "rer install",
-    "release": "rer release"
+    "release": "rer release",
+    "delivery:spec": "node scripts/build-deployment-spec.mjs",
+    "check:deployment-spec": "node scripts/build-deployment-spec.mjs --check"
   },
   "dependencies": {
     "@tanstack/react-router": "1.170.41",
@@ -46,7 +48,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.54.5",
     "@cloudflare/workers-types": "5.20260908.1",
-    "@runeditrun/rer": "0.2.63",
+    "@runeditrun/rer": "0.2.79",
     "@types/node": "24.19.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",

@@ -1,0 +1,4 @@
+{
+  "version": "0.1.0",
+  "publicReleaseNotes": "First public release of Linen: an owned employee service desk with one conversation per request, a Needs your decision view, join/move/leave and device custody, shared incidents and controlled changes, versioned grants with durable effect reconciliation, Freshservice file migration and portable backup."
+}

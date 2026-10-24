@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "project": {
+    "schema": 1,
+    "projectId": "runeditrun/linen",
+    "name": "Linen",
+    "sourceRepository": "https://github.com/just-every/run-linen",
+    "license": "MIT",
+    "deployment": {
+      "target": "cloudflare-workers",
+      "artifactFile": "rer-worker-artifact.json"
+    },
+    "operations": {
+      "setup": "pnpm install --frozen-lockfile && pnpm exec rer install",
+      "build": "pnpm run build",
+      "verify": "pnpm check:deployment-spec && pnpm exec rer check --profile first-party && pnpm run verify",
+      "artifact": "node scripts/delivery/base/cli.mjs artifact --config packaging.json",
+      "recovery": "Follow OPERATIONS.md and docs/backup-and-restore.md. Export the private native archive before changes. Restore only into an empty Linen installation, configure the original owner and keep the Adoption hold until every unknown external effect is reconciled."
+    },
+    "verification": {
+      "migrationDirectories": [
+        "migrations"
+      ],
+      "guidanceFiles": [
+        "AGENTS.md",
+        "OPERATIONS.md"
+      ],
+      "testPatterns": [
+        "tests/**/*.mjs"
+      ]
+    }
+  },
+  "managed": {
+    "workflowRef": "runeditrun/delivery/.github/workflows/trusted-build.yml@86c8b37399c901bffd9a240dbd1148a65ec83b34",
+    "artifactFile": "rer-worker-artifact.json",
+    "buildProfile": "project",
+    "verificationProfiles": [
+      "full"
+    ]
+  },
+  "artifact": {
+    "specInputs": {
+      "publicVariableNames": [
+        "AUTH_ORIGIN",
+        "AUTH_LOCAL",
+        "MAIL_PROVIDER",
+        "MAIL_FROM",
+        "MAIL_RELAY_URL",
+        "MAIL_ACCOUNT_ID",
+        "OWNER_EMAIL"
+      ],
+      "secretNames": [
+        "SESSION_SECRET",
+        "SETUP_TOKEN",
+        "ENCRYPTION_KEY"
+      ],
+      "optionalSecretNames": [
+        "MAIL_API_KEY"
+      ],
+      "healthPath": "/health",
+      "recovery": "Follow OPERATIONS.md and docs/backup-and-restore.md. Export the private native archive before changes. Restore only into an empty Linen installation, configure the original owner and keep the Adoption hold until every unknown external effect is reconciled.",
+      "providerEffects": [
+        "email"
+      ],
+      "mail": {
+        "providers": [
+          "rer",
+          "sendgrid",
+          "resend",
+          "cloudflare"
+        ]
+      },
+      "surfaces": {
+        "app": {
+          "path": "/app",
+          "originVariable": "AUTH_ORIGIN",
+          "signIn": {
+            "path": "/signin",
+            "loginHint": false
+          },
+          "readiness": [
+            {
+              "path": "/health",
+              "statuses": [
+                200
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "setup": {
+    "manifestFile": "rer-setup.json"
+  },
+  "edition": {
+    "manifestFile": "edition.json",
+    "componentId": "runeditrun/linen"
+  }
+}

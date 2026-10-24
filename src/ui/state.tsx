@@ -34,6 +34,7 @@ export function useSession() {
 }
 export function useRemote<T>(path: string | null, pollMs = 0) {
   const responseEpoch = useRef(0);
+  const loadedPath = useRef<string | null>(null);
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [backgroundError, setBackgroundError] = useState<unknown>(null);
@@ -50,7 +51,8 @@ export function useRemote<T>(path: string | null, pollMs = 0) {
     setLoading(true);
     setError(null);
     setBackgroundError(null);
-    setData(null);
+    if (loadedPath.current !== path) setData(null);
+    loadedPath.current = path;
     const epoch = ++responseEpoch.current;
     request<T>(path, { signal: controller.signal })
       .then((value) => { if (!controller.signal.aborted && epoch === responseEpoch.current) setData(value); })

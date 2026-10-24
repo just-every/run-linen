@@ -6,7 +6,11 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "triggers": { "crons": ["* * * * *"] },
+  "triggers": {
+    "crons": [
+      "* * * * *"
+    ]
+  },
   "d1_databases": [
     {
       "binding": "DB",
@@ -20,5 +24,14 @@
       "binding": "ATTACHMENTS",
       "bucket_name": "linen-attachments"
     }
-  ]
+  ],
+  "vars": {
+    "AUTH_LOCAL": "false",
+    "AUTH_ORIGIN": "",
+    "MAIL_PROVIDER": "",
+    "MAIL_FROM": "",
+    "MAIL_RELAY_URL": "",
+    "MAIL_ACCOUNT_ID": "",
+    "OWNER_EMAIL": ""
+  }
 }

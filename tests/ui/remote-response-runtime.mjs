@@ -25,9 +25,11 @@ try {
  function render(path,poll=0){cursor=0;const state=useRemote(path,poll);while(scheduled.length)scheduled.shift()();return state;}
  render('/old',10);const old=requests.at(-1);
  render('/new',10);const fresh=requests.at(-1);assert.equal(old.options.signal.aborted,true);
+ assert.equal(render('/new',10).data,null,'changing routes clears the previous route data');
  fresh.resolve({id:'new'});await flush();assert.deepEqual(render('/new',10).data,{id:'new'});
  old.resolve({id:'stale'});await flush();assert.deepEqual(render('/new',10).data,{id:'new'},'late parsed response from prior route ignored');
  render('/new',10).refresh();render('/new',10);const refresh=requests.at(-1);
+ assert.deepEqual(render('/new',10).data,{id:'new'},'refresh retains the current list while loading');
  const poll=timers.values().next().value;const polling=poll();const newer=requests.at(-1);newer.resolve({id:'newer-poll'});await polling;
  refresh.resolve({id:'stale-refresh'});await flush();assert.deepEqual(render('/new',10).data,{id:'newer-poll'},'older initial refresh cannot overwrite newer poll');
  render('/new',10).refresh();render('/new',10);const oldError=requests.at(-1);

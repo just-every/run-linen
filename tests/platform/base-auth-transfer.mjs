@@ -323,7 +323,7 @@ try{
  assert.ok(artifact.r2_buckets.some(binding=>binding.binding==='ATTACHMENTS'))
  // Base #275 requires target reads even for a dry run; building needs no credentials.
  commandEnvironment.MAIL_API_KEY='synthetic-dry-run-mail-key'
- const missingCredentials=await run(['exec','rer','deploy','--dry-run'],3)
+ const missingCredentials=await run(['exec','rer','deploy','--dry-run','--owner-name','synthetic-linen-4'],3)
  for (const name of ['CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_API_TOKEN']) assert.ok(missingCredentials.includes(name),missingCredentials)
  await assert.rejects(readFile(join(root,'.rer/deploy/production.json')),{code:'ENOENT'})
  const configPath=join(root,'wrangler.jsonc'),config=JSON.parse(await readFile(configPath,'utf8'))

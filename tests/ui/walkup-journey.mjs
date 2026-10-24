@@ -36,7 +36,9 @@ export async function walkupJourney({ browser, page, api, base, out, errors }) {
   await action(page, 'Check someone in', { site: 'Denver IT bar', name: 'priya nair' }, '/walkups', 'Check in', 201);
   await action(page, 'Check someone in', { site: 'Denver IT bar', badge: 'b-7731' }, '/walkups', 'Check in', 201);
   const queue = page.getByRole('region', { name: 'Walk-up queue' }), rows = queue.getByRole('listitem');
-  await rows.filter({ hasText: 'Priya Nair' }).waitFor(); assert.equal(await rows.count(), 2);
+  await rows.filter({ hasText: 'Priya Nair' }).waitFor();
+  await rows.filter({ hasText: 'Tomas Eze' }).waitFor();
+  assert.equal(await rows.count(), 2);
   assert.match(await rows.first().innerText(), /Priya Nair/, 'first in, first served');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'CHANNEL-007 queue fits at 1440');
   await page.screenshot({ path: `${out}/CHANNEL-007-queue-1440.png`, fullPage: true });
