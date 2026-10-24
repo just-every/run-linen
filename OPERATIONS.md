@@ -230,3 +230,37 @@ sender and credential; Cloudflare also needs MAIL_ACCOUNT_ID. The local
 development choice suppresses email and cannot deliver hosted sign-in messages.
 Service mailbox and external action connections retain their separate consent
 and credential requirements.
+
+
+## Configuration sandboxes
+
+The owner can use the authenticated native API at `/api/v1/sandboxes` to draft
+catalog names, forms and team task plans from the current production configuration.
+This first slice has no sandbox screen, provider execution or connector credentials.
+It copies no request records, grants, connection secrets, member profiles or bindings.
+Configuration labels are copied as configuration; do not place personal data in them.
+Other configuration families remain SANDBOX-001 work.
+
+Create with `POST /api/v1/sandboxes` and a `name`. Read the returned sandbox with
+`GET /api/v1/sandboxes/:id`. Edit an existing item with
+`PUT /api/v1/sandboxes/:id/catalog/:catalogId`, passing the current sandbox
+`revision`, `name`, `form` and `tasks`. The form and task schemas are the existing
+catalog schemas. `POST /api/v1/sandboxes/:id/test-form` accepts the current
+`revision`, `catalogId` and synthetic `answers`; it validates the form and returns
+the task plan without executing it or saving the answers.
+
+Submit the current `revision` to `POST /api/v1/sandboxes/:id/package` to freeze the
+supported-field differences for review. An owner who neither created nor edited
+the package approves that revision at `POST /api/v1/sandboxes/:id/approve`.
+An owner then promotes the new revision at `POST /api/v1/sandboxes/:id/promote`.
+Both owners must still hold their roles. Any production catalog drift refuses the
+whole transaction. Promotion increments changed item revisions and writes one
+sandbox audit event; existing request snapshots and duties keep their versions.
+
+For rollback, post the promoted sandbox revision to
+`POST /api/v1/sandboxes/:id/rollback-package`. Review, independently approve and
+promote the returned package through the same doors. Later edits to affected
+production items refuse rollback. Grants, credentials and request records are
+outside both promotion and rollback. Native archives exclude local sandbox
+packages; after restore, create a fresh sandbox and obtain fresh approval.
+Every write uses the native session, same-origin check and CSRF token.
