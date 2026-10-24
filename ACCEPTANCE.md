@@ -4,8 +4,8 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 140 clauses (133 in the contract plus F1–F7), 55 done, 60
-partial and 25 missing.
+Current count: 140 clauses (133 in the contract plus F1–F7), 55 done, 61
+partial and 24 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
 checks, connected journeys, setup checks, emitted HTTP checks and intelligence
@@ -253,7 +253,7 @@ CHANGE-008 gap: No GitHub deployment intake and no automatically raised standard
 | **COST-001 US pricing and budgets** | Set a $50 monthly model budget, exhaust it, and see discretionary research held while routine work continues; an invoice preview shows seats and sales tax for a Texas address. | `tests/intelligence/runtime.mjs` monthly model reservation, routine-work, seat-billing and A7/rollover checks prove the $50 hold/continuation, unknown reservations and Texas cents/tax/free-member preview; `tests/ui/billing-browser.mjs` monthly budget and Texas seat invoice native UI journey proves native editing, persistence and icon tooltips at 1440/390. Owner-entered seat agreement and tax determination; UTC monthly configured-price estimates, unknown charges reserved. | done |
 | **A11Y-001 Accessibility** | Automated and manual audits of six core journeys at 1440 and 390 px with keyboard only and VoiceOver; no AA failures. | `tests/ui/viewport-evidence.mjs`; `tests/ui/browser.mjs` (keyboard/overflow checks). No WCAG audit. | partial |
 | **L10N-001 US English and Spanish for employees** | An employee with locale `es-US` sees the portal and Slack messages in Spanish and submits an item with Spanish labels; the agent sees the message and its translation, replies in English, and the employee receives it in Spanish marked as translated; an article with no Spanish version shows in English with a notice. | English only. | missing |
-| **SANDBOX-001 Sub-production workspace and configuration promotion** | Create a sandbox, edit a catalog item and a workflow there, review the diff, promote it with approval, and see production updated with an audit entry while in-flight requests keep their versions; roll back; production grants and secrets are unchanged, and sandbox connectors call only sandbox credentials. | No sandbox workspace or configuration promotion. | missing |
+| **SANDBOX-001 Sub-production workspace and configuration promotion** | Create a sandbox, edit a catalog item and a workflow there, review the diff, promote it with approval, and see production updated with an audit entry while in-flight requests keep their versions; roll back; production grants and secrets are unchanged, and sandbox connectors call only sandbox credentials. | `tests/platform/sandbox-cases.mjs` sandboxChecks via `tests/platform/config-runtime.mjs` proves owner-only config copy, isolated catalog and form edits, task-plan validation, supported-field diff, separate current-owner approval, atomic versioned promotion, preserved in-flight requests, nonempty grants, credentials and records, reviewed rollback, stale production and revoked-reviewer refusal. `tests/platform/base-auth-transfer.mjs` proves sandbox approvals cannot return through restore. Gap: full workflow execution, sandbox connector credentials and calls, remaining named configuration families and native 1440 and 390 screens. Default adopted pending ct: owners create and promote; a separate current owner who made no edits approves; configuration only, no personal-record copying or outbound action; restore requires fresh packages. Broader admin approval and explicit masked data copying are unbuilt. | partial |
 
 ### Migration and coexistence
 

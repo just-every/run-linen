@@ -1,3 +1,4 @@
+import {sandboxChecks} from './sandbox-cases.mjs'
 import assert from 'node:assert/strict'
 import { spawn,spawnSync } from 'node:child_process'
 import { mkdtemp,rm,writeFile,readFile,readdir } from 'node:fs/promises'
@@ -82,5 +83,6 @@ try {
  await rejected('/settings','PATCH',settings,409)
  await fixture({foreign:ids.openai})
  await rejected('/settings','PATCH',{revision:settings.revision,settings:{defaultModelConnectionId:ids.openai}},409)
+ await sandboxChecks({request,owner,other,fixture})
  console.log('PASS config HTTP real D1/R2 native session: 9 provider schemas, private roundtrips, invalid types/bounds/URLs/credentials, no rejected mutation/audit, immutable provider, revision invalidation, validated owned selectors, restore hold and model route bypass denied')
 } catch(e){console.error(output);throw e} finally {if(worker?.exitCode===null)await stop();await rm(dir,{recursive:true,force:true})}

@@ -3018,8 +3018,8 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 6 | 18 | 0 | 24 |
-| Target and push further | 49 | 42 | 25 | 116 |
-| All | 55 | 60 | 25 | 140 |
+| Target and push further | 49 | 43 | 24 | 116 |
+| All | 55 | 61 | 24 | 140 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -3130,7 +3130,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `COST-001` | US pricing and budgets | target | done | (1) Owner $50 monthly budget, exact exhaustion, held discretionary research and continuing routine ticket/comment: `tests/intelligence/runtime.mjs` monthly model reservation and routine-work checks. (2) Unknown-charge reservation survives restart and monthly rollover: the same runtime A7 and rollover checks. (3) USD agent seats, free requester/approver memberships, Texas applicability/tax/cents preview, owner-only/stale-price refusal: the same runtime seat-billing checks. (4) Native price/budget editing, Texas invoice, persistence and 300 ms hover/immediate keyboard icon tooltip at 1440/390: `tests/ui/billing-browser.mjs` monthly budget and Texas seat invoice native UI journey. |  |
 | `A11Y-001` | Accessibility | target | partial | `tests/ui/viewport-evidence.mjs`, `tests/ui/browser.mjs` | No WCAG audit. |
 | `L10N-001` | US English and Spanish for employees | target | missing |  | English only. |
-| `SANDBOX-001` | Sub-production workspace and configuration promotion | target | missing |  | No sandbox workspace or configuration promotion. |
+| `SANDBOX-001` | Sub-production workspace and configuration promotion | target | partial | `tests/platform/sandbox-cases.mjs` sandboxChecks via `tests/platform/config-runtime.mjs`: owner-only configuration copy, isolated catalog and form edits, task-plan validation, complete supported-field diff, separate current-owner approval, atomic versioned promotion, unchanged in-flight request snapshots and nonempty grants, unchanged connection credentials and records, reviewed rollback, stale production and withdrawn-reviewer refusal. `tests/platform/base-auth-transfer.mjs`: native archive excludes sandbox packages and cannot revive their approval. | Catalog metadata, forms and team task plans only; test-form validates answers without executing a workflow. Full sandbox workflow execution, sandbox-only connector credentials and calls, SLAs, notification rules, scenarios, roles, other connector configuration and native 1440 and 390 screens remain unbuilt. Policy default adopted pending ct approval: owner-only creation and promotion, approval by another current owner who contributed no edits, configuration only with no personal-record copying, no outbound action, fresh packages after restore. Broader admin approval and explicit masked data copying remain unbuilt. |
 | `MIGRATE-001` | Freshservice migration | target | partial | `src/features/adoption/freshservice-import`, `src/features/adoption/freshservice.ts`, `tests/adoption/freshservice-import.mjs`, `tests/adoption/runtime.mjs` | Tickets and conversations only, 100 per job; no assets, catalog, KB, SLA, attachment bytes or 50,000-ticket scale run. |
 | `MIGRATE-002` | Jira Service Management migration | target | missing |  | No JSM, Assets or Confluence importer or delta passes. |
 | `MIGRATE-003` | ServiceNow migration | target | missing |  | No ServiceNow Table/Attachment API importer or delta passes. |
