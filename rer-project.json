@@ -3,5 +3,32 @@
   "projectId": "runeditrun/linen",
   "name": "Linen",
   "sourceRepository": "https://github.com/just-every/run-linen",
-  "license": "MIT"
+  "license": "MIT",
+  "deployment": {
+    "target": "cloudflare-workers",
+    "artifactFile": "rer-worker-artifact.json"
+  },
+  "operations": {
+    "setup": "pnpm install --frozen-lockfile && pnpm exec rer install",
+    "build": "pnpm run build",
+    "verify": "pnpm check:deployment-spec && pnpm exec rer check --profile first-party && pnpm run verify",
+    "artifact": "node scripts/delivery/base/cli.mjs artifact --config packaging.json",
+    "recovery": "Follow OPERATIONS.md and docs/backup-and-restore.md. Export the private native archive before changes. Restore only into an empty Linen installation, configure the original owner and keep the Adoption hold until every unknown external effect is reconciled."
+  },
+  "verification": {
+    "migrationDirectories": [
+      "migrations"
+    ],
+    "guidanceFiles": [
+      "AGENTS.md",
+      "OPERATIONS.md"
+    ],
+    "testPatterns": [
+      "tests/**/*.mjs"
+    ]
+  },
+  "setup": {
+    "path": "rer-setup.json",
+    "sha256": "12669d0dfc1375d850112260ae0ddc25a546d2def693a4e3bc513b548a3ef427"
+  }
 }

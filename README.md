@@ -69,7 +69,7 @@ export CLOUDFLARE_ACCOUNT_ID=your-account-id
 export CLOUDFLARE_API_TOKEN=your-api-token
 export MAIL_PROVIDER=sendgrid
 export MAIL_FROM=your-verified-sender
-export MAIL_API_KEY=your-mail-provider-api-key
+export MAIL_API_KEY='<provider-key>'
 rer deploy --environment production
 ```
 
@@ -113,7 +113,7 @@ A development companion is not endpoint management.
 
 Linen's source is developed in the public repository
 [just-every/run-linen](https://github.com/just-every/run-linen). The RER package is
-`@runeditrun/rer` version `0.2.51`. Publishing source does not deploy Linen,
+`@runeditrun/rer` version `0.2.79`. Publishing source does not deploy Linen,
 configure a provider, or satisfy an acceptance gate.
 
 ## Preserved product requirements

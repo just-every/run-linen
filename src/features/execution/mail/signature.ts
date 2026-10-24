@@ -15,11 +15,15 @@ function rawSignature(der: Uint8Array) {
   if (cursor !== der.length) throw new Error('Invalid signature length');
   return raw;
 }
-export async function verifySendGridWebhook(input: { publicKey: string; timestamp?: string; signature?: string; rawBody: string }) {
+export async function verifySendGridWebhook(input: { publicKey: string; timestamp?: string; signature?: string; rawBody: string | Uint8Array }) {
   if (!input.timestamp || !/^\d+$/.test(input.timestamp) || !input.signature || Math.abs(Date.now() - Number(input.timestamp) * 1000) > 5 * 60_000) return false;
   try {
     const key = await crypto.subtle.importKey('spki', decode(input.publicKey).buffer, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
-    return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, rawSignature(decode(input.signature)).buffer, new TextEncoder().encode(input.timestamp + input.rawBody));
+    const prefix = new TextEncoder().encode(input.timestamp);
+    const body = typeof input.rawBody === 'string' ? new TextEncoder().encode(input.rawBody) : input.rawBody;
+    const signed = new Uint8Array(prefix.length + body.length);
+    signed.set(prefix); signed.set(body, prefix.length);
+    return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, rawSignature(decode(input.signature)).buffer, signed);
   } catch { return false; }
 }
 

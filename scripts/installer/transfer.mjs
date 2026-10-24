@@ -1,5 +1,6 @@
 import { getPlatformProxy,unstable_splitSqlQuery } from 'wrangler'
-import { readFile } from 'node:fs/promises'
+import { nativeMigrationPreflight,appliedMigrations,platformMigrationDeclaration } from '@runeditrun/rer/portability-migrations'
+import { execFileSync } from 'node:child_process'
 import { createPortability } from '@runeditrun/rer/modules/portability'
 import { exportArchive,importArchive,fileRecords } from '@runeditrun/rer/modules/portability/files'
 import { readArchive } from '@runeditrun/rer/modules/portability'
@@ -11,10 +12,19 @@ const [direction,path,journal]=process.argv.slice(2)
 let archive,later
 if(direction==='import')for await(const record of fileRecords(path,readArchive)){if(record.kind==='manifest')archive={sourceIdentity:record.sourceIdentity,epoch:record.epoch};if(record.kind==='closing')archive.archiveHash=record.archiveHash}
 if(direction==='import'&&journal)for await(const record of fileRecords(journal,readArchive))if(record.kind==='manifest')later=record
-const proxy=await getPlatformProxy({configPath:'wrangler.jsonc',persist:{path:'.wrangler/state/v3'},remoteBindings:false})
+const open=()=>getPlatformProxy({configPath:'wrangler.jsonc',persist:{path:'.wrangler/state/v3'},remoteBindings:false})
+let proxy=await open()
 try{
- const names=(await proxy.env.DB.prepare('SELECT name FROM d1_migrations ORDER BY id').all()).results.map(r=>r.name)
- const plan=await Promise.all(names.map(async name=>({name,statements:unstable_splitSqlQuery(await readFile(`migrations/${name}`,'utf8'))})))
+ // The shared preflight validates native d1_migrations and Platform rer_migrations.
+ // It refuses changed bytes or partial history before Wrangler can create a ledger.
+ const declaration=platformMigrationDeclaration()
+ const {nativeApply}=await nativeMigrationPreflight({root:process.cwd(),db:proxy.env.DB,binding:'DB',platformMigrations:declaration})
+ if(nativeApply){
+  await proxy?.dispose();proxy=null
+  execFileSync('pnpm',['exec','wrangler','d1','migrations','apply','linen','--local','--persist-to','.wrangler/state','--config','wrangler.jsonc'],{stdio:'inherit',env:{...process.env,WRANGLER_SEND_METRICS:'false'}})
+  proxy=await open()
+ }
+ const plan=await appliedMigrations(process.cwd(),proxy.env.DB,'DB',declaration,unstable_splitSqlQuery)
  const portabilityPolicy=await createLinenPortabilityPolicy(proxy.env)
  const service=await createPortability({db:proxy.env.DB,buckets:{ATTACHMENTS:proxy.env.ATTACHMENTS},policy:portabilityPolicy,migrations:()=>migrationReplay(plan,portabilityPolicy)})
  // A later export carries the shared value-free redaction checkpoint too, so
@@ -47,4 +57,4 @@ try{
  const result=resumed?{restored:true,resumed:true}:await(direction==='export'?exportArchive(service,path,['Sessions, bearer credentials, passwords and local outbox are excluded; provider execution must be reauthorized after restore.']):importArchive(service,path,[],journal))
  if(direction==='import'&&!resumed)await recordNativeRecovery(proxy.env.DB,archive)
  console.log(JSON.stringify(result))
-}finally{await proxy.dispose()}
+}finally{await proxy?.dispose()}

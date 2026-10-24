@@ -1,7 +1,7 @@
 {
   "id": "linen",
   "name": "Linen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "maturity": "local-implementation; release-acceptance-pending",
   "category": "itsm",
   "spine": {

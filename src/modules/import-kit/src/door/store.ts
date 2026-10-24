@@ -23,11 +23,20 @@ export async function planRow(request: DoorRequest, id: string): Promise<DoorPla
 }
 /** A saved plan's snapshot. A person's erasure withdraws every chunk of it:
  * the plan, its approval and its kit job stay, the reviewed records do not. */
+/** Snapshot rows are at most 32,000 characters; a read returns a bounded page
+ * of them, never a whole multi-megabyte snapshot in one D1 result. */
+const SNAPSHOT_READ_ROWS = 48;
 export async function loadSnapshot(request: DoorRequest, row: DoorPlanRow): Promise<DoorSnapshot> {
-  const chunks = await request.options.database.prepare('SELECT ordinal,body FROM ik_door_plan_chunks WHERE plan_id=? ORDER BY ordinal').bind(row.id).all();
-  if (!chunks.results.length) throw new DoorError('snapshot_withdrawn', 410, {planId: row.id});
-  if (chunks.results.some((c, i) => c.ordinal !== i)) throw new DoorError('plan_custody_mismatch', 409);
-  const snapshot = JSON.parse(chunks.results.map(c => c.body).join('')) as DoorSnapshot;
+  const chunks: {ordinal: unknown; body: string}[] = [];
+  for (;;) {
+    const page = await request.options.database.prepare(`SELECT ordinal,body FROM ik_door_plan_chunks WHERE plan_id=? ORDER BY ordinal LIMIT ${SNAPSHOT_READ_ROWS} OFFSET ?`).bind(row.id, chunks.length).all<{ordinal: unknown; body: string}>();
+    chunks.push(...page.results);
+    if (page.results.length < SNAPSHOT_READ_ROWS) break;
+  }
+  if (!chunks.length) throw new DoorError('snapshot_withdrawn', 410, {planId: row.id});
+  // A torn read across pages fails the ordinals or the snapshot hash below.
+  if (chunks.some((c, i) => c.ordinal !== i)) throw new DoorError('plan_custody_mismatch', 409);
+  const snapshot = JSON.parse(chunks.map(c => c.body).join('')) as DoorSnapshot;
   if (sha256(canonicalJson(snapshot)) !== row.snapshot_hash || snapshot.id !== row.id || snapshot.namespace !== row.namespace || snapshot.bundleSha256 !== row.bundle_sha256
     || snapshot.previous !== row.previous_id || snapshot.plan.fingerprint !== row.fingerprint
     || planFingerprint(snapshot.plan) !== row.fingerprint
@@ -82,7 +91,10 @@ function packRows(rows: unknown[]): {json: string; count: number}[] {
   if (parts.length) flush();
   return packed;
 }
-export async function saveSnapshot(request: DoorRequest, snapshot: DoorSnapshot, upload: {id: string}): Promise<void> {
+/** `retainedFrom` names the plan whose records a re-plan read because the
+ * upload's credential-bearing bytes went: that plan's snapshot must stay held
+ * instead of the upload's chunks. */
+export async function saveSnapshot(request: DoorRequest, snapshot: DoorSnapshot, upload: {id: string}, retainedFrom?: string): Promise<void> {
   const db = request.options.database, g = request.access;
   await transact(db, request.authority, [
     sql('INSERT OR IGNORE INTO ik_door_namespaces(installation_id,namespace) VALUES(?,?)', g.installationId, g.namespace),
@@ -104,10 +116,11 @@ export async function saveSnapshot(request: DoorRequest, snapshot: DoorSnapshot,
   // Each batch, and the one that completes the plan, requires the whole source
   // upload, a catch-up's previous snapshot and every chunk written before it.
   const held = (written: number) => sql(`EXISTS(SELECT 1 FROM ik_door_uploads u WHERE u.id=? AND u.installation_id=? AND u.namespace=? AND u.bundle_sha256=?
-      AND (SELECT count(*) FROM ik_door_chunks c WHERE c.upload_id=u.id)=u.total_chunks)
+      AND (SELECT count(*) FROM ik_door_chunks c WHERE c.upload_id=u.id)=(CASE WHEN ? IS NULL THEN u.total_chunks ELSE 0 END))
+    AND (? IS NULL OR EXISTS(SELECT 1 FROM ik_door_plan_chunks WHERE plan_id=?))
     AND (? IS NULL OR EXISTS(SELECT 1 FROM ik_door_plan_chunks WHERE plan_id=?))
     AND (SELECT count(*) FROM ik_door_plan_chunks WHERE plan_id=?)=?`,
-    upload.id, g.installationId, g.namespace, snapshot.bundleSha256, snapshot.previous, snapshot.previous, snapshot.id, written);
+    upload.id, g.installationId, g.namespace, snapshot.bundleSha256, retainedFrom ?? null, snapshot.previous, snapshot.previous, retainedFrom ?? null, retainedFrom ?? null, snapshot.id, written);
   const batch = (written: number, queries: D1Sql[]) => fenced(request, snapshot.id, held(written), () => transact(db, request.authority, [assertion(held(written)), ...queries]));
   let written = 0;
   for (const packed of packRows(rows)) {
