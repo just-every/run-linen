@@ -5939,7 +5939,7 @@
       "executable": false
     },
     "tests/intelligence/commitment-cases.mjs": {
-      "sha256": "b3996b13b0f19affe2efa66e1fb48da0248233783bdc8ab34635e61ddf585031",
+      "sha256": "a4ba58cc872dba5ec04958ccb2e2eb6c276954c97668c19c884ffcf2875cfbe6",
       "executable": false
     },
     "tests/intelligence/companion.mjs": {
