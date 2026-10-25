@@ -4,17 +4,17 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 143 clauses (136 in the contract plus F1–F7), 55 done, 61
+Current count: 143 clauses (136 in the contract plus F1–F7), 57 done, 59
 partial and 27 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
 checks, connected journeys, setup checks, emitted HTTP checks and intelligence
 HTTP checks. An archived native-data upgrade was checked to retain all prior rows
 and migration entries before applying additive migrations. These bounded local
-results do not establish full release acceptance. No live-provider action,
-hosted deployment or owner acceptance is claimed; those full-clause dimensions
-remain unproven. The category-job clauses, O1–O3 and F1–F7 remain wider
-requirements.
+results do not establish full release acceptance. AGENT-009 and F1 now include
+the selected live GitHub permission observation documented below. No provider
+mutation, hosted deployment or owner release acceptance is claimed. The category-job
+clauses, O1–O3 and the remaining frontier extensions retain their wider requirements.
 ## Evidence by stage
 
 | Gate | Required evidence | What it establishes |
@@ -314,7 +314,7 @@ success only from A4 evidence.
 | **AGENT-006 Measure human work saved** | REPORT-004's report for two request types, with a ranked automation proposal and its evidence. | `src/features/work/automation-proposal.ts`; `tests/work/work-saved-cases.mjs` (two request types, ranked proposal, REPORT-004 audience, cohort); `tests/ui/time-journey.mjs` (1440/390). | done |
 | **AGENT-007 Mine ticket history for automations** | From 1,000 imported Freshservice tickets, the agent proposes three automations; one is published and its measured effect is reported after two weeks. | `src/features/intelligence/capabilities.ts`; `tests/intelligence/frontier.mjs`. No ticket-history mining. | partial |
 | **AGENT-008 Keep devices and licenses healthy** | A Mac with FileVault off gets a Slack message and a Jamf policy push, and compliance reads back; 10 idle seats are reclaimed with owner approval. | No MDM/EDR signals. | missing |
-| **AGENT-009 Carry service commitments across tickets** | A commitment survives ticket closure and restart and flags a hire whose GitHub access never verified. | `src/features/intelligence/commitments.ts`; `tests/intelligence/frontier.mjs`. No live provider observations (such as GitHub access readback) behind commitments. | partial |
+| **AGENT-009 Carry service commitments across tickets** | A commitment survives ticket closure and restart and flags a hire whose GitHub access never verified. | `tests/intelligence/commitment-cases.mjs` commitmentChecks through `tests/intelligence/runtime.mjs`: owner-only GitHub definition and retirement, closed case and persisted restart, scheduled continuation, unobserved cohort, denied and uncertain provider results, source identity drift, staff withdrawal and erasure. `tests/ui/commitment-browser.mjs` livePermissionReadback, closedCase and unobservedHireFlagged; `tests/ui/commitment-restart.mjs` workerRestart and scheduledLiveReadback: fixture-free emitted Worker with held-key GitHub permission reads and native 1440 and 390 screens. | done |
 | **AGENT-010 Prevent recurrence and simplify** | A preventive change with recurrence observed over a declared window, and one simplification compared with continued repair on total work. | `src/features/intelligence/simplification.ts`; `tests/intelligence/frontier.mjs`. No recurrence window measured on a real provider or simplification compared with continued repair. | partial |
 
 ## Approved history and MCP journeys
@@ -412,19 +412,30 @@ and E1–E7 work proceed. Their gates do not delay all unfamiliar engineering un
 desk parity, and a successful demonstration does not release an incomplete desk.
 Use the existing evidence labels and A1–A7 requirements throughout.
 
-Bounded connected and intelligence HTTP checks pass locally, but no full F1–F7
-demonstration is established. Each extension's provider, hosted and
-owner evidence remains unproven even if a related local check passed.
+F1 has the selected live observation demonstration below. Bounded connected and
+intelligence HTTP checks also pass locally; F2–F7 still lack their full proposed
+demonstrations. Hosted release and owner acceptance remain separate gates.
 
 | Scope | Required proposed evidence | Status |
 |---|---|---|
-| F1 Persistent commitments | One owner-defined service outcome becomes explicit cohort, observations, dependency assumptions, responsible owner and dated obligations. Demonstrate continuation across case closure/restart and changing staff/service facts; stale or absent observation stays unknown. | partial |
+| F1 Persistent commitments | One owner-defined service outcome becomes explicit cohort, observations, dependency assumptions, responsible owner and dated obligations. Demonstrate continuation across case closure/restart and changing staff/service facts; stale or absent observation stays unknown. Evidence: Explicit outcome, cohort, bound observations, dependency assumption, accountable owner and dated obligations: `tests/ui/commitment-browser.mjs` ownerDefined and changedStaffAndService. Closure, actual Worker restart and scheduled live follow-up: `tests/ui/commitment-restart.mjs` workerRestart and scheduledLiveReadback. Absent and stale evidence remain unknown, source withdrawal invalidates coverage, and the owner retires the commitment: the same journey missingEvidenceUnknown, staleEvidenceUnknown, sourceWithdrawalUnknown and ownerRetirement. `tests/intelligence/commitment-cases.mjs` commitmentChecks through `tests/intelligence/runtime.mjs` additionally proves denied and uncertain reads, numeric repository identity drift, changed staff, stale dependencies, owner authority and erasure. Native screens and tooltip behavior are checked at 1440 and 390. | done |
 | F2 Semantic observation and help | Real selected events reveal a threatened or broken commitment; employee/operator views provide useful truthful next steps. Compare atomic decisions with a direct capable-model route, including misleading benign events, missing context, wrong confident decisions and provider failure. No event storm creates one model call per log line. | partial |
 | F3 Unfamiliar research | Hold out the actual cause and repair from the harness and reusable library. Resolve an unfamiliar multi-system regression with rival explanations, predicted observations and discriminating probes; retain rejected explanations and all attempts. Include an incorrect fast classification that does not suppress an independently warranted deep investigation. | partial |
 | F4 Service engineering | An absent diagnostic/connector or substantive service fix is authored against real owned source, independently tested, released under an actual engineering grant and adopted on the selected provider. Demonstrate a preauthorized canary without a manufactured human click, real workflow recovery and the existing failed/unknown-effect paths. | partial |
 | F5 Models and experiments | Check one useful bounded policy/protocol property, its assumptions and a counterexample or mutation that the check catches. Run representative replay/experiment evidence and separately verify live effects. A missing dependency or violated assumption invalidates the affected conclusion; the proof cannot certify the whole external service. Local replay through the authenticated protocol door is asserted by `tests/intelligence/protocol-cases.mjs` in `tests/intelligence/runtime.mjs`: uncertainty, reconciliation, authority, counterexamples/mutation, invalid assumptions and attributed restart-persistent evidence. `tests/intelligence/protocol-binding-cases.mjs` through the same native session/check door asserts exact dependency revisions and persisted source observations, complete scoped closure, newer failures, expiry, dependency edits, source revision changes and deletion, role withdrawal, append-only dated rechecks and restart. Recheck uses CONTRACT.md's half-open freshness window and existing source readership. Representative observed-provider replay and separate live-effect verification remain unproven; the network-edge probes are fixtures. | partial |
 | F6 Reusable capability | Generate a versioned detector/action/verifier package from a verified case; succeed on held-out repetitions. A similar symptom with a different cause rejects reuse and starts fresh investigation. Context/provider/action/model drift invalidates affected decisions and packages until revalidated; report both wrong reuse and unnecessarily rejected valid reuse. | partial |
 | F7 Service simplification | Compare at least one substantive redesign with continued repair using service outcomes and total work. Execute a worthwhile granted change and observe subsequent exposure, recurrence, employee impact and net work/cost. Include migration effort, displaced burden and adverse outcomes; proposals or fewer tickets alone do not pass. | partial |
+
+The developer-only F1 journey passed on 25 October 2026 UTC through a local heavy
+slot: `tests/ui/connected-run.mjs` ran `tests/ui/commitment-browser.mjs` and
+`tests/ui/commitment-restart.mjs` with its explicit live-read-only mode. It used an
+isolated workspace and synthetic product members, an explicitly bound real GitHub
+identity and actual permission readback from the authorized repository. No provider
+fixtures were loaded. Every reported assertion was true, including actual Worker
+restart, scheduled readback, changed staff and service facts, unobserved starters,
+stale and withdrawn observations, owner retirement and both tooltip input modes.
+The run sent no provider mutations. This is selected repository permission evidence;
+it does not assert employee workflow recovery or naturally occurring hire outcomes.
 
 Choose the service, authorized environment, cohort, comparison cases, quality
 floor, observation window and success thresholds before each connected run.

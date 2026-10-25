@@ -1,7 +1,9 @@
 # Linen beyond the ticket: maintain the service people intend
 
 Proposed 27 September 2026. This extends the flagship destination in
-[CONTRACT.md](CONTRACT.md); it is neither built capability nor measured performance. E1–E7 remain the complete employee release
+[CONTRACT.md](CONTRACT.md). Implementation and selected provider evidence are tracked
+in [ACCEPTANCE.md](ACCEPTANCE.md); full release acceptance and measured service performance
+remain separate gates. E1–E7 remain the complete employee release
 floor. The new ambition is to continuously maintain intended service outcomes,
 including discovering and engineering work that no existing runbook describes.
 

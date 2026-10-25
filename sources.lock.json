@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "95903364981620347c0805e4ac5fb9cbde836f6345e7bcc7d6bc429fe10bca46",
+      "sha256": "986dc9dbc74fdc0aac4a75622aba1e593034452e5638b26b3d5bccf2919823ec",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "dcdba0be616a27aaacf9505cc25fffc6fdba55748fa33b838f4c00c775886ceb",
+      "sha256": "596fca4cb6e804a4333c12f676d65845468f71b86c3ceeaa4949ebd57735499e",
       "executable": false
     },
     "DEMO.md": {
@@ -703,7 +703,7 @@
       "executable": false
     },
     "FRONTIER-EXTENSION.md": {
-      "sha256": "f0d4b3c8cb4026ef7948baa09c43ed3542dbbab8b6b385c353ab3cf6650dc7e7",
+      "sha256": "6562aca191f61a731401e5c8a25661fcd6a3954f27035981914517c002e7652b",
       "executable": false
     },
     "IMPLEMENTATION-CONTRACT.md": {
