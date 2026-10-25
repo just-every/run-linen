@@ -1,4 +1,5 @@
 import { protocolBindingChecks } from './protocol-binding-cases.mjs';
+import { commitmentChecks } from './commitment-cases.mjs';
 import { protocolChecks } from './protocol-cases.mjs';
 import assert from 'node:assert/strict'
 import {runtimeHarness} from './runtime-harness.mjs'
@@ -28,6 +29,7 @@ try{await start();const setup=await api('/setup','POST',{email:'owner@example.te
  ok(await api('/billing/invoice-preview','POST',{...invoiceInput,tax:undefined},owner),422);
  ok(await api('/billing/plan','PUT',{name:'Northstar revised',agentSeatCents:3000,revision:1},owner));
  assert.equal(ok(await api('/billing/invoice-preview','POST',invoiceInput,owner)).totalCents,6396);
+ await commitmentChecks({api,owner,employee,harness,restart:async()=>{await harness.restart();origin=harness.origin},userId:uid,employeeId,mode:async value=>{await fetch(harness.origin+'/fixture/mode/'+value)}}); origin=harness.origin;
  const probe=await fixtureConnection({name:'Fixture workflow',provider:'workflow-probe',secret:JSON.stringify({token:'fixture-probe'}),config:{url:'https://probe.example.test/observe',allowedHosts:['probe.example.test']}});
  const makeSpec=(id,beneficiary)=>({id,description:'Scoped workflow '+id,step:{action:'group.add',actionVersion:1,connectionId:crypto.randomUUID(),verifierConnectionId:probe,target:'target',beneficiaryId:beneficiary,grantId:crypto.randomUUID(),grantVersion:1,cohort:[beneficiary]}});
  const payload={outcome:'People can prepare an order',cohort:[uid,employeeId],observations:[makeSpec('a',uid),makeSpec('b',employeeId)],freshnessSeconds:600,dependencies:[],participants:[],sensitivity:'restricted',effectiveAt:new Date(Date.now()-1000).toISOString(),intervalSeconds:60,modelConnectionId:model};const commitment=ok(await api('/commitments','POST',payload,owner),201);assert.equal(commitment.revision,1);ok(await api('/commitments/'+commitment.id,'GET',undefined,employee),404);assert.equal(ok(await api('/commitments','GET',undefined,employee)).length,0);

@@ -90,12 +90,12 @@ export default {...product, async fetch(request, env, ctx) { bind(env); if (new 
   }
   await fetch(url + "/__fixture/init", { method: "POST" });
   await browserCheck(process.argv[2] || "tests/ui/connected-browser.mjs",url);
-  if(workerOptions && !process.argv[2]) {
+  if(workerOptions && (!process.argv[2] || process.argv[3])) {
     await stopWorker();
     worker=await startWorker(workerOptions);
     const r=await fetch(url+'/api/v1/setup');
     if(!r.ok || (await r.json()).required)throw Error('Persisted worker failed to restart');
-    await browserCheck("tests/ui/connected-restart.mjs",url);
+    await browserCheck(process.argv[3] || "tests/ui/connected-restart.mjs",url);
   }
   console.log(`UI evidence: ${out}`);
 } finally {

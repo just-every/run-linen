@@ -3,11 +3,13 @@ import {decryptSecret} from '../../platform/crypto'
 import {validateModel} from '../intelligence/models'
 import {auditStatement,check,connection,current,revision,type ConnectionContext} from './core'
 import {controlledHealth,providerReader} from './providers'
+import {verifyGitHubConnection} from './github'
 import {verifySendGridConnection} from './sendgrid'
 import {verifyMailboxConnection} from './mailbox'
 import {verifyRingCentralConnection} from './ringcentral'
 export async function testConnection(ctx:ConnectionContext,key:string,rev:number){const row=await connection(ctx,key,rev);let state='active',evidence:Record<string,unknown>={readOnly:true,workflowVerified:false,writeAuthority:'not-established'};
  if(row.provider==='openai')evidence={...evidence,...await validateModel(ctx,key)};
+ else if(row.provider==='github')evidence={...evidence,...await verifyGitHubConnection(ctx,row)};
  else if(row.provider==='sendgrid')evidence={...evidence,...await verifySendGridConnection(ctx,row)};
  else if(row.provider==='ringcentral')evidence={...evidence,...await verifyRingCentralConnection(ctx,row)};
  else if(row.provider==='gmail'||row.provider==='exchange-online')evidence={...evidence,...await verifyMailboxConnection(ctx,row)};

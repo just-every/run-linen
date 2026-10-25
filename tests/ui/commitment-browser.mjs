@@ -1,0 +1,64 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+import {writeFile} from 'node:fs/promises';
+import {apiFor,action,finishFirstRun,fields,local} from './connected-helpers.mjs';
+import {nativeCreate} from './native-regressions.mjs';
+import {captureJourney} from './viewport-evidence.mjs';
+
+// Explicit held-key journey: the default suite never runs it or spends provider budget.
+const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT,token=process.env.RER_CLOUD_GITHUB_TOKEN;
+assert.ok(base && out && token,'Run the connected browser harness through the held-key wrapper');
+const identityResponse=await fetch('https://api.github.com/user',{headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','User-Agent':'Linen'},redirect:'manual'});
+assert.equal(identityResponse.status,200);
+const identity=await identityResponse.json();assert.ok(Number.isSafeInteger(identity.id)&&typeof identity.login==='string');
+const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+try {
+    const context=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}}),page=await context.newPage();
+    await page.goto(base+'/app');
+    await page.getByLabel('Your name').fill('Avery Morgan');await page.getByLabel('Workspace name').fill('Northstar Studio');
+    await page.getByLabel('Work email').fill('commitment-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic-linen-1');
+    await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();await finishFirstRun(page,base);
+    const api=apiFor(page),owner=(await api('/session')).principal.userId;
+    const starter=await api('/members',{name:'Jordan Starter',email:'jordan@example.test',password:'synthetic-linen-2',roles:['employee']});
+    const missing=await api('/members',{name:'Morgan New Hire',email:'morgan@example.test',password:'synthetic-linen-3',roles:['employee']});
+    await page.goto(base+'/app#/connections');await page.getByRole('button',{name:'Connect a service'}).click();
+    const form=page.locator('form.inline-form').filter({has:page.getByRole('heading',{name:'What would you like to connect?'})});
+    await form.locator('select').first().selectOption('github');
+    await fields(form,{name:'Baseline GitHub read access',repositoryOwner:'just-every',repositoryName:'run-linen',memberId:starter.id,githubLogin:identity.login,githubUserId:identity.id});
+    await captureJourney(page,{path:out+'/commitment-github-binding.png',fullPage:true});
+    await form.locator('[name="token"]').fill(token);await form.getByRole('button',{name:'Save connection',exact:true}).click();
+    const card=page.locator('.connection-record').filter({has:page.getByRole('heading',{name:'Baseline GitHub read access',exact:true})});await card.waitFor();
+    let source=(await api('/connections')).find(c=>c.name==='Baseline GitHub read access');
+    const response=page.waitForResponse(r=>r.url().endsWith(`/connections/${source.id}/test`));await card.getByRole('button',{name:'Check connection',exact:true}).click();
+    assert.equal((await response).status(),200,'Live GitHub connection readback');
+    source=(await api('/connections')).find(c=>c.id===source.id);assert.equal(source.status,'active');
+    await captureJourney(page,{path:out+'/commitment-github-active.png',fullPage:true});
+    const observations=[{id:'baseline-repository',description:'Explicitly bound starter can read the baseline repository',step:{action:'github.repository.read',actionVersion:1,
+        target:'just-every/run-linen',beneficiaryId:starter.id,verifierConnectionId:source.id,verifierConnectionRevision:source.revision}}];
+    const values={'Actual beneficiary identities':starter.id,'Independent observation definitions':JSON.stringify(observations),'Evidence freshness in seconds':600,'Observation interval in seconds':10,'Effective from':local(-60000)};
+    const parentId=await nativeCreate(page,base,'commitments','Establish a service commitment',{'What should people always be able to do?':'Baseline repository permission is independently observed',...values});
+    await action(page,'Observe this commitment now',{},'/observe','Run scoped observations');
+    assert.equal((await api(`/commitments/${parentId}/coverage`)).coverage[0].state,'verified');
+    const commitmentId=await nativeCreate(page,base,'commitments','Establish a service commitment',{'What should people always be able to do?':'Every scheduled starter can read the baseline repository',...values,'Actual beneficiary identities':starter.id+'\n'+missing.id,'Dependent commitment IDs':parentId});
+    await captureJourney(page,{path:out+'/commitment-absent-starter.png',fullPage:true});
+    await action(page,'Observe this commitment now',{},'/observe','Run scoped observations');
+    let coverage=await api(`/commitments/${commitmentId}/coverage`);
+    assert.equal(coverage.coverage[0].state,'verified');assert.deepEqual(coverage.uncoveredCohorts,[missing.id]);assert.equal(coverage.dependencies[0].state,'verified');
+    await page.getByText(/Morgan New Hire/).first().waitFor();await captureJourney(page,{path:out+'/commitment-live-access-unobserved-hire.png',fullPage:true});
+    const work=await api('/work',{title:'Starter setup case',body:'The setup case can close while baseline access remains a service responsibility.',deduplicationKey:'synthetic-linen-4'});
+    await api(`/work/${work.id}/commands`,{revision:work.revision,command:'close',resolutionCode:'Solved (workaround)',reason:'Setup conversation closed; ongoing repository coverage remains'});
+    assert.equal((await api(`/work/${work.id}`)).work.state,'closed');
+    const current=await api(`/commitments/${commitmentId}`);
+    assert.equal(current.ownerId,owner);assert.ok(current.dueAt && current.data.effectiveAt);
+    await api(`/commitments/${commitmentId}`,{revision:current.revision,outcome:'Every scheduled starter retains baseline repository read permission'},'PATCH');
+    assert.equal((await api(`/commitments/${commitmentId}/coverage`)).coverage[0].state,'absent','Service fact change invalidates old evidence');
+    await page.reload();await action(page,'Observe this commitment now',{},'/observe','Run scoped observations');
+    const laterStarter=await api('/members',{name:'Sam Next Starter',email:'sam@example.test',password:'synthetic-linen-5',roles:['employee']});
+    const changed=await api(`/commitments/${commitmentId}`);
+    await api(`/commitments/${commitmentId}`,{revision:changed.revision,cohort:[starter.id,missing.id,laterStarter.id]},'PATCH');
+    assert.deepEqual((await api(`/commitments/${commitmentId}/coverage`)).uncoveredCohorts,[missing.id,laterStarter.id]);
+    await page.reload();await action(page,'Observe this commitment now',{},'/observe','Run scoped observations');
+    await captureJourney(page,{path:out+'/commitment-staff-service-change.png',fullPage:true});
+    await writeFile(out+'/commitment-context.json',JSON.stringify({commitmentId,parentId,connectionId:source.id,connectionRevision:source.revision,workId:work.id,starterId:starter.id,missingIds:[missing.id,laterStarter.id]}));
+    console.log(JSON.stringify({livePermissionReadback:true,ownerDefined:true,closedCase:true,changedStaffAndService:true,unobservedHireFlagged:true,remoteWrites:false}));
+} finally {await browser.close();}

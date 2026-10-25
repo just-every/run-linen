@@ -7,7 +7,17 @@ export interface IntelligenceContext {
 export interface ObservationSpec {
     id: string;
     description: string;
-    step: Step;
+    step: Step | GitHubObservationStep;
+}
+export interface GitHubObservationStep {
+    action: 'github.repository.read';
+    actionVersion: 1;
+    verifierConnectionId: string;
+    verifierConnectionRevision?: number;
+    target: string;
+    beneficiaryId: string;
+    cohort?: string[];
+    connectionId?: never;
 }
 export interface CommitmentData {
     serviceId?: string;

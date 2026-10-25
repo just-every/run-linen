@@ -2,10 +2,12 @@ import { connection } from '../execution/connectors';
 import { providerFetch } from '../execution/transport';
 import { assert } from './access';
 import type { IntelligenceContext, ObservationSpec } from './types';
+import { observeGitHub } from './github-observation';
 
 /** Read-only observation admission. A negative outcome is evidence only after provenance passes. */
 export async function observeProbe(ctx: IntelligenceContext, spec: ObservationSpec) {
     const step = spec.step;
+    if (step.action === 'github.repository.read') return observeGitHub(ctx, step);
     assert(step.verifierConnectionId && step.verifierConnectionId !== step.connectionId, 'verifier_configuration_required', 503);
     const source = await ctx.env.DB.prepare('SELECT revision FROM connections WHERE workspace_id=? AND id=?')
       .bind(ctx.principal.workspaceId, step.verifierConnectionId).first<{revision:number}>();

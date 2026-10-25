@@ -18,6 +18,9 @@ const email: Check = v => {
  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test((match?.[2] ?? match?.[3] ?? '').trim())
 }
 const plainEmail: Check = v => text(254)(v) && /^[^\s@<>"]+@[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(v as string) && v === (v as string).toLowerCase()
+const githubLogin: Check = v => text(39)(v) && /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(v as string) && !(v as string).includes('--')
+const githubRepository: Check = v => text(100)(v) && /^[a-z0-9._-]+$/i.test(v as string) && v !== '.' && v !== '..'
+const uuid: Check = v => typeof v === 'string' && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v)
 const mailboxMode: Check = v => v === 'oauth' || v === 'forwarding'
 // The signature consumer expects base64 SPKI, not a PEM envelope.
 const publicKey: Check = v => {
@@ -32,6 +35,7 @@ const schemas: Record<string, Record<string, Check>> = {
  'notification-webhook': endpoint,
  'monitoring-webhook': {}, // Inbound HMAC signingSecret belongs only in encrypted secret.
  sendgrid: {from:email,webhookPublicKey:publicKey},
+ github: {repositoryOwner:githubLogin,repositoryName:githubRepository,memberId:uuid,githubLogin,githubUserId:number(1,Number.MAX_SAFE_INTEGER,true)},
  // CHANNEL-007: the IT phone line on a RingCentral account (sandbox or production).
  ringcentral: {line:v => text(40)(v) && /^\+?[\d ()-]{7,20}$/.test(v as string),environment:v => v === 'sandbox' || v === 'production'},
  // CHANNEL-003: one support mailbox, read by OAuth polling or fed by a forwarding rule.

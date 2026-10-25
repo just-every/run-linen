@@ -4,7 +4,7 @@ import type { Hono } from 'hono';
 import type { AppEnv } from '../../platform/types';
 import { jsonBody, now } from '../../platform/http';
 import { assert, audit, current, num } from './access';
-import { getCommitment, listCommitments, saveCommitment, coverage, observeCommitment } from './commitments';
+import { getCommitment, listCommitments, saveCommitment, retireCommitment, coverage, observeCommitment } from './commitments';
 import { ingestEvent } from './events';
 import { proposeIntake, validateModel, compareModelRoutes } from './models';
 import { startResearch, getResearch, advanceResearch, verifyResearch } from './research';
@@ -31,6 +31,7 @@ export function registerIntelligenceRoutes(app: Hono<AppEnv>) {
     app.patch('/commitments/:id', async (c) => c.json(await saveCommitment(ctx(c), await jsonBody(c), c.req.param('id'))));
     app.get('/commitments/:id/coverage', async (c) => c.json(await coverage(ctx(c), c.req.param('id'))));
     app.post('/commitments/:id/observe', async (c) => c.json(await observeCommitment(ctx(c), c.req.param('id'))));
+    app.post('/commitments/:id/retire', async (c) => c.json(await retireCommitment(ctx(c), c.req.param('id'), (await jsonBody(c)).revision as number)));
     app.post('/intelligence/events', async (c) => c.json(await ingestEvent(ctx(c), await jsonBody(c)), 201));
     app.post('/intelligence/compare', async (c) => c.json(await compareModelRoutes(ctx(c), await jsonBody(c))));
     app.post('/intelligence/intake', async (c) => c.json(await proposeIntake(ctx(c), await jsonBody(c))));

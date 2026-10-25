@@ -108,7 +108,7 @@ export function IntelligenceSpace({
         label: "Independent observation definitions",
         type: "json",
         required: true,
-        hint: "Each entry binds id, description and a scoped execution step with a separate workflow verifier.",
+        hint: "Bind each check to a scoped workflow verifier or a validated GitHub repository observation.",
       },
       {
         name: "freshnessSeconds",
@@ -206,6 +206,7 @@ export function IntelligenceSpace({
               ],
               ["Revision", record.revision ?? d?.commitmentRevision],
               ["Last changed", date(record.updatedAt ?? record.updated_at)],
+              ...(section === "commitments" ? [["Next observation", date(record.dueAt)], ["Effective from", date(d.effectiveAt)], ["Effective until", d.expiresAt ? date(d.expiresAt) : "Continuing"]] as [string, unknown][] : []),
               ["State", record.state ?? "recorded"],
             ]}
           />
@@ -238,9 +239,15 @@ export function IntelligenceSpace({
                 {coverage.data?.uncoveredCohorts?.length > 0 && (
                   <Notice tone="warning">
                     Unobserved people:{" "}
-                    {coverage.data?.uncoveredCohorts.join(", ")}
+                    {coverage.data?.uncoveredCohorts.map(personName).join(", ")}
                   </Notice>
                 )}
+                {coverage.data?.dependencies?.map((dependency: any) => (
+                  <div className="record-row" key={dependency.id}>
+                    <span>Dependent commitment {dependency.id}</span>
+                    <Badge value={dependency.state} />
+                  </div>
+                ))}
               </section>
               {operator && (
                 <>
@@ -280,6 +287,12 @@ export function IntelligenceSpace({
                     ]}
                     onSaved={refresh}
                   />
+                  {session.principal.roles.includes("owner") && (
+                    <ActionForm title="Retire this commitment" path={`${path}/${selectedId}/retire`}
+                      defaults={{ revision: record.revision }} fields={[]} submit="Retire commitment"
+                      explanation="End scheduled observations. Recorded evidence remains available."
+                      onSaved={refresh} />
+                  )}
                   <ActionForm
                     title="Investigate an unfamiliar failure"
                     path="/research"

@@ -5,6 +5,7 @@ import { ErrorNotice, Notice } from "./primitives";
 import { Fields, readFields, type Field } from "./forms";
 export const providers = [
   { value: "microsoft-graph", label: "Microsoft identity & licenses" },
+  { value: "github", label: "GitHub repository access" },
   { value: "freshservice", label: "Freshservice existing desk" },
   { value: "workflow-probe", label: "Independent workflow verifier" },
   { value: "openai", label: "OpenAI reasoning" },
@@ -62,6 +63,15 @@ export function ConnectionForm({
             },
             { name: "apiKey", label: "API key", type: "password", required },
           ]
+        : provider === "github"
+          ? [
+              { name: "repositoryOwner", label: "Repository owner", required: true, value: old.repositoryOwner },
+              { name: "repositoryName", label: "Repository name", required: true, value: old.repositoryName },
+              { name: "memberId", label: "Workspace member ID", required: true, value: old.memberId, hint: "The UUID of the one workspace member whose access this connection checks." },
+              { name: "githubLogin", label: "GitHub login", required: true, value: old.githubLogin },
+              { name: "githubUserId", label: "GitHub numeric user ID", type: "number", required: true, value: old.githubUserId },
+              { name: "token", label: "Scoped access token", type: "password", required },
+            ]
         : provider === "ringcentral"
           ? [
               { name: "line", label: "IT line number", required: true, value: old.line },
@@ -206,6 +216,15 @@ export function ConnectionForm({
     } else if (provider === "freshservice") {
       config = { domain: values.domain };
       secret = values.apiKey;
+    } else if (provider === "github") {
+      config = {
+        repositoryOwner: values.repositoryOwner,
+        repositoryName: values.repositoryName,
+        memberId: values.memberId,
+        githubLogin: values.githubLogin,
+        githubUserId: values.githubUserId,
+      };
+      secret = values.token ? JSON.stringify({ token: values.token }) : undefined;
     } else if (provider === "ringcentral") {
       config = { line: values.line, environment: values.environment };
       secret = values.jwt ? JSON.stringify({ clientId: values.clientId, clientSecret: values.clientSecret, jwt: values.jwt }) : undefined;
@@ -285,6 +304,8 @@ export function ConnectionForm({
       <p>
         {provider === "microsoft-graph"
           ? "Use your administrator-approved application. Linen reads the supported directory facts before you review actual service ownership."
+          : provider === "github"
+            ? "Bind one workspace member to their GitHub identity and one repository. Checking reads current repository permission; it does not change access."
           : provider === "sendgrid"
             ? "Save the sender and signing key, then check the connection. The check only reads account, scopes and exact verified sender; it sends no email. Signed delivery events are separate evidence."
           : provider === "openai"

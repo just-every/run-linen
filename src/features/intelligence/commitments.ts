@@ -27,6 +27,21 @@ async function validate(ctx: IntelligenceContext, b: any): Promise<CommitmentDat
     const specs: ObservationSpec[] = [];
     for (const o of b.observations) {
         const step = o.step;
+        if (step?.action === 'github.repository.read') {
+            assert(ctx.principal.roles.includes('owner'), 'owner_required', 403);
+            assert(step.actionVersion === 1 && typeof step.verifierConnectionId === 'string'
+                && typeof step.target === 'string' && cohort.includes(step.beneficiaryId)
+                && (!step.cohort || step.cohort.length === 1 && step.cohort[0] === step.beneficiaryId), 'invalid_github_observation');
+            const source = await ctx.env.DB.prepare("SELECT revision,config_json,status FROM connections WHERE workspace_id=? AND id=? AND provider='github'")
+                .bind(ctx.principal.workspaceId, step.verifierConnectionId).first<any>();
+            assert(source?.status === 'active' && step.verifierConnectionRevision === source.revision, 'github_connection_required');
+            const config = JSON.parse(source.config_json);
+            assert(config.memberId === step.beneficiaryId && step.target === `${config.repositoryOwner}/${config.repositoryName}`, 'github_binding_mismatch');
+            specs.push({ id: requiredString(o.id, 'id', 100), description: requiredString(o.description, 'description'),
+                step: { action: 'github.repository.read', actionVersion: 1, target: step.target, beneficiaryId: step.beneficiaryId,
+                    verifierConnectionId: step.verifierConnectionId, verifierConnectionRevision: source.revision, cohort: [step.beneficiaryId] } });
+            continue;
+        }
         assert(step && actions.includes(step.action) && step.actionVersion === 1 && typeof step.target === 'string' && typeof step.beneficiaryId === 'string' && step.verifierConnectionId && step.connectionId !== step.verifierConnectionId, 'invalid_observation_step');
         assert(cohort.includes(step.beneficiaryId) && (!step.cohort || strings(step.cohort).every(c => cohort.includes(c))), 'observation_cohort_mismatch');
         const conn: any = await ctx.env.DB.prepare("SELECT provider,config_json FROM connections WHERE workspace_id=? AND id=?").bind(ctx.principal.workspaceId, step.verifierConnectionId).first();
@@ -54,7 +69,9 @@ export async function saveCommitment(ctx: IntelligenceContext, b: any, key?: str
     assert(sensitivity !== 'hr' || ctx.principal.roles.some(r => ['owner', 'hr'].includes(r)), 'hr_required', 403);
     for (const uid of [owner, ...participants])
         assert(await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId, uid).first(), 'participant_not_active');
-    const data = await validate(ctx, { ...old?.data, ...b });
+    const retirement = old && typeof b.expiresAt === 'string' && iso(b.expiresAt) <= now()
+        && Object.keys(b).every(k => ['revision', 'expiresAt'].includes(k));
+    const data = retirement ? { ...old.data, expiresAt: iso(b.expiresAt) } : await validate(ctx, { ...old?.data, ...b });
     const serviceId = b.serviceId === undefined ? old?.data.serviceId : b.serviceId;
     if (serviceId) {
         const service = await getService(ctx.env.DB, ctx.principal, requiredString(serviceId, 'serviceId'), 'service');
@@ -84,9 +101,13 @@ export async function saveCommitment(ctx: IntelligenceContext, b: any, key?: str
     await audit(ctx, 'commitment.saved', cid, { revision: rev });
     return getCommitment(ctx, cid);
 }
+export async function retireCommitment(ctx: IntelligenceContext, key: string, revision: number) {
+    ctx = await current(ctx, ['owner']);
+    return saveCommitment(ctx, { revision, expiresAt: now() }, key);
+}
 export async function observationFacts(ctx: IntelligenceContext, c: Commitment): Promise<Fact[]> {
     await getCommitment(ctx, c.id);
-    const rows = await ctx.env.DB.prepare('SELECT * FROM intelligence_observations WHERE workspace_id=? AND commitment_id=? AND revision=? ORDER BY created_at DESC LIMIT 500').bind(ctx.principal.workspaceId, c.id, c.revision).all<any>();
+    const rows = await ctx.env.DB.prepare('SELECT * FROM intelligence_observations WHERE workspace_id=? AND commitment_id=? AND revision=? ORDER BY created_at DESC,rowid DESC LIMIT 500').bind(ctx.principal.workspaceId, c.id, c.revision).all<any>();
     return rows.results.map(r => ({ id: r.id, specId: r.spec_id, state: r.state, observedAt: r.observed_at, cohort: JSON.parse(r.cohort_json), evidence: JSON.parse(r.evidence_json) }));
 }
 export async function coverage(ctx: IntelligenceContext, key: string) {
@@ -95,19 +116,31 @@ export async function coverage(ctx: IntelligenceContext, key: string) {
     const dependencies = await Promise.all(c.data.dependencies.map(async (dependencyId) => {
         try {
             const dependency = await getCommitment(ctx, dependencyId), evidence = await observationFacts(ctx, dependency);
-            return { id: dependencyId, state: dependency.data.observations.every(s => {
-                    const f = evidence.find(f => f.specId === s.id);
-                    return f?.state === 'verified' && at - Date.parse(f.observedAt) <= dependency.data.freshnessSeconds * 1000;
-                }) ? 'verified' : 'unknown' };
+            const rows = await coverageRows(ctx, dependency, evidence, at);
+            return { id: dependencyId, state: rows.length && rows.every(r => r.state === 'verified')
+                && dependency.data.cohort.every(person => rows.some(r => r.cohort === person)) ? 'verified' : 'unknown' };
         }
         catch {
             return { id: dependencyId, state: 'unknown' };
         }
     }));
-    return { dependencies, commitmentId: key, revision: c.revision, outcome: c.data.outcome, coverage: c.data.observations.flatMap(spec => (spec.step.cohort || [spec.step.beneficiaryId]).map(cohort => {
-            const f = facts.find(f => f.specId === spec.id && f.cohort.includes(cohort));
-            return { specId: spec.id, cohort, state: !f ? 'absent' : at - Date.parse(f.observedAt) > c.data.freshnessSeconds * 1000 ? 'stale' : f.state, evidenceId: f?.id || null, observedAt: f?.observedAt || null };
-        })), uncoveredCohorts: c.data.cohort.filter(person => !c.data.observations.some(s => (s.step.cohort || [s.step.beneficiaryId]).includes(person))) };
+    return { dependencies, commitmentId: key, revision: c.revision, outcome: c.data.outcome,
+        coverage: await coverageRows(ctx, c, facts, at),
+        uncoveredCohorts: c.data.cohort.filter(person => !c.data.observations.some(s => (s.step.cohort || [s.step.beneficiaryId]).includes(person))) };
+}
+async function coverageRows(ctx: IntelligenceContext, c: Commitment, facts: Fact[], at: number) {
+    return Promise.all(c.data.observations.flatMap(spec => (spec.step.cohort || [spec.step.beneficiaryId]).map(async cohort => {
+        const f = facts.find(f => f.specId === spec.id && f.cohort.includes(cohort));
+        let state = !f ? 'absent' : at - Date.parse(f.observedAt) >= c.data.freshnessSeconds * 1000 ? 'stale' : f.state;
+        if (spec.step.action === 'github.repository.read' && f) {
+            const source: any = await ctx.env.DB.prepare('SELECT revision,status FROM connections WHERE workspace_id=? AND id=?')
+                .bind(ctx.principal.workspaceId, spec.step.verifierConnectionId).first();
+            const member = await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1')
+                .bind(ctx.principal.workspaceId, cohort).first();
+            if (!member || source?.status !== 'active' || source.revision !== spec.step.verifierConnectionRevision) state = 'uncertain';
+        }
+        return { specId: spec.id, cohort, state, evidenceId: f?.id || null, observedAt: f?.observedAt || null };
+    })));
 }
 export async function runProbe(ctx: IntelligenceContext, c: Commitment, spec: ObservationSpec, runId?: string) {
     ctx = await current(ctx, ['owner', 'operator', 'hr', 'integration']);
@@ -125,7 +158,7 @@ export async function runProbe(ctx: IntelligenceContext, c: Commitment, spec: Ob
         assert((await getCommitment(ctx, c.id)).revision === c.revision, 'commitment_changed', 409);
         evidence = observation;
         observedAt = observation.observedAt;
-        state = observation.usableWorkflow ? 'verified' : 'failed';
+        state = ('accessVerified' in observation ? observation.accessVerified : observation.usableWorkflow) ? 'verified' : 'failed';
     }
     catch (e) {
         code = errorCode(e);
