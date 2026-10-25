@@ -6267,7 +6267,7 @@
       "executable": false
     },
     "tests/ui/commitment-restart.mjs": {
-      "sha256": "4dbf4e3b5b36affa306d4530a18d222aaef3a0a969b22339d7d885d1e0f3ee36",
+      "sha256": "05924225a9a03a3070f78b78cff2df118ef801a8ce296eaa169c7f46d7246920",
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {

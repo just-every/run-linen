@@ -36,7 +36,9 @@ try {
         await page.setViewportSize({width,height:1000});const profile=page.getByRole('button',{name:'Your workspace and account'});
         await page.keyboard.press('Tab');await profile.focus();assert.equal(await profile.evaluate(e=>e.matches(':focus-visible')),true);
         assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
-        await profile.evaluate(e=>e.blur());await profile.hover();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');
+        await profile.evaluate(e=>e.blur());await page.mouse.move(0,0);await page.waitForTimeout(120);
+        assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'0');
+        await profile.hover();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'0');
         await page.waitForTimeout(420);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
         await page.screenshot({path:`${out}/commitment-tooltip-${width}.png`});
     }
