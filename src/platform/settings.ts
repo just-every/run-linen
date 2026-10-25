@@ -4,6 +4,7 @@ import { ApiError,audit,auditStatement,id,jsonBody,now,requiredString,requireRol
 import { encryptSecret,passwordHash } from './crypto'
 import { platformAdmissionGuard, assertPlatformAdmission } from './privacy'
 import { connectionConfig } from './connection-config'
+import { connectionAdmission } from './connection-admission'
 const roles:Role[]=['owner','operator','employee','approver','hr','auditor','integration']
 // Ordinary settings retain replacement semantics. Operational controls survive
 // omission, so an ordinary form cannot clear a restore hold or selected model.
@@ -83,7 +84,23 @@ export function registerSettingsRoutes(app:Hono<AppEnv>){
  app.get('/settings',async c=>{requireRole(c,'owner','operator','auditor');const row=await c.env.DB.prepare('SELECT settings_json,revision FROM workspace_settings WHERE workspace_id=?').bind(c.get('principal').workspaceId).first<{settings_json:string,revision:number}>();return c.json({settings:JSON.parse(row?.settings_json||'{}'),revision:row?.revision||1})})
  app.patch('/settings',async c=>{const p=requireRole(c,'owner'),b=await jsonBody(c),{next,predicates,bindings}=await settingsUpdate(c,b.settings,b.revision);const [result]=await c.env.DB.batch([c.env.DB.prepare('UPDATE workspace_settings SET settings_json=?,revision=revision+1 WHERE workspace_id=? AND revision=?'+predicates.map(sql=>' AND '+sql).join('')).bind(JSON.stringify(next),p.workspaceId,b.revision,...bindings),auditStatement(c,'settings.changed',p.workspaceId,{},true)]);if(!result.meta.changes)throw new ApiError(409,'revision_conflict','Settings or connection changed; reload');return c.json({updated:true})})
  app.get('/connections',async c=>{const p=requireRole(c,'owner','operator','auditor');return c.json((await c.env.DB.prepare('SELECT id,provider,name,config_json,status,revision,created_at,updated_at,secret_ciphertext IS NOT NULL AS has_secret FROM connections WHERE workspace_id=?').bind(p.workspaceId).all()).results)})
- app.post('/connections',async c=>{const p=requireRole(c,'owner'),b=await jsonBody(c),cid=id(),time=now();const ciphertext=b.secret?await encryptSecret(c.env.ENCRYPTION_KEY,requiredString(b.secret,'secret',65536)):null;await c.env.DB.batch([c.env.DB.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind(cid,p.workspaceId,requiredString(b.provider,'provider',100),requiredString(b.name,'name',120),JSON.stringify(connectionConfig(requiredString(b.provider,'provider',100),b.config)),ciphertext,'unverified',time,time),auditStatement(c,'connection.created',cid)]);return c.json({id:cid,status:'unverified'},201)})
- app.patch('/connections/:id',async c=>{const p=requireRole(c,'owner'),b=await jsonBody(c),cid=c.req.param('id');const old=await c.env.DB.prepare('SELECT secret_ciphertext,provider FROM connections WHERE id=? AND workspace_id=?').bind(cid,p.workspaceId).first<{secret_ciphertext:string|null,provider:string}>();if(!old)throw new ApiError(404,'not_found','Connection not found');const secret=b.secret===null?null:b.secret?await encryptSecret(c.env.ENCRYPTION_KEY,requiredString(b.secret,'secret',65536)):old.secret_ciphertext;const [result]=await c.env.DB.batch([c.env.DB.prepare("UPDATE connections SET name=?,config_json=?,secret_ciphertext=?,status='unverified',revision=revision+1,updated_at=? WHERE id=? AND workspace_id=? AND revision=?").bind(requiredString(b.name,'name',120),JSON.stringify(connectionConfig(old.provider,b.config)),secret,now(),cid,p.workspaceId,b.revision),auditStatement(c,'settings.changed',p.workspaceId,{},true)]);if(!result.meta.changes)throw new ApiError(409,'revision_conflict','Connection changed; reload');return c.json({updated:true,status:'unverified'})})
+ app.post('/connections',async c=>{
+  const p=requireRole(c,'owner'),b=await jsonBody(c),cid=id(),time=now(),provider=requiredString(b.provider,'provider',100),config=connectionConfig(provider,b.config)
+  const guard=await connectionAdmission(c.env.DB,p.workspaceId,provider,config)
+  const ciphertext=b.secret?await encryptSecret(c.env.ENCRYPTION_KEY,requiredString(b.secret,'secret',65536)):null
+  const [result]=await c.env.DB.batch([c.env.DB.prepare('INSERT INTO connections SELECT ?,?,?,?,?,?,?,1,?,? WHERE '+guard.sql).bind(cid,p.workspaceId,provider,requiredString(b.name,'name',120),JSON.stringify(config),ciphertext,'unverified',time,time,...guard.bindings),auditStatement(c,'connection.created',cid,{},true)])
+  if(!result.meta.changes)throw new ApiError(409,'connection_binding_changed','The member binding changed; reload')
+  return c.json({id:cid,status:'unverified'},201)
+ })
+ app.patch('/connections/:id',async c=>{
+  const p=requireRole(c,'owner'),b=await jsonBody(c),cid=c.req.param('id')
+  const old=await c.env.DB.prepare('SELECT secret_ciphertext,provider FROM connections WHERE id=? AND workspace_id=?').bind(cid,p.workspaceId).first<{secret_ciphertext:string|null,provider:string}>()
+  if(!old)throw new ApiError(404,'not_found','Connection not found')
+  const config=connectionConfig(old.provider,b.config),guard=await connectionAdmission(c.env.DB,p.workspaceId,old.provider,config)
+  const secret=b.secret===null?null:b.secret?await encryptSecret(c.env.ENCRYPTION_KEY,requiredString(b.secret,'secret',65536)):old.secret_ciphertext
+  const [result]=await c.env.DB.batch([c.env.DB.prepare("UPDATE connections SET name=?,config_json=?,secret_ciphertext=?,status='unverified',revision=revision+1,updated_at=? WHERE id=? AND workspace_id=? AND revision=? AND "+guard.sql).bind(requiredString(b.name,'name',120),JSON.stringify(config),secret,now(),cid,p.workspaceId,b.revision,...guard.bindings),auditStatement(c,'settings.changed',p.workspaceId,{},true)])
+  if(!result.meta.changes)throw new ApiError(409,'revision_conflict','Connection or member binding changed; reload')
+  return c.json({updated:true,status:'unverified'})
+ })
  app.delete('/connections/:id',async c=>{const p=requireRole(c,'owner'),cid=c.req.param('id');const [result]=await c.env.DB.batch([c.env.DB.prepare('DELETE FROM connections WHERE id=? AND workspace_id=?').bind(cid,p.workspaceId),auditStatement(c,'connection.deleted',cid,{},true)]);if(!result.meta.changes)throw new ApiError(404,'not_found','Connection not found');return c.json({deleted:true})})
 }

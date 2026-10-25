@@ -5006,8 +5006,12 @@
       "sha256": "9216e84deef8d66d746d31cd9fb8df2b72cd13306a2d5eb06eeb48486abafc83",
       "executable": false
     },
+    "src/platform/connection-admission.ts": {
+      "sha256": "fc11a6e945bb40944cb22c033e416420ac3d9bf67c598601d1fe1ffd91267be9",
+      "executable": false
+    },
     "src/platform/connection-config.ts": {
-      "sha256": "5f85d548582f5d20e13c8e0356581f2e955300f3ff9d69d178226b9c2359dc4c",
+      "sha256": "28385c9fad366d11958d3ee3b9b28d0b83ba2f808d03ad47c1fe4f4477ff0fc2",
       "executable": false
     },
     "src/platform/crypto.ts": {
@@ -5055,7 +5059,7 @@
       "executable": false
     },
     "src/platform/settings.ts": {
-      "sha256": "68c340e9fa96a94cafdd05ea026ee4e110a54bfc80ad9f3723b4bc11dd8ee5b4",
+      "sha256": "0cbc060bdf7130c4ad8b1cfc2236c4e1e9250c8fae816e5c4c6f732771356272",
       "executable": false
     },
     "src/platform/sso.ts": {
@@ -5943,7 +5947,7 @@
       "executable": false
     },
     "tests/intelligence/commitment-cases.mjs": {
-      "sha256": "6fafbd88893a450923b4c39f773d44769becb2d971f1f0e7562ec73e29628cc3",
+      "sha256": "b6bcca25b71b6d7882ed8f71645bc1c746c86639df53c3a275d0e2e1ea465c10",
       "executable": false
     },
     "tests/intelligence/companion.mjs": {

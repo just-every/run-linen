@@ -46,7 +46,7 @@ const schemas: Record<string, Record<string, Check>> = {
 // Admission is not activation: incomplete drafts remain unverified until the
 // adapter validates its protocol. Unknown providers receive inert metadata only.
 export function connectionConfig(provider: string, value: unknown): Record<string, unknown> {
- if (value === undefined) return {}
+ if (value === undefined && provider !== 'github') return {}
  const invalid = () => new ApiError(400,'invalid_config','Unsupported or invalid nonsecret connection configuration')
  if (!value || typeof value !== 'object' || Array.isArray(value) || JSON.stringify(value).length > 32768) throw invalid()
  const schema = Object.hasOwn(schemas,provider) ? {...schemas[provider],description:text(2000)} : metadata
@@ -55,6 +55,7 @@ export function connectionConfig(provider: string, value: unknown): Record<strin
   if (!Object.hasOwn(schema,key) || !schema[key](item)) throw invalid()
   result[key] = item
  }
+ if (provider === 'github' && ['repositoryOwner','repositoryName','memberId','githubLogin','githubUserId'].some(key=>result[key]===undefined)) throw invalid()
  if (result.url !== undefined && (!Array.isArray(result.allowedHosts) || !result.allowedHosts.includes(new URL(result.url as string).hostname))) throw invalid()
  return result
 }
