@@ -18,6 +18,10 @@ export async function commitmentChecks({api, owner, employee, harness, restart, 
     const input = {outcome:'Every scheduled starter can read the baseline repository',cohort:[userId,employeeId],observations:[spec],
         freshnessSeconds:600,intervalSeconds:60,dependencies:[],participants:[],sensitivity:'restricted',effectiveAt:new Date(Date.now()-1000).toISOString()};
     assert.equal((await api('/commitments','POST',input,employee)).status,403);
+    await ok('/members','POST',{name:'Case operator',email:'commitment-operator@example.test',password:'synthetic-linen-3',roles:['operator']});
+    const login=await api('/login','POST',{email:'commitment-operator@example.test',password:'synthetic-linen-3'});
+    const operator={cookie:login.cookie.split(';')[0]};operator.csrf=(await ok('/session','GET',undefined,operator)).csrfToken;
+    assert.equal((await api('/commitments','POST',input,operator)).status,403,'An operator cannot define a new GitHub binding');
     let commitment = await ok('/commitments','POST',input);
     const read = () => ok(`/commitments/${commitment.id}/coverage`);
     assert.equal((await read()).coverage[0].state,'absent');
@@ -64,6 +68,7 @@ export async function commitmentChecks({api, owner, employee, harness, restart, 
     assert.equal((await read()).coverage[0].state,'uncertain','Connection withdrawal invalidates prior health');
     assert.equal((await observe()).coverage[0].state,'uncertain');
     assert.equal((await api(`/commitments/${commitment.id}/retire`,'POST',{revision:commitment.revision},employee)).status,403);
+    assert.equal((await api(`/commitments/${commitment.id}/retire`,'POST',{revision:commitment.revision},operator)).status,403);
     await ok(`/commitments/${commitment.id}/retire`,'POST',{revision:commitment.revision});
     assert.equal((await api(`/commitments/${commitment.id}/observe`,'POST',{},owner)).status,409);
     console.log('PASS persistent repository commitment: owner binding, closure and restart, uncovered starter, changing scope, provider denial and uncertainty, stale dependencies, withdrawal and retirement');

@@ -206,8 +206,8 @@ export function IntelligenceSpace({
               ],
               ["Revision", record.revision ?? d?.commitmentRevision],
               ["Last changed", date(record.updatedAt ?? record.updated_at)],
-              ...(section === "commitments" ? [["Next observation", date(record.dueAt)], ["Effective from", date(d.effectiveAt)], ["Effective until", d.expiresAt ? date(d.expiresAt) : "Continuing"]] as [string, unknown][] : []),
-              ["State", record.state ?? "recorded"],
+              ...(section === "commitments" ? [["Next observation", d.expiresAt && Date.parse(d.expiresAt) <= Date.now() ? "No further checks" : date(record.dueAt)], ["Effective from", date(d.effectiveAt)], ["Effective until", d.expiresAt ? date(d.expiresAt) : "Continuing"]] as [string, unknown][] : []),
+              ["State", section === "commitments" && d.expiresAt && Date.parse(d.expiresAt) <= Date.now() ? "retired" : record.state ?? "recorded"],
             ]}
           />
           {section === "commitments" && (
