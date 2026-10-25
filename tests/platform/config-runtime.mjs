@@ -22,11 +22,14 @@ try {
  await start()
  const setup=await request('/setup','POST',{email:'config@example.test',name:'Owner',password:'correct horse battery staple',workspaceName:'Config'})
  assert.equal(setup.status,201,await setup.clone().text())
- // First-owner setup requires an empty identity store; add the isolation tenant afterwards.
+ // First-owner setup requires an empty identity store. Close the Worker while
+ // the separate D1 fixture process changes its database, then reopen the native session.
+ await stop()
  {
   const fixtureHash='fixture-salt:'+pbkdf2Sync('other tenant safe password','fixture-salt',100000,32,'sha256').toString('hex')
   const fixture=spawnSync('pnpm',['exec','wrangler','d1','execute','DB','--local','--persist-to',dir,'--command',`INSERT INTO workspaces VALUES('other-workspace','Other','2026-01-01T00:00:00.000Z'); INSERT INTO users VALUES('other-user','other@example.test','Other','${fixtureHash}','2026-01-01T00:00:00.000Z'); INSERT INTO memberships VALUES('other-workspace','other-user','["owner"]',1);`],{encoding:'utf8'});assert.equal(fixture.status,0,fixture.stdout+fixture.stderr)
  }
+ await start()
  const owner={cookie:setup.headers.get('set-cookie').split(';')[0]}
  owner.csrf=(await (await request('/session','GET',undefined,owner)).json()).csrfToken
  const fixture=async b=>{const r=await fetch(origin+'/test/config-fixture',{method:'POST',headers:{Origin:origin,Cookie:owner.cookie,'X-Linen-CSRF':owner.csrf,'Content-Type':'application/json'},body:JSON.stringify(b)});assert.equal(r.status,200,await r.clone().text());return r.json()}
@@ -39,12 +42,12 @@ try {
  }
  const ids={}
  for(const [provider,config] of Object.entries(configs)){
-  const r=await request('/connections','POST',{provider,name:provider,config,secret:'TEST-ONLY-ENCRYPTED-CREDENTIAL'},owner)
+  const r=await request('/connections','POST',{provider,name:provider,config,secret:'synthetic-linen-426'},owner)
   assert.equal(r.status,201,provider+': '+await r.clone().text());ids[provider]=(await r.json()).id
  }
  const listed=await (await request('/connections','GET',undefined,owner)).json()
  for(const row of listed){assert.deepEqual(JSON.parse(row.config_json),configs[row.provider]);assert.equal(row.status,'unverified');assert.equal(row.has_secret,1)}
- assert.ok(!JSON.stringify(listed).includes('TEST-ONLY-ENCRYPTED-CREDENTIAL'));assert.ok(!JSON.stringify(listed).includes('secret_ciphertext'))
+ assert.ok(!JSON.stringify(listed).includes('synthetic-linen-426'));assert.ok(!JSON.stringify(listed).includes('secret_ciphertext'))
  assert.equal((await request('/connections')).status,401)
  const otherLogin=await request('/login','POST',{email:'other@example.test',password:'other tenant safe password'})
  const other={cookie:otherLogin.headers.get('set-cookie').split(';')[0]};other.csrf=(await (await request('/session','GET',undefined,other)).json()).csrfToken

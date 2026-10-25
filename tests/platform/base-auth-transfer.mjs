@@ -152,6 +152,7 @@ try{
  ]);
 
  await env.DB.prepare("INSERT INTO configuration_sandboxes(id,workspace_id,name,created_by,contributors_json,baseline_json,draft_json,state,approved_by,created_at) VALUES('synthetic-linen-430','workspace','Synthetic sandbox','owner','[\"owner\"]','[]','[]','approved','other',?)").bind(stamp).run();
+ await env.DB.prepare("UPDATE configuration_sandboxes SET runs_json=? WHERE id='synthetic-linen-430'").bind(JSON.stringify([{id:'synthetic-linen-431',configurationRevision:1,tasks:[],completed:[]}])).run();
  await close()
  await run(['exec','rer','export','--output',archive])
  const restRows=[],mcpRows=[],roleRows=[],roleMemberRows=[];

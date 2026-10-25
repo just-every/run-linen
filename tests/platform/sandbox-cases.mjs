@@ -20,7 +20,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  const team=groups.groups?.[0]??groups.items?.[0];
  // Create the support team through its own public administration door.
  const group=team??await invoke('/work-groups','POST',{name:'Equipment team'},owner,201);
- const tasks=[{key:'prepare',title:'Prepare equipment',groupId:group.id,after:[],dueHours:24}];
+ const tasks=[{key:'prepare',title:'Prepare equipment',groupId:group.id,after:[],dueHours:24},{key:'label',title:'Label equipment',groupId:group.id,after:[],dueHours:24},{key:'check',title:'Check equipment',groupId:group.id,after:['prepare','label'],dueHours:48}];
  const work=await invoke('/work','POST',{title:'Existing request',body:'Synthetic equipment request',deduplicationKey:'synthetic-linen-423'},requester,201);
  await invoke('/work/'+work.id+'/fulfilment','POST',{catalogId,beneficiaryId:employee.id,purpose:'Synthetic equipment request'},requester,201);
  const protectedBefore=await fixture({seedSandboxGrant:true});
@@ -47,7 +47,55 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  const trial=await invoke(path+'/test-form','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}});
  assert.deepEqual(trial.answers,{purpose:'Synthetic test'});assert.deepEqual(trial.taskPlan,tasks);assert.equal(trial.executed,false);
  assert.deepEqual((await fixture({})).connections,protectedBefore.connections,'Sandbox testing never changes connections or secrets');
+ // Execute the isolated team workflow, including parallel tasks and a dependency join.
+ await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{}},owner,422);
+ await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'},connectionId:'synthetic-linen-424'},owner,422);
+ await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},requester,403);
+ await invoke(path+'/runs','GET',undefined,other,404);
+ let run=await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'synthetic-linen-425'}},owner,201);
+ const runPath=path+'/runs/'+run.id+'/complete';
+ assert.deepEqual(run.tasks.map(t=>t.state),['ready','ready','blocked']);assert.equal(run.externalEffects,false);
+ assert.equal(Date.parse(run.tasks[2].dueAt)-Date.parse(run.createdAt),48*3600000);
+ assert.ok(!JSON.stringify(await invoke(path+'/runs','GET')).includes('synthetic-linen-425'),'Answers are not retained');
+ await invoke(runPath,'POST',{revision:sandbox.revision,taskKey:'check'},owner,409);
+ run=await invoke(runPath,'POST',{revision:sandbox.revision,taskKey:'label'});
+ assert.equal(run.tasks[2].state,'blocked');
+ run=await invoke(runPath,'POST',{revision:sandbox.revision,taskKey:'prepare'});
+ assert.equal(run.tasks[2].state,'ready');
+ run=await invoke(runPath,'POST',{revision:sandbox.revision,taskKey:'check'});
+ assert.equal(run.state,'completed');
+ assert.deepEqual((await invoke(path+'/runs','GET')).items[0].tasks,run.tasks,'Workflow progress is read from durable sandbox state');
+ await invoke(runPath,'POST',{revision:sandbox.revision,taskKey:'check'},owner,409);
+ const concurrent=await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,201);
+ const concurrentPath=path+'/runs/'+concurrent.id+'/complete';
+ const auditsBeforeConcurrency=(await fixture({})).sandboxAudits.length;
+ const attempts=await Promise.all(['prepare','label'].map(async taskKey=>{
+  const response=await request(concurrentPath,'POST',{revision:sandbox.revision,taskKey},owner);
+  assert.ok([200,409].includes(response.status),await response.clone().text());
+  return {taskKey,status:response.status};
+ }));
+ const saved=(await invoke(path+'/runs','GET')).items.find(item=>item.id===concurrent.id);
+ assert.equal((await fixture({})).sandboxAudits.length-auditsBeforeConcurrency,attempts.filter(a=>a.status===200).length,'Only committed completions create audit events');
+ assert.deepEqual(saved.completed.slice().sort(),attempts.filter(a=>a.status===200).map(a=>a.taskKey).sort(),'Concurrent completions cannot overwrite a successful task');
+ for(const attempt of attempts.filter(a=>a.status===409))await invoke(concurrentPath,'POST',{revision:sandbox.revision,taskKey:attempt.taskKey});
+ assert.equal((await invoke(path+'/runs','GET')).items.find(item=>item.id===concurrent.id).tasks[2].state,'ready');
+ const staleRun=await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,201);
+ sandbox=await invoke(path+'/catalog/'+catalogId,'PUT',{revision:sandbox.revision,name:'Reviewed equipment',form,tasks});
+ await invoke(path+'/runs/'+staleRun.id+'/complete','POST',{revision:sandbox.revision,taskKey:'prepare'},owner,409);
+ assert.equal((await invoke(path+'/runs','GET')).items.find(item=>item.id===staleRun.id).current,false);
+ // Refuse unsupported automated prerequisites rather than pretend a connector succeeded.
+ sandbox=await invoke(path+'/catalog/'+catalogId,'PUT',{revision:sandbox.revision,name:'Reviewed equipment',form,tasks:[{...tasks[0],after:['automated']}]});
+ await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,422);
+ sandbox=await invoke(path+'/catalog/'+catalogId,'PUT',{revision:sandbox.revision,name:'Reviewed equipment',form,tasks});
+ const frozenRun=await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,201);
+ const afterWorkflow=await fixture({});
+ assert.deepEqual(afterWorkflow.protectedTables,protectedBefore.protectedTables,'Rehearsal task completion cannot change production work, grants or in-flight requests');
+ assert.deepEqual(afterWorkflow.connections,protectedBefore.connections,'Rehearsals cannot use or modify production connectors');
+ assert.deepEqual(afterWorkflow.settings,protectedBefore.settings);
+ assert.equal((await invoke('/catalog','GET')).items.find(i=>i.id===catalogId).name,'Original equipment');
  sandbox=await invoke(path+'/package','POST',{revision:sandbox.revision});
+ await invoke(path+'/runs/'+frozenRun.id+'/complete','POST',{revision:sandbox.revision,taskKey:'prepare'},owner,409);
+ await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,409);
  assert.deepEqual(sandbox.differences.map(d=>d.field),['name','form','tasks']);
  await invoke(path+'/catalog/'+catalogId,'PUT',{revision:sandbox.revision,name:'Late edit',form,tasks},owner,409);
  await invoke(path+'/approve','POST',{revision:sandbox.revision},owner,403);
@@ -82,5 +130,5 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  const beforeWithdrawalRefusal=await fixture({});
  await invoke(withdrawnPath+'/promote','POST',{revision:withdrawn.revision},owner,409);
  assert.deepEqual(await fixture({}),beforeWithdrawalRefusal,'Withdrawn reviewer cannot authorize a production change');
- console.log('PASS sandbox configuration HTTP: config-only copy, scoped access, isolated edits and form validation, complete field diff, separate owner approval, atomic versioned promotion, reviewed rollback, stale production refusal, connection and secret preservation');
+ console.log('PASS sandbox configuration HTTP: config-only copy, scoped access, isolated edits, durable task workflow execution with dependency and revision fences, form validation, complete field diff, separate owner approval, atomic versioned promotion, reviewed rollback, stale production refusal, connection and secret preservation');
 }

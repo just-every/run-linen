@@ -4,10 +4,10 @@ import { ApiError, auditStatement, id, jsonBody, now, requiredString } from './h
 import { normalizeCatalogForm, validateCatalogAnswers, type CatalogForm } from '../features/work/catalog-form-schema';
 import { checkTaskPlan, type CatalogTask } from '../features/work/catalog-task-plan';
 
-type Item = { id: string; name: string; revision: number; sourceForm: string; sourceTasks: string; form: CatalogForm; tasks: CatalogTask[] };
-type Sandbox = { id: string; name: string; created_by: string; contributors_json: string; baseline_json: string; draft_json: string; revision: number; state: string; approved_by: string | null };
+export type Item = { id: string; name: string; revision: number; sourceForm: string; sourceTasks: string; form: CatalogForm; tasks: CatalogTask[] };
+export type Sandbox = { id: string; name: string; created_by: string; contributors_json: string; baseline_json: string; draft_json: string; revision: number; state: string; approved_by: string | null; runs_json: string };
 type C = Context<AppEnv>;
-const ownerSql = `EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value='owner')`;
+export const ownerSql = `EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value='owner')`;
 async function owner(c: C) {
  const p=c.get('principal');
  if(!p.roles.includes('owner') || !await c.env.DB.prepare(`SELECT 1 WHERE ${ownerSql}`).bind(p.workspaceId,p.userId).first())
@@ -32,7 +32,7 @@ function differences(row:Sandbox) {
   return (['name','form','tasks'] as const).filter(field=>JSON.stringify(before[field])!==JSON.stringify(item[field])).map(field=>({catalogId:item.id,field,before:before[field],after:item[field]}));
  });
 }
-function view(row:Sandbox) {return {id:row.id,name:row.name,revision:row.revision,state:row.state,approvedBy:row.approved_by,items:JSON.parse(row.draft_json),differences:differences(row),limits:'Catalog metadata, forms and team task plans only. Form testing performs validation; workflow execution, connectors, other configuration families are not available.'};}
+function view(row:Sandbox) {return {id:row.id,name:row.name,revision:row.revision,state:row.state,approvedBy:row.approved_by,items:JSON.parse(row.draft_json),differences:differences(row),limits:'Catalog metadata, forms and team task plans only. Form validation and isolated team task rehearsals are available. Connector execution and other configuration families are not available.'};}
 function revision(row:Sandbox,b:Record<string,unknown>,state:string) {
  if(b.revision!==row.revision||row.state!==state)throw new ApiError(409,'sandbox_changed','Sandbox state or revision changed; reload');
 }
@@ -131,3 +131,5 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   return c.json(view(await read(c,row.id)));
  });
 }
+
+export { read as readSandbox };

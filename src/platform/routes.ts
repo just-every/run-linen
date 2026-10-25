@@ -1,4 +1,5 @@
 import { registerSandboxRoutes } from './sandboxes'
+import { registerSandboxWorkflowRoutes } from './sandbox-workflows'
 import { Hono } from 'hono'
 import type { AppEnv } from './types'
 import { authenticated, createSession, logout, session } from './auth'
@@ -44,6 +45,7 @@ export function platformApp(){
  })
  app.get('/workspace',async c=>c.json(await c.env.DB.prepare('SELECT id,name,created_at FROM workspaces WHERE id=?').bind(c.get('principal').workspaceId).first()))
  registerSandboxRoutes(app)
+ registerSandboxWorkflowRoutes(app)
  registerSettingsRoutes(app)
  return app
 }
