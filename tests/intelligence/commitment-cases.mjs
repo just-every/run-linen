@@ -71,7 +71,7 @@ export async function commitmentChecks({api, owner, employee, harness, restart, 
     assert.equal((await api(`/commitments/${commitment.id}/retire`,'POST',{revision:commitment.revision},operator)).status,403);
     await ok(`/commitments/${commitment.id}/retire`,'POST',{revision:commitment.revision});
     assert.equal((await api(`/commitments/${commitment.id}/observe`,'POST',{},owner)).status,409);
-    const activeSource=await ok('/connections','POST',{provider:'github',name:'Another starter observation',config,secret:JSON.stringify({token:'synthetic-linen-1'})});
+    const activeSource=await ok('/connections','POST',{provider:'github',name:'Jordan Starter GitHub',config,secret:JSON.stringify({token:'synthetic-linen-1'})});
     const activeRevision=(await ok('/connections')).find(row=>row.id===activeSource.id).revision;
     await ok(`/connections/${activeSource.id}/test`,'POST',{revision:activeRevision});
     assert.ok((await ok('/connection-status')).connections.find(row=>row.id===activeSource.id).evidence);
@@ -84,6 +84,7 @@ export async function commitmentChecks({api, owner, employee, harness, restart, 
     assert.equal((await ok('/connection-status')).connections.find(row=>row.id===c.id).evidence,null);
     const erasedActive=(await ok('/connections')).find(row=>row.id===activeSource.id);
     assert.equal(erasedActive.has_secret,0);assert.equal(erasedActive.config_json.includes(config.githubLogin),false);
+    assert.equal(erasedActive.name.includes('Jordan Starter'),false);
     assert.equal((await ok('/connection-status')).connections.find(row=>row.id===activeSource.id).evidence,null);
     assert.equal((await api('/connections','POST',{provider:'github',name:'Erased binding replay',config,secret:JSON.stringify({token:'synthetic-linen-1'})},owner)).status,409);
     assert.equal((await ok(`/commitments/${commitment.id}`)).data.observations.length,0);

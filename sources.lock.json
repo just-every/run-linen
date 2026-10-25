@@ -2371,7 +2371,7 @@
       "executable": false
     },
     "src/features/intelligence/erasure.ts": {
-      "sha256": "6ab55363a4f492dc27a0dd1f8017eca36efc52ea86f0f00d54f7373d8b237fcd",
+      "sha256": "2df8e2a70d8c77bb05f468a557e62e685624c27a6d72212f10c2c86efa10a3cf",
       "executable": false
     },
     "src/features/intelligence/events.ts": {
@@ -5947,7 +5947,7 @@
       "executable": false
     },
     "tests/intelligence/commitment-cases.mjs": {
-      "sha256": "b6bcca25b71b6d7882ed8f71645bc1c746c86639df53c3a275d0e2e1ea465c10",
+      "sha256": "b71dd201e4cc62861069ffa6faa5245aa76fa3dff62fb65574f48d1ae3404702",
       "executable": false
     },
     "tests/intelligence/companion.mjs": {
