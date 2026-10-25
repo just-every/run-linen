@@ -2095,7 +2095,7 @@
       "executable": false
     },
     "src/features/connections/API.md": {
-      "sha256": "b6a8e9965e7e38a8b5d6db916992ec17b801874208705677ad5e2b92af585ddd",
+      "sha256": "ca33bfa367dae74ed83634125ec13437ccb59571573a79dd8c6c2b3030d231ee",
       "executable": false
     },
     "src/features/connections/core.ts": {
@@ -2359,7 +2359,7 @@
       "executable": false
     },
     "src/features/intelligence/commitments.ts": {
-      "sha256": "e8aa72f1faac55ff09fb1062a3a7ac6f769f92d0446bfdf4d441ace9c365d416",
+      "sha256": "753f6e6b84f18e6176012019bc5b5b3bf21e58db94dec86c94d3fa9637ee17aa",
       "executable": false
     },
     "src/features/intelligence/demo-assessment.ts": {

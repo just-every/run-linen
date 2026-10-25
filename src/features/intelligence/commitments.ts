@@ -67,13 +67,13 @@ export async function saveCommitment(ctx: IntelligenceContext, b: any, key?: str
     const participants = strings(b.participants || old?.participants || [], true), sensitivity = b.sensitivity || old?.sensitivity || 'internal';
     assert(['internal', 'restricted', 'hr'].includes(sensitivity), 'invalid_sensitivity');
     assert(sensitivity !== 'hr' || ctx.principal.roles.some(r => ['owner', 'hr'].includes(r)), 'hr_required', 403);
-    for (const uid of [owner, ...participants])
-        assert(await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId, uid).first(), 'participant_not_active');
     const retirement = old && typeof b.expiresAt === 'string' && iso(b.expiresAt) <= now()
         && Object.keys(b).every(k => ['revision', 'expiresAt'].includes(k));
+    for (const uid of retirement ? [] : [owner, ...participants])
+        assert(await ctx.env.DB.prepare('SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1').bind(ctx.principal.workspaceId, uid).first(), 'participant_not_active');
     const data = retirement ? { ...old.data, expiresAt: iso(b.expiresAt) } : await validate(ctx, { ...old?.data, ...b });
     const serviceId = b.serviceId === undefined ? old?.data.serviceId : b.serviceId;
-    if (serviceId) {
+    if (serviceId && !retirement) {
         const service = await getService(ctx.env.DB, ctx.principal, requiredString(serviceId, 'serviceId'), 'service');
         assert(service.ownerId === owner && (ctx.principal.userId === owner || ctx.principal.roles.includes('owner')), 'service_policy_owner_required', 403);
         data.serviceId = service.id;

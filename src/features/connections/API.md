@@ -28,7 +28,7 @@ See GitHub's [repository permission endpoint](https://docs.github.com/en/rest/co
 
 Controlled providers `controlled-deployment`, `workflow-probe`, `notification-webhook` use an owner-configured HTTPS `url` and config `allowedHosts` exact host allowlist. Protocol GET `<url>/health?nonce=...`; bearer encrypted JSON `{token}`. Response must be `{protocol:'linen-connection-health',version:1,provider,nonce,origin,endpoint,readOnly:true,observedAt}` binding exact configured endpoint URL and origin and fresh nonce/time. This is a Linen protocol requiring actual endpoint implementation, never arbitrary HTTP 200 acceptance. Redirects prohibited. No endpoint activation without that response.
 
-Real tenant probes pending: no credentials supplied. Provider scope success never establishes write permission, approval owner, executor ownership or employee workflow recovery.
+Other tenant probes remain pending. Provider scope success never establishes write permission, approval owner, executor ownership or employee workflow recovery.
 
 ## Official provider references
 
