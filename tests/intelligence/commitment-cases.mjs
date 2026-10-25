@@ -71,5 +71,13 @@ export async function commitmentChecks({api, owner, employee, harness, restart, 
     assert.equal((await api(`/commitments/${commitment.id}/retire`,'POST',{revision:commitment.revision},operator)).status,403);
     await ok(`/commitments/${commitment.id}/retire`,'POST',{revision:commitment.revision});
     assert.equal((await api(`/commitments/${commitment.id}/observe`,'POST',{},owner)).status,409);
+    let erased=await ok('/adoption/erase','POST',{identity:employeeId});
+    for(let step=0;step<20 && erased.state!=='completed';step++) erased=await ok(`/adoption/erase/${erased.id}/resume`,'POST',{});
+    assert.equal(erased.state,'completed');
+    const erasedSource=(await ok('/connections')).find(row=>row.id===c.id);
+    assert.equal(erasedSource.status,'disabled');assert.equal(erasedSource.has_secret,0);
+    assert.equal(erasedSource.config_json.includes(employeeId),false);assert.equal(erasedSource.config_json.includes(config.githubLogin),false);
+    assert.equal((await ok('/connection-status')).connections.find(row=>row.id===c.id).evidence,null);
+    assert.equal((await ok(`/commitments/${commitment.id}`)).data.observations.length,0);
     console.log('PASS persistent repository commitment: owner binding, closure and restart, uncovered starter, changing scope, provider denial and uncertainty, stale dependencies, withdrawal and retirement');
 }

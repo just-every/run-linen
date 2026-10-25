@@ -2371,7 +2371,7 @@
       "executable": false
     },
     "src/features/intelligence/erasure.ts": {
-      "sha256": "a548291e4ed9662625f70d3ae69c33c7ddfa2d4a7b42a180b1455d4fc56c3465",
+      "sha256": "6ab55363a4f492dc27a0dd1f8017eca36efc52ea86f0f00d54f7373d8b237fcd",
       "executable": false
     },
     "src/features/intelligence/events.ts": {
@@ -5943,7 +5943,7 @@
       "executable": false
     },
     "tests/intelligence/commitment-cases.mjs": {
-      "sha256": "dfa0db7ae0d11797485e89212ba37f7b706772de3adabcdbd1412b47c4b0d988",
+      "sha256": "6fafbd88893a450923b4c39f773d44769becb2d971f1f0e7562ec73e29628cc3",
       "executable": false
     },
     "tests/intelligence/companion.mjs": {
@@ -6019,7 +6019,7 @@
       "executable": false
     },
     "tests/intelligence/worker.ts": {
-      "sha256": "42e99aa316c0c127f3982d04ef5c3c9413f6bddef39ea8517a843eb09549b39a",
+      "sha256": "87c532001ebe38627f285b81ec61043d3db9b4a0e411e59ba7d8000a9247240b",
       "executable": false
     },
     "tests/intelligence/wrangler.jsonc": {

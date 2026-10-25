@@ -6,6 +6,10 @@ export async function eraseIntelligenceIdentity(ctx: IntelligenceContext, identi
     ctx = await current(ctx, ['owner']);
     assert(identity && identity.length <= 300, 'identity_required');
     const replacement = 'erased:' + await hashToken(identity), w = ctx.principal.workspaceId;
+    await ctx.env.DB.batch([
+        ctx.env.DB.prepare("DELETE FROM connection_validations WHERE workspace_id=? AND connection_id IN (SELECT id FROM connections WHERE workspace_id=? AND provider='github' AND json_extract(config_json,'$.memberId')=?)").bind(w, w, identity),
+        ctx.env.DB.prepare("UPDATE connections SET config_json='{}',secret_ciphertext=NULL,status='disabled',revision=revision+1,updated_at=? WHERE workspace_id=? AND provider='github' AND json_extract(config_json,'$.memberId')=?").bind(now(), w, identity),
+    ]);
     const rows = await ctx.env.DB.prepare('SELECT * FROM intelligence_commitments WHERE workspace_id=?').bind(w).all<any>();
     const affected = rows.results.filter(r => r.owner_id === identity || JSON.parse(r.participants_json).includes(identity) || JSON.parse(r.data_json).cohort.includes(identity));
     for (const c of affected) {
