@@ -24,8 +24,13 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  // Create the support team through its own public administration door.
  const group=team??await invoke('/work-groups','POST',{name:'Equipment team'},owner,201);
  const tasks=[{key:'prepare',title:'Prepare equipment',groupId:group.id,after:[],dueHours:24},{key:'label',title:'Label equipment',groupId:group.id,after:[],dueHours:24},{key:'check',title:'Check equipment',groupId:group.id,after:['prepare','label'],dueHours:48}];
+ const sla=await invoke('/sla-policies','POST',{name:'Equipment response',position:1,firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:480,pauseOn:['vendor']},owner,201);
  const work=await invoke('/work','POST',{title:'Existing request',body:'Synthetic equipment request',deduplicationKey:'synthetic-linen-423'},requester,201);
  await invoke('/work/'+work.id+'/fulfilment','POST',{catalogId,beneficiaryId:employee.id,purpose:'Synthetic equipment request'},requester,201);
+ const classification=await invoke('/work/'+work.id+'/classification','GET');
+ await invoke('/work/'+work.id+'/classification/override','POST',{revision:classification.revision,workRevision:classification.workRevision,type:'incident',category:'hardware',subcategory:'laptop',impact:'low',urgency:'high',priority:'P3',reason:'Synthetic equipment classification'});
+ const clockBefore=(await invoke('/work/'+work.id+'/sla','GET')).policy;
+ assert.equal(clockBefore.firstResponseMinutes,60);
  assert.equal((await fixture({outboundControl:true})).outboundCalls.length,1,'The network-edge observer detects an attempted outbound call');
  const protectedBefore=await fixture({seedSandboxGrant:true,resetOutbound:true});
  assert.equal(protectedBefore.protectedTables.execution_grants.length,1);
@@ -39,6 +44,14 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  }
  let sandbox=await invoke('/sandboxes','POST',{name:'Equipment configuration'},owner,201);
  const path='/sandboxes/'+sandbox.id;
+ const slaEdit={name:'Reviewed response',first_response_minutes:30,next_response_minutes:90,resolution_minutes:360,pauseOn:['requester']};
+ assert.equal(sandbox.slas[0].id,sla.id);assert.equal(sandbox.slas[0].created_by,undefined);
+ await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit},requester,403);
+ await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit},other,404);
+ for(const invalid of [{first_response_minutes:0},{resolution_minutes:1.5},{next_response_minutes:'30'},{pauseOn:['invalid']}])await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit,...invalid},owner,422);
+ for(const field of ['records','calendar_id','department_id','requester_group_id','position'])await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit,[field]:'synthetic-linen-450'},owner,422);
+ sandbox=await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit},editor);
+ assert.equal((await invoke('/sla-policies','GET')).items[0].first_response_minutes,60,'Draft SLA edits leave production unchanged');
  assert.equal(sandbox.items.length,1);assert.equal(sandbox.items[0].id,catalogId);
  assert.ok(!JSON.stringify(sandbox).includes('secret_ciphertext'));
  assert.ok(!JSON.stringify(sandbox).includes(first.email),'No member profiles are copied');
@@ -114,7 +127,8 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  sandbox=await invoke(path+'/package','POST',{revision:sandbox.revision});
  await invoke(path+'/runs/'+frozenRun.id+'/complete','POST',{revision:sandbox.revision,taskKey:'prepare'},owner,409);
  await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,409);
- assert.deepEqual(sandbox.differences.map(d=>d.field),['name','form','tasks']);
+ assert.deepEqual(sandbox.differences.filter(d=>d.family!=='sla').map(d=>d.field),['name','form','tasks']);
+ assert.deepEqual(sandbox.differences.filter(d=>d.family==='sla').map(d=>d.field),['name','first_response_minutes','next_response_minutes','resolution_minutes','pause_on_json']);
  await invoke(path+'/catalog/'+catalogId,'PUT',{revision:sandbox.revision,name:'Late edit',form,tasks},owner,409);
  await invoke(path+'/approve','POST',{revision:sandbox.revision},owner,403);
  await invoke(path+'/approve','POST',{revision:sandbox.revision},editor,403);
@@ -124,6 +138,9 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke(path+'/promote','POST',{revision:sandbox.revision},requester,403);
  await rejectData(path+'/promote');
  sandbox=await invoke(path+'/promote','POST',{revision:sandbox.revision});
+ const promotedSla=(await invoke('/sla-policies','GET')).items.find(p=>p.id===sla.id);
+ assert.equal(promotedSla.name,slaEdit.name);assert.equal(promotedSla.first_response_minutes,30);assert.equal(promotedSla.revision,2);
+ assert.deepEqual((await invoke('/work/'+work.id+'/sla','GET')).policy,clockBefore,'In-flight SLA snapshot retains its version and targets');
  const promoted=(await invoke('/catalog','GET')).items.find(i=>i.id===catalogId);
  assert.equal(promoted.name,'Reviewed equipment');assert.equal(promoted.revision,2);assert.deepEqual(promoted.form,form);assert.deepEqual(promoted.tasks,tasks);
  await invoke(path+'/promote','POST',{revision:sandbox.revision},owner,409);
@@ -135,6 +152,9 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  rollback=await invoke('/sandboxes/'+rollback.id+'/promote','POST',{revision:rollback.revision});
  const restored=(await invoke('/catalog','GET')).items.find(i=>i.id===catalogId);
  assert.deepEqual((await fixture({})).protectedTables,protectedBefore.protectedTables,'Rollback preserves production authority and existing requests');
+ const rolledSla=(await invoke('/sla-policies','GET')).items.find(p=>p.id===sla.id);
+ assert.equal(rolledSla.name,'Equipment response');assert.equal(rolledSla.first_response_minutes,60);assert.equal(rolledSla.revision,3);
+ assert.deepEqual((await invoke('/work/'+work.id+'/sla','GET')).policy,clockBefore);
  assert.equal(restored.name,'Original equipment');assert.equal(restored.revision,3);assert.deepEqual(restored.tasks,[]);
  // A production edit after review refuses the whole package, including its state transition and audit.
  let stale=await invoke('/sandboxes','POST',{name:'Stale review'},owner,201),stalePath='/sandboxes/'+stale.id;
@@ -146,6 +166,30 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke(stalePath+'/promote','POST',{revision:stale.revision},owner,409);
  assert.equal((await invoke('/catalog','GET')).items.find(i=>i.id===catalogId).name,'Concurrent production edit');
  assert.equal((await invoke(stalePath,'GET')).state,'approved');assert.deepEqual(await fixture({}),beforeRefusal);
+ // SLA-only packages use the same approval and rollback path, with no catalog mutation.
+ let only=await invoke('/sandboxes','POST',{name:'SLA only'},owner,201),onlyPath='/sandboxes/'+only.id;
+ only=await invoke(onlyPath+'/slas/'+sla.id,'PUT',{revision:only.revision,...slaEdit},editor);
+ only=await invoke(onlyPath+'/package','POST',{revision:only.revision});
+ await invoke(onlyPath+'/approve','POST',{revision:only.revision},editor,403);
+ only=await invoke(onlyPath+'/approve','POST',{revision:only.revision},reviewer);
+ const catalogBeforeOnly=await invoke('/catalog','GET');
+ only=await invoke(onlyPath+'/promote','POST',{revision:only.revision});
+ assert.deepEqual(await invoke('/catalog','GET'),catalogBeforeOnly);
+ let onlyRollback=await invoke(onlyPath+'/rollback-package','POST',{revision:only.revision},owner,201);
+ onlyRollback=await invoke('/sandboxes/'+onlyRollback.id+'/approve','POST',{revision:onlyRollback.revision},reviewer);
+ onlyRollback=await invoke('/sandboxes/'+onlyRollback.id+'/promote','POST',{revision:onlyRollback.revision});
+ assert.equal((await invoke('/sla-policies','GET')).items.find(p=>p.id===sla.id).first_response_minutes,60);
+ // Added production policies invalidate the entire reviewed package and prevent partial catalog writes.
+ let slaStale=await invoke('/sandboxes','POST',{name:'SLA stale'},owner,201),slaStalePath='/sandboxes/'+slaStale.id;
+ slaStale=await invoke(slaStalePath+'/slas/'+sla.id,'PUT',{revision:slaStale.revision,...slaEdit});
+ slaStale=await invoke(slaStalePath+'/catalog/'+catalogId,'PUT',{revision:slaStale.revision,name:'Must not apply with stale SLA',form,tasks});
+ slaStale=await invoke(slaStalePath+'/package','POST',{revision:slaStale.revision});
+ slaStale=await invoke(slaStalePath+'/approve','POST',{revision:slaStale.revision},reviewer);
+ await invoke('/sla-policies','POST',{name:'Production addition',position:2,firstResponseMinutes:10,nextResponseMinutes:20,resolutionMinutes:40},owner,201);
+ const beforeSlaRefusal=await fixture({});
+ await invoke(slaStalePath+'/promote','POST',{revision:slaStale.revision},owner,409);
+ assert.deepEqual(await fixture({}),beforeSlaRefusal);
+ await invoke(onlyPath+'/rollback-package','POST',{revision:only.revision},owner,409);
  let withdrawn=await invoke('/sandboxes','POST',{name:'Withdrawn reviewer'},owner,201),withdrawnPath='/sandboxes/'+withdrawn.id;
  withdrawn=await invoke(withdrawnPath+'/catalog/'+catalogId,'PUT',{revision:withdrawn.revision,name:'Must not apply after revocation',form,tasks});
  withdrawn=await invoke(withdrawnPath+'/package','POST',{revision:withdrawn.revision});
