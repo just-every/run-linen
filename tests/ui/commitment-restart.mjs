@@ -31,13 +31,14 @@ try {
     assert.ok(Date.parse((await api(`/commitments/${before.commitmentId}`)).data.expiresAt)<=Date.now());
     const rejected=await page.evaluate(async id=>{const session=await(await fetch('/api/v1/session')).json();return(await fetch(`/api/v1/commitments/${id}/observe`,{method:'POST',headers:{'Content-Type':'application/json','X-Linen-CSRF':session.csrfToken},body:'{}'})).status},before.commitmentId);
     assert.equal(rejected,409);
+    await captureJourney(page,{path:out+'/commitment-retired.png',fullPage:true});
     for(const width of [1440,390]) {
         await page.setViewportSize({width,height:1000});const profile=page.getByRole('button',{name:'Your workspace and account'});
-        await profile.focus();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
+        await page.keyboard.press('Tab');await profile.focus();assert.equal(await profile.evaluate(e=>e.matches(':focus-visible')),true);
+        assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
         await profile.evaluate(e=>e.blur());await profile.hover();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');
         await page.waitForTimeout(420);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
         await page.screenshot({path:`${out}/commitment-tooltip-${width}.png`});
     }
-    await captureJourney(page,{path:out+'/commitment-retired.png',fullPage:true});
     console.log(JSON.stringify({workerRestart:true,scheduledLiveReadback:true,missingEvidenceUnknown:true,staleEvidenceUnknown:true,sourceWithdrawalUnknown:true,ownerRetirement:true,tooltipsBothWidths:true,remoteWrites:false}));
 } finally {await browser.close();}
