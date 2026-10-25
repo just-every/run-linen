@@ -715,7 +715,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "7dc0d467a2442ec18b7100b5a2f52b890a400ceb981ea3be7fada4297004f2d9",
+      "sha256": "d10a1b23c6f2af796adb75ec8d4b09a9e861d922f0027ddf2afae4da945b807d",
       "executable": false
     },
     "migrations/0001_platform.sql": {
@@ -1451,7 +1451,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "5ec5f87f683cd0038f0cb540f93134a9c45ad2ec14d7f9517d7e55898d37cd04",
+      "sha256": "bc180db2e62a560139e5a35d079c361e7195729d016e012b15ff8bc58ec14e77",
       "executable": false
     },
     "release-history/0.1.0.json": {
@@ -1459,7 +1459,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "dd3f4bf992cff03bfc8a5ad74df8cb9aa9ad10e7ed18475b5bd5a3712ad530b5",
+      "sha256": "361e296666f19a65b75bca96edca01b3580abb038f32cbbee861d16ee22b5cdd",
       "executable": false
     },
     "rer-project.json": {

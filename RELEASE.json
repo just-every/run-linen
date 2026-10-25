@@ -60,7 +60,9 @@
     "migrations/0792_department_roles.sql",
     "migrations/0902_billing.sql",
     "migrations/0903_monitor_episode.sql",
-    "migrations/0904_rest_credentials.sql"
+    "migrations/0904_rest_credentials.sql",
+    "migrations/0905_configuration_sandbox.sql",
+    "migrations/0906_configuration_sandbox_runs.sql"
   ],
   "breaking": false,
   "agentUpdateInstructions": "Retain existing resource identities, all applied migration bytes and private backups. Install dependencies and review the setup fields before building. Keep imported execution held until the owner reconciles external effects."
