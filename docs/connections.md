@@ -10,6 +10,7 @@ its details. Credentials are encrypted and never shown again.
 |---|---|
 | Microsoft identity & licenses | Your tenant ID and an approved application's client ID and secret |
 | Freshservice existing desk | Your exact `tenant.freshservice.com` domain and an API key |
+| GitHub repository access | One repository, the workspace member ID, their exact GitHub login and numeric user ID, and a token authorized to read that repository's metadata |
 | OpenAI reasoning | An API key, the model to use, price estimates and spending limits |
 | SendGrid email delivery | The verified sender address, an API key and the signed-event key |
 | Monitoring events | The webhook signing secret its events are signed with |
@@ -18,6 +19,39 @@ its details. Credentials are encrypted and never shown again.
 Each connection card shows its state. **Check connection** runs its read check again; a passed
 check proves only that read. **Edit connection** changes its details, and **Disconnect this
 source** removes the stored credential.
+
+## Keep a repository commitment
+
+The owner binds each GitHub connection to one member and one repository explicitly.
+Linen checks the repository identity and that user's current repository permission
+through GitHub's fixed API origin. A successful check establishes read access only.
+A denied or unavailable API response leaves the observation uncertain; an authoritative
+`none` permission is a failed check. Names and email addresses never create a binding.
+
+In **Continuing commitments**, define the outcome, cohort, owner, dependent commitments,
+effective dates and observation interval. For a GitHub observation, use this definition
+with the actual member and validated connection values:
+
+```json
+{
+  "id": "baseline-repository",
+  "description": "The bound starter retains repository read access",
+  "step": {
+    "action": "github.repository.read",
+    "actionVersion": 1,
+    "target": "just-every/run-linen",
+    "beneficiaryId": "MEMBER_ID",
+    "verifierConnectionId": "CONNECTION_ID",
+    "verifierConnectionRevision": 2
+  }
+}
+```
+
+The target must match the connection exactly. Closing a ticket leaves the commitment
+running. New members without checks appear as unobserved; changed definitions need
+new evidence. Expired evidence, an inactive member or a changed connection never count
+as verified coverage. The owner can **Retire this commitment** to stop scheduled checks
+while preserving its recorded history. No GitHub access changes are sent.
 
 ## Review what Linen found
 

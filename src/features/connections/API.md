@@ -15,6 +15,17 @@ Exports: `connectionStatus`, `testConnection`, `discoverConnection`, `discoveryR
 
 Microsoft Graph secret is encrypted JSON `{clientId,clientSecret}`, config `tenantId` (tenant UUID). Discovery reads users, groups, subscribedSkus, devices, applications. Freshservice secret is raw API key; config domain is exact `tenant.freshservice.com`; discovery reads workspaces and requesters. OpenAI validation calls intelligence.validateModel once (GET model, no generation charge). Monitoring remains inbound-unobserved until services authenticates an event.
 
+GitHub uses encrypted JSON `{token}` and config `repositoryOwner`, `repositoryName`,
+`memberId`, `githubLogin` and numeric `githubUserId`. The current owner explicitly binds
+one member and repository. Validation reads the repository metadata and the exact user's
+permission from the fixed GitHub API origin, checks both identities, and records typed
+read evidence. It creates no grants and supports no provider writes or discovery.
+Commitment observations use `action: 'github.repository.read'` with the exact target,
+beneficiary and validated verifier connection revision. HTTP denial, redirects, missing
+identities and malformed replies stay uncertain; only a bound `none` permission is a
+verified negative. Permission readback never establishes employee workflow recovery.
+See GitHub's [repository permission endpoint](https://docs.github.com/en/rest/collaborators/collaborators?apiVersion=2022-11-28#get-repository-permissions-for-a-user).
+
 Controlled providers `controlled-deployment`, `workflow-probe`, `notification-webhook` use an owner-configured HTTPS `url` and config `allowedHosts` exact host allowlist. Protocol GET `<url>/health?nonce=...`; bearer encrypted JSON `{token}`. Response must be `{protocol:'linen-connection-health',version:1,provider,nonce,origin,endpoint,readOnly:true,observedAt}` binding exact configured endpoint URL and origin and fresh nonce/time. This is a Linen protocol requiring actual endpoint implementation, never arbitrary HTTP 200 acceptance. Redirects prohibited. No endpoint activation without that response.
 
 Real tenant probes pending: no credentials supplied. Provider scope success never establishes write permission, approval owner, executor ownership or employee workflow recovery.

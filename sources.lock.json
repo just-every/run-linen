@@ -655,7 +655,7 @@
       "executable": false
     },
     "docs/connections.md": {
-      "sha256": "436311f2e43b997f10175cf97acbd587abc889ef1d0acf55e146ae0bc733f524",
+      "sha256": "3a8eaa449b0c21c3b08866dbaf012979d75126089d4700074f3b1ce97f84c78f",
       "executable": false
     },
     "docs/decisions.md": {
@@ -2095,7 +2095,7 @@
       "executable": false
     },
     "src/features/connections/API.md": {
-      "sha256": "4c1ab15ab46b9fea34b921f1e36fbe2adf47ef826b6c3cadbefec07b6d5f8995",
+      "sha256": "b6a8e9965e7e38a8b5d6db916992ec17b801874208705677ad5e2b92af585ddd",
       "executable": false
     },
     "src/features/connections/core.ts": {
