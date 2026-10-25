@@ -1,10 +1,16 @@
-import { fontHead } from './font-head'
+import { fontHead, fontLinks } from './font-head'
 
-// Native auth documents bypass the route renderer. Append after their own
-// styles so the shared body font also applies, preserving the auth module's
-// hashed styles, private headers and form/Origin behavior.
+// Native auth documents bypass the route renderer. Replace the theme's former
+// import before its link, keeping the cascade against the auth module's hashed
+// styles. Unthemed documents (the native dev hand-off) need no theme dependency.
 export async function fontDocumentResponse(response: Response | null): Promise<Response | null> {
   if (!response?.headers.get('content-type')?.startsWith('text/html')) return response
+  const html = await response.text()
+  const look = fontLinks.find(link => link.rel === 'stylesheet')!.href
+  const themed = html.includes('href="/rer-theme.css"')
+  const document = themed && !html.includes(look)
+    ? html.replace(/<link\b[^>]*rel="stylesheet"[^>]*>/i, link => `${fontHead}${link}`)
+    : html
   const headers = new Headers(response.headers)
   const policy = headers.get('content-security-policy')
   if (policy) {
@@ -17,9 +23,8 @@ export async function fontDocumentResponse(response: Response | null): Promise<R
     headers.set('content-security-policy', directives.join('; '))
   }
   // These are bounded native auth documents, not streaming route renders.
-  const html = await response.text()
   headers.delete('content-length')
-  return new Response(html.replace(/<\/head\s*>/i, `${fontHead}</head>`), {
+  return new Response(document, {
     status: response.status, statusText: response.statusText, headers,
   })
 }

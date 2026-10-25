@@ -1,8 +1,9 @@
 # Fonts
 
 Every face is self-hosted under the SIL Open Font License 1.1; each folder holds its licence.
-`fonts.css` declares them, and `/rer-theme.css` imports it, so the run site, the app and Base's
-frames (Lobby, sign-in, Run page, outbox) all use the same files. No page loads fonts from another origin.
+`/rer-theme.css` declares them so the theme reader can serve them. `fonts.css` carries Linen's own
+tokens and rules; every themed document links it before the theme, as the former import did.
+The run site, app and Base frames use the same files. No page loads fonts from another origin.
 
 | Face | Use | Files | Source | Licence |
 | --- | --- | --- | --- | --- |

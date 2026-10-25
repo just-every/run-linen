@@ -411,28 +411,6 @@
       }
     },
     {
-      "path": "src/base/font-head.ts",
-      "originPath": "foundation/runtime/font-head.ts",
-      "revision": "11f94fec479228d71ba6d7dd6ea7796c0d42c544",
-      "files": {
-        "src/base/font-head.ts": "937fe339a397abee96e4279f2e310fa336eb30b2ec3aeb98f2c09ed0ba7d5dac"
-      },
-      "modes": {
-        "src/base/font-head.ts": "100644"
-      }
-    },
-    {
-      "path": "src/base/font-response.ts",
-      "originPath": "foundation/runtime/font-response.ts",
-      "revision": "11f94fec479228d71ba6d7dd6ea7796c0d42c544",
-      "files": {
-        "src/base/font-response.ts": "55abc935a78085735ae5b7f2d441ee7a5a67d9c797417f9b5ac3c2449f8c91a8"
-      },
-      "modes": {
-        "src/base/font-response.ts": "100644"
-      }
-    },
-    {
       "path": "src/base/hydration/intro-guard.ts",
       "originPath": "foundation/runtime/hydration/intro-guard.ts",
       "revision": "11f94fec479228d71ba6d7dd6ea7796c0d42c544",
