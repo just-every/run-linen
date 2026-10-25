@@ -63,7 +63,7 @@ export async function verifyResearch(ctx: IntelligenceContext, key: string, oper
     ctx = await current(ctx, ['owner', 'operator']);
     const r = await getResearch(ctx, key);
     const scope = await getCommitment(ctx, r.commitment_id), op = await getOperation(ctx, operationId), step = JSON.parse(op.step_json);
-    assert(scope.data.observations.some(s => s.step.target === step.target && s.step.beneficiaryId === step.beneficiaryId && s.step.verifierConnectionId === step.verifierConnectionId), 'research_operation_scope_mismatch', 409);
+    assert(scope.data.observations.some(s => s.step.action !== 'github.repository.read' && s.step.target === step.target && s.step.beneficiaryId === step.beneficiaryId && s.step.verifierConnectionId === step.verifierConnectionId), 'research_operation_scope_mismatch', 409);
     const result: any = await verifyOutcome(ctx, { operationId, verifierVersion: 1 });
     assert(result.state === 'verified' || result.state === 'outcome_verified', 'research_recovery_unverified', 409);
     const c = await getCommitment(ctx, r.commitment_id);

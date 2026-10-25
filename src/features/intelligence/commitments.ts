@@ -103,7 +103,9 @@ export async function saveCommitment(ctx: IntelligenceContext, b: any, key?: str
 }
 export async function retireCommitment(ctx: IntelligenceContext, key: string, revision: number) {
     ctx = await current(ctx, ['owner']);
-    return saveCommitment(ctx, { revision, expiresAt: now() }, key);
+    const retired = await saveCommitment(ctx, { revision, expiresAt: now() }, key);
+    await audit(ctx, 'commitment.retired', key, { revision: retired.revision });
+    return retired;
 }
 export async function observationFacts(ctx: IntelligenceContext, c: Commitment): Promise<Fact[]> {
     await getCommitment(ctx, c.id);

@@ -30,7 +30,7 @@ export function applicability(pkg: any, versions: Versions, facts: any[], at = D
 }
 export async function currentVersions(ctx: IntelligenceContext, commitmentId: string): Promise<Versions> {
     const c = await getCommitment(ctx, commitmentId);
-    const ids = [...new Set(c.data.observations.flatMap(s => [s.step.connectionId, s.step.verifierConnectionId!]))].sort();
+    const ids = [...new Set(c.data.observations.flatMap(s => [s.step.connectionId, s.step.verifierConnectionId]).filter((id): id is string => typeof id === 'string'))].sort();
     const providers = [];
     for (const id of ids) {
         const r: any = await ctx.env.DB.prepare('SELECT id,provider,revision FROM connections WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, id).first();

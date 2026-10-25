@@ -2106,6 +2106,10 @@
       "sha256": "47cf45d30a9b510bf552eaeb89b0d9e78861c9575f272ac6d0c21cf81ce2d07a",
       "executable": false
     },
+    "src/features/connections/github.ts": {
+      "sha256": "a1167d6b8cc51b53bf6c833e6fc39f8822686d4df20247f06847e79df5b420c0",
+      "executable": false
+    },
     "src/features/connections/index.ts": {
       "sha256": "8d938c38cc90401f244ca10484217e82b0b12692cb1ab22774aef866f355aa02",
       "executable": false
@@ -2351,11 +2355,11 @@
       "executable": false
     },
     "src/features/intelligence/capabilities.ts": {
-      "sha256": "76b9cfeebe880759435be79e116aeafe7acf3e067b65066638a4a0b2b4a5429d",
+      "sha256": "9129dd437df3af1fe8f2d66227c4410280352560a7de4fc9deacda645439f421",
       "executable": false
     },
     "src/features/intelligence/commitments.ts": {
-      "sha256": "ed338abffa1908e322b14e60293ab7ec013daf296639d6522d144eac26efae66",
+      "sha256": "e8aa72f1faac55ff09fb1062a3a7ac6f769f92d0446bfdf4d441ace9c365d416",
       "executable": false
     },
     "src/features/intelligence/demo-assessment.ts": {
@@ -2380,6 +2384,10 @@
     },
     "src/features/intelligence/followup.ts": {
       "sha256": "068348a0d0c34f78314fc58cabafa42678aab151a8ff5c88d312568f224c2c77",
+      "executable": false
+    },
+    "src/features/intelligence/github-observation.ts": {
+      "sha256": "3634ef5e47f45f997b18696cf5933e9e4076f286228d8c99b79ec62d30d20d15",
       "executable": false
     },
     "src/features/intelligence/index.ts": {
@@ -2447,7 +2455,7 @@
       "executable": false
     },
     "src/features/intelligence/research.ts": {
-      "sha256": "139d6cd35438864422e0065a571fe23fe512b434823032e771d8b9a03b9b93c6",
+      "sha256": "6ed9f36e14b91a2940498a804258687260cf014cbb4c5f78a9afa3016b0a451c",
       "executable": false
     },
     "src/features/intelligence/restore.ts": {
@@ -5930,6 +5938,10 @@
       "sha256": "578cb041ea728e7c1f57d215c43fbbaf4b5b91eb41e10217414351638553274c",
       "executable": false
     },
+    "tests/intelligence/commitment-cases.mjs": {
+      "sha256": "b3996b13b0f19affe2efa66e1fb48da0248233783bdc8ab34635e61ddf585031",
+      "executable": false
+    },
     "tests/intelligence/companion.mjs": {
       "sha256": "25870c0c4c1546dec52dd847e77c07ec30bd7eab25d42316ad5bdb2a5dafe4b5",
       "executable": false
@@ -6236,6 +6248,14 @@
     },
     "tests/ui/classification-journey.mjs": {
       "sha256": "eb72a9fe00e2d55d4015a5ee8dbf2a8effa7f610d54abe7fd6421f9be323b2b3",
+      "executable": false
+    },
+    "tests/ui/commitment-browser.mjs": {
+      "sha256": "407a201bab156911a815feeab65b43860141616a3c489f4987a6b2decf941d08",
+      "executable": false
+    },
+    "tests/ui/commitment-restart.mjs": {
+      "sha256": "8a20668aa93b18d9c484d9fedefff47c60f773cabb5cd13fa9012fc5e89a8fa0",
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {
