@@ -1,4 +1,5 @@
 import { usePeopleLabels } from "./people-labels";
+import "../styles/commitments.css";
 import { date, text, type RecordValue } from "./api";
 import { useRemote, useSession } from "./state";
 import { ActionForm, type Field } from "./forms";
@@ -220,7 +221,7 @@ export function IntelligenceSpace({
                 ) : (
                   coverage.data?.coverage?.map((item: any) => (
                     <div
-                      className="record-row"
+                      className="record-row commitment-observation"
                       key={`${item.specId}:${item.cohort}`}
                     >
                       <span>

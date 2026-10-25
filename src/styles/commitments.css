@@ -1,0 +1,15 @@
+.commitment-observation > span:first-child {
+  display: flex !important;
+  flex-direction: column;
+}
+.commitment-observation strong,
+.commitment-observation small {
+  grid-area: auto;
+  align-self: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.commitment-observation small,
+.commitment-observation > .badge {
+  font-size: 13px;
+}

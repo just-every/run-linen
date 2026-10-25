@@ -5262,6 +5262,10 @@
       "sha256": "46de1992ee55b9133b946c77bbfb56364671593725ce5d1406ac7eeecc1c65e4",
       "executable": false
     },
+    "src/styles/commitments.css": {
+      "sha256": "4b9c6c57ec38b91dd5cc329dbc236b0493cc183db6f6245b532d4bf33ced52e5",
+      "executable": false
+    },
     "src/styles/forms.css": {
       "sha256": "8b086053ab54f016c3e375a6f1e2ccef9e558b8210e2a159a0990fbd69dac6be",
       "executable": false
@@ -5459,7 +5463,7 @@
       "executable": false
     },
     "src/ui/intelligence.tsx": {
-      "sha256": "cd6b9ec2deaf4a95751f2dc4122372f9f2c4c9768a60e3fdd983d8df37fc13f3",
+      "sha256": "4b8fa80254578de1b8125d29142e2f9441adf08ef1a85162595567c8340ea5b3",
       "executable": false
     },
     "src/ui/knowledge-drafts.tsx": {
@@ -6255,7 +6259,7 @@
       "executable": false
     },
     "tests/ui/commitment-capture.mjs": {
-      "sha256": "ef05620e892f492314e9a292ba6ffdfaa900f9840f7390ae79cdb095efd8dbcf",
+      "sha256": "fce10f554a038d1b312ebd041b2239a9f19565f8342939bfe8922a080b8abd32",
       "executable": false
     },
     "tests/ui/commitment-restart.mjs": {
