@@ -39,7 +39,7 @@ export async function commitmentChecks({api, owner, employee, harness, restart, 
     const scheduled=await fetch(harness.origin+'/fixture/scheduled');assert.equal(scheduled.status,200);
     const afterScheduled=await (await harness.db).prepare('SELECT COUNT(*) AS count FROM intelligence_observations WHERE commitment_id=?').bind(commitment.id).first();
     assert.ok(afterScheduled.count>beforeScheduled.count,'Scheduled observations continue after closure and restart');
-    for (const value of ['github-none','github-identity','github-repository','github-auth','github-malformed','github-transport']) {
+    for (const value of ['github-none','github-identity','github-repository','github-recreated','github-auth','github-malformed','github-transport']) {
         await mode(value);
         assert.equal((await observe()).coverage[0].state,value==='github-none'?'failed':'uncertain',value);
     }

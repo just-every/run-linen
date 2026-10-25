@@ -11,7 +11,11 @@ export async function observeGitHub(ctx: IntelligenceContext, step: GitHubObserv
     const config = JSON.parse(row.config_json);
     assert(config.memberId === step.beneficiaryId && step.target === `${config.repositoryOwner}/${config.repositoryName}`
         && (!step.cohort || step.cohort.length === 1 && step.cohort[0] === step.beneficiaryId), 'github_binding_mismatch', 403);
+    const validation = await ctx.env.DB.prepare("SELECT evidence_json FROM connection_validations WHERE workspace_id=? AND connection_id=? AND connection_revision=? AND state='active'")
+        .bind(ctx.principal.workspaceId, row.id, row.revision).first<{evidence_json:string}>();
+    assert(validation, 'github_connection_required', 503);
     const evidence = await verifyGitHubConnection(ctx, row);
+    assert(evidence.repositoryId === JSON.parse(validation.evidence_json).repositoryId, 'github_repository_changed', 409);
     await current(ctx, ['owner']);
     const fresh = await ctx.env.DB.prepare('SELECT revision,status FROM connections WHERE workspace_id=? AND id=?')
         .bind(ctx.principal.workspaceId, row.id).first<any>();

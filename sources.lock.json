@@ -2387,7 +2387,7 @@
       "executable": false
     },
     "src/features/intelligence/github-observation.ts": {
-      "sha256": "3634ef5e47f45f997b18696cf5933e9e4076f286228d8c99b79ec62d30d20d15",
+      "sha256": "99ab30c498480125d2c59d1edb5d0aa5b56b80f31cc52d4b549998d235f4bc93",
       "executable": false
     },
     "src/features/intelligence/index.ts": {
@@ -5939,7 +5939,7 @@
       "executable": false
     },
     "tests/intelligence/commitment-cases.mjs": {
-      "sha256": "cfc8e5d5c4d2f81e53b34a663d5b39fadd87657277ec25e89e8d537dad4e288e",
+      "sha256": "dfa0db7ae0d11797485e89212ba37f7b706772de3adabcdbd1412b47c4b0d988",
       "executable": false
     },
     "tests/intelligence/companion.mjs": {
@@ -6015,7 +6015,7 @@
       "executable": false
     },
     "tests/intelligence/worker.ts": {
-      "sha256": "ba326c42415d8f23173495bf132c8d91459825117d00c848848fc8e98f091107",
+      "sha256": "42e99aa316c0c127f3982d04ef5c3c9413f6bddef39ea8517a843eb09549b39a",
       "executable": false
     },
     "tests/intelligence/wrangler.jsonc": {
@@ -6252,6 +6252,10 @@
     },
     "tests/ui/commitment-browser.mjs": {
       "sha256": "d8386721e72b522fbfe807e7801db41bdcb8d0ac88ae9187adef32f3e0604d38",
+      "executable": false
+    },
+    "tests/ui/commitment-capture.mjs": {
+      "sha256": "ef05620e892f492314e9a292ba6ffdfaa900f9840f7390ae79cdb095efd8dbcf",
       "executable": false
     },
     "tests/ui/commitment-restart.mjs": {
