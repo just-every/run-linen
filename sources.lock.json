@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "d13d838b14466d8d7b6e729fa7b252c574ac0d882295539ea7d33158984fc5ff",
+      "sha256": "ea12aeba496beefdddd1f465381ac4f82e79bcc49d9e531a0a8bf3ef60e86278",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5cf7c3d7a66c2a2fde1c574370893990a729d9e86cc10e7ff04d9dfb76994667",
+      "sha256": "55c25d171eb40ba34af8687d8b22a9a32cdf492c63ebf3c9588b2915f3722672",
       "executable": false
     },
     "DEMO.md": {
@@ -2007,7 +2007,7 @@
       "executable": false
     },
     "src/features/adoption/import.ts": {
-      "sha256": "0b9ba79509970f20b090e41c32b9ef05822ce0ef6ccc8fad1365192cd12ec49f",
+      "sha256": "33ccd18b5219f7e0ed1d9bb03aefd240cd9f17dcab72503655c5192f5334f66f",
       "executable": false
     },
     "src/features/adoption/index.ts": {
@@ -5031,7 +5031,7 @@
       "executable": false
     },
     "src/platform/sandboxes.ts": {
-      "sha256": "f6fafc2ea9d9a3f653c74f1337c131dcae7df8823520672e358456d03b2ba068",
+      "sha256": "e3464dfd3decbcf2e54a7ff78c221dd6fed51258d54e94767eb775fd9769f4ee",
       "executable": false
     },
     "src/platform/session-status.ts": {
@@ -6015,15 +6015,15 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "e9ef3b25d0eb670d14a0bcef7ce4c75de788d043a48b12047916957bdb19f327",
+      "sha256": "33af765864a460a5443e9b53acca76b2853de4b514dc9fa73ce2fe0623bfd3cb",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
-      "sha256": "542a58e3e61826e62a2aa938e44ce12f21a3de99bfeb78f89e31c5c888ced051",
+      "sha256": "4aa47a0882c0e97cf39c5985403ec376ef714baa613db1c7b9554d61e9784cbf",
       "executable": false
     },
     "tests/platform/config-worker.ts": {
-      "sha256": "9b2b5dd2b0ece800d0542c4aaf3a80d1356f929f51f2d540c7ebc5e24e98c4b2",
+      "sha256": "b6e79f950ab85adc21990cfebe3a0b90d7529f8050daf937eed014446c7c32c0",
       "executable": false
     },
     "tests/platform/deploy-edge.mjs": {
@@ -6059,7 +6059,7 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "fbfa8556b7d974e77df5e0c0de366545e1e739e203f025f148e844c8a1fe1936",
+      "sha256": "f86e32e27ef1490793571cfd1a609256a21359761c346a6bf9b7b0e9040dc96f",
       "executable": false
     },
     "tests/platform/tombstone-race-fixture.ts": {

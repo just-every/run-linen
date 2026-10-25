@@ -260,6 +260,14 @@ try{
  const confirmation=await request('/auth/confirm',{body:{token:decodeURIComponent(proof)}});assert.equal(confirmation.status,303)
  const cookie=confirmation.headers.get('set-cookie').split(';')[0]
  const session=await(await request('/api/v1/session',{cookie})).json();assert.equal(session.user.email,'owner@example.test')
+ const sandboxes=await request('/api/v1/sandboxes',{cookie});assert.equal(sandboxes.status,200);assert.deepEqual((await sandboxes.json()).items,[],'No pre-restore sandbox is readable');
+ for(const action of ['package','approve','promote']){
+  const stale=await request('/api/v1/sandboxes/synthetic-linen-430/'+action,{cookie,body:{revision:1},headers:{'X-Linen-CSRF':session.csrfToken}});
+  assert.equal(stale.status,404,'Pre-restore package refused on '+action);
+ }
+ const freshSandbox=await request('/api/v1/sandboxes',{cookie,body:{name:'Fresh after restore'},headers:{'X-Linen-CSRF':session.csrfToken}});
+ assert.equal(freshSandbox.status,201,await freshSandbox.clone().text());
+ const freshDraft=await freshSandbox.json();assert.notEqual(freshDraft.id,'synthetic-linen-430');assert.equal(freshDraft.state,'draft');assert.equal(freshDraft.approvedBy,null);
  const policyView=await(await request('/api/v1/access-policies',{cookie})).json();
  const policy=policyView.items.find(p=>p.id==='synthetic-linen-12010');assert.ok(policy);assert.equal(policy.active,false,'LIFE-003 the current owner reads an archived baseline as inactive');
  const policyJoin=await request('/api/v1/lifecycle',{cookie,headers:{'X-Linen-CSRF':session.csrfToken},body:{personId:'owner-person',kind:'join',source:'synthetic-linen-12012',sourceRevision:1,effectiveAt:stamp,timezone:'UTC',ownerId:'owner',identityTarget:'synthetic-linen-12013',retained:[],added:[],removed:[],deviceIds:[],baseline:{to:{department:'dept-sales'}}}});

@@ -1,12 +1,17 @@
 import {Hono} from 'hono'
 import {authenticated} from '../../src/platform/auth'
+import {registerAdoptionRoutes} from '../../src/features/adoption'
 import {registerWorkRoutes} from '../../src/features/work'
 import type {AppEnv} from '../../src/platform/types'
 // Test-only state setup/inspection. Native sessions and CSRF protect every route.
 import app from './worker'
 import {requireRole,jsonBody} from '../../src/platform/http'
+const outboundCalls:string[]=[]
+globalThis.fetch=async input=>{outboundCalls.push(String(input instanceof Request?input.url:input));throw new Error('Unexpected outbound call in configuration test')}
 app.post('/test/config-fixture',async c=>{
  const p=requireRole(c,'owner'),b=await jsonBody(c)
+ if(b.outboundControl)try{await fetch('https://sandbox.example.test/control')}catch{}
+ if(b.resetOutbound)outboundCalls.length=0
  if(b.activate)await c.env.DB.batch([
   c.env.DB.prepare("UPDATE connections SET status='active' WHERE id=? AND workspace_id=?").bind(b.activate,p.workspaceId),
   c.env.DB.prepare("INSERT OR REPLACE INTO connection_validations SELECT workspace_id,id,revision,'2026-09-27','active','{}' FROM connections WHERE id=? AND workspace_id=?").bind(b.activate,p.workspaceId)
@@ -23,7 +28,8 @@ app.post('/test/config-fixture',async c=>{
  const settings=await c.env.DB.prepare('SELECT * FROM workspace_settings WHERE workspace_id=?').bind(p.workspaceId).first()
  const audits=await c.env.DB.prepare('SELECT count(*) n FROM audit_events WHERE workspace_id=?').bind(p.workspaceId).first()
  const connections=await c.env.DB.prepare('SELECT id,provider,config_json,status,revision,secret_ciphertext FROM connections WHERE workspace_id=? ORDER BY id').bind(p.workspaceId).all()
- return c.json({settings,audits,connections:connections.results,protectedTables,sandboxAudits})
+ const sandboxRows=(await c.env.DB.prepare('SELECT * FROM configuration_sandboxes WHERE workspace_id=? ORDER BY id').bind(p.workspaceId).all()).results
+ return c.json({settings,audits,connections:connections.results,protectedTables,sandboxAudits,sandboxRows,outboundCalls})
 })
-const work=new Hono<AppEnv>();work.use('*',authenticated);registerWorkRoutes(work);app.route('/api/v1',work);
+const work=new Hono<AppEnv>();work.use('*',authenticated);registerWorkRoutes(work);registerAdoptionRoutes(work);app.route('/api/v1',work);
 export default app
