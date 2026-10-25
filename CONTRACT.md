@@ -2471,17 +2471,134 @@ INC-004 inherit the source identity and recovery boundaries.
 
 - **SANDBOX-001 — Sub-production workspace and configuration promotion.** Owners
   create a sandbox workspace from production configuration, without production
-  personal data unless explicitly chosen and masked. Catalog items, forms,
-  workflows, SLAs, notification rules, scenarios, roles and connector
-  configuration (with sandbox credentials) are changed and tested there. A
-  promotion package lists every configuration difference, is reviewed and
-  approved, and applies to production as one versioned, audited change with
-  rollback to the prior version. Promotion never copies grants, secrets or
-  records. **Acceptance evidence:** create a sandbox, edit a catalog item and a
-  workflow there, review the diff, promote it with approval, and see production
-  updated with an audit entry while in-flight requests keep their versions; roll
-  back; production grants and secrets are unchanged, and sandbox connectors call
-  only sandbox credentials.
+  personal data unless explicitly chosen and masked under SANDBOX-004. Catalog
+  items, forms, non-provider workflows, complete SLA configuration and roles are
+  changed and tested there. Non-provider workflows include the existing isolated
+  team task workflows and all remaining non-provider workflow configuration.
+  SLA scope includes policy names, first-response, next-response and resolution
+  targets, waiting-on pauses, policy scope and ordering, business calendars and
+  escalation rules under DESK-004 and DESK-005. Provider workflows and all
+  connector configuration belong to SANDBOX-002; notification rules and
+  scenarios belong to SANDBOX-003. These are retained parts of the original
+  sandbox obligation.
+
+  A promotion package lists every configuration difference across its included
+  families. A separate current owner who contributed no edits reviews and
+  approves it; a current owner promotes it. Approval and promotion re-check
+  current authority and the reviewed revisions. Self-approval, editor approval,
+  withdrawn reviewer authority and stale production configuration refuse the
+  whole package without partial application. Promotion applies to production as
+  one versioned, audited configuration change, with reviewed rollback to the
+  prior version. In-flight requests keep their configuration and SLA versions.
+  Promotion and rollback never copy grants, secrets or records and leave
+  production grants and secrets unchanged.
+
+  Native create, edit, test, diff, approval, promotion and rollback screens cover
+  every configuration family at 1440 and 390 px with keyboard and scope checks.
+  Workspace restore invalidates pre-restore packages and approvals, fences use
+  while restore is applying, and requires fresh packages afterward. Form and
+  workflow rehearsal answers are not retained.
+
+  **Acceptance evidence:** create a sandbox from production configuration; edit
+  a catalog item, its form, a non-provider workflow, SLA configuration and role
+  configuration without changing production; review every difference; obtain
+  approval from a separate current non-editor owner; promote and read the
+  versioned production configuration and audit entry while existing requests
+  retain their versions; review and apply rollback. Exercise changed-production
+  and withdrawn-reviewer refusals, unchanged grants, secrets and records, answer
+  absence and restore invalidation. Complete the native journeys at 1440 and
+  390 px. The corresponding provider, notification, scenario, administrator
+  approval and masked-copy acceptance remains required under SANDBOX-002,
+  SANDBOX-003 and SANDBOX-004.
+
+- **SANDBOX-002 — Provider workflows and isolated sandbox connectors.** Provider
+  workflows and all connector configuration are changed and tested in the
+  sandbox using separately configured sandbox credentials. Sandbox execution
+  binds to isolated provider environments, principals, records and recipients;
+  its data and effects cannot reach production. Production credentials and
+  grants are not copied or used, and missing sandbox configuration never falls
+  back to production or pretends success. Provider workflow results retain
+  submission, effect, readback, partial, failed and unknown distinctions under
+  A2–A4. Missing provider accounts remain implementation or evidence gaps,
+  never a reduction of the target.
+
+  All changed non-secret workflow and connector configuration participates in
+  SANDBOX-001's complete diff, current-authority checks, separate non-editor
+  approval, atomic versioned promotion, audit, rollback, in-flight version
+  preservation, restore invalidation and native-screen acceptance. Promotion
+  never carries sandbox credentials, grants or records into production and
+  leaves production grants and secrets unchanged.
+
+  **Acceptance evidence:** configure and edit a provider workflow and connector
+  in a sandbox; execute through the actual product path against the provider's
+  sandbox or developer tenant using only sandbox credentials; independently
+  read back its isolated effect. Refuse production credentials, production
+  targets and wrong-environment bindings; retain failed and unknown outcomes
+  truthfully. Review all workflow and connector differences, including a package
+  mixed with a catalog change, promote the non-secret configuration under
+  SANDBOX-001 and roll it back. Production records, effects, grants and secrets
+  remain unchanged, and in-flight requests retain their versions. Fixtures do
+  not substitute for required provider evidence.
+
+- **SANDBOX-003 — Sandbox notification-rule and scenario configuration.**
+  Notification rules and scenarios are changed and tested in the sandbox, then
+  reviewed, promoted and rolled back under SANDBOX-001. Preserve the complete
+  applicable NOTIFY-001, NOTIFY-002 and DESK-015 behavior, permissions, scope and
+  audit semantics. Existing production-family implementation does not establish
+  sandbox integration. An absent family is a prerequisite still owed, not
+  permission to omit its sandbox obligation: DESK-015 scenarios already exist,
+  while NOTIFY-002 notification-rule configuration remains a prerequisite.
+
+  Rehearsals do not change production work or deliver production notifications.
+  Any external test delivery inherits SANDBOX-002's isolated credentials,
+  recipients, data and effects. All configuration changes inherit SANDBOX-001's
+  complete diff, current-authority checks, separate non-editor approval, atomic
+  versioned promotion, audit, rollback, in-flight version preservation, restore
+  invalidation and native-screen acceptance.
+
+  **Acceptance evidence:** edit and exercise a scenario and a notification rule
+  in the sandbox, proving their applicable scope, permission, atomicity and
+  notification semantics without changing production work or delivering to
+  production recipients. Review every difference, approve and promote a package
+  containing these families, read the production configuration and audit entry,
+  and roll back while existing requests keep their versions. Prove refused
+  out-of-scope scenario execution and isolated test delivery where applicable.
+  An unimplemented notification-rule family leaves this acceptance open.
+
+- **SANDBOX-004 — Administrator approval and explicitly chosen masked-data copying.** Appropriately authorized administrator approvers can review and
+  approve sandbox promotion and rollback packages without weakening the current
+  separate, non-editor approver requirement. Authority is checked at approval
+  and application; role loss, self-approval, editor approval and stale revisions
+  refuse. This obligation does not change SANDBOX-001's owner-only creation and
+  promotion rule or copy role assignments or grants into a sandbox.
+
+  Production personal data is excluded by default. An owner may explicitly
+  choose personal records for a masked sandbox copy; copied values are masked
+  before sandbox persistence or exposure and remain subject to current scope,
+  retention and erasure. Copying never transfers production credentials, grants
+  or live execution authority, and masked records never enter a promotion or
+  rollback package. Rehearsal answers remain unretained. All configuration
+  promotion, rollback, restore and native-screen safeguards in SANDBOX-001
+  continue to apply.
+
+  **Acceptance evidence:** an appropriately authorized non-editor administrator
+  approves a reviewed package; unauthorized, self, editor, revoked-role and
+  stale-revision attempts refuse without application. Create a sandbox without
+  selecting personal records and see none copied; explicitly select records for
+  a masked copy and verify that unmasked source values are absent from sandbox
+  storage, reads, logs and exports. Production records remain unchanged; masked
+  copies, grants and secrets are absent from promotion and rollback packages;
+  applicable scope, erasure and retention remain enforced.
+
+  *Binding cross-inheritance for SANDBOX-001–004:* the split preserves the
+  complete incumbent category job. All four clauses inherit A1–A7 and the
+  applicable CATALOG-001 audience/quote, DESK-004/005 SLA, DESK-015 scenario,
+  NOTIFY-001/002 notification, ROLE-001 authority, PORT-001 restore,
+  ERASURE-001 and RETENTION-001 rules. Any Slack or Teams surface additionally
+  inherits CHANNEL-001 or CHANNEL-002 before shipping. Shared infrastructure
+  does not establish completion of a transferred family. The currently
+  implemented owner-only, configuration-only, zero-outbound path remains in
+  force; the split itself enables no provider action or personal-record copy.
 
 ### Migration and coexistence
 
@@ -3018,8 +3135,8 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 6 | 18 | 0 | 24 |
-| Target and push further | 49 | 43 | 24 | 116 |
-| All | 55 | 61 | 24 | 140 |
+| Target and push further | 49 | 43 | 27 | 119 |
+| All | 55 | 61 | 27 | 143 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -3130,7 +3247,10 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `COST-001` | US pricing and budgets | target | done | (1) Owner $50 monthly budget, exact exhaustion, held discretionary research and continuing routine ticket/comment: `tests/intelligence/runtime.mjs` monthly model reservation and routine-work checks. (2) Unknown-charge reservation survives restart and monthly rollover: the same runtime A7 and rollover checks. (3) USD agent seats, free requester/approver memberships, Texas applicability/tax/cents preview, owner-only/stale-price refusal: the same runtime seat-billing checks. (4) Native price/budget editing, Texas invoice, persistence and 300 ms hover/immediate keyboard icon tooltip at 1440/390: `tests/ui/billing-browser.mjs` monthly budget and Texas seat invoice native UI journey. |  |
 | `A11Y-001` | Accessibility | target | partial | `tests/ui/viewport-evidence.mjs`, `tests/ui/browser.mjs` | No WCAG audit. |
 | `L10N-001` | US English and Spanish for employees | target | missing |  | English only. |
-| `SANDBOX-001` | Sub-production workspace and configuration promotion | target | partial | `tests/platform/sandbox-cases.mjs` sandboxChecks via `tests/platform/config-runtime.mjs`: (1) non-owner creation and promotion refused; (2) creator self-approval and another editor's approval refused; (3) data-bearing creation, edits, form trials, review packages, approval, promotion and rollback packages refused with sandbox_config_only and unchanged state and audit; (4) no outbound call during sandbox use, promotion or rollback, with a positive-control network-edge observer; (5) workspace import invalidates pre-restore approvals, refuses sandbox use while applying, permits fresh unapproved drafts afterward and preserves other workspaces; (6) form and rehearsal answers absent from stored sandbox state, audit, all existing sandbox reads, catalog and work reads, and workspace export chunks; (7) isolated catalog and form edits, form validation, durable parallel team task rehearsals with dependency and revision fences, complete supported-field diff, separate current-owner approval, atomic versioned promotion, unchanged in-flight request snapshots and nonempty grants, unchanged connection credentials and records, reviewed rollback, stale production and withdrawn-reviewer refusal. (8) existing SLA names, minute targets and waiting-on pauses copied without requester membership or author identities; isolated edits, complete field diffs, editor approval refusal, mixed and SLA-only versioned promotion and reviewed rollback, unchanged in-flight SLA policy snapshots, and whole-package refusal after a production SLA addition: sandboxChecks in `tests/platform/sandbox-cases.mjs` via `tests/platform/config-runtime.mjs`. `tests/platform/base-auth-transfer.mjs` actual rer export, reset and import journey: sandbox packages excluded from the archive; pre-restore packages refused by the package, approval and promotion HTTP doors; a fresh draft with no approval can be created. | Catalog metadata, forms, isolated team task workflows and existing SLA names, minute targets and waiting-on pauses only; automated connector prerequisites are refused. Provider workflow execution, sandbox-only connector credentials and calls, SLA scope and ordering edits, business calendars, escalation rules, notification rules, scenarios, roles, other connector configuration and native 1440 and 390 screens remain unbuilt. Ct-approved policy: owner-only creation and promotion, approval by another current owner who contributed no edits, configuration only with no personal-record copying, no outbound action, fresh packages after restore, and no retained rehearsal answers. Broader administrator approval and explicit masked data copying remain unbuilt. |
+| `SANDBOX-001` | Sub-production workspace and configuration promotion | target | partial | `tests/platform/sandbox-cases.mjs` sandboxChecks via `tests/platform/config-runtime.mjs`: owner-only creation/promotion; self/editor approval refusal; data-bearing request refusal without state or audit mutation; positive-control outbound observer and zero outbound attempts; isolated catalog/form edits and durable parallel team task rehearsals with dependency, concurrency and revision fences; supported-field diffs; separate current-owner approval; atomic versioned promotion; unchanged in-flight requests, grants, connection credentials, settings and records; reviewed rollback; stale-production and withdrawn-reviewer refusal; no retained form/rehearsal answers in storage, audit, sandbox/catalog/work reads or export chunks; restore applying fence, pre-restore package invalidation, fresh unapproved drafts and foreign-workspace preservation. Existing SLA names, first/next-response and resolution minute targets and waiting-on pauses have isolated edits, complete supported-field diffs, mixed and SLA-only promotion/rollback, preserved in-flight policy snapshots and whole-package refusal after a production SLA addition. `tests/platform/base-auth-transfer.mjs` documents actual rer export/reset/import invalidation and fresh-draft behavior. | Native 1440/390 screens, role configuration, remaining non-provider workflow configuration, SLA scope and ordering edits, business calendars and escalation rules remain unbuilt. Provider workflows and all connector configuration remain required under SANDBOX-002; notification rules and scenarios under SANDBOX-003; broader administrator approval and explicitly chosen masked-data copying under SANDBOX-004. SANDBOX-001 remains partial; shared safeguards apply to every transferred family. |
+| `SANDBOX-002` | Provider workflows and isolated sandbox connectors | target | missing | No sandbox provider-workflow or isolated connector-configuration/credential implementation is established. Existing zero-outbound and unsupported-prerequisite refusals establish the current safe floor only. | Provider workflow configuration/execution, all sandbox connector configuration, separately bound sandbox credentials, isolated provider targets/data/effects, provider readback and inherited promotion/rollback/native-screen acceptance remain unbuilt. |
+| `SANDBOX-003` | Sandbox notification-rule and scenario configuration | target | missing | No sandbox notification-rule or scenario-configuration implementation is established. DESK-015's production implementation is not sandbox evidence; NOTIFY-002 remains missing. | Sandbox editing, rehearsal, complete diffs, reviewed promotion and rollback for notification rules and scenarios remain unbuilt. NOTIFY-002 is a prerequisite still owed; existing DESK-015 scenarios require sandbox integration now. All shared safeguards and native-screen acceptance remain required. |
+| `SANDBOX-004` | Administrator approval and explicitly chosen masked-data copying | target | missing | Existing separate-current-owner approval and refusal of personal-record copying remain SANDBOX-001 evidence; neither establishes administrator approval or masked copying. | Appropriately authorized administrator approval with current-role and non-editor checks, explicit masked personal-record copying, scope/retention/erasure proof and inherited package/restore/native-screen safeguards remain unbuilt. Owner-only creation/promotion and default data exclusion remain in force. |
 | `MIGRATE-001` | Freshservice migration | target | partial | `src/features/adoption/freshservice-import`, `src/features/adoption/freshservice.ts`, `tests/adoption/freshservice-import.mjs`, `tests/adoption/runtime.mjs` | Tickets and conversations only, 100 per job; no assets, catalog, KB, SLA, attachment bytes or 50,000-ticket scale run. |
 | `MIGRATE-002` | Jira Service Management migration | target | missing |  | No JSM, Assets or Confluence importer or delta passes. |
 | `MIGRATE-003` | ServiceNow migration | target | missing |  | No ServiceNow Table/Attachment API importer or delta passes. |
