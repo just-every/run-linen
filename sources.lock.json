@@ -6251,11 +6251,11 @@
       "executable": false
     },
     "tests/ui/commitment-browser.mjs": {
-      "sha256": "407a201bab156911a815feeab65b43860141616a3c489f4987a6b2decf941d08",
+      "sha256": "d8386721e72b522fbfe807e7801db41bdcb8d0ac88ae9187adef32f3e0604d38",
       "executable": false
     },
     "tests/ui/commitment-restart.mjs": {
-      "sha256": "90780c878038b7fe26a2bb4b757998159257cd936951db46698b09fee6aa48e1",
+      "sha256": "3ce9db6d847aa9d48f4ba7be1de45f417b97f0377da4cead36c625bce9624780",
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {

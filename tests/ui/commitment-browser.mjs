@@ -3,7 +3,7 @@ import {chromium} from 'playwright';
 import {writeFile} from 'node:fs/promises';
 import {apiFor,action,finishFirstRun,fields,local} from './connected-helpers.mjs';
 import {nativeCreate} from './native-regressions.mjs';
-import {captureJourney} from './viewport-evidence.mjs';
+import {captureCommitment as captureJourney} from './commitment-capture.mjs';
 
 // Explicit held-key journey: the default suite never runs it or spends provider budget.
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT,token=process.env.RER_CLOUD_GITHUB_TOKEN;

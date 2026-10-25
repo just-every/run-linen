@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {readFile} from 'node:fs/promises';
 import {apiFor,action,signIn} from './connected-helpers.mjs';
-import {captureJourney} from './viewport-evidence.mjs';
+import {captureCommitment as captureJourney} from './commitment-capture.mjs';
 
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 const before=JSON.parse(await readFile(out+'/commitment-context.json','utf8'));
@@ -36,6 +36,7 @@ try {
         await profile.focus();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
         await profile.evaluate(e=>e.blur());await profile.hover();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');
         await page.waitForTimeout(420);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
+        await page.screenshot({path:`${out}/commitment-tooltip-${width}.png`});
     }
     await captureJourney(page,{path:out+'/commitment-retired.png',fullPage:true});
     console.log(JSON.stringify({workerRestart:true,scheduledLiveReadback:true,missingEvidenceUnknown:true,staleEvidenceUnknown:true,sourceWithdrawalUnknown:true,ownerRetirement:true,tooltipsBothWidths:true,remoteWrites:false}));
