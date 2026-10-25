@@ -3130,13 +3130,13 @@ and preserve E1–E7 and O1–O3. Their acceptance evidence is the
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026).
 
-The commit is the landing-main baseline for this judgement; this candidate also carries the code and public-door checks cited below. `done` means implemented with a cited test through a public door using local runtime and test-only provider fixtures; it is not live provider, hosted or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
+The commit is the landing-main baseline for this judgement; this candidate also carries the code and public-door checks cited below. `done` means implemented with cited assertions through public doors; evidence distinguishes permitted network-edge fixtures from required live observations. It does not assert hosted release or owner acceptance. A `partial` row cites what exists and its gap names what is missing; a `missing` row has no implementation. F1–F7 are defined in [FRONTIER-EXTENSION.md](FRONTIER-EXTENSION.md) and counted here.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 6 | 18 | 0 | 24 |
-| Target and push further | 49 | 43 | 27 | 119 |
-| All | 55 | 61 | 27 | 143 |
+| Published | 7 | 17 | 0 | 24 |
+| Target and push further | 50 | 42 | 27 | 119 |
+| All | 57 | 59 | 27 | 143 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
