@@ -6291,7 +6291,7 @@
       "executable": false
     },
     "tests/ui/connected-run.mjs": {
-      "sha256": "2eee490560fe934ff7261c4ee14ac70c680bbb2d55845a3fdcb2b83d308dc434",
+      "sha256": "c0c07f259be220a9b85339241b8ccad3791cc4f032a46fcdfdb30a58355be8be",
       "executable": false
     },
     "tests/ui/connected-setup.mjs": {

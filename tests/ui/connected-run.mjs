@@ -102,6 +102,5 @@ export default {...product, async fetch(request, env, ctx) { ${liveReadOnly ? ''
 } finally {
   await stopWorker();
   await log.close();
-  await rm(join(scratch, "state"), { recursive: true, force: true });
-  await rm(join(scratch, "dist"), { recursive: true, force: true });
+  await rm(scratch, { recursive: true, force: true });
 }
