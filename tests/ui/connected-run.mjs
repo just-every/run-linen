@@ -14,6 +14,7 @@ const root = resolve(import.meta.dirname, "../.."),
 await mkdir(out, { recursive: true });
 const log = await open(join(out, "worker.log"), "a");
 let worker, workerOptions;
+const liveReadOnly = process.argv[4] === '--live-read-only';
 async function stopWorker() {
   await worker?.dispose();
   worker = undefined;
@@ -51,15 +52,15 @@ try {
   if (!url) {
     await command("pnpm", ["build"]);
     await cp(join(root, "dist"), join(scratch, "dist"), { recursive: true });
-    await cp(join(root, 'tests/ui/provider-boundary.mjs'), join(scratch, 'dist/server/provider-boundary.mjs'));
-    await writeFile(join(scratch, 'dist/server/fixture-wrapper.js'), `import product from './index.js';
-import {bind, fixtureRequest} from './provider-boundary.mjs';
-export default {...product, async fetch(request, env, ctx) { bind(env); if (new URL(request.url).pathname === '/__fixture/tick') { await product.scheduled({scheduledTime:Date.now(),cron:'* * * * *'},env,ctx); return Response.json({ticked:true}); } return await fixtureRequest(request, env) || product.fetch(request, env, ctx); }};
+    if (!liveReadOnly) await cp(join(root, 'tests/ui/provider-boundary.mjs'), join(scratch, 'dist/server/provider-boundary.mjs'));
+    await writeFile(join(scratch, 'dist/server/journey-wrapper.js'), `import product from './index.js';
+${liveReadOnly ? '' : "import {bind, fixtureRequest} from './provider-boundary.mjs';"}
+export default {...product, async fetch(request, env, ctx) { ${liveReadOnly ? '' : 'bind(env);'} if (new URL(request.url).pathname === '${liveReadOnly ? '/__journey/tick' : '/__fixture/tick'}') { await product.scheduled({scheduledTime:Date.now(),cron:'* * * * *'},env,ctx); return Response.json({ticked:true}); } return ${liveReadOnly ? '' : 'await fixtureRequest(request, env) || '}product.fetch(request, env, ctx); }};
 `);
     const { readFile } = await import('node:fs/promises');
     const configPath = join(scratch, 'dist/server/wrangler.json');
     const config = JSON.parse(await readFile(configPath, 'utf8'));
-    config.main = 'fixture-wrapper.js';
+    config.main = 'journey-wrapper.js';
     await writeFile(configPath, JSON.stringify(config));
     const value = await port();
     url = `http://127.0.0.1:${value}`;
@@ -88,7 +89,7 @@ export default {...product, async fetch(request, env, ctx) { bind(env); if (new 
     if (!r.ok) throw Error("Isolated worker did not become ready");
     if (!(await r.json()).required) throw Error("Isolated database is not empty");
   }
-  await fetch(url + "/__fixture/init", { method: "POST" });
+  if (!liveReadOnly) await fetch(url + "/__fixture/init", { method: "POST" });
   await browserCheck(process.argv[2] || "tests/ui/connected-browser.mjs",url);
   if(workerOptions && (!process.argv[2] || process.argv[3])) {
     await stopWorker();

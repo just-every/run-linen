@@ -6255,7 +6255,7 @@
       "executable": false
     },
     "tests/ui/commitment-restart.mjs": {
-      "sha256": "8a20668aa93b18d9c484d9fedefff47c60f773cabb5cd13fa9012fc5e89a8fa0",
+      "sha256": "90780c878038b7fe26a2bb4b757998159257cd936951db46698b09fee6aa48e1",
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {
@@ -6291,7 +6291,7 @@
       "executable": false
     },
     "tests/ui/connected-run.mjs": {
-      "sha256": "f876bf1021b3ff1a574de27ec102dd4c54daa94836279530814f46f33165716c",
+      "sha256": "2eee490560fe934ff7261c4ee14ac70c680bbb2d55845a3fdcb2b83d308dc434",
       "executable": false
     },
     "tests/ui/connected-setup.mjs": {

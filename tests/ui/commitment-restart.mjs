@@ -13,7 +13,7 @@ try {
     assert.equal((await api(`/work/${before.workId}`)).work.state,'closed');
     const current=await api(`/commitments/${before.commitmentId}`);assert.equal(current.revision,3);
     const wait=Math.max(0,Date.parse(current.dueAt)-Date.now()+100);assert.ok(wait<11000);await page.waitForTimeout(wait);
-    await fetch(base+'/__fixture/tick',{method:'POST'});
+    await fetch(base+'/__journey/tick',{method:'POST'});
     let coverage=await api(`/commitments/${before.commitmentId}/coverage`);
     assert.equal(coverage.coverage[0].state,'verified');assert.deepEqual(coverage.uncoveredCohorts,before.missingIds);
     await page.goto(base+'/app#/commitments/'+before.commitmentId);await page.getByText('Every scheduled starter retains baseline repository read permission',{exact:true}).first().waitFor();
