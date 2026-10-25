@@ -44,6 +44,8 @@ try {
     await action(page,'Observe this commitment now',{},'/observe','Run scoped observations');
     let coverage=await api(`/commitments/${commitmentId}/coverage`);
     assert.equal(coverage.coverage[0].state,'verified');assert.deepEqual(coverage.uncoveredCohorts,[missing.id]);assert.equal(coverage.dependencies[0].state,'verified');
+    assert.equal(coverage.dependencies[0].id,parentId);
+    await page.getByText('Baseline repository permission is independently observed',{exact:true}).waitFor();
     await page.getByText(/Morgan New Hire/).first().waitFor();await captureJourney(page,{path:out+'/commitment-live-access-unobserved-hire.png',fullPage:true});
     const work=await api('/work',{title:'Starter setup case',body:'The setup case can close while baseline access remains a service responsibility.',deduplicationKey:'synthetic-linen-4'});
     await api(`/work/${work.id}/commands`,{revision:work.revision,command:'close',resolutionCode:'Solved (workaround)',reason:'Setup conversation closed; ongoing repository coverage remains'});

@@ -245,7 +245,7 @@ export function IntelligenceSpace({
                 )}
                 {coverage.data?.dependencies?.map((dependency: any) => (
                   <div className="record-row" key={dependency.id}>
-                    <span>Dependent commitment {dependency.id}</span>
+                    <span>{dependency.outcome || "Dependent service commitment"}</span>
                     <Badge value={dependency.state} />
                   </div>
                 ))}

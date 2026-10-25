@@ -119,11 +119,11 @@ export async function coverage(ctx: IntelligenceContext, key: string) {
         try {
             const dependency = await getCommitment(ctx, dependencyId), evidence = await observationFacts(ctx, dependency);
             const rows = await coverageRows(ctx, dependency, evidence, at);
-            return { id: dependencyId, state: rows.length && rows.every(r => r.state === 'verified')
+            return { id: dependencyId, outcome: dependency.data.outcome, state: rows.length && rows.every(r => r.state === 'verified')
                 && dependency.data.cohort.every(person => rows.some(r => r.cohort === person)) ? 'verified' : 'unknown' };
         }
         catch {
-            return { id: dependencyId, state: 'unknown' };
+            return { id: dependencyId, outcome: null, state: 'unknown' };
         }
     }));
     return { dependencies, commitmentId: key, revision: c.revision, outcome: c.data.outcome,

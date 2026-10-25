@@ -2359,7 +2359,7 @@
       "executable": false
     },
     "src/features/intelligence/commitments.ts": {
-      "sha256": "753f6e6b84f18e6176012019bc5b5b3bf21e58db94dec86c94d3fa9637ee17aa",
+      "sha256": "17c8bb809010e56633986b3cad0fde45c2b47d8b8cf8173f8f69f266f1ed9118",
       "executable": false
     },
     "src/features/intelligence/demo-assessment.ts": {
@@ -5463,7 +5463,7 @@
       "executable": false
     },
     "src/ui/intelligence.tsx": {
-      "sha256": "4b8fa80254578de1b8125d29142e2f9441adf08ef1a85162595567c8340ea5b3",
+      "sha256": "863d4de3145052c024368061259fac20cb22548b888ba7899c92b4d449f9f809",
       "executable": false
     },
     "src/ui/knowledge-drafts.tsx": {
@@ -6255,7 +6255,7 @@
       "executable": false
     },
     "tests/ui/commitment-browser.mjs": {
-      "sha256": "d8386721e72b522fbfe807e7801db41bdcb8d0ac88ae9187adef32f3e0604d38",
+      "sha256": "0574e4673afbbc6886e0727993536b1b734b20dd148607a69020a7f4d9ce7979",
       "executable": false
     },
     "tests/ui/commitment-capture.mjs": {
