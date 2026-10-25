@@ -1,11 +1,12 @@
 import type { Context, Hono } from 'hono';
+import {sandboxSlas, editSandboxSla, slaDifferences, slaPromotion, slaFields, type Sla} from './sandbox-slas';
 import type { AppEnv } from './types';
 import { ApiError, auditStatement, id, jsonBody, now, requiredString } from './http';
 import { normalizeCatalogForm, validateCatalogAnswers, type CatalogForm } from '../features/work/catalog-form-schema';
 import { checkTaskPlan, type CatalogTask } from '../features/work/catalog-task-plan';
 
 export type Item = { id: string; name: string; revision: number; sourceForm: string; sourceTasks: string; form: CatalogForm; tasks: CatalogTask[] };
-export type Sandbox = { id: string; name: string; created_by: string; contributors_json: string; baseline_json: string; draft_json: string; revision: number; state: string; approved_by: string | null; runs_json: string };
+export type Sandbox = { id: string; name: string; created_by: string; contributors_json: string; baseline_json: string; draft_json: string; revision: number; state: string; approved_by: string | null; runs_json: string; sla_baseline_json:string; sla_draft_json:string };
 type C = Context<AppEnv>;
 const currentOwnerSql = `EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value='owner')`;
 export const ownerSql = `EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value='owner' AND NOT EXISTS(SELECT 1 FROM adoption_imports i WHERE i.workspace_id=m.workspace_id AND i.state IN ('applying','erasure_pending','reconciling')))`;
@@ -30,12 +31,12 @@ async function catalogs(c:C):Promise<Item[]> {
 }
 function differences(row:Sandbox) {
  const baseline=JSON.parse(row.baseline_json) as Item[],draft=JSON.parse(row.draft_json) as Item[];
- return draft.flatMap(item=>{
+ return [...slaDifferences(JSON.parse(row.sla_baseline_json),JSON.parse(row.sla_draft_json)),...draft.flatMap(item=>{
   const before=baseline.find(x=>x.id===item.id)!;
   return (['name','form','tasks'] as const).filter(field=>JSON.stringify(before[field])!==JSON.stringify(item[field])).map(field=>({catalogId:item.id,field,before:before[field],after:item[field]}));
- });
+ })];
 }
-function view(row:Sandbox) {return {id:row.id,name:row.name,revision:row.revision,state:row.state,approvedBy:row.approved_by,items:JSON.parse(row.draft_json),differences:differences(row),limits:'Catalog metadata, forms and team task plans only. Form validation and isolated team task rehearsals are available. Connector execution and other configuration families are not available.'};}
+function view(row:Sandbox) {return {id:row.id,name:row.name,revision:row.revision,state:row.state,approvedBy:row.approved_by,items:JSON.parse(row.draft_json),slas:JSON.parse(row.sla_draft_json),differences:differences(row),limits:'Catalog metadata, forms, team task plans and existing SLA policy targets only. Form validation and isolated team task rehearsals are available. SLA scope, ordering, calendars and requester groups remain unchanged. Connector execution and other configuration families are not available.'};}
 function configurationBody(body:Record<string,unknown>, allowed:string[]) {
  if(Object.keys(body).some(key=>!allowed.includes(key)))
   throw new ApiError(422,'sandbox_config_only','Only the named configuration fields are accepted; records and credentials cannot be included');
@@ -60,9 +61,9 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
  app.post('/sandboxes',async c=>{
   const p=await owner(c),b=await jsonBody(c),name=requiredString(b.name,'name',120);
   configurationBody(b,['name']);
-  const items=await catalogs(c),sandboxId=id(),snapshot=JSON.stringify(items);
+  const items=await catalogs(c),sandboxId=id(),snapshot=JSON.stringify(items),slas=JSON.stringify(await sandboxSlas(c));
   await c.env.DB.batch([
-   c.env.DB.prepare(`INSERT INTO configuration_sandboxes(id,workspace_id,name,created_by,contributors_json,baseline_json,draft_json,created_at) SELECT ?,?,?,?,?,?,?,? WHERE ${ownerSql}`).bind(sandboxId,p.workspaceId,name,p.userId,JSON.stringify([p.userId]),snapshot,snapshot,now(),p.workspaceId,p.userId),
+   c.env.DB.prepare(`INSERT INTO configuration_sandboxes(id,workspace_id,name,created_by,contributors_json,baseline_json,draft_json,sla_baseline_json,sla_draft_json,created_at) SELECT ?,?,?,?,?,?,?,?,?,? WHERE ${ownerSql}`).bind(sandboxId,p.workspaceId,name,p.userId,JSON.stringify([p.userId]),snapshot,snapshot,slas,slas,now(),p.workspaceId,p.userId),
    c.env.DB.prepare('INSERT INTO platform_auth_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)'),
    auditStatement(c,'sandbox.created',sandboxId,{configurationOnly:true}),c.env.DB.prepare('DELETE FROM platform_auth_guard'),
   ]);
@@ -79,6 +80,16 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   if(item.tasks.some(t=>!groups.has(t.groupId)))throw new ApiError(422,'catalog_tasks_invalid','Task groups must exist in this workspace');
   const contributors=[...new Set([...JSON.parse(row.contributors_json),c.get('principal').userId])];
   await write(c,row,'draft_json=?,contributors_json=?,revision=revision+1',[JSON.stringify(items),JSON.stringify(contributors)],'sandbox.edited',{fromRevision:row.revision});
+  return c.json(view(await read(c,row.id)));
+ });
+ app.put('/sandboxes/:id/slas/:slaId',async c=>{
+  const row=await read(c,c.req.param('id')),b=await jsonBody(c);revision(row,b,'draft');
+  configurationBody(b,['revision','name','first_response_minutes','next_response_minutes','resolution_minutes','pauseOn']);
+  const slas=JSON.parse(row.sla_draft_json) as Sla[],item=slas.find(x=>x.id===c.req.param('slaId'));
+  if(!item)throw new ApiError(404,'not_found','SLA policy unavailable in this sandbox');
+  editSandboxSla(item,b);
+  const contributors=[...new Set([...JSON.parse(row.contributors_json),c.get('principal').userId])];
+  await write(c,row,'sla_draft_json=?,contributors_json=?,revision=revision+1',[JSON.stringify(slas),JSON.stringify(contributors)],'sandbox.edited',{family:'sla',fromRevision:row.revision});
   return c.json(view(await read(c,row.id)));
  });
  app.post('/sandboxes/:id/test-form',async c=>{
@@ -105,7 +116,15 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
  app.post('/sandboxes/:id/rollback-package',async c=>{
   const prior=await read(c,c.req.param('id')),b=await jsonBody(c);revision(prior,b,'promoted');configurationBody(b,['revision']);
   const p=c.get('principal'),baseline=await catalogs(c),draft=structuredClone(baseline),before=JSON.parse(prior.baseline_json) as Item[],after=JSON.parse(prior.draft_json) as Item[];
-  const changed=new Set(differences(prior).map(d=>d.catalogId));
+  const changed=new Set(differences(prior).flatMap(d=>'catalogId' in d?[d.catalogId]:[]));
+  const slaBaseline=await sandboxSlas(c),slaDraft=structuredClone(slaBaseline),slaBefore=JSON.parse(prior.sla_baseline_json) as Sla[],slaAfter=JSON.parse(prior.sla_draft_json) as Sla[];
+  for(const original of slaBefore) {
+   const applied=slaAfter.find(x=>x.id===original.id)!;
+   if(!slaFields.some(f=>original[f]!==applied[f]))continue;
+   const current=slaDraft.find(x=>x.id===original.id);
+   if(!current||current.revision!==original.revision+1||JSON.stringify({...current,revision:applied.revision})!==JSON.stringify(applied))throw new ApiError(409,'production_changed','Later SLA configuration changes prevent this rollback');
+   for(const field of slaFields)Object.assign(current,{[field]:original[field]});
+  }
   for(const catalogId of changed) {
    const current=draft.find(x=>x.id===catalogId),applied=after.find(x=>x.id===catalogId)!,original=before.find(x=>x.id===catalogId)!;
    if(!current||current.revision!==original.revision+1||(['name','form','tasks'] as const).some(k=>JSON.stringify(current[k])!==JSON.stringify(applied[k])))throw new ApiError(409,'production_changed','Later configuration changes prevent this rollback');
@@ -113,7 +132,7 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   }
   const sandboxId=id();
   await c.env.DB.batch([
-   c.env.DB.prepare(`INSERT INTO configuration_sandboxes(id,workspace_id,name,created_by,contributors_json,baseline_json,draft_json,state,created_at) SELECT ?,?,?,?,?,?,?,'review',? WHERE ${ownerSql}`).bind(sandboxId,p.workspaceId,('Rollback '+prior.name).slice(0,120),p.userId,JSON.stringify([p.userId]),JSON.stringify(baseline),JSON.stringify(draft),now(),p.workspaceId,p.userId),
+   c.env.DB.prepare(`INSERT INTO configuration_sandboxes(id,workspace_id,name,created_by,contributors_json,baseline_json,draft_json,sla_baseline_json,sla_draft_json,state,created_at) SELECT ?,?,?,?,?,?,?,?,?,'review',? WHERE ${ownerSql}`).bind(sandboxId,p.workspaceId,('Rollback '+prior.name).slice(0,120),p.userId,JSON.stringify([p.userId]),JSON.stringify(baseline),JSON.stringify(draft),JSON.stringify(slaBaseline),JSON.stringify(slaDraft),now(),p.workspaceId,p.userId),
    c.env.DB.prepare('INSERT INTO platform_auth_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)'),
    auditStatement(c,'sandbox.rollback_requested',sandboxId,{priorSandboxId:prior.id}),c.env.DB.prepare('DELETE FROM platform_auth_guard'),
   ]);
@@ -121,8 +140,8 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
  });
  app.post('/sandboxes/:id/promote',async c=>{
   const row=await read(c,c.req.param('id')),b=await jsonBody(c);revision(row,b,'approved');configurationBody(b,['revision']);
-  const p=c.get('principal'),baseline=JSON.parse(row.baseline_json) as Item[],draft=JSON.parse(row.draft_json) as Item[],changed=new Set(differences(row).map(d=>d.catalogId));
-  if(JSON.stringify(await catalogs(c))!==row.baseline_json)throw new ApiError(409,'production_changed','Production configuration changed; create and review a fresh sandbox');
+  const p=c.get('principal'),baseline=JSON.parse(row.baseline_json) as Item[],draft=JSON.parse(row.draft_json) as Item[],changed=new Set(differences(row).flatMap(d=>'catalogId' in d?[d.catalogId]:[]));
+  if(JSON.stringify(await catalogs(c))!==row.baseline_json||JSON.stringify(await sandboxSlas(c))!==row.sla_baseline_json)throw new ApiError(409,'production_changed','Production configuration changed; create and review a fresh sandbox');
   const statements:D1PreparedStatement[]=[
    c.env.DB.prepare(`UPDATE configuration_sandboxes SET state='promoted',promoted_at=?,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=? AND state='approved' AND ${ownerSql} AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=configuration_sandboxes.approved_by AND m.active=1 AND r.value='owner')`).bind(now(),p.workspaceId,row.id,row.revision,p.workspaceId,p.userId,p.workspaceId),
    c.env.DB.prepare('INSERT INTO platform_auth_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)'),
@@ -134,7 +153,8 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
    for(const task of next.tasks)statements.push(c.env.DB.prepare('INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM work_groups WHERE workspace_id=? AND id=?) THEN 1 ELSE 0 END').bind(p.workspaceId,task.groupId));
    if(changed.has(item.id))statements.push(c.env.DB.prepare('UPDATE work_catalog SET name=?,form_json=?,tasks_json=?,revision=revision+1 WHERE workspace_id=? AND id=?').bind(next.name,JSON.stringify(next.form),JSON.stringify(next.tasks),p.workspaceId,item.id));
   }
-  statements.push(auditStatement(c,'sandbox.promoted',row.id,{version:row.revision+1,approvedBy:row.approved_by,catalogIds:[...changed]}),c.env.DB.prepare('DELETE FROM platform_auth_guard'));
+  statements.push(...slaPromotion(c,JSON.parse(row.sla_baseline_json),JSON.parse(row.sla_draft_json)));
+  statements.push(auditStatement(c,'sandbox.promoted',row.id,{version:row.revision+1,approvedBy:row.approved_by,catalogIds:[...changed],slaIds:slaDifferences(JSON.parse(row.sla_baseline_json),JSON.parse(row.sla_draft_json)).map(d=>d.slaId)}),c.env.DB.prepare('DELETE FROM platform_auth_guard'));
   try{await c.env.DB.batch(statements);}catch(e){if(String(e).includes('CHECK constraint'))throw new ApiError(409,'production_changed','Production or current approval changed; nothing was promoted');throw e;}
   return c.json(view(await read(c,row.id)));
  });

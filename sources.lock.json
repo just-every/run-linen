@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "ea12aeba496beefdddd1f465381ac4f82e79bcc49d9e531a0a8bf3ef60e86278",
+      "sha256": "3edd5f79c9b84432e8603156726af12ab33f9ba563efd9aede3fdc7313d244de",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "55c25d171eb40ba34af8687d8b22a9a32cdf492c63ebf3c9588b2915f3722672",
+      "sha256": "d9a4a2ca396d20bfa1ea3a78adab8e5ae77d782485065d15eab33b3dbc4edd54",
       "executable": false
     },
     "DEMO.md": {
@@ -1176,6 +1176,10 @@
     },
     "migrations/0906_configuration_sandbox_runs.sql": {
       "sha256": "8ebed97a7337ea8c246dd1845f815bbc44e23b89eb37f5322f26e66e2fe0838c",
+      "executable": false
+    },
+    "migrations/0907_configuration_sandbox_slas.sql": {
+      "sha256": "be157cd64e09b0c5495ac42a21a995b26207c90446eda35725742ee452b40655",
       "executable": false
     },
     "ONBOARDING.md": {
@@ -5026,12 +5030,16 @@
       "sha256": "eaf46a8655daf7d5a9a5bbd609e3236ab7bd7b1dc99471ca2fec414310274a55",
       "executable": false
     },
+    "src/platform/sandbox-slas.ts": {
+      "sha256": "c5a611344ed2e27a52c179972edd597bcd2a9af59cdafb2d99cfb81adc23a38f",
+      "executable": false
+    },
     "src/platform/sandbox-workflows.ts": {
       "sha256": "bf6fa8c15215aac8b11db2c38205db959d4dd3ddcc69794a8e8800ed501ea0ed",
       "executable": false
     },
     "src/platform/sandboxes.ts": {
-      "sha256": "e3464dfd3decbcf2e54a7ff78c221dd6fed51258d54e94767eb775fd9769f4ee",
+      "sha256": "49c5e91465b829dc14fad7aeb14b0505d57642a58389e8df72182d10e1f0eb8c",
       "executable": false
     },
     "src/platform/session-status.ts": {
@@ -6059,7 +6067,7 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "f86e32e27ef1490793571cfd1a609256a21359761c346a6bf9b7b0e9040dc96f",
+      "sha256": "a10f09e7425a73ef766b449cfaa2f6f288020d4819cf028f0781f53fbae23200",
       "executable": false
     },
     "tests/platform/tombstone-race-fixture.ts": {
