@@ -195,6 +195,7 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
    statements.push(c.env.DB.prepare(`INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM work_catalog WHERE workspace_id=? AND id=? AND revision=? AND name=? AND form_json=? AND tasks_json=?) THEN 1 ELSE 0 END`).bind(p.workspaceId,item.id,item.revision,item.name,item.sourceForm,item.sourceTasks));
    statements.push(...sandboxApprovalGuards(c,next));
    for(const task of next.tasks)statements.push(c.env.DB.prepare('INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM work_groups WHERE workspace_id=? AND id=?) THEN 1 ELSE 0 END').bind(p.workspaceId,task.groupId));
+   if(changed.has(item.id))statements.push(c.env.DB.prepare('INSERT OR IGNORE INTO configuration_catalog_versions(workspace_id,catalog_id,revision,requires_manager) VALUES(?,?,?,?)').bind(p.workspaceId,item.id,item.revision,item.requiresManager??0));
    if(changed.has(item.id))statements.push(c.env.DB.prepare('UPDATE work_catalog SET name=?,form_json=?,tasks_json=?,requires_manager=?,approvals_json=?,manager_approval_json=?,revision=revision+1 WHERE workspace_id=? AND id=?').bind(next.name,JSON.stringify(next.form),JSON.stringify(next.tasks),next.requiresManager??0,JSON.stringify(next.approvals??[]),next.managerApproval?JSON.stringify(next.managerApproval):null,p.workspaceId,item.id));
   }
   statements.push(...promoteSlaConfiguration(c,JSON.parse(row.sla_config_baseline_json),JSON.parse(row.sla_config_draft_json)));

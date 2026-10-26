@@ -1,3 +1,4 @@
+import {fulfilmentRequiresManager,fulfilmentManagerSql} from './fulfilment-configuration';
 import { getWork, type WorkContext } from './core';
 import { fulfilmentManagerApproval } from './fulfilment-authority';
 import { now } from '../../platform/http';
@@ -23,7 +24,7 @@ export async function getFulfilmentReadiness(ctx: WorkContext, workId: string, c
   const manager=await fulfilmentManagerApproval(ctx,work,catalog,f);
   // Only a recorded manager other than the person can decide; without one, the step is recording a manager, not a fallback holder.
   if(manager.rejected)return blocked('Approval was rejected; the request needs a fresh submission');
-  if(!manager.allowed && catalog.requires_manager && (!manager.holderId || manager.holderId===f.beneficiary_id))
+  if(!manager.allowed && await fulfilmentRequiresManager(ctx,catalog,f) && (!manager.holderId || manager.holderId===f.beneficiary_id))
     return blocked('Missing authoritative manager; owner must resolve authority',null);
   if(!manager.allowed && manager.pendingStage)return blocked(`Approval stage "${manager.pendingStage}" is waiting for its decision`);
   if(!manager.allowed)return blocked('Current scoped manager approval is required',manager.holderId);

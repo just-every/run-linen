@@ -53,6 +53,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke('/work/'+work.id+'/commitment','POST',{calendarId:calendar.id,responseMinutes:60,resolutionMinutes:480});
  const followupBefore=(await invoke('/work/'+work.id+'/followups','GET')).configuration;
  const clockBefore=(await invoke('/work/'+work.id+'/sla','GET')).policy;
+ const originalApprovalStages=(await invoke('/work/'+work.id+'/approvals/'+catalogId,'GET')).stages;assert.deepEqual(originalApprovalStages,[]);
  assert.equal(clockBefore.firstResponseMinutes,60);
  assert.equal((await fixture({outboundControl:true})).outboundCalls.length,1,'The network-edge observer detects an attempted outbound call');
  const protectedBefore=await fixture({seedSandboxGrant:true,resetOutbound:true});
@@ -227,6 +228,9 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.deepEqual(retainedFollowups.levels.map(x=>[x.target,x.level,x.offset_minutes,x.notify,x.label]),followupBefore.levels.map(x=>[x.target,x.level,x.offset_minutes,x.notify,x.label]));
  assert.equal(retainedFollowups.waitingRule.remind_business_days,2);assert.equal(retainedFollowups.waitingRule.resolve_business_days,5);
  const newWork=await invoke('/work','POST',{title:'New policy request',body:'Synthetic request after promotion',deduplicationKey:'synthetic-linen-457'},requester,201);
+ await invoke('/work/'+newWork.id+'/fulfilment','POST',{catalogId,catalogRevision:2,beneficiaryId:employee.id,purpose:'Synthetic reviewed workflow',answers:{purpose:'synthetic-linen-465'}},requester,201);
+ assert.deepEqual((await invoke('/work/'+work.id+'/approvals/'+catalogId,'GET')).stages,originalApprovalStages,'Promotion never injects new approval stages into an admitted request');
+ const submittedApprovalStages=(await invoke('/work/'+newWork.id+'/approvals/'+catalogId,'GET')).stages;assert.equal(submittedApprovalStages[0].name,'Equipment review');
  const newFollowups=(await invoke('/work/'+newWork.id+'/followups','GET')).configuration;
  assert.equal(newFollowups.source,'current');assert.equal(newFollowups.levels[0].offset_minutes,-30);assert.equal(newFollowups.waitingRule.remind_business_days,3);
  const protectedWithNewWork=await fixture({});
@@ -257,6 +261,8 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  rollback=await invoke('/sandboxes/'+rollback.id+'/promote','POST',{revision:rollback.revision});
  const restored=(await invoke('/catalog','GET')).items.find(i=>i.id===catalogId);
  assert.deepEqual((await fixture({})).protectedTables,protectedWithNewWork.protectedTables,'Rollback preserves production authority and existing requests');
+ assert.deepEqual((await invoke('/work/'+newWork.id+'/approvals/'+catalogId,'GET')).stages,submittedApprovalStages,'Rollback preserves submitted approval definitions and calendars');
+ assert.deepEqual((await invoke('/work/'+work.id+'/approvals/'+catalogId,'GET')).stages,originalApprovalStages);
  const retainedAfterRollback=(await invoke('/work/'+work.id+'/followups','GET')).configuration;
  assert.deepEqual(retainedAfterRollback,retainedFollowups);
  const newRetainedAfterRollback=(await invoke('/work/'+newWork.id+'/followups','GET')).configuration;

@@ -1,3 +1,4 @@
+import {fulfilmentManagerSql} from './fulfilment-configuration';
 import { currentWorkPrincipal } from './identity';
 import { type WorkContext, type WorkRecord } from './core';
 import { managerRejected } from './approval-decisions';
@@ -29,7 +30,7 @@ export async function listFulfilmentDecisions(ctx: WorkContext): Promise<{items:
     JOIN work_records r ON r.workspace_id=f.workspace_id AND r.id=f.work_id
     LEFT JOIN users rq ON rq.id=r.requester_id LEFT JOIN users rb ON rb.id=r.beneficiary_id
     JOIN work_people p ON p.workspace_id=f.workspace_id AND p.member_id=f.beneficiary_id AND p.binding_id IS NOT NULL AND p.active=1 AND p.merged_into IS NULL
-    WHERE f.workspace_id=? AND c.requires_manager=1 AND r.state NOT IN ('cancelled','closed')
+    WHERE f.workspace_id=? AND ${fulfilmentManagerSql}=1 AND r.state NOT IN ('cancelled','closed')
     AND (f.expires_at IS NULL OR f.expires_at>?) AND (p.manager_id=? OR EXISTS(
       SELECT 1 FROM work_delegations d WHERE d.workspace_id=f.workspace_id AND d.manager_id=p.manager_id
       AND d.delegate_id=? AND d.revoked_at IS NULL AND d.starts_at<=? AND d.expires_at>?))

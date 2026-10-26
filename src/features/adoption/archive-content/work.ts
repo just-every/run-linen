@@ -1,3 +1,4 @@
+import {fulfilmentRequiresManager} from '../../work/fulfilment-configuration';
 import { array, columns, contentJson, json, object, type Row } from './types';
 import type { ContentSubjects } from './subjects';
 
@@ -16,6 +17,11 @@ export async function projectWork(table: string, row: Row, subjects: ContentSubj
             return await subjects.person(row.person_id) ? columns(row, { purpose: '[erased]', reason: 'Identity erased' }) : row;
         case 'work_fulfilments': {
             const snapshot = object(json(row.catalog_snapshot_json));
+            if(snapshot&&typeof snapshot.requiresManager!=='boolean'){
+                const catalog=await subjects.ctx.env.DB.prepare('SELECT requires_manager FROM work_catalog WHERE workspace_id=? AND id=?').bind(subjects.ctx.principal.workspaceId,row.catalog_id).first<{requires_manager:number}>();
+                const requiresManager=await fulfilmentRequiresManager(subjects.ctx,catalog??{},row as {id:string;catalog_snapshot_json:string});
+                row=columns(row,{catalog_snapshot_json:JSON.stringify({...snapshot,requiresManager})});
+            }
             if (!await subjects.work(row.work_id) && !await subjects.person(snapshot?.submittedBy)) return row;
             // Answers are submitted content; retain catalog/form/quote business identities.
             return contentJson(columns(row, { purpose: '[erased]' }), 'catalog_snapshot_json', [['answers']], {});

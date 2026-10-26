@@ -1,3 +1,4 @@
+import {fulfilmentRequiresManager,fulfilmentManagerSql} from './fulfilment-configuration';
 import {approvalCostCents} from './approval-cost';
 import { ApiError, id, now } from '../../platform/http';
 import type { WorkContext, WorkRecord } from './core';
@@ -12,12 +13,12 @@ export async function approvalChain(ctx: WorkContext, workId: string, catalogId:
   const f = await db.prepare('SELECT * FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?').bind(w, workId, catalogId).first<any>();
   const catalog = await db.prepare('SELECT * FROM work_catalog WHERE workspace_id=? AND id=?').bind(w, catalogId).first<any>();
   if (!f || !catalog) throw new ApiError(404, 'not_found', 'Fulfilment not found');
-  const managerApproved = await managerStageApproved(ctx, work, catalog, f), manager = catalog.requires_manager ? await managerHolder(ctx, f) : null;
+  const managerApproved = await managerStageApproved(ctx, work, catalog, f), manager = await fulfilmentRequiresManager(ctx,catalog,f) ? await managerHolder(ctx, f) : null;
   const chain = await chainStatus(ctx, work, catalog, f, managerApproved);
   const names = new Map((await db.prepare('SELECT id,name FROM users WHERE id IN (SELECT value FROM json_each(?))').bind(JSON.stringify([...chain.stages.flatMap(s => [...s.approvers, ...s.decisions.map(d => d.approverId)]), ...(manager ? [manager] : [])])).all<{ id: string; name: string }>()).results.map(u => [u.id, u.name]));
   const managerTimer=await db.prepare("SELECT active_at,remind_at,reminded_at,sla_at,breached_at FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=? AND stage_key='manager'").bind(w,f.id).first();
   const staff = ctx.principal.roles.some(r => ['owner', 'operator', 'hr'].includes(r));
-  return { manager: catalog.requires_manager ? { timer:managerTimer,state: managerApproved ? 'approved' : 'pending', holder: manager ? { id: manager, name: names.get(manager) ?? manager } : null } : null,
+  return { manager: await fulfilmentRequiresManager(ctx,catalog,f) ? { timer:managerTimer,state: managerApproved ? 'approved' : 'pending', holder: manager ? { id: manager, name: names.get(manager) ?? manager } : null } : null,
     stages: chain.stages.map(s => ({ key: s.key, name: s.name, mode: s.mode, state: s.state, applies: s.applies, approvers: staff ? s.approvers.map(a => ({ id: a, name: names.get(a) ?? a })) : undefined,
       decisions: s.decisions.map(d => ({ approver: names.get(d.approverId) ?? d.approverId, decision: d.decision, comment: d.comment, channel: d.channel, at: d.at })),
       activeAt: s.activeAt, remindAt: s.remindAt, remindedAt: s.remindedAt, slaAt: s.slaAt, breachedAt: s.breachedAt })), satisfied: managerApproved && chain.satisfied, rejected: chain.rejected };

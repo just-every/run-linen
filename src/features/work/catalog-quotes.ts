@@ -1,3 +1,4 @@
+import {fulfilmentRequiresManager,fulfilmentManagerSql} from './fulfilment-configuration';
 import { chainStatus } from './approval-stages';
 import { managerStageApproved } from './fulfilment-authority';
 import { ApiError, id, now } from '../../platform/http';
@@ -86,7 +87,7 @@ export async function quoteRelation(ctx: WorkContext, quote: Pick<QuoteRow, 'wor
   if (await db.prepare('SELECT 1 FROM work_approval_decisions WHERE workspace_id=? AND fulfilment_id=? AND approver_id=?').bind(w,f.id,userId).first()) return 'decided_approver';
   const chain=await chainStatus(ctx,work,catalog,f,await managerStageApproved(ctx,work,catalog,f));
   if (!['closed','cancelled'].includes(work.state) && chain.pendingStages.some(stage=>stage.approvers.includes(userId))) return 'approver';
-  if (catalog.requires_manager && !['closed', 'cancelled'].includes(work.state) && userId !== f.beneficiary_id) {
+  if (await fulfilmentRequiresManager(ctx,catalog,f) && !['closed', 'cancelled'].includes(work.state) && userId !== f.beneficiary_id) {
     const person = await personForMember(ctx, f.beneficiary_id);
     if (person && await resolveManager(ctx, person.manager_id || null) === userId) return 'approver';
   }

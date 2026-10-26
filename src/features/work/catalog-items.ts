@@ -116,5 +116,5 @@ export async function catalogRequestSnapshot(ctx: WorkContext, workId: string, c
   const quote=form.quoteRequired ? await ctx.env.DB.prepare(`SELECT id,sha256,size FROM work_attachments WHERE workspace_id=? AND work_id=? AND catalog_id=?
     AND visibility=? AND fulfilment_id IS NULL ORDER BY created_at DESC,id LIMIT 1`).bind(ctx.principal.workspaceId,workId,catalog.id,QUOTE_VISIBILITY).first<{id:string;sha256:string;size:number}>() : null;
   if(form.quoteRequired && !quote)throw new ApiError(422,'catalog_quote_required',quoteRequiredMessage);
-  return {catalogId:catalog.id,departmentId:catalog.department_id??null,revision:catalog.revision,name:catalog.name,submittedBy:ctx.principal.userId,form,answers,...(quote?{quote}:{})};
+  return {catalogId:catalog.id,requiresManager:Boolean(catalog.requires_manager),departmentId:catalog.department_id??null,revision:catalog.revision,name:catalog.name,submittedBy:ctx.principal.userId,form,answers,...(quote?{quote}:{})};
 }

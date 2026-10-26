@@ -1,3 +1,4 @@
+import {fulfilmentRequiresManager,fulfilmentManagerSql} from './fulfilment-configuration';
 import { ApiError, id, now } from '../../platform/http';
 import { hashToken } from '../../platform/crypto';
 import { approvalMailConfig } from './approval-mail-provider';
@@ -27,14 +28,14 @@ interface Pending { work: WorkRecord; catalog: any; f: any; approverId: string; 
 async function pendingDecisions(ctx: WorkContext) {
   const db = ctx.env.DB, w = ctx.principal.workspaceId, out: Pending[] = [];
   const rows = (await db.prepare(`SELECT f.*,c.id c_id FROM work_fulfilments f JOIN work_catalog c ON c.workspace_id=f.workspace_id AND c.id=f.catalog_id JOIN work_records r ON r.workspace_id=f.workspace_id AND r.id=f.work_id
-    WHERE f.workspace_id=? AND (c.requires_manager=1 OR EXISTS(SELECT 1 FROM work_approval_stages s WHERE s.workspace_id=f.workspace_id AND s.fulfilment_id=f.id)) AND r.state NOT IN ('closed','cancelled') AND (f.expires_at IS NULL OR f.expires_at>?) ORDER BY f.work_id LIMIT 200`).bind(w, now()).all<any>()).results;
+    WHERE f.workspace_id=? AND (${fulfilmentManagerSql}=1 OR EXISTS(SELECT 1 FROM work_approval_stages s WHERE s.workspace_id=f.workspace_id AND s.fulfilment_id=f.id)) AND r.state NOT IN ('closed','cancelled') AND (f.expires_at IS NULL OR f.expires_at>?) ORDER BY f.work_id LIMIT 200`).bind(w, now()).all<any>()).results;
   for (const f of rows) {
     const work = await db.prepare('SELECT * FROM work_records WHERE workspace_id=? AND id=?').bind(w, f.work_id).first<WorkRecord>();
     const catalog = await db.prepare('SELECT * FROM work_catalog WHERE workspace_id=? AND id=?').bind(w, f.catalog_id).first<any>();
     if (!work || !catalog) continue;
     if(await managerRejected(ctx,work,catalog,f))continue;
     const manager = await managerStageAuthority(ctx, work, catalog, f);
-    if (catalog.requires_manager && !manager.allowed) { if (manager.holderId && manager.holderId !== f.beneficiary_id) out.push({ work, catalog, f, approverId: manager.holderId, stageKey: 'manager', stageName: 'Manager approval' }); continue; }
+    if (await fulfilmentRequiresManager(ctx,catalog,f) && !manager.allowed) { if (manager.holderId && manager.holderId !== f.beneficiary_id) out.push({ work, catalog, f, approverId: manager.holderId, stageKey: 'manager', stageName: 'Manager approval' }); continue; }
 
     const chain = await chainStatus(ctx, work, catalog, f, true);
     for(const stage of chain.pendingStages)for (const a of stage.approvers) if (!stage.decisions.some(d => d.approverId === a)) out.push({ work, catalog, f, approverId: a, stageKey: stage.key, stageName: stage.name });

@@ -108,5 +108,5 @@ function ConfigurationEditor({family,row,options,save}:{family:string;row:Config
 
 function SandboxApprovals({item,calendars,save}:{item:Item;calendars:{id:string;name:string;timezone:string}[];save:(body:object)=>Promise<unknown>}) {
  const [managerRequired,setManagerRequired]=useState(Boolean(item.requiresManager));
- return <><label className="checkbox-field"><input type="checkbox" checked={managerRequired} onChange={e=>setManagerRequired(e.target.checked)}/>Require manager approval in sandbox</label><CatalogApprovalEditor item={{...item,requires_manager:Number(managerRequired)}} draftCalendars={calendars} onSaved={()=>{}} saveDraft={body=>save({...body,requiresManager:managerRequired})}/></>;
+ return <><label className="checkbox-field"><input type="checkbox" checked={managerRequired} onChange={e=>setManagerRequired(e.target.checked)}/>Require manager approval in sandbox</label><CatalogApprovalEditor item={{...item,requires_manager:Number(managerRequired)}} draftCalendars={calendars} onSaved={()=>{}} saveDraft={({revision,...body})=>save({...body,requiresManager:managerRequired})}/></>;
 }

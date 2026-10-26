@@ -1,3 +1,4 @@
+import {fulfilmentRequiresManager,fulfilmentManagerSql} from './fulfilment-configuration';
 import {ticketHistory} from './work-history';
 import { approvalGuard } from './approval-guard';
 import { personForMember } from './person-binding';
@@ -18,7 +19,7 @@ export function approvalQuoteWitness(fulfilment:{catalog_snapshot_json?:string|n
 
 /** The manager stage alone: the current manager, or their delegate while they are out of office, approved this exact revision. */
 export async function managerStageAuthority(ctx: WorkContext, work: WorkRecord, catalog: any, fulfilment: FulfilmentFacts, step?: Step) {
-  if(!catalog.requires_manager)return {allowed:true,holderId:null};
+  if(!await fulfilmentRequiresManager(ctx,catalog,fulfilment))return {allowed:true,holderId:null};
   const db=ctx.env.DB,w=ctx.principal.workspaceId;
   const person=await personForMember(ctx,fulfilment.beneficiary_id);
   const holder=await resolveManager(ctx,person?.manager_id||null);
@@ -54,7 +55,7 @@ export async function managerHolder(ctx: WorkContext, f: { beneficiary_id: strin
 /** The whole chain: the manager stage, then every applicable stage in order. Approval here is business approval only. */
 export async function fulfilmentManagerApproval(ctx: WorkContext, work: WorkRecord, catalog: any, fulfilment: FulfilmentFacts, step?: Step) {
   const stages = stagesOf(catalog), manager = await managerStageAuthority(ctx, work, catalog, fulfilment, step);
-  const refused = Boolean(fulfilment.id && catalog.requires_manager && await managerRejected(ctx, work, catalog, { id: fulfilment.id, revision: fulfilment.revision ?? 0 }));
+  const refused = Boolean(fulfilment.id && await fulfilmentRequiresManager(ctx,catalog,fulfilment) && await managerRejected(ctx, work, catalog, { id: fulfilment.id, revision: fulfilment.revision ?? 0 }));
   if (!stages.length && !fulfilment.id) return { allowed: manager.allowed && !refused, holderId: manager.holderId, pendingStage: null as string | null, rejected: refused };
   if (!fulfilment.id) return { allowed: false, holderId: manager.holderId, pendingStage: (manager.allowed ? stages[0].name : null) as string | null, rejected: false };
   const f = await ctx.env.DB.prepare('SELECT id,revision,beneficiary_id,application_json FROM work_fulfilments WHERE workspace_id=? AND id=?').bind(ctx.principal.workspaceId, fulfilment.id).first<any>();
@@ -73,7 +74,7 @@ export async function assertWorkFulfilmentAuthority(ctx: WorkContext, step: Step
     await db.prepare('SELECT work_id,context_type FROM execution_plans WHERE workspace_id=? AND id=?').bind(w,planId).first<any>();
   if(pendingWork?.context_type==='work' && await db.prepare(`SELECT 1 FROM work_records r JOIN work_pending_people h ON h.workspace_id=r.workspace_id AND h.id=r.pending_person_id JOIN work_people p ON p.workspace_id=h.workspace_id AND p.id=h.id WHERE r.workspace_id=? AND r.id=? AND (h.state<>'bound' OR p.member_id IS NULL OR p.member_id<>r.beneficiary_id OR p.binding_id IS NULL)`).bind(w,pendingWork.work_id).first())
     throw new ApiError(409,'pending_person_unbound','Pending person services cannot execute before verified account binding');
-  const requiresManager=await db.prepare(`SELECT 1 FROM work_catalog WHERE workspace_id=? AND target=? AND kind=? AND (requires_manager=1 OR approvals_json<>'[]' OR EXISTS(SELECT 1 FROM work_fulfilments f JOIN work_approval_stages s ON s.workspace_id=f.workspace_id AND s.fulfilment_id=f.id WHERE f.workspace_id=work_catalog.workspace_id AND f.catalog_id=work_catalog.id)) LIMIT 1`)
+  const requiresManager=await db.prepare(`SELECT 1 FROM work_catalog WHERE workspace_id=? AND target=? AND kind=? AND (requires_manager=1 OR approvals_json<>'[]' OR EXISTS(SELECT 1 FROM work_fulfilments f WHERE f.workspace_id=work_catalog.workspace_id AND f.catalog_id=work_catalog.id AND (json_extract(f.catalog_snapshot_json,'$.requiresManager')=1 OR EXISTS(SELECT 1 FROM configuration_catalog_versions v WHERE v.workspace_id=f.workspace_id AND v.catalog_id=f.catalog_id AND v.revision=json_extract(f.catalog_snapshot_json,'$.revision') AND v.requires_manager=1))) OR EXISTS(SELECT 1 FROM work_fulfilments f JOIN work_approval_stages s ON s.workspace_id=f.workspace_id AND s.fulfilment_id=f.id WHERE f.workspace_id=work_catalog.workspace_id AND f.catalog_id=work_catalog.id)) LIMIT 1`)
     .bind(w,step.target,kind).first();
   if(!requiresManager)return;
   const plan=planId.startsWith('work:')?{work_id:planId.slice(5),context_type:'work'}:
@@ -118,7 +119,7 @@ export async function prepareFulfilmentApproval(ctx: WorkContext, workId: string
   const f=await db.prepare('SELECT * FROM work_fulfilments WHERE workspace_id=? AND work_id=? AND catalog_id=?').bind(w,workId,input.catalogId).first<any>();
   const catalog=await db.prepare('SELECT * FROM work_catalog WHERE workspace_id=? AND id=?').bind(w,input.catalogId).first<any>();
   if(!f||!catalog)throw new ApiError(404,'not_found','Fulfilment not found');
-  if(!catalog.requires_manager || ['closed','cancelled'].includes(work.state) || (f.expires_at && f.expires_at<=now()))
+  if(!await fulfilmentRequiresManager(ctx,catalog,f) || ['closed','cancelled'].includes(work.state) || (f.expires_at && f.expires_at<=now()))
     throw new ApiError(409,'approval_unavailable','Only active unexpired manager-required fulfilments can be approved');
   const person=await personForMember(ctx,f.beneficiary_id);
   const holder=await resolveManager(ctx,person?.manager_id||null);
@@ -167,7 +168,7 @@ export async function recordWorkManagerGrantApproval(ctx: WorkContext, grantId: 
   if(!work || work.beneficiary_id!==grant.local_beneficiary_id)return;
   const rows=(await db.prepare(`SELECT f.*,c.revision catalog_revision FROM work_fulfilments f JOIN work_catalog c
     ON c.workspace_id=f.workspace_id AND c.id=f.catalog_id WHERE f.workspace_id=? AND f.work_id=?
-    AND f.beneficiary_id=? AND c.target=? AND c.kind=? AND c.requires_manager=1`)
+    AND f.beneficiary_id=? AND c.target=? AND c.kind=? AND ${fulfilmentManagerSql}=1`)
     .bind(w,workId,grant.local_beneficiary_id,grant.target,grant.action==='group.add'?'access':'software').all<any>()).results;
   const person=await personForMember(ctx,grant.local_beneficiary_id);
   const holder=await resolveManager(ctx,person?.manager_id||null);

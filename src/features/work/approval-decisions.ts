@@ -1,3 +1,4 @@
+import {fulfilmentRequiresManager,fulfilmentManagerSql} from './fulfilment-configuration';
 import {obligationHistory,ticketHistory} from './work-history';
 import { ApiError, id, now } from '../../platform/http';
 import type { WorkContext, WorkRecord } from './core';
@@ -75,7 +76,7 @@ const managerState = async (ctx: WorkContext, work: any, catalog: any, f: any) =
 /** The manager approves through the manager decision; here they may reject. The rejection is bound to the same exact revisions. */
 async function prepareManagerRejection(ctx: WorkContext, work: WorkRecord, catalog: any, f: any, input: StageDecisionInput, comment: string | null, channel: 'portal' | 'email') {
   const db = ctx.env.DB, w = ctx.principal.workspaceId;
-  if (!catalog.requires_manager || input.decision !== 'rejected') throw new ApiError(422, 'approval_input', 'The manager approves through the manager decision; here they may reject');
+  if (!await fulfilmentRequiresManager(ctx,catalog,f) || input.decision !== 'rejected') throw new ApiError(422, 'approval_input', 'The manager approves through the manager decision; here they may reject');
   const holder = await managerHolder(ctx, f);
   if (!holder || holder !== ctx.principal.userId || holder === f.beneficiary_id) throw new ApiError(403, 'approval_denied', 'Only the current manager or their delegate decides this');
   if (await managerStageApproved(ctx, work, catalog, f)) throw new ApiError(409, 'approval_not_open', 'The manager stage is already approved');
