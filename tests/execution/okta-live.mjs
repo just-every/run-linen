@@ -243,9 +243,11 @@ try {
     check(digit >= 0, 'factor_secret_encoding'); bits += digit.toString(2).padStart(5, '0');
   }
   const secretBytes = Buffer.from((bits.match(/.{8}/g) || []).map(byte => parseInt(byte, 2)));
-  const counter = Buffer.alloc(8); counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 1000 / Number(activation.timeStep || 30))));
+  const timeStep = Number(activation.timeStep), digits = Number(activation.keyLength);
+  check(Number.isSafeInteger(timeStep) && timeStep > 0 && Number.isSafeInteger(digits) && digits > 0 && digits <= 10, 'factor_activation_parameters');
+  const counter = Buffer.alloc(8); counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 1000 / timeStep))); 
   const digest = createHmac('sha1', secretBytes).update(counter).digest(), offset = digest[digest.length - 1] & 15;
-  const digits = Number(activation.keyLength || 6), passCode = String((digest.readUInt32BE(offset) & 0x7fffffff) % (10 ** digits)).padStart(digits, '0');
+  const passCode = String((digest.readUInt32BE(offset) & 0x7fffffff) % (10 ** digits)).padStart(digits, '0');
   await provider('POST', `/api/v1/users/${userId}/factors/${factor.id}/lifecycle/activate`, { passCode });
   check((await provider('GET', `/api/v1/users/${userId}/factors/${factor.id}`)).value.status === 'ACTIVE', 'factor_activation_readback');
   check((await items(`/api/v1/users/${userId}/factors`)).length > 0, 'factor_setup_empty');
