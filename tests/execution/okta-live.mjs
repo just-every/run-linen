@@ -234,7 +234,7 @@ try {
   await effect('okta.user.activate', userId);
   check((await provider('GET', `/api/v1/users/${userId}`)).value.status === 'ACTIVE', 'activated_user_readback');
   checks.userReactivated = true;
-  await provider('POST', `/api/v1/users/${userId}/factors?activate=true`, { factorType: 'email', provider: 'OKTA', profile: { email: cohort.login } });
+  await provider('POST', `/api/v1/users/${userId}/factors?activate=true`, { factorType: 'token:software:totp', provider: 'OKTA' });
   check((await items(`/api/v1/users/${userId}/factors`)).length > 0, 'factor_setup_empty');
   await effect('okta.factors.reset', userId);
   check((await items(`/api/v1/users/${userId}/factors`)).length === 0, 'factors_reset_readback');

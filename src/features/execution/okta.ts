@@ -41,7 +41,9 @@ export async function oktaObserve(ctx: CoreContext, step: Step, operationId: str
     if (response.ok) {
       const account: any = await response.json();
       if (step.action === 'okta.user.create') {
-        assert(account.profile?.login?.toLowerCase() === step.target.toLowerCase() && account.profile?.nickName === `linen:${operationId}`, 'preexisting_identity_not_owned', 409);
+        const receipt: any = await ctx.env.DB.prepare("SELECT evidence_json FROM execution_verifications WHERE workspace_id=? AND operation_id=? AND state='identity_receipt' ORDER BY rowid DESC LIMIT 1")
+          .bind(ctx.principal.workspaceId, operationId).first();
+        assert(receipt && account.id === JSON.parse(receipt.evidence_json).accountId && account.profile?.login?.toLowerCase() === step.target.toLowerCase(), 'preexisting_identity_not_owned', 409);
         matches = true;
       } else {
         assert(account.id === step.target, 'provider_target_mismatch', 502);
@@ -68,7 +70,7 @@ export async function oktaWrite(ctx: CoreContext, step: Step, operationId: strin
     const p = step.payload;
     assert(p && ['firstName', 'lastName', 'email', 'login'].every(key => typeof p[key] === 'string' && String(p[key]).length > 0 && String(p[key]).length <= 254) && p.login === step.target, 'identity_profile_required', 422);
     path = '/api/v1/users?activate=false';
-    body = { profile: { firstName: p.firstName, lastName: p.lastName, email: p.email, login: p.login, nickName: `linen:${operationId}` } };
+    body = { profile: { firstName: p.firstName, lastName: p.lastName, email: p.email, login: p.login } };
   } else if (step.action === 'okta.sessions.clear') {
     path = `/api/v1/users/${target}/sessions?oauthTokens=false&forgetDevices=false`;
     method = 'DELETE';
@@ -84,6 +86,12 @@ export async function oktaWrite(ctx: CoreContext, step: Step, operationId: strin
     path = `/api/v1/users/${target}/lifecycle/${lifecycle}?sendEmail=false`;
   }
   const startedAt = now(), response = await request(path, method, body);
+  if (response.ok && step.action === 'okta.user.create') {
+    const account: any = await response.json();
+    assert(typeof account.id === 'string' && account.profile?.login?.toLowerCase() === step.target.toLowerCase(), 'provider_target_mismatch', 502);
+    await ctx.env.DB.prepare('INSERT INTO execution_verifications VALUES(?,?,?,?,?,?,?,?,?,?)')
+      .bind(id(), ctx.principal.workspaceId, operationId, 1, 1, step.target, step.beneficiaryId, 'identity_receipt', JSON.stringify({accountId: account.id}), now()).run();
+  }
   if (response.ok && step.action === 'okta.sessions.clear') {
     const requestId = response.headers.get('x-okta-request-id');
     assert(requestId, 'provider_receipt_missing', 503);
