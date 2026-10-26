@@ -4,6 +4,7 @@ import { useMutation } from "./state";
 import { ErrorNotice, Notice } from "./primitives";
 import { Fields, readFields, type Field } from "./forms";
 export const providers = [
+  { value: "okta", label: "Okta identity & applications" },
   { value: "microsoft-graph", label: "Microsoft identity & licenses" },
   { value: "github", label: "GitHub repository access" },
   { value: "freshservice", label: "Freshservice existing desk" },
@@ -36,7 +37,12 @@ export function ConnectionForm({
     old = existing ? JSON.parse(text(existing.config_json, "{}")) : {},
     required = !existing;
   const fields: Field[] =
-    provider === "microsoft-graph"
+    provider === "okta"
+      ? [
+          { name: "orgUrl", label: "Okta organization URL", required: true, value: old.orgUrl, hint: "Your exact HTTPS Okta organization origin." },
+          { name: "apiToken", label: "Scoped API token", type: "password", required },
+        ]
+      : provider === "microsoft-graph"
       ? [
           {
             name: "tenantId",
@@ -205,7 +211,10 @@ export function ConnectionForm({
           providers.find((p) => p.value === provider)?.label,
       );
     let config: RecordValue, secret: unknown;
-    if (provider === "microsoft-graph") {
+    if (provider === "okta") {
+      config = { orgUrl: values.orgUrl };
+      secret = values.apiToken ? JSON.stringify({ apiToken: values.apiToken }) : undefined;
+    } else if (provider === "microsoft-graph") {
       config = { tenantId: values.tenantId };
       secret = values.clientSecret
         ? JSON.stringify({

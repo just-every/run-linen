@@ -1,3 +1,4 @@
+import { oktaOrigin } from "./okta-origin";
 import { ApiError } from './http'
 
 type Check = (value: unknown) => boolean
@@ -28,6 +29,7 @@ const publicKey: Check = v => {
  try { const bytes = atob(v); return bytes.length === 91 && bytes.startsWith(atob('MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE')) } catch { return false }
 }
 const schemas: Record<string, Record<string, Check>> = {
+ okta: {orgUrl: value => oktaOrigin(value) !== null},
  'microsoft-graph': {tenantId:v => typeof v === 'string' && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v)},
  openai: {model:v => text(150)(v) && /^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$/.test(v as string),inputUsdPerMillion:number(0,10000),cachedInputUsdPerMillion:number(0,10000),outputUsdPerMillion:number(0,10000),maxOutputTokens:number(100,16000,true),maxAttemptUsd:number(0.000001,100),contextCharacters:number(1000,100000),reasoningEffort:v => ['none','minimal','low','medium','high','xhigh'].includes(v as string)},
  'workflow-probe': endpoint,

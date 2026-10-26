@@ -145,7 +145,7 @@ export async function authorize(
     );
     if (
       step.action.startsWith("deployment.") ||
-      step.action === "identity.create"
+      step.action === "identity.create" || step.action.startsWith("okta.")
     )
       assert(
         conditions.payloadHash &&

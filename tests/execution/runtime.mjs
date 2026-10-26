@@ -101,6 +101,39 @@ try {
       )
       .run();
   }
+  const oktaSecret = (await call('/fixture/secret', { apiToken: 'synthetic-linen-6' })).body.secret;
+  await db.prepare("INSERT INTO connections VALUES('okta','w','okta','Okta',?,?, 'active',1,?,?)")
+    .bind(JSON.stringify({orgUrl:'https://synthetic-linen-1.okta.com'}),oktaSecret,time,time).run();
+  async function oktaOperation(action,target,beneficiaryId='synthetic-linen-2',revoke=false) {
+    const payload = {}, payloadHash = createHash('sha256').update(JSON.stringify(payload)).digest('hex');
+    const grant = await call('/grants', {principalId:'actor',beneficiaryId,action,actionVersion:1,target,connectionId:'okta',validFrom:new Date(Date.now()-60000).toISOString(),validUntil:new Date(Date.now()+3600000).toISOString(),maxUses:10,conditions:{payloadHash}},'issuer');
+    assert.equal(grant.status,201,JSON.stringify(grant));
+    const plan = await call('/plans',{workId:'work',revision:1,idempotencyKey:crypto.randomUUID(),steps:[{action,actionVersion:1,target,beneficiaryId,connectionId:'okta',grantId:grant.body.id,grantVersion:grant.body.version,payload}]});
+    assert.equal(plan.status,201,JSON.stringify(plan));
+    const dispatched = await call(`/plans/${plan.body.id}/dispatch`,{expectedRevision:1});
+    assert.equal(dispatched.status,200,JSON.stringify(dispatched));
+    if(revoke) assert.equal((await call(`/grants/${grant.body.id}/revoke`,{version:grant.body.version},'issuer')).status,200);
+    await call('/execution/process',{});
+    return (await call('/operations')).body.find(o=>o.id===dispatched.body[0].id);
+  }
+  for(const [action,target,beneficiary] of [
+    ['okta.group.add','synthetic-linen-5','synthetic-linen-2'],
+    ['okta.app.assign','synthetic-linen-7','synthetic-linen-5'],
+    ['okta.user.suspend','synthetic-linen-2','synthetic-linen-2'],
+    ['okta.user.activate','synthetic-linen-2','synthetic-linen-2'],
+  ]) assert.equal((await oktaOperation(action,target,beneficiary)).state,'effect_verified',action);
+  await call('/fixture',{oktaWrongLog:true});
+  const clearing = await oktaOperation('okta.sessions.clear','synthetic-linen-2');
+  assert.equal(clearing.state,'unknown','an unrelated provider event cannot certify session clearing');
+  const clearWrites=(await call('/fixture',{})).body.oktaWrites;
+  await call('/execution/process',{});
+  assert.equal((await call('/fixture',{})).body.oktaWrites,clearWrites,'unknown session clearing reconciles without repeat');
+  await call('/fixture',{oktaWrongLog:false});
+  await call(`/operations/${clearing.id}/reconcile`,{});
+  assert.equal((await call('/operations')).body.find(o=>o.id===clearing.id).state,'effect_verified');
+  const beforeRevoked=(await call('/fixture',{})).body.oktaWrites;
+  await oktaOperation('okta.group.remove','synthetic-linen-5','synthetic-linen-2',true);
+  assert.equal((await call('/fixture',{})).body.oktaWrites,beforeRevoked,'revoked Okta authority cannot send an effect');
   const grant = {
     principalId: "actor",
     beneficiaryId: "person",

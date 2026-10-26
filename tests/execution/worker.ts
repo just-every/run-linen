@@ -12,6 +12,8 @@ import { encryptSecret } from "../../src/platform/crypto";
 import { ApiError } from "../../src/platform/http";
 import type { AppEnv } from "../../src/platform/types";
 const realFetch = globalThis.fetch;
+let oktaMember = false, oktaApp = false, oktaStatus = 'ACTIVE', oktaWrites = 0, oktaLogs: any[] = [], oktaWrongLog = false;
+
 let fixtureDB: D1Database | undefined,
   oauthRevoke: string | null = null,
   oauthCountdown = 0;
@@ -27,6 +29,23 @@ let present = false,
 // Provider fixtures are exclusively in the test worker, never application modules.
 globalThis.fetch = async (input: any, init: any = {}) => {
   const u = new URL(String(input));
+  if (u.hostname === 'synthetic-linen-1.okta.com') {
+    const method = init.method || 'GET';
+    if (method !== 'GET') {
+      oktaWrites++;
+      if (u.pathname.includes('/groups/') && u.pathname.includes('/users/')) oktaMember = method === 'PUT';
+      if (u.pathname.includes('/apps/')) oktaApp = method === 'PUT';
+      if (u.pathname.endsWith('/suspend')) oktaStatus = 'SUSPENDED';
+      if (u.pathname.endsWith('/unsuspend')) oktaStatus = 'ACTIVE';
+      if (u.pathname.endsWith('/deactivate')) oktaStatus = 'DEPROVISIONED';
+      if (u.pathname.endsWith('/sessions')) oktaLogs.push({eventType:'user.session.clear', outcome:{result:'SUCCESS'}, published:new Date().toISOString(),target:[{id:'synthetic-linen-2'}],debugContext:{debugData:{requestId:'synthetic-linen-3'}}});
+      return new Response(null,{status:204,headers:{'x-okta-request-id':'synthetic-linen-3'}});
+    }
+    if (u.pathname.endsWith('/logs')) return Response.json(oktaLogs.map(event => oktaWrongLog ? {...event,debugContext:{debugData:{requestId:'synthetic-linen-4'}}} : event));
+    if (u.pathname.endsWith('/groups') && u.pathname.includes('/users/')) return Response.json(oktaMember ? [{id:'synthetic-linen-5'}] : []);
+    if (u.pathname.includes('/apps/')) return oktaApp ? Response.json({id:'synthetic-linen-5'}) : new Response(null,{status:404});
+    return Response.json({id:'synthetic-linen-2', status:oktaStatus});
+  }
   if (u.hostname === "login.microsoftonline.com") {
     if (oauthRevoke && --oauthCountdown === 0) {
       await fixtureDB!
@@ -139,6 +158,7 @@ app.use("*", async (c, next) => {
 });
 app.post("/fixture", async (c) => {
   const b: any = await c.req.json();
+  if (b.oktaWrongLog !== undefined) oktaWrongLog = b.oktaWrongLog;
   if (b.reset) {
     present = false;
     writes = 0;
@@ -158,7 +178,7 @@ app.post("/fixture", async (c) => {
   if (b.mailLost) mailLost = true;
   invalidProbe = !!b.invalidProbe;
   probeMutation = b.probeMutation || "";
-  return c.json({ present, writes, mailWrites });
+  return c.json({ present, writes, mailWrites, oktaWrites });
 });
 app.post("/fixture/secret", async (c) =>
   c.json({

@@ -1,3 +1,4 @@
+import { oktaObserve, oktaWrite } from "./okta";
 import { providerFetch } from "./transport";
 import { deploymentWrite, deploymentObserve } from "./deployment";
 import { identityObserve, identityWrite } from "./identity";
@@ -109,6 +110,7 @@ export async function observeEffect(
   step: Step,
   operationId = "",
 ) {
+  if (step.action.startsWith("okta.")) return oktaObserve(ctx, step, operationId);
   if (step.action.startsWith("deployment."))
     return deploymentObserve(ctx, step, operationId);
   if (
@@ -157,6 +159,7 @@ export async function applyEffect(
   step: Step,
   operationId = "",
 ) {
+  if (step.action.startsWith("okta.")) return oktaWrite(ctx, step, operationId);
   if (step.action.startsWith("deployment."))
     return deploymentWrite(ctx, step, operationId);
   if (

@@ -4,6 +4,16 @@ export interface CoreContext {
   principal: Principal;
 }
 export type Action =
+  | "okta.group.add"
+  | "okta.group.remove"
+  | "okta.app.assign"
+  | "okta.app.unassign"
+  | "okta.user.create"
+  | "okta.user.activate"
+  | "okta.user.suspend"
+  | "okta.user.deactivate"
+  | "okta.sessions.clear"
+  | "okta.factors.reset"
   | "group.add"
   | "group.remove"
   | "license.add"
@@ -76,6 +86,17 @@ export interface Operation {
   parent_id: string | null;
 }
 export const actions: Action[] = [
+  "okta.group.add",
+  "okta.group.remove",
+  "okta.app.assign",
+  "okta.app.unassign",
+  "okta.user.create",
+  "okta.user.activate",
+  "okta.user.suspend",
+  "okta.user.deactivate",
+  "okta.sessions.clear",
+  "okta.factors.reset",
+
   "group.add",
   "group.remove",
   "license.add",
