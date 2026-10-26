@@ -6531,7 +6531,7 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "46c38558d53c5cf13c4eeec150be63f94c43a3a6c5efca36e0c59b499e2fb30d",
+      "sha256": "5e8866b63213d91611da9600f421338925f680acaa3d843f028975a946c7b24c",
       "executable": false
     },
     "tests/ui/sandbox-routing-journey.mjs": {

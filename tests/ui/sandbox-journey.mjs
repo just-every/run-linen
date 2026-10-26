@@ -208,7 +208,7 @@ export async function sandboxJourney({page,api,base,out}) {
  const adminReads=[];
  const observeAdmin=request=>{if(request.method()==='GET'&&request.url().includes('/api/v1/'))adminReads.push(new URL(request.url()).pathname)};
  page.on('request',observeAdmin);
- await page.goto(base+'/app#'+adminPath);await page.reload();
+ await page.reload();await page.goto(base+'/app#'+adminPath);
  await page.getByRole('button',{name:'Approve reviewed package',exact:true}).waitFor();
  const adminDiff=page.locator('section[aria-label="Configuration sandboxes"] > details.action-disclosure');
  assert.equal(await adminDiff.count(),1);
@@ -233,7 +233,7 @@ export async function sandboxJourney({page,api,base,out}) {
  assert.equal((await api('/catalog')).items.find(item=>item.id===catalog.id).name,'Administrator reviewed '+suffix);
  const adminRollback=await api(adminPath+'/rollback-package',{revision:(await api(adminPath)).revision});
  await api('/login',{email:adminEmail,password});
- await page.goto(base+'/app#/sandboxes/'+adminRollback.id);await page.reload();
+ await page.reload();await page.goto(base+'/app#/sandboxes/'+adminRollback.id);
  await page.getByRole('button',{name:'Approve reviewed package',exact:true}).waitFor();
  await captureJourney(page,{path:out+'/SANDBOX-004-administrator-rollback.png',fullPage:true});
  await writeClick(page.getByRole('button',{name:'Approve reviewed package',exact:true}),'/sandboxes/'+adminRollback.id+'/approve');
