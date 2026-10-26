@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "fa08c87adc5cc910b83dbb43534ab6e34eaccbfe2e5192697dd2c12e9effd444",
+      "sha256": "de731a66d189478450922fa998ddb5b1dd510b2204d765523a180e791a581055",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "bc9a3a2e18211c1f82bb2aa426a572ec45964cb4899698ece1c8b486af20c934",
+      "sha256": "dfead13af5cb71368b3e9472732f2a302091c4607ab6862f407456ca286e2480",
       "executable": false
     },
     "DEMO.md": {
@@ -5543,7 +5543,7 @@
       "executable": false
     },
     "src/ui/labels.ts": {
-      "sha256": "740773bdc2bde4d7ccd123f786857c6929992d7b5b5534a23c2c32ac034e42ce",
+      "sha256": "80453c54e09c8e89f0136a10d7116f019d6a54a3535e8e90ac4a4aac39624f67",
       "executable": false
     },
     "src/ui/lifecycle-template-editor.tsx": {
@@ -6531,7 +6531,7 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "5e8866b63213d91611da9600f421338925f680acaa3d843f028975a946c7b24c",
+      "sha256": "d2d067ec50ceb6d9c140a455ccf59ea1519e506eea22d23c010145ebe15eeadb",
       "executable": false
     },
     "tests/ui/sandbox-routing-journey.mjs": {

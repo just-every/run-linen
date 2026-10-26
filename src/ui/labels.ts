@@ -12,6 +12,7 @@ export const roleLabels: Record<string, string> = {
   hr: "HR",
   auditor: "Auditor",
   integration: "Integration",
+  "sandbox-admin": "Sandbox administrator",
 };
 export const roleLabel = (role: unknown) => roleLabels[text(role)] ?? humanize(role);
 

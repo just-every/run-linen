@@ -194,7 +194,20 @@ export async function sandboxJourney({page,api,base,out}) {
  await captureJourney(page,{path:out+'/SANDBOX-001-rolled-back.png',fullPage:true});
  // A designated administrator uses the same reviewed diff, without owner data doors.
  const adminEmail=`synthetic-linen-${suffix}-admin@example.test`;
- await api('/members',{name:'Sandbox administrator',email:adminEmail,password,roles:['sandbox-admin']});
+ await page.goto(base+'/app#/members');
+ const memberForm=page.locator('details[data-action-path="/members"]');
+ await memberForm.getByLabel(/^Name/).fill('Sandbox administrator');
+ await memberForm.getByLabel(/^Work email/).fill(adminEmail);
+ await memberForm.getByLabel(/^Initial password/).fill(password);
+ await memberForm.getByLabel('This member is also a person',{exact:true}).uncheck();
+ await memberForm.getByLabel('Sandbox administrator',{exact:true}).check();
+ await captureJourney(page,{path:out+'/SANDBOX-004-owner-designation.png',fullPage:true});
+ const assigned=page.waitForResponse(response=>response.url().endsWith('/api/v1/members')&&response.request().method()==='POST');
+ await memberForm.getByRole('button',{name:'Save',exact:true}).focus();await page.keyboard.press('Enter');
+ assert.equal((await assigned).status(),201);
+ const granted=(await api('/members')).find(member=>member.email===adminEmail);
+ assert.deepEqual(JSON.parse(granted.roles_json),['sandbox-admin']);
+ await page.goto(base+'/app#/sandboxes');
  let adminBox=await api('/sandboxes',{name:'Administrator review '+suffix});
  const adminPath='/sandboxes/'+adminBox.id,adminItem=adminBox.items.find(item=>item.id===catalog.id);
  adminBox=await page.evaluate(async({path,revision,item,name})=>{
