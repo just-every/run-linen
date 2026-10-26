@@ -484,3 +484,7 @@ a.record-row:hover {
 /* Dependency facts wrap as a single text column beside their freshness badge. */
 .dependency-details .record-row > span:first-child > strong,
 .dependency-details .record-row > span:first-child > small { grid-area: auto; white-space: normal; }
+
+/* Advanced configuration actions must wrap inside narrow settings panels. */
+.sandbox-space .action { white-space: normal; max-width: 100%; height: auto; }
+.sandbox-space fieldset { min-inline-size: 0; }

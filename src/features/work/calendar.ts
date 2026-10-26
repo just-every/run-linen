@@ -157,7 +157,7 @@ export async function setCommitment(
       calendar,
     );
   await ctx.env.DB.prepare(
-    `INSERT INTO work_commitments VALUES(?,?,?,?,?,?,?,?,?,1) ON CONFLICT(workspace_id,work_id) DO UPDATE SET calendar_id=excluded.calendar_id,calendar_revision=excluded.calendar_revision,response_minutes=excluded.response_minutes,resolution_minutes=excluded.resolution_minutes,response_due_at=excluded.response_due_at,resolution_due_at=excluded.resolution_due_at,revision=work_commitments.revision+1`,
+    `INSERT INTO work_commitments(id,workspace_id,work_id,calendar_id,calendar_revision,response_minutes,resolution_minutes,response_due_at,resolution_due_at,revision,calendar_snapshot_json) VALUES(?,?,?,?,?,?,?,?,?,1,?) ON CONFLICT(workspace_id,work_id) DO UPDATE SET calendar_id=excluded.calendar_id,calendar_revision=excluded.calendar_revision,response_minutes=excluded.response_minutes,resolution_minutes=excluded.resolution_minutes,response_due_at=excluded.response_due_at,resolution_due_at=excluded.resolution_due_at,revision=work_commitments.revision+1,calendar_snapshot_json=excluded.calendar_snapshot_json`,
   )
     .bind(
       id(),
@@ -169,6 +169,7 @@ export async function setCommitment(
       input.resolutionMinutes,
       response,
       resolution,
+      JSON.stringify(calendar),
     )
     .run();
   return {
@@ -208,6 +209,7 @@ export async function pauseCommitmentStatement(
     .bind(ctx.principal.workspaceId, workId)
     .first<{
       id: string;
+      calendar_snapshot_json: string|null;
       response_due_at: string;
       resolution_due_at: string;
       timezone: string;
@@ -219,7 +221,7 @@ export async function pauseCommitmentStatement(
       holiday_catalog: string | null;
     }>();
   if (!row) return null;
-  const calendar = calendarFromRow(row), working = businessMinuteTest(calendar);
+  const calendar:BusinessCalendar = row.calendar_snapshot_json?JSON.parse(row.calendar_snapshot_json):calendarFromRow(row), working = businessMinuteTest(calendar);
   let pausedMinutes = 0;
   for (
     let instant = Date.parse(from);

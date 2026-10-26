@@ -1,3 +1,4 @@
+import { SandboxSpace } from './sandboxes';
 import { BillingSettings } from './settings';
 import { SearchSpace } from './search';
 import { AdoptionSpace } from "./adoption";
@@ -54,7 +55,7 @@ export function ContextSpace({
       ) : (
         <div className="layout layout-full">
           <main>
-            {section === "billing" ? (<BillingSettings />) : section === "lifecycle" ? (
+            {section === "sandboxes" ? (<SandboxSpace selectedId={selectedId}/>) : section === "billing" ? (<BillingSettings />) : section === "lifecycle" ? (
               <LifecycleSpace selectedId={selectedId} />
             ) : section === "assets" ? (
               <AssetsSpace selectedId={selectedId} />

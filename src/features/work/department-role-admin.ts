@@ -4,7 +4,7 @@ import { assertDepartmentConfig, getDepartment } from './department-spaces';
 import { rolePermissions } from './department-role-authority';
 interface Definition {id:string;department_id:string;name:string;permissions_json:string;revision:number;active:number}
 const conflict=()=>new ApiError(409,'role_changed','Role, assignment or owner authority changed; reload');
-function permissions(value:unknown) {
+export function validateRolePermissions(value:unknown) {
   if(!Array.isArray(value)||!value.length||value.some(v=>typeof v!=='string'||!rolePermissions.some(p=>p.id===v))||new Set(value).size!==value.length||!value.includes('ticket.read')||value.includes('ticket.private.reply')&&(!value.includes('ticket.private.read')||!value.includes('ticket.reply'))||value.includes('ticket.attachment.write')&&(!value.includes('ticket.attachment.read')||!value.includes('ticket.reply')))
     throw new ApiError(422,'role_permissions','Choose read access and the explicit ticket permissions this role needs');
   return [...value].sort();
@@ -44,7 +44,7 @@ export async function createDepartmentRole(ctx:WorkContext,input:Record<string,u
   await assertDepartmentConfig(ctx,null);
   const department=await getDepartment(ctx,requiredString(input.departmentId,'departmentId'));
   if(department.kind==='hr')throw new ApiError(422,'role_department','Custom roles cannot grant HR access');
-  const name=requiredString(input.name,'name',120),perms=permissions(input.permissions),roleId=id(),at=now(),w=ctx.principal.workspaceId;
+  const name=requiredString(input.name,'name',120),perms=validateRolePermissions(input.permissions),roleId=id(),at=now(),w=ctx.principal.workspaceId;
   await guardedCommit(ctx,[{sql:"EXISTS(SELECT 1 FROM work_departments WHERE workspace_id=? AND id=? AND active=1 AND kind<>'hr')",values:[w,department.id]}],[ctx.env.DB.prepare('INSERT INTO work_department_roles VALUES(?,?,?,?,?,1,1,?,?,?)').bind(roleId,w,department.id,name,JSON.stringify(perms),ctx.principal.userId,at,at)],'work.department_role_created',roleId,{departmentId:department.id,permissions:perms});
   return (await departmentRoles(ctx)).items.find(r=>r.id===roleId)!;
 }
@@ -53,7 +53,7 @@ export async function editDepartmentRole(ctx:WorkContext,roleId:string,input:Rec
   if(input.revision!==before.revision)throw conflict();
   if(input.departmentId!==undefined&&input.departmentId!==before.department_id)throw new ApiError(422,'role_department_immutable','Create a new role for a different department');
   if(typeof input.active!=='boolean')throw new ApiError(422,'role_active','Choose whether this role is active');
-  const name=requiredString(input.name,'name',120),perms=permissions(input.permissions),at=now();
+  const name=requiredString(input.name,'name',120),perms=validateRolePermissions(input.permissions),at=now();
   await guardedCommit(ctx,[{sql:'EXISTS(SELECT 1 FROM work_department_roles WHERE workspace_id=? AND id=? AND revision=?)',values:[w,roleId,before.revision]}],[
     ctx.env.DB.prepare('UPDATE work_department_roles SET name=?,permissions_json=?,active=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=?').bind(name,JSON.stringify(perms),Number(input.active),at,w,roleId),
     ctx.env.DB.prepare('UPDATE work_department_role_members SET active=0,revision=revision+1,updated_at=? WHERE workspace_id=? AND role_id=?').bind(at,w,roleId),

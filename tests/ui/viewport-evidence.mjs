@@ -15,6 +15,8 @@ export async function captureJourney(page, options) {
       await page.keyboard.press('Tab')
       assert.notEqual(await page.evaluate(() => document.activeElement?.tagName), 'BODY',
         `${options.path}: keyboard reaches an interactive control`)
+      // Keep fixed headers at the top of a full-page capture after the focus probe scrolls.
+      await page.evaluate(() => window.scrollTo(0, 0))
       await page.screenshot({ ...options, path: width === 1440 ? options.path : options.path.replace(/\.png$/, `-${width}px.png`) })
     }
   } finally {

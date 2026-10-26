@@ -103,11 +103,22 @@ async function eraseSinglePerson(
   const w = ctx.principal.workspaceId,
     p = input.personId,
     t = now();
+  const erasedPerson=await ctx.env.DB.prepare('SELECT name,attributes_json FROM work_people WHERE workspace_id=? AND id=?').bind(w,p).first<{name:string;attributes_json:string}>();
+  const erasedIdentity=await ctx.env.DB.prepare('SELECT name,email FROM users WHERE id=? AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=users.id)').bind(p,w).first<{name:string;email:string}>();
+  const erasedTokens=[p,erasedPerson?.name,erasedIdentity?.name,erasedIdentity?.email,erasedPerson?JSON.parse(erasedPerson.attributes_json).email:undefined].filter((value):value is string=>typeof value==='string'&&value.length>2);
+  // Execute the projection against current rows inside the erasure transaction;
+  // a concurrent promotion cannot leave a newly retained recipient behind.
+  const versionErasure=[
+    ctx.env.DB.prepare('UPDATE work_followup_versions SET notify=NULL WHERE workspace_id=? AND notify=?').bind(w,p),
+    ctx.env.DB.prepare(`UPDATE work_followup_versions SET label='[erased]' WHERE workspace_id=? AND (${erasedTokens.map(()=>"instr(lower(label),?)>0").join(' OR ')||'0'})`).bind(w,...erasedTokens.map(token=>token.toLowerCase())),
+  ];
   const history = await prepareHistoryErasure(ctx,[p,...aliases],t);
   const guard = id(), bindingGuard = id();
   let changed;
   try { changed = await ctx.env.DB.batch([
     privacyBindingFence(ctx, people, bindingGuard, aliases),
+    ...versionErasure,
+    ctx.env.DB.prepare('DELETE FROM configuration_sandboxes WHERE workspace_id=?').bind(w),
     person
       ? ctx.env.DB.prepare(
           "UPDATE work_people SET name=?,attributes_json='{}',manager_id=NULL,active=0,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=?",

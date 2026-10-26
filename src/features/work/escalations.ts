@@ -1,3 +1,4 @@
+import {followupConfiguration} from './followup-versions';
 import { ApiError, id, now, requiredString } from "../../platform/http";
 import { currentWorkPrincipal } from "./identity";
 import { getWork, permit, transitionWork, type WorkContext, type WorkRecord } from "./core";
@@ -11,7 +12,7 @@ import type { BusinessCalendar } from "./calendar";
  * due rows and stops rows whose obligation is satisfied. */
 const targets = ["first_response", "resolution"] as const;
 const OFFSET_LIMIT = 10080;
-interface Level { id: string; target: string; level: number; offset_minutes: number; notify: string; label: string }
+interface Level { id?: string; target: string; level: number; offset_minutes: number; notify: string|null; label: string }
 interface Followup { id: string; kind: string; episode: string; level: number; state: string; next_due_at: string | null }
 const activeOperator = "SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND EXISTS(SELECT 1 FROM json_each(roles_json) WHERE value IN ('owner','operator'))";
 
@@ -28,7 +29,7 @@ export async function saveEscalationLevel(ctx: WorkContext, input: Record<string
     throw new ApiError(422, "escalation_notify", "Notify the assignee or an active owner or operator");
   const at = now(), levelId = id();
   await ctx.env.DB.batch([
-    ctx.env.DB.prepare("INSERT INTO work_escalation_levels(id,workspace_id,target,level,offset_minutes,notify,label,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(workspace_id,target,level) DO UPDATE SET offset_minutes=excluded.offset_minutes,notify=excluded.notify,label=excluded.label,created_by=excluded.created_by,created_at=excluded.created_at")
+    ctx.env.DB.prepare("INSERT INTO work_escalation_levels(id,workspace_id,target,level,offset_minutes,notify,label,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(workspace_id,target,level) DO UPDATE SET offset_minutes=excluded.offset_minutes,notify=excluded.notify,label=excluded.label,revision=work_escalation_levels.revision+1,created_by=excluded.created_by,created_at=excluded.created_at")
       .bind(levelId, ctx.principal.workspaceId, target, level, offset, notify, label, ctx.principal.userId, at),
     ctx.env.DB.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)")
       .bind(id(), ctx.principal.workspaceId, ctx.principal.userId, "work.escalation_level_saved", `${target}:${level}`, JSON.stringify({ offsetMinutes: offset, notify, label }), at),
@@ -67,7 +68,7 @@ export async function readFollowups(ctx: WorkContext, workId: string) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner", "operator", "auditor"]);
   await getWork(ctx, workId);
-  return { items: (await ctx.env.DB.prepare("SELECT f.*,u.name notify_name FROM work_followups f LEFT JOIN users u ON u.id=f.notify_id WHERE f.workspace_id=? AND f.work_id=? ORDER BY f.kind,f.level")
+  return { configuration:await followupConfiguration(ctx,workId),items: (await ctx.env.DB.prepare("SELECT f.*,u.name notify_name FROM work_followups f LEFT JOIN users u ON u.id=f.notify_id WHERE f.workspace_id=? AND f.work_id=? ORDER BY f.kind,f.level")
     .bind(ctx.principal.workspaceId, workId).all()).results };
 }
 
@@ -149,17 +150,17 @@ export async function processFollowups(ctx: WorkContext, at = now()) {
     ctx.env.DB.prepare("SELECT * FROM work_escalation_levels WHERE workspace_id=? ORDER BY level").bind(ws).all<Level>(),
     ctx.env.DB.prepare("SELECT remind_business_days,resolve_business_days FROM work_waiting_rules WHERE workspace_id=?").bind(ws).first<{ remind_business_days: number; resolve_business_days: number }>(),
   ]);
-  if (!levels.results.length && !rule) return [];
   const works = (await ctx.env.DB.prepare("SELECT * FROM work_records WHERE workspace_id=? AND state IN ('open','paused') ORDER BY created_at LIMIT 500")
     .bind(ws).all<WorkRecord>()).results;
   const results = [];
   for (const work of works) {
     try {
       const sla = await slaFor(ctx, work, at);
-      if (sla && levels.results.length) await escalate(ctx, work, levels.results, sla, at);
-      if (rule) {
+      const configuration=await followupConfiguration(ctx,work.id,{levels:levels.results,waitingRule:rule});
+      if (sla && configuration.levels.length) await escalate(ctx, work, configuration.levels, sla, at);
+      if (configuration.waitingRule) {
         const messages = sla?.messages ?? (await ctx.env.DB.prepare("SELECT author_id,visibility,source_key,created_at FROM work_messages WHERE workspace_id=? AND work_id=?").bind(ws, work.id).all<any>()).results;
-        await remindRequester(ctx, work, rule, sla?.policy.calendar ?? null, messages, at);
+        await remindRequester(ctx, work, configuration.waitingRule, sla?.policy.calendar ?? null, messages, at);
       }
       results.push({ workId: work.id, state: "checked" });
     } catch (error) {

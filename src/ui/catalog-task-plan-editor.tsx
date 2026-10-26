@@ -6,19 +6,20 @@ import type { CatalogTask } from '../features/work/catalog-task-plan';
 
 type Item = { id: string; name: string; revision: number; tasks?: CatalogTask[] };
 /** CATALOG-003: the owner edits an item's team task plan. Later tasks may follow the automated step or earlier tasks. */
-export function CatalogTaskPlanEditor({ item, onSaved }: { item: Item; onSaved: () => void }) {
+export function CatalogTaskPlanEditor({ item, onSaved, saveDraft }: { item: Item; onSaved: () => void; saveDraft?:(tasks:CatalogTask[])=>Promise<void> }) {
   const { session } = useSession(), groups = useRemote<{ items: { id: string; name: string }[] }>('/work-groups'), [tasks, setTasks] = useState<CatalogTask[]>(item.tasks ?? []);
   const [error, setError] = useState<unknown>(null), [saving, setSaving] = useState(false), [saved, setSaved] = useState(false);
   const edit = (index: number, patch: Partial<CatalogTask>) => setTasks(tasks.map((t, i) => i === index ? { ...t, ...patch } : t));
   async function save(e: FormEvent) {
     e.preventDefault(); setError(null); setSaved(false); setSaving(true);
     try {
-      await request(`/catalog/${item.id}/tasks`, { method: 'POST', csrf: session.csrfToken, body: { revision: item.revision, tasks } });
+      if(saveDraft)await saveDraft(tasks);
+      else await request(`/catalog/${item.id}/tasks`, { method: 'POST', csrf: session.csrfToken, body: { revision: item.revision, tasks } });
       setSaved(true); onSaved();
     } catch (error) { setError(error); } finally { setSaving(false); }
   }
   return <form className="inline-form" onSubmit={e => void save(e)}>
-    <p>Each request for this item creates these tasks for the named teams, alongside its automated step. Tasks that do not follow each other run in parallel.</p>
+    <p>{saveDraft?"Rehearse these tasks without changing production work. ":""}Each request for this item creates these tasks for the named teams, alongside its automated step. Tasks that do not follow each other run in parallel.</p>
     <ErrorNotice error={groups.error} retry={groups.refresh} />
     {tasks.map((task, index) => <fieldset key={task.key}><legend>Task {index + 1}</legend>
       <label>Task title {index + 1}<input required maxLength={200} value={task.title} onChange={e => edit(index, { title: e.target.value })} /></label>

@@ -24,11 +24,22 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  // Create the support team through its own public administration door.
  const group=team??await invoke('/work-groups','POST',{name:'Equipment team'},owner,201);
  const tasks=[{key:'prepare',title:'Prepare equipment',groupId:group.id,after:[],dueHours:24},{key:'label',title:'Label equipment',groupId:group.id,after:[],dueHours:24},{key:'check',title:'Check equipment',groupId:group.id,after:['prepare','label'],dueHours:48}];
- const sla=await invoke('/sla-policies','POST',{name:'Equipment response',position:1,firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:480,pauseOn:['vendor']},owner,201);
+ const calendar=await invoke('/calendars','POST',{name:'Support hours',timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[],location:'Denver',holidayCatalog:'us-federal'},owner,201);
+ const alternateCalendar=await invoke('/calendars','POST',{name:'Alternate hours',timezone:'UTC',weekdays:[1,2,3,4,5],startHour:8,endHour:16,holidays:[]},owner,201);
+ const sla=await invoke('/sla-policies','POST',{name:'Equipment response',position:1,calendarId:calendar.id,firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:480,pauseOn:['vendor']},owner,201);
+ const secondSla=await invoke('/sla-policies','POST',{name:'Fallback response',position:2,firstResponseMinutes:120,nextResponseMinutes:240,resolutionMinutes:960},owner,201);
+ const requesterGroup=await invoke('/requester-groups','POST',{name:'Equipment requesters',memberIds:[employee.id]},owner,201);
+ const department=await invoke('/departments','POST',{name:'Equipment desk',kind:'it'},owner,201);
+ const role=await invoke('/department-roles','POST',{departmentId:department.id,name:'Equipment reader',permissions:['ticket.read']},owner,201);
+ await invoke('/department-roles/'+role.id+'/members','POST',{userId:employee.id,roleRevision:role.revision,revision:0,active:true});
+ await invoke('/escalation-levels','POST',{target:'resolution',level:1,offsetMinutes:0,notify:'assignee',label:'Equipment overdue'});
+ await invoke('/waiting-rule','POST',{remindBusinessDays:2,resolveBusinessDays:5});
  const work=await invoke('/work','POST',{title:'Existing request',body:'Synthetic equipment request',deduplicationKey:'synthetic-linen-423'},requester,201);
  await invoke('/work/'+work.id+'/fulfilment','POST',{catalogId,beneficiaryId:employee.id,purpose:'Synthetic equipment request'},requester,201);
  const classification=await invoke('/work/'+work.id+'/classification','GET');
  await invoke('/work/'+work.id+'/classification/override','POST',{revision:classification.revision,workRevision:classification.workRevision,type:'incident',category:'hardware',subcategory:'laptop',impact:'low',urgency:'high',priority:'P3',reason:'Synthetic equipment classification'});
+ await invoke('/work/'+work.id+'/commitment','POST',{calendarId:calendar.id,responseMinutes:60,resolutionMinutes:480});
+ const followupBefore=(await invoke('/work/'+work.id+'/followups','GET')).configuration;
  const clockBefore=(await invoke('/work/'+work.id+'/sla','GET')).policy;
  assert.equal(clockBefore.firstResponseMinutes,60);
  assert.equal((await fixture({outboundControl:true})).outboundCalls.length,1,'The network-edge observer detects an attempted outbound call');
@@ -44,13 +55,37 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  }
  let sandbox=await invoke('/sandboxes','POST',{name:'Equipment configuration'},owner,201);
  const path='/sandboxes/'+sandbox.id;
- const slaEdit={name:'Reviewed response',first_response_minutes:30,next_response_minutes:90,resolution_minutes:360,pauseOn:['requester']};
- assert.equal(sandbox.slas[0].id,sla.id);assert.equal(sandbox.slas[0].created_by,undefined);
+ const slaEdit={name:'Reviewed response',position:2,priority:'P3',category:'hardware',requester_group_id:requesterGroup.id,calendar_id:alternateCalendar.id,department_id:department.id,first_response_minutes:30,next_response_minutes:90,resolution_minutes:360,pauseOn:['requester']};
+ assert.ok(sandbox.slas.some(row=>row.id===sla.id));assert.equal(sandbox.slas[0].created_by,undefined);
  await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit},requester,403);
  await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit},other,404);
  for(const invalid of [{first_response_minutes:0},{resolution_minutes:1.5},{next_response_minutes:'30'},{pauseOn:['invalid']}])await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit,...invalid},owner,422);
  for(const field of ['records','calendar_id','department_id','requester_group_id','position'])await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit,[field]:'synthetic-linen-450'},owner,422);
+ // Move through an unused draft position, then swap the reviewed production order atomically.
+ sandbox=await invoke(path+'/slas/'+secondSla.id,'PUT',{revision:sandbox.revision,name:'Fallback response',position:1000,first_response_minutes:120,next_response_minutes:240,resolution_minutes:960,pauseOn:[]});
  sandbox=await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit},editor);
+ sandbox=await invoke(path+'/slas/'+secondSla.id,'PUT',{revision:sandbox.revision,name:'Fallback response',position:1,first_response_minutes:120,next_response_minutes:240,resolution_minutes:960,pauseOn:[]});
+ const roleBefore=sandbox.slaConfiguration.role[0];
+ const calendarBefore=sandbox.slaConfiguration.calendar.find(x=>x.id===calendar.id),escalationBefore=sandbox.slaConfiguration.escalation[0],waitingBefore=sandbox.slaConfiguration.waiting[0];
+ await invoke(path+'/sla-configuration/role/'+role.id,'PUT',{revision:sandbox.revision,permissions_json:'["ticket.read","workspace.admin"]'},owner,422);
+ await invoke(path+'/sla-configuration/role/'+role.id,'PUT',{revision:sandbox.revision,department_id:'synthetic-linen-451'},owner,422);
+ sandbox=await invoke(path+'/sla-configuration/role/'+role.id,'PUT',{revision:sandbox.revision,name:'Reviewed equipment reader',permissions_json:'["ticket.read","ticket.reply"]'},editor);
+ const roleBeforePromote=(await invoke('/department-roles','GET')).items.find(x=>x.id===role.id);
+ assert.equal(roleBeforePromote.name,'Equipment reader');assert.equal(roleBeforePromote.members[0].active,true);
+ const beforeConfigTest=await fixture({});
+ for(const [family,configurationId] of [['role',role.id],['calendar',calendar.id],['escalation',escalationBefore.id],['waiting','waiting']]) {
+  const test=await invoke(path+'/test-configuration','POST',{revision:sandbox.revision,family,configurationId});assert.equal(test.valid,true);assert.equal(test.externalEffects,false);assert.equal(test.productionAuthority,false);
+ }
+ assert.deepEqual(await fixture({}),beforeConfigTest,'Configuration rehearsal retains no state, audit, answers or authority');
+ const calendarEdit={name:'Reviewed support hours',timezone:'CET',weekdays_json:'[1,2,3,4]',start_hour:8,end_hour:16,holidays_json:'[2026-12-25]',location:'New York',holiday_catalog:null};
+ await invoke(path+'/sla-configuration/calendar/'+calendar.id,'PUT',{revision:sandbox.revision,...calendarEdit},owner,422);
+ calendarEdit.holidays_json='["2026-12-25"]';
+ sandbox=await invoke(path+'/sla-configuration/calendar/'+calendar.id,'PUT',{revision:sandbox.revision,...calendarEdit},editor);
+ await invoke(path+'/sla-configuration/escalation/'+escalationBefore.id,'PUT',{revision:sandbox.revision,notify:employee.id},owner,422);
+ sandbox=await invoke(path+'/sla-configuration/escalation/'+escalationBefore.id,'PUT',{revision:sandbox.revision,offset_minutes:-30,label:'Equipment due soon',notify:first.id},editor);
+ sandbox=await invoke(path+'/sla-configuration/waiting/waiting','PUT',{revision:sandbox.revision,remind_business_days:3,resolve_business_days:7},editor);
+ await invoke(path+'/sla-configuration/calendar/'+calendar.id,'PUT',{revision:sandbox.revision,...calendarEdit},requester,403);
+ assert.equal((await invoke('/escalation-rules','GET')).levels[0].offset_minutes,0,'Draft escalation changes stay isolated');
  assert.equal((await invoke('/sla-policies','GET')).items[0].first_response_minutes,60,'Draft SLA edits leave production unchanged');
  assert.equal(sandbox.items.length,1);assert.equal(sandbox.items[0].id,catalogId);
  assert.ok(!JSON.stringify(sandbox).includes('secret_ciphertext'));
@@ -127,8 +162,11 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  sandbox=await invoke(path+'/package','POST',{revision:sandbox.revision});
  await invoke(path+'/runs/'+frozenRun.id+'/complete','POST',{revision:sandbox.revision,taskKey:'prepare'},owner,409);
  await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,409);
- assert.deepEqual(sandbox.differences.filter(d=>d.family!=='sla').map(d=>d.field),['name','form','tasks']);
- assert.deepEqual(sandbox.differences.filter(d=>d.family==='sla').map(d=>d.field),['name','first_response_minutes','next_response_minutes','resolution_minutes','pause_on_json']);
+ assert.deepEqual(sandbox.differences.filter(d=>'catalogId' in d).map(d=>d.field),['name','form','tasks']);
+ assert.deepEqual(sandbox.differences.filter(d=>d.family==='sla'&&d.slaId===sla.id).map(d=>d.field),['name','position','priority','category','requester_group_id','calendar_id','department_id','first_response_minutes','next_response_minutes','resolution_minutes','pause_on_json']);
+ assert.deepEqual(sandbox.differences.filter(d=>d.family==='calendar').map(d=>d.field),['name','timezone','weekdays_json','start_hour','end_hour','holidays_json','location','holiday_catalog']);
+ assert.deepEqual(sandbox.differences.filter(d=>d.family==='escalation').map(d=>d.field),['offset_minutes','notify','label']);
+ assert.deepEqual(sandbox.differences.filter(d=>d.family==='waiting').map(d=>d.field),['remind_business_days','resolve_business_days']);
  await invoke(path+'/catalog/'+catalogId,'PUT',{revision:sandbox.revision,name:'Late edit',form,tasks},owner,409);
  await invoke(path+'/approve','POST',{revision:sandbox.revision},owner,403);
  await invoke(path+'/approve','POST',{revision:sandbox.revision},editor,403);
@@ -138,24 +176,61 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke(path+'/promote','POST',{revision:sandbox.revision},requester,403);
  await rejectData(path+'/promote');
  sandbox=await invoke(path+'/promote','POST',{revision:sandbox.revision});
+ const retainedFollowups=(await invoke('/work/'+work.id+'/followups','GET')).configuration;
+ assert.equal(retainedFollowups.source,'retained');
+ assert.deepEqual(retainedFollowups.levels.map(x=>[x.target,x.level,x.offset_minutes,x.notify,x.label]),followupBefore.levels.map(x=>[x.target,x.level,x.offset_minutes,x.notify,x.label]));
+ assert.equal(retainedFollowups.waitingRule.remind_business_days,2);assert.equal(retainedFollowups.waitingRule.resolve_business_days,5);
+ const newWork=await invoke('/work','POST',{title:'New policy request',body:'Synthetic request after promotion',deduplicationKey:'synthetic-linen-457'},requester,201);
+ const newFollowups=(await invoke('/work/'+newWork.id+'/followups','GET')).configuration;
+ assert.equal(newFollowups.source,'current');assert.equal(newFollowups.levels[0].offset_minutes,-30);assert.equal(newFollowups.waitingRule.remind_business_days,3);
+ const protectedWithNewWork=await fixture({});
+ for(const [table,rows] of Object.entries(protectedBefore.protectedTables))for(const prior of rows)assert.deepEqual(protectedWithNewWork.protectedTables[table].find(row=>table==='work_department_role_members'?row.role_id===prior.role_id&&row.user_id===prior.user_id:row.id===prior.id),prior,'Promotion preserves the exact existing '+table+' row');
+ const promotedRole=(await invoke('/department-roles','GET')).items.find(x=>x.id===role.id);
+ assert.equal(promotedRole.name,'Reviewed equipment reader');assert.deepEqual(promotedRole.permissions,['ticket.read','ticket.reply']);assert.equal(promotedRole.revision,2);assert.equal(promotedRole.members[0].active,false,'Role promotion confers no assignment authority');
  const promotedSla=(await invoke('/sla-policies','GET')).items.find(p=>p.id===sla.id);
+ assert.equal(promotedSla.position,2);assert.equal(promotedSla.department_id,department.id);assert.equal(promotedSla.calendar_id,alternateCalendar.id);assert.equal(promotedSla.requester_group_id,requesterGroup.id);assert.equal(promotedSla.priority,'P3');assert.equal(promotedSla.category,'hardware');
+ assert.equal((await invoke('/escalation-rules','GET')).levels[0].offset_minutes,-30);
+ const afterConfig=(await invoke(path,'GET')).slaConfiguration;
+ assert.equal(afterConfig.calendar.find(x=>x.id===calendar.id).name,calendarEdit.name);
  assert.equal(promotedSla.name,slaEdit.name);assert.equal(promotedSla.first_response_minutes,30);assert.equal(promotedSla.revision,2);
  assert.deepEqual((await invoke('/work/'+work.id+'/sla','GET')).policy,clockBefore,'In-flight SLA snapshot retains its version and targets');
  const promoted=(await invoke('/catalog','GET')).items.find(i=>i.id===catalogId);
  assert.equal(promoted.name,'Reviewed equipment');assert.equal(promoted.revision,2);assert.deepEqual(promoted.form,form);assert.deepEqual(promoted.tasks,tasks);
  await invoke(path+'/promote','POST',{revision:sandbox.revision},owner,409);
- const protectedAfter=await fixture({});assert.deepEqual(protectedAfter.connections,protectedBefore.connections);assert.deepEqual(protectedAfter.settings,protectedBefore.settings);assert.deepEqual(protectedAfter.protectedTables,protectedBefore.protectedTables,'Existing grants, request snapshots and duties keep their exact versions');assert.equal(protectedAfter.sandboxAudits.filter(a=>a.action==='sandbox.promoted').length,1);assert.equal(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).version,sandbox.revision);
+ const protectedAfter=await fixture({});assert.deepEqual(protectedAfter.connections,protectedBefore.connections);assert.deepEqual(protectedAfter.settings,protectedBefore.settings);assert.deepEqual(protectedAfter.protectedTables,protectedWithNewWork.protectedTables,'Existing grants, request snapshots and duties keep their exact versions');assert.equal(protectedAfter.sandboxAudits.filter(a=>a.action==='sandbox.promoted').length,1);assert.equal(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).version,sandbox.revision);
+ assert.deepEqual([...new Set(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).configurationChanges.map(change=>change.family))].sort(),['calendar','escalation','role','waiting']);
  assert.deepEqual(protectedAfter.outboundCalls,[],'No outbound call in sandbox rehearsal or promotion');
  await rejectData(path+'/rollback-package');
  let rollback=await invoke(path+'/rollback-package','POST',{revision:sandbox.revision},owner,201);
  rollback=await invoke('/sandboxes/'+rollback.id+'/approve','POST',{revision:rollback.revision},reviewer);
  rollback=await invoke('/sandboxes/'+rollback.id+'/promote','POST',{revision:rollback.revision});
  const restored=(await invoke('/catalog','GET')).items.find(i=>i.id===catalogId);
- assert.deepEqual((await fixture({})).protectedTables,protectedBefore.protectedTables,'Rollback preserves production authority and existing requests');
+ assert.deepEqual((await fixture({})).protectedTables,protectedWithNewWork.protectedTables,'Rollback preserves production authority and existing requests');
+ const retainedAfterRollback=(await invoke('/work/'+work.id+'/followups','GET')).configuration;
+ assert.deepEqual(retainedAfterRollback,retainedFollowups);
+ const newRetainedAfterRollback=(await invoke('/work/'+newWork.id+'/followups','GET')).configuration;
+ assert.equal(newRetainedAfterRollback.source,'retained');assert.equal(newRetainedAfterRollback.levels[0].offset_minutes,-30);assert.equal(newRetainedAfterRollback.waitingRule.remind_business_days,3);
+ const rolledRole=(await invoke('/department-roles','GET')).items.find(x=>x.id===role.id);
+ assert.equal(rolledRole.name,roleBefore.name);assert.deepEqual(rolledRole.permissions,['ticket.read']);assert.equal(rolledRole.revision,3);assert.equal(rolledRole.members[0].active,false,'Rollback does not revive old role assignments');
  const rolledSla=(await invoke('/sla-policies','GET')).items.find(p=>p.id===sla.id);
+ assert.equal(rolledSla.position,1);assert.equal(rolledSla.department_id,null);assert.equal(rolledSla.calendar_id,calendar.id);assert.equal(rolledSla.priority,null);assert.equal(rolledSla.category,null);assert.equal(rolledSla.requester_group_id,null);
+ const restoredConfig=(await invoke('/sandboxes/'+rollback.id,'GET')).slaConfiguration;
+ assert.deepEqual({...restoredConfig.calendar.find(x=>x.id===calendar.id),revision:calendarBefore.revision},calendarBefore);
+ assert.deepEqual({...restoredConfig.escalation[0],revision:escalationBefore.revision},escalationBefore);
+ assert.deepEqual({...restoredConfig.waiting[0],revision:waitingBefore.revision},waitingBefore);
+ assert.equal((await invoke('/escalation-rules','GET')).levels[0].offset_minutes,0);
  assert.equal(rolledSla.name,'Equipment response');assert.equal(rolledSla.first_response_minutes,60);assert.equal(rolledSla.revision,3);
  assert.deepEqual((await invoke('/work/'+work.id+'/sla','GET')).policy,clockBefore);
  assert.equal(restored.name,'Original equipment');assert.equal(restored.revision,3);assert.deepEqual(restored.tasks,[]);
+ // The real scheduler consumes the retained definitions, not the current global rules.
+ const newClassification=await invoke('/work/'+newWork.id+'/classification','GET');
+ await invoke('/work/'+newWork.id+'/classification/override','POST',{revision:newClassification.revision,workRevision:newClassification.workRevision,type:'incident',category:'hardware',subcategory:'laptop',impact:'low',urgency:'high',priority:'P3',reason:'Synthetic post-promotion classification'});
+ await invoke('/work/process-due','POST',{});
+ const oldScheduled=(await invoke('/work/'+work.id+'/followups','GET')).items.find(row=>row.kind==='escalation'&&row.episode==='resolution');
+ const newScheduled=(await invoke('/work/'+newWork.id+'/followups','GET')).items.find(row=>row.kind==='escalation'&&row.episode==='resolution');
+ assert.equal(oldScheduled.next_due_at,(await invoke('/work/'+work.id+'/sla','GET')).resolution.dueAt);assert.equal(oldScheduled.label,'Equipment overdue');
+ assert.equal(Date.parse(newScheduled.next_due_at),Date.parse((await invoke('/work/'+newWork.id+'/sla','GET')).resolution.dueAt)-30*60000);assert.equal(newScheduled.label,'Equipment due soon');
+
  // A production edit after review refuses the whole package, including its state transition and audit.
  let stale=await invoke('/sandboxes','POST',{name:'Stale review'},owner,201),stalePath='/sandboxes/'+stale.id;
  stale=await invoke(stalePath+'/catalog/'+catalogId,'PUT',{revision:stale.revision,name:'Must not apply',form,tasks});
@@ -168,7 +243,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal((await invoke(stalePath,'GET')).state,'approved');assert.deepEqual(await fixture({}),beforeRefusal);
  // SLA-only packages use the same approval and rollback path, with no catalog mutation.
  let only=await invoke('/sandboxes','POST',{name:'SLA only'},owner,201),onlyPath='/sandboxes/'+only.id;
- only=await invoke(onlyPath+'/slas/'+sla.id,'PUT',{revision:only.revision,...slaEdit},editor);
+ only=await invoke(onlyPath+'/slas/'+sla.id,'PUT',{revision:only.revision,...slaEdit,position:1,department_id:null},editor);
  only=await invoke(onlyPath+'/package','POST',{revision:only.revision});
  await invoke(onlyPath+'/approve','POST',{revision:only.revision},editor,403);
  only=await invoke(onlyPath+'/approve','POST',{revision:only.revision},reviewer);
@@ -179,13 +254,43 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  onlyRollback=await invoke('/sandboxes/'+onlyRollback.id+'/approve','POST',{revision:onlyRollback.revision},reviewer);
  onlyRollback=await invoke('/sandboxes/'+onlyRollback.id+'/promote','POST',{revision:onlyRollback.revision});
  assert.equal((await invoke('/sla-policies','GET')).items.find(p=>p.id===sla.id).first_response_minutes,60);
+ // A changed family or a withdrawn reference refuses a mixed package atomically.
+ const reviewMixed=async (name,recipient)=>{
+  let row=await invoke('/sandboxes','POST',{name},owner,201),door='/sandboxes/'+row.id;
+  row=await invoke(door+'/catalog/'+catalogId,'PUT',{revision:row.revision,name:'Must stay isolated',form,tasks});
+  row=await invoke(door+'/sla-configuration/role/'+role.id,'PUT',{revision:row.revision,name:'Must stay isolated role'});
+  if(recipient)row=await invoke(door+'/sla-configuration/escalation/'+escalationBefore.id,'PUT',{revision:row.revision,notify:recipient});
+  row=await invoke(door+'/package','POST',{revision:row.revision});
+  row=await invoke(door+'/approve','POST',{revision:row.revision},reviewer);
+  return {row,door};
+ };
+ const changedFamily=await reviewMixed('Changed escalation family');
+ await invoke('/escalation-levels','POST',{target:'resolution',level:1,offsetMinutes:15,notify:'assignee',label:'Production escalation edit'});
+ const beforeFamilyRefusal=await fixture({});
+ await invoke(changedFamily.door+'/promote','POST',{revision:changedFamily.row.revision},owner,409);
+ assert.deepEqual(await fixture({}),beforeFamilyRefusal);
+ const revokedDepartment=await reviewMixed('Withdrawn department authority');
+ await invoke('/departments/'+department.id,'POST',{revision:department.revision,name:department.name,active:false});
+ const beforeDepartmentRefusal=await fixture({});
+ await invoke(revokedDepartment.door+'/promote','POST',{revision:revokedDepartment.row.revision},owner,409);
+ assert.deepEqual(await fixture({}),beforeDepartmentRefusal);
+ await invoke('/departments/'+department.id,'POST',{revision:department.revision+1,name:department.name,active:true});
+ const editorMember=(await invoke('/members','GET')).find(member=>member.email==='synthetic-linen-440@example.test');
+ const revokedRecipient=await reviewMixed('Withdrawn escalation recipient',editorMember.id);
+ await invoke('/members/'+editorMember.id,'PATCH',{roles:['employee'],active:true});
+ const beforeRecipientRefusal=await fixture({});
+ await invoke(revokedRecipient.door+'/promote','POST',{revision:revokedRecipient.row.revision},owner,409);
+ assert.deepEqual(await fixture({}),beforeRecipientRefusal,'A withdrawn escalation recipient refuses every package family');
+ await invoke('/members/'+editorMember.id,'PATCH',{roles:['owner'],active:true});
+ Object.assign(editor,await login('synthetic-linen-440@example.test','synthetic-linen-441'));
+
  // Added production policies invalidate the entire reviewed package and prevent partial catalog writes.
  let slaStale=await invoke('/sandboxes','POST',{name:'SLA stale'},owner,201),slaStalePath='/sandboxes/'+slaStale.id;
- slaStale=await invoke(slaStalePath+'/slas/'+sla.id,'PUT',{revision:slaStale.revision,...slaEdit});
+ slaStale=await invoke(slaStalePath+'/slas/'+sla.id,'PUT',{revision:slaStale.revision,...slaEdit,position:1,department_id:null});
  slaStale=await invoke(slaStalePath+'/catalog/'+catalogId,'PUT',{revision:slaStale.revision,name:'Must not apply with stale SLA',form,tasks});
  slaStale=await invoke(slaStalePath+'/package','POST',{revision:slaStale.revision});
  slaStale=await invoke(slaStalePath+'/approve','POST',{revision:slaStale.revision},reviewer);
- await invoke('/sla-policies','POST',{name:'Production addition',position:2,firstResponseMinutes:10,nextResponseMinutes:20,resolutionMinutes:40},owner,201);
+ await invoke('/sla-policies','POST',{name:'Production addition',position:3,firstResponseMinutes:10,nextResponseMinutes:20,resolutionMinutes:40},owner,201);
  const beforeSlaRefusal=await fixture({});
  await invoke(slaStalePath+'/promote','POST',{revision:slaStale.revision},owner,409);
  assert.deepEqual(await fixture({}),beforeSlaRefusal);
@@ -244,6 +349,21 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  const fresh=await invoke('/sandboxes','POST',{name:'Fresh workspace configuration'},other,201);
  assert.notEqual(fresh.id,beforeRestore.id);assert.equal(fresh.state,'draft');assert.equal(fresh.approvedBy,null);
  assert.deepEqual(await invoke('/sandboxes','GET'),sourceSandboxes,'Restoring another workspace cannot invalidate source packages');
+ await invoke('/members/'+reviewMember.id,'PATCH',{roles:['owner'],active:true});
+ // Erasure removes retained recipient identity and invalidates old configuration packages.
+ await invoke('/escalation-levels','POST',{target:'resolution',level:1,offsetMinutes:0,notify:reviewMember.id,label:'Review by synthetic-linen-410@example.test'});
+ const erasureWork=await invoke('/work','POST',{title:'Erasure rule version',body:'Synthetic request',deduplicationKey:'synthetic-linen-459'},requester,201);
+ let erasureSandbox=await invoke('/sandboxes','POST',{name:'Erasure version configuration'},owner,201),erasurePath='/sandboxes/'+erasureSandbox.id;
+ erasureSandbox=await invoke(erasurePath+'/sla-configuration/waiting/waiting','PUT',{revision:erasureSandbox.revision,remind_business_days:4,resolve_business_days:8});
+ erasureSandbox=await invoke(erasurePath+'/package','POST',{revision:erasureSandbox.revision});
+ erasureSandbox=await invoke(erasurePath+'/approve','POST',{revision:erasureSandbox.revision},editor);
+ erasureSandbox=await invoke(erasurePath+'/promote','POST',{revision:erasureSandbox.revision});
+ assert.equal((await invoke('/work/'+erasureWork.id+'/followups','GET')).configuration.levels[0].notify,reviewMember.id);
+ await invoke('/people/'+reviewMember.id+'/erase','POST',{revision:0,reason:'Synthetic rule recipient erasure'});
+ const erasedRules=(await invoke('/work/'+erasureWork.id+'/followups','GET')).configuration;
+ assert.equal(erasedRules.source,'retained');assert.equal(erasedRules.levels[0].notify,null);assert.equal(erasedRules.levels[0].label,'[erased]');assert.equal(erasedRules.waitingRule.remind_business_days,2);
+ assert.deepEqual((await invoke('/sandboxes','GET')).items,[]);
+ await invoke(erasurePath+'/rollback-package','POST',{revision:erasureSandbox.revision},owner,404);
  assert.deepEqual((await fixture({})).outboundCalls,[]);
  console.log('PASS sandbox configuration HTTP: config-only copy, scoped access, isolated edits, durable task workflow execution with dependency and revision fences, form validation, complete field diff, separate owner approval, atomic versioned promotion, reviewed rollback, stale production refusal, connection and secret preservation');
 }

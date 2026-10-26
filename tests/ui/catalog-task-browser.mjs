@@ -2,11 +2,12 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {finishFirstRun} from './connected-helpers.mjs';
+import {sandboxJourney} from './sandbox-journey.mjs';
 import {catalogTaskJourney} from './catalog-task-journey.mjs';
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 if(!base||!out) throw Error('Run through tests/ui/run.mjs');
 await mkdir(out,{recursive:true});
-const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+const browser=await chromium.launch({headless:true,...(process.env.LINEN_CHROMIUM_EXECUTABLE?{executablePath:process.env.LINEN_CHROMIUM_EXECUTABLE}:{}),args:[...(process.env.LINEN_CHROMIUM_EXECUTABLE?['--no-sandbox']:[]),'--use-mock-keychain','--password-store=basic']});
 const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];
 page.on('pageerror',e=>errors.push(String(e)));
 try {
@@ -24,5 +25,6 @@ try {
     const d=await r.json();if(!r.ok)throw Error(path+' '+JSON.stringify(d));return d;
   },{path,body});
   await catalogTaskJourney({page,api,base,out});
+  await sandboxJourney({page,api,base,out});
   assert.deepEqual(errors,[],'CATALOG-003 has no browser errors');
 } catch(error) {await page.screenshot({path:out+'/CATALOG-003-failure.png',fullPage:true});throw error;} finally {await context.close();await browser.close();}

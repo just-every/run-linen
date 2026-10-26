@@ -127,6 +127,7 @@ export const scalarReferences: Readonly<Record<string, readonly ReferenceSelecto
     work_stock_purchases: [person('decided_by'), business('line_id', 'work_stock_lines'), business('raised_by_movement_id', 'work_stock_movements'), { ...business('id'), identity: true }],
     work_escalation_levels: [person('created_by'), { ...business('id'), identity: true }],
     work_waiting_rules: [person('updated_by')],
+    work_followup_versions: [business('work_id','work_records'),{...person('notify'),when:({row})=>row.notify!=='assignee'}],
     work_followups: [person('notify_id'), business('work_id', 'work_records'), { ...business('id'), identity: true }],
     work_sla_pauses: [business('work_id', 'work_records'), business('status_id', 'work_custom_statuses'), { ...business('id'), identity: true }],
     work_projects: [person('owner_id'), { ...business('id'), identity: true }],

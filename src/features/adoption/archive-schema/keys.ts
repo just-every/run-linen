@@ -126,6 +126,7 @@ export const archiveKeyFields: Readonly<Record<string, readonly string[]>> = {
     work_stock_purchases: ['id'],
     work_escalation_levels: ['id'],
     work_waiting_rules: ['workspace_id'],
+    work_followup_versions: ['workspace_id','work_id','kind','target','level'],
     work_followups: ['id'],
     work_sla_pauses: ['id'],
     work_projects: ['id'],
