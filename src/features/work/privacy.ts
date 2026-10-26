@@ -117,8 +117,6 @@ async function eraseSinglePerson(
   let changed;
   try { changed = await ctx.env.DB.batch([
     privacyBindingFence(ctx, people, bindingGuard, aliases),
-    ...versionErasure,
-    ctx.env.DB.prepare('DELETE FROM configuration_sandboxes WHERE workspace_id=?').bind(w),
     person
       ? ctx.env.DB.prepare(
           "UPDATE work_people SET name=?,attributes_json='{}',manager_id=NULL,active=0,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=?",
@@ -132,6 +130,8 @@ async function eraseSinglePerson(
     ctx.env.DB.prepare(
       "INSERT INTO work_erasure_guards VALUES(?,changes())",
     ).bind(guard),
+    ...versionErasure,
+    ctx.env.DB.prepare('DELETE FROM configuration_sandboxes WHERE workspace_id=?').bind(w),
     ...(pendingIdentity?[
       ctx.env.DB.prepare('INSERT OR IGNORE INTO adoption_tombstones VALUES(?,?,?)').bind(w,pendingEmailHash,t),
       ctx.env.DB.prepare("UPDATE work_pending_people SET email=?,start_date='',team='[erased]',state='withdrawn',withdrawn_at=? WHERE workspace_id=? AND id=?").bind(`erased-${p}@invalid.local`,t,w,p),

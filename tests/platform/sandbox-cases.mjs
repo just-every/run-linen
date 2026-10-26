@@ -362,6 +362,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke('/people/'+reviewMember.id+'/erase','POST',{revision:0,reason:'Synthetic rule recipient erasure'});
  const erasedRules=(await invoke('/work/'+erasureWork.id+'/followups','GET')).configuration;
  assert.equal(erasedRules.source,'retained');assert.equal(erasedRules.levels[0].notify,null);assert.equal(erasedRules.levels[0].label,'[erased]');assert.equal(erasedRules.waitingRule.remind_business_days,2);
+ await invoke('/people/'+editorMember.id+'/erase','POST',{revision:0,reason:'Synthetic member erasure without retained recipient rows'});
  assert.deepEqual((await invoke('/sandboxes','GET')).items,[]);
  await invoke(erasurePath+'/rollback-package','POST',{revision:erasureSandbox.revision},owner,404);
  assert.deepEqual((await fixture({})).outboundCalls,[]);
