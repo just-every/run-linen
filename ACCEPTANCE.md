@@ -4,16 +4,17 @@ Target edition, 17 October 2026. Each clause in [CONTRACT.md](CONTRACT.md) has i
 acceptance evidence listed here with its current status (`done`, `partial` or
 `missing`) so a build round can work towards it. The evidence paths and status are
 the same as the contract's status table.
-Current count: 143 clauses (136 in the contract plus F1–F7), 57 done, 59
-partial and 27 missing.
+Current count: 143 clauses (136 in the contract plus F1–F7), 58 done, 59
+partial and 26 missing.
 
 **Local checks:** `rer verify` runs the mapped public flows: native browser
 checks, connected journeys, setup checks, emitted HTTP checks and intelligence
 HTTP checks. An archived native-data upgrade was checked to retain all prior rows
 and migration entries before applying additive migrations. These bounded local
 results do not establish full release acceptance. AGENT-009 and F1 now include
-the selected live GitHub permission observation documented below. No provider
-mutation, hosted deployment or owner release acceptance is claimed. The category-job
+the selected live GitHub permission observation documented below. ACCESS-002 also
+includes the held Integrator organization effects and readbacks in its cited journey.
+No hosted deployment or owner release acceptance is claimed. The category-job
 clauses, O1–O3 and the remaining frontier extensions retain their wider requirements.
 ## Evidence by stage
 
@@ -146,7 +147,7 @@ are unchanged by this rule. A display-name exception requires a further ct rulin
 | Clause | Acceptance evidence | Current evidence path | Status |
 |---|---|---|---|
 | **ACCESS-001 Microsoft Entra ID** | In an Entra test tenant, create a user, add a group and an E3 license, then disable and revoke sessions; Graph readback confirms each; a stale grant is refused at the effect. | `src/features/execution/connectors.ts`; `src/features/execution/identity.ts`; `tests/execution/runtime.mjs`; `tests/ui/connected-lifecycle.mjs`. Fixture provider; live tenant acceptance remains. | done |
-| **ACCESS-002 Okta** | In an Okta developer org, assign an app through a group, suspend the user, clear sessions and read back each state. | No Okta connector. | missing |
+| **ACCESS-002 Okta** | In an Okta developer org, assign an app through a group, suspend the user, clear sessions and read back each state. | `tests/execution/okta-live.mjs` runEffect and sessionEvidence prove native authenticated group membership, group application assignment and effective GROUP user assignment, suspension, session clearing and independent provider readback in the held Integrator organization; the successful run and cohort cleanup are recorded in `evidence/ACCESS-002-okta.md`. The same journey proves staged user creation, reactivation, deactivation, factor reset and removals. `tests/execution/runtime.mjs` oktaOperation proves current granted effects, refusal after grant revocation, rejection of unrelated session events and reconciliation without repeating an unknown clear. `tests/ui/okta-browser.mjs` proves native connection creation, live validation, credential absence from the editor, exact-grant selection and account tooltips at 1440 and 390. | done |
 | **ACCESS-003 Google Workspace** | In a Google Workspace test domain, add a user to a group, move OU, suspend and transfer Drive ownership to the manager; readback confirms each. | No Google Workspace connector. | missing |
 | **ACCESS-004 Auth** | Against a local Auth instance, add and remove a group and deactivate a user, with readback. | No Auth connector. | missing |
 | **ACCESS-005 SaaS application provisioning** | Grant and revoke a GitHub team, a Salesforce permission set and a Slack user group in sandboxes and read back each; a SCIM-managed app is provisioned via its Okta assignment. | No GitHub, Slack, Salesforce, Atlassian, Zoom or AWS connectors. | missing |

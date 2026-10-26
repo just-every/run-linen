@@ -3135,8 +3135,8 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 7 | 17 | 0 | 24 |
-| Target and push further | 50 | 42 | 27 | 119 |
-| All | 57 | 59 | 27 | 143 |
+| Target and push further | 51 | 42 | 26 | 119 |
+| All | 58 | 59 | 26 | 143 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -3182,7 +3182,7 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `NOTIFY-001` | Default notifications by role and event | target | partial | `src/features/execution/notifications.ts`, `tests/execution/runtime.mjs` | Explicit per-message only; no event-driven default set, chat or push delivery, or actionable agent notifications. |
 | `NOTIFY-002` | Admin-configured rules, templates and preferences | target | missing |  | No notification rules, templates, branding or preferences. |
 | `ACCESS-001` | Microsoft Entra ID | target | done | `src/features/execution/connectors.ts`, `src/features/execution/identity.ts`, `tests/execution/runtime.mjs`, `tests/ui/connected-lifecycle.mjs` |  |
-| `ACCESS-002` | Okta | target | missing |  | No Okta connector. |
+| `ACCESS-002` | Okta | target | done | `tests/execution/okta-live.mjs` runEffect and sessionEvidence prove native authenticated group membership, group application assignment and effective GROUP user assignment, suspension, session clearing and independent provider readback in the held Integrator organization; the successful run and cohort cleanup are recorded in `evidence/ACCESS-002-okta.md`. The same journey proves staged user creation, reactivation, deactivation, factor reset and removals. `tests/execution/runtime.mjs` oktaOperation proves current granted effects, refusal after grant revocation, rejection of unrelated session events and reconciliation without repeating an unknown clear. `tests/ui/okta-browser.mjs` proves native connection creation, live validation, credential absence from the editor, exact-grant selection and account tooltips at 1440 and 390. | None for this clause. ACCESS-005 retains downstream SCIM provisioning acceptance and SSO-001 retains its SAML, SCIM and MFA obligations. |
 | `ACCESS-003` | Google Workspace | target | missing |  | No Google Workspace connector. |
 | `ACCESS-004` | Auth | target | missing |  | No Auth connector. |
 | `ACCESS-005` | SaaS application provisioning | target | missing |  | No GitHub, Slack, Salesforce, Atlassian, Zoom or AWS connectors. |

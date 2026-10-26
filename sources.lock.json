@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "adba12bfa2d18beec9e043c5bc3f8740c33e7e602da9e5d020a25a5c051324fe",
+      "sha256": "3cfba7b2ed5b91d023ff7f66f5c60b4aeb32deed063452090c58427c1b0a7391",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "bb264a3c94c2f08081d7ef2ecc85dbc50d1403162c7a37729bb7a817d2a1d62f",
+      "sha256": "92c69181e30d05c017a8a3d0dc8a46855dd24c26291a2beacc689c4eee8e94d6",
       "executable": false
     },
     "DEMO.md": {
@@ -700,6 +700,10 @@
     },
     "engineering-agent/runner.mjs": {
       "sha256": "52bbaa85311d1a4e47907c380d41b13fa5980c743cc456b5d2af8ef8d8396846",
+      "executable": false
+    },
+    "evidence/ACCESS-002-okta.md": {
+      "sha256": "586d6c0a14cc8f401e4a1708e916c719bb838b56bce19b890e353a358da41a88",
       "executable": false
     },
     "FRONTIER-EXTENSION.md": {
@@ -2130,6 +2134,10 @@
       "sha256": "2119b7a1b3c7c25e85c1991819f60f4f2c019a14a0ba978d822085eafd741087",
       "executable": false
     },
+    "src/features/connections/okta.ts": {
+      "sha256": "be8226804de6e10ce362df569c647dff292530f2adde62d673a3cf60b7110e7a",
+      "executable": false
+    },
     "src/features/connections/providers.ts": {
       "sha256": "159581db05a40af156047686a7155305ec3984b58d1aa949da386137fbad9319",
       "executable": false
@@ -2147,7 +2155,7 @@
       "executable": false
     },
     "src/features/connections/validation.ts": {
-      "sha256": "4ddb732337d61e58f6158cef36bbd7b6f09a8e163cecd49be9bc9cab3cd8ecf6",
+      "sha256": "5e0b8ac554544f91505ddad64d8c7930ebf81bc1739dcdb35b84d43d5d7781e5",
       "executable": false
     },
     "src/features/execution/access.ts": {
@@ -2155,11 +2163,11 @@
       "executable": false
     },
     "src/features/execution/API.md": {
-      "sha256": "5c792c1b64f9eb2e80d7688798250f1640ac322b859385f5da73a31ead34026e",
+      "sha256": "18e90b57ffa2edaacd8b9ae6aa8b26cf8192fe731d88bef8aad54e30bfdf1ce4",
       "executable": false
     },
     "src/features/execution/authority.ts": {
-      "sha256": "6a6e489c6c6cbebc146a3c8a592e83670370b7f4ea24418d048345389f8583f6",
+      "sha256": "b259d202554cc89673ce24e763dd6f4fe0636cb926f1355413e3a76461dfe6ae",
       "executable": false
     },
     "src/features/execution/automation.ts": {
@@ -2175,7 +2183,7 @@
       "executable": false
     },
     "src/features/execution/connectors.ts": {
-      "sha256": "4dfb4b373bdf92015cc1dea04914a0dcab745151013a9083b79388a055a1feb8",
+      "sha256": "431a6e878740a93bdbbbeea6df51435b4363e08d3bec299d795932bc4d7c394b",
       "executable": false
     },
     "src/features/execution/deployment.ts": {
@@ -2226,6 +2234,14 @@
       "sha256": "e7f02ea7f7d2ce6f99b24fa1e39d94e718e2b48dd80dc01372a0d71f7a50b557",
       "executable": false
     },
+    "src/features/execution/okta-client.ts": {
+      "sha256": "77ffdde0df9e7e06d424c618b2eef0e686c3d6c4139effa6b0b1ae17d055a3c9",
+      "executable": false
+    },
+    "src/features/execution/okta.ts": {
+      "sha256": "7cc18c7b39ec7a06bd41845d11227881483adf42b45637c013b894472d978d77",
+      "executable": false
+    },
     "src/features/execution/origin.ts": {
       "sha256": "8a3ff82fc4e2250c2e65c4cffc00306217379c683e41456bffc7190202c71930",
       "executable": false
@@ -2255,7 +2271,7 @@
       "executable": false
     },
     "src/features/execution/types.ts": {
-      "sha256": "39ef3f77babf906926dc4b7e521640d097867a29c38583ede7ad22d7e9f186e0",
+      "sha256": "5901fd1dba0edba61825ccbb0a2bc498c648110ea5d1bee0e7091ec67fcaaa07",
       "executable": false
     },
     "src/features/execution/verification.ts": {
@@ -5027,7 +5043,7 @@
       "executable": false
     },
     "src/platform/connection-config.ts": {
-      "sha256": "28385c9fad366d11958d3ee3b9b28d0b83ba2f808d03ad47c1fe4f4477ff0fc2",
+      "sha256": "bd7e22d7a98eba9c7cfb01e09a86a3bd13ef95018ae00311e8c320abd0d0ff90",
       "executable": false
     },
     "src/platform/crypto.ts": {
@@ -5044,6 +5060,10 @@
     },
     "src/platform/limits.ts": {
       "sha256": "e972cd3e6058990a4d138b8204330370a0f12f850831c3a4797eba7f00fcfd29",
+      "executable": false
+    },
+    "src/platform/okta-origin.ts": {
+      "sha256": "4a6ea42483d10822b23652255c4f4b6d5bf3c587564ac2f85563cb7f6d2959ad",
       "executable": false
     },
     "src/platform/portability-policy.mjs": {
@@ -5419,7 +5439,7 @@
       "executable": false
     },
     "src/ui/connection-form.tsx": {
-      "sha256": "ef93d101a10aa0089bdb91022d9327e0af2921a62c15fa5a83c27efb7de67246",
+      "sha256": "c7ec33cedf00ab28778beeb7b6285676f1debfd471fa8fc9e1f43a8a4677be62",
       "executable": false
     },
     "src/ui/connections.tsx": {
@@ -5515,7 +5535,7 @@
       "executable": false
     },
     "src/ui/labels.ts": {
-      "sha256": "5acfb6686afc4ca3302c624665e2c4cd2d1d183cb75eff715048837d06c26b42",
+      "sha256": "740773bdc2bde4d7ccd123f786857c6929992d7b5b5534a23c2c32ac034e42ce",
       "executable": false
     },
     "src/ui/lifecycle-template-editor.tsx": {
@@ -5663,7 +5683,7 @@
       "executable": false
     },
     "src/ui/setup-advanced-grant.tsx": {
-      "sha256": "90d41990fa09f2ca20960bd6d99a82d25164441ca5e7b55a0d4fe9ac3d508404",
+      "sha256": "b93a00c806a9d27abd398a190e182a4772111e30be57dc0d2411ce4c45ad3cc6",
       "executable": false
     },
     "src/ui/setup-change.tsx": {
@@ -5970,12 +5990,20 @@
       "sha256": "239d6313d38b722ae84525e357c62fc7304cf9bba2159f5f2da420827fdf9ebe",
       "executable": false
     },
+    "tests/execution/okta-live-worker.ts": {
+      "sha256": "a7a57905332ce06ba36a560792e13368eaa3c1a055b5cd34d5b551eed2b19001",
+      "executable": false
+    },
+    "tests/execution/okta-live.mjs": {
+      "sha256": "c6b460724fdcf48f057d42e031b242f5b79236d30ba7249b0551e05ae83e4f0b",
+      "executable": false
+    },
     "tests/execution/README.md": {
       "sha256": "c379ab93985e013622dbe9febe85169bd7624fcd5ec1ad7bd1958451743074e7",
       "executable": false
     },
     "tests/execution/runtime.mjs": {
-      "sha256": "9303c0727eac4553c7641bca10a070c940099d6f5eb6cccf2b12898bcfa72368",
+      "sha256": "458383b52c25ddee0ba3f3ea65008ae6f842e2484c8e4a880b6ec8e276a37846",
       "executable": false
     },
     "tests/execution/schema.py": {
@@ -5987,7 +6015,7 @@
       "executable": false
     },
     "tests/execution/worker.ts": {
-      "sha256": "8802574be9f3d7a5fa593ef50283e1e60b4766b9e8ceb703fd6d958a20a6ab7d",
+      "sha256": "a0e3f57ea4983fdace09ceb251deb6936a817c442660069cf4a77d0fe56d9220",
       "executable": false
     },
     "tests/fixtures/operations-kpis.mjs": {
@@ -6424,6 +6452,10 @@
     },
     "tests/ui/native-regressions.mjs": {
       "sha256": "ca2a6ef73fe8fea7c11f58202ced6e77542cc5f21a3adc32eea077020566cd9d",
+      "executable": false
+    },
+    "tests/ui/okta-browser.mjs": {
+      "sha256": "4b96cfdaf0752ab6e233d94c4d2caffdf898b17d7f54be2047f929fcad6fcad1",
       "executable": false
     },
     "tests/ui/pending-person-browser.mjs": {
