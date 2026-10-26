@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "4f4076884beaad8ef17c8107c7a84cc062807e2699205682e9e033d4ac7531c7",
+      "sha256": "18e762c972c3c1b9713895305cf072a44b7098c6e0b85293173782f30474bdac",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "afeaf62d55a79c22b37202732449238ff5eafd9bc5feeb26a6401230198c8b77",
+      "sha256": "6ad1bd5a1162477dc691eed989ee3fd8a4c856efc483e79e57d6990566101134",
       "executable": false
     },
     "DEMO.md": {
@@ -6135,11 +6135,11 @@
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
-      "sha256": "4aa47a0882c0e97cf39c5985403ec376ef714baa613db1c7b9554d61e9784cbf",
+      "sha256": "94cbcfce090e5efa78afe5483d2c840900b7ba66cc60104b028d006410f0ba87",
       "executable": false
     },
     "tests/platform/config-worker.ts": {
-      "sha256": "4ae1ed9cb0bdfe92b48178aef79d9e6c0691d582ea1d7b2692f9e3558cc12fed",
+      "sha256": "d173cfd98a4d4989af0797f7d1940dbcd4ced465ccb62e4d50deda1a7300d0cb",
       "executable": false
     },
     "tests/platform/deploy-edge.mjs": {

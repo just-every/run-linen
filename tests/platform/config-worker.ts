@@ -8,9 +8,26 @@ import type {AppEnv} from '../../src/platform/types'
 import app from './worker'
 import {requireRole,jsonBody} from '../../src/platform/http'
 const outboundCalls:string[]=[]
+// Keep transport observations in memory, without retaining bodies or headers.
+// Inspect only after a failed journey so tracing does not add network traffic.
+let workerInstance:string|undefined
+const importRequests:{path:string;enteredAt:number;status?:number;finishedAt?:number;rejected?:boolean}[]=[]
+const nativeFetch=app.fetch
+app.fetch=((...args:Parameters<typeof nativeFetch>)=>{
+ workerInstance??=crypto.randomUUID()
+ const path=new URL(args[0].url).pathname
+ if(!/^\/api\/v1\/imports\/[^/]+\/(dry-run|apply|resume)$/.test(path))return nativeFetch(...args)
+ const event:{path:string;enteredAt:number;status?:number;finishedAt?:number;rejected?:boolean}={path,enteredAt:Date.now()}
+ importRequests.push(event)
+ if(importRequests.length>128)importRequests.shift()
+ const response=nativeFetch(...args)
+ void Promise.resolve(response).then(result=>{event.status=result.status;event.finishedAt=Date.now()},()=>{event.rejected=true;event.finishedAt=Date.now()})
+ return response
+}) as typeof nativeFetch
 globalThis.fetch=async input=>{outboundCalls.push(String(input instanceof Request?input.url:input));throw new Error('Unexpected outbound call in configuration test')}
 app.post('/test/config-fixture',async c=>{
  const p=requireRole(c,'owner'),b=await jsonBody(c)
+ if(b.inspectTransport)return c.json({workerInstance,importRequests})
  if(b.outboundControl)try{await fetch('https://sandbox.example.test/control')}catch{}
  if(b.resetOutbound)outboundCalls.length=0
  if(b.activate)await c.env.DB.batch([

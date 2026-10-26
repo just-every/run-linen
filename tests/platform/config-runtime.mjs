@@ -14,8 +14,8 @@ const migrationFiles=(await readdir('migrations')).filter(file=>file.endsWith('.
 const migrationSql=join(dir,'migrations.sql')
 await writeFile(migrationSql,(await Promise.all(migrationFiles.map(file=>readFile('migrations/'+file,'utf8')))).join('\n'))
 const migrate=spawnSync('pnpm',['exec','wrangler','d1','execute','DB','--local','--persist-to',dir,'--file',migrationSql],{encoding:'utf8'});assert.equal(migrate.status,0,migrate.stdout+migrate.stderr)
-let worker,output=''
-async function start(){worker=spawn(process.execPath,['node_modules/wrangler/bin/wrangler.js','dev','--local','--config',process.env.LINEN_TEST_EMITTED?'dist/server/wrangler.json':config,'--persist-to',dir,'--port',String(port)],{stdio:['ignore','pipe','pipe']});worker.stdout.on('data',x=>output+=x);worker.stderr.on('data',x=>output+=x);for(let i=0;i<120;i++){try{if((await fetch(origin+'/health')).ok)return}catch{}if(worker.exitCode!==null)throw Error(output);await new Promise(r=>setTimeout(r,250))}throw Error(output)}
+let worker,owner,output=''
+async function start(){worker=spawn(process.execPath,['node_modules/wrangler/bin/wrangler.js','dev','--local','--config',process.env.LINEN_TEST_EMITTED?'dist/server/wrangler.json':config,'--persist-to',dir,'--port',String(port)],{stdio:['ignore','pipe','pipe']});worker.once('exit',(code,signal)=>{output+=`\nConfiguration worker exited: pid=${worker.pid} code=${code} signal=${signal}\n`});worker.stdout.on('data',x=>output+=x);worker.stderr.on('data',x=>output+=x);for(let i=0;i<120;i++){try{if((await fetch(origin+'/health')).ok)return}catch{}if(worker.exitCode!==null)throw Error(output);await new Promise(r=>setTimeout(r,250))}throw Error(output)}
 async function stop(){worker.kill('SIGTERM');await new Promise(r=>worker.exitCode!==null?r():worker.once('exit',r))}
 async function request(path,method='GET',body,auth={},extra={}){return fetch(origin+'/api/v1'+path,{method,headers:{Origin:origin,'Content-Type':'application/json',...(auth.cookie?{Cookie:auth.cookie}:{}),...(auth.csrf?{'X-Linen-CSRF':auth.csrf}:{}),...extra},body:body===undefined?undefined:body instanceof Uint8Array?body:JSON.stringify(body)})}
 try {
@@ -30,7 +30,7 @@ try {
   const fixture=spawnSync('pnpm',['exec','wrangler','d1','execute','DB','--local','--persist-to',dir,'--command',`INSERT INTO workspaces VALUES('other-workspace','Other','2026-01-01T00:00:00.000Z'); INSERT INTO users VALUES('other-user','other@example.test','Other','${fixtureHash}','2026-01-01T00:00:00.000Z'); INSERT INTO memberships VALUES('other-workspace','other-user','["owner"]',1);`],{encoding:'utf8'});assert.equal(fixture.status,0,fixture.stdout+fixture.stderr)
  }
  await start()
- const owner={cookie:setup.headers.get('set-cookie').split(';')[0]}
+ owner={cookie:setup.headers.get('set-cookie').split(';')[0]}
  owner.csrf=(await (await request('/session','GET',undefined,owner)).json()).csrfToken
  const fixture=async b=>{const r=await fetch(origin+'/test/config-fixture',{method:'POST',headers:{Origin:origin,Cookie:owner.cookie,'X-Linen-CSRF':owner.csrf,'Content-Type':'application/json'},body:JSON.stringify(b)});assert.equal(r.status,200,await r.clone().text());return r.json()}
  const endpoint={url:'https://ops.example.com/linen',allowedHosts:['ops.example.com']}
@@ -88,4 +88,15 @@ try {
  await rejected('/settings','PATCH',{revision:settings.revision,settings:{defaultModelConnectionId:ids.openai}},409)
  await sandboxChecks({request,owner,other,fixture})
  console.log('PASS config HTTP real D1/R2 native session: 9 provider schemas, private roundtrips, invalid types/bounds/URLs/credentials, no rejected mutation/audit, immutable provider, revision invalidation, validated owned selectors, restore hold and model route bypass denied')
-} catch(e){console.error(output);throw e} finally {if(worker?.exitCode===null)await stop();await rm(dir,{recursive:true,force:true})}
+} catch(e){
+ // Observe liveness and arrival after failure; never repeat a failed mutation.
+ console.error('Configuration process at failure',JSON.stringify({pid:worker?.pid,exitCode:worker?.exitCode,signalCode:worker?.signalCode}))
+ for(const [label,path,init] of [
+  ['health','/health',{}],
+  ['import transport','/test/config-fixture',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json',Cookie:owner?.cookie??'','X-Linen-CSRF':owner?.csrf??''},body:JSON.stringify({inspectTransport:true})}],
+ ]){
+  try{const response=await fetch(origin+path,{...init,signal:AbortSignal.timeout(3000)});console.error('Configuration '+label,JSON.stringify({status:response.status,body:await response.text()}))}
+  catch(error){console.error('Configuration '+label+' unavailable',String(error))}
+ }
+ console.error(output);throw e
+} finally {if(worker?.exitCode===null)await stop();await rm(dir,{recursive:true,force:true})}
