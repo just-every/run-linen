@@ -25,7 +25,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  const group=team??await invoke('/work-groups','POST',{name:'Equipment team'},owner,201);
  const tasks=[{key:'prepare',title:'Prepare equipment',groupId:group.id,after:[],dueHours:24},{key:'label',title:'Label equipment',groupId:group.id,after:[],dueHours:24},{key:'check',title:'Check equipment',groupId:group.id,after:['prepare','label'],dueHours:48}];
  const calendar=await invoke('/calendars','POST',{name:'Support hours',timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[],location:'Denver',holidayCatalog:'us-federal'},owner,201);
- const alternateCalendar=await invoke('/calendars','POST',{name:'Alternate hours',timezone:'America/Denver',weekdays:[1,2,3,4,5],startHour:8,endHour:16,holidays:[]},owner,201);
+ const alternateCalendar=await invoke('/calendars','POST',{name:'Alternate hours',timezone:'CET',weekdays:[1,2,3,4,5],startHour:8,endHour:16,holidays:[]},owner,201);
  const sla=await invoke('/sla-policies','POST',{name:'Equipment response',position:1,calendarId:calendar.id,firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:480,pauseOn:['vendor']},owner,201);
  const secondSla=await invoke('/sla-policies','POST',{name:'Fallback response',position:2,firstResponseMinutes:120,nextResponseMinutes:240,resolutionMinutes:960},owner,201);
  const requesterGroup=await invoke('/requester-groups','POST',{name:'Equipment requesters',memberIds:[employee.id]},owner,201);

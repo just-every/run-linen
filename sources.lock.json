@@ -5627,7 +5627,7 @@
       "executable": false
     },
     "src/ui/sandbox-lifecycle.tsx": {
-      "sha256": "cf64931be65ca28856a257c02167a8447599f5a3a23a3b094444fd92b84b6202",
+      "sha256": "88b77a6a97f7e073c77a6d0341d43439d1129535e5b5cd388bb52bd5abe86152",
       "executable": false
     },
     "src/ui/sandbox-recurring.tsx": {
@@ -6135,7 +6135,7 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "85d74c7b7e8f06e9224fbfb756f6dc81367407e493e30c35062bf00c4fcbc731",
+      "sha256": "f3287aeda6de1a81b4399cd385fb834443c25a97248fed8241ac453461f6db8b",
       "executable": false
     },
     "tests/platform/tombstone-race-fixture.ts": {
