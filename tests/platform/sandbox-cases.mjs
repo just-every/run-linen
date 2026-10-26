@@ -25,7 +25,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  const group=team??await invoke('/work-groups','POST',{name:'Equipment team'},owner,201);
  const tasks=[{key:'prepare',title:'Prepare equipment',groupId:group.id,after:[],dueHours:24},{key:'label',title:'Label equipment',groupId:group.id,after:[],dueHours:24},{key:'check',title:'Check equipment',groupId:group.id,after:['prepare','label'],dueHours:48}];
  const calendar=await invoke('/calendars','POST',{name:'Support hours',timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[],location:'Denver',holidayCatalog:'us-federal'},owner,201);
- const alternateCalendar=await invoke('/calendars','POST',{name:'Alternate hours',timezone:'UTC',weekdays:[1,2,3,4,5],startHour:8,endHour:16,holidays:[]},owner,201);
+ const alternateCalendar=await invoke('/calendars','POST',{name:'Alternate hours',timezone:'America/Denver',weekdays:[1,2,3,4,5],startHour:8,endHour:16,holidays:[]},owner,201);
  const sla=await invoke('/sla-policies','POST',{name:'Equipment response',position:1,calendarId:calendar.id,firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:480,pauseOn:['vendor']},owner,201);
  const secondSla=await invoke('/sla-policies','POST',{name:'Fallback response',position:2,firstResponseMinutes:120,nextResponseMinutes:240,resolutionMinutes:960},owner,201);
  const requesterGroup=await invoke('/requester-groups','POST',{name:'Equipment requesters',memberIds:[employee.id]},owner,201);
@@ -34,6 +34,13 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke('/department-roles/'+role.id+'/members','POST',{userId:employee.id,roleRevision:role.revision,revision:0,active:true});
  await invoke('/escalation-levels','POST',{target:'resolution',level:1,offsetMinutes:0,notify:'assignee',label:'Equipment overdue'});
  await invoke('/waiting-rule','POST',{remindBusinessDays:2,resolveBusinessDays:5});
+ const templateValue=await invoke('/catalog-values','POST',{dimension:'location',label:'Sandbox laboratory'},owner,201);
+ const templateTasks=[{key:'prepare',title:'Original lifecycle preparation',assignee:{type:'group',groupId:group.id},anchor:'start',offsetDays:1,remindDays:null}];
+ const template=await invoke('/lifecycle-templates','POST',{name:'Original lifecycle template',kind:'join',match:{location:[templateValue.id]},tasks:templateTasks},owner,201);
+ const lifecyclePerson=await invoke('/people','POST',{source:'synthetic-linen-460',sourceId:'synthetic-linen-461',name:'Synthetic lifecycle subject',effectiveAt:'2026-01-01T00:00:00.000Z',observedAt:'2026-01-01T00:00:00.000Z',attributes:{location:templateValue.id}},owner,201);
+ const admitted=await invoke('/lifecycle','POST',{personId:lifecyclePerson.id,kind:'join',effectiveAt:'2090-01-09T09:00:00.000Z',timezone:'UTC',source:'synthetic-linen-462',sourceRevision:1,ownerId:first.id,identityTarget:'synthetic-linen-463',retained:[],added:[],removed:[],deviceIds:[]},owner,201);
+ const lifecycleBefore=await invoke('/lifecycle/'+admitted.lifecycleId,'GET');
+ assert.ok(lifecycleBefore.obligations.some(task=>task.title===templateTasks[0].title));
  const work=await invoke('/work','POST',{title:'Existing request',body:'Synthetic equipment request',deduplicationKey:'synthetic-linen-423'},requester,201);
  await invoke('/work/'+work.id+'/fulfilment','POST',{catalogId,beneficiaryId:employee.id,purpose:'Synthetic equipment request'},requester,201);
  const classification=await invoke('/work/'+work.id+'/classification','GET');
@@ -45,7 +52,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal((await fixture({outboundControl:true})).outboundCalls.length,1,'The network-edge observer detects an attempted outbound call');
  const protectedBefore=await fixture({seedSandboxGrant:true,resetOutbound:true});
  assert.equal(protectedBefore.protectedTables.execution_grants.length,1);
- assert.equal(protectedBefore.protectedTables.work_records.length,1);
+ assert.equal(protectedBefore.protectedTables.work_records.length,2);
  assert.equal(protectedBefore.protectedTables.work_fulfilments.length,1);
  await invoke('/sandboxes','POST',{name:'Denied'},requester,403);
  await invoke('/sandboxes','POST',{name:'Denied',copyRecords:true},owner,422);
@@ -65,6 +72,26 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  sandbox=await invoke(path+'/slas/'+secondSla.id,'PUT',{revision:sandbox.revision,name:'Fallback response',position:1000,first_response_minutes:120,next_response_minutes:240,resolution_minutes:960,pauseOn:[]});
  sandbox=await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit},editor);
  sandbox=await invoke(path+'/slas/'+secondSla.id,'PUT',{revision:sandbox.revision,name:'Fallback response',position:1,first_response_minutes:120,next_response_minutes:240,resolution_minutes:960,pauseOn:[]});
+ const templateBefore=sandbox.slaConfiguration.lifecycle.find(row=>row.id===template.id);
+ const rehearsalInput={revision:sandbox.revision,kind:'join',calendarId:calendar.id,effectiveAt:'2027-02-01T09:00:00.000Z',attributes:{location:templateValue.id}};
+ const beforeLifecycleRehearsal=await fixture({});
+ const lifecyclePreview=await invoke(path+'/test-lifecycle','POST',rehearsalInput);
+ assert.equal(lifecyclePreview.tasks[0].title,templateTasks[0].title);assert.equal(lifecyclePreview.tasks[0].dueAt,'2027-02-02T09:00:00.000Z');assert.deepEqual(lifecyclePreview.tasks[0].assignee,{type:'group',groupId:group.id});
+ assert.equal(lifecyclePreview.externalEffects,false);assert.equal(lifecyclePreview.productionAuthority,false);
+ assert.equal((await invoke(path+'/test-lifecycle','POST',{...rehearsalInput,attributes:{}})).tasks.length,0);
+ for(const auth of [requester,other])await invoke(path+'/test-lifecycle','POST',rehearsalInput,auth,auth===requester?403:404);
+ await invoke(path+'/test-lifecycle','POST',{...rehearsalInput,records:[{body:'synthetic-linen-464'}]},owner,422);
+ await invoke(path+'/test-lifecycle','POST',{...rehearsalInput,effectiveAt:'invalid'},owner,422);
+ await invoke(path+'/test-lifecycle','POST',{...rehearsalInput,calendarId:'synthetic-linen-foreign'},owner,422);
+ assert.deepEqual(await fixture({}),beforeLifecycleRehearsal,'Lifecycle previews retain no answers, work, audit or outbound effects');
+ const lifecycleEdit={name:'Reviewed lifecycle template',kind:'move',active:0,match_json:'{}',tasks_json:JSON.stringify([{...templateTasks[0],title:'Reviewed lifecycle preparation',anchor:'end',offsetDays:-2,remindDays:1}])};
+ for(const invalid of [{tasks_json:'not JSON'},{tasks_json:'[]'},{kind:'unknown'},{match_json:JSON.stringify({location:['synthetic-linen-foreign']})},{tasks_json:JSON.stringify([{...templateTasks[0],assignee:{type:'group',groupId:'synthetic-linen-foreign'}}])},{records:[]}])await invoke(path+'/sla-configuration/lifecycle/'+template.id,'PUT',{revision:sandbox.revision,...invalid},owner,422);
+ await invoke(path+'/sla-configuration/lifecycle/'+template.id,'PUT',{revision:sandbox.revision,name:'Forbidden'},requester,403);
+ await invoke(path+'/sla-configuration/lifecycle/'+template.id,'PUT',{revision:sandbox.revision,name:'Foreign'},other,404);
+ sandbox=await invoke(path+'/sla-configuration/lifecycle/'+template.id,'PUT',{revision:sandbox.revision,...lifecycleEdit},editor);
+ assert.equal((await invoke('/lifecycle-templates','GET')).items.find(row=>row.id===template.id).name,template.name);
+ assert.deepEqual((await invoke(path+'/test-lifecycle','POST',{...rehearsalInput,revision:sandbox.revision,kind:'move'})).tasks,[],'Inactive draft templates do not match');
+ await invoke(path+'/test-lifecycle','POST',rehearsalInput,owner,409);
  const roleBefore=sandbox.slaConfiguration.role[0];
  const calendarBefore=sandbox.slaConfiguration.calendar.find(x=>x.id===calendar.id),escalationBefore=sandbox.slaConfiguration.escalation[0],waitingBefore=sandbox.slaConfiguration.waiting[0];
  await invoke(path+'/sla-configuration/role/'+role.id,'PUT',{revision:sandbox.revision,permissions_json:'["ticket.read","workspace.admin"]'},owner,422);
@@ -73,7 +100,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  const roleBeforePromote=(await invoke('/department-roles','GET')).items.find(x=>x.id===role.id);
  assert.equal(roleBeforePromote.name,'Equipment reader');assert.equal(roleBeforePromote.members[0].active,true);
  const beforeConfigTest=await fixture({});
- for(const [family,configurationId] of [['role',role.id],['calendar',calendar.id],['escalation',escalationBefore.id],['waiting','waiting']]) {
+ for(const [family,configurationId] of [['lifecycle',template.id],['role',role.id],['calendar',calendar.id],['escalation',escalationBefore.id],['waiting','waiting']]) {
   const test=await invoke(path+'/test-configuration','POST',{revision:sandbox.revision,family,configurationId});assert.equal(test.valid,true);assert.equal(test.externalEffects,false);assert.equal(test.productionAuthority,false);
  }
  assert.deepEqual(await fixture({}),beforeConfigTest,'Configuration rehearsal retains no state, audit, answers or authority');
@@ -162,6 +189,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  sandbox=await invoke(path+'/package','POST',{revision:sandbox.revision});
  await invoke(path+'/runs/'+frozenRun.id+'/complete','POST',{revision:sandbox.revision,taskKey:'prepare'},owner,409);
  await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,409);
+ assert.deepEqual(sandbox.differences.filter(d=>d.family==='lifecycle').map(d=>d.field),['name','kind','match_json','tasks_json','active']);
  assert.deepEqual(sandbox.differences.filter(d=>'catalogId' in d).map(d=>d.field),['name','form','tasks']);
  assert.deepEqual(sandbox.differences.filter(d=>d.family==='sla'&&d.slaId===sla.id).map(d=>d.field),['name','position','priority','category','requester_group_id','calendar_id','department_id','first_response_minutes','next_response_minutes','resolution_minutes','pause_on_json']);
  assert.deepEqual(sandbox.differences.filter(d=>d.family==='calendar').map(d=>d.field),['name','timezone','weekdays_json','start_hour','end_hour','holidays_json','location','holiday_catalog']);
@@ -185,6 +213,9 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal(newFollowups.source,'current');assert.equal(newFollowups.levels[0].offset_minutes,-30);assert.equal(newFollowups.waitingRule.remind_business_days,3);
  const protectedWithNewWork=await fixture({});
  for(const [table,rows] of Object.entries(protectedBefore.protectedTables))for(const prior of rows)assert.deepEqual(protectedWithNewWork.protectedTables[table].find(row=>table==='work_department_role_members'?row.role_id===prior.role_id&&row.user_id===prior.user_id:row.id===prior.id),prior,'Promotion preserves the exact existing '+table+' row');
+ const promotedTemplate=(await invoke('/lifecycle-templates','GET')).items.find(row=>row.id===template.id);
+ assert.equal(promotedTemplate.name,lifecycleEdit.name);assert.equal(promotedTemplate.kind,'move');assert.equal(promotedTemplate.active,false);assert.equal(promotedTemplate.revision,2);assert.deepEqual(promotedTemplate.tasks,JSON.parse(lifecycleEdit.tasks_json));
+ assert.deepEqual(await invoke('/lifecycle/'+admitted.lifecycleId,'GET'),lifecycleBefore,'Existing lifecycle work keeps its exact tasks and template versions');
  const promotedRole=(await invoke('/department-roles','GET')).items.find(x=>x.id===role.id);
  assert.equal(promotedRole.name,'Reviewed equipment reader');assert.deepEqual(promotedRole.permissions,['ticket.read','ticket.reply']);assert.equal(promotedRole.revision,2);assert.equal(promotedRole.members[0].active,false,'Role promotion confers no assignment authority');
  const promotedSla=(await invoke('/sla-policies','GET')).items.find(p=>p.id===sla.id);
@@ -198,7 +229,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal(promoted.name,'Reviewed equipment');assert.equal(promoted.revision,2);assert.deepEqual(promoted.form,form);assert.deepEqual(promoted.tasks,tasks);
  await invoke(path+'/promote','POST',{revision:sandbox.revision},owner,409);
  const protectedAfter=await fixture({});assert.deepEqual(protectedAfter.connections,protectedBefore.connections);assert.deepEqual(protectedAfter.settings,protectedBefore.settings);assert.deepEqual(protectedAfter.protectedTables,protectedWithNewWork.protectedTables,'Existing grants, request snapshots and duties keep their exact versions');assert.equal(protectedAfter.sandboxAudits.filter(a=>a.action==='sandbox.promoted').length,1);assert.equal(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).version,sandbox.revision);
- assert.deepEqual([...new Set(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).configurationChanges.map(change=>change.family))].sort(),['calendar','escalation','role','waiting']);
+ assert.deepEqual([...new Set(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).configurationChanges.map(change=>change.family))].sort(),['calendar','escalation','lifecycle','role','waiting']);
  assert.deepEqual(protectedAfter.outboundCalls,[],'No outbound call in sandbox rehearsal or promotion');
  await rejectData(path+'/rollback-package');
  let rollback=await invoke(path+'/rollback-package','POST',{revision:sandbox.revision},owner,201);
@@ -210,6 +241,9 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.deepEqual(retainedAfterRollback,retainedFollowups);
  const newRetainedAfterRollback=(await invoke('/work/'+newWork.id+'/followups','GET')).configuration;
  assert.equal(newRetainedAfterRollback.source,'retained');assert.equal(newRetainedAfterRollback.levels[0].offset_minutes,-30);assert.equal(newRetainedAfterRollback.waitingRule.remind_business_days,3);
+ const rolledTemplate=(await invoke('/lifecycle-templates','GET')).items.find(row=>row.id===template.id);
+ assert.deepEqual({...rolledTemplate,revision:1},template);assert.equal(rolledTemplate.revision,3);
+ assert.deepEqual(await invoke('/lifecycle/'+admitted.lifecycleId,'GET'),lifecycleBefore,'Reviewed rollback preserves admitted lifecycle tasks');
  const rolledRole=(await invoke('/department-roles','GET')).items.find(x=>x.id===role.id);
  assert.equal(rolledRole.name,roleBefore.name);assert.deepEqual(rolledRole.permissions,['ticket.read']);assert.equal(rolledRole.revision,3);assert.equal(rolledRole.members[0].active,false,'Rollback does not revive old role assignments');
  const rolledSla=(await invoke('/sla-policies','GET')).items.find(p=>p.id===sla.id);
@@ -241,6 +275,24 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke(stalePath+'/promote','POST',{revision:stale.revision},owner,409);
  assert.equal((await invoke('/catalog','GET')).items.find(i=>i.id===catalogId).name,'Concurrent production edit');
  assert.equal((await invoke(stalePath,'GET')).state,'approved');assert.deepEqual(await fixture({}),beforeRefusal);
+ // A changed template and a retired match value each refuse the complete mixed package.
+ const reviewLifecycle=async name=>{
+  let row=await invoke('/sandboxes','POST',{name},owner,201),door='/sandboxes/'+row.id;
+  row=await invoke(door+'/catalog/'+catalogId,'PUT',{revision:row.revision,name:'Must not apply with stale lifecycle',form,tasks});
+  row=await invoke(door+'/sla-configuration/lifecycle/'+template.id,'PUT',{revision:row.revision,name:'Must not apply lifecycle'});
+  row=await invoke(door+'/package','POST',{revision:row.revision});
+  row=await invoke(door+'/approve','POST',{revision:row.revision},reviewer);
+  return {row,door};
+ };
+ const staleTemplate=await reviewLifecycle('Stale lifecycle template');
+ await invoke('/lifecycle-templates/'+template.id,'POST',{revision:3,name:'Concurrent lifecycle edit',kind:'join',active:true,match:template.match,tasks:template.tasks});
+ const beforeTemplateRefusal=await fixture({});
+ await invoke(staleTemplate.door+'/promote','POST',{revision:staleTemplate.row.revision},owner,409);assert.deepEqual(await fixture({}),beforeTemplateRefusal);
+ const retiredMatch=await reviewLifecycle('Retired lifecycle match');
+ await invoke('/catalog-values/'+templateValue.id,'POST',{revision:templateValue.revision,label:templateValue.label,active:false});
+ const beforeMatchRefusal=await fixture({});
+ await invoke(retiredMatch.door+'/promote','POST',{revision:retiredMatch.row.revision},owner,409);assert.deepEqual(await fixture({}),beforeMatchRefusal);
+ await invoke('/catalog-values/'+templateValue.id,'POST',{revision:templateValue.revision+1,label:templateValue.label,active:true});
  // SLA-only packages use the same approval and rollback path, with no catalog mutation.
  let only=await invoke('/sandboxes','POST',{name:'SLA only'},owner,201),onlyPath='/sandboxes/'+only.id;
  only=await invoke(onlyPath+'/slas/'+sla.id,'PUT',{revision:only.revision,...slaEdit,position:1,department_id:null},editor);

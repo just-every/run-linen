@@ -15,6 +15,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await api('/waiting-rule',{remindBusinessDays:2,resolveBusinessDays:5});
  const department=await api('/departments',{name:'Sandbox department '+suffix,kind:'it'});
  const role=await api('/department-roles',{departmentId:department.id,name:'Sandbox reader '+suffix,permissions:['ticket.read']});
+ const template=await api('/lifecycle-templates',{name:'Sandbox lifecycle '+suffix,kind:'join',match:{},tasks:[{key:'prepare',title:'Prepare lifecycle equipment',assignee:{type:'group',groupId:team.id},anchor:'start',offsetDays:0,remindDays:null}]});
  const writeClick=async(button,ending,method='POST')=>{
   const response=page.waitForResponse(r=>r.url().endsWith(ending)&&r.request().method()===method);
   await button.focus();await page.keyboard.press('Enter');const r=await response;assert.equal(r.status(),200,await r.text());
@@ -101,6 +102,26 @@ export async function sandboxJourney({page,api,base,out}) {
   await updated.locator(':scope > summary').press('Enter');
   await writeClick(updated.getByRole('button',{name:'Test sandbox '+family,exact:true}),path+'/test-configuration');
  }
+ const lifecycle=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit lifecycle: '+template.name})}).first();
+ await lifecycle.locator(':scope > summary').press('Enter');
+ const templateEditor=lifecycle.locator('details').first();await templateEditor.locator(':scope > summary').press('Enter');
+ await templateEditor.getByLabel('Template name',{exact:true}).fill('Reviewed lifecycle '+suffix);
+ await templateEditor.getByLabel('Task title 1',{exact:true}).fill('Reviewed lifecycle preparation');
+ await templateEditor.getByLabel('Business days from date 1',{exact:true}).fill('2');
+ await captureJourney(page,{path:out+'/SANDBOX-001-lifecycle-editor.png',fullPage:true});
+ await writeClick(templateEditor.getByRole('button',{name:'Save',exact:true}),path+'/sla-configuration/lifecycle/'+template.id,'PUT');
+ const testedTemplate=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit lifecycle: Reviewed lifecycle '+suffix})}).first();
+ await testedTemplate.locator(':scope > summary').press('Enter');
+ await writeClick(testedTemplate.getByRole('button',{name:'Test sandbox lifecycle',exact:true}),path+'/test-configuration');
+ const lifecycleRehearsal=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Rehearse lifecycle tasks'})}).first();
+ await lifecycleRehearsal.locator(':scope > summary').press('Enter');
+ await lifecycleRehearsal.getByLabel('Rehearsal business calendar',{exact:true}).selectOption({label:'Reviewed hours '+suffix});
+ await lifecycleRehearsal.getByLabel('Rehearsal effective instant (UTC)',{exact:true}).fill('2027-02-01T09:00');
+ await writeClick(lifecycleRehearsal.getByRole('button',{name:'Preview lifecycle tasks',exact:true}),path+'/test-lifecycle');
+ await lifecycleRehearsal.getByText('Preview only. No work, reminders or answers were saved. No external calls were made.',{exact:true}).waitFor();
+ assert.match(await lifecycleRehearsal.innerText(),/Reviewed lifecycle preparation.*2027-02-03T09:00:00.000Z/);
+ await captureJourney(page,{path:out+'/SANDBOX-001-lifecycle-rehearsal.png',fullPage:true});
+ assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,template.name);
  const production=(await api('/catalog')).items.find(x=>x.id===catalog.id);assert.equal(production.name,catalog.name);
  const isolated=await api(path);assert.ok(!JSON.stringify(isolated).includes('synthetic-linen-456'));assert.ok(!JSON.stringify(isolated).includes('synthetic-linen-457'));
  await writeClick(page.getByRole('button',{name:'Request separate owner review',exact:true}),path+'/package');
@@ -122,6 +143,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await captureJourney(page,{path:out+'/SANDBOX-001-promotion.png',fullPage:true});
  await writeClick(page.getByRole('button',{name:'Promote reviewed configuration',exact:true}),path+'/promote');
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).name,'Reviewed equipment '+suffix);
+ assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,'Reviewed lifecycle '+suffix);
  assert.equal((await api('/department-roles')).items.find(x=>x.id===role.id).name,'Reviewed reader '+suffix);
  await captureJourney(page,{path:out+'/SANDBOX-001-promoted.png',fullPage:true});
  const rollbackResponse=page.waitForResponse(r=>r.url().endsWith(path+'/rollback-package')&&r.request().method()==='POST');await page.getByRole('button',{name:'Request reviewed rollback',exact:true}).click();const rollback=await rollbackResponse;assert.equal(rollback.status(),201);const rollbackRow=await rollback.json();
@@ -131,6 +153,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await writeClick(page.getByRole('button',{name:'Approve reviewed package',exact:true}),'/sandboxes/'+rollbackRow.id+'/approve');
  await writeClick(page.getByRole('button',{name:'Promote reviewed configuration',exact:true}),'/sandboxes/'+rollbackRow.id+'/promote');
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).name,catalog.name);
+ assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,template.name);
  await captureJourney(page,{path:out+'/SANDBOX-001-rolled-back.png',fullPage:true});
  const employeeEmail=`synthetic-linen-${suffix}-employee@example.test`;
  await api('/members',{name:'Sandbox employee',email:employeeEmail,password,roles:['employee']});

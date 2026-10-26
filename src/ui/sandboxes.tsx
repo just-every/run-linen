@@ -1,3 +1,6 @@
+import {SandboxLifecycleRehearsal} from './sandbox-lifecycle';
+import {LifecycleTemplateEditor, type TemplateTeam, type TemplateValue} from './lifecycle-template-editor';
+import type {Template} from '../features/work/lifecycle-templates';
 import {SandboxRehearsal} from './sandbox-rehearsal';
 import {useState,type FormEvent} from 'react';
 import {request} from './api';
@@ -34,22 +37,24 @@ export function SandboxSpace({selectedId}:{selectedId?:string}) {
 function SandboxDetail({row,refresh}:{row:Sandbox;refresh:()=>void}) {
  const {session}=useSession(),options=useRemote<Options>('/sandboxes/'+row.id+'/options'),runs=useRemote<{items:Run[]}>('/sandboxes/'+row.id+'/runs');
  const [error,setError]=useState<unknown>(),[pending,setPending]=useState(false),[tested,setTested]=useState(false);
+ const values=useRemote<{items:TemplateValue[]}>('/catalog-values'),groups=useRemote<{items:TemplateTeam[]}>('/work-groups');
  const path='/sandboxes/'+row.id;
  async function mutate(door:string,body:unknown={},method='POST') {
   setError(null);setPending(true);try{const value=await request<Sandbox>(path+door,{method,csrf:session.csrfToken,body:{revision:row.revision,...body as object}});if(door==='/rollback-package')location.hash='/sandboxes/'+value.id;else refresh();return value;}catch(e){setError(e);throw e;}finally{setPending(false);}
  }
  const action=(door:string)=>void mutate(door).catch(()=>{});
  return <><h2>{row.name}</h2><Facts entries={[["Revision",String(row.revision)],["State",row.state],["Approval",row.approvedBy?'Separate owner approval recorded':'Not approved']]}/><Notice>{row.limits}</Notice>
- <ErrorNotice error={error}/><ErrorNotice error={options.error} retry={options.refresh}/><ErrorNotice error={runs.error} retry={runs.refresh}/>
+ <ErrorNotice error={error}/><ErrorNotice error={values.error} retry={values.refresh}/><ErrorNotice error={groups.error} retry={groups.refresh}/><ErrorNotice error={options.error} retry={options.refresh}/><ErrorNotice error={runs.error} retry={runs.refresh}/>
  {row.state==='draft'&&<>
  {row.items.map(item=><details className="action-disclosure" key={item.id}><summary>Edit {item.name}</summary>
  <CatalogFormEditor item={item} onSaved={()=>{}} saveDraft={async value=>{await mutate('/catalog/'+item.id,{...value,tasks:item.tasks},'PUT');}}/>
  <CatalogTaskPlanEditor item={item} onSaved={()=>{}} saveDraft={async tasks=>{await mutate('/catalog/'+item.id,{name:item.name,form:item.form,tasks},'PUT');}}/>
  <SandboxRehearsal path={path} revision={row.revision} item={item} onRun={runs.refresh}/>
  </details>)}
+ {!!row.slaConfiguration.lifecycle?.length&&<SandboxLifecycleRehearsal path={path} revision={row.revision} csrf={session.csrfToken} values={values.data?.items??[]} calendars={row.slaConfiguration.calendar.map(calendar=>({id:calendar.id,name:String(calendar.name)}))}/>}
  {tested&&<Notice>Validation passed. Answers were not retained. Rehearsals make no external calls.</Notice>}
  {row.slas.map(sla=><details className="action-disclosure" key={sla.id}><summary>Edit SLA: {sla.name}</summary><SlaEditor sla={sla} options={options.data} save={body=>mutate('/slas/'+sla.id,body,'PUT')}/></details>)}
- {Object.entries(row.slaConfiguration).flatMap(([family,rows])=>rows.map(config=><details className="action-disclosure" key={family+config.id}><summary>Edit {family}: {config.name??config.label??'Waiting rule'}</summary><ConfigurationEditor family={family} row={config} options={options.data} save={body=>mutate('/sla-configuration/'+family+'/'+config.id,body,'PUT')}/><button className="action secondary" disabled={pending} onClick={()=>void request(path+'/test-configuration',{method:'POST',csrf:session.csrfToken,body:{revision:row.revision,family,configurationId:config.id}}).then(()=>setTested(true)).catch(setError)}>Test sandbox {family}</button></details>))}
+ {Object.entries(row.slaConfiguration).flatMap(([family,rows])=>rows.map(config=><details className="action-disclosure" key={family+config.id}><summary>Edit {family}: {config.name??config.label??'Waiting rule'}</summary>{family==='lifecycle'?<LifecycleTemplateEditor template={{id:config.id,name:String(config.name),kind:config.kind as Template['kind'],revision:config.revision,active:config.active===1,match:JSON.parse(String(config.match_json)),tasks:JSON.parse(String(config.tasks_json))}} values={values.data?.items??[]} groups={groups.data?.items??[]} onSaved={()=>{}} saveDraft={body=>mutate('/sla-configuration/lifecycle/'+config.id,{name:body.name,kind:body.kind,active:Number(body.active),match_json:JSON.stringify(body.match),tasks_json:JSON.stringify(body.tasks)},'PUT')}/>:<ConfigurationEditor family={family} row={config} options={options.data} save={body=>mutate('/sla-configuration/'+family+'/'+config.id,body,'PUT')}/>}<button className="action secondary" disabled={pending} onClick={()=>void request(path+'/test-configuration',{method:'POST',csrf:session.csrfToken,body:{revision:row.revision,family,configurationId:config.id}}).then(()=>setTested(true)).catch(setError)}>Test sandbox {family}</button></details>))}
  <button className="action primary" disabled={pending||!row.differences.length} onClick={()=>action('/package')}>Request separate owner review</button>
  </>}
  {runs.data?.items.map(run=><article className="connection-record" key={run.id}><h3>Team rehearsal · {run.state}</h3>{!run.current&&<Notice>Configuration changed. Start a fresh rehearsal.</Notice>}{run.tasks.map(task=><p key={task.key}>{task.title} · {task.state} {row.state==='draft'&&run.current&&task.state==='ready'&&<button className="action secondary" disabled={pending} onClick={()=>void mutate('/runs/'+run.id+'/complete',{taskKey:task.key}).then(()=>runs.refresh()).catch(()=>{})}>Complete {task.title}</button>}</p>)}</article>)}

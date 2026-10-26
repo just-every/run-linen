@@ -11,12 +11,12 @@ export type TemplateTeam = { id: string; name: string };
 const kinds = [{ value: 'join', label: 'Joining the team' }, { value: 'move', label: 'Moving role or location' }, { value: 'leave', label: 'Leaving the team' }];
 
 /** Owner-facing controls preserve stable saved task keys and reviewed ids without exposing either. */
-export function LifecycleTemplateEditor({ template, values, groups, onSaved }: {
-  template?: Template; values: TemplateValue[]; groups: TemplateTeam[]; onSaved: () => void;
+export function LifecycleTemplateEditor({ template, values, groups, onSaved, saveDraft }: {
+  template?: Template; values: TemplateValue[]; groups: TemplateTeam[]; onSaved: () => void; saveDraft?: (body: Record<string,unknown>) => Promise<unknown>;
 }) {
   const mutation = useMutation(), [match, setMatch] = useState<Template['match']>(template?.match ?? {});
   const [tasks, setTasks] = useState(() => template ? template.tasks.map(draftTask) : [draftTask()]);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(false), [draftError,setDraftError] = useState<unknown>();
   const path = template ? `/lifecycle-templates/${template.id}` : '/lifecycle-templates';
   const toggle = (dimension: (typeof templateDimensions)[number][0], id: string, checked: boolean) => {
     const selected = match[dimension] ?? [];
@@ -26,13 +26,14 @@ export function LifecycleTemplateEditor({ template, values, groups, onSaved }: {
     setMatch(next);
   };
   async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setSaved(false);
+    event.preventDefault(); setSaved(false); setDraftError(null);
     const form = new FormData(event.currentTarget);
-    const result = await mutation.mutate(path, {
+    const body = {
       name: String(form.get('name')), kind: String(form.get('kind')), match,
       tasks: tasks.map(task => ({ ...task, offsetDays: Number(task.offsetDays), remindDays: task.remindDays === '' ? null : Number(task.remindDays) })),
       ...(template ? { revision: template.revision, active: form.has('active') } : {}),
-    });
+    };
+    const result = saveDraft ? await saveDraft(body).catch(error=>{setDraftError(error);return null;}) : await mutation.mutate(path,body);
     if (result) { setSaved(true); onSaved(); }
   }
   return <details className="action-disclosure" data-action-path={path}>
@@ -50,8 +51,8 @@ export function LifecycleTemplateEditor({ template, values, groups, onSaved }: {
         {!values.some(value => value.dimension === dimension) && <small>No reviewed values yet.</small>}
       </fieldset>)}
       <LifecycleTemplateTaskRows tasks={tasks} groups={groups} onChange={setTasks} />
-      <Notice>Saving creates a new template revision. Existing changes keep their tasks. Dated tasks need a configured business calendar in the change’s time zone. A missing manager holds their task with the accountable owner. Reminders reach people in the portal; Slack, Teams and email reminders are not connected.</Notice>
-      <ErrorNotice error={mutation.error} />{saved && <Notice>Task template saved.</Notice>}
+      <Notice>{saveDraft?'Saving changes only this sandbox draft.':'Saving creates a new template revision.'} Existing changes keep their tasks. Dated tasks need a configured business calendar in the change’s time zone. A missing manager holds their task with the accountable owner. Reminders reach people in the portal; Slack, Teams and email reminders are not connected.</Notice>
+      <ErrorNotice error={mutation.error ?? draftError} />{saved && <Notice>Task template saved.</Notice>}
       <button className="action primary" disabled={mutation.pending || !tasks.length}>{mutation.pending ? 'Saving…' : 'Save'}</button>
     </form>
   </details>;
