@@ -184,6 +184,12 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  sandbox=await invoke(path+'/catalog/'+catalogId,'PUT',{revision:sandbox.revision,name:'Reviewed equipment',form,tasks:[{...tasks[0],after:['automated']}]});
  await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,422);
  sandbox=await invoke(path+'/catalog/'+catalogId,'PUT',{revision:sandbox.revision,name:'Reviewed equipment',form,tasks});
+ const approvalBody={calendarId:calendar.id,requiresManager:true,manager:{remindHours:4,slaHours:8},approvals:[{key:'equipment_review',name:'Equipment review',mode:'all',approvers:[{type:'member',userId:first.id}],aboveCents:10000,costField:null,remindHours:4,slaHours:8}]};
+ await invoke(path+'/catalog/'+catalogId+'/approvals','PUT',{revision:sandbox.revision,...approvalBody},requester,403);
+ for(const invalid of [{requiresManager:'yes'},{calendarId:'synthetic-linen-foreign'},{records:[]},{approvals:[{...approvalBody.approvals[0],approvers:[{type:'member',userId:'synthetic-linen-foreign'}]}]}])await invoke(path+'/catalog/'+catalogId+'/approvals','PUT',{revision:sandbox.revision,...approvalBody,...invalid},owner,422);
+ sandbox=await invoke(path+'/catalog/'+catalogId+'/approvals','PUT',{revision:sandbox.revision,...approvalBody},editor);
+ const approvalFixture=await fixture({}),approvalPreview=await invoke(path+'/test-form','POST',{revision:sandbox.revision,catalogId,answers:{purpose:privateAnswer}});
+ assert.equal(approvalPreview.managerRequired,true);assert.deepEqual(approvalPreview.approvalPlan.map(stage=>[stage.name,stage.mode,stage.applies]),[['Equipment review','all',true]]);assert.deepEqual(await fixture({}),approvalFixture);
  const frozenRun=await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,201);
  const afterWorkflow=await fixture({});
  assert.deepEqual(afterWorkflow.protectedTables,protectedBefore.protectedTables,'Rehearsal task completion cannot change production work, grants or in-flight requests');
@@ -202,7 +208,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke(path+'/runs/'+frozenRun.id+'/complete','POST',{revision:sandbox.revision,taskKey:'prepare'},owner,409);
  await invoke(path+'/runs','POST',{revision:sandbox.revision,catalogId,answers:{purpose:'Synthetic test'}},owner,409);
  assert.deepEqual(sandbox.differences.filter(d=>d.family==='lifecycle').map(d=>d.field),['name','kind','match_json','tasks_json','active']);
- assert.deepEqual(sandbox.differences.filter(d=>'catalogId' in d).map(d=>d.field),['name','form','tasks']);
+ assert.deepEqual(sandbox.differences.filter(d=>'catalogId' in d).map(d=>d.field),['name','form','tasks','requiresManager','approvals','managerApproval']);
  assert.deepEqual(sandbox.differences.filter(d=>d.family==='sla'&&d.slaId===sla.id).map(d=>d.field),['name','position','priority','category','requester_group_id','calendar_id','department_id','first_response_minutes','next_response_minutes','resolution_minutes','pause_on_json']);
  assert.deepEqual(sandbox.differences.filter(d=>d.family==='calendar').map(d=>d.field),['name','timezone','weekdays_json','start_hour','end_hour','holidays_json','location','holiday_catalog']);
  assert.deepEqual(sandbox.differences.filter(d=>d.family==='escalation').map(d=>d.field),['offset_minutes','notify','label']);
@@ -240,7 +246,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal(promotedSla.name,slaEdit.name);assert.equal(promotedSla.first_response_minutes,30);assert.equal(promotedSla.revision,2);
  assert.deepEqual((await invoke('/work/'+work.id+'/sla','GET')).policy,clockBefore,'In-flight SLA snapshot retains its version and targets');
  const promoted=(await invoke('/catalog','GET')).items.find(i=>i.id===catalogId);
- assert.equal(promoted.name,'Reviewed equipment');assert.equal(promoted.revision,2);assert.deepEqual(promoted.form,form);assert.deepEqual(promoted.tasks,tasks);
+ assert.equal(promoted.name,'Reviewed equipment');assert.equal(promoted.revision,2);assert.deepEqual(promoted.form,form);assert.deepEqual(promoted.tasks,tasks);assert.equal(promoted.requires_manager,1);assert.equal(promoted.approvals[0].name,'Equipment review');
  await invoke(path+'/promote','POST',{revision:sandbox.revision},owner,409);
  const protectedAfter=await fixture({});assert.deepEqual(protectedAfter.connections,protectedBefore.connections);assert.deepEqual(protectedAfter.settings,protectedBefore.settings);assert.deepEqual(protectedAfter.protectedTables,protectedWithNewWork.protectedTables,'Existing grants, request snapshots and duties keep their exact versions');assert.equal(protectedAfter.sandboxAudits.filter(a=>a.action==='sandbox.promoted').length,1);assert.equal(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).version,sandbox.revision);
  assert.deepEqual([...new Set(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).configurationChanges.map(change=>change.family))].sort(),['calendar','escalation','lifecycle','recurring','role','waiting']);
@@ -271,7 +277,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal((await invoke('/escalation-rules','GET')).levels[0].offset_minutes,0);
  assert.equal(rolledSla.name,'Equipment response');assert.equal(rolledSla.first_response_minutes,60);assert.equal(rolledSla.revision,3);
  assert.deepEqual((await invoke('/work/'+work.id+'/sla','GET')).policy,clockBefore);
- assert.equal(restored.name,'Original equipment');assert.equal(restored.revision,3);assert.deepEqual(restored.tasks,[]);
+ assert.equal(restored.name,'Original equipment');assert.equal(restored.revision,3);assert.deepEqual(restored.tasks,[]);assert.equal(restored.requires_manager,0);assert.deepEqual(restored.approvals,[]);
  // The real scheduler consumes the retained definitions, not the current global rules.
  const newClassification=await invoke('/work/'+newWork.id+'/classification','GET');
  await invoke('/work/'+newWork.id+'/classification/override','POST',{revision:newClassification.revision,workRevision:newClassification.workRevision,type:'incident',category:'hardware',subcategory:'laptop',impact:'low',urgency:'high',priority:'P3',reason:'Synthetic post-promotion classification'});

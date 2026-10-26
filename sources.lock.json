@@ -5050,6 +5050,10 @@
       "sha256": "eaf46a8655daf7d5a9a5bbd609e3236ab7bd7b1dc99471ca2fec414310274a55",
       "executable": false
     },
+    "src/platform/sandbox-approvals.ts": {
+      "sha256": "9faf846ecd2dcd06973099bfaeaabcf945b07a3f995936d3fc591534f26d71f6",
+      "executable": false
+    },
     "src/platform/sandbox-lifecycle.ts": {
       "sha256": "00c38c9b5263c63c8da0d5dbb7fee1b0d2c338e1b7cc1a9a8ef1972692492eab",
       "executable": false
@@ -5071,7 +5075,7 @@
       "executable": false
     },
     "src/platform/sandboxes.ts": {
-      "sha256": "09762fb050abbacec532579217daf5c2435f78541becabd892990cd1ef7cbc7a",
+      "sha256": "14339aa8dba995c8a51fa857b1219067f1aec9b1b09ae31ab9e7c29d4c7fe49d",
       "executable": false
     },
     "src/platform/session-status.ts": {
@@ -5375,7 +5379,7 @@
       "executable": false
     },
     "src/ui/catalog-approval-editor.tsx": {
-      "sha256": "903bb40f61ec4bb6377eb593b4545bd5c4780e3943a03c624b2aa38a55c0c6d7",
+      "sha256": "55215f4b7b205dededa33c8ee0ca00bdb8618e160433ce5fc7c7b7f4655d46a9",
       "executable": false
     },
     "src/ui/catalog-form-editor.tsx": {
@@ -5623,11 +5627,11 @@
       "executable": false
     },
     "src/ui/sandbox-rehearsal.tsx": {
-      "sha256": "b67c8f205f666c65be5bd7179ca76f8730b1d3e299ea14fcef19d7d38a6dd434",
+      "sha256": "ef2583169247bdb408129199bbb563606e5081bc36c9212bd34b149b34cfa963",
       "executable": false
     },
     "src/ui/sandboxes.tsx": {
-      "sha256": "4f894a5a3f3342e96d0f62aaf398a72515addc7c3bd599e9916cc7203dea482d",
+      "sha256": "38a6e90b8d4a598fd177a9f7015ee0bb0fe4d2ae963ca82427dafba30fd54d2a",
       "executable": false
     },
     "src/ui/search.tsx": {
@@ -6123,7 +6127,7 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "4e54a3a54826eabb466edd76dcc7a95ff60c5245db972ffad58fd74ee1cf1065",
+      "sha256": "d16caa5df6493cc65c73a92c8c1e280370fbd2ab45895b614eed30e57f8176e5",
       "executable": false
     },
     "tests/platform/tombstone-race-fixture.ts": {
@@ -6467,7 +6471,7 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "8096956476d20c514317c52187482171f5415371eb7c06b627b60245470b5ade",
+      "sha256": "e3a9ba8ecd0d6c2527b2e1349fcfdc7a0f30b5105efb323c82f1c379fdaed63a",
       "executable": false
     },
     "tests/ui/search-browser.mjs": {

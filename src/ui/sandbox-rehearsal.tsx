@@ -6,14 +6,14 @@ import {fieldVisible,type CatalogForm} from '../features/work/catalog-form-schem
 
 /** Transient form answers are cleared on success and never enter persistent drafts. */
 export function SandboxRehearsal({path,revision,item,onRun}:{path:string;revision:number;item:{id:string;name:string;form:CatalogForm;tasks:unknown[]};onRun:()=>void}) {
- const {session}=useSession(),[answers,setAnswers]=useState<Record<string,string|number|boolean>>({}),[error,setError]=useState<unknown>(),[pending,setPending]=useState(false),[tested,setTested]=useState(false);
+ const {session}=useSession(),[answers,setAnswers]=useState<Record<string,string|number|boolean>>({}),[error,setError]=useState<unknown>(),[pending,setPending]=useState(false),[tested,setTested]=useState(false),[approvalPlan,setApprovalPlan]=useState<{name:string;applies:boolean;mode:string}[]>([]);
  const visible:Record<string,string|number|boolean>={};
  for(const field of item.form.fields)if(fieldVisible(field,visible)&&answers[field.id]!==undefined)visible[field.id]=answers[field.id];
  const edit=(key:string,value:string|number|boolean|undefined)=>{setAnswers(previous=>value===undefined?Object.fromEntries(Object.entries(previous).filter(([field])=>field!==key)):{...previous,[key]:value});setTested(false);};
  async function rehearse(e:FormEvent<HTMLFormElement>){
   e.preventDefault();const workflow=(e.nativeEvent as SubmitEvent).submitter?.getAttribute('value')==='workflow';
   setError(null);setPending(true);
-  try{await request(path+(workflow?'/runs':'/test-form'),{method:'POST',csrf:session.csrfToken,body:{revision,catalogId:item.id,answers:visible}});setAnswers({});setTested(true);if(workflow)onRun();}catch(error){setError(error);}finally{setPending(false);}
+  try{const result=await request<{approvalPlan?:{name:string;applies:boolean;mode:string}[]}>(path+(workflow?'/runs':'/test-form'),{method:'POST',csrf:session.csrfToken,body:{revision,catalogId:item.id,answers:visible}});setApprovalPlan(result.approvalPlan??[]);setAnswers({});setTested(true);if(workflow)onRun();}catch(error){setError(error);}finally{setPending(false);}
  }
  return <form className="inline-form" onSubmit={e=>void rehearse(e)}><h3>Test {item.name}</h3>
  {item.form.fields.filter(field=>fieldVisible(field,visible)).map(field=><label key={field.id} className={field.type==='checkbox'?'checkbox-field':''}>
@@ -24,6 +24,7 @@ export function SandboxRehearsal({path,revision,item,onRun}:{path:string;revisio
  <input type={field.type==='number'?'number':field.type==='date'?'date':'text'} step={field.type==='number'?'any':undefined} required={field.required} maxLength={4000} value={String(answers[field.id]??'')} onChange={e=>edit(field.id,e.target.value===''?undefined:field.type==='number'?Number(e.target.value):e.target.value)}/>}
  </label>)}
  <ErrorNotice error={error}/>{tested&&<Notice>Validation passed. Answers were not retained. Rehearsals make no external calls.</Notice>}
+ {tested&&approvalPlan.map((stage,index)=><p key={index}>{stage.name} · {stage.applies?'Required':'Skipped'} · {stage.mode==='all'?'Every holder':'Any holder'}</p>)}
  <button className="action secondary" disabled={pending}>Test form</button><button className="action secondary" value="workflow" disabled={pending||!item.tasks.length}>Rehearse team tasks</button>
  </form>;
 }

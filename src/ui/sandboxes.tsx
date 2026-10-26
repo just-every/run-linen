@@ -1,3 +1,5 @@
+import {CatalogApprovalEditor} from './catalog-approval-editor';
+import type {StageDef} from '../features/work/approval-config';
 import {SandboxRecurringEditor} from './sandbox-recurring';
 import {SandboxLifecycleRehearsal} from './sandbox-lifecycle';
 import {LifecycleTemplateEditor, type TemplateTeam, type TemplateValue} from './lifecycle-template-editor';
@@ -15,7 +17,7 @@ import type {Sla} from '../platform/sandbox-slas';
 import {rolePermissions} from '../features/work/department-role-authority';
 import {categories} from '../features/work/classification-policy';
 
-type Item={id:string;name:string;revision:number;form:CatalogForm;tasks:CatalogTask[]};
+type Item={id:string;name:string;revision:number;form:CatalogForm;tasks:CatalogTask[];requiresManager:number;approvals:StageDef[];managerApproval:StageDef|null};
 type ConfigRow=Record<string,string|number|null>&{id:string;revision:number};
 type Sandbox={id:string;name:string;revision:number;state:string;approvedBy:string|null;items:Item[];slas:Sla[];slaConfiguration:Record<string,ConfigRow[]>;differences:{family?:string;catalogId?:string;slaId?:string;configurationId?:string;field:string;before:unknown;after:unknown}[];limits:string};
 type Choice={id:string;name:string};
@@ -50,13 +52,14 @@ function SandboxDetail({row,refresh}:{row:Sandbox;refresh:()=>void}) {
  {row.items.map(item=><details className="action-disclosure" key={item.id}><summary>Edit {item.name}</summary>
  <CatalogFormEditor item={item} onSaved={()=>{}} saveDraft={async value=>{await mutate('/catalog/'+item.id,{...value,tasks:item.tasks},'PUT');}}/>
  <CatalogTaskPlanEditor item={item} onSaved={()=>{}} saveDraft={async tasks=>{await mutate('/catalog/'+item.id,{name:item.name,form:item.form,tasks},'PUT');}}/>
+ <details className="action-disclosure"><summary>Edit sandbox approval workflow</summary><SandboxApprovals item={item} calendars={row.slaConfiguration.calendar.map(calendar=>({id:calendar.id,name:String(calendar.name),timezone:String(calendar.timezone)}))} save={body=>mutate('/catalog/'+item.id+'/approvals',body,'PUT')}/></details>
  <SandboxRehearsal path={path} revision={row.revision} item={item} onRun={runs.refresh}/>
  </details>)}
  {!!row.slaConfiguration.lifecycle?.length&&<SandboxLifecycleRehearsal path={path} revision={row.revision} csrf={session.csrfToken} values={values.data?.items??[]} calendars={row.slaConfiguration.calendar.map(calendar=>({id:calendar.id,name:String(calendar.name)}))}/>}
  {recurringPreview&&<Notice>Next recurring occurrence: {recurringPreview}. No tickets or duties were created.</Notice>}
  {tested&&<Notice>Validation passed. Answers were not retained. Rehearsals make no external calls.</Notice>}
  {row.slas.map(sla=><details className="action-disclosure" key={sla.id}><summary>Edit SLA: {sla.name}</summary><SlaEditor sla={sla} options={options.data} save={body=>mutate('/slas/'+sla.id,body,'PUT')}/></details>)}
- {Object.entries(row.slaConfiguration).flatMap(([family,rows])=>rows.map(config=><details className="action-disclosure" key={family+config.id}><summary>Edit {family}: {config.name??config.title??config.label??'Waiting rule'}</summary>{family==='recurring'?<SandboxRecurringEditor row={config} people={options.data?.recipients??[]} save={body=>mutate('/sla-configuration/recurring/'+config.id,body,'PUT')}/>:family==='lifecycle'?<LifecycleTemplateEditor template={{id:config.id,name:String(config.name),kind:config.kind as Template['kind'],revision:config.revision,active:config.active===1,match:JSON.parse(String(config.match_json)),tasks:JSON.parse(String(config.tasks_json))}} values={values.data?.items??[]} groups={groups.data?.items??[]} onSaved={()=>{}} saveDraft={body=>mutate('/sla-configuration/lifecycle/'+config.id,{name:body.name,kind:body.kind,active:Number(body.active),match_json:JSON.stringify(body.match),tasks_json:JSON.stringify(body.tasks)},'PUT')}/>:<ConfigurationEditor family={family} row={config} options={options.data} save={body=>mutate('/sla-configuration/'+family+'/'+config.id,body,'PUT')}/>}<button className="action secondary" disabled={pending} onClick={()=>void request(path+'/test-configuration',{method:'POST',csrf:session.csrfToken,body:{revision:row.revision,family,configurationId:config.id}}).then(value=>{setTested(true);const result=value as {nextOccurrence?:{dueAt:string}};setRecurringPreview(result.nextOccurrence?.dueAt);}).catch(setError)}>Test sandbox {family}</button></details>))}
+ {Object.entries(row.slaConfiguration).flatMap(([family,rows])=>rows.map(config=><details className="action-disclosure" key={family+config.id}><summary>Edit {family}: {config.name??config.title??config.label??'Waiting rule'}</summary>{family==='recurring'?(options.data&&<SandboxRecurringEditor row={config} people={options.data?.recipients??[]} save={body=>mutate('/sla-configuration/recurring/'+config.id,body,'PUT')}/>):family==='lifecycle'?<LifecycleTemplateEditor template={{id:config.id,name:String(config.name),kind:config.kind as Template['kind'],revision:config.revision,active:config.active===1,match:JSON.parse(String(config.match_json)),tasks:JSON.parse(String(config.tasks_json))}} values={values.data?.items??[]} groups={groups.data?.items??[]} onSaved={()=>{}} saveDraft={body=>mutate('/sla-configuration/lifecycle/'+config.id,{name:body.name,kind:body.kind,active:Number(body.active),match_json:JSON.stringify(body.match),tasks_json:JSON.stringify(body.tasks)},'PUT')}/>:<ConfigurationEditor family={family} row={config} options={options.data} save={body=>mutate('/sla-configuration/'+family+'/'+config.id,body,'PUT')}/>}<button className="action secondary" disabled={pending} onClick={()=>void request(path+'/test-configuration',{method:'POST',csrf:session.csrfToken,body:{revision:row.revision,family,configurationId:config.id}}).then(value=>{setTested(true);const result=value as {nextOccurrence?:{dueAt:string}};setRecurringPreview(result.nextOccurrence?.dueAt);}).catch(setError)}>Test sandbox {family}</button></details>))}
  <button className="action primary" disabled={pending||!row.differences.length} onClick={()=>action('/package')}>Request separate owner review</button>
  </>}
  {runs.data?.items.map(run=><article className="connection-record" key={run.id}><h3>Team rehearsal · {run.state}</h3>{!run.current&&<Notice>Configuration changed. Start a fresh rehearsal.</Notice>}{run.tasks.map(task=><p key={task.key}>{task.title} · {task.state} {row.state==='draft'&&run.current&&task.state==='ready'&&<button className="action secondary" disabled={pending} onClick={()=>void mutate('/runs/'+run.id+'/complete',{taskKey:task.key}).then(()=>runs.refresh()).catch(()=>{})}>Complete {task.title}</button>}</p>)}</article>)}
@@ -101,4 +104,9 @@ function ConfigurationEditor({family,row,options,save}:{family:string;row:Config
  field==='holiday_catalog'?<select name={field} defaultValue={String(value??'')}><option value="">Explicit holidays only</option><option value="us-federal">US federal holidays</option></select>:
  <input name={field} type={typeof value==='number'?'number':'text'} step="1" defaultValue={field.endsWith('_json')?JSON.parse(String(value)).join(','):String(value??'')}/>}</label>)}
  <ErrorNotice error={error}/><button className="action primary" disabled={pending||!options}>Save sandbox {family}</button></form>;
+}
+
+function SandboxApprovals({item,calendars,save}:{item:Item;calendars:{id:string;name:string;timezone:string}[];save:(body:object)=>Promise<unknown>}) {
+ const [managerRequired,setManagerRequired]=useState(Boolean(item.requiresManager));
+ return <><label className="checkbox-field"><input type="checkbox" checked={managerRequired} onChange={e=>setManagerRequired(e.target.checked)}/>Require manager approval in sandbox</label><CatalogApprovalEditor item={{...item,requires_manager:Number(managerRequired)}} draftCalendars={calendars} onSaved={()=>{}} saveDraft={body=>save({...body,requiresManager:managerRequired})}/></>;
 }
