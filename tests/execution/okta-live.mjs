@@ -74,6 +74,7 @@ async function login(email, password) {
   return { ...actor, csrfToken: session.csrfToken, id: session.principal.userId };
 }
 async function runEffect(owner, operator, connection, work, action, target, beneficiaryId, payload = {}) {
+  console.log(`START native Okta effect ${action}`);
   const scope = { action, target, beneficiaryId, connectionId: connection.id, actionVersion: 1 };
   const grant = (await native('/grants', { ...scope, principalId: operator.id,
     validFrom: new Date(Date.now() - 60000).toISOString(), validUntil: new Date(Date.now() + 3600000).toISOString(),
@@ -84,14 +85,28 @@ async function runEffect(owner, operator, connection, work, action, target, bene
   check(Array.isArray(dispatched) && dispatched.length === 1, 'native_operation_missing');
   const operationId = dispatched[0].id;
   await native('/execution/process', {}, operator);
-  await eventually(async () => {
+  try { await eventually(async () => {
     const operation = (await native('/operations', undefined, operator)).value.find(item => item.id === operationId);
     check(operation, 'native_operation_readback_missing');
     if (operation.state === 'effect_verified') return true;
     check(['submitted', 'unknown', 'running'].includes(operation.state), 'native_effect_' + safeCode(operation.last_error || operation.state));
     await native(`/operations/${operationId}/reconcile`, {}, operator);
     return false;
-  }, 'native_effect_unverified', action === 'okta.sessions.clear' ? 60 : 24);
+  }, 'native_effect_unverified', action === 'okta.sessions.clear' ? 60 : 24); }
+  catch (error) {
+    const attempts = (await db.prepare('SELECT kind,state,http_status,count(*) count FROM execution_provider_attempts WHERE connection_id=? GROUP BY kind,state,http_status').bind(connection.id).all()).results;
+    console.log('Provider attempt summary ' + JSON.stringify(attempts));
+    if (action === 'okta.sessions.clear') {
+      const row = await db.prepare("SELECT evidence_json FROM execution_verifications WHERE operation_id=? AND state='provider_receipt' ORDER BY rowid DESC LIMIT 1").bind(operationId).first();
+      if (row) {
+        const receipt = JSON.parse(row.evidence_json);
+        const filter = `eventType eq "user.session.clear" and target.id eq "${target}"`;
+        const events = await items('/api/v1/logs?' + new URLSearchParams({filter,since:new Date(Date.parse(receipt.startedAt)-60000).toISOString(),until:new Date().toISOString(),limit:'100'}));
+        console.log('Session event summary ' + JSON.stringify(events.map(event=>({successful:event.outcome?.result==='SUCCESS',requestMatches:event.debugContext?.debugData?.requestId===receipt.requestId,targetMatches:event.target?.some(item=>item.id===target),timeDeltaMs:Date.parse(event.published)-Date.parse(receipt.startedAt)}))));
+      }
+    }
+    throw error;
+  }
   counts.operations++;
   console.log(`PASS native Okta effect ${action}`);
   return operationId;
@@ -106,7 +121,7 @@ async function sessionEvidence(operationId, target) {
   check(typeof receipt.requestId === 'string' && Number.isFinite(Date.parse(receipt.startedAt)), 'session_receipt_invalid');
   await eventually(async () => {
     const filter = `eventType eq "user.session.clear" and target.id eq "${target}"`;
-    const events = await items('/api/v1/logs?' + new URLSearchParams({ filter, since: receipt.startedAt, limit: '100' }));
+    const events = await items('/api/v1/logs?' + new URLSearchParams({ filter, since: receipt.startedAt, until: new Date().toISOString(), limit: '100' }));
     return events.some(event => event.eventType === 'user.session.clear' && event.outcome?.result === 'SUCCESS'
       && event.target?.some(item => item.id === target) && Date.parse(event.published) >= Date.parse(receipt.startedAt)
       && event.debugContext?.debugData?.requestId === receipt.requestId);

@@ -26,7 +26,7 @@ export async function oktaObserve(ctx: CoreContext, step: Step, operationId: str
     if (receipt) {
       const { requestId, startedAt } = JSON.parse(receipt.evidence_json);
       const filter = `eventType eq "user.session.clear" and target.id eq ${JSON.stringify(step.target)}`;
-      const events = await oktaItems(request, '/api/v1/logs?' + new URLSearchParams({ filter, since: startedAt, limit: '100' }));
+      const events = await oktaItems(request, '/api/v1/logs?' + new URLSearchParams({ filter, since: startedAt, until: now(), limit: '100' }));
       matches = events.some(event => event.outcome?.result === 'SUCCESS' &&
         event.debugContext?.debugData?.requestId === requestId &&
         Date.parse(event.published) >= Date.parse(startedAt) &&

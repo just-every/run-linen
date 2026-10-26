@@ -41,7 +41,7 @@ globalThis.fetch = async (input: any, init: any = {}) => {
       if (u.pathname.endsWith('/sessions')) oktaLogs.push({eventType:'user.session.clear', outcome:{result:'SUCCESS'}, published:new Date().toISOString(),target:[{id:'synthetic-linen-2'}],debugContext:{debugData:{requestId:'synthetic-linen-3'}}});
       return new Response(null,{status:204,headers:{'x-okta-request-id':'synthetic-linen-3'}});
     }
-    if (u.pathname.endsWith('/logs')) return Response.json(oktaLogs.map(event => oktaWrongLog ? {...event,debugContext:{debugData:{requestId:'synthetic-linen-4'}}} : event));
+    if (u.pathname.endsWith('/logs')) return Response.json(oktaLogs.map(event => oktaWrongLog ? {...event,debugContext:{debugData:{requestId:'synthetic-linen-4'}}} : event), {headers:u.searchParams.has('until')?{}:{link:`<${u.href}>; rel="next"`}});
     if (u.pathname.endsWith('/groups') && u.pathname.includes('/users/')) return Response.json(oktaMember ? [{id:'synthetic-linen-5'}] : []);
     if (u.pathname.includes('/apps/')) return oktaApp ? Response.json({id:'synthetic-linen-5'}) : new Response(null,{status:404});
     return Response.json({id:'synthetic-linen-2', status:oktaStatus});
