@@ -119,12 +119,12 @@ function MaskedTickets({path,revision,draft}:{path:string;revision:number;draft:
  const {session}=useSession(),source=useRemote<{items:{id:string;title:string;revision:number}[]}>(draft?'/work':null),copies=useRemote<{items:{id:string;fields:Record<string,string>}[]}>(path+'/masked-records');
  const [error,setError]=useState<unknown>(),[pending,setPending]=useState(false),[selected,setSelected]=useState(''),[consent,setConsent]=useState(false);
  async function copy(e:FormEvent<HTMLFormElement>){e.preventDefault();const row=source.data?.items.find(item=>item.id===selected);if(!row)return;setPending(true);setError(null);try{await request(path+'/masked-records',{method:'POST',csrf:session.csrfToken,body:{revision,consent,records:[{id:row.id,revision:row.revision}]}});setConsent(false);setSelected('');copies.refresh();}catch(e){setError(e);}finally{setPending(false);}}
- return <details className="action-disclosure"><summary>Masked ticket copies</summary>
+ return <section aria-label="Masked ticket copies"><details className="action-disclosure"><summary>Masked ticket copies</summary>
  <Notice>Personal records are excluded by default. A selected ticket keeps its field structure with every source value replaced. Copies carry no production authority and stay outside configuration packages and archives. Source changes, scope changes and erasure retire copies; the source ticket retention deadline still applies.</Notice>
  <ErrorNotice error={error}/><ErrorNotice error={source.error} retry={source.refresh}/><ErrorNotice error={copies.error} retry={copies.refresh}/>
  {draft&&<form className="inline-form" onSubmit={e=>void copy(e)}><label>Production ticket to mask<select aria-label="Production ticket to mask" required value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Choose a ticket</option>{source.data?.items.map(row=><option value={row.id} key={row.id}>{row.title}</option>)}</select></label>
  <label className="checkbox-field"><input type="checkbox" required checked={consent} onChange={e=>setConsent(e.target.checked)}/>I choose this ticket for a fully masked copy</label><button className="action secondary" disabled={pending||!consent||!selected}>Copy masked ticket</button></form>}
  {copies.data?.items.length===0&&<p>No personal records copied.</p>}
  {copies.data?.items.map((row,i)=><details className="action-disclosure" key={row.id}><summary>Inspect masked ticket {i+1}</summary><pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{JSON.stringify(row.fields,null,2)}</pre></details>)}
- </details>;
+ </details></section>;
 }
