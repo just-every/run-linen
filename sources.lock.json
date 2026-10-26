@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "66b565943913d77c7a8be67155007a965798079dae87ed81d37b701dc0b01c89",
+      "sha256": "4b677c415adf7205a1acb0e443f34b4186b3eda9273960698075398334b64f9a",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4835068f66ac86973e3fe68c8a9dfb6f71a44c32f25790af8c98012df16ae33b",
+      "sha256": "f9c0dd3e6116201e6d46ffa1a79580c28725d40a09a6893cd08caca702de53b8",
       "executable": false
     },
     "DEMO.md": {
@@ -5111,7 +5111,7 @@
       "executable": false
     },
     "src/platform/sandboxes.ts": {
-      "sha256": "a2854ffb149761696c71d0a101a1a06297f0822c59437dc39b1bb150621a8c1e",
+      "sha256": "c11efbfdf96a3d403a3683e866a3fa998e0b5b4484770ec8325fc1dec7b21737",
       "executable": false
     },
     "src/platform/session-status.ts": {
@@ -5119,7 +5119,7 @@
       "executable": false
     },
     "src/platform/settings.ts": {
-      "sha256": "0cbc060bdf7130c4ad8b1cfc2236c4e1e9250c8fae816e5c4c6f732771356272",
+      "sha256": "c43d9ffcd51de88814d6a09bca7c4633abdd4b0d4f24f79c805b729d465b9835",
       "executable": false
     },
     "src/platform/sso.ts": {
@@ -5127,7 +5127,7 @@
       "executable": false
     },
     "src/platform/types.ts": {
-      "sha256": "1af34d71d3d05e77c4d383ade508d511d682b22930874acc35352a8a4535fc13",
+      "sha256": "3df6d3ccd6f6e0962db94a5cf5f12816c2c9b22f3f83aec236dc41e4ec43ec6b",
       "executable": false
     },
     "src/router.tsx": {
@@ -6179,7 +6179,7 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "a05f37769165331416d10a0ddb9057c1395c9eab56739d07aaea910d03178d69",
+      "sha256": "11ac9ba9f4e893dcb6dce1d02b7b954649cceb99583460d9f0009d969b192274",
       "executable": false
     },
     "tests/platform/sandbox-routing-cases.mjs": {

@@ -5,7 +5,7 @@ import { encryptSecret,passwordHash } from './crypto'
 import { platformAdmissionGuard, assertPlatformAdmission } from './privacy'
 import { connectionConfig } from './connection-config'
 import { connectionAdmission } from './connection-admission'
-const roles:Role[]=['owner','operator','employee','approver','hr','auditor','integration']
+const roles:Role[]=['owner','operator','employee','approver','hr','auditor','integration','sandbox-admin']
 // Ordinary settings retain replacement semantics. Operational controls survive
 // omission, so an ordinary form cannot clear a restore hold or selected model.
 async function settingsUpdate(c:Context<AppEnv>, value:unknown, revision:unknown) {

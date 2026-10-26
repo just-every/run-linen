@@ -1,4 +1,4 @@
-export type Role = 'owner' | 'operator' | 'employee' | 'approver' | 'hr' | 'auditor' | 'integration'
+export type Role = 'owner' | 'operator' | 'employee' | 'approver' | 'hr' | 'auditor' | 'integration' | 'sandbox-admin'
 export interface Principal { userId: string; workspaceId: string; roles: Role[]; departmentIds?: string[]; departmentRoles?: import('../features/work/department-role-authority').DepartmentRoleGrant[] }
 export interface Env {
   RER_DEMO?: string

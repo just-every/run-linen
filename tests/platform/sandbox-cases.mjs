@@ -434,6 +434,53 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.notEqual(fresh.id,beforeRestore.id);assert.equal(fresh.state,'draft');assert.equal(fresh.approvedBy,null);
  assert.deepEqual(await invoke('/sandboxes','GET'),sourceSandboxes,'Restoring another workspace cannot invalidate source packages');
  await invoke('/members/'+reviewMember.id,'PATCH',{roles:['owner'],active:true});
+ const adminCatalog=await invoke('/catalog','POST',{name:'Administrator equipment',kind:'device',target:'synthetic-linen-514',ownerId:first.id},owner,201);
+ await invoke('/members','POST',{name:'Contributing owner',email:'synthetic-linen-512@example.test',password:'synthetic-linen-513',roles:['owner']},owner,201);
+ let contributor=await login('synthetic-linen-512@example.test','synthetic-linen-513');
+ // Explicitly assigned sandbox administration confers review authority only.
+ const administrator=await invoke('/members','POST',{name:'Sandbox administrator',email:'synthetic-linen-510@example.test',password:'synthetic-linen-511',roles:['sandbox-admin']},owner,201);
+ let admin=await login('synthetic-linen-510@example.test','synthetic-linen-511');
+ let adminBox=await invoke('/sandboxes','POST',{name:'Administrator review'},owner,201),adminPath='/sandboxes/'+adminBox.id;
+ await invoke(adminPath,'GET',undefined,admin,404);
+ await invoke('/sandboxes','POST',{name:'No creation authority'},admin,403);
+ adminBox=await invoke(adminPath+'/catalog/'+adminCatalog.id,'PUT',{revision:adminBox.revision,name:'Administrator reviewed equipment',form:adminCatalog.form??{fields:[],costCents:0,deliveryHours:24,quoteRequired:false},tasks:[]});
+ adminBox=await invoke(adminPath+'/package','POST',{revision:adminBox.revision});
+ assert.equal((await invoke(adminPath,'GET',undefined,admin)).differences[0].after,'Administrator reviewed equipment');
+ await invoke(adminPath+'/catalog/'+adminCatalog.id,'PUT',{revision:adminBox.revision,name:'No editing authority'},admin,403);
+ await invoke(adminPath+'/options','GET',undefined,admin,403);
+ await invoke('/members','GET',undefined,admin,403);
+ await invoke(adminPath+'/approve','POST',{revision:adminBox.revision},requester,403);
+ await invoke(adminPath+'/approve','POST',{revision:adminBox.revision-1},admin,409);
+ adminBox=await invoke(adminPath+'/approve','POST',{revision:adminBox.revision},admin);
+ await invoke(adminPath+'/promote','POST',{revision:adminBox.revision},admin,403);
+ await invoke('/members/'+administrator.id,'PATCH',{roles:['employee']});
+ const revokedBefore=await fixture({});
+ await invoke(adminPath+'/promote','POST',{revision:adminBox.revision},owner,409);
+ assert.deepEqual(await fixture({}),revokedBefore,'Revoked administrator approval applies nothing');
+ await invoke(adminPath+'/approve','POST',{revision:adminBox.revision},admin,401);
+ const revokedAdmin=await login('synthetic-linen-510@example.test','synthetic-linen-511');
+ await invoke(adminPath,'GET',undefined,revokedAdmin,403);
+ await invoke('/members/'+administrator.id,'PATCH',{roles:['sandbox-admin']});
+ admin=await login('synthetic-linen-510@example.test','synthetic-linen-511');
+ adminBox=await invoke(adminPath+'/promote','POST',{revision:adminBox.revision});
+ let adminRollback=await invoke(adminPath+'/rollback-package','POST',{revision:adminBox.revision},owner,201),adminRollbackPath='/sandboxes/'+adminRollback.id;
+ adminRollback=await invoke(adminRollbackPath+'/approve','POST',{revision:adminRollback.revision},admin);
+ await invoke(adminRollbackPath+'/promote','POST',{revision:adminRollback.revision});
+ // A contributing owner cannot evade separation by switching to administrator.
+ let ownBox=await invoke('/sandboxes','POST',{name:'Contributing administrator'},owner,201),ownPath='/sandboxes/'+ownBox.id;
+ ownBox=await invoke(ownPath+'/catalog/'+adminCatalog.id,'PUT',{revision:ownBox.revision,name:'Refused contribution',form:{fields:[],costCents:0,deliveryHours:24,quoteRequired:false},tasks:[]},contributor);
+ ownBox=await invoke(ownPath+'/package','POST',{revision:ownBox.revision},contributor);
+ const contributorMember=(await invoke('/members','GET')).find(row=>row.email==='synthetic-linen-512@example.test');
+ await invoke('/members/'+contributorMember.id,'PATCH',{roles:['sandbox-admin']});
+ contributor=await login('synthetic-linen-512@example.test','synthetic-linen-513');
+ await invoke(ownPath+'/approve','POST',{revision:ownBox.revision},contributor,403);
+ await invoke('/catalog','POST',{name:'Changed production before review',kind:'device',target:'synthetic-linen-515',ownerId:first.id},owner,201);
+ const staleAdminBefore=await fixture({});
+ await invoke(ownPath+'/approve','POST',{revision:ownBox.revision},admin,409);
+ assert.deepEqual(await fixture({}),staleAdminBefore,'Stale production review changes no state or audit');
+ await invoke('/members/'+contributorMember.id,'PATCH',{roles:['owner']});
+ contributor=await login('synthetic-linen-512@example.test','synthetic-linen-513');
+
  // Erasure removes retained recipient identity and invalidates old configuration packages.
  await invoke('/escalation-levels','POST',{target:'resolution',level:1,offsetMinutes:0,notify:reviewMember.id,label:'Review by synthetic-linen-410@example.test'});
  const erasureWork=await invoke('/work','POST',{title:'Erasure rule version',body:'Synthetic request',deduplicationKey:'synthetic-linen-459'},requester,201);

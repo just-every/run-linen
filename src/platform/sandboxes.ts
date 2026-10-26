@@ -8,7 +8,7 @@ import {readSlaConfiguration, editSlaConfiguration, configurationDifferences, pr
 import type { Context, Hono } from 'hono';
 import {sandboxSlas, editSandboxSla, slaDifferences, slaPromotion, slaFields, type Sla} from './sandbox-slas';
 import type { AppEnv } from './types';
-import { ApiError, auditStatement, id, jsonBody, now, requiredString } from './http';
+import { ApiError, audit, auditStatement, id, jsonBody, now, requiredString } from './http';
 import { normalizeCatalogForm, validateCatalogAnswers, type CatalogForm } from '../features/work/catalog-form-schema';
 import { checkTaskPlan, type CatalogTask } from '../features/work/catalog-task-plan';
 
@@ -17,18 +17,20 @@ export type Sandbox = { id: string; name: string; created_by: string; contributo
 type C = Context<AppEnv>;
 const currentOwnerSql = `EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value='owner')`;
 export const ownerSql = `EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value='owner' AND NOT EXISTS(SELECT 1 FROM adoption_imports i WHERE i.workspace_id=m.workspace_id AND i.state IN ('applying','erasure_pending','reconciling')))`;
-async function owner(c: C) {
+const currentReviewerSql = currentOwnerSql.replace("r.value='owner'", "r.value IN ('owner','sandbox-admin')");
+const reviewerSql = ownerSql.replace("r.value='owner'", "r.value IN ('owner','sandbox-admin')");
+async function owner(c: C, review=false) {
  const p=c.get('principal');
- if(!p.roles.includes('owner') || !await c.env.DB.prepare(`SELECT 1 WHERE ${currentOwnerSql}`).bind(p.workspaceId,p.userId).first())
-  throw new ApiError(403,'forbidden','A current workspace owner is required');
+ if(!(p.roles.includes('owner') || review&&p.roles.includes('sandbox-admin')) || !await c.env.DB.prepare(`SELECT 1 WHERE ${review?currentReviewerSql:currentOwnerSql}`).bind(p.workspaceId,p.userId).first())
+  throw new ApiError(403,'forbidden',review?'A current owner or designated sandbox administrator is required':'A current workspace owner is required');
  if(await c.env.DB.prepare("SELECT 1 FROM adoption_imports WHERE workspace_id=? AND state IN ('applying','erasure_pending','reconciling') LIMIT 1").bind(p.workspaceId).first())
   throw new ApiError(409,'sandbox_restore_in_progress','Finish restoring the workspace before creating or using a fresh sandbox');
  return p;
 }
-async function read(c:C, sandboxId:string) {
- const p=await owner(c);
+async function read(c:C, sandboxId:string, review=false) {
+ const p=await owner(c,review);
  const row=await c.env.DB.prepare('SELECT * FROM configuration_sandboxes WHERE workspace_id=? AND id=?').bind(p.workspaceId,sandboxId).first<Sandbox>();
- if(!row)throw new ApiError(404,'not_found','Sandbox unavailable');
+ if(!row || !p.roles.includes('owner') && !['review','approved','promoted'].includes(row.state))throw new ApiError(404,'not_found','Sandbox unavailable');
  return row;
 }
 async function catalogs(c:C):Promise<Item[]> {
@@ -51,10 +53,10 @@ function configurationBody(body:Record<string,unknown>, allowed:string[]) {
 function revision(row:Sandbox,b:Record<string,unknown>,state:string) {
  if(b.revision!==row.revision||row.state!==state)throw new ApiError(409,'sandbox_changed','Sandbox state or revision changed; reload');
 }
-async function write(c:C,row:Sandbox,sql:string,args:(string|number|null)[],action:string,detail:unknown) {
+async function write(c:C,row:Sandbox,sql:string,args:(string|number|null)[],action:string,detail:unknown, review=false) {
  const p=c.get('principal');
  const result=await c.env.DB.batch([
-  c.env.DB.prepare(`UPDATE configuration_sandboxes SET ${sql} WHERE workspace_id=? AND id=? AND revision=? AND state=? AND ${ownerSql}`).bind(...args,p.workspaceId,row.id,row.revision,row.state,p.workspaceId,p.userId),
+  c.env.DB.prepare(`UPDATE configuration_sandboxes SET ${sql} WHERE workspace_id=? AND id=? AND revision=? AND state=? AND ${review?reviewerSql:ownerSql}`).bind(...args,p.workspaceId,row.id,row.revision,row.state,p.workspaceId,p.userId),
   c.env.DB.prepare('INSERT INTO platform_auth_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)'),
   auditStatement(c,action,row.id,detail),c.env.DB.prepare('DELETE FROM platform_auth_guard'),
  ]).catch(e=>{if(String(e).includes('CHECK constraint'))throw new ApiError(409,'sandbox_changed','Sandbox or current authority changed; reload');throw e;});
@@ -76,7 +78,7 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   ]);
   return c.json(view(await read(c,sandboxId)),201);
  });
- app.get('/sandboxes/:id',async c=>{c.header('Cache-Control','private, no-store');return c.json(view(await read(c,c.req.param('id'))));});
+ app.get('/sandboxes/:id',async c=>{c.header('Cache-Control','private, no-store');const row=await read(c,c.req.param('id'),true);if(!c.get('principal').roles.includes('owner'))await audit(c,'sandbox.review_read',row.id,{revision:row.revision});return c.json(view(row));});
  app.get('/sandboxes/:id/options',async c=>{
   await read(c,c.req.param('id'));const ws=c.get('principal').workspaceId;
   const result:Record<string,unknown>={};
@@ -157,11 +159,12 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   return c.json(view(await read(c,row.id)));
  });
  app.post('/sandboxes/:id/approve',async c=>{
-  const row=await read(c,c.req.param('id')),b=await jsonBody(c);revision(row,b,'review');configurationBody(b,['revision']);
+  const row=await read(c,c.req.param('id'),true),b=await jsonBody(c);revision(row,b,'review');configurationBody(b,['revision']);
+  if(JSON.stringify(await catalogs(c))!==row.baseline_json||JSON.stringify(await sandboxSlas(c))!==row.sla_baseline_json||JSON.stringify(await readSlaConfiguration(c))!==row.sla_config_baseline_json)throw new ApiError(409,'production_changed','Production configuration changed; create and review a fresh sandbox');
   const p=c.get('principal');
-  if((JSON.parse(row.contributors_json) as string[]).includes(p.userId))throw new ApiError(403,'sandbox_separate_approver','A separate owner who did not edit this sandbox must approve');
-  await write(c,row,"state='approved',approved_by=?,revision=revision+1",[p.userId],'sandbox.approved',{fromRevision:row.revision});
-  return c.json(view(await read(c,row.id)));
+  if((JSON.parse(row.contributors_json) as string[]).includes(p.userId))throw new ApiError(403,'sandbox_separate_approver','A separate current owner or sandbox administrator who did not edit must approve');
+  await write(c,row,"state='approved',approved_by=?,revision=revision+1",[p.userId],'sandbox.approved',{fromRevision:row.revision},true);
+  return c.json(view(await read(c,row.id,true)));
  });
  app.post('/sandboxes/:id/rollback-package',async c=>{
   const prior=await read(c,c.req.param('id')),b=await jsonBody(c);revision(prior,b,'promoted');configurationBody(b,['revision']);
@@ -194,7 +197,7 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   const p=c.get('principal'),baseline=JSON.parse(row.baseline_json) as Item[],draft=JSON.parse(row.draft_json) as Item[],changed=new Set(differences(row).flatMap(d=>'catalogId' in d?[d.catalogId]:[]));
   if(JSON.stringify(await catalogs(c))!==row.baseline_json||JSON.stringify(await sandboxSlas(c))!==row.sla_baseline_json||JSON.stringify(await readSlaConfiguration(c))!==row.sla_config_baseline_json)throw new ApiError(409,'production_changed','Production configuration changed; create and review a fresh sandbox');
   const statements:D1PreparedStatement[]=[
-   c.env.DB.prepare(`UPDATE configuration_sandboxes SET state='promoted',promoted_at=?,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=? AND state='approved' AND ${ownerSql} AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=configuration_sandboxes.approved_by AND m.active=1 AND r.value='owner')`).bind(now(),p.workspaceId,row.id,row.revision,p.workspaceId,p.userId,p.workspaceId),
+   c.env.DB.prepare(`UPDATE configuration_sandboxes SET state='promoted',promoted_at=?,revision=revision+1 WHERE workspace_id=? AND id=? AND revision=? AND state='approved' AND ${ownerSql} AND EXISTS(SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=configuration_sandboxes.approved_by AND m.active=1 AND r.value IN ('owner','sandbox-admin')) AND NOT EXISTS(SELECT 1 FROM json_each(configuration_sandboxes.contributors_json) WHERE value=configuration_sandboxes.approved_by)`).bind(now(),p.workspaceId,row.id,row.revision,p.workspaceId,p.userId,p.workspaceId),
    c.env.DB.prepare('INSERT INTO platform_auth_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)'),
    c.env.DB.prepare(`INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN COUNT(*)=? THEN 1 ELSE 0 END FROM work_catalog WHERE workspace_id=?`).bind(baseline.length,p.workspaceId),
   ];
