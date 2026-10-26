@@ -15,6 +15,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await api('/waiting-rule',{remindBusinessDays:2,resolveBusinessDays:5});
  const department=await api('/departments',{name:'Sandbox department '+suffix,kind:'it'});
  const role=await api('/department-roles',{departmentId:department.id,name:'Sandbox reader '+suffix,permissions:['ticket.read']});
+ const recurring=await api('/recurring-work',{title:'Sandbox recurring '+suffix,body:'Original recurring instructions',ownerId:owner,tasks:[{title:'Original recurring task',ownerId:owner}],calendar:{timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]},rule:{startDate:'2027-01-01',frequency:'annual',interval:1,firstBusinessDay:false}});
  const template=await api('/lifecycle-templates',{name:'Sandbox lifecycle '+suffix,kind:'join',match:{},tasks:[{key:'prepare',title:'Prepare lifecycle equipment',assignee:{type:'group',groupId:team.id},anchor:'start',offsetDays:0,remindDays:null}]});
  const writeClick=async(button,ending,method='POST')=>{
   const response=page.waitForResponse(r=>r.url().endsWith(ending)&&r.request().method()===method);
@@ -102,12 +103,27 @@ export async function sandboxJourney({page,api,base,out}) {
   await updated.locator(':scope > summary').press('Enter');
   await writeClick(updated.getByRole('button',{name:'Test sandbox '+family,exact:true}),path+'/test-configuration');
  }
+ const recurringEditor=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit recurring: Sandbox recurring '+suffix})}).first();
+ await recurringEditor.locator(':scope > summary').press('Enter');
+ await recurringEditor.getByLabel('Recurring work title',{exact:false}).fill('Reviewed recurring '+suffix);
+ await recurringEditor.getByLabel('Work to carry out',{exact:false}).fill('Reviewed recurring instructions');
+ await recurringEditor.getByLabel('Duty title 1',{exact:true}).fill('Reviewed recurring task');
+ await recurringEditor.getByLabel('Local creation hour',{exact:false}).fill('10');
+ await recurringEditor.getByLabel('Recurring plan active',{exact:true}).uncheck();
+ await captureJourney(page,{path:out+'/SANDBOX-001-recurring-editor.png',fullPage:true});
+ await writeClick(recurringEditor.getByRole('button',{name:'Save sandbox recurring',exact:true}),path+'/sla-configuration/recurring/'+recurring.id,'PUT');
+ const recurringTest=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit recurring: Reviewed recurring '+suffix})}).first();
+ await recurringTest.locator(':scope > summary').press('Enter');
+ await writeClick(recurringTest.getByRole('button',{name:'Test sandbox recurring',exact:true}),path+'/test-configuration');
+ await page.getByText('Next recurring occurrence: 2027-01-01T10:00:00.000Z. No tickets or duties were created.',{exact:true}).waitFor();
+ await captureJourney(page,{path:out+'/SANDBOX-001-recurring-rehearsal.png',fullPage:true});
+ assert.equal((await api('/recurring-work')).items.find(row=>row.id===recurring.id).title,'Sandbox recurring '+suffix);
  const lifecycle=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit lifecycle: '+template.name})}).first();
  await lifecycle.locator(':scope > summary').press('Enter');
  const templateEditor=lifecycle.locator('details').first();await templateEditor.locator(':scope > summary').press('Enter');
- await templateEditor.getByLabel('Template name',{exact:true}).fill('Reviewed lifecycle '+suffix);
+ await templateEditor.getByLabel('Template name',{exact:false}).fill('Reviewed lifecycle '+suffix);
  await templateEditor.getByLabel('Task title 1',{exact:true}).fill('Reviewed lifecycle preparation');
- await templateEditor.getByLabel('Business days from date 1',{exact:true}).fill('2');
+ await templateEditor.getByLabel('Business days from date 1',{exact:false}).fill('2');
  await captureJourney(page,{path:out+'/SANDBOX-001-lifecycle-editor.png',fullPage:true});
  await writeClick(templateEditor.getByRole('button',{name:'Save',exact:true}),path+'/sla-configuration/lifecycle/'+template.id,'PUT');
  const testedTemplate=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit lifecycle: Reviewed lifecycle '+suffix})}).first();
@@ -143,6 +159,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await captureJourney(page,{path:out+'/SANDBOX-001-promotion.png',fullPage:true});
  await writeClick(page.getByRole('button',{name:'Promote reviewed configuration',exact:true}),path+'/promote');
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).name,'Reviewed equipment '+suffix);
+ assert.equal((await api('/recurring-work')).items.find(row=>row.id===recurring.id).title,'Reviewed recurring '+suffix);
  assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,'Reviewed lifecycle '+suffix);
  assert.equal((await api('/department-roles')).items.find(x=>x.id===role.id).name,'Reviewed reader '+suffix);
  await captureJourney(page,{path:out+'/SANDBOX-001-promoted.png',fullPage:true});
@@ -154,6 +171,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await writeClick(page.getByRole('button',{name:'Promote reviewed configuration',exact:true}),'/sandboxes/'+rollbackRow.id+'/promote');
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).name,catalog.name);
  assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,template.name);
+ assert.equal((await api('/recurring-work')).items.find(row=>row.id===recurring.id).title,'Sandbox recurring '+suffix);
  await captureJourney(page,{path:out+'/SANDBOX-001-rolled-back.png',fullPage:true});
  const employeeEmail=`synthetic-linen-${suffix}-employee@example.test`;
  await api('/members',{name:'Sandbox employee',email:employeeEmail,password,roles:['employee']});

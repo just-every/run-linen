@@ -5054,8 +5054,12 @@
       "sha256": "00c38c9b5263c63c8da0d5dbb7fee1b0d2c338e1b7cc1a9a8ef1972692492eab",
       "executable": false
     },
+    "src/platform/sandbox-recurring.ts": {
+      "sha256": "6ca2eaddc6f28dbe840f5a97a155a4b5476bf81b94b70279947c903d31ca8ba2",
+      "executable": false
+    },
     "src/platform/sandbox-sla-config.ts": {
-      "sha256": "cdc6e0ece45282c9a7eb7be10ad6896bdb0a6847d4a31fd276e9836c7748cc9a",
+      "sha256": "e273a06136bde190ed4b839e4e1e3485b34afad47edf6d9c47a91539b1b225dc",
       "executable": false
     },
     "src/platform/sandbox-slas.ts": {
@@ -5067,7 +5071,7 @@
       "executable": false
     },
     "src/platform/sandboxes.ts": {
-      "sha256": "950d3250ab42b2860c8e0205fa99f3db7313848896f5817ee395fca3a44205c9",
+      "sha256": "09762fb050abbacec532579217daf5c2435f78541becabd892990cd1ef7cbc7a",
       "executable": false
     },
     "src/platform/session-status.ts": {
@@ -5614,12 +5618,16 @@
       "sha256": "cf64931be65ca28856a257c02167a8447599f5a3a23a3b094444fd92b84b6202",
       "executable": false
     },
+    "src/ui/sandbox-recurring.tsx": {
+      "sha256": "25868058d969dfc82917ffa1e4371ca732900560822e5ed6c806a51b8f1ffe50",
+      "executable": false
+    },
     "src/ui/sandbox-rehearsal.tsx": {
       "sha256": "b67c8f205f666c65be5bd7179ca76f8730b1d3e299ea14fcef19d7d38a6dd434",
       "executable": false
     },
     "src/ui/sandboxes.tsx": {
-      "sha256": "f3d837f688201c6ae94c1d5400c3082f09f74ff2374ddc3703cfcca9739872bd",
+      "sha256": "4f894a5a3f3342e96d0f62aaf398a72515addc7c3bd599e9916cc7203dea482d",
       "executable": false
     },
     "src/ui/search.tsx": {
@@ -6079,7 +6087,7 @@
       "executable": false
     },
     "tests/platform/config-worker.ts": {
-      "sha256": "f400c6bdac03ad739c6025480ff233cd43d3fea089788bfde8c7f11a9b526ba4",
+      "sha256": "8cdd65f7b3c0036ca768ac47a0d33e6bd3c5b51d0d216b5e878e193f3ad5d50c",
       "executable": false
     },
     "tests/platform/deploy-edge.mjs": {
@@ -6115,7 +6123,7 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "70ea314757a895faffc56022fd23c918039a7d562f5d9ddbd4ac6277a28e0f58",
+      "sha256": "4e54a3a54826eabb466edd76dcc7a95ff60c5245db972ffad58fd74ee1cf1065",
       "executable": false
     },
     "tests/platform/tombstone-race-fixture.ts": {
@@ -6459,7 +6467,7 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "7109ccec7ca519645d0294637b0d5c69aa46f3d6f737694b3ca1858966a3b856",
+      "sha256": "8096956476d20c514317c52187482171f5415371eb7c06b627b60245470b5ade",
       "executable": false
     },
     "tests/ui/search-browser.mjs": {

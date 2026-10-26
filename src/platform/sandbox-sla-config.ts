@@ -1,3 +1,4 @@
+import {editRecurringConfiguration,recurringNext,recurringAuthority} from './sandbox-recurring';
 import type { Context } from 'hono';
 import type { AppEnv } from './types';
 import { ApiError, requiredString } from './http';
@@ -12,6 +13,7 @@ type C = Context<AppEnv>;
 type Row = Record<string,string|number|null> & {id:string;revision:number};
 export type SlaConfiguration = Record<Family,Row[]>;
 const specs = {
+ recurring: {table:'work_recurring_plans',fields:['owner_id','title','body','calendar_json','rule_json','tasks_json','enabled']},
  lifecycle: {table:'work_lifecycle_templates',fields:['name','kind','match_json','tasks_json','active']},
  role: {table:'work_department_roles',fields:['name','permissions_json','active','department_id']},
  calendar: {table:'work_calendars',fields:['name','timezone','weekdays_json','start_hour','end_hour','holidays_json','location','holiday_catalog']},
@@ -21,7 +23,7 @@ const specs = {
 type Family = keyof typeof specs;
 export async function readSlaConfiguration(c:C):Promise<SlaConfiguration> {
  const ws=c.get('principal').workspaceId;
- const entries=await Promise.all(Object.entries(specs).map(async([family,spec])=>[family,(await c.env.DB.prepare(`SELECT ${family==='waiting'?"'waiting' AS id":'id'},revision,${spec.fields.join(',')} FROM ${spec.table} WHERE workspace_id=? ORDER BY id`).bind(ws).all<Row>()).results]));
+ const entries=await Promise.all(Object.entries(specs).map(async([family,spec])=>[family,(await c.env.DB.prepare(`SELECT ${family==='waiting'?"'waiting' AS id":'id'},revision,${spec.fields.join(',')}${family==='recurring'?',next_index,next_due_at':''} FROM ${spec.table} WHERE workspace_id=? ORDER BY id`).bind(ws).all<Row>()).results]));
  return Object.fromEntries(entries) as SlaConfiguration;
 }
 export function configurationDifferences(before:SlaConfiguration,after:SlaConfiguration) {
@@ -36,7 +38,9 @@ export async function editSlaConfiguration(c:C,draft:SlaConfiguration,family:str
  if(!row)throw new ApiError(404,'not_found','Configuration unavailable in this sandbox');
  if(Object.keys(body).some(key=>key!=='revision'&&!(spec.fields as readonly string[]).includes(key)))throw new ApiError(422,'sandbox_config_only','Only the named configuration fields are accepted');
  for(const field of spec.fields)if(body[field]!==undefined)row[field]=body[field] as string|number|null;
- if(kind==='lifecycle') {
+ if(kind==='recurring') {
+  await editRecurringConfiguration(c,row);
+ } else if(kind==='lifecycle') {
   row.name=requiredString(row.name,'name',200);
   if(!templateKinds.includes(row.kind as never)||![0,1].includes(Number(row.active))||typeof row.active!=='number')throw new ApiError(422,'lifecycle_template','Choose a lifecycle event and active state');
   try {
@@ -73,15 +77,17 @@ export function promoteSlaConfiguration(c:C,before:SlaConfiguration,after:SlaCon
   const spec=specs[family];
   statements.push(db.prepare(`INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN COUNT(*)=? THEN 1 ELSE 0 END FROM ${spec.table} WHERE workspace_id=?`).bind((before[family]??[]).length,ws));
   for(const row of before[family]??[]) {
-   const fields=['revision',...spec.fields],where=family==='waiting'?'workspace_id=?':'workspace_id=? AND id=?',keys=family==='waiting'?[ws]:[ws,row.id];
+   const fields=['revision',...spec.fields,...(family==='recurring'?['next_index','next_due_at']:[])],where=family==='waiting'?'workspace_id=?':'workspace_id=? AND id=?',keys=family==='waiting'?[ws]:[ws,row.id];
    statements.push(db.prepare(`INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM ${spec.table} WHERE ${where} AND ${fields.map(f=>f+' IS ?').join(' AND ')}) THEN 1 ELSE 0 END`).bind(...keys,...fields.map(f=>row[f])));
    const next=after[family].find(x=>x.id===row.id)!;
+   if(family==='recurring')statements.push(...recurringAuthority(c,next));
    if(family==='lifecycle') {
     for(const task of JSON.parse(String(next.tasks_json)))if(task.assignee.type==='group')statements.push(db.prepare('INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM work_groups WHERE workspace_id=? AND id=?) THEN 1 ELSE 0 END').bind(ws,task.assignee.groupId));
     for(const [dimension,values] of Object.entries(JSON.parse(String(next.match_json))))for(const value of values as string[])statements.push(db.prepare('INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM work_catalog_values WHERE workspace_id=? AND dimension=? AND id=? AND active=1) THEN 1 ELSE 0 END').bind(ws,dimension,value));
    }
    if(family==='role'&&spec.fields.some(f=>row[f]!==next[f]))statements.push(db.prepare("INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM work_departments WHERE workspace_id=? AND id=? AND active=1 AND kind<>'hr') THEN 1 ELSE 0 END").bind(ws,next.department_id));
    if(family==='escalation'&&next.notify!=='assignee')statements.push(db.prepare("INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND EXISTS(SELECT 1 FROM json_each(roles_json) WHERE value IN ('owner','operator'))) THEN 1 ELSE 0 END").bind(ws,next.notify));
+   if(family==='recurring'&&spec.fields.some(f=>row[f]!==next[f])){updates.push(db.prepare(`UPDATE ${spec.table} SET ${spec.fields.map(f=>f+'=?').join(',')},next_due_at=?,revision=revision+1 WHERE ${where}`).bind(...spec.fields.map(f=>next[f]),recurringNext({...next,next_index:row.next_index}).dueAt,...keys));continue;}
    if(spec.fields.some(f=>row[f]!==next[f])||family==='role'&&configurationDifferences(before,after).some(d=>d.family==='role'&&d.field==='name')||family==='escalation'&&configurationDifferences(before,after).some(d=>d.family==='escalation'))updates.push(db.prepare(`UPDATE ${spec.table} SET ${spec.fields.map(f=>f+'=?').join(',')},revision=revision+? WHERE ${where}`).bind(...spec.fields.map(f=>next[f]),Number(spec.fields.some(f=>row[f]!==next[f])),...keys));
   }
  }

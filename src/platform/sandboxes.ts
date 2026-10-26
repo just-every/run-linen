@@ -1,3 +1,4 @@
+import {recurringNext} from './sandbox-recurring';
 import {rehearseLifecycle} from './sandbox-lifecycle';
 import {readSlaConfiguration, editSlaConfiguration, configurationDifferences, promoteSlaConfiguration, rollbackSlaConfiguration} from './sandbox-sla-config';
 import type { Context, Hono } from 'hono';
@@ -38,7 +39,7 @@ function differences(row:Sandbox) {
   return (['name','form','tasks'] as const).filter(field=>JSON.stringify(before[field])!==JSON.stringify(item[field])).map(field=>({catalogId:item.id,field,before:before[field],after:item[field]}));
  })];
 }
-function view(row:Sandbox) {return {id:row.id,name:row.name,revision:row.revision,state:row.state,approvedBy:row.approved_by,items:JSON.parse(row.draft_json),slas:JSON.parse(row.sla_draft_json),slaConfiguration:JSON.parse(row.sla_config_draft_json),differences:differences(row),limits:'Catalog metadata, forms, team task plans and lifecycle task templates, existing custom role definitions, SLA policies, business calendars, escalation levels and waiting rules only. Form validation and isolated team task rehearsals are available. Requester memberships and role assignments remain unchanged. Changed role revisions require new assignment confirmation in production. Definitions must already exist in production; this workspace edits configuration only. Connector execution and other configuration families are not available.'};}
+function view(row:Sandbox) {return {id:row.id,name:row.name,revision:row.revision,state:row.state,approvedBy:row.approved_by,items:JSON.parse(row.draft_json),slas:JSON.parse(row.sla_draft_json),slaConfiguration:JSON.parse(row.sla_config_draft_json),differences:differences(row),limits:'Catalog metadata, forms, team task plans and lifecycle task templates, recurring duties, existing custom role definitions, SLA policies, business calendars, escalation levels and waiting rules only. Form validation and isolated team task rehearsals are available. Requester memberships and role assignments remain unchanged. Changed role revisions require new assignment confirmation in production. Definitions must already exist in production; this workspace edits configuration only. Connector execution and other configuration families are not available.'};}
 function configurationBody(body:Record<string,unknown>, allowed:string[]) {
  if(Object.keys(body).some(key=>!allowed.includes(key)))
   throw new ApiError(422,'sandbox_config_only','Only the named configuration fields are accepted; records and credentials cannot be included');
@@ -121,7 +122,7 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   const draft=JSON.parse(row.sla_config_draft_json),family=String(b.family),entry=Object.hasOwn(draft,family)&&Array.isArray(draft[family])?draft[family].find((item:{id:string})=>item.id===b.configurationId):undefined;
   if(!entry)throw new ApiError(404,'not_found','Configuration unavailable');
   await editSlaConfiguration(c,draft,family,entry.id,{revision:row.revision});
-  return c.json({valid:true,externalEffects:false,productionAuthority:false,configurationRevision:row.revision});
+  return c.json({valid:true,externalEffects:false,productionAuthority:false,configurationRevision:row.revision,...(family==='recurring'?{nextOccurrence:recurringNext(entry),duties:JSON.parse(String(entry.tasks_json))}:{})});
  });
  app.post('/sandboxes/:id/test-form',async c=>{
   const row=await read(c,c.req.param('id')),b=await jsonBody(c);if(b.revision!==row.revision)throw new ApiError(409,'sandbox_changed','Reload the current sandbox');

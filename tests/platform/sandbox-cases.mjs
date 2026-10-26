@@ -34,6 +34,11 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke('/department-roles/'+role.id+'/members','POST',{userId:employee.id,roleRevision:role.revision,revision:0,active:true});
  await invoke('/escalation-levels','POST',{target:'resolution',level:1,offsetMinutes:0,notify:'assignee',label:'Equipment overdue'});
  await invoke('/waiting-rule','POST',{remindBusinessDays:2,resolveBusinessDays:5});
+ const recurringCalendar={timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]};
+ const recurring=await invoke('/recurring-work','POST',{title:'Original recurring duty',body:'Original duty instructions',ownerId:first.id,tasks:[{title:'Original duty task',ownerId:first.id}],calendar:recurringCalendar,rule:{startDate:'2026-01-01',frequency:'annual',interval:120,firstBusinessDay:false}},owner,201);
+ await invoke('/work/process-due','POST',{});
+ const recurringBefore=(await invoke('/recurring-work','GET')).items.find(row=>row.id===recurring.id);
+ assert.equal(recurringBefore.next_index,1);
  const templateValue=await invoke('/catalog-values','POST',{dimension:'location',label:'Sandbox laboratory'},owner,201);
  const templateTasks=[{key:'prepare',title:'Original lifecycle preparation',assignee:{type:'group',groupId:group.id},anchor:'start',offsetDays:1,remindDays:null}];
  const template=await invoke('/lifecycle-templates','POST',{name:'Original lifecycle template',kind:'join',match:{location:[templateValue.id]},tasks:templateTasks},owner,201);
@@ -52,7 +57,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal((await fixture({outboundControl:true})).outboundCalls.length,1,'The network-edge observer detects an attempted outbound call');
  const protectedBefore=await fixture({seedSandboxGrant:true,resetOutbound:true});
  assert.equal(protectedBefore.protectedTables.execution_grants.length,1);
- assert.equal(protectedBefore.protectedTables.work_records.length,2);
+ assert.equal(protectedBefore.protectedTables.work_records.length,3);
  assert.equal(protectedBefore.protectedTables.work_fulfilments.length,1);
  await invoke('/sandboxes','POST',{name:'Denied'},requester,403);
  await invoke('/sandboxes','POST',{name:'Denied',copyRecords:true},owner,422);
@@ -72,6 +77,13 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  sandbox=await invoke(path+'/slas/'+secondSla.id,'PUT',{revision:sandbox.revision,name:'Fallback response',position:1000,first_response_minutes:120,next_response_minutes:240,resolution_minutes:960,pauseOn:[]});
  sandbox=await invoke(path+'/slas/'+sla.id,'PUT',{revision:sandbox.revision,...slaEdit},editor);
  sandbox=await invoke(path+'/slas/'+secondSla.id,'PUT',{revision:sandbox.revision,name:'Fallback response',position:1,first_response_minutes:120,next_response_minutes:240,resolution_minutes:960,pauseOn:[]});
+ const recurringOriginal=sandbox.slaConfiguration.recurring.find(row=>row.id===recurring.id);
+ const recurringEdit={title:'Reviewed recurring duty',body:'Reviewed duty instructions',owner_id:first.id,tasks_json:JSON.stringify([{title:'Reviewed duty task',ownerId:first.id}]),calendar_json:JSON.stringify({...recurringCalendar,startHour:10}),rule_json:JSON.stringify({startDate:'2027-01-01',frequency:'annual',interval:2,firstBusinessDay:false}),enabled:0};
+ for(const invalid of [{owner_id:employee.id},{tasks_json:'not JSON'},{tasks_json:JSON.stringify([{title:'No authority',ownerId:employee.id}])},{rule_json:JSON.stringify({startDate:'2027-01-01',frequency:'daily',interval:0,firstBusinessDay:false})},{calendar_json:JSON.stringify({...recurringCalendar,records:[]})},{next_index:0}])await invoke(path+'/sla-configuration/recurring/'+recurring.id,'PUT',{revision:sandbox.revision,...invalid},owner,422);
+ sandbox=await invoke(path+'/sla-configuration/recurring/'+recurring.id,'PUT',{revision:sandbox.revision,...recurringEdit},editor);
+ assert.equal((await invoke('/recurring-work','GET')).items.find(row=>row.id===recurring.id).title,recurringBefore.title);
+ const recurringFixture=await fixture({}),recurringPreview=await invoke(path+'/test-configuration','POST',{revision:sandbox.revision,family:'recurring',configurationId:recurring.id});
+ assert.equal(recurringPreview.nextOccurrence.dueAt,'2029-01-01T10:00:00.000Z');assert.equal(recurringPreview.duties[0].title,'Reviewed duty task');assert.deepEqual(await fixture({}),recurringFixture);
  const templateBefore=sandbox.slaConfiguration.lifecycle.find(row=>row.id===template.id);
  const rehearsalInput={revision:sandbox.revision,kind:'join',calendarId:calendar.id,effectiveAt:'2027-02-01T09:00:00.000Z',attributes:{location:templateValue.id}};
  const beforeLifecycleRehearsal=await fixture({});
@@ -213,6 +225,8 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal(newFollowups.source,'current');assert.equal(newFollowups.levels[0].offset_minutes,-30);assert.equal(newFollowups.waitingRule.remind_business_days,3);
  const protectedWithNewWork=await fixture({});
  for(const [table,rows] of Object.entries(protectedBefore.protectedTables))for(const prior of rows)assert.deepEqual(protectedWithNewWork.protectedTables[table].find(row=>table==='work_department_role_members'?row.role_id===prior.role_id&&row.user_id===prior.user_id:row.id===prior.id),prior,'Promotion preserves the exact existing '+table+' row');
+ const recurringPromoted=(await invoke('/recurring-work','GET')).items.find(row=>row.id===recurring.id);
+ assert.equal(recurringPromoted.next_index,recurringBefore.next_index);assert.equal(recurringPromoted.next_due_at,'2029-01-01T10:00:00.000Z');assert.equal(recurringPromoted.enabled,0);assert.equal(recurringPromoted.tasks[0].title,'Reviewed duty task');
  const promotedTemplate=(await invoke('/lifecycle-templates','GET')).items.find(row=>row.id===template.id);
  assert.equal(promotedTemplate.name,lifecycleEdit.name);assert.equal(promotedTemplate.kind,'move');assert.equal(promotedTemplate.active,false);assert.equal(promotedTemplate.revision,2);assert.deepEqual(promotedTemplate.tasks,JSON.parse(lifecycleEdit.tasks_json));
  assert.deepEqual(await invoke('/lifecycle/'+admitted.lifecycleId,'GET'),lifecycleBefore,'Existing lifecycle work keeps its exact tasks and template versions');
@@ -229,7 +243,7 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal(promoted.name,'Reviewed equipment');assert.equal(promoted.revision,2);assert.deepEqual(promoted.form,form);assert.deepEqual(promoted.tasks,tasks);
  await invoke(path+'/promote','POST',{revision:sandbox.revision},owner,409);
  const protectedAfter=await fixture({});assert.deepEqual(protectedAfter.connections,protectedBefore.connections);assert.deepEqual(protectedAfter.settings,protectedBefore.settings);assert.deepEqual(protectedAfter.protectedTables,protectedWithNewWork.protectedTables,'Existing grants, request snapshots and duties keep their exact versions');assert.equal(protectedAfter.sandboxAudits.filter(a=>a.action==='sandbox.promoted').length,1);assert.equal(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).version,sandbox.revision);
- assert.deepEqual([...new Set(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).configurationChanges.map(change=>change.family))].sort(),['calendar','escalation','lifecycle','role','waiting']);
+ assert.deepEqual([...new Set(JSON.parse(protectedAfter.sandboxAudits.find(a=>a.action==='sandbox.promoted').detail_json).configurationChanges.map(change=>change.family))].sort(),['calendar','escalation','lifecycle','recurring','role','waiting']);
  assert.deepEqual(protectedAfter.outboundCalls,[],'No outbound call in sandbox rehearsal or promotion');
  await rejectData(path+'/rollback-package');
  let rollback=await invoke(path+'/rollback-package','POST',{revision:sandbox.revision},owner,201);
@@ -241,6 +255,8 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.deepEqual(retainedAfterRollback,retainedFollowups);
  const newRetainedAfterRollback=(await invoke('/work/'+newWork.id+'/followups','GET')).configuration;
  assert.equal(newRetainedAfterRollback.source,'retained');assert.equal(newRetainedAfterRollback.levels[0].offset_minutes,-30);assert.equal(newRetainedAfterRollback.waitingRule.remind_business_days,3);
+ const recurringRolled=(await invoke('/recurring-work','GET')).items.find(row=>row.id===recurring.id);
+ assert.equal(recurringRolled.title,recurringBefore.title);assert.equal(recurringRolled.next_index,recurringBefore.next_index);assert.equal(recurringRolled.next_due_at,recurringBefore.next_due_at);assert.deepEqual(recurringRolled.tasks,recurringBefore.tasks);
  const rolledTemplate=(await invoke('/lifecycle-templates','GET')).items.find(row=>row.id===template.id);
  assert.deepEqual({...rolledTemplate,revision:1},template);assert.equal(rolledTemplate.revision,3);
  assert.deepEqual(await invoke('/lifecycle/'+admitted.lifecycleId,'GET'),lifecycleBefore,'Reviewed rollback preserves admitted lifecycle tasks');
