@@ -1,3 +1,4 @@
+import {maskedCopyChecks} from './sandbox-masked-record-cases.mjs';
 import {sandboxRoutingChecks} from './sandbox-routing-cases.mjs';
 import {sandboxApprovalVersionChecks} from './sandbox-approval-version-cases.mjs';
 import assert from 'node:assert/strict';
@@ -390,15 +391,19 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  const beforeWithdrawalRefusal=await fixture({});
  await invoke(withdrawnPath+'/promote','POST',{revision:withdrawn.revision},owner,409);
  assert.deepEqual(await fixture({}),beforeWithdrawalRefusal,'Withdrawn reviewer cannot authorize a production change');
+ const maskWork=await invoke('/work','POST',{title:'synthetic-linen-600-private-title',body:'synthetic-linen-601-private-body',deduplicationKey:'synthetic-linen-602'},requester,201);
+ const masked=await maskedCopyChecks({invoke,fixture,owner,other,requester,work:(await invoke('/work/'+maskWork.id,'GET')).work});
  // The portable workspace read door includes audits but excludes sandbox state and answers.
  let exported=await invoke('/exports','POST',{idempotencyKey:'synthetic-linen-443'},owner,201);
  for(let page=0;page<100&&exported.state!=='ready';page++)exported=await invoke('/exports/'+exported.id+'/advance','POST',{});
  assert.equal(exported.state,'ready');
  assert.equal(exported.tables.configuration_sandboxes,undefined);
+ assert.equal(exported.tables.configuration_masked_records,undefined);
  const archiveChunks=new Map();
  for(const chunk of exported.chunks){
   const response=await request('/exports/'+exported.exportId+'/chunks/'+chunk.ordinal,'GET',undefined,owner);
   assert.equal(response.status,200);const bytes=new Uint8Array(await response.arrayBuffer());archiveChunks.set(chunk.ordinal,bytes);
+  assert.ok(!new TextDecoder().decode(bytes).includes('configuration_masked_records'));
   assert.ok(!new TextDecoder().decode(bytes).includes(privateAnswer),'No rehearsal answer in exported records or audit');
  }
  for(const door of ['/sandboxes',path,path+'/runs','/catalog','/work'])
@@ -413,6 +418,9 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  let beforeRestore=await invoke('/sandboxes','POST',{name:'Must expire on workspace restore'},other,201);
  const beforeRestorePath='/sandboxes/'+beforeRestore.id;
  beforeRestore=await invoke(beforeRestorePath+'/catalog/'+destinationCatalog.id,'PUT',{revision:beforeRestore.revision,name:'Must not survive restore',form,tasks:[]},other);
+ const destinationWork=await invoke('/work','POST',{title:'synthetic-linen-603',body:'synthetic-linen-604',deduplicationKey:'synthetic-linen-605'},other,201);
+ await invoke(beforeRestorePath+'/masked-records','POST',{revision:beforeRestore.revision,consent:true,records:[{id:destinationWork.id,revision:destinationWork.revision}]},other);
+ assert.equal((await invoke(beforeRestorePath+'/masked-records','GET',undefined,other)).items.length,1);
  beforeRestore=await invoke(beforeRestorePath+'/package','POST',{revision:beforeRestore.revision},other);
  beforeRestore=await invoke(beforeRestorePath+'/approve','POST',{revision:beforeRestore.revision},destinationReviewer);
  const imported=await invoke('/imports','POST',{manifest:exported,idempotencyKey:'synthetic-linen-444'},other,201);
@@ -432,7 +440,9 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.ok(['restored','history_only'].includes(importResult.state),JSON.stringify(importResult));
  assert.deepEqual((await invoke('/sandboxes','GET',undefined,other)).items,[],'Workspace restore invalidates every pre-restore package');
  for(const action of ['package','approve','promote'])await invoke(beforeRestorePath+'/'+action,'POST',{revision:beforeRestore.revision},other,404);
+ await invoke(beforeRestorePath+'/masked-records','GET',undefined,other,404);
  const fresh=await invoke('/sandboxes','POST',{name:'Fresh workspace configuration'},other,201);
+ assert.deepEqual((await invoke('/sandboxes/'+fresh.id+'/masked-records','GET',undefined,other)).items,[]);
  assert.notEqual(fresh.id,beforeRestore.id);assert.equal(fresh.state,'draft');assert.equal(fresh.approvedBy,null);
  assert.deepEqual(await invoke('/sandboxes','GET'),sourceSandboxes,'Restoring another workspace cannot invalidate source packages');
  await invoke('/members/'+reviewMember.id,'PATCH',{roles:['owner'],active:true});
@@ -450,6 +460,8 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  assert.equal((await invoke(adminPath,'GET',undefined,admin)).differences[0].after,'Administrator reviewed equipment');
  await invoke(adminPath+'/catalog/'+adminCatalog.id,'PUT',{revision:adminBox.revision,name:'No editing authority'},admin,403);
  await invoke(adminPath+'/options','GET',undefined,admin,403);
+ await invoke(masked.path+'/masked-records','GET',undefined,admin,403);
+ await invoke(masked.path+'/masked-records','POST',masked.selection,admin,403);
  await invoke('/members','GET',undefined,admin,403);
  await invoke(adminPath+'/approve','POST',{revision:adminBox.revision},requester,403);
  await invoke(adminPath+'/approve','POST',{revision:adminBox.revision-1},admin,409);
@@ -483,6 +495,8 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke('/members/'+contributorMember.id,'PATCH',{roles:['owner']});
  contributor=await login('synthetic-linen-512@example.test','synthetic-linen-513');
 
+ await invoke(masked.path+'/masked-records','POST',masked.selection);
+ assert.equal((await fixture({})).maskedRows.length,1);
  // Erasure removes retained recipient identity and invalidates old configuration packages.
  await invoke('/escalation-levels','POST',{target:'resolution',level:1,offsetMinutes:0,notify:reviewMember.id,label:'Review by synthetic-linen-410@example.test'});
  const erasureWork=await invoke('/work','POST',{title:'Erasure rule version',body:'Synthetic request',deduplicationKey:'synthetic-linen-459'},requester,201);
@@ -492,11 +506,15 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  erasureSandbox=await invoke(erasurePath+'/approve','POST',{revision:erasureSandbox.revision},editor);
  erasureSandbox=await invoke(erasurePath+'/promote','POST',{revision:erasureSandbox.revision});
  assert.equal((await invoke('/work/'+erasureWork.id+'/followups','GET')).configuration.levels[0].notify,reviewMember.id);
+ await invoke(masked.path+'/masked-records','POST',masked.selection);
+ assert.equal((await fixture({})).maskedRows.length,1,'A masked copy exists immediately before erasure');
  await invoke('/people/'+reviewMember.id+'/erase','POST',{revision:0,reason:'Synthetic rule recipient erasure'});
+ assert.deepEqual((await fixture({})).maskedRows,[],'Authorized erasure atomically removes masked copies');
  const erasedRules=(await invoke('/work/'+erasureWork.id+'/followups','GET')).configuration;
  assert.equal(erasedRules.source,'retained');assert.equal(erasedRules.levels[0].notify,null);assert.equal(erasedRules.levels[0].label,'[erased]');assert.equal(erasedRules.waitingRule.remind_business_days,2);
  await invoke('/people/'+editorMember.id+'/erase','POST',{revision:0,reason:'Synthetic member erasure without retained recipient rows'});
  assert.deepEqual((await invoke('/sandboxes','GET')).items,[]);
+ assert.deepEqual((await fixture({})).maskedRows,[],'Erasure removes all masked copies with invalidated packages');
  await invoke(erasurePath+'/rollback-package','POST',{revision:erasureSandbox.revision},owner,404);
  assert.deepEqual((await fixture({})).outboundCalls,[]);
  console.log('PASS sandbox configuration HTTP: config-only copy, scoped access, isolated edits, durable task workflow execution with dependency and revision fences, form validation, complete field diff, separate owner approval, atomic versioned promotion, reviewed rollback, stale production refusal, connection and secret preservation');

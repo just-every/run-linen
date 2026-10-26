@@ -153,17 +153,20 @@ try{
 
  await env.DB.prepare("INSERT INTO configuration_sandboxes(id,workspace_id,name,created_by,contributors_json,baseline_json,draft_json,state,approved_by,created_at) VALUES('synthetic-linen-430','workspace','Synthetic sandbox','owner','[\"owner\"]','[]','[]','approved','other',?)").bind(stamp).run();
  await env.DB.prepare("UPDATE configuration_sandboxes SET runs_json=? WHERE id='synthetic-linen-430'").bind(JSON.stringify([{id:'synthetic-linen-431',configurationRevision:1,tasks:[],completed:[]}])).run();
+ await env.DB.prepare("INSERT INTO configuration_masked_records(id,sandbox_id,workspace_id,masked_json) VALUES('synthetic-linen-608','synthetic-linen-430','workspace','{\"title\":\"[masked]\"}')").run();
  await close()
  await run(['exec','rer','export','--output',archive])
  const restRows=[],mcpRows=[],roleRows=[],roleMemberRows=[];
- let sandboxRows=0;
+ let sandboxRows=0,maskedRows=0;
  for await(const record of fileRecords(archive))if(record.kind==='part')for(const item of record.items)if(item.kind==='row'){
   if(item.table==='configuration_sandboxes')sandboxRows++;
+  if(item.table==='configuration_masked_records')maskedRows++;
   if(item.table==='rest_credentials')restRows.push(item.row);
   if(item.table==='mcp_credentials')mcpRows.push(item.row);
   if(item.table==='work_department_roles')roleRows.push(item.row);
   if(item.table==='work_department_role_members')roleMemberRows.push(item.row);
  }
+ assert.equal(maskedRows,0,'Actual rer export excludes every masked ticket copy');
  assert.equal(sandboxRows,0,'Sandbox drafts and approvals are not portable execution authority');
  assert.deepEqual(roleRows,[{...retainedRole,active:0}],'ROLE-001 actual rer export retains scoped permissions and revision without active role authority');
  assert.deepEqual(roleMemberRows,[{...retainedRoleMember,active:0,granted_by:null}],'ROLE-001 actual rer export retains inactive versioned assignment metadata');
@@ -199,6 +202,7 @@ try{
  assert.equal(await(await env.ATTACHMENTS.get('workspace/private-file')).text(),'Private retained attachment')
  assert.equal(JSON.parse((await env.DB.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id="workspace"').first()).settings_json).executionHeld,true)
  assert.equal((await env.DB.prepare('SELECT password_hash FROM users WHERE id="owner"').first()).password_hash,'!restored-email-link')
+ assert.equal((await env.DB.prepare('SELECT count(*) n FROM configuration_masked_records').first()).n,0,'Actual rer restore never revives masked copies');
  assert.equal((await env.DB.prepare('SELECT count(*) n FROM configuration_sandboxes').first()).n,0,'Restoring an installation cannot revive sandbox approval');
  assert.equal((await env.DB.prepare('SELECT secret_ciphertext FROM connections').first()).secret_ciphertext,null)
  assert.ok((await env.DB.prepare('SELECT revoked_at FROM intelligence_engineering_grants').first()).revoked_at)

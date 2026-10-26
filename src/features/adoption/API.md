@@ -194,3 +194,24 @@ and erasure rules apply; a restore confers no execution or membership authority.
   write and typed `record` custody history. Source status is quoted evidence,
   never an assignment; existing custody is not overwritten. The original file,
   assignments, purchase and warranty fields are not imported or retained.
+
+
+### Masked sandbox ticket copies
+
+A current owner may use `POST /sandboxes/:id/masked-records` with the draft
+`revision`, `consent: true` and `records: [{id, revision}]` for 1 to 25 distinct
+current workspace tickets. No other payload fields are accepted. Default sandbox
+creation copies none. Every source value is replaced before storage; the response
+and owner-only `GET /sandboxes/:id/masked-records` contain fresh local copy ids
+and fully masked field structures. No source ids, messages, attachments, grants,
+credentials or execution authority are copied. A stale, foreign, already erased
+or retention-due selection refuses the complete batch.
+
+Copies stay outside configuration packages and both archive formats. Source
+changes, membership authority changes, erasure and retention-policy changes retire
+all workspace copies conservatively. Existing closed-ticket retention deadlines
+also expire copies durably with content-free receipts; no configured source policy
+means no hidden copy deadline. Workspace restore invalidates them with their
+sandbox. Administrator review grants no masked-record access. This initial ticket
+slice and its conservative semantic remain PARTIAL under SANDBOX-004 pending ct
+review and the remaining personal-record scope.

@@ -3,6 +3,7 @@
  * No policy row means keep forever ("No retention set"); there is no hidden default.
  * Age counts from closed_at: a ticket is due when closed strictly more than N×24 h ago (UTC instants).
  */
+import {expireMaskedRecords} from '../../platform/sandbox-masked-records';
 import { ApiError, id, now } from '../../platform/http';
 import type { Env } from '../../platform/types';
 import { identityHash } from '../adoption/core';
@@ -107,6 +108,7 @@ export async function retentionReceipts(ctx: WorkContext) {
 
 /** Deletes due records in one batch each with its receipt; bytes go to the durable deletion queue the adoption lane drains. */
 export async function processDueRetention(env: Env, at = Date.now()) {
+  await expireMaskedRecords(env,at);
   let tickets = 0, attachments = 0, skipped = 0;
   const policies = (await env.DB.prepare('SELECT workspace_id FROM work_retention WHERE closed_ticket_days IS NOT NULL OR attachment_days IS NOT NULL').all<{ workspace_id: string }>()).results;
   for (const { workspace_id: w } of policies) {

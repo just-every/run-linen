@@ -1,3 +1,4 @@
+import {expireMaskedRecords} from '../../src/platform/sandbox-masked-records';
 import {registerServiceRoutes} from '../../src/features/services'
 import {Hono} from 'hono'
 import {authenticated} from '../../src/platform/auth'
@@ -28,6 +29,9 @@ globalThis.fetch=async input=>{outboundCalls.push(String(input instanceof Reques
 app.post('/test/config-fixture',async c=>{
  const p=requireRole(c,'owner'),b=await jsonBody(c)
  if(b.inspectTransport)return c.json({workerInstance,importRequests})
+ if(b.touchMaskedTicket)await c.env.DB.prepare('UPDATE work_records SET updated_at=updated_at WHERE workspace_id=? AND id=?').bind(p.workspaceId,b.touchMaskedTicket).run()
+ if(b.maskedTicket)await c.env.DB.prepare('UPDATE work_records SET state=?,closed_at=? WHERE workspace_id=? AND id=?').bind(b.open?'open':'closed',b.open?null:new Date(Date.now()-Number(b.closedDaysAgo)*86400000).toISOString(),p.workspaceId,b.maskedTicket).run()
+ if(b.runMaskedRetentionAt)await expireMaskedRecords(c.env,Number(b.runMaskedRetentionAt))
  if(b.outboundControl)try{await fetch('https://sandbox.example.test/control')}catch{}
  if(b.resetOutbound)outboundCalls.length=0
  if(b.activate)await c.env.DB.batch([
@@ -50,7 +54,8 @@ app.post('/test/config-fixture',async c=>{
  const audits=await c.env.DB.prepare('SELECT count(*) n FROM audit_events WHERE workspace_id=?').bind(p.workspaceId).first()
  const connections=await c.env.DB.prepare('SELECT id,provider,config_json,status,revision,secret_ciphertext FROM connections WHERE workspace_id=? ORDER BY id').bind(p.workspaceId).all()
  const sandboxRows=(await c.env.DB.prepare('SELECT * FROM configuration_sandboxes WHERE workspace_id=? ORDER BY id').bind(p.workspaceId).all()).results
- return c.json({configurationTables,settings,audits,connections:connections.results,protectedTables,sandboxAudits,sandboxRows,outboundCalls})
+ const maskedRows=(await c.env.DB.prepare('SELECT * FROM configuration_masked_records WHERE workspace_id=? ORDER BY rowid').bind(p.workspaceId).all()).results
+ return c.json({maskedRows,configurationTables,settings,audits,connections:connections.results,protectedTables,sandboxAudits,sandboxRows,outboundCalls})
 })
 const work=new Hono<AppEnv>();work.use('*',authenticated);registerWorkRoutes(work);registerServiceRoutes(work);registerAdoptionRoutes(work);app.route('/api/v1',work);
 export default app

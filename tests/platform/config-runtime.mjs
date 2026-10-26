@@ -6,6 +6,9 @@ import { tmpdir } from 'node:os'
 import { join,resolve } from 'node:path'
 import { createServer } from 'node:net'
 import { pbkdf2Sync } from 'node:crypto'
+import {createRequire} from 'node:module'
+const require=createRequire(import.meta.resolve('wrangler/package.json'))
+const {build}=require('esbuild'),{Miniflare,convertV4MiniflareOptions}=require('miniflare')
 const dir=await mkdtemp(join(tmpdir(),'linen-platform-'))
 const socket=createServer();await new Promise(r=>socket.listen(Number(process.env.LINEN_TEST_PORT || 0),'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r))
 const origin=`http://127.0.0.1:${port}`
@@ -14,9 +17,17 @@ const migrationFiles=(await readdir('migrations')).filter(file=>file.endsWith('.
 const migrationSql=join(dir,'migrations.sql')
 await writeFile(migrationSql,(await Promise.all(migrationFiles.map(file=>readFile('migrations/'+file,'utf8')))).join('\n'))
 const migrate=spawnSync('pnpm',['exec','wrangler','d1','execute','DB','--local','--persist-to',dir,'--file',migrationSql],{encoding:'utf8'});assert.equal(migrate.status,0,migrate.stdout+migrate.stderr)
-let worker,owner,output=''
-async function start(){worker=spawn(process.execPath,['node_modules/wrangler/bin/wrangler.js','dev','--local','--config',process.env.LINEN_TEST_EMITTED?'dist/server/wrangler.json':config,'--persist-to',dir,'--port',String(port)],{stdio:['ignore','pipe','pipe']});worker.once('exit',(code,signal)=>{output+=`\nConfiguration worker exited: pid=${worker.pid} code=${code} signal=${signal}\n`});worker.stdout.on('data',x=>output+=x);worker.stderr.on('data',x=>output+=x);for(let i=0;i<120;i++){try{if((await fetch(origin+'/health')).ok)return}catch{}if(worker.exitCode!==null)throw Error(output);await new Promise(r=>setTimeout(r,250))}throw Error(output)}
-async function stop(){worker.kill('SIGTERM');await new Promise(r=>worker.exitCode!==null?r():worker.once('exit',r))}
+let worker,mf,owner,output=''
+const built=await build({entryPoints:['tests/platform/config-worker.ts'],bundle:true,format:'esm',platform:'browser',external:['node:*'],target:'es2022',write:false})
+async function start(){
+ // Keep native HTTP and real D1 and R2, without Wrangler's development forwarding Worker.
+ // The forwarding connection can fail before the application's fetch handler enters.
+ if(!process.env.LINEN_TEST_EMITTED){
+  mf=new Miniflare({...convertV4MiniflareOptions({port,host:'127.0.0.1',modules:true,script:built.outputFiles[0].text,compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'local-linen'},r2Buckets:{ATTACHMENTS:'linen-test-attachments'},bindings:{SESSION_SECRET:'synthetic-fixture-only-session-key',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}),resourcePersistencePath:join(dir,'v3'),isolatedResourcePersistencePath:join(dir,'isolated')});
+  await mf.ready;return;
+ }
+ worker=spawn(process.execPath,['node_modules/wrangler/bin/wrangler.js','dev','--local','--config',process.env.LINEN_TEST_EMITTED?'dist/server/wrangler.json':config,'--persist-to',dir,'--port',String(port)],{stdio:['ignore','pipe','pipe']});worker.once('exit',(code,signal)=>{output+=`\nConfiguration worker exited: pid=${worker.pid} code=${code} signal=${signal}\n`});worker.stdout.on('data',x=>output+=x);worker.stderr.on('data',x=>output+=x);for(let i=0;i<120;i++){try{if((await fetch(origin+'/health')).ok)return}catch{}if(worker.exitCode!==null)throw Error(output);await new Promise(r=>setTimeout(r,250))}throw Error(output)}
+async function stop(){if(mf){await mf.dispose();mf=null;return;}worker.kill('SIGTERM');await new Promise(r=>worker.exitCode!==null?r():worker.once('exit',r))}
 async function request(path,method='GET',body,auth={},extra={}){return fetch(origin+'/api/v1'+path,{method,headers:{Origin:origin,'Content-Type':'application/json',...(auth.cookie?{Cookie:auth.cookie}:{}),...(auth.csrf?{'X-Linen-CSRF':auth.csrf}:{}),...extra},body:body===undefined?undefined:body instanceof Uint8Array?body:JSON.stringify(body)})}
 try {
  await start()
@@ -99,4 +110,4 @@ try {
   catch(error){console.error('Configuration '+label+' unavailable',String(error))}
  }
  console.error(output);throw e
-} finally {if(worker?.exitCode===null)await stop();await rm(dir,{recursive:true,force:true})}
+} finally {if(mf||worker?.exitCode===null)await stop();await rm(dir,{recursive:true,force:true})}

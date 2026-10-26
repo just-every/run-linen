@@ -1,3 +1,4 @@
+import {copyMaskedRecords,maskedRecords} from './sandbox-masked-records';
 import {rehearseRouting} from './sandbox-routing';
 import {editSandboxApprovals,sandboxApprovalGuards} from './sandbox-approvals';
 import type {StageDef} from '../features/work/approval-config';
@@ -79,6 +80,8 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   return c.json(view(await read(c,sandboxId)),201);
  });
  app.get('/sandboxes/:id',async c=>{c.header('Cache-Control','private, no-store');const row=await read(c,c.req.param('id'),true);if(!c.get('principal').roles.includes('owner'))await audit(c,'sandbox.review_read',row.id,{revision:row.revision});return c.json(view(row));});
+ app.get('/sandboxes/:id/masked-records',async c=>{const row=await read(c,c.req.param('id'));return c.json(await maskedRecords(c,row.id));});
+ app.post('/sandboxes/:id/masked-records',async c=>{const row=await read(c,c.req.param('id'));return c.json(await copyMaskedRecords(c,row,await jsonBody(c),ownerSql));});
  app.get('/sandboxes/:id/options',async c=>{
   await read(c,c.req.param('id'));const ws=c.get('principal').workspaceId;
   const result:Record<string,unknown>={};

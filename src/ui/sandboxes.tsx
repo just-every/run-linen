@@ -33,7 +33,7 @@ export function SandboxSpace({selectedId}:{selectedId?:string}) {
  {!reviewer?<Notice>A current workspace owner is required.</Notice>:<><ErrorNotice error={list.error} retry={list.refresh}/><ErrorNotice error={detail.error} retry={detail.refresh}/><ErrorNotice error={error}/>
  {selectedId?<><a href="#/sandboxes">All sandboxes</a>{detail.data&&<SandboxDetail key={detail.data.id+':'+detail.data.revision} row={detail.data} refresh={()=>{detail.refresh();list.refresh();}}/>}</>:<>
  {owner?<><form className="inline-form" onSubmit={e=>void create(e)}><label>Sandbox name<input name="name" required maxLength={120}/></label><button className="action primary" disabled={pending}>Create configuration sandbox</button></form>
- <Notice>Configuration only. Personal records, role assignments, grants and credentials are excluded. A separate current owner must review your changes.</Notice>
+ <Notice>Personal records are excluded by default. Owners can choose fully masked ticket copies inside a draft. Role assignments, grants and credentials are excluded. A separate current owner must review your changes.</Notice>
  </>:<Notice>Open the reviewed package link shared by an owner. Administrator authority permits review and approval only.</Notice>}
  {list.data?.items.map(row=><article className="connection-record" key={row.id}><a href={'#/sandboxes/'+row.id}>{row.name}</a><p>Revision {row.revision} · {row.state}</p></article>)}
  </>}</>}
@@ -49,6 +49,7 @@ function SandboxDetail({row,refresh}:{row:Sandbox;refresh:()=>void}) {
  }
  const action=(door:string)=>void mutate(door).catch(()=>{});
  return <><h2>{row.name}</h2><Facts entries={[["Revision",String(row.revision)],["State",row.state],["Approval",row.approvedBy?'Separate reviewer approval recorded':'Not approved']]}/><Notice>{row.limits}</Notice>
+ {owner&&<MaskedTickets path={path} revision={row.revision} draft={row.state==='draft'}/>}
  <ErrorNotice error={error}/><ErrorNotice error={values.error} retry={values.refresh}/><ErrorNotice error={groups.error} retry={groups.refresh}/><ErrorNotice error={options.error} retry={options.refresh}/><ErrorNotice error={runs.error} retry={runs.refresh}/>
  {owner&&row.state==='draft'&&<>
  {row.items.map(item=><details className="action-disclosure" key={item.id}><summary>Edit {item.name}</summary>
@@ -112,4 +113,18 @@ function ConfigurationEditor({family,row,options,save}:{family:string;row:Config
 function SandboxApprovals({item,calendars,save}:{item:Item;calendars:{id:string;name:string;timezone:string}[];save:(body:object)=>Promise<unknown>}) {
  const [managerRequired,setManagerRequired]=useState(Boolean(item.requiresManager));
  return <><label className="checkbox-field"><input type="checkbox" checked={managerRequired} onChange={e=>setManagerRequired(e.target.checked)}/>Require manager approval in sandbox</label><CatalogApprovalEditor item={{...item,requires_manager:Number(managerRequired)}} draftCalendars={calendars} onSaved={()=>{}} saveDraft={({revision,...body})=>save({...body,requiresManager:managerRequired})}/></>;
+}
+
+function MaskedTickets({path,revision,draft}:{path:string;revision:number;draft:boolean}) {
+ const {session}=useSession(),source=useRemote<{items:{id:string;title:string;revision:number}[]}>(draft?'/work':null),copies=useRemote<{items:{id:string;fields:Record<string,string>}[]}>(path+'/masked-records');
+ const [error,setError]=useState<unknown>(),[pending,setPending]=useState(false),[selected,setSelected]=useState(''),[consent,setConsent]=useState(false);
+ async function copy(e:FormEvent<HTMLFormElement>){e.preventDefault();const row=source.data?.items.find(item=>item.id===selected);if(!row)return;setPending(true);setError(null);try{await request(path+'/masked-records',{method:'POST',csrf:session.csrfToken,body:{revision,consent,records:[{id:row.id,revision:row.revision}]}});setConsent(false);setSelected('');copies.refresh();}catch(e){setError(e);}finally{setPending(false);}}
+ return <details className="action-disclosure"><summary>Masked ticket copies</summary>
+ <Notice>Personal records are excluded by default. A selected ticket keeps its field structure with every source value replaced. Copies carry no production authority and stay outside configuration packages and archives. Source changes, scope changes and erasure retire copies; the source ticket retention deadline still applies.</Notice>
+ <ErrorNotice error={error}/><ErrorNotice error={source.error} retry={source.refresh}/><ErrorNotice error={copies.error} retry={copies.refresh}/>
+ {draft&&<form className="inline-form" onSubmit={e=>void copy(e)}><label>Production ticket to mask<select required value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Choose a ticket</option>{source.data?.items.map(row=><option value={row.id} key={row.id}>{row.title}</option>)}</select></label>
+ <label className="checkbox-field"><input type="checkbox" required checked={consent} onChange={e=>setConsent(e.target.checked)}/>I choose this ticket for a fully masked copy</label><button className="action secondary" disabled={pending||!consent||!selected}>Copy masked ticket</button></form>}
+ {copies.data?.items.length===0&&<p>No personal records copied.</p>}
+ {copies.data?.items.map((row,i)=><details className="action-disclosure" key={row.id}><summary>Inspect masked ticket {i+1}</summary><pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{JSON.stringify(row.fields,null,2)}</pre></details>)}
+ </details>;
 }
