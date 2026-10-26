@@ -59,7 +59,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await mask.getByRole('button',{name:'Copy masked ticket',exact:true}).focus();await page.keyboard.press('Enter');assert.equal((await copyResponse).status(),200);
  await mask.getByText('Inspect masked ticket 1',{exact:true}).waitFor();
  await mask.getByText('Inspect masked ticket 1',{exact:true}).press('Enter');
- const maskedFields=mask.locator('pre');assert.ok((await maskedFields.innerText()).includes('"title": "[masked]"'));assert.ok(!(await maskedFields.innerText()).includes(sourceTicket.title));
+ const maskedFields=mask.locator('pre');assert.ok((await maskedFields.innerText()).includes('"title": "[masked]"'));assert.ok(!(await maskedFields.innerText()).includes('synthetic-linen-606-private-title'));
  await captureJourney(page,{path:out+'/SANDBOX-004-masked-read.png',fullPage:true});
  await mask.locator(':scope > summary').press('Enter');
  let item=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit '+catalog.name})}).first();

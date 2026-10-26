@@ -5679,7 +5679,7 @@
       "executable": false
     },
     "src/ui/sandboxes.tsx": {
-      "sha256": "2fdd6dba44e7e6404063dca5d02ac09d3550de348aa8485a90bd644028973220",
+      "sha256": "65c54c740629fa1417cb86bec683ea31234718b2c5be3b603d916129097e4a9d",
       "executable": false
     },
     "src/ui/search.tsx": {
@@ -6543,7 +6543,7 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "ab067e4d7b99ed2a7408cc09a0debbf6f05a0eaa6d6df844727436e6d94d98ce",
+      "sha256": "e47fb0f81449e8c7cdd87e14c7bb431ec7c8f340bdba57b981a6a6e4667fca3c",
       "executable": false
     },
     "tests/ui/sandbox-routing-journey.mjs": {
