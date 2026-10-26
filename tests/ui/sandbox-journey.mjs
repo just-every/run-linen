@@ -1,3 +1,4 @@
+import {seedSandboxRouting,editSandboxRouting,assertSandboxRoutingPromoted} from './sandbox-routing-journey.mjs';
 import assert from 'node:assert/strict';
 import {captureJourney} from './viewport-evidence.mjs';
 
@@ -10,10 +11,11 @@ export async function sandboxJourney({page,api,base,out}) {
  catalog.name='Sandbox equipment '+suffix;
  const position=Math.max(0,...(await api('/sla-policies')).items.map(x=>x.position))+1;
  const policy=await api('/sla-policies',{name:'Sandbox response '+suffix,position,firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:480,pauseOn:[]});
- await api('/calendars',{name:'Sandbox hours '+suffix,timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]});
+ const calendar=await api('/calendars',{name:'Sandbox hours '+suffix,timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]});
  await api('/escalation-levels',{target:'resolution',level:1,offsetMinutes:0,notify:'assignee',label:'Sandbox resolution'});
  await api('/waiting-rule',{remindBusinessDays:2,resolveBusinessDays:5});
  const department=await api('/departments',{name:'Sandbox department '+suffix,kind:'it'});
+ const routing=await seedSandboxRouting({api,owner,team,department,calendar,suffix});
  const role=await api('/department-roles',{departmentId:department.id,name:'Sandbox reader '+suffix,permissions:['ticket.read']});
  const recurring=await api('/recurring-work',{title:'Sandbox recurring '+suffix,body:'Original recurring instructions',ownerId:owner,tasks:[{title:'Original recurring task',ownerId:owner}],calendar:{timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]},rule:{startDate:'2027-01-01',frequency:'annual',interval:1,firstBusinessDay:false}});
  const template=await api('/lifecycle-templates',{name:'Sandbox lifecycle '+suffix,kind:'join',match:{},tasks:[{key:'prepare',title:'Prepare lifecycle equipment',assignee:{type:'group',groupId:team.id},anchor:'start',offsetDays:0,remindDays:null}]});
@@ -151,6 +153,7 @@ export async function sandboxJourney({page,api,base,out}) {
  assert.match(await lifecycleRehearsal.innerText(),/Reviewed lifecycle preparation.*2027-02-03T09:00:00.000Z/);
  await captureJourney(page,{path:out+'/SANDBOX-001-lifecycle-rehearsal.png',fullPage:true});
  assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,template.name);
+ await editSandboxRouting({page,api,path,out,suffix,writeClick,routing});
  const production=(await api('/catalog')).items.find(x=>x.id===catalog.id);assert.equal(production.name,catalog.name);
  const isolated=await api(path);assert.ok(!JSON.stringify(isolated).includes('synthetic-linen-456'));assert.ok(!JSON.stringify(isolated).includes('synthetic-linen-457'));
  await writeClick(page.getByRole('button',{name:'Request separate owner review',exact:true}),path+'/package');
@@ -171,6 +174,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await writeClick(page.getByRole('button',{name:'Approve reviewed package',exact:true}),path+'/approve');
  await captureJourney(page,{path:out+'/SANDBOX-001-promotion.png',fullPage:true});
  await writeClick(page.getByRole('button',{name:'Promote reviewed configuration',exact:true}),path+'/promote');
+ await assertSandboxRoutingPromoted(api,routing);
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).name,'Reviewed equipment '+suffix);
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).approvals[0].name,'Reviewed sandbox approval');
  assert.equal((await api('/recurring-work')).items.find(row=>row.id===recurring.id).title,'Reviewed recurring '+suffix);
@@ -186,6 +190,7 @@ export async function sandboxJourney({page,api,base,out}) {
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).name,catalog.name);
  assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,template.name);
  assert.equal((await api('/recurring-work')).items.find(row=>row.id===recurring.id).title,'Sandbox recurring '+suffix);
+ assert.deepEqual(await api('/work-routing'),routing.before,'Native reviewed rollback restores routing configuration');
  await captureJourney(page,{path:out+'/SANDBOX-001-rolled-back.png',fullPage:true});
  const employeeEmail=`synthetic-linen-${suffix}-employee@example.test`;
  await api('/members',{name:'Sandbox employee',email:employeeEmail,password,roles:['employee']});

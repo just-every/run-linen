@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict';
+
+export async function sandboxRoutingChecks({invoke,owner,reviewer,requester,employee,first,calendar,fixture,login}) {
+ const group=await invoke('/work-groups','POST',{name:'synthetic-linen-470'},owner,201);
+ const department=await invoke('/departments','POST',{name:'synthetic-linen-471',kind:'it'},owner,201);
+ const destination=await invoke('/work-groups','POST',{name:'synthetic-linen-472',departmentId:department.id},owner,201);
+ const service=await invoke('/services','POST',{name:'synthetic-linen-473',ciType:'business_service',description:'synthetic-linen-474',businessImpact:'synthetic-linen-475',provenance:'observed',source:'synthetic-linen-476',observedAt:new Date().toISOString(),freshnessMs:86400000},owner,201);
+ await invoke('/work-routing/support-groups/'+service.id,'POST',{groupId:group.id});
+ await invoke('/work-routing/agents/'+first.id,'POST',{calendarId:calendar.id,skills:['synthetic-linen-477']});
+ const requesterGroup=await invoke('/requester-groups','POST',{name:'synthetic-linen-478',memberIds:[employee.id]},owner,201);
+ const route=await invoke('/work-routing/rules','POST',{name:'synthetic-linen-479',position:40,requesterId:first.id,groupId:group.id},owner,201);
+ const second=await invoke('/work-routing/rules','POST',{name:'synthetic-linen-480',position:41,requesterId:first.id,groupId:group.id},owner,201);
+ const existing=await invoke('/work','POST',{title:'synthetic-linen-481',body:'synthetic-linen-481',context:{serviceId:service.id},deduplicationKey:'synthetic-linen-481'},requester,201);
+ const assignmentsBefore=await invoke('/work/'+existing.id+'/assignments','GET');
+ const production=await invoke('/work-routing','GET');
+ let sandbox=await invoke('/sandboxes','POST',{name:'synthetic-linen-482'},owner,201),path='/sandboxes/'+sandbox.id;
+ for(const family of ['routing','support','agent','assignment'])assert.ok(sandbox.slaConfiguration[family].length);
+ for(const invalid of [{position:0},{category:'synthetic-linen-unknown'},{requester_id:'synthetic-linen-foreign'},{requester_group_id:'synthetic-linen-foreign'},{group_id:'synthetic-linen-foreign'},{department_id:department.id},{records:[]}])await invoke(path+'/sla-configuration/routing/'+route.id,'PUT',{revision:sandbox.revision,...invalid},owner,422);
+ await invoke(path+'/sla-configuration/routing/'+route.id,'PUT',{revision:sandbox.revision,name:'synthetic-linen-483'},requester,403);
+ await invoke(path+'/sla-configuration/agent/'+first.id,'PUT',{revision:sandbox.revision,skills_json:'invalid'},owner,422);
+ await invoke(path+'/sla-configuration/assignment/'+group.id,'PUT',{revision:sandbox.revision,assignment:'invalid'},owner,422);
+ await invoke(path+'/sla-configuration/assignment/'+group.id,'PUT',{revision:sandbox.revision,max_open:0},owner,422);
+ await invoke(path+'/sla-configuration/support/'+service.id,'PUT',{revision:sandbox.revision,group_id:'synthetic-linen-foreign'},owner,422);
+ const edit=async(family,id,body)=>sandbox=await invoke(path+'/sla-configuration/'+family+'/'+id,'PUT',{revision:sandbox.revision,...body});
+ await edit('routing',second.id,{position:1000});await edit('routing',route.id,{name:'synthetic-linen-484',position:41,category:'hardware',requester_id:employee.id,requester_group_id:requesterGroup.id,skill:'synthetic-linen-485',group_id:destination.id,department_id:department.id});await edit('routing',second.id,{position:40});
+ await edit('support',service.id,{group_id:destination.id});await edit('agent',first.id,{calendar_id:null,skills_json:'["synthetic-linen-485"]'});await edit('assignment',destination.id,{assignment:'load',max_open:8});
+ assert.deepEqual(await invoke('/work-routing','GET'),production,'Every draft routing family stays isolated');
+ const protectedBefore=await fixture({});
+ const preview=await invoke(path+'/test-routing','POST',{revision:sandbox.revision,requesterId:employee.id,departmentId:department.id,category:'hardware'});
+ assert.equal(preview.groupId,destination.id);assert.equal(preview.ruleId,route.id);assert.deepEqual(preview.assignment,{mode:'load',maxOpen:8});assert.equal(preview.skill,'synthetic-linen-485');assert.equal(preview.assigned,false);assert.equal(preview.externalEffects,false);
+ assert.equal((await invoke(path+'/test-routing','POST',{revision:sandbox.revision,requesterId:employee.id,departmentId:department.id,category:'software'})).groupId,null);
+ assert.equal((await invoke(path+'/test-routing','POST',{revision:sandbox.revision,serviceId:service.id,departmentId:department.id,category:'software'})).source,'support');
+ await invoke(path+'/test-routing','POST',{revision:sandbox.revision,requesterId:'synthetic-linen-foreign'},owner,422);await invoke(path+'/test-routing','POST',{revision:sandbox.revision,records:[]},owner,422);await invoke(path+'/test-routing','POST',{revision:sandbox.revision},requester,403);
+ for(const [family,id] of [['routing',route.id],['support',service.id],['agent',first.id],['assignment',destination.id]])assert.equal((await invoke(path+'/test-configuration','POST',{revision:sandbox.revision,family,configurationId:id})).valid,true);
+ assert.deepEqual(await fixture({}),protectedBefore,'Rehearsals retain no answers, production work, assignment cursor or outbound effects');
+ sandbox=await invoke(path+'/package','POST',{revision:sandbox.revision});
+ for(const [family,fields] of [['routing',['name','position','category','requester_id','requester_group_id','skill','group_id','department_id']],['support',['group_id']],['agent',['calendar_id','skills_json']],['assignment',['assignment','max_open']]])for(const field of fields)assert.ok(sandbox.differences.some(diff=>diff.family===family&&diff.field===field),'Review includes '+family+' '+field);
+ await invoke(path+'/approve','POST',{revision:sandbox.revision},owner,403);sandbox=await invoke(path+'/approve','POST',{revision:sandbox.revision},reviewer);sandbox=await invoke(path+'/promote','POST',{revision:sandbox.revision});
+ assert.deepEqual((await fixture({})).protectedTables,protectedBefore.protectedTables,'Routing promotion preserves admitted work and authority');assert.deepEqual(await invoke('/work/'+existing.id+'/assignments','GET'),assignmentsBefore);
+ const promoted=await invoke('/work-routing','GET');assert.equal(promoted.rules.find(item=>item.id===route.id).department_id,department.id);assert.equal(promoted.groups.find(item=>item.id===destination.id).mode,'load');assert.equal(promoted.agents.find(item=>item.userId===first.id).calendarId,null);
+ const routed=await invoke('/work','POST',{title:'synthetic-linen-486',body:'synthetic-linen-486',departmentId:department.id,context:{serviceId:service.id},deduplicationKey:'synthetic-linen-486'},requester,201);assert.equal(routed.group_id,destination.id,'New work uses promoted support routing');
+ let rollback=await invoke(path+'/rollback-package','POST',{revision:sandbox.revision},owner,201),rollbackPath='/sandboxes/'+rollback.id;rollback=await invoke(rollbackPath+'/approve','POST',{revision:rollback.revision},reviewer);await invoke(rollbackPath+'/promote','POST',{revision:rollback.revision});
+ assert.deepEqual(await invoke('/work-routing','GET'),production,'Reviewed rollback restores every routing field');assert.deepEqual(await invoke('/work/'+existing.id+'/assignments','GET'),assignmentsBefore);
+ let stale=await invoke('/sandboxes','POST',{name:'synthetic-linen-487'},owner,201),stalePath='/sandboxes/'+stale.id;stale=await invoke(stalePath+'/sla-configuration/assignment/'+group.id,'PUT',{revision:stale.revision,assignment:'round_robin'});stale=await invoke(stalePath+'/package','POST',{revision:stale.revision});stale=await invoke(stalePath+'/approve','POST',{revision:stale.revision},reviewer);
+ await invoke('/work-groups/'+group.id+'/assignment','POST',{mode:'load',maxOpen:4});const beforeRefusal=await fixture({});await invoke(stalePath+'/promote','POST',{revision:stale.revision},owner,409);assert.deepEqual(await fixture({}),beforeRefusal);
+ let withdrawn=await invoke('/sandboxes','POST',{name:'synthetic-linen-488'},owner,201),withdrawnPath='/sandboxes/'+withdrawn.id;withdrawn=await invoke(withdrawnPath+'/sla-configuration/routing/'+route.id,'PUT',{revision:withdrawn.revision,name:'synthetic-linen-489',requester_id:employee.id});withdrawn=await invoke(withdrawnPath+'/package','POST',{revision:withdrawn.revision});withdrawn=await invoke(withdrawnPath+'/approve','POST',{revision:withdrawn.revision},reviewer);
+ await invoke('/members/'+employee.id,'PATCH',{roles:['employee'],active:false});const beforeWithdrawal=await fixture({});await invoke(withdrawnPath+'/promote','POST',{revision:withdrawn.revision},owner,409);assert.deepEqual(await fixture({}),beforeWithdrawal);await invoke('/members/'+employee.id,'PATCH',{roles:['employee'],active:true});Object.assign(requester,await login('synthetic-linen-412@example.test','synthetic-linen-413'));
+}

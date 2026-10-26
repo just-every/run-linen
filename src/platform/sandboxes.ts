@@ -1,3 +1,4 @@
+import {rehearseRouting} from './sandbox-routing';
 import {editSandboxApprovals,sandboxApprovalGuards} from './sandbox-approvals';
 import type {StageDef} from '../features/work/approval-config';
 import {stageApplies} from '../features/work/approval-stages';
@@ -42,7 +43,7 @@ function differences(row:Sandbox) {
   return (['name','form','tasks','requiresManager','approvals','managerApproval'] as const).filter(field=>JSON.stringify(before[field])!==JSON.stringify(item[field])).map(field=>({catalogId:item.id,field,before:before[field],after:item[field]}));
  })];
 }
-function view(row:Sandbox) {return {id:row.id,name:row.name,revision:row.revision,state:row.state,approvedBy:row.approved_by,items:JSON.parse(row.draft_json),slas:JSON.parse(row.sla_draft_json),slaConfiguration:JSON.parse(row.sla_config_draft_json),differences:differences(row),limits:'Catalog metadata, forms, team task plans and lifecycle task templates, recurring duties, existing custom role definitions, SLA policies, business calendars, escalation levels and waiting rules only. Form validation and isolated team task rehearsals are available. Requester memberships and role assignments remain unchanged. Changed role revisions require new assignment confirmation in production. Definitions must already exist in production; this workspace edits configuration only. Connector execution and other configuration families are not available.'};}
+function view(row:Sandbox) {return {id:row.id,name:row.name,revision:row.revision,state:row.state,approvedBy:row.approved_by,items:JSON.parse(row.draft_json),slas:JSON.parse(row.sla_draft_json),slaConfiguration:JSON.parse(row.sla_config_draft_json),differences:differences(row),limits:'Catalog metadata, forms, team task plans and lifecycle task templates, recurring duties, existing custom role definitions, SLA policies, business calendars, escalation levels and waiting rules, routing rules, support group bindings, agent shifts and skills, and group assignment settings only. Form validation and isolated team task rehearsals are available. Requester memberships and role assignments remain unchanged. Changed role revisions require new assignment confirmation in production. Definitions must already exist in production; this workspace edits configuration only. Connector execution and other configuration families are not available.'};}
 function configurationBody(body:Record<string,unknown>, allowed:string[]) {
  if(Object.keys(body).some(key=>!allowed.includes(key)))
   throw new ApiError(422,'sandbox_config_only','Only the named configuration fields are accepted; records and credentials cannot be included');
@@ -80,6 +81,9 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   await read(c,c.req.param('id'));const ws=c.get('principal').workspaceId;
   const result:Record<string,unknown>={};
   for(const [key,table] of [['requesterGroups','work_requester_groups'],['calendars','work_calendars'],['departments','work_departments']])result[key]=(await c.env.DB.prepare(`SELECT id,name FROM ${table} WHERE workspace_id=?${key==='departments'?' AND active=1':''} ORDER BY name`).bind(ws).all()).results;
+  result.groups=(await c.env.DB.prepare('SELECT id,name,department_id FROM work_groups WHERE workspace_id=? ORDER BY name').bind(ws).all()).results;
+  result.services=(await c.env.DB.prepare("SELECT id,json_extract(data_json,'$.name') AS name FROM svc_records WHERE workspace_id=? AND kind='service' ORDER BY name").bind(ws).all()).results;
+  result.requesters=(await c.env.DB.prepare('SELECT u.id,u.name FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.workspace_id=? AND m.active=1 ORDER BY u.name').bind(ws).all()).results;
   result.recipients=(await c.env.DB.prepare("SELECT u.id,u.name FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.workspace_id=? AND m.active=1 AND EXISTS(SELECT 1 FROM json_each(m.roles_json) WHERE value IN ('owner','operator')) ORDER BY u.name").bind(ws).all()).results;
   c.header('Cache-Control','private, no-store');return c.json(result);
  });
@@ -120,6 +124,10 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   const contributors=[...new Set([...JSON.parse(row.contributors_json),c.get('principal').userId])];
   await write(c,row,'sla_config_draft_json=?,contributors_json=?,revision=revision+1',[JSON.stringify(draft),JSON.stringify(contributors)],'sandbox.edited',{family:c.req.param('family'),fromRevision:row.revision});
   return c.json(view(await read(c,row.id)));
+ });
+ app.post('/sandboxes/:id/test-routing',async c=>{
+  const row=await read(c,c.req.param('id')),b=await jsonBody(c);revision(row,b,'draft');
+  c.header('Cache-Control','private, no-store');return c.json(await rehearseRouting(c,JSON.parse(row.sla_config_draft_json),b));
  });
  app.post('/sandboxes/:id/test-lifecycle',async c=>{
   const row=await read(c,c.req.param('id')),b=await jsonBody(c);revision(row,b,'draft');

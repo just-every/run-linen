@@ -1,3 +1,4 @@
+import {approvalCatalogSql,approvalCatalogBindings} from './approval-catalog-versions';
 import {fulfilmentRequiresManager,fulfilmentManagerSql} from './fulfilment-configuration';
 import {obligationHistory,ticketHistory} from './work-history';
 import { ApiError, id, now } from '../../platform/http';
@@ -94,5 +95,5 @@ async function prepareManagerRejection(ctx: WorkContext, work: WorkRecord, catal
     db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard)] };
 }
 export const managerRejected = async (ctx: WorkContext, work: { revision: number }, catalog: { revision: number }, f: { id: string; revision: number }) =>
-  Boolean(await ctx.env.DB.prepare("SELECT 1 FROM work_approval_decisions WHERE workspace_id=? AND fulfilment_id=? AND stage_key='manager' AND inert=0 AND decision='rejected' AND work_revision=? AND fulfilment_revision=? AND catalog_revision=?")
-    .bind(ctx.principal.workspaceId, f.id, work.revision, f.revision, catalog.revision).first());
+  Boolean(await ctx.env.DB.prepare(`SELECT 1 FROM work_approval_decisions WHERE workspace_id=? AND fulfilment_id=? AND stage_key='manager' AND inert=0 AND decision='rejected' AND work_revision=? AND fulfilment_revision=? AND ${approvalCatalogSql('work_approval_decisions')}`)
+    .bind(ctx.principal.workspaceId, f.id, work.revision, f.revision, ...approvalCatalogBindings(catalog.revision)).first());

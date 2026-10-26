@@ -1,3 +1,4 @@
+import {approvalCatalogSql,approvalCatalogBindings} from './approval-catalog-versions';
 import {approvalCostCents,snapshotApprovalCosts,type ApprovalCostSnapshot} from './approval-cost';
 import { now } from '../../platform/http';
 import type { WorkContext, WorkRecord } from './core';
@@ -63,7 +64,7 @@ export async function chainStatus(ctx: WorkContext, work: Pick<WorkRecord, 'id' 
   const db = ctx.env.DB, w = ctx.principal.workspaceId;
   const rows = (await db.prepare("SELECT * FROM work_approval_stages WHERE workspace_id=? AND fulfilment_id=? AND stage_key<>'manager' ORDER BY ordinal").bind(w, f.id).all<any>()).results;
   const decisions = (await db.prepare(`SELECT stage_key,approver_id,decision,comment,channel,created_at FROM work_approval_decisions WHERE workspace_id=? AND fulfilment_id=?
-    AND inert=0 AND work_revision=? AND fulfilment_revision=? AND catalog_revision=? ORDER BY created_at,rowid`).bind(w, f.id, work.revision, f.revision, catalog.revision).all<any>()).results;
+    AND inert=0 AND work_revision=? AND fulfilment_revision=? AND ${approvalCatalogSql('work_approval_decisions')} ORDER BY created_at,rowid`).bind(w, f.id, work.revision, f.revision, ...approvalCatalogBindings(catalog.revision)).all<any>()).results;
   if(preview)decisions.push({stage_key:preview.stageKey,approver_id:preview.approverId,decision:preview.decision,comment:null,channel:'portal',created_at:now()});
   const groups=stageGroups(rows.map(row=>JSON.parse(row.definition_json)));
   let prior = managerApproved,group=-1,groupSatisfied=true; const stages: StageStatus[] = [];

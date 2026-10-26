@@ -1,3 +1,4 @@
+import {routingSpecs,isRouting,routingKey,validateRouting,routingGuards} from './sandbox-routing';
 import {editRecurringConfiguration,recurringNext,recurringAuthority} from './sandbox-recurring';
 import type { Context } from 'hono';
 import type { AppEnv } from './types';
@@ -13,6 +14,7 @@ type C = Context<AppEnv>;
 type Row = Record<string,string|number|null> & {id:string;revision:number};
 export type SlaConfiguration = Record<Family,Row[]>;
 const specs = {
+ ...routingSpecs,
  recurring: {table:'work_recurring_plans',fields:['owner_id','title','body','calendar_json','rule_json','tasks_json','enabled']},
  lifecycle: {table:'work_lifecycle_templates',fields:['name','kind','match_json','tasks_json','active']},
  role: {table:'work_department_roles',fields:['name','permissions_json','active','department_id']},
@@ -23,7 +25,7 @@ const specs = {
 type Family = keyof typeof specs;
 export async function readSlaConfiguration(c:C):Promise<SlaConfiguration> {
  const ws=c.get('principal').workspaceId;
- const entries=await Promise.all(Object.entries(specs).map(async([family,spec])=>[family,(await c.env.DB.prepare(`SELECT ${family==='waiting'?"'waiting' AS id":'id'},revision,${spec.fields.join(',')}${family==='recurring'?',next_index,next_due_at':''} FROM ${spec.table} WHERE workspace_id=? ORDER BY id`).bind(ws).all<Row>()).results]));
+ const entries=await Promise.all(Object.entries(specs).map(async([family,spec])=>[family,(await c.env.DB.prepare(`SELECT ${family==='waiting'?"'waiting' AS id":isRouting(family)?routingKey(family)+' AS id':'id'},${isRouting(family)?'0 AS revision':'revision'},${spec.fields.join(',')}${family==='recurring'?',next_index,next_due_at':''} FROM ${spec.table} WHERE workspace_id=? ORDER BY id`).bind(ws).all<Row>()).results]));
  return Object.fromEntries(entries) as SlaConfiguration;
 }
 export function configurationDifferences(before:SlaConfiguration,after:SlaConfiguration) {
@@ -38,7 +40,9 @@ export async function editSlaConfiguration(c:C,draft:SlaConfiguration,family:str
  if(!row)throw new ApiError(404,'not_found','Configuration unavailable in this sandbox');
  if(Object.keys(body).some(key=>key!=='revision'&&!(spec.fields as readonly string[]).includes(key)))throw new ApiError(422,'sandbox_config_only','Only the named configuration fields are accepted');
  for(const field of spec.fields)if(body[field]!==undefined)row[field]=body[field] as string|number|null;
- if(kind==='recurring') {
+ if(isRouting(kind)) {
+  await validateRouting(c,draft,kind,row);
+ } else if(kind==='recurring') {
   await editRecurringConfiguration(c,row);
  } else if(kind==='lifecycle') {
   row.name=requiredString(row.name,'name',200);
@@ -77,9 +81,11 @@ export function promoteSlaConfiguration(c:C,before:SlaConfiguration,after:SlaCon
   const spec=specs[family];
   statements.push(db.prepare(`INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN COUNT(*)=? THEN 1 ELSE 0 END FROM ${spec.table} WHERE workspace_id=?`).bind((before[family]??[]).length,ws));
   for(const row of before[family]??[]) {
-   const fields=['revision',...spec.fields,...(family==='recurring'?['next_index','next_due_at']:[])],where=family==='waiting'?'workspace_id=?':'workspace_id=? AND id=?',keys=family==='waiting'?[ws]:[ws,row.id];
+   const fields=[...(isRouting(family)?[]:['revision']),...spec.fields,...(family==='recurring'?['next_index','next_due_at']:[])],where=family==='waiting'?'workspace_id=?':`workspace_id=? AND ${isRouting(family)?routingKey(family):'id'}=?`,keys=family==='waiting'?[ws]:[ws,row.id];
    statements.push(db.prepare(`INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM ${spec.table} WHERE ${where} AND ${fields.map(f=>f+' IS ?').join(' AND ')}) THEN 1 ELSE 0 END`).bind(...keys,...fields.map(f=>row[f])));
    const next=after[family].find(x=>x.id===row.id)!;
+   if(isRouting(family))statements.push(...routingGuards(c,family,next));
+   if(isRouting(family)){if(spec.fields.some(f=>row[f]!==next[f])||family==='routing'&&configurationDifferences(before,after).some(d=>d.family==='routing'&&d.field==='position'))updates.push(db.prepare(`UPDATE ${spec.table} SET ${spec.fields.map(f=>f+'=?').join(',')} WHERE ${where}`).bind(...spec.fields.map(f=>next[f]),...keys));continue;}
    if(family==='recurring')statements.push(...recurringAuthority(c,next));
    if(family==='lifecycle') {
     for(const task of JSON.parse(String(next.tasks_json)))if(task.assignee.type==='group')statements.push(db.prepare('INSERT INTO platform_auth_guard(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM work_groups WHERE workspace_id=? AND id=?) THEN 1 ELSE 0 END').bind(ws,task.assignee.groupId));
@@ -91,6 +97,7 @@ export function promoteSlaConfiguration(c:C,before:SlaConfiguration,after:SlaCon
    if(spec.fields.some(f=>row[f]!==next[f])||family==='role'&&configurationDifferences(before,after).some(d=>d.family==='role'&&d.field==='name')||family==='escalation'&&configurationDifferences(before,after).some(d=>d.family==='escalation'))updates.push(db.prepare(`UPDATE ${spec.table} SET ${spec.fields.map(f=>f+'=?').join(',')},revision=revision+? WHERE ${where}`).bind(...spec.fields.map(f=>next[f]),Number(spec.fields.some(f=>row[f]!==next[f])),...keys));
   }
  }
+ if(configurationDifferences(before,after).some(d=>d.family==='routing'&&d.field==='position'))statements.push(db.prepare('UPDATE work_routing_rules SET position=-position WHERE workspace_id=?').bind(ws));
  if(configurationDifferences(before,after).some(d=>d.family==='escalation'||d.family==='waiting'))statements.push(...preserveFollowupVersions(db,ws));
  if(configurationDifferences(before,after).some(d=>d.family==='role'&&d.field==='name'))statements.push(db.prepare('UPDATE work_department_roles SET name=?||id WHERE workspace_id=?').bind('sandbox-stage-'+id()+'-',ws));
  if(configurationDifferences(before,after).some(d=>d.family==='escalation'))statements.push(db.prepare('UPDATE work_escalation_levels SET level=-level WHERE workspace_id=?').bind(ws));
@@ -102,7 +109,7 @@ export function rollbackSlaConfiguration(current:SlaConfiguration,before:SlaConf
   const applied=after[family].find(x=>x.id===original.id)!,fields=specs[family].fields;
   if(!fields.some(f=>original[f]!==applied[f]))continue;
   const row=draft[family].find(x=>x.id===original.id);
-  if(!row||row.revision!==original.revision+1||fields.some(f=>row[f]!==applied[f]))throw new ApiError(409,'production_changed','Later SLA configuration changes prevent this rollback');
+  if(!row||!isRouting(family)&&row.revision!==original.revision+1||fields.some(f=>row[f]!==applied[f]))throw new ApiError(409,'production_changed','Later SLA configuration changes prevent this rollback');
   for(const field of fields)row[field]=original[field];
  }
  return draft;

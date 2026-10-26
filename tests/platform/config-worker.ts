@@ -1,3 +1,4 @@
+import {registerServiceRoutes} from '../../src/features/services'
 import {Hono} from 'hono'
 import {authenticated} from '../../src/platform/auth'
 import {registerAdoptionRoutes} from '../../src/features/adoption'
@@ -34,5 +35,5 @@ app.post('/test/config-fixture',async c=>{
  const sandboxRows=(await c.env.DB.prepare('SELECT * FROM configuration_sandboxes WHERE workspace_id=? ORDER BY id').bind(p.workspaceId).all()).results
  return c.json({configurationTables,settings,audits,connections:connections.results,protectedTables,sandboxAudits,sandboxRows,outboundCalls})
 })
-const work=new Hono<AppEnv>();work.use('*',authenticated);registerWorkRoutes(work);registerAdoptionRoutes(work);app.route('/api/v1',work);
+const work=new Hono<AppEnv>();work.use('*',authenticated);registerWorkRoutes(work);registerServiceRoutes(work);registerAdoptionRoutes(work);app.route('/api/v1',work);
 export default app

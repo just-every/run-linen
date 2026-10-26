@@ -1,3 +1,5 @@
+import {sandboxRoutingChecks} from './sandbox-routing-cases.mjs';
+import {sandboxApprovalVersionChecks} from './sandbox-approval-version-cases.mjs';
 import assert from 'node:assert/strict';
 
 // One configuration promotion flow through native sessions and the same HTTP doors as the application.
@@ -375,6 +377,8 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke(slaStalePath+'/promote','POST',{revision:slaStale.revision},owner,409);
  assert.deepEqual(await fixture({}),beforeSlaRefusal);
  await invoke(onlyPath+'/rollback-package','POST',{revision:only.revision},owner,409);
+ await sandboxRoutingChecks({invoke,owner,reviewer,requester,employee,first,calendar,fixture,login});
+ await sandboxApprovalVersionChecks({invoke,owner,reviewer,requester,employee,first,calendar,login});
  let withdrawn=await invoke('/sandboxes','POST',{name:'Withdrawn reviewer'},owner,201),withdrawnPath='/sandboxes/'+withdrawn.id;
  withdrawn=await invoke(withdrawnPath+'/catalog/'+catalogId,'PUT',{revision:withdrawn.revision,name:'Must not apply after revocation',form,tasks});
  withdrawn=await invoke(withdrawnPath+'/package','POST',{revision:withdrawn.revision});

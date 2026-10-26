@@ -1,3 +1,4 @@
+import {approvalCatalogSql,approvalCatalogBindings} from './approval-catalog-versions';
 import {fulfilmentRequiresManager,fulfilmentManagerSql} from './fulfilment-configuration';
 import {ticketHistory} from './work-history';
 import { approvalGuard } from './approval-guard';
@@ -25,7 +26,7 @@ export async function managerStageAuthority(ctx: WorkContext, work: WorkRecord, 
   const holder=await resolveManager(ctx,person?.manager_id||null);
   if(!holder)return {allowed:false,holderId:null};
   const approval=fulfilment.id ? await db.prepare(`SELECT 1 FROM work_fulfilment_approvals a WHERE a.workspace_id=?
-    AND a.work_id=? AND a.fulfilment_id=? AND a.work_revision=? AND a.fulfilment_revision=? AND a.catalog_revision=?
+    AND a.work_id=? AND a.fulfilment_id=? AND a.work_revision=? AND a.fulfilment_revision=? AND ${approvalCatalogSql('a')}
     AND a.person_revision=? AND a.person_id=? AND a.binding_id=? AND a.manager_id=? AND a.holder_id=? AND a.beneficiary_id=? AND a.purpose=?
     AND EXISTS(SELECT 1 FROM work_people p
       JOIN memberships employee ON employee.workspace_id=p.workspace_id AND employee.user_id=p.member_id AND employee.active=1
@@ -42,7 +43,7 @@ export async function managerStageAuthority(ctx: WorkContext, work: WorkRecord, 
       AND g.valid_from<=? AND g.valid_until>? AND (? IS NULL OR (g.id=? AND g.version=?))
       AND NOT EXISTS(SELECT 1 FROM execution_grant_revocations r WHERE r.workspace_id=g.workspace_id AND r.grant_id=g.id AND r.version=g.version)
       AND NOT EXISTS(SELECT 1 FROM execution_grants n WHERE n.workspace_id=g.workspace_id AND n.id=g.id AND n.version>g.version)))`)
-    .bind(w,work.id,fulfilment.id,work.revision,fulfilment.revision,catalog.revision,person.revision,person.id,person.binding_id,
+    .bind(w,work.id,fulfilment.id,work.revision,fulfilment.revision,...approvalCatalogBindings(catalog.revision),person.revision,person.id,person.binding_id,
       person.manager_id,holder,fulfilment.beneficiary_id,fulfilment.purpose,now(),now(),fulfilment.expires_at,fulfilment.expires_at,
       now(),now(),step?.grantId||null,step?.grantId||null,step?.grantVersion||null).first():null;
   return {allowed:!!approval,holderId:holder};
