@@ -6187,7 +6187,7 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "f59deca29c53098ddc27389af39d7d94e64c888dbdf7cf0029af85b79e229b42",
+      "sha256": "8df41ef5bc230b77bee59177dce44f2efa31b57ed198a728cbe2c0287551cd7a",
       "executable": false
     },
     "tests/platform/sandbox-masked-record-cases.mjs": {

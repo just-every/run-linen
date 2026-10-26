@@ -495,8 +495,6 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  await invoke('/members/'+contributorMember.id,'PATCH',{roles:['owner']});
  contributor=await login('synthetic-linen-512@example.test','synthetic-linen-513');
 
- await invoke(masked.path+'/masked-records','POST',masked.selection);
- assert.equal((await fixture({})).maskedRows.length,1);
  // Erasure removes retained recipient identity and invalidates old configuration packages.
  await invoke('/escalation-levels','POST',{target:'resolution',level:1,offsetMinutes:0,notify:reviewMember.id,label:'Review by synthetic-linen-410@example.test'});
  const erasureWork=await invoke('/work','POST',{title:'Erasure rule version',body:'Synthetic request',deduplicationKey:'synthetic-linen-459'},requester,201);
