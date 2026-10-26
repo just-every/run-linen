@@ -88,7 +88,7 @@ const exactFields: Field[] = [
               name: "conditions",
               label: "Exact additional conditions",
               type: "json",
-              hint: "Optional workId or payloadHash; current verifier revision is bound by the server.",
+              hint: "Required payloadHash for Okta or account creation; optional workId. The server binds the current verifier revision.",
             },
             { name: "connectionId", label: "Connection ID", required: true },
             { name: "target", label: "Exact target", required: true },

@@ -26,14 +26,28 @@ try {
     await page.goto(base + '/app#/connections');
     const card = page.locator('.connection-record').filter({ has: page.getByRole('heading', { name: 'Linen developer identity', exact: true }) });
     await card.waitFor();
+    const account = page.getByRole('button', { name: 'Your workspace and account', exact: true });
+    await page.keyboard.press('Tab'); await account.focus();
+    assert.equal(await account.evaluate(node => getComputedStyle(node, '::after').opacity), '1');
+    await page.getByRole('button', {name:'Connect a service'}).focus();
+    await page.mouse.move(0, 0); await account.hover();
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('.profile'), '::after').opacity === '1');
     await page.screenshot({ path: `${out}/ACCESS-002-connection-${width}.png`, fullPage: true });
+    await card.locator(':scope > details > summary').filter({hasText:'Manage'}).press('Enter');
     await card.getByRole('button', { name: 'Edit connection', exact: true }).click();
+    await card.locator(':scope > details > summary').filter({hasText:'Manage'}).press('Enter');
     const form = page.locator('form.inline-form').filter({ has: page.getByRole('heading', { name: 'Update this connection' }) });
     await form.getByLabel('Okta organization URL').fill('https://linen-acceptance.okta.com');
     assert.equal(await form.getByLabel('Scoped API token').inputValue(), '', 'saved credentials never return to the form');
     await form.scrollIntoViewIfNeeded();
     await page.screenshot({ path: `${out}/ACCESS-002-editor-${width}.png`, fullPage: true });
     await form.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page.goto(base + '/app#/grants');
+    const advanced = page.locator('details').filter({has:page.locator(':scope > summary', {hasText:'Advanced: issue an exact standing grant'})}).first();
+    await advanced.locator(':scope > summary').click();
+    await advanced.locator('[name="action"]').selectOption('okta.user.suspend');
+    await advanced.scrollIntoViewIfNeeded();
+    await page.screenshot({path:`${out}/ACCESS-002-grant-${width}.png`, fullPage:true});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'no horizontal overflow');
   }
   assert.deepEqual(errors, []);

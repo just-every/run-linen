@@ -88,11 +88,12 @@ async function runEffect(owner, operator, connection, work, action, target, bene
     const operation = (await native('/operations', undefined, operator)).value.find(item => item.id === operationId);
     check(operation, 'native_operation_readback_missing');
     if (operation.state === 'effect_verified') return true;
-    check(['submitted', 'unknown', 'running'].includes(operation.state), 'native_effect_' + safeCode(operation.state));
+    check(['submitted', 'unknown', 'running'].includes(operation.state), 'native_effect_' + safeCode(operation.last_error || operation.state));
     await native(`/operations/${operationId}/reconcile`, {}, operator);
     return false;
   }, 'native_effect_unverified', action === 'okta.sessions.clear' ? 60 : 24);
   counts.operations++;
+  console.log(`PASS native Okta effect ${action}`);
   return operationId;
 }
 async function sessionEvidence(operationId, target) {
@@ -185,7 +186,7 @@ try {
   await eventually(async () => (await provider('GET', `/api/v1/users/${userId}`)).value.status === 'ACTIVE', 'cohort_user_not_active');
   const effect = (action, target, beneficiary = target, payload) => runEffect(owner, operator, connection, work, action, target, beneficiary, payload);
   await effect('okta.group.add', groupId, userId);
-  check((await items(`/api/v1/groups/${groupId}/users`)).some(user => user.id === userId), 'group_add_readback');
+  await eventually(async () => (await items(`/api/v1/groups/${groupId}/users`)).some(user => user.id === userId), 'group_add_readback');
   checks.groupAdded = true;
   await effect('okta.app.assign', appId, groupId);
   await eventually(async () => {
@@ -228,7 +229,7 @@ try {
   await eventually(async () => (await provider('GET', `/api/v1/apps/${appId}/users/${userId}`, undefined, [200, 404])).status === 404, 'app_user_remains');
   checks.appUnassigned = true;
   await effect('okta.group.remove', groupId, userId);
-  check(!(await items(`/api/v1/groups/${groupId}/users`)).some(user => user.id === userId), 'group_remove_readback');
+  await eventually(async () => !(await items(`/api/v1/groups/${groupId}/users`)).some(user => user.id === userId), 'group_remove_readback');
   checks.groupRemoved = true;
   await effect('okta.user.deactivate', userId);
   check((await provider('GET', `/api/v1/users/${userId}`)).value.status === 'DEPROVISIONED', 'deactivated_user_readback');
