@@ -1,6 +1,6 @@
 // Developer-only held-key journey. Inject OKTA_ORG_URL and OKTA_API_TOKEN through
 // _od08-env.py. Never include credentials in command arguments or saved evidence.
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { mkdtemp, readFile, rm, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -234,7 +234,20 @@ try {
   await effect('okta.user.activate', userId);
   check((await provider('GET', `/api/v1/users/${userId}`)).value.status === 'ACTIVE', 'activated_user_readback');
   checks.userReactivated = true;
-  await provider('POST', `/api/v1/users/${userId}/factors?activate=true`, { factorType: 'token:software:totp', provider: 'OKTA' });
+  const factor = (await provider('POST', `/api/v1/users/${userId}/factors`, { factorType: 'token:software:totp', provider: 'OKTA' })).value;
+  const activation = factor._embedded?.activation;
+  check(factor.id && activation?.encoding === 'base32' && typeof activation.sharedSecret === 'string', 'factor_activation_missing');
+  let bits = '';
+  for (const letter of activation.sharedSecret.replace(/=+$/, '')) {
+    const digit = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'.indexOf(letter.toUpperCase());
+    check(digit >= 0, 'factor_secret_encoding'); bits += digit.toString(2).padStart(5, '0');
+  }
+  const secretBytes = Buffer.from((bits.match(/.{8}/g) || []).map(byte => parseInt(byte, 2)));
+  const counter = Buffer.alloc(8); counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 1000 / Number(activation.timeStep || 30))));
+  const digest = createHmac('sha1', secretBytes).update(counter).digest(), offset = digest[digest.length - 1] & 15;
+  const digits = Number(activation.keyLength || 6), passCode = String((digest.readUInt32BE(offset) & 0x7fffffff) % (10 ** digits)).padStart(digits, '0');
+  await provider('POST', `/api/v1/users/${userId}/factors/${factor.id}/lifecycle/activate`, { passCode });
+  check((await provider('GET', `/api/v1/users/${userId}/factors/${factor.id}`)).value.status === 'ACTIVE', 'factor_activation_readback');
   check((await items(`/api/v1/users/${userId}/factors`)).length > 0, 'factor_setup_empty');
   await effect('okta.factors.reset', userId);
   check((await items(`/api/v1/users/${userId}/factors`)).length === 0, 'factors_reset_readback');
