@@ -6143,7 +6143,7 @@
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
-      "sha256": "4b4623581e3783fe19b89874dcdd7cc3aa1826375858c3c85b94fd7fd2fee5d4",
+      "sha256": "45b2122e5e1fa79340ad81166ab06dc5218938717ee4969a4df697325055b874",
       "executable": false
     },
     "tests/platform/config-worker.ts": {

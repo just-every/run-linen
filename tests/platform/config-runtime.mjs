@@ -28,7 +28,9 @@ async function start(){
  }
  worker=spawn(process.execPath,['node_modules/wrangler/bin/wrangler.js','dev','--local','--config',process.env.LINEN_TEST_EMITTED?'dist/server/wrangler.json':config,'--persist-to',dir,'--port',String(port)],{stdio:['ignore','pipe','pipe']});worker.once('exit',(code,signal)=>{output+=`\nConfiguration worker exited: pid=${worker.pid} code=${code} signal=${signal}\n`});worker.stdout.on('data',x=>output+=x);worker.stderr.on('data',x=>output+=x);for(let i=0;i<120;i++){try{if((await fetch(origin+'/health')).ok)return}catch{}if(worker.exitCode!==null)throw Error(output);await new Promise(r=>setTimeout(r,250))}throw Error(output)}
 async function stop(){if(mf){await mf.dispose();mf=null;return;}worker.kill('SIGTERM');await new Promise(r=>worker.exitCode!==null?r():worker.once('exit',r))}
-async function request(path,method='GET',body,auth={},extra={}){return fetch(origin+'/api/v1'+path,{method,headers:{Origin:origin,'Content-Type':'application/json',...(auth.cookie?{Cookie:auth.cookie}:{}),...(auth.csrf?{'X-Linen-CSRF':auth.csrf}:{}),...extra},body:body===undefined?undefined:body instanceof Uint8Array?body:JSON.stringify(body)})}
+// Each HTTP mutation owns its connection; a long prior response must not leave
+// the next write on a development listener's retired keep-alive socket. No retries.
+async function request(path,method='GET',body,auth={},extra={}){return fetch(origin+'/api/v1'+path,{method,headers:{Connection:'close',Origin:origin,'Content-Type':'application/json',...(auth.cookie?{Cookie:auth.cookie}:{}),...(auth.csrf?{'X-Linen-CSRF':auth.csrf}:{}),...extra},body:body===undefined?undefined:body instanceof Uint8Array?body:JSON.stringify(body)}).catch(error=>{throw new Error(method+' '+path+' transport failed',{cause:error})})}
 try {
  await start()
  const setup=await request('/setup','POST',{email:'config@example.test',name:'Owner',password:'correct horse battery staple',workspaceName:'Config'})
@@ -43,7 +45,7 @@ try {
  await start()
  owner={cookie:setup.headers.get('set-cookie').split(';')[0]}
  owner.csrf=(await (await request('/session','GET',undefined,owner)).json()).csrfToken
- const fixture=async b=>{const r=await fetch(origin+'/test/config-fixture',{method:'POST',headers:{Origin:origin,Cookie:owner.cookie,'X-Linen-CSRF':owner.csrf,'Content-Type':'application/json'},body:JSON.stringify(b)});assert.equal(r.status,200,await r.clone().text());return r.json()}
+ const fixture=async b=>{const r=await fetch(origin+'/test/config-fixture',{method:'POST',headers:{Connection:'close',Origin:origin,Cookie:owner.cookie,'X-Linen-CSRF':owner.csrf,'Content-Type':'application/json'},body:JSON.stringify(b)});assert.equal(r.status,200,await r.clone().text());return r.json()}
  const endpoint={url:'https://ops.example.com/linen',allowedHosts:['ops.example.com']}
  const configs={
   'microsoft-graph':{tenantId:'12345678-1234-1234-1234-123456789abc'},
