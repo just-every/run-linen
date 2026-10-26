@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "4b677c415adf7205a1acb0e443f34b4186b3eda9273960698075398334b64f9a",
+      "sha256": "fa08c87adc5cc910b83dbb43534ab6e34eaccbfe2e5192697dd2c12e9effd444",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f9c0dd3e6116201e6d46ffa1a79580c28725d40a09a6893cd08caca702de53b8",
+      "sha256": "bc9a3a2e18211c1f82bb2aa426a572ec45964cb4899698ece1c8b486af20c934",
       "executable": false
     },
     "DEMO.md": {
@@ -5671,7 +5671,7 @@
       "executable": false
     },
     "src/ui/sandboxes.tsx": {
-      "sha256": "7c71010df17fb80a81f2b362bb536ac7a7896b31e7bf7bcdfb188f5bbcac37bf",
+      "sha256": "7fe069257d827642c714725d478967c61586279c0931dc4825e6e07abac09210",
       "executable": false
     },
     "src/ui/search.tsx": {
@@ -6179,7 +6179,7 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "11ac9ba9f4e893dcb6dce1d02b7b954649cceb99583460d9f0009d969b192274",
+      "sha256": "014e9645c3ca37184ab99dae91ec1afda12867d830703eb7c1a5939cfe8111e2",
       "executable": false
     },
     "tests/platform/sandbox-routing-cases.mjs": {
@@ -6531,7 +6531,7 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "906afd60a6e30fb608416d32e5b16158b612bde0adb7dfdabff5e85a191b5bee",
+      "sha256": "46c38558d53c5cf13c4eeec150be63f94c43a3a6c5efca36e0c59b499e2fb30d",
       "executable": false
     },
     "tests/ui/sandbox-routing-journey.mjs": {

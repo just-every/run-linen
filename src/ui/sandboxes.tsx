@@ -25,31 +25,32 @@ type Choice={id:string;name:string};
 type Options=RoutingOptions&{requesterGroups:Choice[];calendars:Choice[];departments:Choice[];recipients:Choice[]};
 type Run={id:string;catalogId:string;state:string;current:boolean;tasks:(CatalogTask&{state:string})[]};
 export function SandboxSpace({selectedId}:{selectedId?:string}) {
- const {session}=useSession(),owner=session.principal.roles.includes('owner');
- const list=useRemote<{items:Sandbox[]}>(owner?'/sandboxes':null),detail=useRemote<Sandbox>(owner&&selectedId?'/sandboxes/'+selectedId:null);
+ const {session}=useSession(),owner=session.principal.roles.includes('owner'),reviewer=owner||session.principal.roles.includes('sandbox-admin');
+ const list=useRemote<{items:Sandbox[]}>(owner?'/sandboxes':null),detail=useRemote<Sandbox>(reviewer&&selectedId?'/sandboxes/'+selectedId:null);
  const [error,setError]=useState<unknown>(),[pending,setPending]=useState(false);
  async function create(e:FormEvent<HTMLFormElement>){e.preventDefault();const form=e.currentTarget;setError(null);setPending(true);try{const row=await request<Sandbox>('/sandboxes',{method:'POST',csrf:session.csrfToken,body:{name:new FormData(form).get('name')}});location.hash='/sandboxes/'+row.id;}catch(e){setError(e);}finally{setPending(false);}}
  return <section className="sandbox-space" aria-label="Configuration sandboxes"><Hero eyebrow="Settings" title="Configuration sandboxes">Review configuration changes before production.</Hero>
- {!owner?<Notice>A current workspace owner is required.</Notice>:<><ErrorNotice error={list.error} retry={list.refresh}/><ErrorNotice error={detail.error} retry={detail.refresh}/><ErrorNotice error={error}/>
+ {!reviewer?<Notice>A current workspace owner is required.</Notice>:<><ErrorNotice error={list.error} retry={list.refresh}/><ErrorNotice error={detail.error} retry={detail.refresh}/><ErrorNotice error={error}/>
  {selectedId?<><a href="#/sandboxes">All sandboxes</a>{detail.data&&<SandboxDetail key={detail.data.id+':'+detail.data.revision} row={detail.data} refresh={()=>{detail.refresh();list.refresh();}}/>}</>:<>
- <form className="inline-form" onSubmit={e=>void create(e)}><label>Sandbox name<input name="name" required maxLength={120}/></label><button className="action primary" disabled={pending}>Create configuration sandbox</button></form>
+ {owner?<><form className="inline-form" onSubmit={e=>void create(e)}><label>Sandbox name<input name="name" required maxLength={120}/></label><button className="action primary" disabled={pending}>Create configuration sandbox</button></form>
  <Notice>Configuration only. Personal records, role assignments, grants and credentials are excluded. A separate current owner must review your changes.</Notice>
+ </>:<Notice>Open the reviewed package link shared by an owner. Administrator authority permits review and approval only.</Notice>}
  {list.data?.items.map(row=><article className="connection-record" key={row.id}><a href={'#/sandboxes/'+row.id}>{row.name}</a><p>Revision {row.revision} · {row.state}</p></article>)}
  </>}</>}
  </section>;
 }
 function SandboxDetail({row,refresh}:{row:Sandbox;refresh:()=>void}) {
- const {session}=useSession(),options=useRemote<Options>('/sandboxes/'+row.id+'/options'),runs=useRemote<{items:Run[]}>('/sandboxes/'+row.id+'/runs');
+ const {session}=useSession(),owner=session.principal.roles.includes('owner'),options=useRemote<Options>(owner?'/sandboxes/'+row.id+'/options':null),runs=useRemote<{items:Run[]}>(owner?'/sandboxes/'+row.id+'/runs':null);
  const [error,setError]=useState<unknown>(),[pending,setPending]=useState(false),[tested,setTested]=useState(false),[recurringPreview,setRecurringPreview]=useState<string>();
- const values=useRemote<{items:TemplateValue[]}>('/catalog-values'),groups=useRemote<{items:TemplateTeam[]}>('/work-groups');
+ const values=useRemote<{items:TemplateValue[]}>(owner?'/catalog-values':null),groups=useRemote<{items:TemplateTeam[]}>(owner?'/work-groups':null);
  const path='/sandboxes/'+row.id;
  async function mutate(door:string,body:unknown={},method='POST') {
   setError(null);setPending(true);try{const value=await request<Sandbox>(path+door,{method,csrf:session.csrfToken,body:{revision:row.revision,...body as object}});if(door==='/rollback-package')location.hash='/sandboxes/'+value.id;else refresh();return value;}catch(e){setError(e);throw e;}finally{setPending(false);}
  }
  const action=(door:string)=>void mutate(door).catch(()=>{});
- return <><h2>{row.name}</h2><Facts entries={[["Revision",String(row.revision)],["State",row.state],["Approval",row.approvedBy?'Separate owner approval recorded':'Not approved']]}/><Notice>{row.limits}</Notice>
+ return <><h2>{row.name}</h2><Facts entries={[["Revision",String(row.revision)],["State",row.state],["Approval",row.approvedBy?'Separate reviewer approval recorded':'Not approved']]}/><Notice>{row.limits}</Notice>
  <ErrorNotice error={error}/><ErrorNotice error={values.error} retry={values.refresh}/><ErrorNotice error={groups.error} retry={groups.refresh}/><ErrorNotice error={options.error} retry={options.refresh}/><ErrorNotice error={runs.error} retry={runs.refresh}/>
- {row.state==='draft'&&<>
+ {owner&&row.state==='draft'&&<>
  {row.items.map(item=><details className="action-disclosure" key={item.id}><summary>Edit {item.name}</summary>
  <CatalogFormEditor item={item} onSaved={()=>{}} saveDraft={async value=>{await mutate('/catalog/'+item.id,{...value,tasks:item.tasks},'PUT');}}/>
  <CatalogTaskPlanEditor item={item} onSaved={()=>{}} saveDraft={async tasks=>{await mutate('/catalog/'+item.id,{name:item.name,form:item.form,tasks},'PUT');}}/>
@@ -68,8 +69,8 @@ function SandboxDetail({row,refresh}:{row:Sandbox;refresh:()=>void}) {
  <h3>Complete configuration diff</h3>{!row.differences.length&&<p>No configuration changes.</p>}
  {row.differences.map((diff,i)=><details className="action-disclosure" key={i}><summary>{diff.family??'catalog'} · {diff.family&&routingFamilies.includes(diff.family)?routingLabel(diff.family,Object.values(row.slaConfiguration).flat().find(x=>x.id===diff.configurationId)!,options.data):row.items.find(x=>x.id===diff.catalogId)?.name??row.slas.find(x=>x.id===diff.slaId)?.name??Object.values(row.slaConfiguration).flat().find(x=>x.id===diff.configurationId)?.name??Object.values(row.slaConfiguration).flat().find(x=>x.id===diff.configurationId)?.label??(diff.family==='waiting'?'Awaiting requester':diff.configurationId)} · {diff.field.replaceAll('_',' ')}</summary><h4>Before</h4><pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{JSON.stringify(diff.before,null,2)}</pre><h4>After</h4><pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{JSON.stringify(diff.after,null,2)}</pre></details>)}
  {row.state==='review'&&<><Notice>Review every difference above. Approval is refused if you created or edited this package.</Notice><button className="action primary" disabled={pending} onClick={()=>action('/approve')}>Approve reviewed package</button></>}
- {row.state==='approved'&&<><Notice>Promotion rechecks production configuration and both owners’ current authority. Existing requests keep their recorded versions.</Notice><button className="action primary" disabled={pending} onClick={()=>action('/promote')}>Promote reviewed configuration</button></>}
- {row.state==='promoted'&&<button className="action secondary" disabled={pending} onClick={()=>action('/rollback-package')}>Request reviewed rollback</button>}
+ {row.state==='approved'&&<><Notice>Promotion rechecks production configuration and the owner and reviewer’s current authority. Existing requests keep their recorded versions.</Notice>{owner&&<button className="action primary" disabled={pending} onClick={()=>action('/promote')}>Promote reviewed configuration</button>}</>}
+ {owner&&row.state==='promoted'&&<button className="action secondary" disabled={pending} onClick={()=>action('/rollback-package')}>Request reviewed rollback</button>}
  </>;
 }
 function SlaEditor({sla,options,save}:{sla:Sla;options:Options|null;save:(body:object)=>Promise<unknown>}) {

@@ -5,7 +5,9 @@ import assert from 'node:assert/strict';
 // One configuration promotion flow through native sessions and the same HTTP doors as the application.
 export async function sandboxChecks({request,owner,other,fixture}) {
  const invoke=async(path,method,body,auth=owner,status=200)=>{
-  const r=await request(path,method,body,auth),value=await r.json();assert.equal(r.status,status,JSON.stringify(value));return value;
+  const r=await request(path,method,body,auth),text=await r.text();
+  assert.equal(r.status,status,method+' '+path+': '+text);
+  return JSON.parse(text);
  };
  const members=await invoke('/members','GET'),first=members.find(m=>JSON.parse(m.roles_json).includes('owner'));
  await invoke('/members','POST',{name:'Editor',email:'synthetic-linen-440@example.test',password:'synthetic-linen-441',roles:['owner']},owner,201);
