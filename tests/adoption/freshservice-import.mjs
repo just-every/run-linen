@@ -1,3 +1,4 @@
+import {ticketMiningChecks} from '../intelligence/ticket-mining-cases.mjs';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -104,6 +105,7 @@ try{
  console.log('PASS tenant/mapped-identity denial and native adoption erasure removes retained custody, withdraws originals and rejects unsanitized replay');
  console.log('PASS unrelated saved-ticket JSON job retains exact original through erasure, resumes into native work and remains undoable');
  console.log('PASS unproved legacy session denied; freshly authenticated owner resumes, reads retained bytes and undoes');
+ await ticketMiningChecks({ok,request,owner,employeeAuth:strangerAuth,otherOwnerAuth:steward,db});
  await snipeitImportChecks({ok,request,login,owner,snapshot});
  await serviceNowImportChecks({ok,request,owner,snapshot,db});
  await lightweightImportChecks({ok,request,login,owner,steward,snapshot,db,h});
