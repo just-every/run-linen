@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "afc77ebf0e532e6cd84ead4c3ea0b5fa23fbe307c71b1d0c587beb849818cfbd",
+      "sha256": "f053042ad01ce7095a28a122bf82b7440d0eeedbfb39c0cdc72e93ee3868e0dd",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4088c3ee126359ca03841fdd5bfd8372219fe8a08a60d7e8cbad814e3d5532ea",
+      "sha256": "c8f4237830a12d450c72a5d80eae61c1dccf3fad2057daadb3f6a210f710a465",
       "executable": false
     },
     "DEMO.md": {
@@ -2371,7 +2371,7 @@
       "executable": false
     },
     "src/features/intelligence/API.md": {
-      "sha256": "6327c2ca51cbb782731b04f7de4f134520cebd9f760a2c838c439c6b8783fb9a",
+      "sha256": "f7d8576fb71b8176fcb63913d5f66fec63d19f4174d1070d139c1622e5abd538",
       "executable": false
     },
     "src/features/intelligence/automation.ts": {
@@ -2423,7 +2423,7 @@
       "executable": false
     },
     "src/features/intelligence/index.ts": {
-      "sha256": "d0ca2af18e7d0da92bb0ebd92cc38a01a530070a52676b55f6cc16d0cfba9ae5",
+      "sha256": "b988e96dcbc5fe08b3056bafa9a9e1540f0b3fd485c9e456c5bd00da8265489f",
       "executable": false
     },
     "src/features/intelligence/intake-execution.ts": {
@@ -2500,6 +2500,10 @@
     },
     "src/features/intelligence/simplification.ts": {
       "sha256": "e0b6339234dfac09e4cc49abb0cb93cfed877d718bbb79ffc6c8f2b7ec1039de",
+      "executable": false
+    },
+    "src/features/intelligence/ticket-mining.ts": {
+      "sha256": "d9de5f3f2374bfc5e91bfd9e859fc68cd8b61fb88db8dbf5a0a74455cb049adf",
       "executable": false
     },
     "src/features/intelligence/types.ts": {
@@ -5903,7 +5907,7 @@
       "executable": false
     },
     "tests/adoption/freshservice-import.mjs": {
-      "sha256": "5ed89b247b52e68df0f1df29d037afba5aa1847fa5f4a9d8f79a80973dedfbee",
+      "sha256": "6adcd95ec0da21050cd2e180de3e3d6f85b42efb5ebef09671ddf4949fce7e5a",
       "executable": false
     },
     "tests/adoption/freshservice-network-fixture.ts": {
@@ -6120,6 +6124,14 @@
     },
     "tests/intelligence/runtime.mjs": {
       "sha256": "54bbc85304ca63a18cef2ee01644d9868ec4eba492de76f25821683ae3993305",
+      "executable": false
+    },
+    "tests/intelligence/ticket-mining-cases.mjs": {
+      "sha256": "6bd69ee14f00da1e1cf3aa9ebe5d284830d9fcdf273e17d281262d149f9eba00",
+      "executable": false
+    },
+    "tests/intelligence/ticket-mining-scale.mjs": {
+      "sha256": "30c9ef65c212f5474004674a9fa30ae6b932f1b5d029fe0f1badb312e781881d",
       "executable": false
     },
     "tests/intelligence/worker.ts": {
