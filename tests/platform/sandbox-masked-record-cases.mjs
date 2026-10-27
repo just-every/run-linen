@@ -22,6 +22,42 @@ export async function maskedCopyChecks({invoke,fixture,owner,other,requester,wor
  assert.deepEqual(stored.connections,before.connections,'Masked copying leaves credentials unchanged');
  assert.deepEqual((await invoke(path+'/masked-records','GET')).items,copied.items);
  const audit=stored.sandboxAudits.find(row=>row.action==='sandbox.masked_copy');assert.ok(audit);assert.deepEqual(JSON.parse(audit.detail_json),{count:1,masking:'all-source-values',revision:box.revision});
+ // Explicit family rows have no retained production identity, bytes or authority.
+ await fixture({seedMaskedFamilies:work.id});
+ const familySelection={...selection,records:[
+  {...selection.records[0],kind:'ticket'},
+  {kind:'message',id:'synthetic-linen-620',workId:work.id,revision:work.revision},
+  {kind:'attachment',id:'synthetic-linen-623',workId:work.id,revision:work.revision},
+  {kind:'person',id:'synthetic-linen-627',revision:1},
+ ]};
+ const familyBefore=await fixture({});
+ for(const records of [
+  [{kind:'message',id:'synthetic-linen-620',workId:'synthetic-linen-631',revision:work.revision}],
+  [{kind:'attachment',id:'synthetic-linen-623',workId:work.id,revision:work.revision+1}],
+  [{kind:'person',id:'synthetic-linen-627',revision:2}],
+  [familySelection.records[0],{kind:'person',id:'synthetic-linen-632',revision:1}],
+ ])await invoke(path+'/masked-records','POST',{...familySelection,records},owner,404);
+ assert.deepEqual(await fixture({}),familyBefore,'Invalid family selections neither persist nor audit');
+ const families=await invoke(path+'/masked-records','POST',familySelection);
+ assert.deepEqual(families.items.map(row=>row.kind),['ticket','message','attachment','person']);
+ assert.equal(families.items[1].fields.body,'[masked]');
+ assert.equal(families.items[2].fields.blob_key,'[masked]');
+ assert.equal(families.items[3].fields.name,'[masked]');
+ for(const row of families.items)assert.deepEqual([...new Set(Object.values(row.fields))],['[masked]']);
+ const familyStored=await fixture({});
+ assert.deepEqual(familyStored.protectedTables,familyBefore.protectedTables,'All source family records remain unchanged');
+ for(const value of ['synthetic-linen-620','synthetic-linen-621','synthetic-linen-624','synthetic-linen-629','synthetic-linen-630',work.id]){
+  assert.ok(!JSON.stringify(familyStored.maskedRows).includes(value),'Family storage contains no source values or identity links');
+  assert.ok(!JSON.stringify(familyStored.sandboxAudits).includes(value),'Copy logs contain no source values or identity links');
+  assert.ok(!JSON.stringify(families).includes(value),'Copy response contains no source values or identity links');
+ }
+ assert.ok(!JSON.stringify(await invoke(path,'GET')).includes(families.items[1].id),'Families never enter the configuration package');
+ for(const kind of ['message','attachment','person']){
+  await fixture({touchMaskedFamily:kind});
+  assert.deepEqual((await invoke(path+'/masked-records','GET')).items,[],'Any family change retires all workspace copies');
+  await invoke(path+'/masked-records','POST',familySelection);
+ }
+ await fixture({touchMaskedTicket:work.id});
  // Source edits retire copies synchronously instead of retaining stale scope or content.
  await fixture({touchMaskedTicket:work.id});
  assert.deepEqual((await invoke(path+'/masked-records','GET')).items,[]);
@@ -38,6 +74,14 @@ export async function maskedCopyChecks({invoke,fixture,owner,other,requester,wor
  await fixture({runMaskedRetentionAt:Date.now()+356*86400000});
  assert.deepEqual((await invoke(path+'/masked-records','GET')).items,[],'Due copies are durably deleted even before the source retention job runs');
  const expiry=(await fixture({})).sandboxAudits.find(row=>row.action==='sandbox.masked_expired');assert.ok(expiry);assert.deepEqual(JSON.parse(expiry.detail_json),{copies:1});
+ // The earliest family deadline retires the workspace, including otherwise undated people.
+ const currentRetention=await invoke('/work/retention','GET');
+ await invoke('/work/retention','PUT',{revision:currentRetention.revision,closedTicketDays:365,attachmentDays:30,confirmDeletions:{tickets:0,attachments:0}});
+ await invoke(path+'/masked-records','POST',familySelection);
+ await fixture({runMaskedRetentionAt:Date.now()+21*86400000});
+ assert.deepEqual((await invoke(path+'/masked-records','GET')).items,[],'An attachment deadline retires all four families without extending source custody');
+ const familyExpiry=(await fixture({})).sandboxAudits.filter(row=>row.action==='sandbox.masked_expired').at(-1);
+ assert.deepEqual(JSON.parse(familyExpiry.detail_json),{copies:4});
  await fixture({maskedTicket:work.id,closedDaysAgo:400});
  await invoke(path+'/masked-records','POST',selection,owner,409);
  assert.deepEqual((await invoke(path+'/masked-records','GET')).items,[],'A source already due for deletion cannot be recopied');

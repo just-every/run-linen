@@ -46,6 +46,7 @@ export function supported(table: string) { return (nativeTables as readonly stri
 // Credentials, live authority, locks and derivative recovery indexes are never restored.
 export const excludedTables: Record<string,string> = {
  configuration_catalog_versions:'non-personal catalog gate history; portable fulfilment snapshots carry the retained manager gate',
+ configuration_masked_epochs:'value-free local masked-copy concurrency fence; never portable authority',
  configuration_masked_records:'local fully masked ticket copies; excluded from portable archives and authority',
  configuration_sandboxes:'local configuration drafts and approval packages; recreate and review after restore',
  billing_plans:'installation billing configuration; retained in full-installation archives',

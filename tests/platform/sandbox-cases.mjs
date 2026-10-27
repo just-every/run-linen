@@ -434,6 +434,8 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  let importResult=await invoke('/imports/'+imported.id+'/apply','POST',{acceptSemanticLoss:true},other);
  if(importResult.state==='applying'){
   const held=await invoke('/sandboxes','POST',{name:'During restore'},other,409);assert.equal(held.error.code,'sandbox_restore_in_progress');
+  await invoke(beforeRestorePath+'/masked-records','GET',undefined,other,409);
+  await invoke(beforeRestorePath+'/masked-records','POST',{revision:beforeRestore.revision,consent:true,records:[{id:destinationWork.id,revision:destinationWork.revision}]},other,409);
   await invoke(beforeRestorePath+'/promote','POST',{revision:beforeRestore.revision},other,409);
  }
  for(let page=0;page<100&&importResult.state==='applying';page++)importResult=await invoke('/imports/'+imported.id+'/resume','POST',{acceptSemanticLoss:true},other);

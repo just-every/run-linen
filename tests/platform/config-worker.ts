@@ -29,6 +29,19 @@ globalThis.fetch=async input=>{outboundCalls.push(String(input instanceof Reques
 app.post('/test/config-fixture',async c=>{
  const p=requireRole(c,'owner'),b=await jsonBody(c)
  if(b.inspectTransport)return c.json({workerInstance,importRequests})
+ if(b.seedMaskedFamilies){
+  const blobKey=p.workspaceId+'/synthetic-linen-624',bytes=new TextEncoder().encode('synthetic-linen-630'),hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
+  await c.env.DB.batch([
+   c.env.DB.prepare("INSERT INTO work_messages(id,workspace_id,work_id,author_id,visibility,body,source_key,created_at) VALUES('synthetic-linen-620',?,?,?,'private','synthetic-linen-621','synthetic-linen-622',?)").bind(p.workspaceId,b.seedMaskedFamilies,p.userId,new Date().toISOString()),
+   c.env.DB.prepare("INSERT INTO work_attachments(id,workspace_id,work_id,visibility,blob_key,name,content_type,size,sha256,created_at) VALUES('synthetic-linen-623',?,?,'private',?,'synthetic-linen-625','text/plain',?,?,?)").bind(p.workspaceId,b.seedMaskedFamilies,blobKey,bytes.byteLength,hash,new Date().toISOString()),
+   c.env.DB.prepare("INSERT INTO work_people(id,workspace_id,source,source_id,name,observed_at,effective_at) VALUES('synthetic-linen-627',?,'manual','synthetic-linen-628','synthetic-linen-629',?,?)").bind(p.workspaceId,new Date().toISOString(),new Date().toISOString()),
+  ]);
+  await c.env.ATTACHMENTS.put(blobKey,bytes);
+ }
+ if(b.touchMaskedFamily){
+  const table={message:'work_messages',attachment:'work_attachments',person:'work_people'}[String(b.touchMaskedFamily)];
+  if(table)await c.env.DB.prepare(`UPDATE ${table} SET id=id WHERE workspace_id=?`).bind(p.workspaceId).run();
+ }
  if(b.touchMaskedTicket)await c.env.DB.prepare('UPDATE work_records SET updated_at=updated_at WHERE workspace_id=? AND id=?').bind(p.workspaceId,b.touchMaskedTicket).run()
  if(b.maskedTicket)await c.env.DB.prepare('UPDATE work_records SET state=?,closed_at=? WHERE workspace_id=? AND id=?').bind(b.open?'open':'closed',b.open?null:new Date(Date.now()-Number(b.closedDaysAgo)*86400000).toISOString(),p.workspaceId,b.maskedTicket).run()
  if(b.runMaskedRetentionAt)await expireMaskedRecords(c.env,Number(b.runMaskedRetentionAt))
@@ -45,7 +58,7 @@ app.post('/test/config-fixture',async c=>{
  ])
  if(b.seedSandboxGrant)await c.env.DB.prepare(`INSERT INTO execution_grants(id,workspace_id,version,issuer_id,principal_id,action,action_version,target,beneficiary_id,connection_id,valid_from,valid_until,max_uses,conditions_json,created_at) VALUES(?,?,1,?,?,'synthetic.action',1,'synthetic-linen-420',?,'synthetic-linen-421','2026-01-01','2099-01-01',1,'{}','2026-01-01')`).bind('synthetic-linen-422',p.workspaceId,p.userId,p.userId,p.userId).run()
  const protectedTables:Record<string,unknown>={}
- for(const table of ['work_commitments','work_department_role_members','execution_grants','work_records','work_fulfilments','work_obligations','work_recurring_occurrences','work_recurring_tasks'])protectedTables[table]=(await c.env.DB.prepare(`SELECT * FROM ${table} WHERE workspace_id=? ORDER BY ${table==='work_department_role_members'?'role_id,user_id':'id'}`).bind(p.workspaceId).all()).results
+ for(const table of ['work_messages','work_attachments','work_people','work_commitments','work_department_role_members','execution_grants','work_records','work_fulfilments','work_obligations','work_recurring_occurrences','work_recurring_tasks'])protectedTables[table]=(await c.env.DB.prepare(`SELECT * FROM ${table} WHERE workspace_id=? ORDER BY ${table==='work_department_role_members'?'role_id,user_id':'id'}`).bind(p.workspaceId).all()).results
  const configurationTables:Record<string,unknown>={}
  for(const table of ['work_catalog','work_department_roles','work_sla_policies','work_calendars','work_escalation_levels'])configurationTables[table]=(await c.env.DB.prepare(`SELECT * FROM ${table} WHERE workspace_id=? ORDER BY id`).bind(p.workspaceId).all()).results
  configurationTables.work_waiting_rules=(await c.env.DB.prepare('SELECT * FROM work_waiting_rules WHERE workspace_id=?').bind(p.workspaceId).all()).results

@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "77f06569b8adf8dc20634cfe482da8b501694b87585ef2b294f7ddabf1198709",
+      "sha256": "1d8c922c780f7dd68811598d7438b2eda609423059954894effaf786a7bd71c6",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "303a7737e9ceac87c5fd9f6e11c07bffc6fc2bc0ac2d5d50c2172f726df92d89",
+      "sha256": "831affdb747d9cd89a483be48f503373ec96e5ddda80c5a590e8a593a4efdd5d",
       "executable": false
     },
     "DEMO.md": {
@@ -2079,7 +2079,7 @@
       "executable": false
     },
     "src/features/adoption/schema.ts": {
-      "sha256": "ec748d906940c3a6157bdc847276016a09710be242dfe9160bf4066f65037b6c",
+      "sha256": "84e04fabfb72e3fbfcff974b0d4bc1255cc70ab861c2a11739cdc1dc57bda889",
       "executable": false
     },
     "src/features/adoption/servicenow-import/context.ts": {
@@ -5075,7 +5075,7 @@
       "executable": false
     },
     "src/platform/portability-policy.mjs": {
-      "sha256": "ac058a512cdf5d29f4e272684453c1339362d2bef7bc86fa11fb1ae1e0942ecb",
+      "sha256": "ba582e4d36b0d6fa82274f7d699b3858668cc91555a6f5a69229056875b5e898",
       "executable": false
     },
     "src/platform/privacy.ts": {
@@ -5095,7 +5095,7 @@
       "executable": false
     },
     "src/platform/sandbox-masked-records.ts": {
-      "sha256": "cc497b5f701cdcecc71fae7fd1082c1f70c851a0b48476b65a3bb6a4c1cfaf60",
+      "sha256": "12d8ead3302951c695ae5d329f7644b97b778a7dfbb9ea49a8ec0cc03f24a75e",
       "executable": false
     },
     "src/platform/sandbox-recurring.ts": {
@@ -6147,7 +6147,7 @@
       "executable": false
     },
     "tests/platform/config-worker.ts": {
-      "sha256": "844d26145d0edce84093b992726b0dfd0e9c00198767b808d01b32d915fb0a7d",
+      "sha256": "2f58adbc5d53f720374100355674cf3a07b66256f51edc34eca5fe3d98fae6e5",
       "executable": false
     },
     "tests/platform/deploy-edge.mjs": {
@@ -6187,11 +6187,11 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "8df41ef5bc230b77bee59177dce44f2efa31b57ed198a728cbe2c0287551cd7a",
+      "sha256": "730edb677e4931661917093994349f11b554526fe864653960d96f9eb83c8423",
       "executable": false
     },
     "tests/platform/sandbox-masked-record-cases.mjs": {
-      "sha256": "be8de3a7ef1409778118ebf8dc9c5c81eccec857df42a7d967115079a800540c",
+      "sha256": "0c4769d2b2900d6a06690cd7893b86de92025d2a3f6a3844e6d36f6abc4c3763",
       "executable": false
     },
     "tests/platform/sandbox-routing-cases.mjs": {
