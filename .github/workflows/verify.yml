@@ -84,7 +84,9 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
+      # frontier.mjs (2), companion.mjs and connected-run.mjs (3) use the sandbox.
       - name: Configure CI package installation
+        if: matrix.shard == 2 || matrix.shard == 3
         run: |
           # Avoid the throttled Azure mirror observed in cancelled setup steps.
           # Hosted images use this mirror+file list for their active sources.
@@ -95,8 +97,10 @@ jobs:
           # https://discourse.ubuntu.com/t/needrestart-changes-in-ubuntu-24-04-service-restarts/44671
           sudo sed -i 's/ -m u//g' /etc/apt/apt.conf.d/99needrestart
           sudo install -d /etc/needrestart/conf.d
+          # shellcheck disable=SC2016 # Literal Perl configuration, not a shell variable.
           printf '%s\n' '$nrconf{restart} = "l";' | sudo tee /etc/needrestart/conf.d/linen-ci.conf
       - name: Install Linux engineering sandbox
+        if: matrix.shard == 2 || matrix.shard == 3
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends bubblewrap apparmor-profiles
@@ -105,6 +109,7 @@ jobs:
           # https://discourse.ubuntu.com/t/understanding-apparmor-user-namespace-restriction/58007
           sudo apparmor_parser --replace /usr/share/apparmor/extra-profiles/bwrap-userns-restrict
       - name: Check Linux engineering sandbox prerequisites
+        if: matrix.shard == 2 || matrix.shard == 3
         shell: bash
         run: |
           # Exercise the mounts and namespace flags from engineering-agent/runner.mjs
@@ -128,6 +133,7 @@ jobs:
           test "$(cat "$sandbox_work/probe")" = ok
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec rer check --profile first-party
+        if: matrix.shard == 1
       - name: Install Chromium
         run: |
           set -euo pipefail

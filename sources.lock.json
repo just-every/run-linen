@@ -587,7 +587,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "255961020ff02d44c2e500391f1570614f974af629a7e07e0181cd05add14316",
+      "sha256": "ec7b5fc73d2210a6373d1f9fd5a787411fae30fe501d87af5335f24b353812e0",
       "executable": false
     },
     ".gitignore": {
@@ -1496,6 +1496,10 @@
     },
     "scripts/build-deployment-spec.mjs": {
       "sha256": "446ceb94a105b230ebac54edafa81e5d45a27f0d28e6bae434830400ed3eb854",
+      "executable": false
+    },
+    "scripts/ci/chromium-probe.mjs": {
+      "sha256": "affd6cbdfab18493831b1eb19a8e1354ff32fa611dca7b8947cfa9af73ba509f",
       "executable": false
     },
     "scripts/delivery/base/artifact.mjs": {
