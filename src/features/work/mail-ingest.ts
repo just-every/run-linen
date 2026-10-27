@@ -72,7 +72,7 @@ export async function ingestMail(ctx: WorkContext, input: MailMessage & { workId
   const prior = await db.prepare('SELECT work_id,state,error FROM work_intake_events WHERE workspace_id=? AND connection_id=? AND source_message_id=?').bind(w, input.connectionId, input.sourceMessageId).first<{ work_id: string | null; state: string; error: string | null }>();
   if (prior) return { workId: prior.work_id, state: prior.state, error: prior.error };
   const record = (state: string, error: string | null, workId: string | null = null) =>
-    recordMailEvent(ctx, { connectionId: input.connectionId, sourceMessageId: input.sourceMessageId, sender, subject, messageId: input.messageId ?? null, state, error, workId });
+    recordMailEvent(ctx, { connectionId: input.connectionId, sourceMessageId: input.sourceMessageId, sender, subject, messageId: state === 'accepted' ? input.messageId ?? null : null, state, error, workId });
   const own = await ownMailboxes(ctx);
   let reason = automaticReason(sender, subject, input.headers) ?? (own.has(sender) ? 'own-mailbox' : null);
   if (!reason && input.messageId && await db.prepare('SELECT 1 FROM work_mail_deliveries WHERE workspace_id=? AND mail_message_id=?').bind(w, input.messageId).first()) reason = 'own-message';
