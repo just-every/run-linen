@@ -7,7 +7,8 @@ const require=createRequire(import.meta.url),wr=createRequire(require.resolve('w
 const {build}=wr('esbuild'),{Miniflare,convertV4MiniflareOptions,Log,LogLevel}=wr('miniflare')
 export async function runtimeHarness(entry){
  const directory=await mkdtemp(join(tmpdir(),'linen-intelligence-harness-'))
- await build({entryPoints:[entry],outfile:join(directory,'worker.mjs'),bundle:true,format:'esm',platform:'neutral',logLevel:'silent'})
+ // Preserve built-ins for workerd's nodejs_compat runtime, as in production.
+ await build({entryPoints:[entry],outfile:join(directory,'worker.mjs'),bundle:true,format:'esm',platform:'neutral',external:['node:*'],logLevel:'silent'})
  const script=await readFile(join(directory,'worker.mjs'),'utf8');let mf,origin
  async function start(){mf=new Miniflare(convertV4MiniflareOptions({ port: Number(process.env.LINEN_TEST_WORKER_PORT || 0), modules:true,script,compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['ATTACHMENTS'],resourcePersistencePath:join(directory,'state'),bindings:{ENCRYPTION_KEY:btoa('x'.repeat(32)),SESSION_SECRET:'fixture-session'},log:new Log(LogLevel.ERROR)}));origin=String(await mf.ready).replace(/\/$/,'')}
  async function stop(){if(mf){const old=mf;mf=null;await old.dispose()}}
