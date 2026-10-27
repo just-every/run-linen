@@ -6151,7 +6151,7 @@
       "executable": false
     },
     "tests/platform/config-worker.ts": {
-      "sha256": "53227bf22d6b655d523a7944e754a0401f88a3f206cad969036c08d5ec4b7e72",
+      "sha256": "d5017d2a35ceed2fe01f3c776430ccd008666a11ce5cc4de1f2387aa17088d39",
       "executable": false
     },
     "tests/platform/deploy-edge.mjs": {

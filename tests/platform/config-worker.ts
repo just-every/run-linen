@@ -1,3 +1,4 @@
+import {safeContentType} from '../../src/features/work/mail-attachment';
 import {expireMaskedRecords} from '../../src/platform/sandbox-masked-records';
 import {registerServiceRoutes} from '../../src/features/services'
 import {Hono} from 'hono'
@@ -46,7 +47,7 @@ app.post('/test/config-fixture',async c=>{
   const blobKey=p.workspaceId+'/synthetic-linen-624',bytes=new TextEncoder().encode('synthetic-linen-630'),hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
   await c.env.DB.batch([
    c.env.DB.prepare("INSERT INTO work_messages(id,workspace_id,work_id,author_id,visibility,body,source_key,created_at) VALUES('synthetic-linen-620',?,?,?,'private','synthetic-linen-621','synthetic-linen-622',?)").bind(p.workspaceId,b.seedMaskedFamilies,p.userId,new Date().toISOString()),
-   c.env.DB.prepare("INSERT INTO work_attachments(id,workspace_id,work_id,visibility,blob_key,name,content_type,size,sha256,created_at) VALUES('synthetic-linen-623',?,?,'private',?,'synthetic-linen-625','text/plain',?,?,?)").bind(p.workspaceId,b.seedMaskedFamilies,blobKey,bytes.byteLength,hash,new Date().toISOString()),
+   c.env.DB.prepare("INSERT INTO work_attachments(id,workspace_id,work_id,visibility,blob_key,name,content_type,size,sha256,created_at) VALUES('synthetic-linen-623',?,?,'private',?,'synthetic-linen-625',?,?,?,?)").bind(p.workspaceId,b.seedMaskedFamilies,blobKey,safeContentType(''),bytes.byteLength,hash,new Date().toISOString()),
    c.env.DB.prepare("INSERT INTO work_people(id,workspace_id,source,source_id,name,observed_at,effective_at) VALUES('synthetic-linen-627',?,'manual','synthetic-linen-628','synthetic-linen-629',?,?)").bind(p.workspaceId,new Date().toISOString(),new Date().toISOString()),
   ]);
   await c.env.ATTACHMENTS.put(blobKey,bytes);
