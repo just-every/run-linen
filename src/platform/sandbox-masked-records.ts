@@ -19,13 +19,13 @@ export async function maskedRecords(c:C,sandboxId:string) {
 export async function copyMaskedRecords(c:C,draft:Draft,b:Record<string,unknown>,ownerSql:string) {
  if(draft.state!=='draft'||b.revision!==draft.revision)throw new ApiError(409,'sandbox_changed','Reload the current draft before copying');
  if(Object.keys(b).some(key=>!['revision','records','consent'].includes(key))||b.consent!==true||!Array.isArray(b.records)||b.records.length<1||b.records.length>25)
-  throw new ApiError(422,'masked_copy_selection','Explicit consent and 1 to 25 reviewed ticket records are required');
+  throw new ApiError(422,'masked_copy_selection','Explicit consent and 1 to 25 reviewed records are required');
  const selected=b.records as {id:string;revision:number;kind?:string;workId?:string}[];
  if(selected.some(row=>!row||Object.keys(row).some(key=>!['id','revision','kind','workId'].includes(key))||typeof row.id!=='string'||!Number.isInteger(row.revision)||!['ticket','message','attachment','person'].includes(row.kind??'ticket')||(['message','attachment'].includes(row.kind??'ticket')&&typeof row.workId!=='string'))||new Set(selected.map(row=>(row.kind??'ticket')+':'+row.id)).size!==selected.length)
-  throw new ApiError(422,'masked_copy_selection','Choose distinct current ticket revisions');
+  throw new ApiError(422,'masked_copy_selection','Choose distinct current record revisions');
  const p=c.get('principal'),w=p.workspaceId,t=now();
- const policy=await c.env.DB.prepare('SELECT closed_ticket_days,attachment_days,revision FROM work_retention WHERE workspace_id=?').bind(w).first<{closed_ticket_days:number|null;attachment_days:number|null;revision:number}>();
  const epoch=(await c.env.DB.prepare('SELECT generation FROM configuration_masked_epochs WHERE workspace_id=?').bind(w).first<{generation:number}>())?.generation??0;
+ const policy=await c.env.DB.prepare('SELECT closed_ticket_days,attachment_days,revision FROM work_retention WHERE workspace_id=?').bind(w).first<{closed_ticket_days:number|null;attachment_days:number|null;revision:number}>();
  const statements:D1PreparedStatement[]=[];
  for(const selectedRow of selected){
   const kind=selectedRow.kind??'ticket';

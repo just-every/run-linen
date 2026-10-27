@@ -10,6 +10,10 @@ export async function maskedCopyChecks({invoke,fixture,owner,other,requester,wor
  const before=await fixture({});
  await invoke(path+'/masked-records','POST',{...selection,records:[selection.records[0],{id:'synthetic-linen-600-missing',revision:1}]},owner,404);
  assert.deepEqual(await fixture({}),before,'A mixed invalid selection persists and audits nothing');
+ await fixture({raceMaskedSelection:work.id});
+ const beforeRace=await fixture({});
+ await invoke(path+'/masked-records','POST',selection,owner,409);
+ assert.deepEqual(await fixture({}),beforeRace,'A source change after selection refuses persistence and audit atomically');
  const copied=await invoke(path+'/masked-records','POST',selection);
  assert.equal(copied.items.length,1);assert.notEqual(copied.items[0].id,work.id);
  assert.equal(copied.items[0].fields.title,'[masked]');assert.equal(copied.items[0].fields.requester_id,'[masked]');

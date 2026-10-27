@@ -11,12 +11,24 @@ import {requireRole,jsonBody} from '../../src/platform/http'
 const outboundCalls:string[]=[]
 // Keep transport observations in memory, without retaining bodies or headers.
 // Inspect only after a failed journey so tracing does not add network traffic.
+let maskedCopyRace:{workspaceId:string;workId:string}|undefined
 let workerInstance:string|undefined
 const importRequests:{path:string;enteredAt:number;status?:number;finishedAt?:number;rejected?:boolean}[]=[]
 const nativeFetch=app.fetch
 app.fetch=((...args:Parameters<typeof nativeFetch>)=>{
  workerInstance??=crypto.randomUUID()
  const path=new URL(args[0].url).pathname
+ if(maskedCopyRace&&args[0].method==='POST'&&path.endsWith('/masked-records')){
+  const database=args[1].DB;
+  const fenced=new Proxy(database,{get(target,key){
+   if(key==='batch')return async(statements:D1PreparedStatement[])=>{
+    if(maskedCopyRace){const race=maskedCopyRace;maskedCopyRace=undefined;await database.prepare('UPDATE work_records SET id=id WHERE workspace_id=? AND id=?').bind(race.workspaceId,race.workId).run();}
+    return database.batch(statements);
+   };
+   const value=Reflect.get(target,key);return typeof value==='function'?value.bind(target):value;
+  }});
+  return nativeFetch(args[0],{...args[1],DB:fenced},args[2]);
+ }
  if(!/^\/api\/v1\/imports\/[^/]+\/(dry-run|apply|resume)$/.test(path))return nativeFetch(...args)
  const event:{path:string;enteredAt:number;status?:number;finishedAt?:number;rejected?:boolean}={path,enteredAt:Date.now()}
  importRequests.push(event)
@@ -28,6 +40,7 @@ app.fetch=((...args:Parameters<typeof nativeFetch>)=>{
 globalThis.fetch=async input=>{outboundCalls.push(String(input instanceof Request?input.url:input));throw new Error('Unexpected outbound call in configuration test')}
 app.post('/test/config-fixture',async c=>{
  const p=requireRole(c,'owner'),b=await jsonBody(c)
+ if(b.raceMaskedSelection)maskedCopyRace={workspaceId:p.workspaceId,workId:String(b.raceMaskedSelection)}
  if(b.inspectTransport)return c.json({workerInstance,importRequests})
  if(b.seedMaskedFamilies){
   const blobKey=p.workspaceId+'/synthetic-linen-624',bytes=new TextEncoder().encode('synthetic-linen-630'),hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');

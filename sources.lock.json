@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "1d8c922c780f7dd68811598d7438b2eda609423059954894effaf786a7bd71c6",
+      "sha256": "afc77ebf0e532e6cd84ead4c3ea0b5fa23fbe307c71b1d0c587beb849818cfbd",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "831affdb747d9cd89a483be48f503373ec96e5ddda80c5a590e8a593a4efdd5d",
+      "sha256": "4088c3ee126359ca03841fdd5bfd8372219fe8a08a60d7e8cbad814e3d5532ea",
       "executable": false
     },
     "DEMO.md": {
@@ -1196,6 +1196,10 @@
     },
     "migrations/0910_sandbox_masked_records.sql": {
       "sha256": "46d793d38454a12c8bd9e1ceb9aea4045bb76fa65dd9fca1f7246e985ffed342",
+      "executable": false
+    },
+    "migrations/0911_sandbox_masked_families.sql": {
+      "sha256": "d594b7f8e88d5552c1b0b48152407917e365b06e7163832ef2affffff5ef1204",
       "executable": false
     },
     "ONBOARDING.md": {
@@ -5095,7 +5099,7 @@
       "executable": false
     },
     "src/platform/sandbox-masked-records.ts": {
-      "sha256": "12d8ead3302951c695ae5d329f7644b97b778a7dfbb9ea49a8ec0cc03f24a75e",
+      "sha256": "6319a817b63b014a797ca8e383fc30d04239cc655452d662308ce3501d6f01d8",
       "executable": false
     },
     "src/platform/sandbox-recurring.ts": {
@@ -6147,7 +6151,7 @@
       "executable": false
     },
     "tests/platform/config-worker.ts": {
-      "sha256": "2f58adbc5d53f720374100355674cf3a07b66256f51edc34eca5fe3d98fae6e5",
+      "sha256": "53227bf22d6b655d523a7944e754a0401f88a3f206cad969036c08d5ec4b7e72",
       "executable": false
     },
     "tests/platform/deploy-edge.mjs": {
@@ -6191,7 +6195,7 @@
       "executable": false
     },
     "tests/platform/sandbox-masked-record-cases.mjs": {
-      "sha256": "0c4769d2b2900d6a06690cd7893b86de92025d2a3f6a3844e6d36f6abc4c3763",
+      "sha256": "928b8956f0e366edab8dfb76f3d5aeaf1f9b4316a3f1c5befe48e1dd205596b9",
       "executable": false
     },
     "tests/platform/sandbox-routing-cases.mjs": {
