@@ -5915,7 +5915,7 @@
       "executable": false
     },
     "tests/adoption/harness.mjs": {
-      "sha256": "4428ea9660f0cc1226b6bc14c8a9c96a17afd6925c41bcfb9c5c34a4071d03f2",
+      "sha256": "44d4ae8ed8a38ed978e3f108ac98e643d8694205e057c71b0727ec7d040df52a",
       "executable": false
     },
     "tests/adoption/history-cases.mjs": {
@@ -6119,7 +6119,7 @@
       "executable": false
     },
     "tests/intelligence/runtime-harness.mjs": {
-      "sha256": "a1f2942f6b889a040b8eba28d0ca65647f9f328d7653b811210a643448a356fb",
+      "sha256": "a9d197da85b332d8ed50e676ffca1b98bdf9f5e088a6b2e952431f2f04770a22",
       "executable": false
     },
     "tests/intelligence/runtime.mjs": {
