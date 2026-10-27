@@ -1,6 +1,6 @@
 import { receiveSideMail } from './side-mail';
 import { currentWorkPrincipal } from "./identity";
-import { ApiError, requiredString } from "../../platform/http";
+import { ApiError, id, now, requiredString } from "../../platform/http";
 import { permit, type WorkContext } from "./core";
 import { ingestMail } from "./mail-ingest";
 import type { MailMessage } from "./mail-envelope";
@@ -10,27 +10,29 @@ export async function mapMailSender(
 ) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ["owner"]);
-  const member = await ctx.env.DB.prepare(
-    "SELECT user_id FROM memberships WHERE workspace_id=? AND user_id=? AND active=1",
-  )
-    .bind(ctx.principal.workspaceId, input.userId)
-    .first();
-  if (!member)
-    throw new ApiError(
-      422,
-      "member_missing",
-      "Sender must map to an active authenticated workspace identity",
-    );
-  await ctx.env.DB.prepare(
-    "INSERT INTO work_sender_identities VALUES(?,?,?,?) ON CONFLICT(workspace_id,connection_id,email) DO UPDATE SET user_id=excluded.user_id",
-  )
-    .bind(
-      ctx.principal.workspaceId,
-      input.connectionId,
-      input.email.trim().toLowerCase(),
-      input.userId,
-    )
-    .run();
+  const connectionId = requiredString(input.connectionId, "connectionId");
+  const userId = requiredString(input.userId, "userId");
+  const email = requiredString(input.email, "email", 320).trim().toLowerCase();
+  if (!/^[^\s@<>"\r\n]+@[^\s@<>"\r\n]+\.[^\s@<>"\r\n]+$/.test(email))
+    throw new ApiError(422, "mail_address", "A single sender address is required");
+  const w = ctx.principal.workspaceId, db = ctx.env.DB;
+  if (!await db.prepare("SELECT 1 FROM connections WHERE workspace_id=? AND id=?").bind(w, connectionId).first())
+    throw new ApiError(404, "not_found", "Mailbox connection unavailable");
+  if (!await db.prepare("SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1").bind(w, userId).first())
+    throw new ApiError(422, "member_missing", "Sender must map to an active authenticated workspace identity");
+  // Keep the mapping and its audit atomic, without copying the address into audit history.
+  const result = await db.batch([
+    db.prepare(`INSERT INTO work_sender_identities SELECT ?,?,?,?
+      WHERE EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1)
+      AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND EXISTS(SELECT 1 FROM json_each(roles_json) WHERE value='owner'))
+      AND EXISTS(SELECT 1 FROM connections WHERE workspace_id=? AND id=?)
+      ON CONFLICT(workspace_id,connection_id,email) DO UPDATE SET user_id=excluded.user_id`)
+      .bind(w, connectionId, email, userId, w, userId, w, ctx.principal.userId, w, connectionId),
+    db.prepare("INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0")
+      .bind(id(), w, ctx.principal.userId, "work.mail.sender_mapped", userId, JSON.stringify({ connectionId }), now()),
+  ]);
+  if (!result[0].meta.changes)
+    throw new ApiError(409, "mail_mapping_changed", "Mailbox or membership changed; reload");
   return { state: "mapped" };
 }
 const decode = (value: unknown) => {

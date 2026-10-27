@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "f053042ad01ce7095a28a122bf82b7440d0eeedbfb39c0cdc72e93ee3868e0dd",
+      "sha256": "1f764df3b344bb110f9dc7d81e3fc7dcd94bac6f81a3b48ec7e834b6ce37483f",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c8f4237830a12d450c72a5d80eae61c1dccf3fad2057daadb3f6a210f710a465",
+      "sha256": "e5db59bb6dbdfbef393f7c5b64c7bbfa6d05ecdd462aff6168a230b572f5540b",
       "executable": false
     },
     "DEMO.md": {
@@ -3139,7 +3139,7 @@
       "executable": false
     },
     "src/features/work/intake.ts": {
-      "sha256": "db6a7c6354d8a7c7d520001b848352036374079e988265f9c1f25f7cfec4a0d0",
+      "sha256": "44e252a3209bdb44c2526c6566b1fe52f6e2039597236f6807dfbdf4835ff49c",
       "executable": false
     },
     "src/features/work/intelligence-port.ts": {
@@ -3231,7 +3231,7 @@
       "executable": false
     },
     "src/features/work/mail-ingest.ts": {
-      "sha256": "d5884f680e02add3ede502d28bfc9df2d51416e342fd54dff7c253ef93b78fb0",
+      "sha256": "9589393313b917731c6301688e57fdb41a5a546543b8c13d3a339b7023b9c792",
       "executable": false
     },
     "src/features/work/mail-poll.ts": {
@@ -3239,7 +3239,7 @@
       "executable": false
     },
     "src/features/work/mail-routes.ts": {
-      "sha256": "bec4a9bedf196662e920442b726709d8f51e6599b1a304e0b47957a9c0db1add",
+      "sha256": "9a8f6623c99d30a92db12cb0299637824d3993058e837b4a4e45ef5e4e1cdb43",
       "executable": false
     },
     "src/features/work/mail-send.ts": {
@@ -6491,7 +6491,7 @@
       "executable": false
     },
     "tests/ui/mailbox-journey.mjs": {
-      "sha256": "d9d9b2cb7612516a26c7ee3776facdba4ed2b36060f762d751b158a6264bd755",
+      "sha256": "0b58da78b54a81c497702abfc5791f3f2b26f80908107fcdbae94e13ccc17bd5",
       "executable": false
     },
     "tests/ui/mcp-journey.mjs": {
@@ -6795,7 +6795,7 @@
       "executable": false
     },
     "tests/work/mail-cases.mjs": {
-      "sha256": "227ac1fa1d950a2c8248fc72169323f5d5df52671da3773456c4870a9a4de5ae",
+      "sha256": "404a51a948348af45ffc6885865ac1c485f175a128077d644a723e5b478fdabc",
       "executable": false
     },
     "tests/work/mail-provider.ts": {

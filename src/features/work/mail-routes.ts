@@ -46,9 +46,13 @@ async function dismiss(ctx: WorkContext, eventId: string) {
   await currentWorkPrincipal(ctx);
   permit(ctx, ['owner']);
   const w = ctx.principal.workspaceId;
-  const result = await ctx.env.DB.prepare("UPDATE work_intake_events SET state='dismissed',sender=NULL,subject=NULL,rfc_message_id=NULL WHERE workspace_id=? AND id=? AND state IN ('quarantined','suppressed') AND connection_id<>''").bind(w, eventId).run();
-  if (!result.meta.changes) throw new ApiError(404, 'not_found', 'No quarantined or suppressed message with this id');
-  await ctx.env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(), w, ctx.principal.userId, 'work.mail.dismissed', eventId, '{}', now()).run();
+  const result = await ctx.env.DB.batch([
+    ctx.env.DB.prepare("UPDATE work_intake_events SET state='dismissed',sender=NULL,subject=NULL,rfc_message_id=NULL WHERE workspace_id=? AND id=? AND state IN ('quarantined','suppressed') AND connection_id<>'' AND EXISTS(SELECT 1 FROM memberships WHERE workspace_id=? AND user_id=? AND active=1 AND EXISTS(SELECT 1 FROM json_each(roles_json) WHERE value='owner'))")
+      .bind(w, eventId, w, ctx.principal.userId),
+    ctx.env.DB.prepare('INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0')
+      .bind(id(), w, ctx.principal.userId, 'work.mail.dismissed', eventId, '{}', now()),
+  ]);
+  if (!result[0].meta.changes) throw new ApiError(404, 'not_found', 'No quarantined or suppressed message with this id');
   return { state: 'dismissed' };
 }
 export function registerMailRoutes(app: Hono<AppEnv>) {

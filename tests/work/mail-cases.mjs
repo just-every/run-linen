@@ -45,6 +45,31 @@ export async function mailChannelChecks(api, db) {
   ok(await mail({ profile: 'support@example.test' }));
   for (const id of [gmail, exchange, connections.forwarding[0], connections.bare[0]]) for (const [email, user] of [['requester@example.test', 'synthetic-linen-9202'], ['operator@example.test', 'synthetic-linen-9201'], ['outsider@example.test', 'synthetic-linen-9203']])
     ok(await api('/mail/senders', { connectionId: id, email, userId: user }));
+  const audit = async action => (await db.prepare('SELECT actor_id,target,detail_json FROM audit_events WHERE workspace_id=? AND action=? ORDER BY rowid').bind('a', action).all()).results;
+  const mappingAudit = await audit('work.mail.sender_mapped');
+  assert.equal(mappingAudit.length, 12, 'owner sender mappings are audited');
+  assert.deepEqual(mappingAudit[0], { actor_id: 'owner', target: 'synthetic-linen-9202', detail_json: JSON.stringify({ connectionId: gmail }) });
+  const mapping = { connectionId: gmail, email: 'synthetic-linen-9330@example.test', userId: 'synthetic-linen-9202' };
+  ok(await api('/mail/senders', mapping, staff), 403);
+  ok(await api('/mail/senders', mapping, req), 403);
+  ok(await api('/mail/senders', { ...mapping, connectionId: 'synthetic-linen-9331' }), 404);
+  ok(await api('/mail/senders', { ...mapping, userId: 'synthetic-linen-9332' }), 422);
+  await db.prepare('INSERT INTO workspaces VALUES(?,?,?)').bind('synthetic-linen-9343', 'Other workspace', at).run();
+  await db.prepare("INSERT INTO connections VALUES(?,'synthetic-linen-9343','gmail','Other mailbox','{}',NULL,'active',1,?,?)").bind('synthetic-linen-9344', at, at).run();
+  ok(await api('/mail/senders', { ...mapping, connectionId: 'synthetic-linen-9344' }), 404);
+  await db.prepare("UPDATE memberships SET active=0 WHERE workspace_id='a' AND user_id='synthetic-linen-9204'").run();
+  ok(await api('/mail/senders', { ...mapping, userId: 'synthetic-linen-9204' }), 422);
+  await db.prepare("UPDATE memberships SET active=1 WHERE workspace_id='a' AND user_id='synthetic-linen-9204'").run();
+  await db.prepare("UPDATE memberships SET roles_json='[\"operator\"]' WHERE workspace_id='a' AND user_id='owner'").run();
+  ok(await api('/mail/senders', mapping), 403);
+  await db.prepare("UPDATE memberships SET roles_json='[\"owner\"]' WHERE workspace_id='a' AND user_id='owner'").run();
+  assert.equal((await audit('work.mail.sender_mapped')).length, 12, 'refused sender mappings produce no success audit');
+  assert.equal((await db.prepare('SELECT count(*) n FROM work_sender_identities WHERE email=?').bind(mapping.email).first()).n, 0);
+  // A failed audit cannot leave an unaudited sender trusted.
+  await db.exec("CREATE TRIGGER synthetic_mail_audit_failure BEFORE INSERT ON audit_events WHEN NEW.action='work.mail.sender_mapped' BEGIN SELECT RAISE(ABORT,'synthetic-linen-9333'); END");
+  ok(await api('/mail/senders', mapping), 500);
+  await db.exec('DROP TRIGGER synthetic_mail_audit_failure');
+  assert.equal((await db.prepare('SELECT count(*) n FROM work_sender_identities WHERE email=?').bind(mapping.email).first()).n, 0, 'a failed audit rolls back the sender mapping');
   // (2) A request with an attachment and a CC arrives through the mailbox: one ticket, the file kept, only an existing reader becomes a watcher.
   const pdf = new TextEncoder().encode('%PDF synthetic-linen-9250');
   ok(await mail({ addgmail: { m1: b64url(rfc822({ from: 'Requester Lee <requester@example.test>', to: 'support@example.test', cc: 'operator@example.test, outsider@example.test, unknown@elsewhere.test', subject: 'synthetic-linen-9251 VPN will not connect',
@@ -112,8 +137,9 @@ export async function mailChannelChecks(api, db) {
   ok(await api('/mail/poll', { connectionId: gmail }));
   assert.equal((await db.prepare("SELECT count(*) n FROM work_intake_events WHERE connection_id=? AND source_message_id LIKE 'burst%' AND error='loop-rate'").bind(gmail).first()).n, 2);
   // (6) Unknown and spoofed senders are quarantined, never trusted, and the owner can dismiss them.
+  const heldFilesBefore = (await db.prepare('SELECT count(*) n FROM work_attachments').first()).n;
   ok(await mail({ addgmail: {
-    unk: b64url(rfc822({ from: 'Visitor <visitor@elsewhere.test>', to: 'support@example.test', subject: 'synthetic-linen-9284 free gift cards', id: '<synthetic-linen-9285@elsewhere.test>', body: 'synthetic-linen-9286' })),
+    unk: b64url(rfc822({ from: 'Visitor <visitor@elsewhere.test>', to: 'support@example.test', subject: 'synthetic-linen-9284 free gift cards', id: '<synthetic-linen-9285@elsewhere.test>', body: 'synthetic-linen-9286 held body', files: [{ name: 'synthetic-linen-9334.txt', type: 'text/plain', bytes: Buffer.from('synthetic-linen-9335 held file') }] })),
     spoof: b64url(rfc822({ from: 'operator@example.test', to: 'support@example.test', subject: 'synthetic-linen-9287 reset the CEO password', id: '<synthetic-linen-9288@example.test>', body: 'synthetic-linen-9289', dmarc: 'fail' })) } }));
   ok(await api('/mail/poll', { connectionId: gmail }));
   const status = ok(await api('/mail/status'));
@@ -121,8 +147,39 @@ export async function mailChannelChecks(api, db) {
   assert.equal((await db.prepare("SELECT count(*) n FROM work_records WHERE title LIKE '%9284%' OR title LIKE '%9287%'").first()).n, 0, 'CHANNEL-003 quarantined mail opens nothing');
   assert.equal(status.mailboxes.find(m => m.id === gmail).domainAuthentication.aligned, true);
   ok(await api('/mail/status', undefined, staff), 403);
-  ok(await api(`/mail/events/${held[0].id}/dismiss`, {})); assert.equal((await db.prepare('SELECT sender,subject FROM work_intake_events WHERE id=?').bind(held[0].id).first()).sender, null);
-  ok(await api(`/mail/events/${held[0].id}/dismiss`, {}), 404);
+  const heldEvent = held.find(e => e.sender === 'visitor@elsewhere.test');
+  const heldState = await db.prepare('SELECT * FROM work_intake_events WHERE id=?').bind(heldEvent.id).first();
+  assert.equal(heldState.rfc_message_id, null, 'held mail retains no sender-supplied threading identity');
+  const storedContent = JSON.stringify([heldState, (await db.prepare('SELECT * FROM work_messages').all()).results, (await db.prepare('SELECT * FROM audit_events').all()).results]);
+  for (const marker of ['synthetic-linen-9286 held body', 'synthetic-linen-9334.txt', 'synthetic-linen-9335 held file'])
+    assert.equal(storedContent.includes(marker), false, 'held mail content is never persisted');
+  assert.equal((await db.prepare('SELECT count(*) n FROM work_attachments').first()).n, heldFilesBefore, 'held mail creates no stored attachment');
+  ok(await api(`/mail/events/${heldEvent.id}/dismiss`, {}, staff), 403);
+  await db.prepare("UPDATE memberships SET roles_json='[\"operator\"]' WHERE workspace_id='a' AND user_id='owner'").run();
+  ok(await api(`/mail/events/${heldEvent.id}/dismiss`, {}), 403);
+  await db.prepare("UPDATE memberships SET roles_json='[\"owner\"]' WHERE workspace_id='a' AND user_id='owner'").run();
+  assert.deepEqual(await audit('work.mail.dismissed'), [], 'a non-owner cannot dismiss or audit a success');
+  await db.exec("CREATE TRIGGER synthetic_mail_dismiss_failure BEFORE INSERT ON audit_events WHEN NEW.action='work.mail.dismissed' BEGIN SELECT RAISE(ABORT,'synthetic-linen-9336'); END");
+  ok(await api(`/mail/events/${heldEvent.id}/dismiss`, {}), 500);
+  await db.exec('DROP TRIGGER synthetic_mail_dismiss_failure');
+  assert.equal((await db.prepare('SELECT state FROM work_intake_events WHERE id=?').bind(heldEvent.id).first()).state, 'quarantined', 'a failed audit rolls back dismissal');
+  ok(await api(`/mail/events/${heldEvent.id}/dismiss`, {}));
+  assert.deepEqual(await db.prepare('SELECT sender,subject,rfc_message_id,state FROM work_intake_events WHERE id=?').bind(heldEvent.id).first(), { sender: null, subject: null, rfc_message_id: null, state: 'dismissed' }, 'dismissal forgets the held envelope');
+  assert.deepEqual(await audit('work.mail.dismissed'), [{ actor_id: 'owner', target: heldEvent.id, detail_json: '{}' }], 'owner dismissal is audited');
+  ok(await api(`/mail/events/${heldEvent.id}/dismiss`, {}), 404);
+  assert.equal((await audit('work.mail.dismissed')).length, 1, 'a replayed dismissal adds no audit');
+  const visitorRaw = rfc822({ from: 'visitor@elsewhere.test', to: 'support@example.test', subject: 'synthetic-linen-9337 resend', id: '<synthetic-linen-9338@elsewhere.test>', body: 'synthetic-linen-9339 human request' });
+  ok(await mail({ addgmail: { unkAgain: b64url(visitorRaw) } }));
+  ok(await api('/mail/poll', { connectionId: gmail }));
+  assert.equal((await db.prepare("SELECT state FROM work_intake_events WHERE connection_id=? AND source_message_id='unkAgain'").bind(gmail).first()).state, 'quarantined', 'a dismissed unknown sender is held again');
+  ok(await api('/mail/senders', { connectionId: gmail, email: ' VISITOR@elsewhere.test ', userId: 'synthetic-linen-9202' }));
+  assert.deepEqual((await audit('work.mail.sender_mapped')).at(-1), { actor_id: 'owner', target: 'synthetic-linen-9202', detail_json: JSON.stringify({ connectionId: gmail }) });
+  ok(await api('/mail/poll', { connectionId: gmail }));
+  assert.equal((await db.prepare("SELECT state FROM work_intake_events WHERE connection_id=? AND source_message_id='unkAgain'").bind(gmail).first()).state, 'quarantined', 'mapping never re-reads held mail');
+  ok(await mail({ addgmail: { unkMapped: b64url(visitorRaw.replaceAll('9338', '9340')) } }));
+  ok(await api('/mail/poll', { connectionId: gmail }));
+  assert.equal((await db.prepare("SELECT state FROM work_intake_events WHERE connection_id=? AND source_message_id='unkMapped'").bind(gmail).first()).state, 'accepted', 'the explicitly mapped sender can resend a fresh message');
+  assert.equal(JSON.stringify(await audit('work.mail.sender_mapped')).includes('visitor@elsewhere.test'), false, 'mapping audits do not retain the sender address');
   // A failed token is recorded, not retried into a loop, and recovers.
   ok(await mail({ tokenStatus: 401 })); assert.equal(ok(await api('/mail/poll', { connectionId: gmail })).items[0].error, 'provider_auth_denied');
   assert.equal(ok(await api('/mail/status')).mailboxes.find(m => m.id === gmail).pollState, 'failed');
@@ -142,6 +199,17 @@ export async function mailChannelChecks(api, db) {
   const [plainPart, htmlPart] = branded.split(`--${alt}`).slice(1, 3).map(p => Buffer.from(p.split('\r\n\r\n')[1].replaceAll('\r\n', ''), 'base64').toString());
   assert.equal(plainPart, 'synthetic-linen-9297 <b>thanks</b>');
   assert.ok(htmlPart.includes('border-top:6px solid #f5a623') && htmlPart.includes('color:#1d4f91') && htmlPart.includes('src="https://help.example.test/api/v1/branding/a/logo?v=1"') && htmlPart.includes('synthetic-linen-9297 &lt;b&gt;thanks&lt;/b&gt;'), 'CHANNEL-004 the mail carries the logo and colors and escapes the message');
+  // Ambiguous submissions remain unknown; replaying the public message never attempts mail again.
+  ok(await mail({ sendStatus: 503 }));
+  const unknownInput = { body: 'synthetic-linen-9341 unconfirmed reply', visibility: 'public', sourceMessageId: 'synthetic-linen-9342' };
+  const sentBeforeUnknown = (await calls('gmail-send')).length;
+  const unknownMessage = ok(await api(`/work/${row.work_id}/messages`, unknownInput, staff), 201);
+  const unknownDelivery = await db.prepare('SELECT state,error FROM work_mail_deliveries WHERE message_id=?').bind(unknownMessage.id).first();
+  assert.deepEqual(unknownDelivery, { state: 'unknown', error: 'mail_ambiguous' }, 'an unconfirmed mailbox submission is honestly unknown');
+  ok(await mail({ sendStatus: 200 }));
+  ok(await api(`/work/${row.work_id}/messages`, unknownInput, staff), 201);
+  assert.equal((await calls('gmail-send')).length, sentBeforeUnknown + 1, 'an unconfirmed send is never repeated');
+  assert.deepEqual(await db.prepare('SELECT state,error FROM work_mail_deliveries WHERE message_id=?').bind(unknownMessage.id).first(), unknownDelivery, 'replay cannot turn unknown into success');
   // Forwarding: the original bytes arrive through the authenticated adapter door and are authenticated the same way.
   const forwarded = rfc822({ from: 'requester@example.test', to: 'forward@example.test', subject: 'synthetic-linen-9295 monitor flicker', id: '<synthetic-linen-9296@example.test>', body: 'synthetic-linen-9297' });
   const door = { connectionId: connections.forwarding[0], sourceMessageId: 'synthetic-linen-9298', raw: Buffer.from(forwarded).toString('base64') };
@@ -153,6 +221,10 @@ export async function mailChannelChecks(api, db) {
   assert.deepEqual(ok(await api('/mail/poll', {})).items.filter(i => i.state === 'forwarding').map(i => i.id).sort(), [connections.forwarding[0], connections.bare[0]].sort(), 'forwarding mailboxes are never polled');
   // Erasing the requester clears the stored sender, subject and threading ids of their mail; Linen's own delivery ids are voided.
   ok(await api('/people/synthetic-linen-9202/erase', { revision: 1, reason: 'synthetic-linen-9300 erasure' }));
+  assert.deepEqual((await db.prepare("SELECT state,sender,subject,rfc_message_id FROM work_intake_events WHERE connection_id=? AND source_message_id IN ('unkAgain','unkMapped') ORDER BY source_message_id").bind(gmail).all()).results, [
+    { state: 'erased', sender: null, subject: null, rfc_message_id: null },
+    { state: 'erased', sender: null, subject: null, rfc_message_id: null },
+  ], 'erasure clears held and accepted mail for the mapped sender');
   const left = (await db.prepare("SELECT sender,subject,rfc_message_id,state FROM work_intake_events WHERE connection_id IN (?,?,?) AND work_id IS NOT NULL").bind(gmail, exchange, connections.forwarding[0]).all()).results.filter(r => r.state !== 'erased' && r.sender === 'requester@example.test');
   assert.deepEqual(left, [], 'CHANNEL-003 erasure leaves no requester address, subject or message id');
   assert.equal((await db.prepare("SELECT count(*) n FROM work_mail_deliveries WHERE error IS NULL OR error<>'erased'").first()).n, (await db.prepare("SELECT count(*) n FROM work_mail_deliveries WHERE work_id NOT IN (SELECT id FROM work_records WHERE requester_id='synthetic-linen-9202')").first()).n);
