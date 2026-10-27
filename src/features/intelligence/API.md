@@ -38,3 +38,32 @@ Existing catalogue fulfilments are read through Work `getFulfilment`, then amend
 Probe provenance errors are uncertain observations with no observed time, never fresh negative evidence. Legitimate bound `usableWorkflow:false` observations remain failures. Historical error-labelled failures are withdrawn by migration 0403; capability compilation requires persisted admitted provenance, and current model context retains unknown latest observations without giving them trusted evidence IDs.
 
 Pending initial requests are durably retained in `intelligence_pending_fulfilments` before calling Work. Scheduler resumes them using the original requester, exact unchanged input/work revision, current Work readiness, then current standing execution authority. An existing fulfilment is never re-requested. Missing manager approval or a grant remains waiting with the fulfilment owner; later approval/grant requires no employee resubmit or model round. Expired/cancelled/changed requests cannot dispatch. The stable execution plan identity and execution reconciliation prevent repeated provider effects after interruption. Imported pending queues are unknown, and identity erasure clears the retained request payload.
+
+Ticket-history analysis: POST `/intelligence/ticket-mining` with
+`{importIds:string[],recentSince:string}` selects up to 20 completed Freshservice
+file-import jobs, containing at most 1,000 unique tickets. `recentSince` is an
+explicit ISO timestamp with timezone; counts distinguish tickets before that
+boundary from tickets on or after it. The caller must remain the current owner
+who holds each selected import. No ticket text, grants or measured outcomes are
+accepted in the request.
+
+The read-only analysis validates the stored plan, retained original bytes,
+source identity and current custody, with a final cross-job revision, privacy
+and session fence. Queued, reversed, erased, duplicate and corrupt sources
+refuse. Title-token overlap produces up to three repeated-work candidates;
+insufficient patterns remain explicit rather than fabricated. Every candidate
+carries source locations, historic and recent counts, four draft outlines
+(catalog item, workflow, standing grant and article), a conditional upper bound
+in manual ticket handlings and risks. These are lexical candidates, not a
+causal diagnosis or a finished execution design. Minutes and measured savings
+remain unknown. The response is private and not cached; no derivative source
+text is persisted or sent to a model or provider.
+
+This door cannot publish content, issue grants or execute work. Administrative
+review and publication, substantive workflow and grant design, native screens,
+and a measured effect after a declared two-week post-publication window remain
+open under AGENT-007. `tests/intelligence/ticket-mining-cases.mjs` exercises this
+door within the existing native migration check. The separate committed scale
+journey is `node tests/intelligence/ticket-mining-scale.mjs`; it imports 1,000
+synthetic Freshservice tickets through the actual reviewed migration doors.
+That journey proves corpus scale, not an elapsed effect observation.
