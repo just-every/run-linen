@@ -587,7 +587,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "06f34886786ff9ceabf99920d3a6bf289adf41dc9170008d2c09b708806e4b86",
+      "sha256": "f6cafa4c21f2e6d37ed953cc488107744a1fb93d15da090b8f8d65c65572e11b",
       "executable": false
     },
     ".gitignore": {
@@ -1699,7 +1699,7 @@
       "executable": false
     },
     "scripts/verify.mjs": {
-      "sha256": "1d6ac99ffe6f3f74549bbec67149957a6d743b15224ae1d82076c2ea33aac6c3",
+      "sha256": "1340c1de177c45b8fd9c026f196305f714a09af4e8b8552ed728f4b3c989fb37",
       "executable": false
     },
     "seed.json": {
@@ -6391,7 +6391,7 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "78679031bf2d39d95f7e34949b43134df65da28582e4bf7e1b90c3d9b8bf1442",
+      "sha256": "e7112e329478ee6848513860eb26589f238338e6ee29512ec280921ad0ff0f01",
       "executable": false
     },
     "tests/ui/sandbox-routing-journey.mjs": {

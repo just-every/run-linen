@@ -50,32 +50,32 @@ if (shardValue !== undefined) {
 // Conservative journey durations, refreshed from the exact-head Verify when needed.
 const measuredSeconds = {
   "Native sign-in and scoped API": 30,
-  "Native archive and recovery": 400,
-  "Employee service desk browser": 300,
-  "Emitted HTTP": 15,
-  "Configuration and sandbox": 25,
-  "Service desk and lifecycle": 35,
+  "Native archive and recovery": 315,
+  "Employee service desk browser": 280,
+  "Emitted HTTP": 50,
+  "Configuration and sandbox": 70,
+  "Service desk and lifecycle": 80,
   "Knowledge publication": 10,
   "Fulfilment and measured effort": 10,
-  "Fulfilment integration": 25,
-  "Reviewed identity continuity": 10,
-  "Pending people": 30,
-  "Manager approval and bundles": 10,
-  "Execution and reconciliation": 15,
+  "Fulfilment integration": 23,
+  "Reviewed identity continuity": 14,
+  "Pending people": 29,
+  "Manager approval and bundles": 28,
+  "Execution and reconciliation": 19,
   "Current effect authority": 10,
   "Service operations": 15,
-  "Controlled changes and reporting": 35,
-  "Connection discovery": 10,
-  "Native transport": 10,
-  "Intelligence protocols and budgets": 15,
-  "Conversational intake and evidence": 25,
-  "Incumbent import": 25,
-  "Archive restore and erasure": 40,
-  "Department privacy browser": 85,
-  "Connected service recovery browser": 155,
-  "Connection and authority browser": 55,
-  "Communications browser": 140,
-  "Billing browser": 30,
+  "Controlled changes and reporting": 55,
+  "Connection discovery": 11,
+  "Native transport": 58,
+  "Intelligence protocols and budgets": 30,
+  "Conversational intake and evidence": 35,
+  "Incumbent import": 75,
+  "Archive restore and erasure": 130,
+  "Department privacy browser": 100,
+  "Connected service recovery browser": 250,
+  "Connection and authority browser": 70,
+  "Communications browser": 155,
+  "Billing browser": 30
 }
 function shardChecks(count) {
   const loads = Array(count).fill(0), shards = Array.from({ length: count }, () => [])
@@ -98,7 +98,7 @@ if (!process.env.LINEN_TEST_BUILT) {
 }
 const selectedChecks = shard ? shardChecks(shard.count)[shard.number-1] : checks
 if (process.argv.includes('--plan')) {
-  console.log(JSON.stringify(shardChecks(4).map((items,index)=>({shard:index+1,seconds:items.reduce((sum,item)=>sum+measuredSeconds[item[0]],0),journeys:items.map(item=>item[0])})),null,2));
+  console.log(JSON.stringify(shardChecks(6).map((items,index)=>({shard:index+1,seconds:items.reduce((sum,item)=>sum+measuredSeconds[item[0]],0),journeys:items.map(item=>item[0])})),null,2));
   process.exit(0);
 }
 const shardLabel = shard ? ` (shard ${shard.number}/${shard.count})` : ''
