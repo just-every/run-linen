@@ -112,5 +112,5 @@ jobs:
     steps:
       - name: Require every verification tier
         env:
-          RESULTS: '${{ join(needs.*.result, ",") }}'
+          RESULTS: "${{ join(needs.*.result, ',') }}"
         run: test "$RESULTS" = success,success,success
