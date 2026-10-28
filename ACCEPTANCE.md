@@ -1647,7 +1647,7 @@ Core · target · **missing**
 
 Core · target · **missing**
 
-**Requirement.** Lock, wipe, restart, rename, push or remove an app, and retire through the MDM, each with a grant, a confirmation for destructive actions and readback of the command result. An app push or removal is verified by the device's next installed-application inventory (ASSET-001), not by the MDM accepting the command.
+**Requirement.** Lock, wipe, restart, rename, push or remove an app, and retire through the MDM, each under a grant, carrying its class (a wipe or retire is destructive, which the company's policy decides), with readback of the command result. An app push or removal is verified by the device's next installed-application inventory (ASSET-001), not by the MDM accepting the command.
 
 **Acceptance.**
 1. Lock a test Mac in Jamf through a leaver plan; the lock command's completion reads back.
@@ -1711,7 +1711,7 @@ Core · target · **partial**
 
 **Acceptance.**
 1. A Zoom contract with 120 seats and 95 active users shows 25 reclaimable.
-2. Reclaim 10 with the owner's approval and read back seat counts.
+2. Reclaim 10 seats, a money call the company's policy decides (under the held policy, once the owner approves), and read back seat counts.
 3. The renewal reminder fires at 90 days.
 4. Jamf and Intune report Acrobat Pro on 30 devices against 25 licenses, and Linen shows 5 over-licensed.
 5. A prohibited title on one Mac is flagged and its user notified.
