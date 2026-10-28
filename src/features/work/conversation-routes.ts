@@ -167,7 +167,7 @@ export function registerConversationRoutes(app: Hono<AppEnv>) {
       201,
     ),
   );
-  // CATALOG-001: a vendor quote PDF for a catalog item, attached before the item is submitted.
+  // CATALOG-008: a vendor quote PDF for a catalog item, attached before the item is submitted.
   app.post("/work/:id/catalog-quote", async (c) =>
     c.json(
       await storeCatalogQuote(

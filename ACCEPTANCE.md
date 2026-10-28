@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 81 | 68 | 29 | 178 |
+| Core | 35 | 114 | 29 | 178 |
 | Agent surface | 0 | 0 | 8 | 8 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 81 | 68 | 37 | 186 |
+| Full target | 35 | 114 | 37 | 186 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -132,7 +132,7 @@ Core · published · **partial** · Register R-7
 
 #### A1 — Identity and privacy
 
-Core · published · **done** · Cites BASE-ROLE-001, BASE-ACCESS-004, BASE-DATA-003
+Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-004, BASE-DATA-003
 
 **Requirement.** Linen separates requester/beneficiary, approver, HR, service operator, owner, auditor and integration rights, and its scopes reach attachments, search, notifications, exports and AI context. Restricted departures and incidents are protected, HR data is minimized, and erased content is never restored on replay. Privileged read/export and policy changes are audited.
 
@@ -144,11 +144,11 @@ Core · published · **done** · Cites BASE-ROLE-001, BASE-ACCESS-004, BASE-DATA
 5. Erasure prevents later access and replay.
 
 **Evidence.** `src/platform/auth.ts`, `src/features/work/privacy.ts`, `tests/ui/browser.mjs`, `tests/platform/privacy-runtime.mjs`, `tests/work/person-binding-runtime.mjs`
-**Gap.** None.
+**Gap.** Not asserted: denial of the private note, attachment and HR record through search, notifications, exports and AI context, and that revoked membership prevents later access. Conversation, direct-download and lifecycle denial and erasure without replay are asserted.
 
 #### A2 — Granted action
 
-Core · published · **done** · Cites BASE-AGENT-005
+Core · published · **partial** · Cites BASE-AGENT-005
 
 **Requirement.** Versioned grants bind action, target, beneficiary, conditions, limits and time. A grant the company issued can cover a repeated low-risk effect without a fresh human approval each time; wider-impact action needs a grant that covers it. At-action checks reject stale, expired, revoked or concurrently superseded decisions. Source/policy editing cannot silently let the executor expand its own privileges.
 
@@ -159,7 +159,7 @@ Core · published · **done** · Cites BASE-AGENT-005
 4. Hostile retrieved text cannot cause an effect.
 
 **Evidence.** `src/features/execution/authority.ts`, `src/features/execution/grants.ts`, `tests/execution/authority-runtime.mjs`, `tests/ui/connected-request.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a grant expired between plan and effect refuses the effect, and that hostile retrieved text cannot cause an effect. Dispatch under a grant and refusal after revocation are asserted.
 
 #### A3 — Durable effects
 
@@ -561,7 +561,7 @@ Core · target · **partial** · Cites BASE-MAIL-001 · Rules D-2, D-3
 
 #### CHANNEL-009 — Request sharing and manager visibility
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** A requester shares a request with named colleagues, who can read and reply to its public thread but never see private notes; a request filed on behalf of someone shows to both the submitter and the beneficiary; managers see their direct and indirect reports' requests in "My team's requests", following the HRIS reporting line (LIFE-001), with sensitive categories (HR, security, health, leaver) excluded by policy. Every share is audited and revocable (RL-3). Linen's taxonomy has no separate security, health or leaver categories: security and health requests are restricted, and leaver lifecycle work is not a request. HR facts arrive through the people API until LIFE-001's HRIS connectors inherit it, and DESK-011's department workspaces inherit the HR exclusion (D-4).
 
@@ -575,13 +575,13 @@ Core · target · **done**
 7. The request portal tells requesters and beneficiaries that their managers can read the public thread of their normal requests.
 
 **Evidence.** `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: a shared colleague never sees attachments, a colleague's reply opens no new intake, and an HR request cannot be shared. The share, revoke, audit, on-behalf, team-view and HR-change outcomes are asserted.
 
 ### Service catalog and approvals
 
 #### CATALOG-001 — Catalog items with forms
 
-Core · target · **done** · Rules D-1
+Core · target · **partial** · Rules D-1
 
 **Requirement.** Admins build catalog items (access, software, hardware, accounts, general services) with field types, conditional logic, required attachments, audience visibility by department/location/employment type, a USD cost and an expected delivery time. Items are versioned; in-flight requests keep their version. Audiences are CATALOG-007, quote files CATALOG-008, and bundle, pending-person and assistant admission CATALOG-009.
 
@@ -596,11 +596,11 @@ Core · target · **done** · Rules D-1
 8. Item kinds are access, software, hardware (`device`), account and general service; an account or general-service item is a task its owner completes, never a provider action.
 
 **Evidence.** `tests/work/application-cases.mjs`, `tests/work/catalog-quote-cases.mjs`, `tests/ui/application-journey.mjs`, `tests/ui/catalog-quote-journey.mjs`, `tests/work/pending-person-runtime.mjs`, `tests/intelligence/repair-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/adoption/retention-cases.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** None.
+**Gap.** Not asserted: a negative or fractional cost or a nonpositive or fractional delivery is refused, and an empty cost or delivery reads as unknown. The other form, revision, scope, erasure, bundle and kind outcomes are asserted.
 
 #### CATALOG-007 — Catalog audiences
 
-Core · target · **done** · From CATALOG-001 · Rules D-1
+Core · target · **partial** · From CATALOG-001 · Rules D-1
 
 **Requirement.** Only the owner configures versioned catalog audience and quote requirements (RL-4). Reviewed people have department, location and employment-type stable IDs from owner-maintained lists; referenced values may be retired, not deleted. Owner or HR reviews these attributes through the existing source-attributed, effective-dated people API; no inference or integration-principal writes. LIFE-001 later uses an owner-reviewed source mapping. Audience gates submission, not later approval or fulfillment.
 
@@ -615,11 +615,11 @@ Core · target · **done** · From CATALOG-001 · Rules D-1
 8. A refused filer's staff see the failed dimensions but no values; item/value-list edits, dimension-only attribute reviews and audience refusals are audited with no attribute values; erasure clears attributes, and native restore retains facts without a live binding.
 
 **Evidence.** `tests/work/application-cases.mjs`, `tests/work/catalog-quote-cases.mjs`, `tests/ui/application-journey.mjs`, `tests/ui/catalog-quote-journey.mjs`, `tests/work/pending-person-runtime.mjs`, `tests/intelligence/repair-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/adoption/retention-cases.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** None.
+**Gap.** Not asserted: renaming a value, that a value is never deleted, and that native restore keeps reviewed facts without a live binding. Value lists, reviews, matching, filer rules, commit rechecks, frozen revisions and audits are asserted.
 
 #### CATALOG-008 — Quote attachments for catalog requests
 
-Core · target · **done** · From CATALOG-001 · Rules D-1
+Core · target · **partial** · From CATALOG-001 · Rules D-1
 
 **Requirement.** An item's form can require a quote: a PDF the requester or beneficiary attaches before submitting, frozen with the request and readable only by the people who decide or fulfil it. Quote attachments are their own record kind, immutable after submission; replacement is an amendment. The upload, download and refusal mechanism is in [docs/contract/mechanism.md](docs/contract/mechanism.md#catalog-quotes).
 
@@ -634,11 +634,11 @@ Core · target · **done** · From CATALOG-001 · Rules D-1
 8. Linen never reads an amount from a quote: the price is a form question; quotes grant no approval and no provider authority, and the approval view carries the frozen quote for the current approver.
 
 **Evidence.** `tests/work/application-cases.mjs`, `tests/work/catalog-quote-cases.mjs`, `tests/ui/application-journey.mjs`, `tests/ui/catalog-quote-journey.mjs`, `tests/work/pending-person-runtime.mjs`, `tests/intelligence/repair-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/adoption/retention-cases.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** None.
+**Gap.** Not asserted: an unsubmitted quote is readable by the requester, beneficiary and owner. Upload, freeze, readers, exclusions, export, erasure, retention and audit outcomes are asserted.
 
 #### CATALOG-009 — Catalog admission for bundles, pending people and the assistant
 
-Core · target · **done** · From CATALOG-001 · Rules D-1
+Core · target · **partial** · From CATALOG-001 · Rules D-1
 
 **Requirement.** Every door that admits a catalog request applies the item's current audience, form and quote rules in one atomic write, so no partial request opens. CATALOG-002, CATALOG-003, API-001, API-002, API-003, LIFE-001, SSO-001, DESK-011, ROLE-001, NOTIFY-001/002 and CHANNEL-001/002 keep the duties their own clauses name.
 
@@ -648,11 +648,11 @@ Core · target · **done** · From CATALOG-001 · Rules D-1
 3. A pending person's reviewed attributes are checked when the service is held (at the person revision the hold's write rechecks), and the bound person is checked again at release against the item as it is then.
 4. A refused release keeps the service held with its reason; existing held services whose item becomes restricted stay held with their refusal reason at release.
 5. The assistant's catalog holds eligible items only and its submission carries the item revision it saw, so a changed item, a missing required answer or a missing quote refuses it.
-6. API-003 ticket tools expose no catalog quote or catalog submission payloads.
+6. The MCP ticket tools (API-007) expose no catalog quote or catalog submission payloads.
 7. Credentials, quotes and forms grant no provider or approval authority.
 
 **Evidence.** `tests/work/application-cases.mjs`, `tests/work/catalog-quote-cases.mjs`, `tests/ui/application-journey.mjs`, `tests/ui/catalog-quote-journey.mjs`, `tests/work/pending-person-runtime.mjs`, `tests/intelligence/repair-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/adoption/retention-cases.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** None.
+**Gap.** Not asserted: a changed item refuses the assistant's submission. Bundle, pending-person, missing-quote and missing-answer refusals and the MCP exclusion are asserted.
 
 #### CATALOG-002 — Approval chains
 
@@ -711,7 +711,7 @@ Core · target · **partial** · From CATALOG-002 · Cites BASE-MAIL-001 · Rule
 
 #### CATALOG-003 — Fulfillment task plans
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Each item expands into ordered and parallel tasks for teams, automated steps through connectors, and child tasks with dependencies and due dates; the request completes only when every obligation is verified or explicitly waived by its owner. A software item's install step is CATALOG-005's MDM install, verified on the device. Each item's automated step is the connector step its kind has (access grant, licence or device delivery); CATALOG-005's MDM install joins as such a step and inherits this ordering, ownership, waiver and close rule.
 
@@ -726,11 +726,11 @@ Core · target · **done**
 8. A waived step is shown as waived, never as verified, and releases what follows it; a request closes only when every catalog responsibility (automated step and tasks) is verified, done or waived, and cancelling the request cancels the open ones.
 
 **Evidence.** `src/features/work/catalog-task-plan.ts`, `src/features/work/catalog-tasks.ts`, `src/features/work/requests.ts`, `src/features/work/progress.ts`, `src/ui/catalog-task-plan-editor.tsx`, `src/ui/obligation-actions.tsx`, `tests/work/catalog-task-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/ui/catalog-task-journey.mjs`, `tests/ui/catalog-task-browser.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that no team works a request before capacity is in place, and that an automated step with an applied or uncertain effect must be reconciled rather than waived. Plan, ordering, ownership, completion, waiver and close outcomes are asserted.
 
 #### CATALOG-004 — Bundles and kits
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** A bundle such as "New engineer" combines hardware, software and access items with shared approval and individual fulfillment (RL-5).
 
@@ -743,7 +743,7 @@ Core · target · **done**
 6. The bundle reads complete only when every child's delivery obligation (device delivery or access grant) is verified; pending, held, failed or unknown children keep it in progress, shown per child.
 
 **Evidence.** `src/features/work/bundles.ts`, `src/ui/bundles.tsx`, `tests/work/bundle-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that every child is for the same person, purpose and expiry, that stock and licence capacity stay per child, and that a bundle never creates a grant. One approval, five children, pinned revisions, atomic decision and per-child verification are asserted.
 
 #### CATALOG-005 — Software requests installed through MDM
 
@@ -795,7 +795,7 @@ Core · target · **done**
 
 #### DESK-001 — Queues, groups and views
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Agent groups, saved and shared views, filters, sorting, bulk update and keyboard navigation (next/previous ticket, assign, reply, private note, status, run a scenario from DESK-015, with a shortcut reference); each ticket has one accountable group and owner. The keyboard paths are DESK-018.
 
@@ -803,18 +803,18 @@ Core · target · **done**
 1. Create two groups, save an "Unassigned P1" view and bulk-assign five tickets.
 2. A group lead's view excludes another group's restricted ticket.
 3. The owner (acting for "admin" until that role exists) creates agent groups, adds active agents (owner or operator members) and names each group's leads (RL-6).
-4. Each ticket has one accountable group and at most one owner, its assignee, who must be an agent in that group: placing a ticket in a group whose members exclude its owner, assigning it to a non-member, or removing a member who still owns one of the group's open tickets is refused; an API-003 queue grant is not group membership, and an integration principal is never a group member, lead or assignee.
+4. Each ticket has one accountable group and at most one owner, its assignee, who must be an agent in that group: placing a ticket in a group whose members exclude its owner, assigning it to a non-member, or removing a member who still owns one of the group's open tickets is refused; an MCP queue grant (API-006) is not group membership, and an integration principal is never a group member, lead or assignee.
 5. A group lead's view lists their group's tickets that they can read and that are not restricted; it never widens visibility, and restricted tickets stay visible only to the workspace owner, the requester and the person it is for.
 6. Agents read each ticket's group and priority in the queue; requesters do not.
 7. An agent saves a view (filters: open or closed, unassigned or assigned to them, priority, ticket type, group; sort: recently updated, newest, oldest or priority, P1 first and unclassified last) under a name, private to them or shared with every agent in the workspace; running a view narrows its reader's own queue and never widens it, and only its creator or the workspace owner removes it.
 8. The bulk-update screen applies one command (assign, pause, resume or close) to the tickets an agent chooses from the current view, changing or refusing each ticket on its own under the single-ticket rules and reporting both counts.
 
 **Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/ui/desk-group-browser.mjs`, `tests/ui/desk-scenario-browser.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that an MCP queue grant is not group membership and an integration principal is never a group member, lead or assignee. Groups, leads, ownership refusals, lead views, saved views and bulk update are asserted.
 
 #### DESK-018 — Keyboard triage
 
-Core · target · **done** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
+Core · target · **partial** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
 
 **Requirement.** An agent triages a queue from the keyboard alone. Keyboard triage works outside text fields.
 
@@ -829,7 +829,7 @@ Core · target · **done** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
 8. `x` runs a DESK-015 scenario on the open ticket.
 
 **Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/ui/desk-group-browser.mjs`, `tests/ui/desk-scenario-browser.mjs`
-**Gap.** None.
+**Gap.** Not asserted: k (previous ticket), n (private note), c (close) and Escape leaving a field. Keyboard-only triage with j, a, r, s, Ctrl/⌘+Enter, ? and x is asserted.
 
 #### DESK-002 — Classification and priority
 
@@ -866,7 +866,7 @@ Core · target · **done**
 
 #### DESK-019 — Automatic assignment and routing history
 
-Core · target · **done** · From DESK-003
+Core · target · **partial** · From DESK-003
 
 **Requirement.** Within the group a rule chose, Linen hands the ticket to one candidate by the group's method, never to an agent for a restricted or HR ticket, and keeps every routing step.
 
@@ -879,7 +879,7 @@ Core · target · **done** · From DESK-003
 6. Requesters do not read groups or routing.
 
 **Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that with no candidate the ticket stays in its group unassigned. Round-robin, load, restricted placement, routing history and requester exclusion are asserted.
 
 #### DESK-004 — SLA policies
 
@@ -916,7 +916,7 @@ Core · target · **done** · From DESK-004
 
 #### DESK-005 — Escalation and supervisor rules
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Multi-level escalation before and after an SLA breach (agent, group lead, IT manager), and time-based rules such as "awaiting requester for 3 business days → reminder → resolve with disclosure after 5". Every reminder is persisted with its next due time and stops when the obligation is satisfied. The awaiting-requester rule is DESK-021.
 
@@ -929,11 +929,11 @@ Core · target · **done**
 6. Every escalation and reminder is persisted with its next due time (recomputed while scheduled, as SLA pauses move a target), fires on the first scheduler tick at or after it, and records why it stopped.
 
 **Evidence.** `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a scheduled escalation's next due time is recomputed when an SLA pause moves its target. Levels, firing, private notes, once-only firing, stopping and persistence are asserted.
 
 #### DESK-021 — Awaiting-requester reminders and closure
 
-Core · target · **done** · From DESK-005
+Core · target · **partial** · From DESK-005
 
 **Requirement.** A ticket waiting on its requester is reminded, then closed with a disclosure the requester can undo by reopening.
 
@@ -946,7 +946,7 @@ Core · target · **done** · From DESK-005
 6. A business day is one working day's hours on the ticket's SLA calendar, skipping non-working days and holidays, or 24 hours without a calendar.
 
 **Evidence.** `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that the requester can reopen the automatically closed ticket, and that leaving the paused-awaiting-requester state stops the reminder and resolution. Reminder, disclosed close and reply-stops-both are asserted.
 
 #### DESK-006 — Ticket relationships
 
@@ -1006,7 +1006,7 @@ Core · target · **partial** · From DESK-007 · Cites BASE-MAIL-001 · Rules D
 
 #### DESK-008 — Responses and summaries
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Canned responses with placeholders, and assistant-drafted replies and ticket summaries that cite knowledge and ticket history. A drafted reply stays a draft in the composer until a person sends it; when an agent sends a reply through a tool, that call carries its class and the company's policy decides it (RL-8).
 
@@ -1021,7 +1021,7 @@ Core · target · **done**
 8. For articles generated by KB-004, the requester and beneficiary must each currently be able to read every source before and after reply generation, and a pending beneficiary refuses that article context; these are read-only checks, never a new account or grant.
 
 **Evidence.** `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that inserting a template or using a reply draft preserves the composer's selected visibility. Canned responses, placeholders, summaries, citations, context rechecks, unsent drafts and generated-knowledge rights are asserted.
 
 #### DESK-009 — Satisfaction surveys
 
@@ -1038,22 +1038,22 @@ Core · target · **missing** · Rules D-2
 
 #### DESK-010 — Custom fields, forms and statuses
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Admins add custom ticket fields, forms per ticket type and custom statuses mapped to SLA behavior. Fields can be required on a status: by default an incident cannot be resolved without a resolution code (from an admin-edited list such as "Solved (workaround)", "Solved (permanent fix)", "Not reproducible" and "Duplicate") and close notes, and a service request cannot be resolved without close notes. The rule holds on every door: console, bulk update, scenario, API and chat action; it is DESK-023.
 
 **Acceptance.**
 1. Add an "Office" dropdown and an "Awaiting parts" status that pauses SLA; use both and see the SLA pause.
 2. The owner acts for "admin" until an admin role exists; a field is text or a dropdown and shows on the ticket types its definition names (incident, service request, which includes the older "request" kind, and question), and that set is the type's form.
-3. A custom status is a named pause that waits on the requester, a vendor or nobody outside the desk; whether it stops the SLA clock is the bound policy's pause rule (DESK-004), never an override, so "Awaiting parts" is a vendor wait.
+3. A custom status is a named pause that waits on the requester, a vendor or nobody outside the desk; whether it stops the SLA clock is the bound policy's pause rule (DESK-020), never an override, so "Awaiting parts" is a vendor wait.
 4. Field values, the status and the resolution are read by whoever can read the ticket and written by the roles that move its state (owner, operator, HR); people a ticket is shared with see its public thread only.
 
 **Evidence.** `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that people a ticket is shared with see its public thread only. Fields, forms, statuses, pause rules and read/write roles are asserted.
 
 #### DESK-023 — Required resolution fields on every closing door
 
-Core · target · **done** · From DESK-010
+Core · target · **partial** · From DESK-010
 
 **Requirement.** A ticket closes only with the fields its type requires, on every door that closes a ticket. DESK-015 scenarios and the CHANNEL-001/CHANNEL-002 chat actions inherit the rule.
 
@@ -1062,16 +1062,16 @@ Core · target · **done** · From DESK-010
 2. Resolve it with a code and close notes and see both on the record and resolutions counted by code in REPORT-001.
 3. A field can be required on closed (resolving) or on a named status.
 4. Close notes are the close's reason, kept on the ticket and posted as its public closing line.
-5. The code list is the owner's (by default "Solved (workaround)", "Solved (permanent fix)" and "Not reproducible") plus "Duplicate" and "No response", which automatic closures record: a merge (DESK-006) closes the duplicate with "Duplicate" and its closing line as notes, and the awaiting-requester rule (DESK-005) closes with "No response" and its disclosure as notes.
+5. The code list is the owner's (by default "Solved (workaround)", "Solved (permanent fix)" and "Not reproducible") plus "Duplicate" and "No response", which automatic closures record: a merge (DESK-006) closes the duplicate with "Duplicate" and its closing line as notes, and the awaiting-requester rule (DESK-021) closes with "No response" and its disclosure as notes.
 6. Every door that closes a ticket holds the rule: the console, the API, the bulk update (each ticket changed or refused on its own), merge and the automatic close (a merge is refused, and the automatic close waits, while a required field is empty).
 7. REPORT-001 counts closed normal-sensitivity tickets opened in the period by the code recorded at their latest close.
 
 **Evidence.** `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted in the cited files: that close notes post as the public closing line, that the automatic close waits while a required field is empty, and that the awaiting-requester close records No response (asserted in tests/work/sla-policy-cases.mjs, which this clause does not cite). The console, API, bulk and merge refusals and the code counts are asserted.
 
 #### DESK-011 — Department workspaces
 
-Core · target · **done** · Rules D-4
+Core · target · **partial** · Rules D-4
 
 **Requirement.** IT, HR service, Facilities, Finance and Legal run separate workspaces with their own catalog, queues, SLAs, knowledge and permissions, one employee portal across them, and handoff between workspaces that keeps history and restrictions. HR-service tickets remain service requests; Willow or the buyer's HRIS remains the employee record. Department workspaces are internal to the existing Linen installation, administered by the owner (RL-9). CATALOG-004 keeps the obligation to supply mixed-department bundle routing; its requirement is not narrowed here and it is not an acceptance point of DESK-011. Handoff is DESK-024.
 
@@ -1082,11 +1082,11 @@ Core · target · **done** · Rules D-4
 4. Current department membership intersects existing roles, sensitivity and private-note rules; the owner's existing global authority remains.
 5. Legacy records with no department or retained HR restriction keep their existing permissions.
 6. Catalog items, groups, saved queues, routing, SLA policies and knowledge carry department ownership; the employee portal combines eligible active catalogs and employee-visible knowledge.
-7. Catalog audience, form revisions and exact quote readers remain CATALOG-001's; department staff membership grants no quote access, and a request uses its item's department.
+7. Catalog audience, form revisions and exact quote readers remain those of CATALOG-007, CATALOG-001 and CATALOG-008; department staff membership grants no quote access, and a request uses its item's department.
 8. A new mixed-department bundle refuses atomically with its reasons; same-department and legacy bundles retain their existing atomic behavior.
 
 **Evidence.** `tests/work/department-space-cases.mjs`, `tests/ui/department-browser.mjs`, `tests/work/department-ops-cases.mjs`, `tests/work/department-report-cases.mjs`, `tests/services/department-source-cases.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/platform/privacy-runtime.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that employee department attributes grant no staff authority. Department reads, catalogs, ownership, legacy permissions, quote exclusion and bundle refusal are asserted.
 
 #### DESK-024 — Department handoff and retained HR restriction
 
@@ -1122,7 +1122,7 @@ Core · target · **done**
 
 #### DESK-013 — Scheduled and recurring work
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Recurring tickets and task plans (monthly patch review, quarterly access review kick-off, annual hardware refresh) are created on a calendar with owners.
 
@@ -1137,7 +1137,7 @@ Core · target · **done**
 8. Task plans create owned local duties, each separately completed; they do not authorize provider effects.
 
 **Evidence.** `src/features/work/recurrence.ts`, `src/features/work/recurrence-calendar.ts`, `tests/work/recurrence-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/recurrence-journey.mjs`, `tests/ui/browser.mjs`, `tests/adoption/recurrence-cases.mjs`, `tests/adoption/runtime.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a daylight-saving fold uses the earliest matching instant and a skipped local hour advances to the next real minute. Holiday roll-forward, anchors, month-end clamping, pause/resume and owned duties are asserted.
 
 #### DESK-014 — Remote support handoff
 
@@ -1164,7 +1164,7 @@ Core · target · **done**
 2. An agent outside the Service Desk group is not offered the group-scoped scenario and a direct API call to run it is refused.
 3. A scenario with a step outside the runner's role applies nothing.
 4. Agents (owner or operator) save a scenario for themselves or for an agent group they belong to; only the owner (acting for "admin" until that role exists) saves workspace scenarios; a scenario is offered to its author, to the members of its group or to every agent, and a run of a scenario not offered to the runner is refused.
-5. Steps are classification (type, category, subcategory, impact, urgency, priority), group and owner (DESK-001 rules), custom field values (DESK-010), one public reply or private note from its own text or a canned response (DESK-008), and pause, resume or close with its reason (DESK-010 resolution rules apply).
+5. Steps are classification (type, category, subcategory, impact, urgency, priority), group and owner (DESK-001 rules), custom field values (DESK-010), one public reply or private note from its own text or a canned response (DESK-008), and pause, resume or close with its reason (DESK-023 applies).
 6. Before any change Linen checks every step against the runner's roles (classification, group and messages need owner or operator; fields and status also allow HR); if one is outside them, nothing is applied.
 7. Steps then apply in that fixed order through each step's own door; a step refused while applying (a concurrent edit, a missing resolution code) stops the run and the run's one audit entry lists only the changes made, each with its before and after.
 8. Runs start from the ticket (keyboard `x`), from the bulk-update screen (one run per chosen ticket) and from the same console at phone width.
@@ -1174,7 +1174,7 @@ Core · target · **done**
 
 #### DESK-025 — Record templates and scenario task plans
 
-Core · target · **done** · From DESK-015
+Core · target · **partial** · From DESK-015
 
 **Requirement.** Record templates pre-fill new tickets, tasks and changes, and a scenario's task plan is a PROJECT-001 IT project.
 
@@ -1188,11 +1188,11 @@ Core · target · **done** · From DESK-015
 7. Change record templates use CHANGE-001's exact-version standard change catalog, retaining its standard-change approval and separate grant rules.
 
 **Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/ui/desk-scenario-browser.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that starting a scenario task plan grants no provider authority and that the run audit links to the plan. Ticket, task and change templates and the project link and boundary are asserted.
 
 #### DESK-016 — Global agent search
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** One search across tickets (number, subject, content, requester), people, assets (serial, asset tag), configuration items, changes, problems, catalog items and articles, with type filters and typo tolerance. Results and their counts honor the searcher's current scope (A1). Matching and ranking are DESK-026.
 
@@ -1207,11 +1207,11 @@ Core · target · **done**
 8. Tickets match their native ID (the current ticket number), title, readable conversation text and requester name; assets match serial and recorded asset tag.
 
 **Evidence.** `src/features/work/search.ts`, `tests/work/search-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/search-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that search creates no index, model or external flow, that the privileged-search audit stores no query content, and that employees keep their reviewed-knowledge search. Record types, scoped counts, revoked roles, people projection and audit presence are asserted.
 
 #### DESK-026 — Search matching and ranking
 
-Core · target · **done** · From DESK-016
+Core · target · **partial** · From DESK-016
 
 **Requirement.** Search finds records through recorded relationships only and ranks matches the same way for every type.
 
@@ -1224,7 +1224,7 @@ Core · target · **done** · From DESK-016
 6. No hidden rows or source-list truncation affect that count.
 
 **Evidence.** `src/features/work/search.ts`, `tests/work/search-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/search-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: Unicode NFKC, case and separator normalization, and the phrase-then-tokens-then-typo ranking order. Linked serial lookups, source checks, typo matching, the query bound, pagination and counts are asserted.
 
 #### DESK-017 — Ticket activity history
 
@@ -1273,11 +1273,11 @@ Core · target · **partial** · From DESK-017 · Cites BASE-DATA-003
 **Acceptance.**
 1. Retention requires one shared typed schema registry mapping audit actions and fields to value classes, used by export, import, erasure and history; unregistered actions or fields keep full clearing.
 2. The closed allowlist is built-in state, type, priority, impact/urgency, SLA pause with an enum reason, resolution code, and approval outcome with revision numbers and grant version; category, service and group by id and configured label (scrub a group with exactly one member at change time or a label matching an erased identity); dropdown, multi-select, number, boolean and date custom fields only after audited owner/admin classification as nonpersonal, default personal (text, user, email, URL, phone and attachment fields can never be nonpersonal); and links to tickets, tasks, changes, problems and assets as ids only, with titles read live under current scope.
-3. Each scrubbed entry is marked `redacted: erasure`; erased-person references show "Erased person" without a link across entries (archives use A6 opaque aliases); free text, values matching existing erased identity tombstone digests and asset values tying the asset to that person are always scrubbed.
+3. Each scrubbed entry is marked `redacted: erasure`; erased-person references show "Erased person" without a link across entries (archives use A8 opaque aliases); free text, values matching existing erased identity tombstone digests and asset values tying the asset to that person are always scrubbed.
 4. If an HR or restricted record's subject is erased, category, type, service and all custom values are scrubbed too: only state, priority, SLA and timing remain.
 5. For registered actions, only entries where that person is actor, requester/beneficiary or a value are touched; unrelated people's history is unchanged.
 6. Already-cleared entries remain cleared, showing "values removed by an erasure on <date>", and are never rebuilt from records, archives, imports or replay.
-7. One redacted history serves agent, auditor, REST, MCP, search, notifications, export, restore and replay; no raw payload is exposed and scrubbed values leave search; employee history remains public-only; older archives receive the same scrub or are refused under A6, and ServiceNow history inherits the same classification on import.
+7. One redacted history serves agent, auditor, REST, MCP, search, notifications, export, restore and replay; no raw payload is exposed and scrubbed values leave search; employee history remains public-only; older archives receive the same scrub or are refused under A8, and ServiceNow history inherits the same classification on import.
 8. Erasure receipts report counts per class without content.
 
 **Evidence.** `tests/work/desk-scenario-cases.mjs`, `tests/execution/runtime.mjs`, `tests/work/project-cases.mjs`, `tests/work/catalog-task-cases.mjs`, `tests/work/lifecycle-template-cases.mjs`, `tests/work/desk-field-cases.mjs`, `tests/work/history-erasure-cases.mjs`, `tests/services/run.mjs`, `tests/services/integration.mjs`, `tests/work/asset-contract-cases.mjs`, `tests/adoption/servicenow-import-cases.mjs`, `tests/adoption/history-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/ui/typed-history-journey.mjs`, `tests/ui/desk-scenario-browser.mjs`
@@ -1323,7 +1323,7 @@ Core · target · **missing** · Rules D-1
 
 #### ACCESS-001 — Microsoft Entra ID
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Create users, add/remove group memberships and licenses, disable accounts and revoke sign-in sessions under versioned grants, with independent readback of each effect. Users and groups mastered in on-premises Active Directory are handled by ACCESS-010.
 
@@ -1336,7 +1336,7 @@ Core · target · **done**
 6. A stale grant is refused at the effect.
 
 **Evidence.** `src/features/execution/connectors.ts`, `src/features/execution/identity.ts`, `tests/execution/runtime.mjs`, `tests/ui/connected-lifecycle.mjs`
-**Gap.** None.
+**Gap.** Not asserted: adding an E3 license with Graph readback. User creation, group membership, disable, session revocation and the refused revoked grant are asserted against the Graph network-edge fixture.
 
 #### ACCESS-002 — Okta
 
@@ -1398,7 +1398,7 @@ Core · target · **missing** · Register R-8
 
 #### ACCESS-006 — Just-in-time and time-bound access
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Access granted for a stated period is removed at expiry by a separately authorized operation and verified removed; pre-existing access is not removed.
 
@@ -1407,7 +1407,7 @@ Core · target · **done**
 2. Repeat for a user who already had the group and see it kept.
 
 **Evidence.** `src/features/work/requests.ts`, `src/features/execution/automation.ts`, `tests/ui/connected-request.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that access a user already had is kept at expiry. Expiry removal with independent readback is asserted.
 
 #### ACCESS-007 — Self-service account recovery
 
@@ -1427,7 +1427,7 @@ Core · target · **missing** · Cites BASE-SECRET-001 · Rules D-2
 
 #### ACCESS-008 — Application catalog and owners
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** A registry of SaaS applications with owner, approvers, roles/entitlements, cost per seat in USD, connector and data sensitivity; catalog items reference these entitlements (RL-11). ACCESS-005 carries SaaS provisioning.
 
@@ -1442,7 +1442,7 @@ Core · target · **done**
 8. Native restore remaps references without activating historical membership or releasing the execution hold; erasure anonymizes retained registry/request actors.
 
 **Evidence.** `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that approver metadata confers no approval right. Registration, routing, visibility, snapshots, seat costs, restore and erasure are asserted.
 
 #### ACCESS-009 — User access reviews
 
@@ -1674,7 +1674,7 @@ Core · target · **partial**
 
 #### ASSET-004 — Hardware lifecycle and custody
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Procure, receive, assign, loan, repair, return, retire and dispose with serial-level history and attributed receipts. A disposal records the ITAD partner's certificate as a persisted HTTPS reference to the partner's actual certificate document, stored with the partner, standard (R2v3 or e-Stewards), operator and disposal timestamp. Linen does not retain the original document bytes unless uploaded, never infers that the partner is certified and never claims the document was independently validated. Disposal is refused while the device is still assigned to someone, including when it is in repair.
 
@@ -1684,7 +1684,7 @@ Core · target · **done**
 3. Confirm the reference alone retains no original document bytes, an uploaded document retains its bytes, and neither view claims partner certification or independent document validation.
 
 **Evidence.** `src/features/work/assets.ts`, `tests/work/asset-custody-cases.mjs`, `tests/ui/asset-custody-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a certificate reference alone retains no document bytes, that an uploaded document retains its bytes, and that no view claims partner certification or independent validation. The custody lifecycle, recorded certificate and disposal refusals are asserted.
 
 #### ASSET-005 — Stock rooms and reorder
 
@@ -1736,7 +1736,7 @@ Core · target · **partial**
 
 #### ASSET-008 — Asset financials
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Purchase cost, depreciation (straight-line or declining balance), book value, cost center and fiscal-year reporting in USD, exportable to Pantry, QuickBooks Online or NetSuite as CSV or API.
 
@@ -1749,11 +1749,11 @@ Core · target · **done**
 6. The CSV downloads the schedule for import into the named accounting products; a download does not claim a provider import.
 
 **Evidence.** `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs`, `tests/ui/browser.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that the CSV download claims no provider import. Book value, rounding, declining balance, anniversaries, fiscal years and the CSV export are asserted.
 
 #### ASSET-009 — CMDB and service dependencies
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Configuration items for hardware, software, SaaS apps, business services and cloud resources with typed relationships, provenance and freshness; incidents and changes show upstream/downstream impact.
 
@@ -1768,11 +1768,11 @@ Core · target · **done**
 8. An absent relationship is unknown; inferred impact does not establish an outage.
 
 **Evidence.** `tests/services/dependency-cases.mjs`, `tests/ui/dependency-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that connects_to records a non-dependency connection, and that an absent relationship is unknown and inferred impact establishes no outage. CI types, provenance, impact, freshness and uncertainty are asserted.
 
 #### ASSET-010 — Physical audits
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Asset audits by location using the mobile app to scan tags, with expected-vs-found reconciliation and missing-device follow up. CHANNEL-005's native apps inherit this audit scan, including camera scanning.
 
@@ -1785,7 +1785,7 @@ Core · target · **done**
 6. Completing the audit is one atomic step that marks found devices observed and opens one follow-up request per expected device not scanned, assigned to the completing auditor and linked to the device; a completed audit takes no further scans.
 
 **Evidence.** `src/features/work/asset-audits.ts`, `tests/work/asset-custody-cases.mjs`, `tests/ui/asset-audit-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a completed audit takes no further scans. Expected lists, one open audit, scans, reconciliation and follow-ups are asserted.
 
 #### ASSET-011 — Hardware requests and device swaps for existing employees
 
@@ -1883,7 +1883,7 @@ Core · target · **done**
 
 #### PROB-002 — Proactive problem detection
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Linen clusters recurring tickets and alerts by service, device model or app and proposes problem records with the evidence; a person accepts or rejects each proposal. Decisions and visibility are PROB-003.
 
@@ -1898,7 +1898,7 @@ Core · target · **done**
 8. Decisions retain the actor, reason and timestamp.
 
 **Evidence.** `tests/work/problem-detection-cases.mjs`, `tests/ui/problem-detection-journey.mjs`, `tests/adoption/problem-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that untagged sources have their own bucket, NFKC, whitespace and case label normalization, and that canceled tickets are excluded. Proposals, retained rejection, facets, thresholds, alert deduplication and decision reasons are asserted.
 
 #### PROB-003 — Problem proposals: acceptance, visibility and persistence
 
@@ -1922,7 +1922,7 @@ Core · target · **done** · From PROB-002
 
 #### CHANGE-001 — Change types and templates
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Standard (approved once as a template, catalog-driven), normal and emergency changes, with templates carrying implementation, test and backout plans (RL-15). No meeting, vote or quorum is claimed: CHANGE-003 carries the complete board, quorum and channel requirements. Freeze bypass remains the separate owner-only authority in CHANGE-004.
 
@@ -1937,11 +1937,11 @@ Core · target · **done**
 8. Restore makes templates inactive with no live approval and clears imported change bypass/authority; affected personal-data erasure also withdraws live template approval.
 
 **Evidence.** `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that affected personal-data erasure withdraws a live template approval. Standard, normal and emergency paths, exact-version approval, snapshots, withdrawal, amendment and inactive restore are asserted.
 
 #### CHANGE-002 — Risk scoring
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Risk is scored from a questionnaire, impacted CIs, schedule and the history of failed changes on those CIs; the score selects the approval path.
 
@@ -1956,7 +1956,7 @@ Core · target · **done**
 8. Emergency changes stay on ECAB and standard changes on the catalog; the score, band and each factor are shown on the change, and an edit recomputes them and withdraws any approval.
 
 **Evidence.** `src/features/services/change-risk.ts`, `tests/services/risk-cases.mjs`, `tests/ui/connected-change.mjs`
-**Gap.** None.
+**Gap.** Not asserted in the cited files: that emergency changes stay on ECAB and standard changes on the catalog. Scoring factors, bands, approval paths and recomputation are asserted.
 
 #### CHANGE-003 — Change advisory board
 
@@ -1974,7 +1974,7 @@ Core · target · **partial** · Rules D-2, D-3
 
 #### CHANGE-004 — Change calendar and freeze windows
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** A calendar of scheduled changes, maintenance windows and blackout/freeze periods, with conflict detection and an ICS feed. Calendar reads and the feed are CHANGE-009.
 
@@ -1989,11 +1989,11 @@ Core · target · **done**
 8. Database admission and effect-time checks fence a freeze added after planning.
 
 **Evidence.** `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that calendar bypass authorizes scheduling only while execution keeps its own grants and approvals. Freeze refusal, conflicts, owner-only windows, CI scope, emergency scheduling and the dispatch fence are asserted.
 
 #### CHANGE-009 — Calendar reads, restore, erasure and the ICS feed
 
-Core · target · **done** · From CHANGE-004 · Cites BASE-ACCESS-002, BASE-DATA-003
+Core · target · **partial** · From CHANGE-004 · Cites BASE-ACCESS-002, BASE-DATA-003
 
 **Requirement.** The calendar and its ICS feed show each reader only what their current scope allows, keep business freezes through restore and erasure, and never claim provider execution.
 
@@ -2007,7 +2007,7 @@ Core · target · **done** · From CHANGE-004 · Cites BASE-ACCESS-002, BASE-DAT
 7. Calendar entries never claim provider execution.
 
 **Evidence.** `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that privileged calendar reads and exports are audited, that restored changes keep no emergency scheduling authority, and that inactive windows stay out of the feed. Scoped warnings, ICS privacy and format, inactive restore and erasure are asserted.
 
 #### CHANGE-005 — Rollback, change-caused incidents and post-implementation review
 
@@ -2063,7 +2063,7 @@ Core · target · **partial**
 
 #### CHANGE-007 — Release management
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Releases group related changes (e.g. "Okta MFA rollout") with a plan, build/test/deploy phases, a release calendar shared with CHANGE-004, a go/no-go decision by named approvers, linked tickets, problems and CIs, and release notes to affected employees through CHANNEL-008's notices. A release completes only when every change in it is successful or explicitly backed out. Gates, notes and completion are CHANGE-011.
 
@@ -2078,11 +2078,11 @@ Core · target · **done**
 8. Each named approver records go or no-go with a reason; the latest decision per approver counts, one no-go holds the release, go needs passed build and test, and a release owner without the owner role cannot decide their own release.
 
 **Evidence.** `tests/services/release-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/release-journey.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that tickets link to a release, that a test needs a passed build, that recording a result withdraws earlier decisions, and that a release owner without the owner role cannot decide their own release. Grouping, CIs, approvers, no-go holds, deployment, notes and the failed-change hold are asserted.
 
 #### CHANGE-011 — Release go/no-go gates, notes and completion
 
-Core · target · **done** · From CHANGE-007 · Rules D-2
+Core · target · **partial** · From CHANGE-007 · Rules D-2
 
 **Requirement.** No member change of a release dispatches before every named approver's current decision is go, and the release completes only on its members' recorded outcomes. Release notes inherit CHANNEL-008's channels, including Slack or Teams delivery when CHANNEL-008 adds it.
 
@@ -2096,7 +2096,7 @@ Core · target · **done** · From CHANGE-007 · Rules D-2
 7. Native and domain restore keep go/no-go decisions as inert history and put the release in review; erasing a person in a release withdraws its decisions.
 
 **Evidence.** `tests/services/release-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/release-journey.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a release all-clear needs a completed release, and that erasing a person withdraws their release decisions. The go gate, approver recheck, backout, phases, calendar span, cohort notes, completion and restore review are asserted.
 
 #### CHANGE-008 — Deployment-raised changes
 
@@ -2134,7 +2134,7 @@ Core · target · **done** · Rules D-4
 
 #### KB-001 — Knowledge base
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Articles with authoring, review, versions, audience scoping, expiry and escalation to a request (E7).
 
@@ -2143,7 +2143,7 @@ Core · target · **done**
 2. An expired article disappears from employee search.
 
 **Evidence.** `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs`
-**Gap.** None.
+**Gap.** Not asserted in the cited files: that an expired article disappears from employee search. Reviewed-article search and escalation with the article revision are asserted.
 
 #### KB-002 — Federated knowledge sources
 
@@ -2161,7 +2161,7 @@ Core · target · **missing**
 
 #### KB-003 — Deflection with verified outcome
 
-Core · target · **done** · Rules D-2
+Core · target · **partial** · Rules D-2
 
 **Requirement.** The portal, Slack and Teams suggest articles and actions before a ticket is filed; deflection is counted only when the employee confirms or later evidence shows the issue resolved. CHANNEL-001 (Slack) and CHANNEL-002 (Teams) inherit this suggestion and count; ACCESS-007 and CATALOG-001 inherit it for any self-service action they add; and any later resolution evidence (such as a verified execution outcome, AGENT-003) inherits the rule that only a resolved issue counts.
 
@@ -2175,7 +2175,7 @@ Core · target · **done** · Rules D-2
 7. The work report shows offered, deflected, filed-after-suggestion and unanswered counts as aggregates only.
 
 **Evidence.** `src/features/work/deflection.ts`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/knowledge-draft-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that at most three articles are offered, ordered by words matched then recency, and that a suggestion never stores the question text. The answered question, confirmation, filing-anyway count, readable-article matching and aggregate report are asserted.
 
 #### KB-004 — Articles from resolved work
 
@@ -2365,7 +2365,7 @@ Core · target · **partial** · Cites BASE-SIGNIN-001, BASE-SIGNIN-002, BASE-AC
 
 #### AUDIT-001 — Audit log
 
-Core · target · **done** · Cites BASE-AUDIT-001, BASE-OPS-005, BASE-DATA-003
+Core · target · **partial** · Cites BASE-AUDIT-001, BASE-OPS-005, BASE-DATA-003
 
 **Requirement.** Linen's audit also records privileged reads and exports, and configuration, grant, role and executor actions, and auditors read and export it. History-value retention inherits DESK-017's erasure rule (DESK-028); until that rule is implemented and proven, untyped payloads keep full clearing.
 
@@ -2375,7 +2375,7 @@ Core · target · **done** · Cites BASE-AUDIT-001, BASE-OPS-005, BASE-DATA-003
 3. Erase the actor's personal data, and the entries remain anonymized.
 
 **Evidence.** `src/platform/privacy.ts`, `tests/platform/privacy-runtime.mjs`, `tests/platform/config-runtime.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that an auditor reads the entries for a grant change and for a data export. Anonymized audit entries after the actor's erasure are asserted.
 
 #### API-001 — REST API and webhooks
 
@@ -2398,7 +2398,7 @@ Core · target · **partial** · From API-001 · Cites BASE-SECRET-001 · Rules 
 **Requirement.** A REST token is an owner-issued, hash-only, expiring credential with an explicit scope, bound to one workspace and rechecked against live authority on every call (RL-101). This clause owns the REST credential rule; API-002 and future API-001 doors inherit its live authority, explicit scope, archive inertness and CATALOG-001's duties. Endpoints are in [docs/contract/mechanism.md](docs/contract/mechanism.md#rest-tokens).
 
 **Acceptance.**
-1. REST tokens authorize the REST API only and are refused by API-003; a bearer never falls back to a browser session.
+1. REST tokens authorize the REST API only and are refused by the MCP door (API-005); a bearer never falls back to a browser session.
 2. Only a current owner mints a token for an active automation principal whose sole role is integration.
 3. The workspace-bound secret is shown once, stored only as a SHA-256 hash, expires within 365 days, and can be revoked by a current owner.
 4. The self-ticket scope (`work.create`) files a normal ticket for the principal itself, with title, body, kind and a stable deduplication key; other bearer routes and extra fields are refused, including catalog, quotes, HR, restricted records and filing for another person.
@@ -2426,21 +2426,20 @@ Core · target · **partial** · Rules D-1
 
 #### API-003 — Agent access by MCP
 
-Core · target · **done** · Cites BASE-AGENT-001 · Rules D-1
+Core · target · **partial** · Cites BASE-AGENT-001 · Rules D-1
 
-**Requirement.** A Model Context Protocol server lets the buyer's own agents (Claude, ChatGPT, Copilot) read tickets and act within the same scoped principal and grants as any integration (RL-18). Credentials are API-005, queue readership API-006 and the ticket projection API-007. MCP may reuse API-001's principal/scope checker, never its secret or audience. The Base agent door this surface moves onto is the Agent surface below.
+**Requirement.** A Model Context Protocol server lets the buyer's own agents (Claude, ChatGPT, Copilot) read tickets and act within the same scoped principal and grants as any integration (RL-18). Credentials are API-005, queue readership API-006 and the ticket projection API-007. MCP may reuse API-004's principal/scope checker, never its secret or audience. New tools need a ct contract change and tested release. The Base agent door this surface moves onto is the Agent surface below.
 
 **Acceptance.**
 1. Connect an MCP client as an automation principal; it lists its permitted queue and is refused an out-of-grant action.
 2. The MCP door authenticates before protocol discovery and checks current membership and automation-principal status on every request; unauthenticated discovery returns only a protocol auth error, without tool or resource names.
 3. Initialize and ping work; tool discovery intersects current scopes, selected tools and queue/own-created readership, and authenticated lists expose only currently usable tools and resources.
 4. The closed tool list maps `work.read` to permitted queue listing, ticket get, search and DESK-017 redacted history, `work.create` to ticket creation and `work.comment` to comment addition; six closed ticket tools enforce the queue, projection and commit rules.
-5. New tools need a ct contract change and tested release.
-6. Launch refuses approval/decisions, credential minting, grants, role/configuration changes, export, restore, erasure, connectors/provider/external effects, task plans and bulk changes; a future external-effect tool needs an A2 grant and carries its risk class, which the company's policy decides.
-7. Minting never grants agent approval rights or changes existing approvals/grants.
+5. Launch refuses approval/decisions, credential minting, grants, role/configuration changes, export, restore, erasure, connectors/provider/external effects, task plans and bulk changes; a future external-effect tool needs an A2 grant and carries its risk class, which the company's policy decides.
+6. Minting never grants agent approval rights or changes existing approvals/grants.
 
 **Evidence.** `src/features/mcp/credentials.ts`, `src/features/mcp/authority.ts`, `src/features/mcp/tools.ts`, `src/features/mcp/projection.ts`, `src/features/mcp/writes.ts`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/ui/mcp-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that unauthenticated discovery returns only a protocol auth error without tool or resource names, and that minting never grants agent approval rights. Session refusal, initialize, scoped discovery, the six closed tools and out-of-grant refusal are asserted.
 
 #### API-005 — MCP credentials
 
@@ -2501,7 +2500,7 @@ Core · target · **done** · From API-003
 
 Core · target · **done** · Cites BASE-DATA-001, BASE-BACKUP-001 · Rules D-6
 
-**Requirement.** Owner export of every record, attachment and policy as a verified archive, and restore under an execution hold that never re-dispatches effects or reactivates grants (A6).
+**Requirement.** The owner's export is a verified archive that also carries every policy, and restore runs under an execution hold that never re-dispatches effects or reactivates grants (A6).
 
 **Acceptance.**
 1. Export, restore into a fresh workspace, and compare counts and hashes.
@@ -2525,7 +2524,7 @@ Core · target · **done** · Cites BASE-DATA-003, BASE-DATA-006
 
 #### RETENTION-001 — Retention policies
 
-Core · target · **done** · Cites BASE-DATA-002, BASE-DATA-006
+Core · target · **partial** · Cites BASE-DATA-002, BASE-DATA-006
 
 **Requirement.** Configurable retention for archives, closed tickets and attachments, with no hidden default; due deletion is durable and reported (RL-20). Any future legal hold, or new ticket-owned record kind, inherits this rule: holds block deletion, and new ticket content is deleted with the ticket.
 
@@ -2540,11 +2539,11 @@ Core · target · **done** · Cites BASE-DATA-002, BASE-DATA-006
 8. Each deletion leaves a receipt (SHA-256 of the record id, kind, closed time, deletion time, policy revision and days, attachment count and bytes, no content) that the owner and auditors read, and tombstones the id so restoring an older archive does not bring it back.
 
 **Evidence.** `src/features/adoption/retention.ts`, `src/features/work/retention.ts`, `tests/adoption/retention-cases.mjs`, `tests/ui/connected-setup.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a due ticket with an open obligation, linked repair or unfinished service record is held back and reported, and that a deleted ticket id is tombstoned so an older archive does not bring it back. No hidden default, preview and confirmation, deletion of the ticket, attachment bytes and quote, and the content-free receipt are asserted.
 
 #### BASE-001 — Base platform replacements
 
-Core · target · **done** · Cites BASE-ACCESS-001, BASE-MAIL-001, BASE-OPS-002
+Core · target · **partial** · Cites BASE-ACCESS-001, BASE-MAIL-001, BASE-OPS-002
 
 **Requirement.** Linen uses Base's lobby, owner claim, operator sign-in, mail and dependency modules rather than private copies, keeping its account and data continuity.
 
@@ -2554,11 +2553,11 @@ Core · target · **done** · Cites BASE-ACCESS-001, BASE-MAIL-001, BASE-OPS-002
 3. An upgrade keeps existing accounts.
 
 **Evidence.** `src/platform/base-auth`, `src/base`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/mail-edge.mjs`
-**Gap.** None.
+**Gap.** Not asserted in the cited files: that an upgrade keeps existing accounts. The Base sign-in and mail-edge checks are asserted.
 
 #### COST-001 — US pricing and budgets
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Plans are priced in USD per agent seat with requesters and approvers free; model and provider spend has an owner budget in USD with unknown charges reserved; invoices carry US sales tax where applicable.
 
@@ -2572,13 +2571,13 @@ Core · target · **done**
 7. Ordinary ticket creation and public conversation remain available when discretionary model research is held.
 
 **Evidence.** `tests/intelligence/runtime.mjs`, `tests/ui/billing-browser.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that the invoice preview issues no invoice and takes no payment, that uncertain charges keep their reservation across month boundaries, and that ordinary ticket creation and public conversation continue while research is held. The budget hold, Texas invoice preview, seat price and seat counting are asserted.
 
 #### L10N-001 — US English and Spanish for employees
 
 Core · target · **missing** · Rules D-2
 
-**Requirement.** The portal, Slack and Teams messages, notifications, catalog labels, surveys and the assistant work in US English and US Spanish, chosen from the IdP or HRIS locale or the employee's preference. Admins provide Spanish catalog items, templates and articles, and the assistant drafts translations for review. Agents see each employee message with a translation, and replies to a Spanish-speaking employee are sent in Spanish, marked as machine-translated where they are.
+**Requirement.** The portal, Slack and Teams messages, notifications, catalog labels, surveys and the assistant work in US English and US Spanish, chosen from the IdP or HRIS locale or the employee's preference. Admins provide Spanish catalog items, templates and articles, and the assistant drafts their Spanish translations; the company's policy decides whether an admin reviews a drafted translation before it is used. Agents see each employee message with a translation, and replies to a Spanish-speaking employee are sent in Spanish, marked as machine-translated where they are.
 
 **Acceptance.**
 1. An employee with locale `es-US` sees the portal and Slack messages in Spanish and submits an item with Spanish labels.
@@ -2593,7 +2592,7 @@ Core · target · **missing** · Rules D-2
 
 Core · target · **done** · Rules D-2
 
-**Requirement.** Owners create a sandbox workspace from production configuration, without production personal data unless explicitly chosen and masked under SANDBOX-005. Catalog items, forms, non-provider workflows, complete SLA configuration and roles are changed and tested there. Non-provider workflows include the existing isolated team task workflows and all remaining non-provider workflow configuration. SLA scope includes policy names, first-response, next-response and resolution targets, waiting-on pauses, policy scope and ordering, business calendars and escalation rules under DESK-004 and DESK-005. Provider workflows and all connector configuration belong to SANDBOX-002; notification rules and scenarios belong to SANDBOX-003. These are retained parts of the original sandbox obligation. A promotion package lists every configuration difference across its included families. A separate current owner who contributed no edits reviews and approves it, or an explicitly owner-assigned current sandbox-admin approves under SANDBOX-004's interim rule. Sandbox and package creation and editing remain owner-only; a current owner applies promotion or rollback. Approval and application re-check current authority, non-contribution and the reviewed revisions. Self-approval, editor approval, withdrawn reviewer authority and stale production configuration refuse the whole package without partial application. Promotion applies to production as one versioned, audited configuration change, with reviewed rollback to the prior version. In-flight requests keep their configuration and SLA versions. Promotion and rollback never copy grants, secrets or records and leave production grants and secrets unchanged. Native create, edit, test, diff, approval, promotion and rollback screens cover every configuration family at 1440 and 390 px with keyboard and scope checks. Workspace restore invalidates pre-restore packages and approvals, fences use while restore is applying, and requires fresh packages afterward. Form and workflow rehearsal answers are not retained. The corresponding provider, notification, scenario, administrator approval and masked-copy acceptance remains required under SANDBOX-002, SANDBOX-003, SANDBOX-004 and SANDBOX-005. SANDBOX-001 to SANDBOX-004 preserve the complete incumbent category job: all of them inherit A1–A7 and the applicable CATALOG-001 audience/quote, DESK-004/005 SLA, DESK-015 scenario, NOTIFY-001/002 notification, ROLE-001 authority, PORT-001 restore, ERASURE-001 and RETENTION-001 rules, and any Slack or Teams surface inherits CHANNEL-001 or CHANNEL-002 (D-2). Shared infrastructure does not establish completion of a transferred family, and the split itself enables no provider action or personal-record copy.
+**Requirement.** Owners create a sandbox workspace from production configuration, without production personal data unless explicitly chosen and masked under SANDBOX-005. Catalog items, forms, non-provider workflows, complete SLA configuration and roles are changed and tested there. Non-provider workflows include the existing isolated team task workflows and all remaining non-provider workflow configuration. SLA scope includes policy names, first-response, next-response and resolution targets, waiting-on pauses, policy scope and ordering, business calendars and escalation rules under DESK-004 and DESK-005. Provider workflows and all connector configuration belong to SANDBOX-002; notification rules and scenarios belong to SANDBOX-003. These are retained parts of the original sandbox obligation. A promotion package lists every configuration difference across its included families. A separate current owner who contributed no edits reviews and approves it, or an explicitly owner-assigned current sandbox-admin approves under SANDBOX-004's interim rule. Sandbox and package creation and editing remain owner-only; a current owner applies promotion or rollback. Approval and application re-check current authority, non-contribution and the reviewed revisions. Self-approval, editor approval, withdrawn reviewer authority and stale production configuration refuse the whole package without partial application. Promotion applies to production as one versioned, audited configuration change, with reviewed rollback to the prior version. In-flight requests keep their configuration and SLA versions. Promotion and rollback never copy grants, secrets or records and leave production grants and secrets unchanged. Native create, edit, test, diff, approval, promotion and rollback screens cover every configuration family at 1440 and 390 px with keyboard and scope checks. Workspace restore invalidates pre-restore packages and approvals, fences use while restore is applying, and requires fresh packages afterward. Form and workflow rehearsal answers are not retained. The corresponding provider, notification, scenario, administrator approval and masked-copy acceptance remains required under SANDBOX-002, SANDBOX-003, SANDBOX-004 and SANDBOX-005. SANDBOX-001 to SANDBOX-004 preserve the complete incumbent category job: all of them inherit A1–A7 and the applicable CATALOG-007 audience and CATALOG-008 quote, DESK-004/005 SLA, DESK-015 scenario, NOTIFY-001/002 notification, ROLE-001 authority, PORT-001 restore, ERASURE-001 and RETENTION-001 rules, and any Slack or Teams surface inherits CHANNEL-001 or CHANNEL-002 (D-2). Shared infrastructure does not establish completion of a transferred family, and the split itself enables no provider action or personal-record copy.
 
 **Acceptance.**
 1. Create a sandbox from production configuration; edit a catalog item, its form, a non-provider workflow, SLA configuration and role configuration without changing production.
@@ -2776,7 +2775,7 @@ Core · target · **missing** · From MIGRATE-003 · Rules D-6
 
 #### MIGRATE-004 — Spreadsheet and lightweight-tool move-in
 
-Core · target · **done** · Rules D-6
+Core · target · **partial** · Rules D-6
 
 **Requirement.** CSV imports for tickets, people and assets, and importers for Zendesk (when used for IT) and Snipe-IT asset inventories. Ticket, Zendesk, people and asset CSV files are MIGRATE-008.
 
@@ -2791,11 +2790,11 @@ Core · target · **done** · Rules D-6
 8. Check-outs, assignees, models, purchase and warranty fields are not imported and the export file is not retained, so importing the same export again finds every serial already in Linen.
 
 **Evidence.** `tests/adoption/snipeit-import-cases.mjs`, `tests/adoption/freshservice-import.mjs`, `tests/adoption/lightweight-import-cases.mjs`, `tests/ui/lightweight-import-journey.mjs`, `tests/ui/browser.mjs`
-**Gap.** None.
+**Gap.** Not asserted: the 2 MiB and 1,000-row file bounds and the unique-asset-tag rule. Dry-run counts, conflicts and omissions, skip-only existing serials, fingerprinted apply, custody events and re-import are asserted.
 
 #### MIGRATE-008 — Ticket, Zendesk, people and asset CSV move-in
 
-Core · target · **done** · From MIGRATE-004 · Rules D-6
+Core · target · **partial** · From MIGRATE-004 · Rules D-6
 
 **Requirement.** The existing current-owner, A1 restricted-history and A6 inert-import rules also govern the CSV and Zendesk doors (D-6). Saved files cannot establish source completeness. Supported file schemas, bounds and omissions are documented in [the adoption API reference](src/features/adoption/API.md); these doors use no live provider credentials.
 
@@ -2810,7 +2809,7 @@ Core · target · **done** · From MIGRATE-004 · Rules D-6
 8. Related erasure refuses unsanitized replay.
 
 **Evidence.** `tests/adoption/snipeit-import-cases.mjs`, `tests/adoption/freshservice-import.mjs`, `tests/adoption/lightweight-import-cases.mjs`, `tests/ui/lightweight-import-journey.mjs`, `tests/ui/browser.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that undo refuses later native changes and that people and asset CSV files are not retained. Ticket CSV and Zendesk fields, paused restricted tickets, resumable imports, people and asset CSV custody, fingerprinted apply and erasure-refused replay are asserted.
 
 #### MIGRATE-005 — Coexistence and cutover
 
@@ -2906,7 +2905,7 @@ Core · push-further · **partial** · Rules D-7
 
 #### AGENT-006 — Measure human work saved
 
-Core · push-further · **done** · Rules D-7
+Core · push-further · **partial** · Rules D-7
 
 **Requirement.** The agent reports total human touches and minutes, model/provider cost and failures per verified outcome for each request type over time, and names the next most valuable automation by work saved, not tickets closed. The owner chooses the cohort and comparison period.
 
@@ -2919,7 +2918,7 @@ Core · push-further · **done** · Rules D-7
 6. Its audience is REPORT-004's: the owner, operators and auditors read the same ranking and evidence, including cost at the declared role rates.
 
 **Evidence.** `src/features/work/automation-proposal.ts`, `tests/work/work-saved-cases.mjs`, `tests/ui/time-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a type with no verified outcome in the current window is listed as not enough evidence and never ranked, and that the proposal authorizes nothing. Ranking, realized saving, cohort choice and the shared audience are asserted.
 
 #### AGENT-007 — Mine ticket history for automations
 

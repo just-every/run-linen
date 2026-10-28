@@ -90,7 +90,7 @@ export function Composer({
       catch { setDraftError(true); }
     }
   }
-  // DESK-001: r writes a shared reply and n a private note on the open ticket.
+  // DESK-018: r writes a shared reply and n a private note on the open ticket.
   useTriage(workId, (action) => {
     if (action !== "reply" && action !== "note") return;
     updateDraft(body, action === "note" && privateAllowed ? "private" : "public");

@@ -117,7 +117,7 @@ export async function describeObligations(ctx: WorkContext, workId: string, rows
   return Promise.all(rows.map(async row => {
     const { catalog_id, after_json, lifecycle_id, ...visible } = row;
     if (row.kind !== 'task.manual') return { ...visible, can_waive: canAct && mayWaive(ctx, row) && waivable(row) };
-    // LIFE-002: a template task of a lifecycle record is done by its team or named person and waived by the owner.
+    // LIFE-008: a template task of a lifecycle record is done by its team or named person and waived by the owner.
     if (lifecycle_id) return { ...visible, group_name: staff ? groups.get(row.group_id) ?? null : undefined, waiting_for: [],
       can_complete: canAct && row.state === 'pending' && await mayDoTask(ctx, row), can_waive: canAct && row.state === 'pending' && ctx.principal.roles.includes('owner'), lifecycle_task: true };
     const waitingFor = (JSON.parse(after_json || '[]') as string[]).filter(dep => !['verified', 'done', 'waived'].includes(state.get(dep) ?? '')).map(dep => titles.get(dep) ?? 'An earlier step');

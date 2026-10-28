@@ -141,7 +141,7 @@ export async function changeCalendar(env: Env, principal: Principal, from: unkno
     }
     if (blocked) warnings.push({ changeId: change.id, code: 'calendar_blocked', message: 'This change has a calendar conflict requiring an authorized operator.' });
   }
-  // CHANGE-007: releases share this calendar, spanning their member changes' windows.
+  // CHANGE-011: releases share this calendar, spanning their member changes' windows.
   const releaseRows = await env.DB.prepare("SELECT * FROM svc_records WHERE workspace_id=? AND kind='release' ORDER BY created_at,id")
     .bind(p.workspaceId).all<RecordRow>();
   const releases: ServiceRecord[] = [];

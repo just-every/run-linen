@@ -12,7 +12,7 @@ export interface FulfilmentDecision {
   holderId:string; holderName:string; state:'needs_approval'; reason:string;
   /** CATALOG-004: set when the item is a bundle child; bundle children are approved together. */
   bundleName:string|null;
-  /** The frozen vendor quote the current approver may read (CATALOG-001), never its amount. */
+  /** The frozen vendor quote the current approver may read (CATALOG-008), never its amount. */
   approvalTimer:{sla_at:string|null;reminded_at:string|null;breached_at:string|null}|null;
   quote:{id:string;name:string;size:number;sha256:string}|null;
 }

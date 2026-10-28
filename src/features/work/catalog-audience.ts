@@ -6,7 +6,7 @@ import { permit, type WorkContext } from './core';
 
 export const dimensions = ['department', 'location', 'employmentType'] as const;
 export type Dimension = typeof dimensions[number];
-/** Reviewed person facts also carry a title; an item audience never does (CATALOG-001). */
+/** Reviewed person facts also carry a title; an item audience never does (CATALOG-007). */
 export const attributeDimensions = [...dimensions, 'title'] as const;
 export type AttributeDimension = typeof attributeDimensions[number];
 export type Audience = Record<Dimension, string[]>;

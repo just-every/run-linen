@@ -13,7 +13,7 @@ export type CatalogForm = {
   fields: CatalogField[]
   costCents: number | null
   deliveryHours: number | null
-  /** A vendor quote PDF is required to submit (CATALOG-001); Linen never reads its amount. */
+  /** A vendor quote PDF is required to submit (CATALOG-008); Linen never reads its amount. */
   quoteRequired: boolean
 }
 

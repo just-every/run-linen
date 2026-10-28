@@ -13,7 +13,7 @@ import { managerHolder, managerStageAuthority, prepareFulfilmentApproval } from 
 import { personForMember } from './person-binding';
 
 /**
- * CATALOG-002: an approver may decide by replying "approve" or "reject" to the approval email. A reply counts only from
+ * CATALOG-011: an approver may decide by replying "approve" or "reject" to the approval email. A reply counts only from
  * the approver's own address, authenticated (SPF, DKIM and DMARC pass and aligned with that address), carrying the
  * approval's single-use token, and only for the request revision the email was sent for. The receiving adapter supplies
  * the authentication verdicts; Linen refuses anything it cannot attribute. The email carries only configured item/stage labels and a request reference, never

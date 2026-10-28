@@ -484,7 +484,7 @@ export async function transitionWork(
     throw new ApiError(409,'pending_person_withdrawn','Withdrawn pending people cannot resume requests');
   if (command === "close") await assertCloseable(ctx, workId);
   const t = now();
-  // DESK-010: the close notes are this close's reason; an incident also needs a resolution code.
+  // DESK-023: the close notes are this close's reason; an incident also needs a resolution code.
   const resolution = command === "close" ? await closeResolution(ctx, work, desk.resolutionCode, reason, t) : null;
   const priorPause=await ctx.env.DB.prepare('SELECT waiting_on,status_id FROM work_sla_pauses WHERE workspace_id=? AND work_id=? AND resumed_at IS NULL ORDER BY paused_at DESC LIMIT 1').bind(ctx.principal.workspaceId,workId).first<{waiting_on:string|null;status_id:string|null}>();
   const priorResolution=await ctx.env.DB.prepare('SELECT code,close_notes FROM work_resolutions WHERE workspace_id=? AND work_id=?').bind(ctx.principal.workspaceId,workId).first<{code:string|null;close_notes:string|null}>();

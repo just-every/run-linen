@@ -72,5 +72,6 @@ jobs:
           test "$(cat "$sandbox_work/probe")" = ok
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec rer check --profile first-party
+      - run: node src/base/contract-docs.mjs check
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec rer verify

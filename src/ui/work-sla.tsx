@@ -48,7 +48,7 @@ export function WorkSla({ workId }: { workId: string }) {
 }
 
 interface Followup { id: string; kind: string; level: number; label: string; notify_name: string | null; state: string; next_due_at: string | null; fired_at: string | null; stop_reason: string | null }
-/** DESK-005: each persisted escalation and requester reminder with its next due time, firing or stop reason. */
+/** DESK-005 and DESK-021: each persisted escalation and requester reminder with its next due time, firing or stop reason. */
 function WorkFollowups({ workId, zone }: { workId: string; zone: string }) {
   const remote = useRemote<{ items: Followup[] }>(`/work/${encodeURIComponent(workId)}/followups`, 30000);
   if (!remote.data?.items.length) return null;

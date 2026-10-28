@@ -1361,24 +1361,23 @@
       "file": "CONTRACT.md",
       "line": 190,
       "text": "*Binding Slack intake and delivery rule (ct, 20 October 18:40Z):* setup",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-1"
+        "CHANNEL-010"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-1"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 191,
-      "text": "requires the app signing secret and refuses without it.",
-      "to": "rulings",
-      "ids": [
-        "RL-1"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 191,
-      "text": "Intake checks, in",
+      "text": "requires the app signing secret and refuses without it. Intake checks, in",
       "to": "clause",
       "ids": [
         "CHANNEL-010"
@@ -1586,51 +1585,112 @@
       "to": "rulings",
       "ids": [
         "RL-1"
+      ],
+      "also": [
+        {
+          "to": "section",
+          "section": "Status"
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 203,
-      "text": "unchanged until both native fixture and real adapter proof pass. Every future",
+      "text": "unchanged until both native fixture and real adapter proof pass.",
       "to": "rulings",
       "ids": [
         "RL-1"
+      ],
+      "also": [
+        {
+          "to": "section",
+          "section": "Status"
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 203,
+      "text": "Every future",
+      "to": "door-rule",
+      "ids": [
+        "D-2"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-1"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 204,
       "text": "Slack delivery or action inherits this rule before shipping, including",
-      "to": "rulings",
+      "to": "door-rule",
       "ids": [
-        "RL-1"
+        "D-2"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-1"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 205,
       "text": "CHANNEL-006, CHANNEL-008, DESK-007, DESK-009, NOTIFY-001, NOTIFY-002, ACCESS-007,",
-      "to": "rulings",
+      "to": "door-rule",
       "ids": [
-        "RL-1"
+        "D-2"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-1"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 206,
       "text": "LIFE-002, KB-003, KB-005, API-002 and L10N-001. A display name in a Slack reply",
-      "to": "rulings",
+      "to": "door-rule",
       "ids": [
-        "RL-1"
+        "D-2"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-1"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 207,
       "text": "needs a further ct ruling; it is not an exception to the notice-only rule.",
-      "to": "rulings",
+      "to": "door-rule",
       "ids": [
-        "RL-1"
+        "D-2"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-1"
+          ]
+        }
       ]
     },
     {
@@ -2279,6 +2339,12 @@
       "to": "clause",
       "ids": [
         "CHANNEL-004"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/adopted-defaults.md"
+        }
       ]
     },
     {
@@ -2288,6 +2354,12 @@
       "to": "clause",
       "ids": [
         "CHANNEL-004"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/adopted-defaults.md"
+        }
       ]
     },
     {
@@ -2297,12 +2369,33 @@
       "to": "clause",
       "ids": [
         "CHANNEL-004"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/adopted-defaults.md"
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 288,
-      "text": "PNG, JPEG or WebP of at most 150 KB (never SVG). The logo is served without a",
+      "text": "PNG, JPEG or WebP of at most 150 KB (never SVG).",
+      "to": "clause",
+      "ids": [
+        "CHANNEL-004"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/adopted-defaults.md"
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 288,
+      "text": "The logo is served without a",
       "to": "clause",
       "ids": [
         "CHANNEL-004"
@@ -2942,24 +3035,23 @@
       "file": "CONTRACT.md",
       "line": 367,
       "text": "*Today's semantic (ct, 20 October 20:20Z):* an owner-managed requester group",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-2"
+        "CHANNEL-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-2"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 368,
-      "text": "defines a cohort.",
-      "to": "rulings",
-      "ids": [
-        "RL-2"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 368,
-      "text": "A current owner or operator publishes against an incident or",
+      "text": "defines a cohort. A current owner or operator publishes against an incident or",
       "to": "clause",
       "ids": [
         "CHANNEL-008"
@@ -3197,7 +3289,7 @@
     {
       "file": "CONTRACT.md",
       "line": 382,
-      "text": "cadence without inventing a fresh human progress update.",
+      "text": "cadence without inventing a fresh human progress update. Email uses a selected",
       "to": "clause",
       "ids": [
         "CHANNEL-008"
@@ -3209,39 +3301,29 @@
             "RL-2"
           ]
         }
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 382,
-      "text": "Email uses a selected",
-      "to": "rulings",
-      "ids": [
-        "RL-2"
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 383,
       "text": "active SendGrid connection; provider acceptance is distinct from delivery and",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-2"
+        "CHANNEL-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-2"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 384,
-      "text": "an uncertain send is not automatically repeated.",
-      "to": "rulings",
-      "ids": [
-        "RL-2"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 384,
-      "text": "Restored historical sources",
+      "text": "an uncertain send is not automatically repeated. Restored historical sources",
       "to": "clause",
       "ids": [
         "CHANNEL-008"
@@ -3258,7 +3340,7 @@
     {
       "file": "CONTRACT.md",
       "line": 385,
-      "text": "do not publish notices.",
+      "text": "do not publish notices. Slack and Teams delivery remain required under",
       "to": "clause",
       "ids": [
         "CHANNEL-008"
@@ -3270,24 +3352,23 @@
             "RL-2"
           ]
         }
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 385,
-      "text": "Slack and Teams delivery remain required under",
-      "to": "rulings",
-      "ids": [
-        "RL-2"
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 386,
       "text": "CHANNEL-001 and CHANNEL-002 and are not implemented in this slice.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-2"
+        "CHANNEL-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-2"
+          ]
+        }
       ]
     },
     {
@@ -3393,33 +3474,40 @@
       "file": "CONTRACT.md",
       "line": 399,
       "text": "*Today's semantic (ct, 20 October):* the requester or the person a normal",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-3"
+        "CHANNEL-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-3"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 400,
       "text": "request is for shares it by a colleague's work email with a current workspace",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-3"
+        "CHANNEL-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-3"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 401,
-      "text": "member.",
-      "to": "rulings",
-      "ids": [
-        "RL-3"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 401,
-      "text": "A shared colleague reads and replies to the public thread only: never",
+      "text": "member. A shared colleague reads and replies to the public thread only: never",
       "to": "clause",
       "ids": [
         "CHANNEL-009"
@@ -3505,60 +3593,91 @@
       "file": "CONTRACT.md",
       "line": 406,
       "text": "A request filed on behalf of someone shows to the submitter and the person it",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-3"
+        "CHANNEL-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-3"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 407,
       "text": "is for (filing for someone else is the service team's or HR's today).",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-3"
+        "CHANNEL-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-3"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 408,
       "text": "\"My team's requests\" lists, read-only, the public thread of normal requests",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-3"
+        "CHANNEL-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-3"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 409,
       "text": "for a manager's direct and indirect reports, following each person's current",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-3"
+        "CHANNEL-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-3"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 410,
       "text": "manager on their reviewed HR-fact record at read time, so an HR change moves",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-3"
+        "CHANNEL-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-3"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 411,
-      "text": "visibility at once;",
-      "to": "rulings",
-      "ids": [
-        "RL-3"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 411,
-      "text": "HR and restricted requests and private notes are never",
+      "text": "visibility at once; HR and restricted requests and private notes are never",
       "to": "clause",
       "ids": [
         "CHANNEL-009"
@@ -3962,24 +4081,23 @@
       "file": "CONTRACT.md",
       "line": 451,
       "text": "*Approved audience and quote semantic (ct, 21 October):* only the",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 452,
-      "text": "owner configures versioned catalog audience and quote requirements.",
-      "to": "rulings",
-      "ids": [
-        "RL-4"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 452,
-      "text": "Reviewed",
+      "text": "owner configures versioned catalog audience and quote requirements. Reviewed",
       "to": "clause",
       "ids": [
         "CATALOG-007"
@@ -4064,7 +4182,7 @@
     {
       "file": "CONTRACT.md",
       "line": 457,
-      "text": "LIFE-001 later uses an owner-reviewed source mapping.",
+      "text": "LIFE-001 later uses an owner-reviewed source mapping. Unbound, inactive,",
       "to": "clause",
       "ids": [
         "CATALOG-007"
@@ -4080,44 +4198,42 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 457,
-      "text": "Unbound, inactive,",
-      "to": "rulings",
-      "ids": [
-        "RL-4"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 458,
       "text": "merged, erased, absent or unmapped facts are unknown, without age expiry.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 459,
       "text": "Matching is OR within each dimension, AND across dimensions, empty means",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 460,
-      "text": "unrestricted and unknown fails a restricted dimension.",
-      "to": "rulings",
-      "ids": [
-        "RL-4"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 460,
-      "text": "Every filer, including",
+      "text": "unrestricted and unknown fails a restricted dimension. Every filer, including",
       "to": "clause",
       "ids": [
         "CATALOG-007"
@@ -4186,96 +4302,184 @@
       "file": "CONTRACT.md",
       "line": 464,
       "text": "Submission atomically rechecks current filer membership/role, evaluated person",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 465,
       "text": "revision, item revision, audience, conditional required answers and a quote",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 466,
       "text": "revision/hash. Audience gates submission, not later approval or fulfillment;",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 467,
       "text": "an amendment is a fresh submission and invalidates prior approvals. Freeze",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 468,
       "text": "item/form/answers, cost/delivery, audience/person revisions and quote id/hash.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 469,
       "text": "Quote attachments are a separate `catalog_quote` kind, PDF up to 20 MiB,",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        },
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 470,
-      "text": "immutable after submission; replacement is an amendment. Readers are the",
-      "to": "rulings",
+      "text": "immutable after submission; replacement is an amendment.",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        },
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 470,
+      "text": "Readers are the",
+      "to": "clause",
+      "ids": [
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 471,
       "text": "requester, beneficiary, owner, current approver for the current revision,",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 472,
       "text": "an approver who recorded a decision on that quote revision, and the current",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 473,
-      "text": "item fulfillment owner.",
-      "to": "rulings",
-      "ids": [
-        "RL-4"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 473,
-      "text": "A replaced undecided approver loses access. All other",
+      "text": "item fulfillment owner. A replaced undecided approver loses access. All other",
       "to": "clause",
       "ids": [
         "CATALOG-008"
@@ -4310,105 +4514,210 @@
       "file": "CONTRACT.md",
       "line": 475,
       "text": "Non-readers see only that a quote is attached, never name/content; serve it",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 476,
       "text": "as a download, not inline. Exclude quote contents from search, history,",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 477,
       "text": "notifications and AI context; include them in owner export, erasure and",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 478,
-      "text": "retention. Audit privileged reads except requester/beneficiary, uploads and",
-      "to": "rulings",
+      "text": "retention.",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 478,
+      "text": "Audit privileged reads except requester/beneficiary, uploads and",
+      "to": "clause",
+      "ids": [
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 479,
       "text": "replacement, item/value-list edits, dimension-only attribute reviews and",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 480,
-      "text": "audience refusals, with no attribute values. No PDF amount extraction: the",
-      "to": "rulings",
+      "text": "audience refusals, with no attribute values.",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 480,
+      "text": "No PDF amount extraction: the",
+      "to": "clause",
+      "ids": [
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 481,
       "text": "requester enters a separate USD field when price-based routing needs it.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 482,
       "text": "Bundles refuse atomically with every failing child named. Pending people",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 483,
       "text": "use their reviewed attributes at hold and release; failed services remain",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 484,
       "text": "held with a visible reason. Assistant choices recheck eligibility and refuse",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-4"
+        "CATALOG-009"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 485,
-      "text": "missing required fields/quotes.",
-      "to": "rulings",
-      "ids": [
-        "RL-4"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 485,
-      "text": "Credentials, quotes and forms grant no",
+      "text": "missing required fields/quotes. Credentials, quotes and forms grant no",
       "to": "clause",
       "ids": [
         "CATALOG-009"
@@ -4460,36 +4769,98 @@
       "file": "CONTRACT.md",
       "line": 488,
       "text": "Refusals use `catalog_audience` (403, staff see failed dimensions but no",
-      "to": "rulings",
-      "ids": [
-        "RL-4"
+      "to": "docs",
+      "path": "docs/contract/mechanism.md",
+      "also": [
+        {
+          "to": "clause",
+          "ids": [
+            "CATALOG-007"
+          ]
+        },
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 489,
       "text": "values), `catalog_changed` (409), `catalog_quote_required` and",
-      "to": "rulings",
-      "ids": [
-        "RL-4"
+      "to": "docs",
+      "path": "docs/contract/mechanism.md",
+      "also": [
+        {
+          "to": "clause",
+          "ids": [
+            "CATALOG-007"
+          ]
+        },
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 490,
       "text": "`catalog_quote_type` (422), `catalog_field_required` (422, named question),",
-      "to": "rulings",
-      "ids": [
-        "RL-4"
+      "to": "docs",
+      "path": "docs/contract/mechanism.md",
+      "also": [
+        {
+          "to": "clause",
+          "ids": [
+            "CATALOG-007"
+          ]
+        },
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 491,
-      "text": "and `bundle_child_refused` (one line per failed child). This complete rule",
+      "text": "and `bundle_child_refused` (one line per failed child).",
+      "to": "docs",
+      "path": "docs/contract/mechanism.md",
+      "also": [
+        {
+          "to": "clause",
+          "ids": [
+            "CATALOG-007"
+          ]
+        },
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-4"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 491,
+      "text": "This complete rule",
       "to": "rulings",
       "ids": [
         "RL-4"
+      ],
+      "also": [
+        {
+          "to": "changelog"
+        }
       ]
     },
     {
@@ -4499,6 +4870,11 @@
       "to": "rulings",
       "ids": [
         "RL-4"
+      ],
+      "also": [
+        {
+          "to": "changelog"
+        }
       ]
     },
     {
@@ -4736,22 +5112,46 @@
       "file": "CONTRACT.md",
       "line": 519,
       "text": "The requester or beneficiary attaches the PDF",
-      "to": "docs",
-      "path": "docs/contract/mechanism.md"
+      "to": "clause",
+      "ids": [
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
+      ]
     },
     {
       "file": "CONTRACT.md",
       "line": 520,
       "text": "(`POST /work/:id/catalog-quote`, PDF magic bytes, `application/pdf`, at most",
-      "to": "docs",
-      "path": "docs/contract/mechanism.md"
+      "to": "clause",
+      "ids": [
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
+      ]
     },
     {
       "file": "CONTRACT.md",
       "line": 521,
       "text": "20 MiB; a later upload replaces an unsubmitted one) before submitting.",
-      "to": "docs",
-      "path": "docs/contract/mechanism.md"
+      "to": "clause",
+      "ids": [
+        "CATALOG-008"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
+      ]
     },
     {
       "file": "CONTRACT.md",
@@ -6671,33 +7071,40 @@
       "file": "CONTRACT.md",
       "line": 736,
       "text": "*Today's semantic (ct, 20 October):* the owner (acting for \"admin\" until that",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-6"
+        "DESK-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 737,
       "text": "role exists) creates agent groups, adds active agents (owner or operator",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-6"
+        "DESK-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 738,
-      "text": "members) and names each group's leads.",
-      "to": "rulings",
-      "ids": [
-        "RL-6"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 738,
-      "text": "Each ticket has one accountable group",
+      "text": "members) and names each group's leads. Each ticket has one accountable group",
       "to": "clause",
       "ids": [
         "DESK-001"
@@ -6918,7 +7325,7 @@
     {
       "file": "CONTRACT.md",
       "line": 751,
-      "text": "removes it.",
+      "text": "removes it. The bulk-update screen applies one command (assign, pause, resume",
       "to": "clause",
       "ids": [
         "DESK-001"
@@ -6934,38 +7341,53 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 751,
-      "text": "The bulk-update screen applies one command (assign, pause, resume",
-      "to": "rulings",
-      "ids": [
-        "RL-6"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 752,
       "text": "or close) to the tickets an agent chooses from the current view through",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-6"
+        "DESK-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 753,
       "text": "`POST /work/bulk-commands`, which changes or refuses each ticket on its own",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-6"
+        "DESK-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 754,
       "text": "under the single-ticket rules and reports both counts.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-6"
+        "DESK-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
       ]
     },
     {
@@ -6988,7 +7410,7 @@
     {
       "file": "CONTRACT.md",
       "line": 755,
-      "text": "outside text fields:",
+      "text": "outside text fields: `j`/`k` open the next/previous ticket of the current",
       "to": "clause",
       "ids": [
         "DESK-018"
@@ -7004,47 +7426,81 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 755,
-      "text": "`j`/`k` open the next/previous ticket of the current",
-      "to": "rulings",
-      "ids": [
-        "RL-6"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 756,
       "text": "view, `a` assigns the open ticket to oneself, `r` writes a shared reply, `n` a",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-6"
+        "DESK-018"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 757,
       "text": "private note, `s` pauses or resumes it, `c` closes it, Ctrl/\u2318+Enter sends the",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-6"
+        "DESK-018"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 758,
-      "text": "field's form, Escape leaves a field and `?` shows the shortcut reference. Done",
-      "to": "rulings",
+      "text": "field's form, Escape leaves a field and `?` shows the shortcut reference.",
+      "to": "clause",
       "ids": [
-        "RL-6"
+        "DESK-018"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 758,
+      "text": "Done",
+      "to": "changelog",
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 759,
       "text": "for every triage action that exists today;",
-      "to": "rulings",
-      "ids": [
-        "RL-6"
+      "to": "changelog",
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-6"
+          ]
+        }
       ]
     },
     {
@@ -9201,24 +9657,23 @@
       "file": "CONTRACT.md",
       "line": 997,
       "text": "*Current implementation, owner-only administration default (ct approved as landed, 22 October):*",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-9"
+        "DESK-011"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-9"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 998,
-      "text": "department workspaces are internal to the existing Linen installation.",
-      "to": "rulings",
-      "ids": [
-        "RL-9"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 998,
-      "text": "The",
+      "text": "department workspaces are internal to the existing Linen installation. The",
       "to": "clause",
       "ids": [
         "DESK-011"
@@ -10167,19 +10622,13 @@
       "file": "CONTRACT.md",
       "line": 1100,
       "text": "Watchers inherit",
-      "to": "clause",
-      "ids": [
-        "DESK-015"
-      ]
+      "to": "changelog"
     },
     {
       "file": "CONTRACT.md",
       "line": 1101,
       "text": "from DESK-007 and native mobile from CHANNEL-005 before they ship.",
-      "to": "clause",
-      "ids": [
-        "DESK-015"
-      ]
+      "to": "changelog"
     },
     {
       "file": "CONTRACT.md",
@@ -10955,33 +11404,40 @@
       "file": "CONTRACT.md",
       "line": 1193,
       "text": "*Erasure semantic (ct, 20 October):* the following approved retained-value rule",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-10"
+        "DESK-028"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-10"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1194,
       "text": "is an implementation obligation, not a claim that value preservation exists",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-10"
+        "DESK-028"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-10"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1195,
-      "text": "today.",
-      "to": "rulings",
-      "ids": [
-        "RL-10"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 1195,
-      "text": "Until it is built and proven, the existing blanket clearing stays.",
+      "text": "today. Until it is built and proven, the existing blanket clearing stays.",
       "to": "clause",
       "ids": [
         "DESK-028"
@@ -11202,16 +11658,7 @@
     {
       "file": "CONTRACT.md",
       "line": 1208,
-      "text": "(c) Keep each scrubbed entry marked `redacted: erasure`.",
-      "to": "rulings",
-      "ids": [
-        "RL-10"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 1208,
-      "text": "Erased-person",
+      "text": "(c) Keep each scrubbed entry marked `redacted: erasure`. Erased-person",
       "to": "clause",
       "ids": [
         "DESK-028"
@@ -11280,54 +11727,102 @@
       "file": "CONTRACT.md",
       "line": 1212,
       "text": "(d) If an HR or restricted record's subject is erased, scrub category, type,",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-10"
+        "DESK-028"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-10"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1213,
       "text": "service and all custom values too: only state, priority, SLA and timing remain.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-10"
+        "DESK-028"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-10"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1214,
       "text": "(e) For registered actions, touch only entries where that person is actor,",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-10"
+        "DESK-028"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-10"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1215,
       "text": "requester/beneficiary or a value; leave unrelated people's history unchanged.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-10"
+        "DESK-028"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-10"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1216,
       "text": "(f) Already-cleared entries remain cleared, showing \"values removed by an",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-10"
+        "DESK-028"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-10"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1217,
       "text": "erasure on <date>\"; never rebuild them from records, archives, imports or replay.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-10"
+        "DESK-028"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-10"
+          ]
+        }
       ]
     },
     {
@@ -14615,7 +15110,7 @@
     {
       "file": "CONTRACT.md",
       "line": 1602,
-      "text": "A line has at most one open (raised or ordered) request.",
+      "text": "A line has at most one open (raised or ordered) request. Linen labels a",
       "to": "clause",
       "ids": [
         "ASSET-005"
@@ -14631,35 +15126,25 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 1602,
-      "text": "Linen labels a",
-      "to": "rulings",
-      "ids": [
-        "RL-13"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 1603,
       "text": "raised request \"raised in Linen, not sent\": no Purse or vendor connector",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-13"
+        "ASSET-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-13"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1604,
-      "text": "sends it yet.",
-      "to": "rulings",
-      "ids": [
-        "RL-13"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 1604,
-      "text": "The owner or operator records the order placed with the buyer",
+      "text": "sends it yet. The owner or operator records the order placed with the buyer",
       "to": "clause",
       "ids": [
         "ASSET-005"
@@ -14710,7 +15195,7 @@
     {
       "file": "CONTRACT.md",
       "line": 1607,
-      "text": "evidence.",
+      "text": "evidence. Sending to Purse through its requester intake door (Purse",
       "to": "clause",
       "ids": [
         "ASSET-005"
@@ -14726,38 +15211,53 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 1607,
-      "text": "Sending to Purse through its requester intake door (Purse",
-      "to": "rulings",
-      "ids": [
-        "RL-13"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 1608,
       "text": "INTAKE-004, an owner-created integration token) remains this clause's gap,",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-13"
+        "ASSET-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-13"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1609,
       "text": "under the egress rule for the owner-entered Purse origin; CDW, Apple",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-13"
+        "ASSET-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-13"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1610,
       "text": "Business and Dell connectors inherit transmission before they ship.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-13"
+        "ASSET-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-13"
+          ]
+        }
       ]
     },
     {
@@ -16245,24 +16745,23 @@
       "file": "CONTRACT.md",
       "line": 1789,
       "text": "Under the ct-approved aggregation rule (19 October 2026), normal-source",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-14"
+        "PROB-003"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-14"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 1790,
-      "text": "proposals use existing operator visibility.",
-      "to": "rulings",
-      "ids": [
-        "RL-14"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 1790,
-      "text": "Restricted sources are clustered",
+      "text": "proposals use existing operator visibility. Restricted sources are clustered",
       "to": "clause",
       "ids": [
         "PROB-003"
@@ -19667,45 +20166,85 @@
       "file": "CONTRACT.md",
       "line": 2184,
       "text": "**Approved initial boundary (ct, 23 October 11:28Z):** current-owner",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-17"
+        "ROLE-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-17"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2185,
       "text": "administration and public-ticket reading in one active non-HR department add",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-17"
+        "ROLE-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-17"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2186,
       "text": "no staff actions, private notes, attachments, quotes, catalog eligibility or",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-17"
+        "ROLE-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-17"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2187,
       "text": "approval authority. Revocation applies on the next request; restored assignments",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-17"
+        "ROLE-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-17"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2188,
       "text": "stay inactive until re-confirmed. This is an interim floor, not the target.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-17"
+        "ROLE-001"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-17"
+          ]
+        }
       ]
     },
     {
@@ -20192,8 +20731,16 @@
       "file": "CONTRACT.md",
       "line": 2241,
       "text": "REST tokens authorize `/api/v1/*` only and are refused by API-003.",
-      "to": "docs",
-      "path": "docs/contract/mechanism.md"
+      "to": "clause",
+      "ids": [
+        "API-004"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
+      ]
     },
     {
       "file": "CONTRACT.md",
@@ -20235,22 +20782,46 @@
       "file": "CONTRACT.md",
       "line": 2247,
       "text": "This release exposes only `work.create`: `POST /api/v1/work` files a normal",
-      "to": "docs",
-      "path": "docs/contract/mechanism.md"
+      "to": "clause",
+      "ids": [
+        "API-004"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
+      ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2248,
       "text": "ticket for the principal itself, with title, body, kind and a stable",
-      "to": "docs",
-      "path": "docs/contract/mechanism.md"
+      "to": "clause",
+      "ids": [
+        "API-004"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
+      ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2249,
       "text": "deduplication key.",
-      "to": "docs",
-      "path": "docs/contract/mechanism.md"
+      "to": "clause",
+      "ids": [
+        "API-004"
+      ],
+      "also": [
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
+      ]
     },
     {
       "file": "CONTRACT.md",
@@ -20702,34 +21273,50 @@
     {
       "file": "CONTRACT.md",
       "line": 2298,
-      "text": "implemented. An MCP grant has",
+      "text": "implemented.",
       "to": "rulings",
       "ids": [
         "RL-18"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 2298,
+      "text": "An MCP grant has",
+      "to": "clause",
+      "ids": [
+        "API-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-18"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2299,
       "text": "its own audience: a REST token is refused at MCP and an MCP credential is",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-18"
+        "API-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-18"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2300,
-      "text": "refused on `/api/v1/*`; no secret serves both.",
-      "to": "rulings",
-      "ids": [
-        "RL-18"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2300,
-      "text": "Only an owner mints one for an",
+      "text": "refused on `/api/v1/*`; no secret serves both. Only an owner mints one for an",
       "to": "clause",
       "ids": [
         "API-005"
@@ -20933,7 +21520,7 @@
     {
       "file": "CONTRACT.md",
       "line": 2311,
-      "text": "recheck at commit with revision checks.",
+      "text": "recheck at commit with revision checks. Exclude HR and restricted records.",
       "to": "clause",
       "ids": [
         "API-006"
@@ -20949,20 +21536,19 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 2311,
-      "text": "Exclude HR and restricted records.",
-      "to": "rulings",
-      "ids": [
-        "RL-18"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 2312,
       "text": "Ticket text is data, never authority.",
-      "to": "rulings",
+      "to": "base",
       "ids": [
-        "RL-18"
+        "BASE-AGENT-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-18"
+          ]
+        }
       ]
     },
     {
@@ -21019,16 +21605,7 @@
     {
       "file": "CONTRACT.md",
       "line": 2315,
-      "text": "Future external-effect tools need A2 grants with human approvals.",
-      "to": "rulings",
-      "ids": [
-        "RL-18"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2315,
-      "text": "Minting",
+      "text": "Future external-effect tools need A2 grants with human approvals. Minting",
       "to": "clause",
       "ids": [
         "API-003"
@@ -21117,6 +21694,11 @@
       "to": "rulings",
       "ids": [
         "RL-18"
+      ],
+      "also": [
+        {
+          "to": "changelog"
+        }
       ]
     },
     {
@@ -21139,7 +21721,7 @@
     {
       "file": "CONTRACT.md",
       "line": 2321,
-      "text": "credential and clears its hash.",
+      "text": "credential and clears its hash. Export carries credential metadata without",
       "to": "clause",
       "ids": [
         "API-005"
@@ -21155,20 +21737,19 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 2321,
-      "text": "Export carries credential metadata without",
-      "to": "rulings",
-      "ids": [
-        "RL-18"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 2322,
       "text": "its hash; restore leaves it revoked and inert until freshly minted.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-18"
+        "API-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-18"
+          ]
+        }
       ]
     },
     {
@@ -21209,18 +21790,34 @@
       "file": "CONTRACT.md",
       "line": 2324,
       "text": "MCP may",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-18"
+        "API-003"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-18"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2325,
       "text": "reuse API-001's future principal/scope checker, never its secret or audience.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-18"
+        "API-003"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-18"
+          ]
+        }
       ]
     },
     {
@@ -21423,7 +22020,7 @@
     {
       "file": "CONTRACT.md",
       "line": 2341,
-      "text": "credential state/expiry and issuing owner still active as owner.",
+      "text": "credential state/expiry and issuing owner still active as owner. Losing that",
       "to": "clause",
       "ids": [
         "API-006"
@@ -21439,35 +22036,25 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 2341,
-      "text": "Losing that",
-      "to": "rulings",
-      "ids": [
-        "RL-19"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 2342,
       "text": "issuer returns `mcp_issuer_inactive`, revokes the credential and audits it;",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-19"
+        "API-006"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2343,
-      "text": "another owner re-mints.",
-      "to": "rulings",
-      "ids": [
-        "RL-19"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2343,
-      "text": "Own normal work.create tickets are additionally",
+      "text": "another owner re-mints. Own normal work.create tickets are additionally",
       "to": "clause",
       "ids": [
         "API-006"
@@ -21638,18 +22225,42 @@
       "file": "CONTRACT.md",
       "line": 2353,
       "text": "Missing, out-of-grant, HR and restricted tickets all return `not_found`,",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-19"
+        "API-006"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        },
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2354,
       "text": "audited with a refusal code.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-19"
+        "API-006"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        },
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
       ]
     },
     {
@@ -21758,33 +22369,57 @@
       "file": "CONTRACT.md",
       "line": 2359,
       "text": "Restore keeps grants/credentials revoked",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-19"
+        "API-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2360,
-      "text": "and inert. Audit mint group ids, versioned `mcp.queue_grant_narrowed`, issuer",
-      "to": "rulings",
+      "text": "and inert.",
+      "to": "clause",
       "ids": [
-        "RL-19"
+        "API-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 2360,
+      "text": "Audit mint group ids, versioned `mcp.queue_grant_narrowed`, issuer",
+      "to": "clause",
+      "ids": [
+        "API-006"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2361,
-      "text": "loss and calls with ids only;",
-      "to": "rulings",
-      "ids": [
-        "RL-19"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2361,
-      "text": "AUDIT-001 inherits these events.",
+      "text": "loss and calls with ids only; AUDIT-001 inherits these events.",
       "to": "clause",
       "ids": [
         "API-006"
@@ -21802,27 +22437,63 @@
       "file": "CONTRACT.md",
       "line": 2361,
       "text": "Existing",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-19"
+        "API-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        },
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2362,
       "text": "custom fields support text and dropdowns; only dropdowns can be owner-classified",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-19"
+        "API-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        },
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2363,
       "text": "nonpersonal through `/api/v1/mcp-fields/:id/classification`.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-19"
+        "API-007"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        },
+        {
+          "to": "docs",
+          "path": "docs/contract/mechanism.md"
+        }
       ]
     },
     {
@@ -21863,18 +22534,42 @@
       "file": "CONTRACT.md",
       "line": 2365,
       "text": "Queue grants narrow through `/api/v1/mcp-credentials/:id/narrow`, using the",
-      "to": "rulings",
-      "ids": [
-        "RL-19"
+      "to": "docs",
+      "path": "docs/contract/mechanism.md",
+      "also": [
+        {
+          "to": "clause",
+          "ids": [
+            "API-006"
+          ]
+        },
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2366,
       "text": "current grant revision; widening requires re-minting.",
-      "to": "rulings",
-      "ids": [
-        "RL-19"
+      "to": "docs",
+      "path": "docs/contract/mechanism.md",
+      "also": [
+        {
+          "to": "clause",
+          "ids": [
+            "API-006"
+          ]
+        },
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-19"
+          ]
+        }
       ]
     },
     {
@@ -23687,16 +24382,7 @@
     {
       "file": "CONTRACT.md",
       "line": 2582,
-      "text": "**Approved interim sandbox-admin rule, ct, 26 October 2026:** only a current owner may explicitly assign or withdraw the sandbox-admin role through the existing audited owner-only membership door.",
-      "to": "rulings",
-      "ids": [
-        "RL-21"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2582,
-      "text": "The holder must be a current active Linen member. Existing owner approval rights remain independent.",
+      "text": "**Approved interim sandbox-admin rule, ct, 26 October 2026:** only a current owner may explicitly assign or withdraw the sandbox-admin role through the existing audited owner-only membership door. The holder must be a current active Linen member. Existing owner approval rights remain independent.",
       "to": "clause",
       "ids": [
         "SANDBOX-004"
@@ -23730,7 +24416,7 @@
     {
       "file": "CONTRACT.md",
       "line": 2586,
-      "text": "The approver must be separate from the package creator and must have contributed no edits to the package\u2019s included changes.",
+      "text": "The approver must be separate from the package creator and must have contributed no edits to the package\u2019s included changes. Check current membership, approval authority, non-contribution and reviewed revisions at approval and again at application. Refuse unauthorized, self, contributing-editor, revoked-role and stale-revision attempts; refuse application when reviewer authority or independence is no longer current. Refusal applies to the whole package without partial application.",
       "to": "clause",
       "ids": [
         "SANDBOX-004"
@@ -23746,26 +24432,8 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 2586,
-      "text": "Check current membership, approval authority, non-contribution and reviewed revisions at approval and again at application. Refuse unauthorized, self, contributing-editor, revoked-role and stale-revision attempts; refuse application when reviewer authority or independence is no longer current. Refusal applies to the whole package without partial application.",
-      "to": "rulings",
-      "ids": [
-        "RL-21"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 2588,
-      "text": "Role changes, privileged package reads, approvals and applications retain their applicable durable audit requirements, recording actor, time and relevant package and revision identities without secrets or personal-record content. Refusal must not create a successful application record.",
-      "to": "rulings",
-      "ids": [
-        "RL-21"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2588,
-      "text": "Restore invalidates packages and approvals and cannot revive role authority.",
+      "text": "Role changes, privileged package reads, approvals and applications retain their applicable durable audit requirements, recording actor, time and relevant package and revision identities without secrets or personal-record content. Refusal must not create a successful application record. Restore invalidates packages and approvals and cannot revive role authority.",
       "to": "clause",
       "ids": [
         "SANDBOX-004"
@@ -23834,10 +24502,27 @@
     {
       "file": "CONTRACT.md",
       "line": 2594,
-      "text": "**CT masking and custody ruling, 26 October 2026 \u2014 APPROVE WITH RIDERS.** The interim copying capability is explicit, current-owner-consented ticket-row structure copying only. Every source value must be replaced with a non-identifying masked value before storage or exposure. Retain no source record or person identifiers, identity-bearing links, reversible mappings or raw source values in copied rows, storage, reads, logs or exports. Structural references, where needed, use fresh sandbox-local identities and cannot resolve production records.",
+      "text": "**CT masking and custody ruling, 26 October 2026 \u2014 APPROVE WITH RIDERS.** The interim copying capability is explicit, current-owner-consented ticket-row structure copying only.",
       "to": "rulings",
       "ids": [
         "RL-22"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 2594,
+      "text": "Every source value must be replaced with a non-identifying masked value before storage or exposure. Retain no source record or person identifiers, identity-bearing links, reversible mappings or raw source values in copied rows, storage, reads, logs or exports. Structural references, where needed, use fresh sandbox-local identities and cannot resolve production records.",
+      "to": "clause",
+      "ids": [
+        "SANDBOX-005"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-22"
+          ]
+        }
       ]
     },
     {
@@ -23861,9 +24546,17 @@
       "file": "CONTRACT.md",
       "line": 2596,
       "text": "They never enter promotion or rollback packages, portable copies or retained rehearsal answers.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-22"
+        "SANDBOX-006"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-22"
+          ]
+        }
       ]
     },
     {
@@ -23886,16 +24579,7 @@
     {
       "file": "CONTRACT.md",
       "line": 2598,
-      "text": "Enforce source retention deadlines without extending them. Because retained source-identity links are prohibited, a source change or relevant membership, scope, erasure or retention change retires all masked copies in the workspace before further use.",
-      "to": "rulings",
-      "ids": [
-        "RL-22"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2598,
-      "text": "Restore cannot revive retired copies. Any later copy requires fresh owner selection and consent under current conditions.",
+      "text": "Enforce source retention deadlines without extending them. Because retained source-identity links are prohibited, a source change or relevant membership, scope, erasure or retention change retires all masked copies in the workspace before further use. Restore cannot revive retired copies. Any later copy requires fresh owner selection and consent under current conditions. Retirement may retain only the minimal non-content control information needed to prevent revival.",
       "to": "clause",
       "ids": [
         "SANDBOX-006"
@@ -23907,15 +24591,6 @@
             "RL-22"
           ]
         }
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2598,
-      "text": "Retirement may retain only the minimal non-content control information needed to prevent revival.",
-      "to": "rulings",
-      "ids": [
-        "RL-22"
       ]
     },
     {
@@ -26880,60 +27555,91 @@
       "file": "CONTRACT.md",
       "line": 2919,
       "text": "*Erasure and archives (ct, 19 October):* after an identity erasure, a",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-23"
+        "A8"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-23"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2920,
       "text": "workspace export redacts the erased person's personal and free-text content",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-23"
+        "A8"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-23"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2921,
       "text": "and maps each erased actor or person reference to a stable, per-installation",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-23"
+        "A8"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-23"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2922,
       "text": "opaque archive alias; archive tombstones stay keyed digests, never raw",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-23"
+        "A8"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-23"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2923,
       "text": "identities; typed business policy, effect and audit identities and their",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-23"
+        "A8"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-23"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2924,
-      "text": "relationships remain, and no grant is revived.",
-      "to": "rulings",
-      "ids": [
-        "RL-23"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2924,
-      "text": "Export and import reference",
+      "text": "relationships remain, and no grant is revived. Export and import reference",
       "to": "clause",
       "ids": [
         "A8"
@@ -26967,7 +27673,7 @@
     {
       "file": "CONTRACT.md",
       "line": 2926,
-      "text": "still contains an erased identity refuses.",
+      "text": "still contains an erased identity refuses. A snapshot taken before an erasure",
       "to": "clause",
       "ids": [
         "A8"
@@ -26979,39 +27685,29 @@
             "RL-23"
           ]
         }
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2926,
-      "text": "A snapshot taken before an erasure",
-      "to": "rulings",
-      "ids": [
-        "RL-23"
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2927,
       "text": "stays refused against the destination's known tombstones, and fresh imports",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-23"
+        "A8"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-23"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2928,
-      "text": "stay held and inert.",
-      "to": "rulings",
-      "ids": [
-        "RL-23"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2928,
-      "text": "No field is exempted from the tombstone check and no",
+      "text": "stay held and inert. No field is exempted from the tombstone check and no",
       "to": "clause",
       "ids": [
         "A8"
@@ -27028,7 +27724,7 @@
     {
       "file": "CONTRACT.md",
       "line": 2929,
-      "text": "retained business row is deleted to pass it.",
+      "text": "retained business row is deleted to pass it. Audit-history values also",
       "to": "clause",
       "ids": [
         "A8"
@@ -27040,33 +27736,40 @@
             "RL-23"
           ]
         }
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 2929,
-      "text": "Audit-history values also",
-      "to": "rulings",
-      "ids": [
-        "RL-23"
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2930,
       "text": "inherit DESK-017's *Erasure semantic (ct, 20 October)*, including redacted",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-23"
+        "A8"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-23"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 2931,
       "text": "history on restore/replay and never reconstructing earlier cleared values.",
-      "to": "rulings",
+      "to": "clause",
       "ids": [
-        "RL-23"
+        "A8"
+      ],
+      "also": [
+        {
+          "to": "rulings",
+          "ids": [
+            "RL-23"
+          ]
+        }
       ]
     },
     {
@@ -32753,51 +33456,128 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 443,
-      "text": "| F1 Persistent commitments | One owner-defined service outcome becomes explicit cohort, observations, dependency assumptions, responsible owner and dated obligations. Demonstrate continuation across case closure/restart and changing staff/service facts; stale or absent observation stays unknown. Evidence: Explicit outcome, cohort, bound observations, dependency assumption, accountable owner and dated obligations: `tests/ui/commitment-browser.mjs` ownerDefined and changedStaffAndService. Closure, actual Worker restart and scheduled live follow-up: `tests/ui/commitment-restart.mjs` workerRestart and scheduledLiveReadback. Absent and stale evidence remain unknown, source withdrawal invalidates coverage, and the owner retires the commitment: the same journey missingEvidenceUnknown, staleEvidenceUnknown, sourceWithdrawalUnknown and ownerRetirement. `tests/intelligence/commitment-cases.mjs` commitmentChecks through `tests/intelligence/runtime.mjs` additionally proves denied and uncertain reads, numeric repository identity drift, changed staff, stale dependencies, owner authority and erasure. Native screens and tooltip behavior are checked at 1440 and 390. | done |",
+      "text": "| F1 Persistent commitments | One owner-defined service outcome becomes explicit cohort, observations, dependency assumptions, responsible owner and dated obligations. Demonstrate continuation across case closure/restart and changing staff/service facts; stale or absent observation stays unknown.",
+      "to": "clause",
+      "ids": [
+        "F1"
+      ]
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 443,
+      "text": "Evidence: Explicit outcome, cohort, bound observations, dependency assumption, accountable owner and dated obligations: `tests/ui/commitment-browser.mjs` ownerDefined and changedStaffAndService. Closure, actual Worker restart and scheduled live follow-up: `tests/ui/commitment-restart.mjs` workerRestart and scheduledLiveReadback. Absent and stale evidence remain unknown, source withdrawal invalidates coverage, and the owner retires the commitment: the same journey missingEvidenceUnknown, staleEvidenceUnknown, sourceWithdrawalUnknown and ownerRetirement. `tests/intelligence/commitment-cases.mjs` commitmentChecks through `tests/intelligence/runtime.mjs` additionally proves denied and uncertain reads, numeric repository identity drift, changed staff, stale dependencies, owner authority and erasure. Native screens and tooltip behavior are checked at 1440 and 390.",
       "to": "docs",
       "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 443,
+      "text": "| done |",
+      "to": "generated",
+      "note": "The contract generator writes the clause status."
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 444,
-      "text": "| F2 Semantic observation and help | Real selected events reveal a threatened or broken commitment; employee/operator views provide useful truthful next steps. Compare atomic decisions with a direct capable-model route, including misleading benign events, missing context, wrong confident decisions and provider failure. No event storm creates one model call per log line. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "text": "| F2 Semantic observation and help | Real selected events reveal a threatened or broken commitment; employee/operator views provide useful truthful next steps. Compare atomic decisions with a direct capable-model route, including misleading benign events, missing context, wrong confident decisions and provider failure. No event storm creates one model call per log line.",
+      "to": "clause",
+      "ids": [
+        "F2"
+      ]
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 444,
+      "text": "| partial |",
+      "to": "generated",
+      "note": "The contract generator writes the clause status."
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 445,
-      "text": "| F3 Unfamiliar research | Hold out the actual cause and repair from the harness and reusable library. Resolve an unfamiliar multi-system regression with rival explanations, predicted observations and discriminating probes; retain rejected explanations and all attempts. Include an incorrect fast classification that does not suppress an independently warranted deep investigation. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "text": "| F3 Unfamiliar research | Hold out the actual cause and repair from the harness and reusable library. Resolve an unfamiliar multi-system regression with rival explanations, predicted observations and discriminating probes; retain rejected explanations and all attempts. Include an incorrect fast classification that does not suppress an independently warranted deep investigation.",
+      "to": "clause",
+      "ids": [
+        "F3"
+      ]
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 445,
+      "text": "| partial |",
+      "to": "generated",
+      "note": "The contract generator writes the clause status."
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 446,
-      "text": "| F4 Service engineering | An absent diagnostic/connector or substantive service fix is authored against real owned source, independently tested, released under an actual engineering grant and adopted on the selected provider. Demonstrate a preauthorized canary without a manufactured human click, real workflow recovery and the existing failed/unknown-effect paths. | partial |",
+      "text": "| F4 Service engineering | An absent diagnostic/connector or substantive service fix is authored against real owned source, independently tested, released under an actual engineering grant and adopted on the selected provider. Demonstrate a preauthorized canary without a manufactured human click, real workflow recovery and the existing failed/unknown-effect paths.",
+      "to": "clause",
+      "ids": [
+        "F4"
+      ]
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 446,
+      "text": "| partial |",
+      "to": "generated",
+      "note": "The contract generator writes the clause status."
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 447,
+      "text": "| F5 Models and experiments | Check one useful bounded policy/protocol property, its assumptions and a counterexample or mutation that the check catches. Run representative replay/experiment evidence and separately verify live effects. A missing dependency or violated assumption invalidates the affected conclusion; the proof cannot certify the whole external service.",
+      "to": "clause",
+      "ids": [
+        "F5"
+      ]
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 447,
+      "text": "Local replay through the authenticated protocol door is asserted by `tests/intelligence/protocol-cases.mjs` in `tests/intelligence/runtime.mjs`: uncertainty, reconciliation, authority, counterexamples/mutation, invalid assumptions and attributed restart-persistent evidence. `tests/intelligence/protocol-binding-cases.mjs` through the same native session/check door asserts exact dependency revisions and persisted source observations, complete scoped closure, newer failures, expiry, dependency edits, source revision changes and deletion, role withdrawal, append-only dated rechecks and restart. Recheck uses CONTRACT.md's half-open freshness window and existing source readership. Representative observed-provider replay and separate live-effect verification remain unproven; the network-edge probes are fixtures.",
       "to": "docs",
       "path": "docs/verify.md"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 447,
-      "text": "| F5 Models and experiments | Check one useful bounded policy/protocol property, its assumptions and a counterexample or mutation that the check catches. Run representative replay/experiment evidence and separately verify live effects. A missing dependency or violated assumption invalidates the affected conclusion; the proof cannot certify the whole external service. Local replay through the authenticated protocol door is asserted by `tests/intelligence/protocol-cases.mjs` in `tests/intelligence/runtime.mjs`: uncertainty, reconciliation, authority, counterexamples/mutation, invalid assumptions and attributed restart-persistent evidence. `tests/intelligence/protocol-binding-cases.mjs` through the same native session/check door asserts exact dependency revisions and persisted source observations, complete scoped closure, newer failures, expiry, dependency edits, source revision changes and deletion, role withdrawal, append-only dated rechecks and restart. Recheck uses CONTRACT.md's half-open freshness window and existing source readership. Representative observed-provider replay and separate live-effect verification remain unproven; the network-edge probes are fixtures. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "text": "| partial |",
+      "to": "generated",
+      "note": "The contract generator writes the clause status."
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 448,
-      "text": "| F6 Reusable capability | Generate a versioned detector/action/verifier package from a verified case; succeed on held-out repetitions. A similar symptom with a different cause rejects reuse and starts fresh investigation. Context/provider/action/model drift invalidates affected decisions and packages until revalidated; report both wrong reuse and unnecessarily rejected valid reuse. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "text": "| F6 Reusable capability | Generate a versioned detector/action/verifier package from a verified case; succeed on held-out repetitions. A similar symptom with a different cause rejects reuse and starts fresh investigation. Context/provider/action/model drift invalidates affected decisions and packages until revalidated; report both wrong reuse and unnecessarily rejected valid reuse.",
+      "to": "clause",
+      "ids": [
+        "F6"
+      ]
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 448,
+      "text": "| partial |",
+      "to": "generated",
+      "note": "The contract generator writes the clause status."
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 449,
-      "text": "| F7 Service simplification | Compare at least one substantive redesign with continued repair using service outcomes and total work. Execute a worthwhile granted change and observe subsequent exposure, recurrence, employee impact and net work/cost. Include migration effort, displaced burden and adverse outcomes; proposals or fewer tickets alone do not pass. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "text": "| F7 Service simplification | Compare at least one substantive redesign with continued repair using service outcomes and total work. Execute a worthwhile granted change and observe subsequent exposure, recurrence, employee impact and net work/cost. Include migration effort, displaced burden and adverse outcomes; proposals or fewer tickets alone do not pass.",
+      "to": "clause",
+      "ids": [
+        "F7"
+      ]
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 449,
+      "text": "| partial |",
+      "to": "generated",
+      "note": "The contract generator writes the clause status."
     },
     {
       "file": "ACCEPTANCE.md",

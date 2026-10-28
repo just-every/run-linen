@@ -30,7 +30,7 @@ export async function listPendingPeople(ctx: WorkContext) {
 }
 export async function savePendingPerson(ctx: WorkContext,input: Parameters<typeof facts>[0] & {expectedRevision?:number;attributes?:unknown},personId?:string) {
  await currentWorkPrincipal(ctx);permit(ctx,['owner','operator','hr']);
- // CATALOG-001: reviewed department, location and employment type gate audience-controlled services; owner or HR only, never inferred.
+ // CATALOG-007: reviewed department, location and employment type gate audience-controlled services; owner or HR only, never inferred.
  const reviewsAttributes=Object.hasOwn(input,'attributes');
  if(reviewsAttributes)permit(ctx,['owner','hr']);
  const attributes=reviewsAttributes?normalizeAttributes(input.attributes):{},values=await validateValues(ctx,Object.fromEntries(attributeDimensions.map(d=>[d,attributes[d]?[attributes[d]]:[]])));

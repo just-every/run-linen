@@ -11,7 +11,7 @@ import { resolveManager } from './delegation';
 import type { WorkContext } from './core';
 
 /**
- * CATALOG-001 (ct, 21 October): a vendor quote is a private `catalog_quote` PDF of at most 20 MiB, kept with the
+ * CATALOG-008 (ct, 21 October): a vendor quote is a private `catalog_quote` PDF of at most 20 MiB, kept with the
  * request's files so export, erasure and retention reach it. A submission binds it once to the request's
  * fulfilment (its hash is frozen in the snapshot) and it never changes afterwards; replacing it is a fresh
  * submission. Linen never reads the amount from the PDF. A quote grants no approval and no provider authority.

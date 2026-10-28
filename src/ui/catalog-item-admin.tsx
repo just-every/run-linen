@@ -9,7 +9,7 @@ const dimensions = [['department', 'Department'], ['location', 'Location'], ['em
 type Value = { id: string; dimension: string; label: string; active: number; revision: number };
 type Audience = Record<(typeof dimensions)[number][0], string[]>;
 
-/** CATALOG-001: the owner keeps the stable value lists that item audiences and reviewed people refer to. */
+/** CATALOG-007: the owner keeps the stable value lists that item audiences and reviewed people refer to. */
 export function CatalogValues({ onChanged }: { onChanged: () => void }) {
   const { session } = useSession(), values = useRemote<{ items: Value[] }>('/catalog-values'), [error, setError] = useState<unknown>(null);
   async function toggle(value: Value) {
@@ -28,7 +28,7 @@ export function CatalogValues({ onChanged }: { onChanged: () => void }) {
   </details>;
 }
 
-/** CATALOG-001: who may request an item. OR within a list, AND across lists, an empty list is unrestricted. */
+/** CATALOG-007: who may request an item. OR within a list, AND across lists, an empty list is unrestricted. */
 export function CatalogAudienceEditor({ item, onSaved }: { item: { id: string; revision: number; audience?: Audience }; onSaved: () => void }) {
   const { session } = useSession(), values = useRemote<{ items: Value[] }>('/catalog-values');
   const [audience, setAudience] = useState<Audience>(item.audience ?? { department: [], location: [], employmentType: [] });

@@ -8,7 +8,7 @@ export function registerSlaRoutes(app: Hono<AppEnv>) {
   app.post('/requester-groups', async c => c.json(await saveRequesterGroup({ env: c.env, principal: c.get('principal') }, await jsonBody(c)), 201));
   app.get('/sla-policies', async c => c.json({ items: await listSlaPolicies({ env: c.env, principal: c.get('principal') }) }));
   app.post('/sla-policies', async c => c.json(await saveSlaPolicy({ env: c.env, principal: c.get('principal') }, await jsonBody(c)), 201));
-  // DESK-005: escalation levels, the awaiting-requester rule and each ticket's persisted escalations and reminders.
+  // DESK-005 and DESK-021: escalation levels, the awaiting-requester rule and each ticket's persisted escalations and reminders.
   app.get('/escalation-rules', async c => c.json(await listEscalationLevels({ env: c.env, principal: c.get('principal') })));
   app.post('/escalation-levels', async c => c.json(await saveEscalationLevel({ env: c.env, principal: c.get('principal') }, await jsonBody(c))));
   app.post('/waiting-rule', async c => c.json(await saveWaitingRule({ env: c.env, principal: c.get('principal') }, await jsonBody(c))));

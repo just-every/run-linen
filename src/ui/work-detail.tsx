@@ -285,7 +285,7 @@ function WorkCommands({ work, onChanged, operator, transition }: { work: WorkRec
     desk = useRemote<DeskSettings>(operator ? "/desk-settings" : transition ? `/work/${work.id}/command-options` : null),
     assignees = (members.data ?? []).filter((m) => m.active && /"(owner|operator)"/.test(text(m.roles_json))),
     { session } = useSession();
-  // DESK-001: a assigns the open ticket to oneself; s opens the status change and c the close.
+  // DESK-018: a assigns the open ticket to oneself; s opens the status change and c the close.
   useTriage(operator ? work.id : undefined, async (action) => {
     if (action === "status") setCommand(work.state === "paused" ? "resume" : "pause");
     if (action === "close") setCommand("close");

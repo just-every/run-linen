@@ -100,7 +100,7 @@ export async function publishNotice(env: Env, principal: Principal, sourceId: st
   if (command === 'withdraw' && prior?.verifiedBy && prior.verifiedBy !== p.userId)
     throw new ApiError(403, 'notice_verifier', 'Only the person who recorded this recovery may withdraw its all-clear');
   const groupId = prior?.groupId ?? requiredString(b.groupId, 'groupId');
-  // CHANGE-007: release notes reach only the release's named affected cohorts.
+  // CHANGE-011: release notes reach only the release's named affected cohorts.
   if (r.kind === 'release' && !r.data.affectedGroupIds.includes(groupId))
     throw new ApiError(422, 'release_cohort', 'Release notes go only to the release’s affected cohorts');
   const g = command === 'withdraw' ? { memberIds: [] as string[] } : await cohort(env, p, groupId);

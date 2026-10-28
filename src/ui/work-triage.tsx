@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-/** DESK-001: keyboard triage. Outside a text field, j and k open the next and previous ticket of the current view;
+/** DESK-018: keyboard triage. Outside a text field, j and k open the next and previous ticket of the current view;
  * a, r, n, s, c and x act on the open ticket; ? opens this reference; Escape leaves a field; Ctrl or ⌘ + Enter sends the
  * field's form. The open ticket's controls listen for `triageEvent` and act through their own doors. */
 export const triageEvent = "linen:triage";

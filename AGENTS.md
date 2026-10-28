@@ -38,3 +38,10 @@ commands and release identity in edition metadata. Source publication does not
 authorize provider actions, hosting or deployment. Use git/package commands only
 in the repository being changed; publishing, deployment and provider actions need
 the active task's scope and real credentials.
+
+## Contract
+
+CONTRACT.md follows the RER contract standard and is the only acceptance text and status source. ACCEPTANCE.md and docs/CLAIMS.md are generated from it: after any CONTRACT.md change run the generator, then `node src/base/contract-docs.mjs check`, and relock last. Rulings are in RULINGS.md, history in CHANGELOG.md, mechanism in docs/contract/, and the carried-done audit in docs/contract/DONE-AUDIT.md.
+
+Lander-Regenerate: node src/base/contract-docs.mjs write
+Lander-Regenerate: node scripts/edition-authoring/cli.mjs lock

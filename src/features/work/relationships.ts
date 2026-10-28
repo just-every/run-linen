@@ -35,7 +35,7 @@ export async function mergeWork(ctx: WorkContext, duplicateId: string, input: { 
   if(duplicate.department_kind==='hr'||into.department_kind==='hr'||JSON.parse(duplicate.protected_departments_json??'[]').length||JSON.parse(into.protected_departments_json??'[]').length)throw new ApiError(422,'merge_sensitivity','HR workspace tickets are never merged');
   if (!open(duplicate) || !open(into)) throw new ApiError(409, "merge_state", "Both tickets must be open and not already merged");
   const at = now(), db = ctx.env.DB, ws = ctx.principal.workspaceId;
-  // DESK-010: the merge is an automatic close, recorded with the Duplicate code and its public closing line as close notes.
+  // DESK-023: the merge is an automatic close, recorded with the Duplicate code and its public closing line as close notes.
   const closedLine = `This ticket was merged into ticket ${ref(into.id)} as a duplicate. Updates continue there; this conversation is closed.`;
   const resolution = await closeResolution(ctx, duplicate, "Duplicate", closedLine, at);
   const followers = [...new Set([duplicate.requester_id, duplicate.beneficiary_id])].filter((u) => u !== into.requester_id && u !== into.beneficiary_id);

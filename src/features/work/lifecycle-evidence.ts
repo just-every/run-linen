@@ -103,7 +103,7 @@ export async function lifecycleEvidencePack(ctx: WorkContext, lifecycleId: strin
       outstandingDuties.push({ operation_id:effect.id, kind:effect.action, target:effect.target, state:effect.state,
         owner_id:effect.actor_id, due_at:effect.due_at, reason:"Execution or compensation remains unresolved" });
   }
-  // LIFE-002: template tasks are recorded team completions, never provider effects or independent verification.
+  // LIFE-008: template tasks are recorded team completions, never provider effects or independent verification.
   const teamTasks = (await db.prepare(`SELECT id,title,owner_id,group_id,due_at,remind_at,reminded_at,state,completed_by,completed_at,waived_by,waived_at,template_json
     FROM work_obligations WHERE workspace_id=? AND lifecycle_id=? AND kind='task.manual' ORDER BY due_at,id`).bind(workspace,lifecycleId).all<Row>()).results;
   // Revocation/erasure during a long export also closes this read door.
