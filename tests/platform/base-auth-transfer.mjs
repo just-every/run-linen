@@ -1,4 +1,6 @@
 import {sourceCustodyJourney} from './source-custody-journey.mjs'
+import {seedSoftwareLicensing,assertRestoredSoftwareLicensing} from './software-license-transfer-cases.mjs';
+import {seedReportingNotifications,assertRestoredReportingNotifications} from './reporting-transfer-cases.mjs';
 import {captureArchiveAliasStatements,captureKnownArchiveAliasStatements} from '../../src/features/history/archive-identities.mjs'
 import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {mailEdge} from './mail-edge.mjs'
@@ -163,6 +165,8 @@ try{
  await env.DB.prepare("INSERT INTO configuration_sandboxes(id,workspace_id,name,created_by,contributors_json,baseline_json,draft_json,state,approved_by,created_at) VALUES('synthetic-linen-430','workspace','Synthetic sandbox','owner','[\"owner\"]','[]','[]','approved','other',?)").bind(stamp).run();
  await env.DB.prepare("UPDATE configuration_sandboxes SET runs_json=? WHERE id='synthetic-linen-430'").bind(JSON.stringify([{id:'synthetic-linen-431',configurationRevision:1,tasks:[],completed:[]}])).run();
  await env.DB.prepare("INSERT INTO configuration_masked_records(id,sandbox_id,workspace_id,masked_json) VALUES('synthetic-linen-608','synthetic-linen-430','workspace','{\"title\":\"[masked]\"}')").run();
+ await seedReportingNotifications(env,stamp);
+ await seedSoftwareLicensing(env,stamp);
  await close()
  await run(['exec','rer','export','--output',archive])
  const restRows=[],mcpRows=[],roleRows=[],roleMemberRows=[];
@@ -213,6 +217,8 @@ try{
  assert.equal((await env.DB.prepare('SELECT password_hash FROM users WHERE id="owner"').first()).password_hash,'!restored-email-link')
  assert.equal((await env.DB.prepare('SELECT count(*) n FROM configuration_masked_records').first()).n,0,'Actual rer restore never revives masked copies');
  assert.equal((await env.DB.prepare('SELECT count(*) n FROM configuration_sandboxes').first()).n,0,'Restoring an installation cannot revive sandbox approval');
+ await assertRestoredReportingNotifications(env);
+ await assertRestoredSoftwareLicensing(env);
  assert.equal((await env.DB.prepare('SELECT secret_ciphertext FROM connections').first()).secret_ciphertext,null)
  assert.deepEqual(await env.DB.prepare('SELECT active,secret_ciphertext FROM svc_development_bindings WHERE id=?').bind('development-binding').first(),{active:0,secret_ciphertext:null},'Development bindings survive actual archive restore without inbound authority or secret');
  assert.ok((await env.DB.prepare('SELECT revoked_at FROM intelligence_engineering_grants').first()).revoked_at)

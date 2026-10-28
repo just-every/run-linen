@@ -34,6 +34,10 @@ const checks = [
   ["Connection and authority browser", process.execPath, ["tests/ui/setup-run.mjs"]],
   ["Communications browser", process.execPath, ["tests/ui/connected-run.mjs", "tests/ui/communication-browser.mjs"]],
   ["Billing browser", process.execPath, ["tests/ui/run.mjs", "tests/ui/billing-browser.mjs"]],
+  ['software provider browser', process.execPath, ['tests/ui/software-license-run.mjs']],
+  ['software license browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/software-license-browser.mjs']],
+  ['report builder and exports browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/reporting-browser.mjs']],
+  ['notification rules browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/notification-browser.mjs']],
 ]
 const shardValue = process.env.LINEN_VERIFY_SHARD
 let shard
@@ -49,6 +53,7 @@ if (shardValue !== undefined) {
 }
 // Conservative journey durations, refreshed from the exact-head Verify when needed.
 const measuredSeconds = {
+  "software provider browser": 100, "software license browser": 45, "report builder and exports browser": 45, "notification rules browser": 45,
   "Native sign-in and scoped API": 30,
   "Native archive and recovery": 315,
   "Employee service desk browser": 455,
