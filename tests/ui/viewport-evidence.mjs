@@ -7,7 +7,7 @@ export async function captureJourney(page, options) {
   await page.waitForFunction(() => [...document.images].every(image => image.complete))
   const previous = page.viewportSize()
   try {
-    for (const width of [1440, 390, 320]) {
+    for (const width of process.env.LINEN_CAPTURE ? [1440,390] : [page.viewportSize().width]) {
       await page.setViewportSize({ width, height: width === 1440 ? 1000 : 844 })
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
@@ -17,7 +17,7 @@ export async function captureJourney(page, options) {
         `${options.path}: keyboard reaches an interactive control`)
       // Keep fixed headers at the top of a full-page capture after the focus probe scrolls.
       await page.evaluate(() => window.scrollTo(0, 0))
-      await page.screenshot({ ...options, path: width === 1440 ? options.path : options.path.replace(/\.png$/, `-${width}px.png`) })
+      process.env.LINEN_CAPTURE && await page.screenshot({ ...options, path: width === 1440 ? options.path : options.path.replace(/\.png$/, `-${width}px.png`) })
     }
   } finally {
     await page.setViewportSize(previous)

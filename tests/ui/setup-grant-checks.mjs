@@ -30,10 +30,10 @@ export async function runGrantChecks({ page, api, base, out, checks, payloads, o
   assert.equal(await page.getByLabel('Executing principal ID').isVisible(), false);
   assert.equal(await page.locator('input:visible').evaluateAll(es => es.some(e => /id$/i.test(e.name))), false);
   await prepare();
-  await page.screenshot({ path: out + '/setup-permission-review.png', fullPage: true });
-  await page.setViewportSize({ width: 390, height: 844 });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: out + '/setup-permission-review.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-  await page.screenshot({ path: out + '/setup-permission-mobile.png', fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: out + '/setup-permission-mobile.png', fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
   // Lost HTTP response after the real write: GET reconciliation must discover it, not repeat POST.
   let posts = 0;

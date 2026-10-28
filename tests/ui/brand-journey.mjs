@@ -44,26 +44,8 @@ export async function brandJourney({ browser, page, api, base, out, errors }) {
       if (who === eve) { await p.getByRole('region', { name: 'My devices' }).getByText('SYNTHETIC-LINEN-9820', { exact: false }).first().waitFor(); }
       else assert.equal(await p.getByRole('region', { name: 'My devices' }).count(), 0, 'nobody sees another employee\'s device');
       assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `CHANNEL-004 ${label} portal fits at ${width}`);
-      await p.screenshot({ path: `${out}/CHANNEL-004-${label}-${width}.png`, fullPage: true });
+      process.env.LINEN_CAPTURE && await p.screenshot({ path: `${out}/CHANNEL-004-${label}-${width}.png`, fullPage: true });
     }
   } finally { for (const c of contexts) await c.close(); }
-  console.log('PASS CHANNEL-004 native 1440/390: owner branding with a refused unreadable color, a public logo, the portal name, logo and colors for an employee, and my devices shown only to the device holder. Custom domain with managed TLS remains unbuilt.');
-}
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const base = process.env.LINEN_TEST_URL, out = process.env.LINEN_TEST_OUTPUT;
-  if (!base || !out) throw Error('Run through tests/ui/connected-run.mjs');
-  await mkdir(out, { recursive: true });
-  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] }), errors = [];
-  try {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, timezoneId: 'UTC' }), page = await context.newPage();
-    page.on('pageerror', e => errors.push(String(e)));
-    await page.goto(base + '/app'); await page.getByLabel('Your name').fill('Morgan Hayes'); await page.getByLabel('Workspace name').fill('Brand proof');
-    await page.getByLabel('Work email').fill('brand-owner@example.test'); await page.getByLabel('Password', { exact: true }).fill('synthetic-Connected-browser-2026');
-    await page.getByRole('button', { name: 'Create workspace' }).click(); await page.getByRole('heading', { name: 'Requests', exact: true }).waitFor();
-    await finishFirstRun(page, base);
-    await brandJourney({ browser, page, api: apiFor(page), base, out, errors }); assert.deepEqual(errors, []);
-  } catch (error) {
-    for (const [i, c] of browser.contexts().entries()) for (const [j, p] of c.pages().entries()) await p.screenshot({ path: `${out}/CHANNEL-004-failure-${i}-${j}.png`, fullPage: true }).catch(() => {});
-    throw error;
-  } finally { await browser.close(); }
+  console.log('PASS CHANNEL-004 native 1440: owner branding with a refused unreadable color, a public logo, the portal name, logo and colors for an employee, and my devices shown only to the device holder. Custom domain with managed TLS remains unbuilt.');
 }

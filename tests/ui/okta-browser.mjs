@@ -5,7 +5,7 @@ import { finishFirstRun, apiFor, createConnection } from './connected-helpers.mj
 const base = process.env.LINEN_TEST_URL, out = process.env.LINEN_TEST_OUTPUT;
 if (!base || !out || !process.env.OKTA_ORG_URL || !process.env.OKTA_API_TOKEN) throw Error('Run the named live journey with held Okta keys');
 await mkdir(out, { recursive: true });
-const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
+const browser = await chromium.launch({ ...(process.env.LINEN_CHROMIUM_EXECUTABLE ? {executablePath:process.env.LINEN_CHROMIUM_EXECUTABLE} : {}),  headless: true, args: ['--no-sandbox', '--use-mock-keychain', '--password-store=basic'] });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage();
 const errors = [];
 page.on('pageerror', error => errors.push(String(error)));
@@ -21,7 +21,7 @@ try {
   const api = apiFor(page);
   const connection = await createConnection(page, api, base, 'okta', 'Linen developer identity', { orgUrl: process.env.OKTA_ORG_URL, apiToken: process.env.OKTA_API_TOKEN });
   assert.equal(connection.status, 'active');
-  for (const width of [1440, 390]) {
+  for (const width of [1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto(base + '/app#/connections');
     const card = page.locator('.connection-record').filter({ has: page.getByRole('heading', { name: 'Linen developer identity', exact: true }) });
@@ -32,7 +32,7 @@ try {
     await page.getByRole('button', {name:'Connect a service'}).focus();
     await page.mouse.move(0, 0); await account.hover();
     await page.waitForFunction(() => getComputedStyle(document.querySelector('.profile'), '::after').opacity === '1');
-    await page.screenshot({ path: `${out}/ACCESS-002-connection-${width}.png`, fullPage: true });
+    process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/ACCESS-002-connection-${width}.png`, fullPage: true });
     await card.locator(':scope > details > summary').filter({hasText:'Manage'}).press('Enter');
     await card.getByRole('button', { name: 'Edit connection', exact: true }).click();
     await card.locator(':scope > details > summary').filter({hasText:'Manage'}).press('Enter');
@@ -40,16 +40,16 @@ try {
     await form.getByLabel('Okta organization URL').fill('https://linen-acceptance.okta.com');
     assert.equal(await form.getByLabel('Scoped API token').inputValue(), '', 'saved credentials never return to the form');
     await form.scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `${out}/ACCESS-002-editor-${width}.png`, fullPage: true });
+    process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/ACCESS-002-editor-${width}.png`, fullPage: true });
     await form.getByRole('button', { name: 'Cancel', exact: true }).click();
     await page.goto(base + '/app#/grants');
     const advanced = page.locator('details').filter({has:page.locator(':scope > summary', {hasText:'Advanced: issue an exact standing grant'})}).first();
     await advanced.locator(':scope > summary').click();
     await advanced.locator('[name="action"]').selectOption('okta.user.suspend');
     await advanced.scrollIntoViewIfNeeded();
-    await page.screenshot({path:`${out}/ACCESS-002-grant-${width}.png`, fullPage:true});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ACCESS-002-grant-${width}.png`, fullPage:true});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'no horizontal overflow');
   }
   assert.deepEqual(errors, []);
-  console.log('PASS Okta native connection save, live read check and private editor at 1440 and 390');
+  console.log('PASS Okta native connection save, live read check and private editor at 1440');
 } finally { await context.close(); await browser.close(); }

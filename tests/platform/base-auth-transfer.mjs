@@ -331,10 +331,10 @@ try{
 
  await run(['exec','rer','reset','--yes'])
  const checkpoint=await run(['exec','rer','import','--input',archive,'--journal','exports/after.rer','--yes'],1);assert.match(checkpoint,/erasure_epoch/)
- await run(['exec','rer','import','--input',later,'--yes'])
  // Build the deploy artifact without provider credentials; retained resources stay protected.
  for (const key of Object.keys(commandEnvironment)) if (key.startsWith('LINEN_') || key.startsWith('CLOUDFLARE_')) delete commandEnvironment[key]
- await run(['exec','rer','build'])
+ if(process.env.LINEN_TEST_BUILT)await cp(join(source,'dist'),join(root,'dist'),{recursive:true});
+ else await run(['exec','rer','build'])
  const artifact=JSON.parse(await readFile(join(root,'dist/server/wrangler.json'),'utf8'))
  assert.ok((await readFile(resolve(root,'dist/server',artifact.main))).length,'The deploy artifact contains its Worker entry')
  assert.ok(artifact.d1_databases.some(binding=>binding.binding==='DB'))

@@ -43,8 +43,8 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  check(groups.items.every(g=>g.members.every(m=>m.userId!==bot.id)),'queue grant adds no group member or lead')
  equal((await ownerApi('/work-groups/'+hardware+'/members',{userId:bot.id,lead:true})).status,422,'integration cannot become group member or lead')
 
- sql(`INSERT INTO workspaces VALUES('mcp-tools-foreign','Foreign queue fixture','2026-01-01');
- INSERT INTO work_groups(id,workspace_id,name,created_by,created_at) VALUES('mcp-tools-foreign-group','mcp-tools-foreign','Foreign Hardware',${quoted(session.principal.userId)},'2026-01-01')`)
+ ;(await sql(`INSERT INTO workspaces VALUES('mcp-tools-foreign','Foreign queue fixture','2026-01-01');
+ INSERT INTO work_groups(id,workspace_id,name,created_by,created_at) VALUES('mcp-tools-foreign-group','mcp-tools-foreign','Foreign Hardware',${quoted(session.principal.userId)},'2026-01-01')`))
  for(const groupIds of [undefined,[],['mcp-tools-unknown'],['mcp-tools-foreign-group']])
   equal((await ownerApi('/mcp-credentials',{...grant,groupIds})).status,400,'mint refuses missing, unknown or foreign queue grants')
 
@@ -165,11 +165,11 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
 
  // No work-intake, mail/notification or provider/model attempt is part of a comment.
  const effectTables=['work_intake_events','execution_outbox','execution_operations','execution_provider_attempts','intelligence_attempts']
- const effects=()=>Object.fromEntries(sql(effectTables.map(table=>`SELECT '${table}' table_name,count(*) n FROM ${table} WHERE workspace_id=${quoted(session.principal.workspaceId)}`).join(' UNION ALL ')).map(row=>[row.table_name,row.n]))
- const beforeEffects=effects(),beforeComment=await tool(credential.secret,'work.get',{workId:normal.id})
+ const effects=async()=>Object.fromEntries((await sql(effectTables.map(table=>`SELECT '${table}' table_name,count(*) n FROM ${table} WHERE workspace_id=${quoted(session.principal.workspaceId)}`).join(' UNION ALL '))).map(row=>[row.table_name,row.n]))
+ const beforeEffects=(await effects()),beforeComment=await tool(credential.secret,'work.get',{workId:normal.id})
  const commented=await tool(credential.secret,'work.comment',{workId:normal.id,revision:beforeComment.revision,body:ownBody,deduplicationKey:'API-003-own-comment'})
  equal(commented.revision,beforeComment.revision+1,'comment advances the revision read')
- equal(effects(),beforeEffects,'internal comment creates no notification, provider or intake work')
+ equal((await effects()),beforeEffects,'internal comment creates no notification, provider or intake work')
  await refused(credential.secret,'work.comment',{workId:normal.id,revision:beforeComment.revision,body:'MCP-STALE-COMMENT',deduplicationKey:'API-003-stale'},'revision_conflict')
  const ownerView=await value(ownerApi('/work/'+normal.id))
  const ownMessage=ownerView.messages.find(m=>m.body===ownBody)
@@ -204,12 +204,12 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  await refused(credential.secret,'work.get',{workId:normal.id},'not_found')
  await route(normal.id,hardware)
  const beforeRace=await value(ownerApi('/work/'+normal.id))
- sql(`CREATE TRIGGER test_mcp_comment_move AFTER INSERT ON work_messages
+ ;(await sql(`CREATE TRIGGER test_mcp_comment_move AFTER INSERT ON work_messages
  WHEN NEW.work_id=${quoted(normal.id)} AND NEW.source_key LIKE 'mcp:%'
- BEGIN UPDATE work_records SET group_id=${quoted(network.id)},revision=revision+1 WHERE id=NEW.work_id; END`)
+ BEGIN UPDATE work_records SET group_id=${quoted(network.id)},revision=revision+1 WHERE id=NEW.work_id; END`))
  try {
   await refused(credential.secret,'work.comment',{workId:normal.id,revision:beforeRace.work.revision,body:'MCP-ROLLBACK-COMMENT',deduplicationKey:'API-003-race'},'mcp_commit_conflict')
- } finally {sql('DROP TRIGGER test_mcp_comment_move')}
+ } finally {(await sql('DROP TRIGGER test_mcp_comment_move'))}
  const afterRace=await value(ownerApi('/work/'+normal.id))
  equal({group:afterRace.work.group_id,revision:afterRace.work.revision,messages:afterRace.messages.map(m=>m.id).sort()},
   {group:beforeRace.work.group_id,revision:beforeRace.work.revision,messages:beforeRace.messages.map(m=>m.id).sort()},'mid-comment movement rolls back message, revision and fixture movement atomically')
@@ -228,18 +228,18 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
   `UPDATE memberships SET roles_json='["employee"]' WHERE workspace_id=${quoted(session.principal.workspaceId)} AND user_id=${quoted(session.principal.userId)}`,
  ]
  for(const [i,mutation] of authorityRaces.entries()) {
-  sql(`CREATE TRIGGER test_mcp_comment_authority AFTER INSERT ON work_messages WHEN NEW.work_id=${quoted(normal.id)} AND NEW.source_key LIKE 'mcp:%' BEGIN ${mutation}; END`)
+  ;(await sql(`CREATE TRIGGER test_mcp_comment_authority AFTER INSERT ON work_messages WHEN NEW.work_id=${quoted(normal.id)} AND NEW.source_key LIKE 'mcp:%' BEGIN ${mutation}; END`))
   try {await refused(credential.secret,'work.comment',{workId:normal.id,revision:beforeRace.work.revision,body:'MCP-AUTHORITY-ROLLBACK-'+i,deduplicationKey:'API-003-authority-race-'+i},'mcp_commit_conflict')}
-  finally {sql('DROP TRIGGER test_mcp_comment_authority')}
+  finally {(await sql('DROP TRIGGER test_mcp_comment_authority'))}
   const current=await value(ownerApi('/work/'+normal.id))
   equal(current.messages.map(m=>m.id).sort(),beforeRace.messages.map(m=>m.id).sort(),'commit authority loss rolls back the internal comment')
   equal((await rpc(credential.secret)).status,200,'transaction rollback preserves the original live authority')
  }
- sql(`CREATE TRIGGER test_mcp_comment_audit BEFORE INSERT ON audit_events WHEN NEW.action='mcp.call' BEGIN SELECT RAISE(ABORT,'test_mcp_audit_unavailable'); END`)
+ ;(await sql(`CREATE TRIGGER test_mcp_comment_audit BEFORE INSERT ON audit_events WHEN NEW.action='mcp.call' BEGIN SELECT RAISE(ABORT,'test_mcp_audit_unavailable'); END`))
  try {equal((await call(credential.secret,'work.comment',{workId:normal.id,revision:beforeRace.work.revision,body:'MCP-AUDIT-ROLLBACK',deduplicationKey:'API-003-audit-failure'})).status,500,'failed call audit rolls back comment')}
- finally {sql('DROP TRIGGER test_mcp_comment_audit')}
+ finally {(await sql('DROP TRIGGER test_mcp_comment_audit'))}
  equal((await value(ownerApi('/work/'+normal.id))).messages.map(m=>m.id).sort(),beforeRace.messages.map(m=>m.id).sort(),'failed audit leaves no internal comment')
- equal(effects(),beforeEffects,'refused comments and creation do not dispatch effects or intake')
+ equal((await effects()),beforeEffects,'refused comments and creation do not dispatch effects or intake')
 
  const narrowed=await mint({name:'Narrowing proof'})
  const narrow=await value(ownerApi('/mcp-credentials/'+narrowed.id+'/narrow',{revision:narrowed.grantVersion,groupIds:[]}))
@@ -262,7 +262,7 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  check(!JSON.stringify(managed).includes(issued.secret),'management never re-exposes secret')
  equal((await rpc(credential.secret)).status,200,'main issuing owner and credential remain active')
 
- const audits=sql("SELECT * FROM audit_events WHERE action LIKE 'mcp.%'")
+ const audits=(await sql("SELECT * FROM audit_events WHERE action LIKE 'mcp.%'"))
  const audit=(action,target)=>audits.filter(a=>a.action===action&&a.target===target)
  equal(JSON.parse(audit('mcp.credential_minted',credential.id)[0].detail_json).groupIds,[hardware],'mint audit records selected queue ids')
  const narrowedAudit=JSON.parse(audit('mcp.queue_grant_narrowed',narrowed.id)[0].detail_json)
@@ -279,7 +279,7 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const auditText=JSON.stringify(audits)
  for(const excluded of [credential.secret,full.secret,readonly.secret,issued.secret,hidden,ownBody,'MCP-ROLLBACK-COMMENT','MCP-STALE-COMMENT','MCP-REFUSED-DANGEROUS-BODY','mcp-private-contact@example.test'])
   check(!auditText.includes(excluded),'MCP audit excludes secrets, free text and personal values')
- check(sql(`SELECT secret_hash FROM mcp_credentials WHERE id=${quoted(issued.id)}`)[0].secret_hash===null,'issuer revocation clears stored hash')
+ check((await sql(`SELECT secret_hash FROM mcp_credentials WHERE id=${quoted(issued.id)}`))[0].secret_hash===null,'issuer revocation clears stored hash')
 
  // DESK-017: erasing an actor preserves authorized facts on somebody else's work.
  const historyActor=await value(ownerApi('/members',{email:'synthetic-linen-12900@example.test',name:'synthetic-linen-12901 Alice',password,roles:['operator']}),201)

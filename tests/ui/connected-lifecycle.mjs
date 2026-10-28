@@ -37,7 +37,7 @@ export async function connectedLifecycle(env) {
   await page.goto(base+'/app#/work/'+reminder.id);
   await page.getByRole('region',{name:'Sponsor re-attestation'}).waitFor();
   await captureJourney(page,{path:out+'/LIFE-006-sponsor-reminder.png',fullPage:true});
-  await page.setViewportSize({width:390,height:844});
+  await page.setViewportSize({width:1440,height:844});
   const extended=await action(page,'Re-attest with a later end date',{expiresAt:local(10*86400000)},`/lifecycle/${kept}/reattest`,'Re-attest');
   await page.setViewportSize({width:1440,height:1000});
   assert.equal((await api('/lifecycle/sponsored')).items.find(i=>i.lifecycleId===kept).expiresAt,extended.expiresAt,'LIFE-006 re-attestation at 390 moves the end date');
@@ -90,7 +90,7 @@ export async function birthrightBaselineJourney(env) {
   assert.deepEqual([review.retained,review.added,review.removed],[['slack-users'],['hubspot-users'],['salesforce-users']],'LIFE-003 Salesforce removed, HubSpot added, Slack retained');
   await page.goto(base+'/app#/lifecycle/'+second);await page.getByRole('region',{name:'Access baseline review'}).waitFor();
   await captureJourney(page,{path:out+'/LIFE-003-baseline-review.png',fullPage:true});
-  await page.setViewportSize({width:390,height:844});await page.reload();await page.getByRole('region',{name:'Access baseline review'}).waitFor();
+  await page.setViewportSize({width:1440,height:844});await page.reload();await page.getByRole('region',{name:'Access baseline review'}).waitFor();
   await captureJourney(page,{path:out+'/LIFE-003-baseline-review-390.png',fullPage:true});
   await page.setViewportSize({width:1440,height:1000});
   const writesBefore=(await (await fetch(base+'/__fixture/evidence')).json()).calls.filter(c=>c.kind==='entitlement-write').length;

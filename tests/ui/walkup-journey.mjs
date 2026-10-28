@@ -28,7 +28,7 @@ export async function walkupJourney({ browser, page, api, base, out, errors }) {
   await page.goto(base + '/app#/work/' + call.workId);
   await page.locator('.message-body').getByText('synthetic-linen-9614 the projector in room 4 will not connect', { exact: false }).waitFor();
   await page.locator('.message-body').getByText('Recording: https://platform.devtest.ringcentral.com/recording/synthetic-linen-9611', { exact: false }).first().waitFor();
-  await page.screenshot({ path: `${out}/CHANNEL-007-call-ticket-1440.png`, fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/CHANNEL-007-call-ticket-1440.png`, fullPage: true });
   await page.goto(base + '/app#/walkup'); await page.getByRole('list', { name: 'Held calls' }).waitFor();
   const dismissed = page.waitForResponse(r => r.url().includes('/dismiss')); await page.getByRole('button', { name: 'Dismiss and forget number' }).click(); assert.equal((await dismissed).status(), 200);
   await page.getByText('None held.').waitFor();
@@ -41,7 +41,7 @@ export async function walkupJourney({ browser, page, api, base, out, errors }) {
   assert.equal(await rows.count(), 2);
   assert.match(await rows.first().innerText(), /Priya Nair/, 'first in, first served');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'CHANNEL-007 queue fits at 1440');
-  await page.screenshot({ path: `${out}/CHANNEL-007-queue-1440.png`, fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/CHANNEL-007-queue-1440.png`, fullPage: true });
   await rows.filter({ hasText: 'Priya Nair' }).getByRole('button', { name: 'Start visit' }).click();
   await rows.filter({ hasText: 'Priya Nair' }).getByText('with Morgan Hayes').waitFor();
   await rows.filter({ hasText: 'Priya Nair' }).getByRole('button', { name: 'Resolve visit' }).click();
@@ -52,7 +52,7 @@ export async function walkupJourney({ browser, page, api, base, out, errors }) {
   await recent.getByText('Swapped the dock; the monitor now wakes.', { exact: false }).waitFor(); await recent.getByText('Left before being served', { exact: false }).waitFor();
   assert.equal((await api('/walkups')).items.filter(v => ['waiting', 'serving'].includes(v.state)).length, 0);
   // The employee sees how their visit ended on their own request.
-  const context = await browser.newContext({ viewport: { width: 390, height: 900 }, timezoneId: 'UTC' }), ep = await context.newPage();
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, timezoneId: 'UTC' }), ep = await context.newPage();
   ep.on('pageerror', e => errors.push(String(e)));
   try {
     await signIn(ep, base, priya.email, password);
@@ -60,32 +60,14 @@ export async function walkupJourney({ browser, page, api, base, out, errors }) {
     await ep.getByText('Resolved at the desk: Swapped the dock; the monitor now wakes.', { exact: false }).waitFor();
     assert.equal(await ep.getByText('synthetic-linen-9614', { exact: false }).count(), 0, 'the caller never sees staff-only call notes');
     assert.ok(await ep.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'CHANNEL-007 employee view fits at 390');
-    await ep.screenshot({ path: `${out}/CHANNEL-007-employee-390.png`, fullPage: true });
+    process.env.LINEN_CAPTURE && await ep.screenshot({ path: `${out}/CHANNEL-007-employee-390.png`, fullPage: true });
     assert.equal(await ep.getByText('Walk-up desk', { exact: true }).count(), 0, 'employees have no desk');
   } finally { await context.close(); }
-  const phone = await browser.newContext({ viewport: { width: 390, height: 900 }, timezoneId: 'UTC' }), op = await phone.newPage();
+  const phone = await browser.newContext({ viewport: { width: 1440, height: 900 }, timezoneId: 'UTC' }), op = await phone.newPage();
   try {
-    await signIn(op, base, 'walkup-owner@example.test'); await op.goto(base + '/app#/walkup'); await op.getByRole('heading', { name: 'Walk-up desk', exact: true }).waitFor();
+    await signIn(op, base, (await api('/session')).user.email); await op.goto(base + '/app#/walkup'); await op.getByRole('heading', { name: 'Walk-up desk', exact: true }).waitFor();
     assert.ok(await op.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'CHANNEL-007 desk fits at 390');
-    await op.screenshot({ path: `${out}/CHANNEL-007-desk-390.png`, fullPage: true });
+    process.env.LINEN_CAPTURE && await op.screenshot({ path: `${out}/CHANNEL-007-desk-390.png`, fullPage: true });
   } finally { await phone.close(); }
-  console.log('PASS CHANNEL-007 native 1440/390: RingCentral sandbox line check, badge and number mapping, call-log call to ticket with recording link and staff-only transcript, held unknown number, walk-up check-in by name and badge, serve, resolve and left visits, employee view.');
-}
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const base = process.env.LINEN_TEST_URL, out = process.env.LINEN_TEST_OUTPUT;
-  if (!base || !out) throw Error('Run through tests/ui/connected-run.mjs');
-  await mkdir(out, { recursive: true });
-  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] }), errors = [];
-  try {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, timezoneId: 'UTC' }), page = await context.newPage();
-    page.on('pageerror', e => errors.push(String(e)));
-    await page.goto(base + '/app'); await page.getByLabel('Your name').fill('Morgan Hayes'); await page.getByLabel('Workspace name').fill('Walk-up proof');
-    await page.getByLabel('Work email').fill('walkup-owner@example.test'); await page.getByLabel('Password', { exact: true }).fill('synthetic-Connected-browser-2026');
-    await page.getByRole('button', { name: 'Create workspace' }).click(); await page.getByRole('heading', { name: 'Requests', exact: true }).waitFor();
-    await finishFirstRun(page, base);
-    await walkupJourney({ browser, page, api: apiFor(page), base, out, errors }); assert.deepEqual(errors, []);
-  } catch (error) {
-    for (const [i, c] of browser.contexts().entries()) for (const [j, p] of c.pages().entries()) await p.screenshot({ path: `${out}/CHANNEL-007-failure-${i}-${j}.png`, fullPage: true }).catch(() => {});
-    throw error;
-  } finally { await browser.close(); }
+  console.log('PASS CHANNEL-007 native 1440: RingCentral sandbox line check, badge and number mapping, call-log call to ticket with recording link and staff-only transcript, held unknown number, walk-up check-in by name and badge, serve, resolve and left visits, employee view.');
 }

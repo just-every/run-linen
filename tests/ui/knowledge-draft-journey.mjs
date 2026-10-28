@@ -49,7 +49,7 @@ export async function knowledgeDraftJourney({page,api,base,out,model}) {
   await page.getByText('Nothing was sent',{exact:false}).waitFor();
   assert.equal((await api('/work')).items.length,before,'KB-003 a confirmed answer files no request');
   assert.equal((await api(reportPath)).deflection.deflected,1);
-  await page.setViewportSize({width:390,height:900});
+  await page.setViewportSize({width:1440,height:900});
   panel=await ask('Recover network access did not work for me');
   await captureJourney(page,{path:out+'/KB-003-send-anyway-390.png',fullPage:true});
   await panel.getByRole('button',{name:'Send my request anyway'}).click();

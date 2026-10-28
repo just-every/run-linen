@@ -28,5 +28,5 @@ export async function problemDetectionJourney({page,api,base,out}) {
   await page.getByRole('heading',{name:'Accepted recurrence evidence',exact:true}).waitFor();
   assert.equal((await api('/problems/'+accepted.data.problemId)).data.ticketIds.length,3);
   await captureJourney(page,{path:out+'/PROB-002-accepted-problem.png',fullPage:true});
-  console.log('PASS PROB-002 browser: eight floor Wi-Fi tickets listed, rejection retained after ninth and reload, human acceptance opens one linked native problem at 1440/390');
+  console.log('PASS PROB-002 browser: eight floor Wi-Fi tickets listed, rejection retained after ninth and reload, human acceptance opens one linked native problem at 1440');
 }

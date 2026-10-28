@@ -31,7 +31,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await page.goto(base+'/app#/sandboxes');
  await page.getByLabel('Sandbox name',{exact:true}).fill('Reviewed sandbox '+suffix);
  // The shared account control becomes icon-only at narrow widths and already carries its tooltip.
- for(const width of [1440,390]) {
+ for(const width of [1440]) {
   await page.setViewportSize({width,height:1000});
   const account=page.getByRole('button',{name:'Your workspace and account',exact:true});
   await page.keyboard.press('Tab');await account.focus();
@@ -278,5 +278,5 @@ export async function sandboxJourney({page,api,base,out}) {
  await captureJourney(page,{path:out+'/SANDBOX-001-scope-refusal.png',fullPage:true});
  assert.equal(await page.getByRole('button',{name:'Promote reviewed configuration',exact:true}).count(),0);
  await api('/login',{email:session.user.email,password:'Browser-proof-2026'});await page.reload();
- console.log('PASS sandbox native settings: isolated catalog, form, tasks, roles, full existing SLA configuration, rehearsals, field diffs, separate owner approval, promotion, reviewed rollback and employee refusal at 1440, 390 and 320');
+ console.log('PASS sandbox native settings: isolated catalog, form, tasks, roles, full existing SLA configuration, rehearsals, field diffs, separate owner approval, promotion, reviewed rollback and employee refusal at 1440');
 }

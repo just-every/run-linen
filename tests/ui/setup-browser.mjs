@@ -1,3 +1,4 @@
+import {templateJourney} from './template-journey.mjs';
 import { templateJourney } from './template-journey.mjs';
 import { seedSetupFixtures } from './setup-fixtures.mjs';
 import { finishFirstRun } from './connected-helpers.mjs';
@@ -9,7 +10,7 @@ const base = process.env.LINEN_TEST_URL;
 if (!base) throw Error('Use setup-run.mjs with an isolated D1 worker');
 const out = process.env.LINEN_TEST_OUTPUT;
 await mkdir(out, { recursive: true });
-const browser = await chromium.launch({ headless: true, args: ["--use-mock-keychain", "--password-store=basic"] });
+const browser = await chromium.launch({ ...(process.env.LINEN_CHROMIUM_EXECUTABLE ? {executablePath:process.env.LINEN_CHROMIUM_EXECUTABLE} : {}),  headless: true, args: ['--no-sandbox', "--use-mock-keychain", "--password-store=basic"] });
 const context = await browser.newContext({ timezoneId: 'UTC', viewport: { width: 1440, height: 1000 } });
 const page = await context.newPage();
 page.setDefaultTimeout(45000);
@@ -80,10 +81,10 @@ try {
   const checked = await api('/connections/' + missing.body.id + '/test', { revision: missing.body.revision });
   assert.equal(checked.body.error.code, 'credential_required');
   checks.push('Honest missing-credential failure before any provider call');
-  await page.screenshot({ path: out + '/setup-sendgrid.png', fullPage: true });
-  await page.setViewportSize({ width: 390, height: 844 });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: out + '/setup-sendgrid.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-  await page.screenshot({ path: out + '/setup-sendgrid-mobile.png', fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: out + '/setup-sendgrid-mobile.png', fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
   const ownerId = (await api('/session')).body.principal.userId;
   const employee = await api('/members', { name: 'Casey Colleague', email: 'casey@example.test', password: 'Setup-colleague-proof-2026', roles: ['employee'] });
@@ -119,7 +120,7 @@ try {
   console.log(JSON.stringify({ passed: checks.length, checks }, null, 2));
   await writeFile(out + '/setup-results.json', JSON.stringify({ passed: checks.length, checks }, null, 2));
 } catch (error) {
-  await page.screenshot({ path: out + '/setup-failure.png', fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: out + '/setup-failure.png', fullPage: true });
   await writeFile(out + '/setup-failure.txt', String(error) + '\n' + await page.locator('body').innerText());
   throw error;
 } finally { await browser.close(); }

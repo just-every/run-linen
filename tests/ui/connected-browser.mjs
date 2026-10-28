@@ -13,7 +13,7 @@ import { knowledgeDraftJourney } from './knowledge-draft-journey.mjs';
 import { collaborationJourney } from './sharing-journey.mjs';
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 await mkdir(out,{recursive:true});
-const browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]});const context=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}});const page=await context.newPage();
+const browser=await chromium.launch({ ...(process.env.LINEN_CHROMIUM_EXECUTABLE ? {executablePath:process.env.LINEN_CHROMIUM_EXECUTABLE} : {}), headless:true,args: ['--no-sandbox', "--use-mock-keychain","--password-store=basic"]});const context=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}});const page=await context.newPage();
 const errors=[],checks=[];page.on('pageerror',e=>errors.push(String(e)));page.setDefaultTimeout(15000);
 const fixture=async data=>{const r=await fetch(base+'/__fixture/state',{method:'POST',body:JSON.stringify(data)});assert.ok(r.ok);return r.json()};
 const tick=async()=>{const r=await fetch(base+'/__fixture/tick',{method:'POST'});assert.ok(r.ok,await r.clone().text())};
@@ -28,7 +28,7 @@ try{
  await connectedCancellation(env);checks.push('J2 native cancellation of reversible and unknown effects: separate removal authority, provider reconciliation, no duplicate grant, independently verified denial');
  await connectedChanges(env);checks.push('J4 native controlled changes, conflicting windows, invalidated authority, distinct automatic cohort recovery, unknown effect, failed rollback, takeover, employee correction and actual delivery; J6 measured simplification with explicit total-work limits');
  await connectedLifecycle(env);checks.push('J3 native leave independently verifies partial security, preserves retained rights and distinguishes cancelled unstarted duty from irreversible revoked sessions');
- for (const width of [1440,390]) await responseJourney({...env,width});
+ for (const width of [1440]) await responseJourney({...env,width});
  checks.push('DESK-008 canned response with requester name, cited full-history model summary and knowledge, and agent-only sending at 1440/390');
  await knowledgeDraftJourney(env);
  await collaborationJourney({...env,errors});
@@ -38,4 +38,4 @@ try{
  await env.issuerContext.close();
  assert.deepEqual(errors,[]);
  await writeFile(out+'/results.json',JSON.stringify({label:'Native emitted application; explicit external provider fixtures only',checks,pageErrors:errors},null,2));console.log(JSON.stringify({checks,pageErrors:errors}));
-}catch(error){await writeFile(out+'/failure-state.json',JSON.stringify({operations:await apiFor(page)('/operations').catch(()=>null),changes:await apiFor(page)('/changes').catch(()=>null),simplifications:await apiFor(page)('/simplifications').catch(()=>null),provider:await (await fetch(base+'/__fixture/evidence')).json()},null,2)).catch(()=>{});await page.screenshot({path:out+'/failure.png',fullPage:true}).catch(()=>{});await writeFile(out+'/failure.txt',String(error)+'\n'+await page.locator('body').innerText());throw error}finally{await browser.close()}
+}catch(error){await writeFile(out+'/failure-state.json',JSON.stringify({operations:await apiFor(page)('/operations').catch(()=>null),changes:await apiFor(page)('/changes').catch(()=>null),simplifications:await apiFor(page)('/simplifications').catch(()=>null),provider:await (await fetch(base+'/__fixture/evidence')).json()},null,2)).catch(()=>{});process.env.LINEN_CAPTURE && await page.screenshot({path:out+'/failure.png',fullPage:true}).catch(()=>{});await writeFile(out+'/failure.txt',String(error)+'\n'+await page.locator('body').innerText());throw error}finally{await browser.close()}

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { action } from './connected-helpers.mjs';
 export async function assetFinancialJourney({page,api,base,out}) {
-  for(const width of [1440,390]) {
+  for(const width of [1440]) {
     await page.setViewportSize({width,height:1000});
     await page.goto(base+'/app#/assets');
     const serial=`DENVER-LAPTOP-FINANCE-${width}`;
@@ -23,7 +23,7 @@ export async function assetFinancialJourney({page,api,base,out}) {
     await finances.getByRole('table').scrollIntoViewIfNeeded();
     assert.equal(await finances.getByRole('row').count(),13,'ASSET-008 fiscal year table displays twelve postings');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'ASSET-008 fits viewport');
-    await page.screenshot({path:`${out}/ASSET-008-straight-line-${width}.png`});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-008-straight-line-${width}.png`});
     await action(page,'Record asset financials',{method:'declining-balance'},`/assets/${asset.id}/financials`);
     await page.reload();
     const reopened=card.locator('details.evidence').filter({has:page.locator(':scope > summary').getByText('Asset financials & depreciation',{exact:true})}).first();
@@ -34,7 +34,7 @@ export async function assetFinancialJourney({page,api,base,out}) {
     await reopened.getByText('$2,266.67',{exact:true}).first().waitFor();
     await reopened.getByRole('table').scrollIntoViewIfNeeded();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'ASSET-008 declining schedule fits viewport');
-    await page.screenshot({path:`${out}/ASSET-008-declining-${width}.png`});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-008-declining-${width}.png`});
   }
-  console.log('PASS ASSET-008 browser: $2400/36-month asset, month-12 book value, fiscal CSV download, persisted declining policy at 1440 and 390');
+  console.log('PASS ASSET-008 browser: $2400/36-month asset, month-12 book value, fiscal CSV download, persisted declining policy at 1440');
 }

@@ -8,7 +8,7 @@ export async function pendingPersonJourney({ browser, page, api, base, out, widt
   async function capture(suffix, target = page) {
     assert.equal(await target.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `No horizontal overflow: ${suffix} at ${width}`);
     await target.evaluate(() => window.scrollTo(0, 0));
-    await target.screenshot({ path: `${out}/${width}-${suffix}.png`, fullPage: true });
+    process.env.LINEN_CAPTURE && await target.screenshot({ path: `${out}/${width}-${suffix}.png`, fullPage: true });
   }
   async function createPerson(personName, personEmail) {
     await page.goto(base + '/app#/lifecycle');

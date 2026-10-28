@@ -29,5 +29,5 @@ export async function dependencyJourney({page,api,base,out}) {
   await page.reload();
   await page.getByText('stale',{exact:true}).waitFor();
   await captureJourney(page,{path:out+'/ASSET-009-stale-relationship.png',fullPage:true});
-  console.log('PASS ASSET-009 browser: typed CIs and Payroll dependencies, change/incident impact and marked stale relationship at 1440/390');
+  console.log('PASS ASSET-009 browser: typed CIs and Payroll dependencies, change/incident impact and marked stale relationship at 1440');
 }

@@ -47,7 +47,7 @@ export async function timeJourney({page,base,api,workId,out}) {
   await page.getByRole('button',{name:'Read this period',exact:true}).click();
   await page.getByRole('heading',{name:'Human effort',exact:true}).waitFor();
   await captureJourney(page,{path:`${out}/DESK-012-effort.png`,fullPage:true});
-  console.log('PASS DESK-012: manual and real measured active work feed the effort report at 1440/390');
+  console.log('PASS DESK-012: manual and real measured active work feed the effort report at 1440');
   // REPORT-004: the owner declares a role rate, then reads a baseline window beside this period.
   await page.getByText('Declare labor rates',{exact:true}).click();
   await page.getByLabel('Owner rate (USD/hour)',{exact:true}).fill('90');
@@ -71,7 +71,7 @@ export async function timeJourney({page,base,api,workId,out}) {
   for(const type of saved.automationProposal.notEnoughEvidence)await proposal.getByText(type,{exact:false}).first().waitFor();
   await proposal.scrollIntoViewIfNeeded();
   await captureJourney(page,{path:`${out}/AGENT-006-next-automation.png`,fullPage:true});
-  console.log('PASS REPORT-004: owner-declared role rate prices recorded minutes in the baseline/current work-saved report at 1440/390');
+  console.log('PASS REPORT-004: owner-declared role rate prices recorded minutes in the baseline/current work-saved report at 1440');
   return {workId,entries};
   } finally {
     await focus.send('Emulation.setFocusEmulationEnabled', { enabled: false });

@@ -42,7 +42,7 @@ try {
   if (process.env.LINEN_TEST_URL) throw Error("Setup fixtures require the runner-owned isolated worker, never an existing preview URL");
   let url;
   if (!url) {
-    await command("pnpm", ["build"]);
+    if (!process.env.LINEN_TEST_BUILT) await command("pnpm", ["run", "build:app"]);
     await cp(join(root, "dist"), join(scratch, "dist"), { recursive: true });
     const value = await port();
     url = `http://127.0.0.1:${value}`;

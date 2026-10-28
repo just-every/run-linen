@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+import {mkdir} from 'node:fs/promises';
+import {apiFor,finishFirstRun} from './connected-helpers.mjs';
+import {monitoringJourney,serviceNoticeJourney} from './service-notice-journey.mjs';
+import {mailboxJourney} from './mailbox-journey.mjs';
+import {walkupJourney} from './walkup-journey.mjs';
+import {handoffJourney} from './handoff-journey.mjs';
+import {brandJourney} from './brand-journey.mjs';
+const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
+await mkdir(out,{recursive:true});
+const browser=await chromium.launch({ ...(process.env.LINEN_CHROMIUM_EXECUTABLE ? {executablePath:process.env.LINEN_CHROMIUM_EXECUTABLE} : {}), headless:true,args:['--no-sandbox']}),errors=[];
+try {
+ const context=await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'UTC'}),page=await context.newPage();
+ page.on('pageerror',e=>errors.push(String(e)));
+ await page.goto(base+'/app');
+ await page.getByLabel('Your name').fill('Morgan Hayes');
+ await page.getByLabel('Workspace name').fill('Northstar service desk');
+ await page.getByLabel('Work email').fill('notice-owner@example.test');
+ await page.getByLabel('Password',{exact:true}).fill('synthetic-Connected-browser-2026');
+ await page.getByRole('button',{name:'Create workspace'}).click();
+ await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();
+ await finishFirstRun(page,base);
+ const env={browser,context,page,api:apiFor(page),base,out,errors};
+ await monitoringJourney(env);
+ await serviceNoticeJourney(env);
+ await mailboxJourney(env);
+ await walkupJourney(env);
+ await handoffJourney(env);
+ await brandJourney(env);
+ assert.deepEqual(errors,[]);
+} finally {await browser.close();}
