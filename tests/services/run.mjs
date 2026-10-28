@@ -1,4 +1,5 @@
 import { employeeNoticeChecks } from './employee-notice-cases.mjs';
+import { softwareLicenseChecks } from './software-license-cases.mjs';
 import { templateChecks } from './template-cases.mjs';
 import { calendarChecks } from './calendar-cases.mjs';
 import { dependencyChecks } from './dependency-cases.mjs';
@@ -14,7 +15,7 @@ const {Miniflare,convertV4MiniflareOptions}=require('../../node_modules/.pnpm/mi
 const {build}=require('../../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild')
 const dir=await mkdtemp(path.join(tmpdir(),'linen-services-'))
 await build({entryPoints:[new URL('./worker.ts',import.meta.url).pathname],outfile:path.join(dir,'worker.mjs'),bundle:true,format:'esm',platform:'browser',target:'es2022'})
-const mf=new Miniflare(convertV4MiniflareOptions({ port: Number(process.env.LINEN_TEST_WORKER_PORT || 0), modules:true,script:await readFile(path.join(dir,'worker.mjs'),'utf8'),compatibilityDate:'2026-09-01',d1Databases:{DB:'services-test'},bindings:{SESSION_SECRET:'test-only',APP_ORIGIN:'https://linen.example.test',ENCRYPTION_KEY:btoa('a'.repeat(32))}}))
+const mf=new Miniflare(convertV4MiniflareOptions({ port: Number(process.env.LINEN_TEST_WORKER_PORT || 0), modules:true,script:await readFile(path.join(dir,'worker.mjs'),'utf8'),compatibilityDate:'2026-09-01',d1Databases:{DB:'services-test'},r2Buckets:['ATTACHMENTS'],bindings:{SESSION_SECRET:'test-only',APP_ORIGIN:'https://linen.example.test',ENCRYPTION_KEY:btoa('a'.repeat(32))}}))
 try{
  const db=await mf.getD1Database('DB')
  await applyMigrations(db);
@@ -171,5 +172,6 @@ try{
  await dependencyChecks(request);
  await calendarChecks(request,db);
  await templateChecks(request,db);
+ await softwareLicenseChecks(request,db);
  console.log('SERVICES: real D1 privacy/tenant isolation, graph stale conflicts, private audience denial, independent partial cohort recovery, wrong-link correction, amended approval invalidation, conflicting windows, canary dispatch, incomplete compensation, supplier breaches, scoped business decisions and signed monitoring/replay rejection/staleness/automatic incident and on-call routing and actual notification adapter submission/readback and honest report denominators passed')
 }finally{await mf.dispose();await rm(dir,{recursive:true,force:true})}

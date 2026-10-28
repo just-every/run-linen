@@ -1,3 +1,4 @@
+import { SoftwareLicenseLink } from './software-licenses';
 import { RecordHistory } from './record-history';
 import { NoticeControls } from './service-notices';
 import { NewRelease, ReleaseDetails } from './releases';
@@ -193,6 +194,7 @@ export function ServiceSpace({
           {label[0]}
         </a>
       )}
+      {section === "software-assets" && canEdit && <SoftwareLicenseLink/>}
       <Hero eyebrow={d ? label[0] : undefined} title={d ? text(d.title ?? d.name) : label[0]}>
         <p className="lead">
           {d

@@ -67,6 +67,10 @@ const checks = [
   ['pricing and budgets browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/billing-browser.mjs']],
   ['operations KPI browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/kpi-journey.mjs']],
   ['MCP native conversation', process.execPath, ['tests/ui/run.mjs', 'tests/ui/mcp-journey.mjs']],
+  ['software provider browser', process.execPath, ['tests/ui/software-license-run.mjs']],
+  ['software license browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/software-license-browser.mjs']],
+  ['report builder and exports browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/reporting-browser.mjs']],
+  ['notification rules browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/notification-browser.mjs']],
 ]
 const shardValue = process.env.LINEN_VERIFY_SHARD
 let shard
@@ -84,6 +88,7 @@ if (shardValue !== undefined) {
 // Unlisted checks count as 10.
 // Heaviest first onto the lightest shard keeps every shard inside its job limit.
 const measuredSeconds = {
+  'software provider browser': 100, 'software license browser': 45, 'report builder and exports browser': 45, 'notification rules browser': 45,
   'Native archive transfer': 447, 'browser journeys': 249, 'native connected provider journeys': 246,
   'department workspaces browser': 146, 'identity erasure': 143, 'operations KPI browser': 100, 'Base native auth': 78,
   'desk scenarios and templates browser': 74, 'connection and authority setup': 69, 'release browser': 56,

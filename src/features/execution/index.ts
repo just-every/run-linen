@@ -1,3 +1,6 @@
+import { setWorkNotificationPort } from '../work/notification-port';
+import { emitNotificationEvent } from './notification-rules';
+import { registerNotificationRoutes } from './notification-routes';
 import type { Hono } from "hono";
 import type { AppEnv } from "../../platform/types";
 import { id, jsonBody, now } from "../../platform/http";
@@ -30,6 +33,8 @@ export {
 };
 export type { CoreContext, PlanInput, Step } from "./types";
 export function registerExecutionRoutes(app: Hono<AppEnv>) {
+  setWorkNotificationPort(emitNotificationEvent);
+  registerNotificationRoutes(app);
   app.get("/subject-mappings", async c => c.json(await listSubjectMappings({ env: c.env, principal: c.get("principal") })));
   app.get("/automation-principals", async c => c.json(await listAutomationPrincipals({ env: c.env, principal: c.get("principal") })));
   app.post("/subject-mappings", async (c) =>
