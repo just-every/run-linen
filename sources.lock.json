@@ -2095,7 +2095,7 @@
       "executable": false
     },
     "src/features/adoption/schema.ts": {
-      "sha256": "84e04fabfb72e3fbfcff974b0d4bc1255cc70ab861c2a11739cdc1dc57bda889",
+      "sha256": "0177c9c067445653556c84b0fc6acd3aac8b31410e550604a5c358abd382d25b",
       "executable": false
     },
     "src/features/adoption/servicenow-import/context.ts": {
