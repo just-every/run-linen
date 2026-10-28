@@ -643,7 +643,7 @@
       "executable": false
     },
     "deploy.json": {
-      "sha256": "c85583ddc47f4babbbd78040c480c9b759d94fbaca63c2d6367c0af43e85bffd",
+      "sha256": "506f3994bb372cf03af65b14344b6128ab0c9e3e4d4db7a4bebcd2eee9c2c07a",
       "executable": false
     },
     "docs/asking.md": {
@@ -6907,7 +6907,7 @@
       "executable": false
     },
     "wrangler.jsonc": {
-      "sha256": "be260507c04dc4769928c5f8db98cddb95a3c13e413f4e137cfed3ba87e1cb0b",
+      "sha256": "ad6834b81a432435e2fc77115c33447b5b42b6b704773c23209a7e40fa5fe38e",
       "executable": false
     }
   }
