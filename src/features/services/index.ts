@@ -1,4 +1,5 @@
 import { closeChangeReview } from './change-health';
+import { registerDevelopmentRoutes } from './development-bindings';
 import { reviewChangeCause } from './change-causes';
 import { monitoringBinding, monitoringSignature } from './monitoring-source';
 import { serviceHistory } from './history';
@@ -63,6 +64,7 @@ async function presentRecord(env: Env, p: Principal, r: ServiceRecord) {
     return { ...r, data: { ...publicData, links, diagnostics: [], recoveries: (r.data.recoveries || []).map((e: any) => ({ cohort: e.cohort, observedAt: e.observedAt, expiresAt: e.expiresAt })), updates: (r.data.updates || []).filter((u: any) => u.audience.includes(p.userId)).map((u: any) => ({ message: u.message, at: u.at })) } };
 }
 export function registerServiceRoutes(app: Hono<AppEnv>) {
+    registerDevelopmentRoutes(app);
     registerEmployeeNotices(app);
     registerCalendarRoutes(app);
     registerTemplateRoutes(app);

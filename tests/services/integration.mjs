@@ -24,6 +24,78 @@ await db.prepare("INSERT INTO workspace_settings VALUES('w','{}',1)").run()
 async function call(method,path,body,user='owner',workspace='w',headers={}){const response=await mf.dispatchFetch('http://localhost'+path,{method,headers:{'content-type':'application/json','x-user':user,'x-workspace':workspace,...headers},body:body===undefined?undefined:JSON.stringify(body)});return {status:response.status,body:await response.json()}}
 async function ok(method,path,body,user){const r=await call(method,path,body,user);assert.ok(r.status<300,JSON.stringify(r));return r.body}
 for(const [id,provider,config] of [['deploy','controlled-deployment',{url:'https://deployment.fixture.test/change',allowedHosts:['deployment.fixture.test'],targets:['orders']}],['probe','workflow-probe',{url:'https://probe.fixture.test/check',allowedHosts:['probe.fixture.test']}]]){const secret=(await ok('POST','/fixture/secret',{token:'fixture'})).secret;await db.prepare('INSERT INTO connections VALUES(?,?,?,?,?,?,?,1,?,?)').bind(id,'w',provider,id,JSON.stringify(config),secret,'active',now,now).run()}
+// Public development doors: signed native events, current owner custody and private projections.
+async function developmentChecks() {
+ const at=new Date().toISOString(),signingSecret='synthetic-linen-42001';
+ await db.prepare('INSERT INTO workspaces VALUES(?,?,?)').bind('development','Development proof',at).run();
+ for(const user of ['owner','operator'])await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('development',user,JSON.stringify([user])).run();
+ const devCall=(method,path,body,user='owner',workspace='development',headers={})=>call(method,path,body,user,workspace,headers);
+ const devOk=async(method,path,body,user)=>{const r=await devCall(method,path,body,user);assert.ok(r.status<300,JSON.stringify(r));return r.body};
+ await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind('dev-employee','development@example.test','Employee','synthetic-linen-42002',at).run();
+ await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('development','dev-employee',JSON.stringify(['employee'])).run();
+ const work=await devOk('POST','/work',{title:'Engineering issue',body:'A normal incident',kind:'incident',beneficiaryId:'dev-employee',deduplicationKey:'synthetic-linen-42003'});
+ const bindingBody={kind:'issue',targetId:work.id,repositoryId:42001,repositoryName:['synthetic-linen','issues'].join('/'),issueNumber:42,signingSecret,consent:true};
+ assert.equal((await devCall('POST','/development-bindings',bindingBody,'operator')).status,403);
+ assert.equal((await devCall('POST','/development-bindings',{...bindingBody,consent:false})).status,422);
+ const binding=await devOk('POST','/development-bindings',bindingBody);
+ assert.ok(!JSON.stringify(await devOk('GET','/development-bindings')).includes(signingSecret));
+ let sequence=0;
+ const send=(bindingId,event,type='issues',delivery='synthetic-linen-'+(++sequence))=>devCall('POST','/webhooks/development/'+bindingId,event,'owner','development',{'x-github-delivery':delivery,'x-github-event':type,'x-hub-signature-256':'sha256='+createHmac('sha256',signingSecret).update(JSON.stringify(event)).digest('hex')});
+ const event={action:'closed',repository:{id:42001,full_name:bindingBody.repositoryName},issue:{number:42,state:'closed',updated_at:at}};
+ assert.equal((await devCall('POST','/webhooks/development/'+binding.id,event)).status,401);
+ assert.equal((await send(binding.id,{...event,repository:{...event.repository,id:7}})).status,422);
+ const closed=await send(binding.id,event,'issues','synthetic-linen-42004');assert.equal(closed.status,200,JSON.stringify(closed));
+ assert.equal((await send(binding.id,event,'issues','synthetic-linen-42004')).body.duplicate,true);
+ assert.equal((await send(binding.id,event,'issues','synthetic-linen-42014')).body.duplicate,true);
+ const replay=await send(binding.id,{...event,action:'reopened',issue:{...event.issue,state:'open'}},'issues','synthetic-linen-42004');assert.equal(replay.status,409);
+ const conversation=await devOk('GET','/work/'+work.id);
+ assert.equal(conversation.work.state,'paused');assert.equal(conversation.messages.filter(m=>m.body.includes('Verify with employee')).length,1);
+ assert.equal(conversation.messages.find(m=>m.body.includes('Verify with employee')).visibility,'private');
+ const employee=await devOk('GET','/work/'+work.id,undefined,'dev-employee');assert.ok(employee.messages.every(m=>m.visibility==='public'));
+ const comment={...event,action:'created',comment:{id:42005,created_at:at,body:'synthetic-linen-42006 private engineering context'}};
+ assert.equal((await send(binding.id,comment,'issue_comment')).status,200);
+ assert.ok((await devOk('GET','/work/'+work.id)).messages.some(m=>m.body.includes(comment.comment.body)));
+ assert.ok(!(await devOk('GET','/work/'+work.id,undefined,'dev-employee')).messages.some(m=>m.body.includes(comment.comment.body)));
+ assert.equal((await send(binding.id,{...event,issue:{...event.issue,updated_at:'2000-01-01T00:00:00Z'}})).status,422);
+ const service=await devOk('POST','/services',{name:'Development SSO',description:'Sign-in',businessImpact:'Employees',source:'reviewed',observedAt:at});
+ let template=await devOk('POST','/change-templates',{title:'Production deployment context',risk:'Bounded',impact:'Employees',services:[service.id],cohorts:['sales'],canaryCohorts:['sales'],implementation:{target:'orders',payload:{release:'reviewed'}},compensation:{target:'orders',payload:{release:'prior'}},implementationPlan:'Record reviewed deployment',testPlan:'Independent verification required',backoutPlan:'Separate grant required',active:true});
+ template=await devOk('POST','/change-templates/'+template.id+'/approve',{revision:template.revision,version:template.data.version,reason:'Reviewed exact production plan'});
+ const deploymentBinding=await devOk('POST','/development-bindings',{...bindingBody,kind:'deployment',targetId:template.id,templateVersion:template.data.version});
+ const deployment={repository:event.repository,deployment:{id:42007,environment:'production',production_environment:true,created_at:at,payload:{pullRequestNumber:42,runId:42008}}};
+ assert.equal((await send(deploymentBinding.id,{...deployment,deployment:{...deployment.deployment,environment:'staging'}},'deployment')).status,422);
+ const results=await Promise.all([send(deploymentBinding.id,deployment,'deployment','synthetic-linen-42009'),send(deploymentBinding.id,deployment,'deployment','synthetic-linen-42009')]);
+ assert.ok(results.every(r=>r.status===200),JSON.stringify(results));assert.equal(results.filter(r=>!r.body.duplicate).length,1);
+ const change=await devOk('GET','/changes/'+results[0].body.resultId);
+ assert.equal(change.data.changeType,'standard');assert.equal(change.data.state,'preapproved');assert.equal(change.data.developmentContext.pullRequest,'https://github.com/'+bindingBody.repositoryName+'/pull/42');assert.ok(change.data.developmentContext.run.endsWith('/actions/runs/42008'));
+ assert.deepEqual(change.data.authorizations,[]);assert.deepEqual(change.data.invocations,[]);
+ const deniedDispatch=await devCall('POST','/changes/'+change.id+'/dispatch',{revision:change.revision,phase:'canary',idempotencyKey:'synthetic-linen-42010'});
+ assert.equal(deniedDispatch.status,409);assert.equal(deniedDispatch.body.error.code,'authorization');
+ await devOk('POST','/development-bindings/'+binding.id+'/revoke',{});
+ assert.equal((await send(binding.id,comment,'issue_comment')).status,404);
+ const erasedWork=await devOk('POST','/work',{title:'Erasure boundary',body:'Normal incident',beneficiaryId:'dev-employee',deduplicationKey:'synthetic-linen-42015'});
+ const erasedBinding=await devOk('POST','/development-bindings',{...bindingBody,targetId:erasedWork.id});
+ await devOk('POST','/people/'+'dev-employee'+'/erase',{revision:1,reason:'Authorized synthetic erasure'});
+ assert.equal((await send(erasedBinding.id,comment,'issue_comment')).status,404,'Subject erasure revokes inbound authority');
+ assert.equal((await devCall('POST','/development-bindings',{...bindingBody,targetId:erasedWork.id})).status,409,'Erased subjects cannot be rebound');
+ await db.prepare("UPDATE memberships SET active=0 WHERE workspace_id='development' AND user_id='owner'").run();
+ assert.equal((await send(deploymentBinding.id,{...deployment,deployment:{...deployment.deployment,id:42011}},'deployment')).status,404);
+ await db.prepare("UPDATE memberships SET active=1 WHERE workspace_id='development' AND user_id='owner'").run();
+ template=await devOk('PATCH','/change-templates/'+template.id,{revision:template.revision,active:false});
+ assert.equal((await send(deploymentBinding.id,{...deployment,deployment:{...deployment.deployment,id:42012}},'deployment')).status,409);
+ // A different current owner erases the consenting owner through the public door.
+ await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind('dev-successor','successor@example.test','Successor','synthetic-linen-43001',at).run();
+ await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('development','dev-successor','["owner"]').run();
+ const ownerWork=await devOk('POST','/work',{title:'Owner consent erasure',body:'Normal incident',deduplicationKey:'synthetic-linen-43002'},'dev-successor');
+ const ownerBinding=await devOk('POST','/development-bindings',{...bindingBody,targetId:ownerWork.id});
+ await devOk('POST','/people/owner/erase',{revision:0,reason:'Authorized owner erasure'},'dev-successor');
+ for(const key of [ownerBinding.id,deploymentBinding.id]) {
+  assert.deepEqual(await db.prepare('SELECT active,secret_ciphertext,owner_id FROM svc_development_bindings WHERE id=?').bind(key).first(),{active:0,secret_ciphertext:null,owner_id:'[erased]'},'Owner erasure clears both kinds of inbound credential');
+ }
+ assert.equal((await send(ownerBinding.id,comment,'issue_comment')).status,404,'Erased owner issue binding refuses signed events');
+ assert.equal((await send(deploymentBinding.id,{...deployment,deployment:{...deployment.deployment,id:43003}},'deployment')).status,404,'Erased owner deployment binding refuses signed events');
+ console.log('PASS developmentChecks: signed issue closure and private comments, replay and scope refusals, production standard change with PR and run, no effect authority; owner erasure revokes both binding kinds and clears secrets');
+}
+await developmentChecks();
 await departmentSourceChecks({ok,call,db});
 await operationsKpiChecks({ok,call,implementation:{connectionId:'deploy',connectionRevision:1,verifierConnectionRevision:1,target:'orders',beneficiaryId:'sales',verifierConnectionId:'probe',payload:{release:'kpi-proof'}}});
 await ok('POST','/fixture/state',{reset:true});

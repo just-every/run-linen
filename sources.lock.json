@@ -662,6 +662,10 @@
       "sha256": "dbb56b394ad79a84665cb0fc35f3417d52700787ee3c598a9a34e4a2687554b9",
       "executable": false
     },
+    "docs/development-context.md": {
+      "sha256": "41131329778409e1bdd22046549e68da7de9aeeb32651e57278aa1d4484de88f",
+      "executable": false
+    },
     "docs/FRESHSERVICE-MIGRATION.md": {
       "sha256": "31d8c08a9ebb08763222a501d23c934e827ab42622e365f3d3205847224f2625",
       "executable": false
@@ -1200,6 +1204,10 @@
     },
     "migrations/0911_sandbox_masked_families.sql": {
       "sha256": "d594b7f8e88d5552c1b0b48152407917e365b06e7163832ef2affffff5ef1204",
+      "executable": false
+    },
+    "migrations/0912_development_bindings.sql": {
+      "sha256": "cf9bc98a075ee197905bc4f911b6720dcce99858a30ac3ee54a32e97e7587a78",
       "executable": false
     },
     "ONBOARDING.md": {
@@ -2083,7 +2091,7 @@
       "executable": false
     },
     "src/features/adoption/schema.ts": {
-      "sha256": "84e04fabfb72e3fbfcff974b0d4bc1255cc70ab861c2a11739cdc1dc57bda889",
+      "sha256": "1c7974dbff90b75f43e33f6c82707681636da8830b60d8c034b450182b9412c8",
       "executable": false
     },
     "src/features/adoption/servicenow-import/context.ts": {
@@ -2615,7 +2623,7 @@
       "executable": false
     },
     "src/features/services/changes.ts": {
-      "sha256": "8b67146e07feb24f24ed1f3fd1cbf14efd687fa461f6417ff22029fca2a9ec18",
+      "sha256": "a0dd17a07df9e3de1ed9ed8f1e796fbb8778aaaeede4f1526af8ed7fe49a3726",
       "executable": false
     },
     "src/features/services/configuration.ts": {
@@ -2628,6 +2636,14 @@
     },
     "src/features/services/dependency-impact.ts": {
       "sha256": "5514351839d4991b2472e61176d761cff8a9c09a3e58d12aa2416ff86cd1c89b",
+      "executable": false
+    },
+    "src/features/services/development-bindings.ts": {
+      "sha256": "1d7b42a4feb8029d8bbd9ac6502ccd00b1720f87dc33f6157e70c5e8d8a35703",
+      "executable": false
+    },
+    "src/features/services/development-events.ts": {
+      "sha256": "094c6d25b467ade2a99cee6943b08aa6bb6d49c27bbcb500a33d3c7cf22d0c4b",
       "executable": false
     },
     "src/features/services/economics.ts": {
@@ -2659,7 +2675,7 @@
       "executable": false
     },
     "src/features/services/index.ts": {
-      "sha256": "419ee4a936df9b5e9f33fc4744620650cb8020014724a56a6d8cff146d3cb934",
+      "sha256": "63f60950a06f2e2a89891e330669e70422f3033b45fcf2594a80823ea7f6f7c4",
       "executable": false
     },
     "src/features/services/intake.ts": {
@@ -2743,7 +2759,7 @@
       "executable": false
     },
     "src/features/services/webhooks.ts": {
-      "sha256": "fd3572c7780719011ed3247b3c762e10d8a63d05abfce06c033f93f1d547f3a7",
+      "sha256": "20ec88cbe824b339d1ee802549b4d30cf5abce3cb47462311b8881066554b189",
       "executable": false
     },
     "src/features/services/work-port.ts": {
@@ -5083,7 +5099,7 @@
       "executable": false
     },
     "src/platform/portability-policy.mjs": {
-      "sha256": "ba582e4d36b0d6fa82274f7d699b3858668cc91555a6f5a69229056875b5e898",
+      "sha256": "901684f88dd13662b160850bc10736476157bb2faa2786102b8397b5f94827ca",
       "executable": false
     },
     "src/platform/privacy.ts": {
@@ -5703,7 +5719,7 @@
       "executable": false
     },
     "src/ui/service-space.tsx": {
-      "sha256": "36256973df274d14092338942810fbf548a89c907e9e6da4736424ab12569153",
+      "sha256": "8cd7a635e6a827a562f32c77db5be7727de16db26e8426d78dbc2ebb5cfbe08b",
       "executable": false
     },
     "src/ui/settings.tsx": {
@@ -5963,7 +5979,7 @@
       "executable": false
     },
     "tests/adoption/runtime.mjs": {
-      "sha256": "f59e14c6148dcd356aeed9166acb4b583bf72e3cb1b3449fff888ea22961926b",
+      "sha256": "68ec343bf195fc7098cd83d898ce0b57e8ab24369fac29596e3fd9b1f5eb30d6",
       "executable": false
     },
     "tests/adoption/servicenow-import-cases.mjs": {
@@ -6155,7 +6171,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "2968beb6aa76cf77d91c258a98ad80f198e64060a615028b1ea5790b7f715a97",
+      "sha256": "942a7e851e36b9bf950b7a65a8b4e40a3d55c9529e98016164703b0ab5d67265",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
@@ -6259,11 +6275,11 @@
       "executable": false
     },
     "tests/services/integration-worker.ts": {
-      "sha256": "2b651ee1e86307937d3b02d1e4d3432077ebc66569cf54e2a10ea68b9b43fd0a",
+      "sha256": "e3b6bf6646dc99b2cb346913260c072bb75e81ebcf5fe73d2d78fd53fc053083",
       "executable": false
     },
     "tests/services/integration.mjs": {
-      "sha256": "d29eec89ccbee141204b120285d9b55ed834150a6f8b2b6ecc35ace42290ed43",
+      "sha256": "b2d7b91ddd488d9251666c41c4b916c3910c9201ecbae0d38f1c5e1466bbd910",
       "executable": false
     },
     "tests/services/kpi-cases.mjs": {
@@ -6403,7 +6419,7 @@
       "executable": false
     },
     "tests/ui/connected-change.mjs": {
-      "sha256": "cf205e727a489c294e3789eebd02395c078025a5ba3c2a2c387c1736a60acc3a",
+      "sha256": "ea18235ba83bcf73629ed15457d6c3a572e05ca1a8b72b005888017a3e5de347",
       "executable": false
     },
     "tests/ui/connected-frontier.mjs": {
