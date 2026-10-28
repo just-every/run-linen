@@ -45,9 +45,10 @@
       ]
     },
     "CHANNEL-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CHANNEL-001"
+        "CHANNEL-001",
+        "CHANNEL-010"
       ]
     },
     "CHANNEL-002": {
@@ -99,15 +100,20 @@
       ]
     },
     "CATALOG-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CATALOG-001"
+        "CATALOG-001",
+        "CATALOG-007",
+        "CATALOG-008",
+        "CATALOG-009"
       ]
     },
     "CATALOG-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CATALOG-002"
+        "CATALOG-002",
+        "CATALOG-010",
+        "CATALOG-011"
       ]
     },
     "CATALOG-003": {
@@ -123,9 +129,10 @@
       ]
     },
     "CATALOG-005": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CATALOG-005"
+        "CATALOG-005",
+        "CATALOG-012"
       ]
     },
     "CATALOG-006": {
@@ -135,9 +142,10 @@
       ]
     },
     "DESK-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-001"
+        "DESK-001",
+        "DESK-018"
       ]
     },
     "DESK-002": {
@@ -147,21 +155,24 @@
       ]
     },
     "DESK-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-003"
+        "DESK-003",
+        "DESK-019"
       ]
     },
     "DESK-004": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-004"
+        "DESK-004",
+        "DESK-020"
       ]
     },
     "DESK-005": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-005"
+        "DESK-005",
+        "DESK-021"
       ]
     },
     "DESK-006": {
@@ -171,9 +182,10 @@
       ]
     },
     "DESK-007": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-007"
+        "DESK-007",
+        "DESK-022"
       ]
     },
     "DESK-008": {
@@ -189,15 +201,17 @@
       ]
     },
     "DESK-010": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-010"
+        "DESK-010",
+        "DESK-023"
       ]
     },
     "DESK-011": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-011"
+        "DESK-011",
+        "DESK-024"
       ]
     },
     "DESK-012": {
@@ -219,21 +233,25 @@
       ]
     },
     "DESK-015": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-015"
+        "DESK-015",
+        "DESK-025"
       ]
     },
     "DESK-016": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-016"
+        "DESK-016",
+        "DESK-026"
       ]
     },
     "DESK-017": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "DESK-017"
+        "DESK-017",
+        "DESK-027",
+        "DESK-028"
       ]
     },
     "NOTIFY-001": {
@@ -315,15 +333,17 @@
       ]
     },
     "LIFE-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "LIFE-002"
+        "LIFE-002",
+        "LIFE-008"
       ]
     },
     "LIFE-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "LIFE-003"
+        "LIFE-003",
+        "LIFE-009"
       ]
     },
     "LIFE-004": {
@@ -447,9 +467,10 @@
       ]
     },
     "PROB-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "PROB-002"
+        "PROB-002",
+        "PROB-003"
       ]
     },
     "CHANGE-001": {
@@ -471,15 +492,17 @@
       ]
     },
     "CHANGE-004": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CHANGE-004"
+        "CHANGE-004",
+        "CHANGE-009"
       ]
     },
     "CHANGE-005": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CHANGE-005"
+        "CHANGE-005",
+        "CHANGE-010"
       ]
     },
     "CHANGE-006": {
@@ -489,9 +512,10 @@
       ]
     },
     "CHANGE-007": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CHANGE-007"
+        "CHANGE-007",
+        "CHANGE-011"
       ]
     },
     "CHANGE-008": {
@@ -525,9 +549,10 @@
       ]
     },
     "KB-004": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "KB-004"
+        "KB-004",
+        "KB-006"
       ]
     },
     "KB-005": {
@@ -561,9 +586,10 @@
       ]
     },
     "REPORT-005": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "REPORT-005"
+        "REPORT-005",
+        "REPORT-006"
       ]
     },
     "ROLE-001": {
@@ -585,9 +611,10 @@
       ]
     },
     "API-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "API-001"
+        "API-001",
+        "API-004"
       ]
     },
     "API-002": {
@@ -597,9 +624,12 @@
       ]
     },
     "API-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "API-003"
+        "API-003",
+        "API-005",
+        "API-006",
+        "API-007"
       ]
     },
     "PORT-001": {
@@ -633,10 +663,9 @@
       ]
     },
     "A11Y-001": {
-      "how": "kept",
-      "to": [
-        "A11Y-001"
-      ]
+      "how": "retired",
+      "to": [],
+      "now": "moved to Base BASE-ACCESSIBILITY-001"
     },
     "L10N-001": {
       "how": "kept",
@@ -663,9 +692,11 @@
       ]
     },
     "SANDBOX-004": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SANDBOX-004"
+        "SANDBOX-004",
+        "SANDBOX-005",
+        "SANDBOX-006"
       ]
     },
     "MIGRATE-001": {
@@ -675,21 +706,24 @@
       ]
     },
     "MIGRATE-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "MIGRATE-002"
+        "MIGRATE-002",
+        "MIGRATE-006"
       ]
     },
     "MIGRATE-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "MIGRATE-003"
+        "MIGRATE-003",
+        "MIGRATE-007"
       ]
     },
     "MIGRATE-004": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "MIGRATE-004"
+        "MIGRATE-004",
+        "MIGRATE-008"
       ]
     },
     "MIGRATE-005": {
@@ -729,9 +763,10 @@
       ]
     },
     "A6": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "A6"
+        "A6",
+        "A8"
       ]
     },
     "A7": {
