@@ -9,7 +9,8 @@ const require=createRequire(await realpath('node_modules/wrangler/package.json')
 const {build}=require('esbuild'),{Miniflare,convertV4MiniflareOptions}=require('miniflare');
 export async function adoptionHarness(){
  const dir=await mkdtemp(join(tmpdir(),'linen-adoption-'));
- if(!process.env.LINEN_ADOPTION_BUNDLE)await build({entryPoints:[resolve('tests/adoption/worker.ts')],bundle:true,format:'esm',platform:'browser',target:'es2022',outfile:join(dir,'worker.mjs')});
+ // Preserve built-ins for workerd's nodejs_compat runtime, as in production.
+ if(!process.env.LINEN_ADOPTION_BUNDLE)await build({entryPoints:[resolve('tests/adoption/worker.ts')],bundle:true,format:'esm',platform:'browser',target:'es2022',external:['node:*'],outfile:join(dir,'worker.mjs')});
  const script=await readFile(process.env.LINEN_ADOPTION_BUNDLE || join(dir,'worker.mjs'),'utf8');
  console.log('Frozen adoption Worker SHA256 '+createHash('sha256').update(script).digest('hex'));
  const files=(await readdir('migrations')).filter(f=>f.endsWith('.sql')).sort();

@@ -1,4 +1,4 @@
-Carried-done audit of `docs/contract` against old reference `19816529116ae290357a5bebafc35189a7dcc1e9`: one row per acceptance point (one per named outcome) of every part of a clause that was done there.
+Carried-done audit of `docs/contract` against old reference `1a401858c1e58f8392cffdccf7dd3ff0e7e6e4a7`: one row per acceptance point (one per named outcome) of every part of a clause that was done there.
 
 | Clause | Point | Outcome | Asserting test | Result |
 | --- | ---: | --- | --- | --- |
@@ -283,7 +283,7 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-006` | 4 | the surviving ticket carries a public merge notice | `tests/work/relationship-cases.mjs:29` | asserted |
 | `DESK-006` | 4 | the duplicate carries a public merge notice | none | none |
 | `DESK-006` | 5 | HR tickets are never merged | `tests/work/relationship-cases.mjs:21` | asserted |
-| `DESK-006` | 6 | a split copies the chosen public message citing its source | `tests/work/relationship-cases.mjs:43` | asserted |
+| `DESK-006` | 6 | a split copies the chosen public message citing its source record | `tests/work/relationship-cases.mjs:43` | asserted |
 | `DESK-006` | 6 | the split ticket keeps the requester | `tests/work/relationship-cases.mjs:42` | asserted |
 | `DESK-006` | 6 | the split ticket keeps the beneficiary | none | none |
 | `DESK-006` | 6 | the split carries the classification and binds its own SLA | `tests/work/relationship-cases.mjs:45` | asserted |
@@ -307,7 +307,7 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-008` | 6 | changed context or authority refuses a late result | `tests/work/response-cases.mjs:53` | asserted |
 | `DESK-008` | 7 | a draft stays unsent until the service agent sends it | `tests/ui/response-journey.mjs:31` | asserted |
 | `DESK-008` | 7 | the composer's selected visibility is preserved | none | none |
-| `DESK-008` | 8 | generated knowledge is used when both recipients can read every source | `tests/work/knowledge-draft-cases.mjs:57` | asserted |
+| `DESK-008` | 8 | generated knowledge is used when both recipients can read every source record | `tests/work/knowledge-draft-cases.mjs:57` | asserted |
 | `DESK-008` | 8 | unreadable requester, beneficiary or pending-beneficiary context is refused | `tests/work/knowledge-draft-cases.mjs:65` | asserted |
 | `DESK-008` | 8 | a late rights change never posts the reply | `tests/work/knowledge-draft-cases.mjs:74` | asserted |
 | `DESK-010` | 1 | an Office dropdown and an Awaiting parts status are added and used, and the SLA pauses | `tests/work/desk-field-cases.mjs:70` | asserted |
@@ -395,7 +395,7 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-025` | 1 | a "New laptop setup" template pre-fills a new ticket | `tests/work/desk-scenario-cases.mjs:85` | asserted |
 | `DESK-025` | 2 | anyone starts a request from a template and edits the draft | `tests/work/desk-scenario-cases.mjs:83` | asserted |
 | `DESK-025` | 3 | a scenario starts a named project with its duties | `tests/work/desk-scenario-cases.mjs:137` | asserted |
-| `DESK-025` | 3 | a scenario links an existing project | `tests/work/desk-scenario-cases.mjs:141` | asserted |
+| `DESK-025` | 3 | a scenario links an existing project record | `tests/work/desk-scenario-cases.mjs:141` | asserted |
 | `DESK-025` | 4 | the project normal-ticket boundary is checked before any field changes | `tests/work/desk-scenario-cases.mjs:145` | asserted |
 | `DESK-025` | 5 | the project, duties and ticket link are committed together | `tests/work/desk-scenario-cases.mjs:138` | asserted |
 | `DESK-025` | 5 | starting a plan grants no provider authority | none | none |

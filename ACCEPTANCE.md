@@ -473,7 +473,7 @@ Core · target · **partial** · Rules D-3
 7. Linen replies only to the mapped requester, only with a public staff message, from the mailbox itself, and only after the domain's SPF, DKIM and DMARC records were read back as present for the connection's current revision; an unconfirmed send is never repeated.
 
 **Evidence.** `tests/work/mail-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/mailbox-journey.mjs`
-**Gap.** Network edges (Gmail, Microsoft Graph, OAuth token, DNS) use fixtures; no live Gmail or Exchange Online mailbox receipt and no live OAuth consent are claimed, and Exchange's handling of a client-set Message-ID is unproven (threading relies on the References chain). Gmail/Exchange OAuth app registration and consent remain owner-held.
+**Gap.** Network edges (Gmail, Microsoft Graph, OAuth token, DNS) use fixtures; no live Gmail or Exchange Online mailbox receipt and no live OAuth consent are claimed, and Exchange's handling of a client-set Message-ID is unproven (threading relies on the References chain). Trusted receiving-provider provenance for Authentication-Results remains unproved. Gmail and Exchange OAuth app registration and consent remain owner-held.
 
 #### CHANNEL-004 — Employee portal
 
@@ -2931,8 +2931,8 @@ Core · push-further · **partial** · Rules D-7
 2. One is published.
 3. Its measured effect is reported after two weeks.
 
-**Evidence.** `src/features/intelligence/capabilities.ts`, `tests/intelligence/frontier.mjs`
-**Gap.** No ticket-history mining.
+**Evidence.** `tests/intelligence/ticket-mining-cases.mjs`, `tests/adoption/freshservice-import.mjs`, `tests/intelligence/ticket-mining-scale.mjs`
+**Gap.** Substantive automation design beyond lexical title patterns and draft outlines, publication with admin review where the company's policy requires it, native screens, and a measured effect after a declared two-week post-publication observation remain unbuilt. No elapsed window or measured savings is claimed.
 
 #### AGENT-008 — Keep devices and licenses healthy
 

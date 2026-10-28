@@ -1,5 +1,11 @@
 # Changelog
 
+## 28 October 2026 — reconcile current-main contract evidence
+
+Main `1a401858c1e58f8392cffdccf7dd3ff0e7e6e4a7` records the conservative mailbox semantic as ct approved with riders on 23 October 2026 (RL-103). Its mailbox evidence now includes owner-only mapping and dismissal with atomic audits and rollback, dismissed senders held again, no re-reading after mapping, a fresh mapped resend, held body/file/threading exclusion, held-mail erasure and unknown sends never repeated. Trusted receiving-provider Authentication-Results provenance, live mailbox/OAuth receipts and Exchange Message-ID behavior remain unproved.
+
+AGENT-007 now has source-custodied Freshservice ticket-mining proof: three lexical clusters with exact source membership and historic/recent counts, four inert draft outlines, conditional handling upper bounds with unknown minutes/effect, and sparse, duplicate, corrupt and withdrawn-source refusal without publishing or issuing grants. The separate scale journey uses 1,000 imported tickets. Substantive design, publication with admin review where company policy requires it, native screens and a measured two-week post-publication effect remain owed. Both clauses remain partial; their acceptance points are unchanged.
+
 ## 28 October 2026 — contract cleanup to the RER contract standard
 
 CONTRACT.md was rewritten to the RER contract standard from main `19816529116ae290357a5bebafc35189a7dcc1e9`. Nothing was cut and no status was promoted; `docs/contract/COVERAGE.json` places every old sentence, `docs/contract/ID-MAP.json` maps every old id, and `docs/contract/DONE-AUDIT.md` proves every carried done point row by row.

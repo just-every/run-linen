@@ -1,3 +1,4 @@
+import { registerTicketMiningRoutes } from './ticket-mining';
 import { registerBillingRoutes } from './billing';
 import { refreshBudget } from './budgets';
 import type { Hono } from 'hono';
@@ -24,6 +25,7 @@ export * from './intake';
 export * from './restore';
 export function registerIntelligenceRoutes(app: Hono<AppEnv>) {
     registerBillingRoutes(app);
+    registerTicketMiningRoutes(app);
     const ctx = (c: any) => ({ env: c.env, principal: c.get('principal') });
     app.get('/commitments', async (c) => c.json(await listCommitments(ctx(c))));
     app.post('/commitments', async (c) => c.json(await saveCommitment(ctx(c), await jsonBody(c)), 201));

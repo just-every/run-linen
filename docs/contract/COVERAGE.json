@@ -2,7 +2,7 @@
   "schema": 1,
   "seed": "linen-product",
   "old": {
-    "commit": "19816529116ae290357a5bebafc35189a7dcc1e9",
+    "commit": "1a401858c1e58f8392cffdccf7dd3ff0e7e6e4a7",
     "files": [
       "CONTRACT.md",
       "ACCEPTANCE.md"
@@ -2038,7 +2038,13 @@
     {
       "file": "CONTRACT.md",
       "line": 251,
-      "text": "*Mailbox semantic (adopted default, pending ct approval).* A mailbox connection",
+      "text": "*Mailbox semantic (ct approved with riders, 23 October 2026).*",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 251,
+      "text": "A mailbox connection",
       "to": "clause",
       "ids": [
         "CHANNEL-003"
@@ -29864,8 +29870,8 @@
     {
       "file": "CONTRACT.md",
       "line": 3198,
-      "cell": "gap",
       "text": "Network edges (Gmail, Microsoft Graph, OAuth token, DNS) use fixtures; no live Gmail or Exchange Online mailbox receipt and no live OAuth consent are claimed, and Exchange's handling of a client-set Message-ID is unproven (threading relies on the References chain).",
+      "cell": "gap",
       "to": "gap",
       "ids": [
         "CHANNEL-003"
@@ -29874,18 +29880,15 @@
     {
       "file": "CONTRACT.md",
       "line": 3198,
+      "text": "Ct approved the conservative mailbox policy with riders on 23 October 2026.",
       "cell": "gap",
-      "text": "Policy defaults above (DMARC-aligned mapped senders only, CC watchers limited to existing readers, content of held mail not stored, requester-only replies) are adopted pending ct approval.",
-      "to": "rulings",
-      "ids": [
-        "RL-103"
-      ]
+      "to": "changelog"
     },
     {
       "file": "CONTRACT.md",
       "line": 3198,
+      "text": "Trusted receiving-provider provenance for Authentication-Results remains unproved;",
       "cell": "gap",
-      "text": "Gmail/Exchange OAuth app registration and consent remain owner-held.",
       "to": "gap",
       "ids": [
         "CHANNEL-003"
@@ -29894,8 +29897,26 @@
     {
       "file": "CONTRACT.md",
       "line": 3198,
+      "text": "the current parser reads the topmost header without binding its authentication service to the connection.",
       "cell": "gap",
+      "to": "docs",
+      "path": "docs/contract/mechanism.md"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3198,
+      "text": "Gmail and Exchange OAuth app registration and consent remain owner-held.",
+      "cell": "gap",
+      "to": "gap",
+      "ids": [
+        "CHANNEL-003"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3198,
       "text": "Other outbound mail doors inherit the domain-alignment obligation.",
+      "cell": "gap",
       "to": "door-rule",
       "ids": [
         "D-3"
@@ -31105,8 +31126,8 @@
     {
       "file": "CONTRACT.md",
       "line": 3321,
+      "text": "Substantive automation design beyond lexical title patterns and draft outlines, admin-reviewed publication, native screens, and a measured effect after a declared two-week post-publication observation remain unbuilt. No elapsed window or measured savings is claimed.",
       "cell": "gap",
-      "text": "No ticket-history mining.",
       "to": "gap",
       "ids": [
         "AGENT-007"
@@ -31734,7 +31755,7 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 97,
-      "text": "| **CHANNEL-003 Email mailboxes** | Connect a Gmail and an Exchange Online mailbox, send a request with an attachment and a CC, reply from a mail client and from Linen, and see one thread, the CC watcher, a suppressed out-of-office loop and a quarantined unknown sender. | `src/features/work/intake.ts` (authenticated mail envelope, sender quarantine); `src/features/execution/mail/sender.ts`; `tests/connections/sendgrid-runtime.mjs`. Gmail and Exchange Online mailbox connectors (OAuth polling or forwarding), header threading, CC watchers, attachments, suppression and quarantine are implemented with fixture network edges (`tests/work/mail-cases.mjs`, `tests/ui/mailbox-journey.mjs`); live mailbox/OAuth receipts and ct approval of the mailbox policy defaults pending. | partial |",
+      "text": "| **CHANNEL-003 Email mailboxes** | Connect a Gmail and an Exchange Online mailbox, send a request with an attachment and a CC, reply from a mail client and from Linen, and see one thread, the CC watcher, a suppressed out-of-office loop and a quarantined unknown sender. | `src/features/work/intake.ts` (authenticated mail envelope, sender quarantine); `src/features/execution/mail/sender.ts`; `tests/connections/sendgrid-runtime.mjs`. Gmail and Exchange Online mailbox connectors (OAuth polling or forwarding), header threading, CC watchers, attachments, suppression and quarantine are implemented with fixture network edges (`tests/work/mail-cases.mjs`, `tests/ui/mailbox-journey.mjs`); mailChannelChecks additionally asserts owner-only mapping and dismissal with atomic audits and rollback on audit failure, dismissed senders held again, no re-reading after mapping, a fresh mapped resend accepted, held body and file exclusion, no held sender-supplied threading identity, mapped held-mail erasure, and unknown sends never repeated. Ct approved the conservative mailbox policy with riders on 23 October 2026. Gap: live Gmail and Exchange Online mailbox receipts, live OAuth application registration and owner consent, Exchange client-set Message-ID behavior, and trusted receiving-provider Authentication-Results provenance. The parser currently reads the topmost header without binding its authentication service to the connection. Other outbound mail doors retain the domain-alignment obligation. | partial |",
       "to": "docs",
       "path": "docs/verify.md"
     },
@@ -32868,7 +32889,7 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 337,
-      "text": "| **AGENT-007 Mine ticket history for automations** | From 1,000 imported Freshservice tickets, the agent proposes three automations; one is published and its measured effect is reported after two weeks. | `src/features/intelligence/capabilities.ts`; `tests/intelligence/frontier.mjs`. No ticket-history mining. | partial |",
+      "text": "| **AGENT-007 Mine ticket history for automations** | From 1,000 imported Freshservice tickets, the agent proposes three automations; one is published and its measured effect is reported after two weeks. | `tests/intelligence/ticket-mining-cases.mjs` ticketMiningChecks through `tests/adoption/freshservice-import.mjs` proves current importing-owner custody, exact three lexical clusters and source membership, declared historic and recent counts, inert catalog, workflow, grant and article draft outlines, conditional handling upper bounds with unknown minutes and effect, sparse, duplicate, corrupt and reversed source refusal and no publication or grant issuance. `tests/intelligence/ticket-mining-scale.mjs` proves the same public doors with 1,000 imported tickets outside push Verify. Gap: substantive automation design beyond lexical title patterns and draft outlines, admin-reviewed publication, native screens and measured effect after a declared two-week post-publication observation remain unbuilt. No elapsed window or measured savings is claimed. | partial |",
       "to": "docs",
       "path": "docs/verify.md"
     },

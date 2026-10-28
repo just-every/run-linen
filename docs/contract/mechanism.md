@@ -33,3 +33,7 @@ RETENTION-001. Closed tickets and their attachments are counted from the ticket'
 ## Phone intake
 
 CHANNEL-007. Until a transcription adapter is built, a transcript arrives only through the authenticated `/calls/events` door.
+
+## Mail authentication provenance
+
+CHANNEL-003 currently reads the topmost Authentication-Results header without binding its authentication service to the connection. Trusted receiving-provider provenance remains unproved; a sender-supplied header is never sufficient authority under RL-103. Other outbound mail doors retain D-3's domain-alignment obligation.
