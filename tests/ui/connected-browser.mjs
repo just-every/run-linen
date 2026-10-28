@@ -29,11 +29,11 @@ try{
  await connectedChanges(env);checks.push('J4 native controlled changes, conflicting windows, invalidated authority, distinct automatic cohort recovery, unknown effect, failed rollback, takeover, employee correction and actual delivery; J6 measured simplification with explicit total-work limits');
  await connectedLifecycle(env);checks.push('J3 native leave independently verifies partial security, preserves retained rights and distinguishes cancelled unstarted duty from irreversible revoked sessions');
  for (const width of [1440]) await responseJourney({...env,width});
- checks.push('DESK-008 canned response with requester name, cited full-history model summary and knowledge, and agent-only sending at 1440/390');
+ checks.push('DESK-008 canned response with requester name, cited full-history model summary and knowledge, and agent-only sending at 1440');
  await knowledgeDraftJourney(env);
  await collaborationJourney({...env,errors});
- checks.push('DESK-007 private mention and notified colleague, public-update watcher and vendor email/reply privacy at 1440/390; Slack remains CHANNEL-001 blocked');
- checks.push('KB-004 three resolved sources, reviewed publication and known-error rejection with scoped source links at 1440/390');
+ checks.push('DESK-007 private mention and notified colleague, public-update watcher and vendor email/reply privacy at 1440; Slack remains CHANNEL-001 blocked');
+ checks.push('KB-004 three resolved sources, reviewed publication and known-error rejection with scoped source links at 1440');
  await writeFile(out+'/persistence.json',JSON.stringify({commitmentId:env.commitmentId,workId:env.workId,grants:await api('/grants'),operations:await api('/operations'),fixture:await (await fetch(base+'/__fixture/evidence')).json()}));
  await env.issuerContext.close();
  assert.deepEqual(errors,[]);

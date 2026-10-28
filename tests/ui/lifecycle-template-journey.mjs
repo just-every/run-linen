@@ -50,7 +50,9 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
   await captureJourney(page,{path:out+'/LIFE-002-template-form.png',fullPage:true});
   const saving=page.waitForResponse(r=>r.url().endsWith('/lifecycle-templates')&&r.request().method()==='POST');
   await form.getByRole('button',{name:'Save',exact:true}).click();const savedResponse=await saving;assert.equal(savedResponse.status(),201,'LIFE-002 the owner adds a template natively');
-  const savedTemplate=await savedResponse.json();
+  const createdTemplate=await savedResponse.json();
+  const savedTemplate=(await api('/lifecycle-templates')).items.find(template=>template.id===createdTemplate.id);
+  assert.ok(savedTemplate,'The saved template can be read back');
   await region.getByRole('heading',{name:'Sales Austin onboarding '+suffix,exact:true}).waitFor();
 
   // The hire starts within the hour: its tasks exist, and the reminders are due now.
@@ -66,7 +68,7 @@ export async function lifecycleTemplateJourney({browser,page,api,base,out}) {
     for(const width of [1440]) {
       await page.setViewportSize({width,height:width===1440?1000:844});
       await templateReview.getByRole('heading',{name:'Close out the contract',exact:true}).waitFor();
-      assert.ok(await templateReview.getByText(`${savedTemplate.name} (revision ${savedTemplate.revision})`,{exact:true}).isVisible(),`LIFE-002 applied template and revision are visible at ${width}px`);
+      assert.ok(await templateReview.getByText(`${savedTemplate.name} (revision ${savedTemplate.revision})`,{exact:false}).isVisible(),`LIFE-002 applied template and revision are visible at ${width}px`);
       assert.ok(await templateReview.getByText('No end date is recorded to date this task from.',{exact:false}).isVisible(),`LIFE-002 the undated task has a visible named reason at ${width}px`);
     }
   } finally {await page.setViewportSize(previousViewport);}

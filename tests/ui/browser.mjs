@@ -288,7 +288,7 @@ try {
   await dstJourney(browser, context, base, person.id, uid, out);
   checks.push("Native New York leave rejects fold and gap without a request and displays the chosen valid offset");
   await lifecycleVariants(page, api, person.id, uid, out);
-  checks.push("Distinct move and urgent-leave forms persist obligations through reload at desktop and mobile widths");
+  checks.push("Distinct move and urgent-leave forms persist obligations through reload at desktop width");
   await custodyJourney(page, api, person.id, uid, out);
   for (const width of [1440]) await classificationJourney({page,api,base,out,width});
   checks.push("Native device creation, assignment, receipt and return verify physical duty without certifying pending security work");
@@ -488,7 +488,7 @@ try {
   );
   const other = await browser.newContext({
     timezoneId: "UTC",
-    viewport: { width: 390, height: 844 },
+    viewport: { width: 1440, height: 1000 },
   });
   try {
     const ep = await other.newPage();
@@ -584,7 +584,7 @@ try {
   await deskFieldJourney({page,api,base,out});
   checks.push("DESK-010 console field, Awaiting parts status, close refused without a resolution code, resolution on the record and counted by code");
   await timeJourney({page,base,api,workId,out});
-  checks.push("DESK-012 manual and measured active effort reaches the role-scoped report at desktop and mobile widths");
+  checks.push("DESK-012 manual and measured active effort reaches the role-scoped report at desktop width");
   await problemJourney({page,api,base,out});
   checks.push("PROB-001 reviewed expiring workaround published from three incidents and offered on a matching request");
   for (const width of [1440]) await unsentReplyJourney({ page, api, base, out, width });

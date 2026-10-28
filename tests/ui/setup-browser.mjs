@@ -1,4 +1,3 @@
-import {templateJourney} from './template-journey.mjs';
 import { templateJourney } from './template-journey.mjs';
 import { seedSetupFixtures } from './setup-fixtures.mjs';
 import { finishFirstRun } from './connected-helpers.mjs';
