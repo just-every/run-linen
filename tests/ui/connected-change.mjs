@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
-import { action, fields, local, later, signIn, apiFor, requestWork } from './connected-helpers.mjs';
+import { createHash, createHmac } from 'node:crypto';
+import { chromium } from 'playwright';
+import { promises as fs } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { action, fields, local, later, signIn, apiFor, requestWork, finishFirstRun } from './connected-helpers.mjs';
 import { nativeCreate } from './native-regressions.mjs';
 import { captureJourney } from './viewport-evidence.mjs';
 
@@ -28,6 +31,7 @@ async function phase(env,changeId,name) {
   r=await action(page,'Verify an actual invocation',{invocationId:invocation.id},'/verify');return r;
 }
 export async function connectedChanges(env) {
+  await developmentJourney(env);
   const {page,api,base,out,fixture,tick,until,commitmentId,serviceId,employee}=env,uid=(await api('/session')).principal.userId;
   const incidentId=await nativeCreate(page,base,'incidents','Add incident',{'What is happening?':'Renewal orders interrupted in two cohorts','Who may see this?':'workspace','Affected service':serviceId,'Impact on people’s work':'London new sessions and Sydney existing sessions need separate checks','Affected groups':uid+'\n'+employee.id});
   for(const hypothesis of ['Rotated claim regression','Independent route degradation']){await action(page,'Assign a scoped diagnostic',{assignee:uid,scope:'Read declared independent fixture probes only',hypothesis,budget:2},'/diagnostics');await page.reload()}
@@ -109,4 +113,63 @@ export async function connectedChanges(env) {
   const response=page.waitForResponse(r=>r.url().endsWith('/service-notifications/'+notice.id+'/reconcile'));await reconcile.getByRole('button',{name:'Check actual delivery'}).click();assert.equal((await response).status(),200);
   assert.equal((await api('/service-notifications')).items.find(n=>n.id===notice.id).state,'delivered');
   await captureJourney(page,{path:out+'/J4-native-delivery-readback.png',fullPage:true});
+}
+
+
+async function captureDevelopment(page,path) {
+ const previous=page.viewportSize();
+ try {
+  await page.evaluate(()=>document.fonts.ready);
+  for(const width of [1440,390]) {
+   await page.setViewportSize({width,height:width===1440?1000:844});
+   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   await page.evaluate(()=>window.scrollTo(0,0));
+   await page.screenshot({path:width===1440?path:path.replace('.png','-390px.png'),fullPage:true});
+  }
+ } finally {await page.setViewportSize(previous);}
+}
+
+/** GitHub fixture acceptance uses the native signed ingress and existing ticket and change screens. */
+export async function developmentJourney({page,base,out}) {
+ const api=apiFor(page),at=new Date().toISOString(),signingSecret='synthetic-linen-42101';
+ const work=await api('/work',{title:'SSO engineering investigation',body:'A normal sign-in incident needs engineering review.',kind:'incident',deduplicationKey:'synthetic-linen-42102'});
+ const repositoryName=['synthetic-linen','issues'].join('/');
+ const binding=await api('/development-bindings',{kind:'issue',targetId:work.id,repositoryId:42101,repositoryName,issueNumber:42,signingSecret,consent:true});
+ const send=async(id,event,type,delivery)=>{
+  const raw=JSON.stringify(event),response=await fetch(base+'/api/v1/webhooks/development/'+id,{method:'POST',headers:{'x-hub-signature-256':'sha256='+createHmac('sha256',signingSecret).update(raw).digest('hex'),'x-github-event':type,'x-github-delivery':delivery},body:raw});
+  const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));return body;
+ };
+ const repository={id:42101,full_name:repositoryName};
+ await send(binding.id,{repository,action:'closed',issue:{number:42,state:'closed',updated_at:at}},'issues','synthetic-linen-42103');
+ await page.goto(base+'/app#/work/'+work.id);
+ await page.getByText('Verify with employee',{exact:true}).waitFor();
+ await page.getByText('GitHub issue #42 closed. Verify with employee; this is not verified recovery.',{exact:true}).waitFor();
+ await captureDevelopment(page,out+'/INC-004-private-closure.png');
+ const service=await api('/services',{name:'SSO development context',description:'New sign-ins',businessImpact:'Employees',source:'Reviewed service register',observedAt:at});
+ let template=await api('/change-templates',{title:'Production SSO deployment',risk:'Bounded',impact:'Employees',services:[service.id],cohorts:['employees'],canaryCohorts:['employees'],implementation:{target:'sso',payload:{release:'reviewed'}},compensation:{target:'sso',payload:{release:'prior'}},implementationPlan:'Record production deployment',testPlan:'Check sign-in independently',backoutPlan:'Separate execution grant required',active:true});
+ template=await api('/change-templates/'+template.id+'/approve',{revision:template.revision,version:template.data.version,reason:'Approve exact standard plan'});
+ const deploy=await api('/development-bindings',{kind:'deployment',targetId:template.id,templateVersion:template.data.version,repositoryId:42101,repositoryName,signingSecret,consent:true});
+ const event={repository,deployment:{id:42104,environment:'production',production_environment:true,created_at:at,payload:{pullRequestNumber:42,runId:42105}}};
+ const created=await send(deploy.id,event,'deployment','synthetic-linen-42106');
+ await page.goto(base+'/app#/changes/'+created.resultId);
+ const context=page.getByRole('region',{name:'Development context',exact:true});
+ await context.getByRole('link',{name:'GitHub pull request',exact:true}).waitFor();
+ assert.equal(await context.getByRole('link',{name:'GitHub Actions run',exact:true}).getAttribute('href'),'https://github.com/'+repositoryName+'/actions/runs/42105');
+ assert.equal((await api('/changes/'+created.resultId)).data.changeType,'standard');
+ await captureDevelopment(page,out+'/CHANGE-008-production-context.png');
+ console.log('PASS developmentJourney: private issue closure and production change context at 1440; screen proof at 1440 and 390');
+}
+if(process.argv[1]===fileURLToPath(import.meta.url)) {
+ const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
+ if(!base||!out)throw Error('Use the connected browser runner');
+ await fs.mkdir(out,{recursive:true});
+ const browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--use-mock-keychain','--password-store=basic']});
+ try {
+  const context=await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'UTC'}),page=await context.newPage(),errors=[];
+  page.on('pageerror',e=>errors.push(String(e)));
+  await page.goto(base+'/app');await page.getByLabel('Your name').fill('Morgan Hayes');await page.getByLabel('Workspace name').fill('Development proof');
+  await page.getByLabel('Work email').fill('development-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic-linen-42107');
+  await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();
+  await finishFirstRun(page,base);await developmentJourney({page,base,out});assert.deepEqual(errors,[]);
+ } finally {await browser.close();}
 }

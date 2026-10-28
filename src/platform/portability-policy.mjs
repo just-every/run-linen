@@ -6,7 +6,7 @@ export const portabilityPolicy={
  product:'runeditrun/linen',
  replaceableTables:['platform_auth_policy'],
  excludeTables:['configuration_masked_epochs','configuration_masked_records','configuration_sandboxes','history_service_rewrite_permits','history_archive_origin','history_write_guards','work_approval_mail_subscriptions','platform_archive_recovery','sessions','login_limits','platform_auth_session_proofs','platform_auth_links','platform_auth_steps','platform_auth_limits','platform_auth_guard','execution_secrets'],
- secretColumns:{connections:['secret_ciphertext'],intelligence_engineering_jobs:['claim_token_hash']},
+ secretColumns:{svc_development_bindings:['secret_ciphertext'],connections:['secret_ciphertext'],intelligence_engineering_jobs:['claim_token_hash']},
  requiredConfiguration:['OWNER_EMAIL','SESSION_SECRET','SETUP_TOKEN','AUTH_ORIGIN','ENCRYPTION_KEY','MAIL_PROVIDER','MAIL_FROM'],
  buckets:{ATTACHMENTS:{}},
  // Keep the existing archive secret inventory compatible with pre-MCP archives.
@@ -19,6 +19,7 @@ export const portabilityPolicy={
   const table=tables.mcp_credentials;
   if(table && await db.prepare(`SELECT 1 FROM "${table.replaceAll('"','""')}" WHERE secret_hash IS NOT NULL OR state<>'revoked' LIMIT 1`).first())return false;
   for(const [name,invalid] of [
+   ['svc_development_bindings','active IS NOT 0 OR secret_ciphertext IS NOT NULL'],
    ['work_access_policies','active IS NOT 0'],
    ['work_department_roles','active IS NOT 0'],
    ['work_department_role_members','active IS NOT 0 OR granted_by IS NOT NULL'],
@@ -79,6 +80,7 @@ export const portabilityPolicy={
    return {...row,data_json:JSON.stringify({...data,importedState:data.importedState||data.state,state:'imported-review',decisions:[],
     priorDecisions:[...(data.priorDecisions||[]),...(data.decisions||[])].map(d=>({...d,inert:true}))})};
   }
+  if(table==='svc_development_bindings')return {...row,active:0}
   if(table==='work_access_policies')return {...row,active:0}
   if(table==='work_approval_decisions')return {...row,inert:1}
   if(table==='work_approval_stages')return {...row,active_at:null,remind_at:null,reminded_at:null,sla_at:null,breached_at:null}

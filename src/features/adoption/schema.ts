@@ -49,6 +49,8 @@ export const excludedTables: Record<string,string> = {
  configuration_masked_epochs:'value-free local masked-copy concurrency fence; never portable authority',
  configuration_masked_records:'local fully masked ticket copies; excluded from portable archives and authority',
  configuration_sandboxes:'local configuration drafts and approval packages; recreate and review after restore',
+ svc_development_bindings:'installation-local inbound consent and credentials; full-installation archives retain inactive metadata only',
+ svc_development_receipts:'installation-local replay receipts tied to excluded development bindings',
  billing_plans:'installation billing configuration; retained in full-installation archives',
  work_approval_tokens:'single-use approval reply credentials; require fresh issuance',
  work_approval_mail_config:'local authenticated inbound custody and outbound consent; require fresh configuration',
