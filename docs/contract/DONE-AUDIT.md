@@ -157,7 +157,7 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `CATALOG-004` | 6 | verified children are shown per child | `tests/work/bundle-cases.mjs:60` | asserted |
 | `CATALOG-004` | 6 | an unverified child keeps the bundle in progress | `tests/work/bundle-cases.mjs:62` | asserted |
 | `CATALOG-006` | 1 | the service is held | `tests/work/pending-person-runtime.mjs:105` | asserted |
-| `CATALOG-006` | 1 | a held service shows its reason | `tests/work/pending-person-runtime.mjs:178` | asserted |
+| `CATALOG-006` | 1 | a service held for the pending hire shows its reason | none | none |
 | `CATALOG-006` | 2 | binding the account releases the service into fulfilment | `tests/work/pending-person-runtime.mjs:144` | asserted |
 | `CATALOG-006` | 3 | an unbound pending person is edited | `tests/work/pending-person-runtime.mjs:126` | asserted |
 | `CATALOG-006` | 4 | withdrawing cancels the request | `tests/work/pending-person-runtime.mjs:202` | asserted |
@@ -202,7 +202,8 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-003` | 2 | a VIP request routes to executive support | `tests/work/desk-routing-cases.mjs:52` | asserted |
 | `DESK-003` | 3 | a Payroll service ticket routes to Payroll's support group | `tests/work/desk-routing-cases.mjs:72` | asserted |
 | `DESK-003` | 3 | a laptop CI ticket routes to that CI's support group | `tests/work/desk-routing-cases.mjs:73` | asserted |
-| `DESK-003` | 4 | shifts, skills, methods and caps are applied | `tests/work/desk-routing-cases.mjs:79` | asserted |
+| `DESK-003` | 4 | shifts, skills, round-robin and load methods and caps are applied | `tests/work/desk-routing-cases.mjs:79` | asserted |
+| `DESK-003` | 4 | a group whose assignment method is none places the ticket without an agent | none | none |
 | `DESK-003` | 5 | VIP status is a requester group the owner names | `tests/work/desk-routing-cases.mjs:52` | asserted |
 | `DESK-003` | 6 | routing on creation | `tests/work/desk-routing-cases.mjs:46` | asserted |
 | `DESK-003` | 6 | routing on classification with no group | `tests/work/desk-routing-cases.mjs:87` | asserted |
@@ -210,7 +211,9 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-003` | 7 | the item's support group comes before every rule | `tests/work/desk-routing-cases.mjs:72` | asserted |
 | `DESK-003` | 7 | the matching rule decides | `tests/work/desk-routing-cases.mjs:88` | asserted |
 | `DESK-003` | 7 | with no match nothing changes | `tests/work/desk-routing-cases.mjs:84` | asserted |
+| `DESK-003` | 7 | a rule with several set conditions decides only when every one matches | none | none |
 | `DESK-003` | 8 | candidates are on shift, skilled and under the cap | `tests/work/desk-routing-cases.mjs:46` | asserted |
+| `DESK-003` | 8 | an inactive agent is not a candidate | none | none |
 | `DESK-019` | 1 | round-robin takes the next candidate | `tests/work/desk-routing-cases.mjs:46` | asserted |
 | `DESK-019` | 2 | load takes the least-loaded candidate | `tests/work/desk-routing-cases.mjs:50` | asserted |
 | `DESK-019` | 3 | with no candidate the ticket stays in the group unassigned | none | none |
@@ -223,18 +226,30 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-004` | 2 | the breach shows on the ticket | `tests/work/sla-policy-cases.mjs:41` | asserted |
 | `DESK-004` | 2 | the breach shows in the report | `tests/work/sla-policy-cases.mjs:87` | asserted |
 | `DESK-004` | 3 | policies are ordered and a ticket binds the first match | `tests/work/sla-policy-cases.mjs:46` | asserted |
+| `DESK-004` | 3 | a policy's category criterion binds only tickets of that category | none | none |
 | `DESK-004` | 3 | classification applied later binds from the ticket's opening | `tests/work/sla-policy-cases.mjs:37` | asserted |
+| `DESK-004` | 3 | a priority change rebinds the policy from the ticket's opening | none | none |
 | `DESK-004` | 4 | a business calendar counts its working minutes in its time zone | `tests/work/sla-policy-cases.mjs:37` | asserted |
 | `DESK-004` | 4 | without a calendar every minute counts | `tests/work/sla-policy-cases.mjs:48` | asserted |
-| `DESK-004` | 5 | the US federal holiday catalog is observed | `tests/work/sla-policy-cases.mjs:37` | asserted |
+| `DESK-004` | 5 | a calendar names its location | `tests/work/sla-policy-cases.mjs:36` | asserted |
+| `DESK-004` | 5 | the location's federal holiday catalog skips a Monday holiday | `tests/work/sla-policy-cases.mjs:37` | asserted |
+| `DESK-004` | 5 | a Saturday holiday is observed the Friday before | none | none |
+| `DESK-004` | 5 | a Sunday holiday is observed the Monday after | none | none |
+| `DESK-004` | 5 | Inauguration Day is excluded | none | none |
+| `DESK-004` | 5 | a calendar's own listed dates are observed beside the catalog | none | none |
 | `DESK-004` | 6 | first response is met by the first public agent reply | `tests/work/sla-policy-cases.mjs:75` | asserted |
 | `DESK-004` | 6 | resolution runs from the opening | `tests/work/sla-policy-cases.mjs:38` | asserted |
+| `DESK-004` | 6 | resolution is met by closing | none | none |
 | `DESK-004` | 7 | a next-response target starts and is met by the next public agent reply | `tests/work/sla-policy-cases.mjs:80` | asserted |
 | `DESK-020` | 1 | only the parties the policy pauses on stop the clock; an internal hold does not | `tests/work/sla-policy-cases.mjs:69` | asserted |
 | `DESK-020` | 2 | a pause after the due time never clears the breach | `tests/work/sla-policy-cases.mjs:56` | asserted |
 | `DESK-020` | 3 | the breach time is the due time | `tests/work/sla-policy-cases.mjs:41` | asserted |
 | `DESK-020` | 3 | a target met after its due time is breached | `tests/work/sla-policy-cases.mjs:75` | asserted |
-| `DESK-020` | 4 | targets and the period report are read by service staff, not the requester | `tests/work/sla-policy-cases.mjs:87` | asserted |
+| `DESK-020` | 4 | the owner reads each ticket's targets | `tests/work/sla-policy-cases.mjs:35` | asserted |
+| `DESK-020` | 4 | the owner reads the period report | `tests/work/sla-policy-cases.mjs:87` | asserted |
+| `DESK-020` | 4 | the requester is refused both reads | `tests/work/sla-policy-cases.mjs:88` | asserted |
+| `DESK-020` | 4 | a service agent reads each ticket's targets and the period report | none | none |
+| `DESK-020` | 4 | an auditor reads each ticket's targets and the period report | none | none |
 | `DESK-005` | 1 | level-1 then level-2 escalation | `tests/work/sla-policy-cases.mjs:137` | asserted |
 | `DESK-005` | 2 | the owner sets escalation levels on the targets | `tests/work/sla-policy-cases.mjs:110` | asserted |
 | `DESK-005` | 3 | a level fires at its offset for the assignee or a named member | `tests/work/sla-policy-cases.mjs:131` | asserted |
@@ -256,20 +271,28 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-021` | 6 | business days skip weekends and holidays on the SLA calendar | `tests/work/sla-policy-cases.mjs:197` | asserted |
 | `DESK-006` | 1 | merging notifies both requesters on the surviving ticket | `tests/work/relationship-cases.mjs:31` | asserted |
 | `DESK-006` | 2 | a split ticket gets its own SLA | `tests/work/relationship-cases.mjs:45` | asserted |
+| `DESK-006` | 2 | the split ticket keeps its own history | `tests/work/relationship-cases.mjs:80` | asserted |
 | `DESK-006` | 2 | the split ticket links back to the original message | `tests/work/relationship-cases.mjs:43` | asserted |
 | `DESK-006` | 3 | a linked laptop and problem each list the ticket | `tests/work/relationship-cases.mjs:62` | asserted |
 | `DESK-006` | 4 | the duplicate closes with a pointer | `tests/work/relationship-cases.mjs:27` | asserted |
 | `DESK-006` | 4 | the duplicate's requester becomes a participant | `tests/work/relationship-cases.mjs:24` | asserted |
+| `DESK-006` | 4 | the duplicate's beneficiary becomes a participant | none | none |
 | `DESK-006` | 4 | participants read only public messages | `tests/work/relationship-cases.mjs:30` | asserted |
+| `DESK-006` | 4 | participants never see attachments | none | none |
 | `DESK-006` | 4 | participants cannot act on the surviving ticket | `tests/work/relationship-cases.mjs:33` | asserted |
-| `DESK-006` | 4 | both tickets carry a public merge notice | `tests/work/relationship-cases.mjs:29` | asserted |
+| `DESK-006` | 4 | the surviving ticket carries a public merge notice | `tests/work/relationship-cases.mjs:29` | asserted |
+| `DESK-006` | 4 | the duplicate carries a public merge notice | none | none |
 | `DESK-006` | 5 | HR tickets are never merged | `tests/work/relationship-cases.mjs:21` | asserted |
 | `DESK-006` | 6 | a split copies the chosen public message citing its source | `tests/work/relationship-cases.mjs:43` | asserted |
+| `DESK-006` | 6 | the split ticket keeps the requester | `tests/work/relationship-cases.mjs:42` | asserted |
+| `DESK-006` | 6 | the split ticket keeps the beneficiary | none | none |
 | `DESK-006` | 6 | the split carries the classification and binds its own SLA | `tests/work/relationship-cases.mjs:45` | asserted |
 | `DESK-006` | 7 | a parent is set and a cycle refused | `tests/work/relationship-cases.mjs:48` | asserted |
 | `DESK-006` | 7 | an engineering issue must be an https URL | `tests/work/relationship-cases.mjs:58` | asserted |
 | `DESK-006` | 7 | asset, problem and engineering-issue links are kept | `tests/work/relationship-cases.mjs:60` | asserted |
-| `DESK-006` | 8 | a linked record lists only tickets its reader can read | `tests/work/relationship-cases.mjs:63` | asserted |
+| `DESK-006` | 7 | a ticket links to a change | none | none |
+| `DESK-006` | 8 | a linked asset, problem or change lists only the linked tickets its reader can read | none | none |
+| `DESK-006` | 8 | a reader without staff access is refused the whole listing | `tests/work/relationship-cases.mjs:63` | asserted |
 | `DESK-008` | 1 | a canned response inserts the requester's name | `tests/work/response-cases.mjs:15` | asserted |
 | `DESK-008` | 2 | a 20-message summary with citations | `tests/work/response-cases.mjs:33` | asserted |
 | `DESK-008` | 3 | only owners and operators manage and insert canned responses | `tests/work/response-cases.mjs:11` | asserted |
@@ -322,8 +345,14 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-011` | 8 | a mixed-department bundle refuses atomically with its reasons | `tests/work/department-ops-cases.mjs:47` | asserted |
 | `DESK-011` | 8 | a same-department bundle keeps its atomic behavior | `tests/ui/department-browser.mjs:258` | asserted |
 | `DESK-024` | 1 | a handed-off request keeps its history | `tests/work/department-space-cases.mjs:80` | asserted |
+| `DESK-024` | 1 | only the owner hands a ticket off | `tests/work/department-space-cases.mjs:73` | asserted |
 | `DESK-024` | 1 | the handoff needs a reason and is recorded | `tests/work/department-space-cases.mjs:86` | asserted |
-| `DESK-024` | 2 | identity, sensitivity, attachments and the frozen SLA clock remain | `tests/work/department-space-cases.mjs:84` | asserted |
+| `DESK-024` | 1 | a handoff at a stale revision is refused | none | none |
+| `DESK-024` | 2 | identity and sensitivity remain | `tests/work/department-space-cases.mjs:77` | asserted |
+| `DESK-024` | 2 | messages remain | `tests/work/department-space-cases.mjs:80` | asserted |
+| `DESK-024` | 2 | attachments remain | `tests/work/department-space-cases.mjs:85` | asserted |
+| `DESK-024` | 2 | the frozen SLA clock remains | `tests/work/department-space-cases.mjs:84` | asserted |
+| `DESK-024` | 2 | the ticket's submitted forms remain | none | none |
 | `DESK-024` | 2 | incompatible assignments are cleared | `tests/ui/department-browser.mjs:169` | asserted |
 | `DESK-024` | 3 | the HR workspace stays a live access requirement after moving out | `tests/work/department-space-cases.mjs:103` | asserted |
 | `DESK-024` | 3 | later moves, including to legacy, cannot remove it | `tests/work/department-space-cases.mjs:123` | asserted |
@@ -339,7 +368,7 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-024` | 7 | HR sources cannot be copied into a project plan | `tests/work/department-ops-cases.mjs:134` | asserted |
 | `DESK-024` | 8 | archives keep department metadata and restore memberships inert | `tests/platform/base-auth-transfer.mjs:229` | asserted |
 | `DESK-012` | 1 | 15 manual minutes appear in the effort report | `tests/work/time-cases.mjs:43` | asserted |
-| `DESK-012` | 2 | a measured interval appears in the effort report | `tests/ui/time-journey.mjs:42` | asserted |
+| `DESK-012` | 2 | a measured interval appears in the effort report | `tests/work/time-cases.mjs:43` | asserted |
 | `DESK-013` | 1 | a monthly first-business-day plan skips the holiday to the next business day | `tests/work/recurrence-cases.mjs:14` | asserted |
 | `DESK-013` | 2 | the plan snapshots its time zone, business days, holidays and local hour | `tests/work/recurrence-cases.mjs:15` | asserted |
 | `DESK-013` | 3 | month-end dates clamp without drifting the anchor | `tests/work/recurrence-cases.mjs:48` | asserted |
@@ -358,9 +387,11 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `DESK-015` | 4 | a workspace scenario is offered to every agent | `tests/work/desk-scenario-cases.mjs:65` | asserted |
 | `DESK-015` | 5 | classification, group and owner, field, reply and status steps apply | `tests/work/desk-scenario-cases.mjs:103` | asserted |
 | `DESK-015` | 6 | a step outside the runner's roles leaves nothing applied | `tests/work/desk-scenario-cases.mjs:67` | asserted |
+| `DESK-015` | 6 | an HR runner's field and status steps apply | none | none |
 | `DESK-015` | 7 | a step refused while applying stops the run with one audit entry of the changes made | `tests/work/desk-scenario-cases.mjs:120` | asserted |
 | `DESK-015` | 8 | runs start from the ticket with x | `tests/ui/desk-scenario-browser.mjs:70` | asserted |
 | `DESK-015` | 8 | runs start from the bulk-update screen | `tests/ui/desk-scenario-browser.mjs:161` | asserted |
+| `DESK-015` | 8 | a run started at phone width (390 px) applies the scenario | `tests/ui/desk-scenario-browser.mjs:161` | asserted |
 | `DESK-025` | 1 | a "New laptop setup" template pre-fills a new ticket | `tests/work/desk-scenario-cases.mjs:85` | asserted |
 | `DESK-025` | 2 | anyone starts a request from a template and edits the draft | `tests/work/desk-scenario-cases.mjs:83` | asserted |
 | `DESK-025` | 3 | a scenario starts a named project with its duties | `tests/work/desk-scenario-cases.mjs:137` | asserted |
@@ -402,9 +433,9 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `ACCESS-001` | 4 | the account is disabled and read back | `tests/execution/runtime.mjs:582` | asserted |
 | `ACCESS-001` | 5 | sign-in sessions are revoked and read back | `tests/execution/runtime.mjs:582` | asserted |
 | `ACCESS-001` | 6 | a revoked grant is refused at the effect | `tests/execution/runtime.mjs:361` | asserted |
-| `ACCESS-002` | 1 | an app is assigned through a group and read back | `tests/execution/runtime.mjs:124` | asserted |
-| `ACCESS-002` | 2 | the user is suspended and read back | `tests/execution/runtime.mjs:124` | asserted |
-| `ACCESS-002` | 3 | sessions are cleared and read back | `tests/execution/runtime.mjs:133` | asserted |
+| `ACCESS-002` | 1 | an app is assigned through a group and read back in the developer org | `tests/execution/okta-live.mjs:211` | asserted |
+| `ACCESS-002` | 2 | the user is suspended and read back in the developer org | `tests/execution/okta-live.mjs:230` | asserted |
+| `ACCESS-002` | 3 | sessions are cleared and read back in the developer org | `tests/execution/okta-live.mjs:226` | asserted |
 | `ACCESS-006` | 1 | time-bound access is removed at expiry and the removal read back | `tests/ui/connected-request.mjs:37` | asserted |
 | `ACCESS-006` | 2 | access the user already had is kept | none | none |
 | `ACCESS-008` | 1 | Salesforce is registered with two permission sets and an owner | `tests/work/application-cases.mjs:25` | asserted |
@@ -423,26 +454,40 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `ACCESS-008` | 8 | native restore remaps references without activating membership | `tests/adoption/application-cases.mjs:44` | asserted |
 | `ACCESS-008` | 8 | erasure anonymizes registry and request actors | `tests/work/application-cases.mjs:62` | asserted |
 | `LIFE-003` | 1 | a Sales-to-Marketing move removes Salesforce, adds HubSpot and keeps Slack with readback | `tests/ui/connected-lifecycle.mjs:101` | asserted |
-| `LIFE-003` | 2 | only the owner writes policies; HR reads them | `tests/work/access-policy-cases.mjs:18` | asserted |
+| `LIFE-003` | 2 | only the owner writes policies | `tests/work/access-policy-cases.mjs:18` | asserted |
+| `LIFE-003` | 2 | HR reads the policies | `tests/work/access-policy-cases.mjs:33` | asserted |
 | `LIFE-003` | 3 | policies name reviewed values and group, app or license entitlements | `tests/work/access-policy-cases.mjs:23` | asserted |
 | `LIFE-003` | 4 | a person matches per named dimension and an unrestricted policy applies to everyone | `tests/work/access-policy-cases.mjs:50` | asserted |
 | `LIFE-003` | 5 | the baseline is the union of active matching policies | `tests/work/access-policy-cases.mjs:45` | asserted |
 | `LIFE-003` | 5 | an inactive policy grants nothing | `tests/work/access-policy-cases.mjs:69` | asserted |
 | `LIFE-003` | 6 | join, move and leave baselines | `tests/work/access-policy-cases.mjs:73` | asserted |
 | `LIFE-003` | 7 | the record names the policies behind it | `tests/work/access-policy-cases.mjs:58` | asserted |
-| `LIFE-003` | 7 | replaying the same admission never rewrites it | `tests/work/access-policy-cases.mjs:63` | asserted |
+| `LIFE-003` | 7 | the record keeps each policy's revision | none | none |
+| `LIFE-003` | 7 | replaying the same admission returns the admitted record | `tests/work/access-policy-cases.mjs:62` | asserted |
+| `LIFE-003` | 7 | a later policy edit leaves an admitted record's retained, added and removed access unchanged | none | none |
 | `LIFE-003` | 8 | listed access may not contradict the policies | `tests/work/access-policy-cases.mjs:75` | asserted |
+| `LIFE-003` | 8 | access the admission lists explicitly is added to the policy result | none | none |
 | `LIFE-009` | 1 | policy edits are versioned and audited with before and after | `tests/work/access-policy-cases.mjs:65` | asserted |
-| `LIFE-009` | 2 | each entitlement runs as an access duty under its own grant and verifier | `tests/ui/connected-lifecycle.mjs:102` | asserted |
-| `LIFE-009` | 3 | an app runs as its provider app-assignment group | `tests/ui/connected-lifecycle.mjs:100` | asserted |
+| `LIFE-009` | 2 | each group entitlement runs as an access duty under its own grant and verifier | `tests/ui/connected-lifecycle.mjs:104` | asserted |
+| `LIFE-009` | 2 | a license entitlement runs as ACCESS-001's license action | none | none |
+| `LIFE-009` | 3 | an app entitlement with no native connector runs as the provider's app-assignment group | none | none |
 | `LIFE-009` | 4 | retained access creates no duty and no provider call | `tests/ui/connected-lifecycle.mjs:100` | asserted |
 | `LIFE-009` | 5 | archives keep policies as inactive history | `tests/platform/base-auth-transfer.mjs:236` | asserted |
 | `LIFE-009` | 5 | restored policies grant nothing until the owner re-enters them | `tests/platform/base-auth-transfer.mjs:280` | asserted |
+| `LIFE-006` | 1 | an end date within three days reminds the sponsor | `tests/work/lifecycle-regressions.mjs:63` | asserted |
 | `LIFE-006` | 1 | access is removed and verified at the end instant | `tests/ui/connected-lifecycle.mjs:58` | asserted |
 | `LIFE-006` | 2 | an end date needs a current sponsor | `tests/work/lifecycle-regressions.mjs:56` | asserted |
+| `LIFE-006` | 2 | an inactive member or the contractor is refused as sponsor | none | none |
 | `LIFE-006` | 3 | one reminder in the sponsor's own requests within 72 hours | `tests/work/lifecycle-regressions.mjs:67` | asserted |
-| `LIFE-006` | 4 | only the sponsor re-attests, moving both expiry duties, audited | `tests/work/lifecycle-regressions.mjs:75` | asserted |
+| `LIFE-006` | 3 | no reminder while the end is more than 72 hours away | none | none |
+| `LIFE-006` | 4 | only the sponsor re-attests | `tests/work/lifecycle-regressions.mjs:69` | asserted |
+| `LIFE-006` | 4 | the new end date must be later | `tests/work/lifecycle-regressions.mjs:70` | asserted |
+| `LIFE-006` | 4 | re-attestation moves both expiry duties | `tests/work/lifecycle-regressions.mjs:75` | asserted |
+| `LIFE-006` | 4 | re-attestation is audited | `tests/work/lifecycle-regressions.mjs:76` | asserted |
+| `LIFE-006` | 4 | re-attestation clears the reminder so a new one precedes the new end | none | none |
 | `LIFE-006` | 5 | a departed sponsor's reminder goes to the owner | `tests/work/lifecycle-regressions.mjs:97` | asserted |
+| `LIFE-006` | 5 | the owner re-attests or names a new sponsor | `tests/work/lifecycle-regressions.mjs:101` | asserted |
+| `LIFE-006` | 5 | a newly named sponsor is reminded afresh | none | none |
 | `LIFE-006` | 6 | the disable starts at the end instant and revocation follows the verified disable | `tests/work/lifecycle-regressions.mjs:88` | asserted |
 | `LIFE-006` | 6 | a started expiry cannot be re-attested | `tests/work/lifecycle-regressions.mjs:89` | asserted |
 | `LIFE-007` | 1 | each effect shows its timestamp | `tests/work/lifecycle-evidence-cases.mjs:52` | asserted |
@@ -483,7 +528,8 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `ASSET-010` | 6 | completion marks found devices and links one follow-up per missing device | `tests/work/asset-custody-cases.mjs:87` | asserted |
 | `ASSET-010` | 6 | a completed audit takes no further scans | none | none |
 | `PROB-001` | 1 | a problem is created from three incidents | `tests/work/problem-cases.mjs:11` | asserted |
-| `PROB-001` | 2 | the known error and a workaround article are recorded | `tests/work/problem-cases.mjs:22` | asserted |
+| `PROB-001` | 2 | the known error is recorded | `tests/work/problem-cases.mjs:32` | asserted |
+| `PROB-001` | 2 | a workaround article is recorded | `tests/work/problem-cases.mjs:22` | asserted |
 | `PROB-001` | 3 | the preventive change is linked | `tests/work/problem-cases.mjs:28` | asserted |
 | `PROB-001` | 4 | a later matching ticket is offered the workaround | `tests/work/problem-cases.mjs:41` | asserted |
 | `PROB-002` | 1 | eight floor Wi-Fi tickets yield a proposal listing them | `tests/work/problem-detection-cases.mjs:21` | asserted |
@@ -499,8 +545,13 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `PROB-002` | 8 | a decision retains its reason | `tests/work/problem-detection-cases.mjs:32` | asserted |
 | `PROB-003` | 1 | accepting creates one problem linked to its evidence with the cause unknown | `tests/work/problem-detection-cases.mjs:47` | asserted |
 | `PROB-003` | 1 | accepting resolves no source ticket | `tests/work/problem-detection-cases.mjs:50` | asserted |
-| `PROB-003` | 2 | decisions survive later scans and native restore | `tests/adoption/problem-cases.mjs:46` | asserted |
-| `PROB-003` | 3 | normal-source proposals use operator visibility | `tests/work/problem-detection-cases.mjs:121` | asserted |
+| `PROB-003` | 2 | a rejected cluster stays decided as later sources arrive | `tests/work/problem-detection-cases.mjs:33` | asserted |
+| `PROB-003` | 2 | a rejected cluster stays decided through native restore | `tests/adoption/problem-cases.mjs:46` | asserted |
+| `PROB-003` | 2 | an accepted cluster stays decided through native restore | `tests/adoption/problem-cases.mjs:43` | asserted |
+| `PROB-003` | 2 | an accepted cluster stays decided as later sources arrive | none | none |
+| `PROB-003` | 2 | decisions stay decided as the observation window rolls | none | none |
+| `PROB-003` | 2 | decisions survive a Worker restart | none | none |
+| `PROB-003` | 3 | an operator reads a normal-source proposal | none | none |
 | `PROB-003` | 4 | restricted proposals are visible only to the detecting owner | `tests/work/problem-detection-cases.mjs:113` | asserted |
 | `PROB-003` | 5 | one inaccessible source hides the whole cluster | `tests/work/problem-detection-cases.mjs:124` | asserted |
 | `PROB-003` | 6 | accepted problems keep the proposal's visibility | `tests/work/problem-detection-cases.mjs:127` | asserted |
@@ -574,14 +625,22 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `PROJECT-001` | 2 | a blocked dependency is flagged on the timeline | `tests/work/project-cases.mjs:31` | asserted |
 | `PROJECT-001` | 2 | the workload combines project tasks and tickets | `tests/work/project-cases.mjs:78` | asserted |
 | `PROJECT-001` | 3 | employees have no project view | `tests/work/project-cases.mjs:72` | asserted |
+| `PROJECT-001` | 3 | a service agent edits a task | `tests/work/project-cases.mjs:97` | asserted |
 | `PROJECT-001` | 3 | auditors read | `tests/work/project-cases.mjs:136` | asserted |
-| `PROJECT-001` | 4 | a task owner must be an active owner or agent | `tests/work/project-cases.mjs:20` | asserted |
+| `PROJECT-001` | 4 | a task owner who is not an owner or agent is refused | `tests/work/project-cases.mjs:20` | asserted |
+| `PROJECT-001` | 4 | an inactive owner or agent is refused as a task owner | none | none |
 | `PROJECT-001` | 4 | tasks take due dates and dependencies | `tests/work/project-cases.mjs:33` | asserted |
 | `PROJECT-001` | 5 | the timeline orders by due date | `tests/work/project-cases.mjs:34` | asserted |
+| `PROJECT-001` | 5 | a task waits on an open dependency | `tests/work/project-cases.mjs:33` | asserted |
+| `PROJECT-001` | 5 | a task is flagged blocked when its dependency is due after it | `tests/work/project-cases.mjs:31` | asserted |
+| `PROJECT-001` | 5 | a task is flagged blocked when its dependency is itself blocked | none | none |
+| `PROJECT-001` | 5 | a task is flagged blocked when its dependency is overdue | none | none |
 | `PROJECT-001` | 5 | a task cannot be done while a dependency is open | `tests/work/project-cases.mjs:35` | asserted |
-| `PROJECT-001` | 6 | HR tickets are refused as links | `tests/work/project-cases.mjs:51` | asserted |
+| `PROJECT-001` | 6 | HR tickets are refused as links | `tests/work/project-cases.mjs:50` | asserted |
 | `PROJECT-001` | 6 | tickets, changes and assets with notes link | `tests/work/project-cases.mjs:56` | asserted |
+| `PROJECT-001` | 6 | a lifecycle plan links | none | none |
 | `PROJECT-001` | 7 | the workload counts open tickets beside open project tasks | `tests/work/project-cases.mjs:78` | asserted |
+| `PROJECT-001` | 7 | paused tickets assigned to the agent count in the workload | none | none |
 | `KB-001` | 1 | an employee searches a reviewed article and escalates it with the article revision | `tests/work/runtime.mjs:594` | asserted |
 | `KB-001` | 2 | an expired article disappears from employee search | none | none |
 | `KB-003` | 1 | the VPN question is answered with the readable reviewed article | `tests/work/knowledge-draft-cases.mjs:147` | asserted |
@@ -596,8 +655,12 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `KB-004` | 1 | three similar tickets yield a draft with three sources | `tests/work/knowledge-draft-cases.mjs:39` | asserted |
 | `KB-004` | 1 | the draft stays unpublished until a reviewer publishes it | `tests/work/knowledge-draft-cases.mjs:41` | asserted |
 | `KB-004` | 2 | discovery makes no model call | `tests/work/knowledge-draft-cases.mjs:15` | asserted |
-| `KB-004` | 3 | candidates need three matching resolved normal tickets within one context and cohort | `tests/work/knowledge-draft-cases.mjs:103` | asserted |
-| `KB-004` | 4 | reviewed known errors supply candidates | `tests/work/knowledge-draft-cases.mjs:111` | asserted |
+| `KB-004` | 3 | recorded context and cohort group tickets, with app, service, device model and title precedence and normalized words | `tests/work/knowledge-draft-cases.mjs:101` | asserted |
+| `KB-004` | 3 | HR tickets make no candidate | `tests/work/knowledge-draft-cases.mjs:89` | asserted |
+| `KB-004` | 3 | fewer than three matching resolved tickets, or unresolved tickets, make no candidate | none | none |
+| `KB-004` | 3 | a candidate keeps at most 30 complete public-message sources | none | none |
+| `KB-004` | 4 | reviewed known errors supply candidates | `tests/work/knowledge-draft-cases.mjs:109` | asserted |
+| `KB-004` | 4 | a restricted known error supplies no candidate | none | none |
 | `KB-004` | 5 | private notes never enter generation | `tests/work/knowledge-draft-cases.mjs:40` | asserted |
 | `KB-004` | 6 | a reviewer publishes the generated draft | `tests/work/knowledge-draft-cases.mjs:45` | asserted |
 | `KB-004` | 7 | every source is cited | `tests/work/knowledge-draft-cases.mjs:39` | asserted |
@@ -612,25 +675,47 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `REPORT-004` | 3 | touches and minutes are recorded human effort by role; an automated window has no touches | `tests/work/work-saved-cases.mjs:79` | asserted |
 | `REPORT-004` | 4 | labor USD uses the owner-declared role rates | `tests/work/work-saved-cases.mjs:81` | asserted |
 | `REPORT-004` | 4 | only the owner declares rates and employees cannot read the report | `tests/work/work-saved-cases.mjs:65` | asserted |
-| `REPORT-004` | 5 | model USD is the configured-price estimate, and a call without usage is unknown | `tests/work/work-saved-cases.mjs:90` | asserted |
+| `REPORT-004` | 5 | classification calls' model USD is the configured-price estimate, and a call without usage is unknown | `tests/work/work-saved-cases.mjs:90` | asserted |
+| `REPORT-004` | 5 | reply, summary and employee-intake calls that named the request are counted | none | none |
 | `REPORT-004` | 6 | every provider dispatch is an unknown charge, never $0 | `tests/work/work-saved-cases.mjs:85` | asserted |
 | `REPORT-004` | 7 | known cost per verified outcome includes failed work and is labelled incomplete when a role is unpriced | `tests/work/work-saved-cases.mjs:72` | asserted |
 | `REPORT-005` | 1 | 40 incidents, 92% change success and 12% emergency share | `tests/services/kpi-cases.mjs:11` | asserted |
 | `REPORT-005` | 2 | each tile drills through to its records | `tests/services/kpi-cases.mjs:46` | asserted |
 | `REPORT-005` | 3 | the range is labelled in its time zone and an empty cohort borrows nothing | `tests/services/kpi-cases.mjs:60` | asserted |
+| `REPORT-005` | 3 | the month picker computes midnight boundaries in that zone | `tests/ui/kpi-journey.mjs:80` | asserted |
 | `REPORT-005` | 4 | a missing acknowledgment is excluded and disclosed | `tests/services/kpi-cases.mjs:16` | asserted |
 | `REPORT-005` | 4 | timing equals the contributing records | `tests/services/kpi-cases.mjs:53` | asserted |
 | `REPORT-005` | 5 | MTTA and MTTR by recorded priority | `tests/services/kpi-cases.mjs:21` | asserted |
+| `REPORT-005` | 5 | major incidents need an explicit designation | `tests/services/kpi-cases.mjs:14` | asserted |
 | `REPORT-005` | 6 | change success uses every change as the denominator | `tests/services/kpi-cases.mjs:10` | asserted |
 | `REPORT-005` | 7 | causal incident rate stays unknown without assessments | `tests/services/kpi-cases.mjs:24` | asserted |
-| `REPORT-005` | 8 | problem backlog, age and known errors | `tests/services/kpi-cases.mjs:28` | asserted |
+| `REPORT-005` | 8 | problems in the backlog are counted | `tests/services/kpi-cases.mjs:26` | asserted |
+| `REPORT-005` | 8 | backlog problems carry their age | `tests/services/kpi-cases.mjs:56` | asserted |
+| `REPORT-005` | 8 | reviewed known errors are counted | `tests/services/kpi-cases.mjs:28` | asserted |
+| `REPORT-005` | 8 | a problem leaves the backlog once permanent-fix effectiveness is verified | none | none |
 | `REPORT-006` | 1 | ages use the disclosed observation snapshot | `tests/services/kpi-cases.mjs:56` | asserted |
-| `REPORT-006` | 2 | asset ages and states are counted per record | `tests/services/kpi-cases.mjs:29` | asserted |
+| `REPORT-006` | 2 | native asset age starts at the recorded in-service date | `tests/ui/kpi-journey.mjs:110` | asserted |
+| `REPORT-006` | 2 | native asset age starts at the first custody record when no in-service date is recorded | none | none |
+| `REPORT-006` | 2 | service asset age starts at record creation | none | none |
+| `REPORT-006` | 2 | asset states are counted per record | `tests/services/kpi-cases.mjs:29` | asserted |
+| `REPORT-006` | 2 | source records that could share an identity count separately | none | none |
+| `REPORT-006` | 3 | a fresh attributed observation counts | `tests/services/kpi-cases.mjs:31` | asserted |
 | `REPORT-006` | 3 | an unobserved device stays unknown | `tests/services/kpi-cases.mjs:32` | asserted |
+| `REPORT-006` | 3 | the operator-recorded or provider-verified label is shown | none | none |
+| `REPORT-006` | 3 | an expired observation stays unknown | none | none |
 | `REPORT-006` | 4 | license utilization over allocated seats | `tests/services/kpi-cases.mjs:33` | asserted |
+| `REPORT-006` | 4 | utilization uses each asset's latest usage period | none | none |
+| `REPORT-006` | 4 | a usage period not wholly within the range is excluded | none | none |
 | `REPORT-006` | 5 | non-USD spend is excluded, not converted | `tests/services/kpi-cases.mjs:34` | asserted |
 | `REPORT-006` | 6 | upcoming renewals and refreshes | `tests/services/kpi-cases.mjs:37` | asserted |
+| `REPORT-006` | 6 | dates outside [end, end+30 days) are excluded | none | none |
+| `REPORT-006` | 6 | native useful-life anniversaries are labelled planning indicators | none | none |
 | `REPORT-006` | 7 | each tile keeps its definition, units and records | `tests/services/kpi-cases.mjs:40` | asserted |
+| `REPORT-006` | 7 | elapsed milliseconds display as minutes to two decimals | `tests/ui/kpi-journey.mjs:56` | asserted |
+| `REPORT-006` | 7 | a whole percentage displays without trailing zeroes | `tests/ui/kpi-journey.mjs:51` | asserted |
+| `REPORT-006` | 7 | JSON keeps numeric precision | `tests/services/kpi-cases.mjs:33` | asserted |
+| `REPORT-006` | 7 | USD displays to cents | none | none |
+| `REPORT-006` | 7 | a fractional percentage or number rounds to two decimals | none | none |
 | `REPORT-006` | 8 | source scopes apply and the auditor's unavailable device scope is disclosed | `tests/ui/kpi-journey.mjs:127` | asserted |
 | `AUDIT-001` | 1 | the auditor reads the grant-change entry | none | none |
 | `AUDIT-001` | 2 | the auditor reads the data-export entry | none | none |
@@ -647,9 +732,15 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `API-005` | 1 | owner routes mint, list and revoke credentials | `tests/platform/base-auth-runtime.mjs:202` | asserted |
 | `API-005` | 1 | a REST token is refused at MCP and an MCP credential at REST | `tests/platform/base-auth-runtime.mjs:134` | asserted |
 | `API-005` | 2 | mixed or privileged roles refuse mint | `tests/platform/base-auth-runtime.mjs:192` | asserted |
-| `API-005` | 3 | the credential expires within 365 days and binds one workspace | `tests/platform/base-auth-runtime.mjs:171` | asserted |
+| `API-005` | 3 | a credential expiring beyond 365 days is refused | `tests/platform/base-auth-runtime.mjs:96` | asserted |
+| `API-005` | 3 | a credential binds one workspace | `tests/platform/base-auth-runtime.mjs:171` | asserted |
+| `API-005` | 3 | the credential stores SHA-256 only | `tests/platform/base-auth-runtime.mjs:184` | asserted |
 | `API-005` | 3 | the secret shows once and hashes never reappear | `tests/platform/mcp-tools-cases.mjs:262` | asserted |
-| `API-005` | 4 | revocation is immediate and audited; last use is listed; expiry audited | `tests/platform/base-auth-runtime.mjs:209` | asserted |
+| `API-005` | 4 | revocation refuses the next call at once | `tests/platform/base-auth-runtime.mjs:200` | asserted |
+| `API-005` | 4 | the list shows last use | `tests/platform/base-auth-runtime.mjs:110` | asserted |
+| `API-005` | 4 | minting is audited | `tests/platform/base-auth-runtime.mjs:186` | asserted |
+| `API-005` | 4 | revocation is audited | `tests/platform/base-auth-runtime.mjs:202` | asserted |
+| `API-005` | 4 | expiry is audited | `tests/platform/base-auth-runtime.mjs:208` | asserted |
 | `API-005` | 5 | erasure revokes the credential and clears its hash | `tests/platform/base-auth-runtime.mjs:225` | asserted |
 | `API-005` | 6 | export carries metadata without its hash and restore leaves it revoked | `tests/platform/base-auth-transfer.mjs:194` | asserted |
 | `API-005` | 6 | an old archive introduces no credential authority | `tests/platform/base-auth-transfer.mjs:52` | asserted |
@@ -663,7 +754,9 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `API-006` | 6 | moving a ticket out removes it on the next list | `tests/platform/mcp-tools-cases.mjs:203` | asserted |
 | `API-006` | 7 | missing, out-of-grant, HR and restricted tickets share the not-found response | `tests/platform/mcp-tools-cases.mjs:127` | asserted |
 | `API-006` | 8 | mint, narrowing, issuer loss and calls are audited with ids | `tests/platform/mcp-tools-cases.mjs:269` | asserted |
-| `API-007` | 1 | a read returns the bounded projection with display identities only | `tests/platform/mcp-tools-cases.mjs:108` | asserted |
+| `API-007` | 1 | a read returns the id, group id, revision, display-only requester and beneficiary, public thread, classified fields and history | `tests/platform/mcp-tools-cases.mjs:108` | asserted |
+| `API-007` | 1 | a read returns the number, title, state, type, priority, impact, urgency, category and service ids and labels, group label, SLA and timestamps | none | none |
+| `API-007` | 1 | a read returns the principal's own comments | none | none |
 | `API-007` | 2 | search uses only the projected fields | `tests/platform/mcp-tools-cases.mjs:122` | asserted |
 | `API-007` | 3 | private notes, attachments, personal and HR facts are excluded | `tests/platform/mcp-tools-cases.mjs:119` | asserted |
 | `API-007` | 4 | a comment is internal, attributed, revision-checked and sends nothing | `tests/platform/mcp-tools-cases.mjs:179` | asserted |
@@ -698,6 +791,8 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `COST-001` | 7 | ordinary ticket creation and public conversation continue while research is held | none | none |
 | `SANDBOX-001` | 1 | draft edits leave production unchanged | `tests/platform/sandbox-cases.mjs:146` | asserted |
 | `SANDBOX-001` | 2 | every configuration difference is listed | `tests/platform/sandbox-cases.mjs:217` | asserted |
+| `SANDBOX-001` | 2 | a separate current non-editor owner approves; the owner and the editor are refused | `tests/platform/sandbox-cases.mjs:227` | asserted |
+| `SANDBOX-001` | 2 | a qualifying sandbox-admin approves under SANDBOX-004 | `tests/platform/sandbox-cases.mjs:470` | asserted |
 | `SANDBOX-001` | 3 | promotion applies the versioned configuration with its audit | `tests/platform/sandbox-cases.mjs:261` | asserted |
 | `SANDBOX-001` | 3 | in-flight requests keep their SLA and approval versions | `tests/platform/sandbox-cases.mjs:256` | asserted |
 | `SANDBOX-001` | 4 | rollback restores the prior configuration and keeps production authority | `tests/platform/sandbox-cases.mjs:268` | asserted |
@@ -741,7 +836,7 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `A2` | 2 | a grant revoked between plan and effect refuses the effect | `tests/execution/authority-runtime.mjs:130` | asserted |
 | `A2` | 3 | a grant expired between plan and effect refuses the effect | none | none |
 | `A2` | 4 | hostile retrieved text cannot cause an effect | none | none |
-| `A3` | 1 | a restart before a provider write replays no effect | `tests/ui/connected-restart.mjs:14` | asserted |
+| `A3` | 1 | a crash between persisting an operation and its provider write, then a restart, shows reconciliation instead of a duplicate | none | none |
 | `A3` | 2 | an unknown effect after a write reconciles without a repeat | `tests/execution/runtime.mjs:130` | asserted |
 | `A3` | 3 | cancelling after the effect leaves the compensation owed | `tests/ui/connected-cancellation.mjs:22` | asserted |
 | `A4` | 1 | provider readback alone leaves the request at effect verified | `tests/execution/runtime.mjs:582` | asserted |
@@ -763,7 +858,10 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `A7` | 2 | a lost response is an unknown charge keeping its reservation | `tests/intelligence/runtime.mjs:69` | asserted |
 | `A7` | 3 | both survive a restart | `tests/intelligence/runtime.mjs:74` | asserted |
 | `A7` | 4 | missing model configuration returns needs_configuration with no data | `tests/intelligence/runtime.mjs:82` | asserted |
-| `A7` | 5 | every touch names its kind | `tests/work/time-cases.mjs:20` | asserted |
+| `A7` | 5 | touches name sign-in or consent, a setup gap, a correction, physical custody, takeover or recovery | `tests/work/time-cases.mjs:45` | asserted |
+| `A7` | 5 | vendor or technician work defaults to its own kind | `tests/work/time-cases.mjs:17` | asserted |
+| `A7` | 5 | a touch for the request itself is recorded as that kind | none | none |
+| `A7` | 5 | a resumed measured session names what it was for | none | none |
 | `A7` | 6 | the effort report counts touches per kind beside unresolved and failed requests | `tests/work/time-cases.mjs:48` | asserted |
 | `AGENT-006` | 1 | REPORT-004's report for two request types with a ranked proposal | `tests/work/work-saved-cases.mjs:103` | asserted |
 | `AGENT-006` | 2 | the owner chooses the cohort | `tests/work/work-saved-cases.mjs:113` | asserted |
@@ -779,6 +877,6 @@ Carried-done audit of `docs/contract` against old reference `19816529116ae290357
 | `F1` | 3 | changed staff and service facts invalidate old evidence | `tests/ui/commitment-browser.mjs:56` | asserted |
 | `F1` | 4 | stale or absent observations stay unknown | `tests/intelligence/commitment-cases.mjs:59` | asserted |
 
-Rows: 688 asserted, 88 none, 0 moved. Parts audited: 81 (from 59 clauses done at the old reference); 46 are now partial because a row reads none, each with a Gap naming the unasserted outcomes.
+Rows: 725 asserted, 149 none, 0 moved. Parts audited: 81 (from 59 clauses done at the old reference); 65 are now partial because a row reads none, each with a Gap naming the unasserted outcomes.
 
 The rubric is brief c's: an assertion of the named outcome in a file the clause's Evidence cell lists; a test title, an assertion over an empty set, a subset match offered as proof of an absence, an assertion made before the named condition or in an uncited file does not count. A status-asserting helper call (for example `call(path, body, actor, 404)`) counts as the assertion of that refusal.

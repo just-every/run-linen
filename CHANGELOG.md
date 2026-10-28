@@ -11,6 +11,7 @@ CONTRACT.md was rewritten to the RER contract standard from main `19816529116ae2
 - The Agent surface (SURFACE-001 to SURFACE-008) was added, and sentences that preset an approval or review for an agent were reworded as the risk class the step carries or the company's policy.
 - The homepage claims of run-linen.com were mapped for the first time (18 claims).
 - The carried-done audit demoted 46 of 81 carried done parts to partial, each with a Gap naming the outcomes no cited test asserts.
+- Fix round 1, after the fresh judge failed `a47464d`: the carried-done audit was re-read per named outcome, and 19 more parts drop to partial, each Gap naming the outcomes no cited test asserts: A3, A7, API-007, CATALOG-006, DESK-003, DESK-004, DESK-006, DESK-015, DESK-020, DESK-024, KB-004, LIFE-003, LIFE-006, LIFE-009, PROB-003, PROJECT-001, REPORT-004, REPORT-005 and REPORT-006. Sixteen of the 81 carried parts stay done.
 - ASSET-006 point 2 and ASSET-002's Requirement now name the class the step carries (money for a seat reclamation, destructive for a wipe or retire), which the company's policy decides, instead of a fixed owner approval or confirmation.
 
 ### Status notes moved from done rows

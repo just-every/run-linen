@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 35 | 114 | 29 | 178 |
+| Core | 16 | 133 | 29 | 178 |
 | Agent surface | 0 | 0 | 8 | 8 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 35 | 114 | 37 | 186 |
+| Full target | 16 | 133 | 37 | 186 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -163,7 +163,7 @@ Core · published · **partial** · Cites BASE-AGENT-005
 
 #### A3 — Durable effects
 
-Core · published · **done** · Cites BASE-OPS-003, BASE-AUDIT-001
+Core · published · **partial** · Cites BASE-OPS-003, BASE-AUDIT-001
 
 **Requirement.** Persist intent and operation identity before dispatch; fence competing execution and human takeover. Reconcile unknown remote effects before repeat. Resume after crash without duplicating confirmed effects. Record partial completion, failed compensation and remaining obligations. A revocation or cancellation request is not proof that a remote action stopped.
 
@@ -173,7 +173,7 @@ Core · published · **done** · Cites BASE-OPS-003, BASE-AUDIT-001
 3. Cancel after the effect and see the compensation owed.
 
 **Evidence.** `src/features/execution/engine.ts`, `tests/ui/connected-cancellation.mjs`, `tests/ui/connected-restart.mjs`, `tests/execution/runtime.mjs`
-**Gap.** None.
+**Gap.** Not asserted: a crash between persisting an operation and its provider write, followed by a restart that reconciles it instead of writing twice; the cited restart journey stops the worker after every journey has finished and runs nothing afterwards. Reconciliation of an unknown effect after a write and the compensation owed after cancellation are asserted.
 
 #### A4 — Verifiable outcomes
 
@@ -237,7 +237,7 @@ Core · published · **done** · From A6 · Cites BASE-DATA-001, BASE-DATA-003
 
 #### A7 — Honest operating and cost boundaries
 
-Core · published · **done** · Cites BASE-SECRET-002, BASE-DATA-004
+Core · published · **partial** · Cites BASE-SECRET-002, BASE-DATA-004
 
 **Requirement.** Declare supported commands, runtime, resources, provider effects and recovery targets. Record every model/tool attempt, failures and uncertain charges, budgets, latency and all human work, counting touches and active minutes for sign-ins/consents, setup gaps, corrections, physical custody, vendor/technician tasks, takeover and recovery; report unresolved and missed work beside any lower-interruption result. Fixture, real provider, hosted and owner evidence stay distinct. Missing configuration cannot produce mock data or successful fallback execution.
 
@@ -250,7 +250,7 @@ Core · published · **done** · Cites BASE-SECRET-002, BASE-DATA-004
 6. The period effort report counts touches and active minutes per kind for each request type beside that type's unresolved and failed requests, so a lower-touch period never hides missed work.
 
 **Evidence.** `src/features/intelligence/measurement.ts`, `src/features/work/time.ts`, `src/features/work/effort-window.ts`, `tests/intelligence/runtime.mjs`, `tests/work/time-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a touch for the request itself is recorded as that kind (the default for other work), and that a resumed measured session names what it was for. The budget hold for the owner, the unknown charge keeping its reservation, both surviving a restart, needs_configuration without data, the other touch kinds with the vendor and technician default, and the per-kind effort report beside unresolved and failed requests are asserted.
 
 ### Flagship service operations (retained)
 
@@ -777,7 +777,7 @@ Core · target · **missing** · From CATALOG-005
 
 #### CATALOG-006 — Requests for pending people
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** A request may name a pending person (a reviewed person record without an account, e.g. a new hire) as its beneficiary; requested catalog services are held, with the reason shown, until that person's account is bound, then released into normal fulfillment; an unbound pending person can be edited or withdrawn, canceling the request. A person without review cannot be named as a beneficiary.
 
@@ -789,7 +789,7 @@ Core · target · **done**
 5. A person without review cannot be named.
 
 **Evidence.** `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/pending-person-browser.mjs`
-**Gap.** None.
+**Gap.** Not asserted in the cited files: the reason shown on a service held for a pending hire (asserted in tests/ui/pending-person-journey.mjs:52, which this clause does not cite; the cited runtime reads only the audience reason of a service still held after binding). The hold, release into fulfilment on binding, editing, withdrawal cancelling the request, and the refusal of an unreviewed person are asserted.
 
 ### Agent workspace and ticket operations
 
@@ -847,7 +847,7 @@ Core · target · **done**
 
 #### DESK-003 — Routing and assignment
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Rules route by category, requester, department, location, VIP status and the impacted configuration item's or business service's support group (ASSET-009); assignment can be round-robin, by current load, by skill, or by business-hours availability, and reassignment keeps history. Assignment within a group is DESK-019.
 
@@ -862,7 +862,7 @@ Core · target · **done**
 8. Within the group, the candidates are its active agents who are on shift at that minute in their calendar's time zone, hold the rule's skill if it names one, and own fewer open tickets than the group's cap.
 
 **Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: a group whose assignment method is none placing the ticket without an agent; a rule with several set conditions deciding only when all of them match; and an inactive agent left out of the candidates. Round-robin and load-based assignment past the off-shift and capped agents, the VIP, Payroll-service and laptop-CI routes, owner-only rules, support groups, shifts and skills, routing on creation, on classification and on request at the revision read, precedence and no change without a match, and skill-based candidates are asserted.
 
 #### DESK-019 — Automatic assignment and routing history
 
@@ -883,7 +883,7 @@ Core · target · **partial** · From DESK-003
 
 #### DESK-004 — SLA policies
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Multiple SLA policies by priority, category and requester group with first-response, next-response and resolution targets on business or calendar hours, US federal holiday calendars by location, pause on "awaiting requester" or "awaiting vendor", and visible breach time. Pauses and breaches are DESK-020.
 
@@ -897,11 +897,11 @@ Core · target · **done**
 7. Each public requester message after an agent reply starts a next-response target met by the next public agent reply.
 
 **Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: a Saturday holiday observed the Friday before, a Sunday holiday observed the Monday after, the Inauguration Day exclusion, a calendar's own listed dates beside the catalog, resolution met by closing, a policy matched on its category, and a priority change rebinding from the ticket's opening. Policy order and first-match binding on priority and requester group, business and calendar hours, the location's federal catalog skipping a Monday holiday, the requester pause, breaches on the ticket and the report, first response met by the first public agent reply and the next-response target are asserted.
 
 #### DESK-020 — SLA pauses and breaches
 
-Core · target · **done** · From DESK-004
+Core · target · **partial** · From DESK-004
 
 **Requirement.** A pause stops only the clocks its policy pauses on, and a breach, once reached, stays a breach.
 
@@ -912,7 +912,7 @@ Core · target · **done** · From DESK-004
 4. Owners, agents and auditors read each ticket's targets and the period report.
 
 **Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that service agents and auditors read each ticket's targets and the period report. The owner's reads and the requester's refusal, pauses stopping only the policy's parties, a later pause keeping the breach, and the breach time are asserted.
 
 #### DESK-005 — Escalation and supervisor rules
 
@@ -950,7 +950,7 @@ Core · target · **partial** · From DESK-005
 
 #### DESK-006 — Ticket relationships
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Merge duplicates (keeping both requesters informed), split, parent/child, and links to problems, changes, assets and engineering issues (RL-7).
 
@@ -965,7 +965,7 @@ Core · target · **done**
 8. Each linked asset, problem or change lists only the tickets its reader can already read.
 
 **Evidence.** `src/features/work/relationships.ts`, `src/ui/work-relationships.tsx`, `tests/work/relationship-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that each linked asset, problem or change lists only the linked tickets its reader can read (no reader who can read the record but not every linked ticket is constructed); a link to a change; the duplicate's beneficiary joining the surviving ticket; participants never seeing attachments; the merge notice on the duplicate; and a split keeping the beneficiary. Merge with both requesters notified, the duplicate's pointer, its requester's public-only participation, the HR merge refusal, split with cited messages, its own SLA and history, parent with cycle refusal, asset, problem and engineering-issue links and the employee's refused listing are asserted.
 
 #### DESK-007 — Collaboration
 
@@ -1090,7 +1090,7 @@ Core · target · **partial** · Rules D-4
 
 #### DESK-024 — Department handoff and retained HR restriction
 
-Core · target · **done** · From DESK-011 · Rules D-4
+Core · target · **partial** · From DESK-011 · Rules D-4
 
 **Requirement.** A handoff between workspaces moves the ticket whole, and a ticket that was ever in an HR workspace keeps that workspace's restriction wherever it goes.
 
@@ -1105,7 +1105,7 @@ Core · target · **done** · From DESK-011 · Rules D-4
 8. Native archives retain department metadata and HR restrictions while restoring staff memberships inert; owners explicitly confirm authority again.
 
 **Evidence.** `tests/work/department-space-cases.mjs`, `tests/ui/department-browser.mjs`, `tests/work/department-ops-cases.mjs`, `tests/work/department-report-cases.mjs`, `tests/services/department-source-cases.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/platform/privacy-runtime.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a handoff at a stale revision is refused, and that the ticket's submitted forms remain after a handoff (the handed-off request has none). The kept history, owner-only handoff with an audited reason, identity, messages, attachments, sensitivity and the frozen SLA clock, cleared incompatible assignments, the retained HR requirement across later moves, staff-door membership, the requester's public view, HR-service limits, no recovery through relationships, withdrawal before aggregation and inert archived memberships are asserted.
 
 #### DESK-012 — Time tracking and effort
 
@@ -1155,7 +1155,7 @@ Core · target · **missing**
 
 #### DESK-015 — Agent scenarios and record templates
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Admins and agents build named scenarios: one-click actions that set several fields (type, category, priority, status, custom fields), assign a group and agent, add a private note or a public reply from a template, add watchers, and link or start a task plan. Each scenario is scoped to its author, a group or the workspace. Running it applies every step as one audited action recording each field's before and after; each step is checked against the runner's permissions, and a step the runner may not perform stops the scenario with nothing applied. Scenarios are offered only within their scope and run from the ticket, a bulk selection (DESK-001) and mobile. Record templates pre-fill new tickets, tasks and changes (DESK-025). Watchers inherit from DESK-007 and native mobile from CHANNEL-005.
 
@@ -1170,7 +1170,7 @@ Core · target · **done**
 8. Runs start from the ticket (keyboard `x`), from the bulk-update screen (one run per chosen ticket) and from the same console at phone width.
 
 **Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/ui/desk-scenario-browser.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that an HR runner's field and status steps apply (only HR refusals, of classification and task-plan steps, are asserted). The one-entry audited run with no note for the requester, group scoping and refused unoffered runs, role checks that apply nothing, the saving rules, every step kind, a run stopped by a refused step with only its changes audited, and runs from the ticket with x, from bulk update and at phone width are asserted.
 
 #### DESK-025 — Record templates and scenario task plans
 
@@ -1529,7 +1529,7 @@ Core · target · **partial** · From LIFE-002 · Rules D-2
 
 #### LIFE-003 — Birthright access baselines
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Access policies map department, title, location and employment type to groups, apps and licenses; a join grants the baseline and a move computes retained, added and removed access for review or for the versioned grants the company issued. Duties and history are LIFE-009.
 
@@ -1544,11 +1544,11 @@ Core · target · **done**
 8. Access the admission also lists explicitly is added to the policy result and must not contradict it.
 
 **Evidence.** `tests/work/access-policy-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/connected-lifecycle.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that the record keeps each policy's revision; that a later policy edit leaves an admitted record's retained, added and removed access unchanged (only a replay returning the same record is asserted); and that access the admission lists explicitly is added to the policy result. The Sales-to-Marketing move with readback, owner-only writes and HR reads, reviewed values and entitlement kinds, matching per named dimension, the union of active policies, join, move and leave baselines, the policy names on the record, and the contradiction refusal are asserted.
 
 #### LIFE-009 — Baseline access duties and policy history
 
-Core · target · **done** · From LIFE-003
+Core · target · **partial** · From LIFE-003
 
 **Requirement.** Each baseline change becomes an ordinary access duty with its own grant and verifier, and policy history survives edits and restore.
 
@@ -1560,7 +1560,7 @@ Core · target · **done** · From LIFE-003
 5. A native archive retains policies as history only; a restored workspace re-enters them under its own owner.
 
 **Evidence.** `tests/work/access-policy-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/connected-lifecycle.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a license entitlement runs as ACCESS-001's license action, and that an app entitlement with no native connector runs as the provider's app-assignment group (the connected journey's policies grant groups only). Versioned and audited policy edits, group entitlements running as access duties under their own grants and verifier, no duty or provider call for retained access, and archived policies kept as inactive history are asserted.
 
 #### LIFE-004 — Joiner device readiness
 
@@ -1595,7 +1595,7 @@ Core · target · **partial**
 
 #### LIFE-006 — Contractors and temporary staff
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Contractor and temp accounts carry an end date and sponsor; access expires automatically unless the sponsor re-attests before the end date. Email and chat delivery of the sponsor reminder are inherited by NOTIFY-001.
 
@@ -1608,7 +1608,7 @@ Core · target · **done**
 6. Without re-attestation the account disable starts at the end instant and session revocation follows once the disable is independently verified (both act on the same account, through their bound provider grants); once either duty has started, the end date cannot be re-attested.
 
 **Evidence.** `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that re-attestation clears the reminder so a new one precedes the new end; that no reminder fires while the end is more than 72 hours away; that an inactive member or the contractor cannot be the sponsor; and that a newly named sponsor is reminded afresh. The sponsor requirement, one reminder in the sponsor's requests, sponsor-only re-attestation to a later date moving both expiry duties with an audit entry, the owner hand-off when the sponsor leaves, and removal verified at the end instant are asserted.
 
 #### LIFE-007 — Lifecycle evidence pack
 
@@ -1902,7 +1902,7 @@ Core · target · **partial**
 
 #### PROB-003 — Problem proposals: acceptance, visibility and persistence
 
-Core · target · **done** · From PROB-002
+Core · target · **partial** · From PROB-002
 
 **Requirement.** An accepted proposal becomes one problem that keeps its evidence by reference, and every proposal is visible only to readers of all its sources (RL-14).
 
@@ -1916,7 +1916,7 @@ Core · target · **done** · From PROB-002
 7. Source evidence stores references rather than copied conversations.
 
 **Evidence.** `tests/work/problem-detection-cases.mjs`, `tests/ui/problem-detection-journey.mjs`, `tests/adoption/problem-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted in the cited files: decisions surviving a Worker restart (asserted in tests/work/runtime.mjs:740, which this clause does not cite), a decision kept as the observation window rolls, an accepted cluster staying decided as later sources arrive, and an operator reading a normal-source proposal. Acceptance into one linked problem with the cause unknown, a rejection kept across later sources and native restore, an acceptance kept across restore, restricted clustering visible only to the detecting owner, a whole cluster hidden by one inaccessible source, inherited visibility and reference-only evidence are asserted.
 
 ### Change management
 
@@ -2114,7 +2114,7 @@ Core · target · **missing**
 
 #### PROJECT-001 — IT team projects
 
-Core · target · **done** · Rules D-4
+Core · target · **partial** · Rules D-4
 
 **Requirement.** Projects such as an office move, a laptop refresh or an SSO migration have tasks, milestones, owners, due dates, dependencies and status, link to tickets, changes, assets and lifecycle plans, and show as a board and a timeline; each agent's workload shows project tasks beside ticket load. Software delivery projects stay in Vector or Jira, and cross-functional business projects stay in the buyer's work-management tool (see also [Pegboard](https://github.com/just-every/run-pegboard)).
 
@@ -2128,7 +2128,7 @@ Core · target · **done** · Rules D-4
 7. An agent's workload counts open or paused tickets assigned to them beside their open project tasks.
 
 **Evidence.** `src/features/work/projects.ts`, `src/ui/projects.tsx`, `tests/work/project-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: a link to a lifecycle plan; a task flagged blocked because its dependency is itself blocked or overdue; an inactive owner or agent refused as a task owner; and paused tickets counted in an agent's workload. Twelve tasks over two milestones, 30 relocations and two change links, the blocked flag for a dependency due after its task, waiting and the done refusal, timeline order, the HR-ticket refusal, who edits and reads, and the combined workload are asserted.
 
 ### Knowledge
 
@@ -2179,7 +2179,7 @@ Core · target · **partial** · Rules D-2
 
 #### KB-004 — Articles from resolved work
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Linen drafts articles from resolved tickets and known errors with source links; a reviewer publishes or rejects each draft in the product, and an agent that publishes one through a tool carries its class under the company's policy (RL-16). Source custody is KB-006.
 
@@ -2194,7 +2194,7 @@ Core · target · **done**
 8. Repeated discovery preserves the group's rejection or publication.
 
 **Evidence.** `src/features/work/knowledge-drafts.ts`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/knowledge-draft-journey.mjs`, `tests/adoption/knowledge-draft-cases.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that fewer than three matching resolved tickets, or unresolved ones, make no candidate; that a candidate keeps at most 30 sources; and that a restricted known error supplies no candidate. The three-source draft unpublished until a reviewer publishes it, discovery without a model call, context and cohort grouping with its precedence and normalization, the HR exclusion, reviewed known errors, private notes kept out of generation, explicit generation within the configured model and budget, publication and rejection, cited sources and kept decisions are asserted.
 
 #### KB-006 — Generated articles follow their sources
 
@@ -2272,7 +2272,7 @@ Core · target · **partial**
 
 #### REPORT-004 — Human work saved
 
-Core · target · **done** · Rules D-5
+Core · target · **partial** · Rules D-5
 
 **Requirement.** Per request type, touches and active minutes of employees, agents, approvers and vendors before and after automation, with model, provider and labor cost in USD per verified outcome, reported beside unresolved and failed work rather than tickets closed.
 
@@ -2286,11 +2286,11 @@ Core · target · **done** · Rules D-5
 7. Known cost per verified outcome is the known USD of all work of the type in the window, failed and pending included, divided by the requests whose every duty was independently verified; it is labelled known cost only whenever a role is unpriced or any charge is unknown, and closure never counts as an outcome.
 
 **Evidence.** `src/features/work/effort-report.ts`, `src/features/work/effort-window.ts`, `src/features/work/labor-rates.ts`, `src/ui/work-saved.tsx`, `tests/work/work-saved-cases.mjs`, `tests/work/fulfilment-link-runtime.mjs`, `tests/ui/time-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: model charges of reply, summary and employee-intake calls that named the request (the fixture's model calls are classifications only). Prior and current touches, minutes, costs and failures, owner-chosen non-overlapping windows, effort by role with no touches for automated work, cent-precision labor at the current owner-declared rates, owner-only rates, the report audience, model estimates and unknown charges, unknown provider dispatches, and known cost per verified outcome with its label are asserted.
 
 #### REPORT-005 — IT operations and asset KPIs
 
-Core · target · **done** · Rules D-5
+Core · target · **partial** · Rules D-5
 
 **Requirement.** Incident MTTA and MTTR by priority and service, major-incident count and duration, change success rate, emergency-change share, change-caused incident rate, problem backlog and age, known errors without a permanent fix, assets by state and age, devices out of compliance, license utilization and spend in USD, and upcoming renewals and refreshes, each with definition, range, time zone and drill-through to its records. Asset, compliance, license and spend measures are REPORT-006.
 
@@ -2305,11 +2305,11 @@ Core · target · **done** · Rules D-5
 8. Problems remain in the backlog, with age and reviewed known errors, until permanent-fix effectiveness is verified.
 
 **Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/kpi-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: a problem leaving the backlog once permanent-fix effectiveness is verified (the only problem has a known error and no verified fix). The month's tiles and rates, drill-through to every counted record, the range in its time zone with Denver midnight boundaries, acknowledgement and restoration timing with missing observations disclosed, recorded priority and explicit major designation, the change denominator, the unknown causal rate, and problem backlog, age and known errors are asserted.
 
 #### REPORT-006 — Asset, compliance, license and spend measures
 
-Core · target · **done** · From REPORT-005 · Rules D-5
+Core · target · **partial** · From REPORT-005 · Rules D-5
 
 **Requirement.** Asset and license measures count only recorded, attributed observations, keep unknowns visible and never infer identity, conversion or outcome. The report does not itself claim the feeds later clauses add.
 
@@ -2324,7 +2324,7 @@ Core · target · **done** · From REPORT-005 · Rules D-5
 8. The report uses existing report and source scopes; an auditor's unavailable native-device scope is disclosed, and a missing feed or outcome is unknown.
 
 **Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/kpi-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: the first-custody-record age basis and the service-asset record-creation basis; separate counting of source records that could share an identity; the operator-recorded or provider-verified compliance label; an expired observation staying unknown; utilization from each asset's latest usage period and the exclusion of a period not wholly within the range; dates outside the upcoming window and the planning-indicator label; and USD to cents and two-decimal rounding in the display. Current-state counts with the snapshot age, the native in-service age basis, noncompliant and unobserved devices, seat utilization, known USD spend without conversion, upcoming renewals and refreshes, definitions, units and records, minutes display, whole percentages, numeric precision and the report scopes are asserted.
 
 ### Platform, administration and integration
 
@@ -2480,7 +2480,7 @@ Core · target · **done** · From API-003 · Cites BASE-AGENT-003, BASE-AGENT-0
 
 #### API-007 — MCP ticket projection and writes
 
-Core · target · **done** · From API-003
+Core · target · **partial** · From API-003
 
 **Requirement.** An MCP read returns a fixed, minimal projection of a permitted normal ticket, and the only writes are a self-filed normal ticket and an internal comment. Wider reads need a new ct-approved scope or tool.
 
@@ -2494,7 +2494,7 @@ Core · target · **done** · From API-003
 7. Existing custom fields support text and dropdowns; only dropdowns can be owner-classified nonpersonal, and DESK-010 inherits this classification and projection boundary before adding further field types.
 
 **Evidence.** `src/features/mcp/credentials.ts`, `src/features/mcp/authority.ts`, `src/features/mcp/tools.ts`, `src/features/mcp/projection.ts`, `src/features/mcp/writes.ts`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/ui/mcp-journey.mjs`
-**Gap.** None.
+**Gap.** Not asserted: that a read returns the ticket number, title, state, type, priority, impact, urgency, category and service ids and labels, the group label, SLA and timestamps, and the principal's own comments. The id, group id and revision, display-only requester and beneficiary, the public thread, classified dropdown fields and redacted history, search limits, the excluded content, the internal revision-checked comment, normal-only creation without placement, the refused actions and the field classification boundary are asserted.
 
 #### PORT-001 — Portable native archive
 
