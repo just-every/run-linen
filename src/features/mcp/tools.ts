@@ -1,7 +1,7 @@
 import type { PreparedBy } from '../../modules/agent-door/types.ts';
 import type { Env } from '../../platform/types';
 import { ApiError, requiredString, id, now } from '../../platform/http';
-import { credentialPredicate, type Credential } from './authority';
+import type { Credential } from './authority';
 import { authorizedTool, liveTool, readableTicket, recheckTicket, ticket } from './ticket-scope';
 import { projectHistory, projectTicket } from './projection';
 import { commentTicket, createTicket } from './writes';
@@ -17,20 +17,6 @@ const definitions = [
   { name: 'work.create', description: 'File a normal ticket for this automation principal; no group or execution authority.', inputSchema: schema({ title: string, body: string, deduplicationKey: string, kind: { type: 'string', enum: ['request', 'service_request', 'incident', 'question'] } }, ['title', 'body', 'deduplicationKey']) },
   { name: 'work.comment', description: 'Add an internal automation comment at the revision read; no notification or provider effect.', inputSchema: schema({ workId: string, revision, body: string, deduplicationKey: string }, ['workId', 'revision', 'body', 'deduplicationKey']) },
 ] as const;
-export async function availableTools(env: Env, c: Credential) {
-  const permitted = [];
-  for (const definition of definitions) {
-    if (!await liveTool(env, c, definition.name)) continue;
-    if (definition.name !== 'work.create') {
-      const queue = await env.DB.prepare(`SELECT 1 FROM work_groups g,json_each(?) q WHERE g.workspace_id=? AND g.id=q.value LIMIT 1`)
-        .bind(c.queue_groups_json, c.workspace_id).first();
-      const own = ['work.get', 'work.search'].includes(definition.name) && await env.DB.prepare(`SELECT 1 FROM work_records w,mcp_credentials c WHERE c.id=? AND ${readableTicket()} LIMIT 1`).bind(c.id).first();
-      if (!queue && !own) continue;
-    }
-    permitted.push(definition);
-  }
-  return await env.DB.prepare(`SELECT 1 FROM mcp_credentials c WHERE c.id=? AND c.grant_version=? AND ${credentialPredicate('c')}`).bind(c.id,c.grant_version).first() ? permitted : [];
-}
 function inputFor(definition: typeof definitions[number], raw: unknown): Record<string, any> {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new ApiError(400, 'invalid_arguments', 'Object required');
   const value = raw as Record<string, any>, fields = definition.inputSchema.properties as Record<string, any>;
@@ -56,9 +42,9 @@ export async function callTool(env: Env, c: Credential, params: any, auditTarget
     throw error;
   }
 }
-export function nativeCallAudit(env: Env,c: Credential,tool:string,targets:string[],outcome:string,actor?:PreparedBy) {
+export function nativeCallAudit(env: Env,c: Credential,tool:string,targets:string[],outcome:string,_actor?:PreparedBy) {
   return env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),c.workspace_id,c.principal_id,'mcp.call',c.id,
-    JSON.stringify({credentialId:c.id,principalId:c.principal_id,method:'tools/call',tool,targetIds:targets,outcome,...(actor?{preparedBy:actor}:{})}),now()).run();
+    JSON.stringify({credentialId:c.id,principalId:c.principal_id,method:'tools/call',tool,targetIds:targets,outcome}),now()).run();
 }
 async function nativeCall(env: Env, c: Credential, params: any, auditTarget: (name: string, ids: string[]) => void, actor?: PreparedBy, approvers: readonly {id:string;name:string}[] = []) {
   const definition = definitions.find(item => item.name === params?.name);

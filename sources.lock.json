@@ -632,7 +632,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "653a8519032d3056b4db2b889401a3e3b9b84ececa7d4e636fd9e4ce877b41d7",
+      "sha256": "b4162e6264da5469bb683f04e6bfcacc2d04477b3a0fd28a561bd2481097b57a",
       "executable": false
     },
     "DEMO.md": {
@@ -649,6 +649,10 @@
     },
     "deploy.json": {
       "sha256": "506f3994bb372cf03af65b14344b6128ab0c9e3e4d4db7a4bebcd2eee9c2c07a",
+      "executable": false
+    },
+    "docs/agents.md": {
+      "sha256": "5c29ca00fae5e0b7acebf4ce2324ca3f8b03efecbd8c36098b9a1fc37d94c4e3",
       "executable": false
     },
     "docs/asking.md": {
@@ -1492,7 +1496,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "5ec5f87f683cd0038f0cb540f93134a9c45ad2ec14d7f9517d7e55898d37cd04",
+      "sha256": "ce138d0cd98e7f246f5f1d910559cdd655ce0de9d82fae537fe6b437faad53aa",
       "executable": false
     },
     "release-history/0.1.0.json": {
@@ -2544,7 +2548,7 @@
       "executable": false
     },
     "src/features/mcp/authority.ts": {
-      "sha256": "458a15299032ef40bd7e117217aca2c18b4fc9bdd0110fd3e9a46f8bcc25517d",
+      "sha256": "d33d038be1240b55841692cbb954df2ca6f503f331dd2075a5cf78a6ffdd07c4",
       "executable": false
     },
     "src/features/mcp/credentials.ts": {
@@ -2568,7 +2572,7 @@
       "executable": false
     },
     "src/features/mcp/tools.ts": {
-      "sha256": "6947e8549ea5895b234098626f4af6e0e0d767ecd10dbff453b4b9269505919c",
+      "sha256": "9d361e6702ff07ee9da1c504d69455483099629f3b5447e52087f537bb8a8928",
       "executable": false
     },
     "src/features/mcp/writes.ts": {
