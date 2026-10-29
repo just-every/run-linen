@@ -45,7 +45,7 @@
   pointer-events: none;
 }
 .top-search input {
-  min-height: 40px;
+  min-height: 44px;
   padding-left: 42px;
   border-color: var(--line-strong);
   border-radius: var(--radius-field);
@@ -356,8 +356,16 @@
     padding: 12px 16px;
   }
   .brand {
+    flex: 0 1 auto;
     min-width: 0;
+    max-width: calc(100% - 104px);
+    min-height: 44px;
     font-size: 28px;
+  }
+  .brand > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .brand .mark {
     width: 40px;
