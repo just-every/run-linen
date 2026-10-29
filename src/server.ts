@@ -1,3 +1,4 @@
+import { agentResponse } from './features/agent-door'
 import { withDemo, demoEffect } from './modules/demo/index.mjs'
 import { setModelEffect } from './features/intelligence/model-effect'
 import { seedDemo, demoOwner, demoOwnerClaim, demoBindings } from './demo'
@@ -14,6 +15,6 @@ import { fontDocumentResponse } from './base/font-response'
 const api = createApplication()
 setModelEffect(demoEffect)
 export default withDemo({
- async fetch(request,env,execution){env=originBindings(await demoBindings(env));const claim=await demoOwnerClaim(request,env);if(claim)return claim;const asset=await staticAssetResponse(request,env);if(asset)return documentResponse(asset);const base=await baseAuthResponse(request,env);if(base)return documentResponse((await fontDocumentResponse(base))!);return documentResponse(await dispatch(request,()=>api.fetch(request,env,execution),()=>start.fetch(request)))},
+ async fetch(request,env,execution){env=originBindings(await demoBindings(env));const claim=await demoOwnerClaim(request,env);if(claim)return claim;const door=await agentResponse(request,env);if(door)return door;const asset=await staticAssetResponse(request,env);if(asset)return documentResponse(asset);const base=await baseAuthResponse(request,env);if(base)return documentResponse((await fontDocumentResponse(base))!);return documentResponse(await dispatch(request,()=>api.fetch(request,env,execution),()=>start.fetch(request)))},
  async scheduled(_controller,env){await processScheduledWork(await demoBindings(env))},
 } satisfies ExportedHandler<Env>, { seed: seedDemo, owner: demoOwner })

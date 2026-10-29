@@ -1,5 +1,6 @@
+import type { PreparedBy } from '../../modules/agent-door/types.ts';
 import type { Env } from '../../platform/types';
-import { ApiError, requiredString } from '../../platform/http';
+import { ApiError, requiredString, id, now } from '../../platform/http';
 import { credentialPredicate, type Credential } from './authority';
 import { authorizedTool, liveTool, readableTicket, recheckTicket, ticket } from './ticket-scope';
 import { projectHistory, projectTicket } from './projection';
@@ -44,7 +45,22 @@ function inputFor(definition: typeof definitions[number], raw: unknown): Record<
   }
   return value;
 }
-export async function callTool(env: Env, c: Credential, params: any, auditTarget: (name: string, ids: string[]) => void) {
+export async function callTool(env: Env, c: Credential, params: any, auditTarget: (name: string, ids: string[]) => void, actor?: PreparedBy, approvers: readonly {id:string;name:string}[] = []) {
+  let targets: string[] = [];
+  try {
+    const result = await nativeCall(env,c,params,(name,ids)=>{targets=ids;auditTarget(name,ids)},actor,approvers);
+    if (!['work.create','work.comment'].includes(params?.name)) await nativeCallAudit(env,c,params?.name,targets,'success',actor);
+    return result;
+  } catch(error) {
+    await nativeCallAudit(env,c,params?.name,targets,error instanceof ApiError?error.code:'internal_error',actor);
+    throw error;
+  }
+}
+export function nativeCallAudit(env: Env,c: Credential,tool:string,targets:string[],outcome:string,actor?:PreparedBy) {
+  return env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),c.workspace_id,c.principal_id,'mcp.call',c.id,
+    JSON.stringify({credentialId:c.id,principalId:c.principal_id,method:'tools/call',tool,targetIds:targets,outcome,...(actor?{preparedBy:actor}:{})}),now()).run();
+}
+async function nativeCall(env: Env, c: Credential, params: any, auditTarget: (name: string, ids: string[]) => void, actor?: PreparedBy, approvers: readonly {id:string;name:string}[] = []) {
   const definition = definitions.find(item => item.name === params?.name);
   if (!definition) throw new ApiError(403, 'tool_unavailable', 'Tool unavailable');
   auditTarget(definition.name, []);
@@ -55,9 +71,9 @@ export async function callTool(env: Env, c: Credential, params: any, auditTarget
     if (target) auditTarget(definition.name, [target.id]);
   }
   if (definition.name === 'work.create') {
-    const created = await createTicket(env, c, input); auditTarget(definition.name, [created.id]); return created;
+    const created = await createTicket(env, c, input, actor, approvers); auditTarget(definition.name, [created.id]); return created;
   }
-  if (definition.name === 'work.comment') return commentTicket(env, c, input);
+  if (definition.name === 'work.comment') return commentTicket(env, c, input, actor, approvers);
   if (definition.name === 'work.get' || definition.name === 'work.history') {
     const row = await ticket(env, c, definition.name, input.workId);
     const result = definition.name === 'work.get' ? await projectTicket(env, c, row) : await projectHistory(env, c, row);

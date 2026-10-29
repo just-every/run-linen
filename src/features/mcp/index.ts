@@ -3,7 +3,6 @@ import type { AppEnv } from '../../platform/types';
 import { registerMcpFieldClassificationRoutes } from './field-classification';
 import { jsonBody } from '../../platform/http';
 import { listMcpCredentials, mintMcpCredential, narrowMcpCredential, revokeMcpCredential } from './credentials';
-export { mcpProtocol } from './protocol';
 export function registerMcpCredentialRoutes(app: Hono<AppEnv>) {
   registerMcpFieldClassificationRoutes(app);
   app.use('/mcp-credentials*',async (c,next) => { c.header('Cache-Control','no-store'); await next(); });
