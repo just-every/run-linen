@@ -128,3 +128,5 @@ and [ADOPTION.md](ADOPTION.md) preserve the requirements.
 Linen's comparative advantage has not been measured.
 
 The Linen site is at https://run-linen.com.
+
+Company agents use the [shared ticket door](docs/agents.md). Its declared CORE subset preserves native automation grants; broader specialist jobs remain partial.

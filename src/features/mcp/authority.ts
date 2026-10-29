@@ -1,5 +1,4 @@
-import type { Context } from 'hono';
-import type { AppEnv } from '../../platform/types';
+import type { Env } from '../../platform/types';
 import { hashToken } from '../../platform/crypto';
 import { ApiError, id, now } from '../../platform/http';
 import { expireMcpCredentials } from './credentials';
@@ -31,27 +30,27 @@ export function credentialPredicate(alias: string): string {
     AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=${alias}.workspace_id AND e.person_id=${alias}.principal_id)
     AND NOT EXISTS(SELECT 1 FROM platform_identity_erasures e WHERE e.workspace_id=${alias}.workspace_id AND e.user_id=${alias}.principal_id)`;
 }
-export async function authenticateMcp(c: Context<AppEnv>): Promise<Credential> {
-  const authorization = c.req.header('Authorization') ?? '';
+export async function authenticateMcpRequest(env: Env, request: Request): Promise<Credential> {
+  const authorization = request.headers.get('Authorization') ?? '';
   const denied = () => new ApiError(401, 'mcp_auth_required', 'Authentication required');
   if (!/^Bearer linen_mcp_[a-f0-9-]{72}$/.test(authorization)) throw denied();
   const digest = await hashToken(authorization.slice(7));
-  await expireMcpCredentials(c.env);
-  const candidate = await c.env.DB.prepare("SELECT id FROM mcp_credentials WHERE secret_hash=? AND state='active'")
+  await expireMcpCredentials(env);
+  const candidate = await env.DB.prepare("SELECT id FROM mcp_credentials WHERE secret_hash=? AND state='active'")
     .bind(digest).first<{ id: string }>();
   if (!candidate) throw denied();
   const at = now();
   // Both revocation and last-use updates recheck authority inside the same transaction.
-  const [lostIssuer, , authenticated] = await c.env.DB.batch([
-    c.env.DB.prepare(`UPDATE mcp_credentials SET state='revoked',secret_hash=NULL,invalidated_at=?
+  const [lostIssuer, , authenticated] = await env.DB.batch([
+    env.DB.prepare(`UPDATE mcp_credentials SET state='revoked',secret_hash=NULL,invalidated_at=?
       WHERE id=? AND secret_hash=? AND state='active' AND NOT (${issuerPredicate('mcp_credentials')})`)
       .bind(at, candidate.id, digest),
-    c.env.DB.prepare(`INSERT INTO audit_events
+    env.DB.prepare(`INSERT INTO audit_events
       SELECT ?,workspace_id,principal_id,'mcp.credential_revoked',id,
         json_object('credentialId',id,'principalId',principal_id,'issuerId',created_by,'reason','mcp_issuer_inactive'),?
       FROM mcp_credentials WHERE id=? AND changes()>0`)
       .bind(id(), at, candidate.id),
-    c.env.DB.prepare(`UPDATE mcp_credentials SET last_used_at=?
+    env.DB.prepare(`UPDATE mcp_credentials SET last_used_at=?
       WHERE id=? AND secret_hash=? AND ${credentialPredicate('mcp_credentials')} RETURNING *`)
       .bind(at, candidate.id, digest),
   ]);

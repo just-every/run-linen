@@ -530,7 +530,8 @@
           "rer-setup.json",
           "deploy.json",
           "base-copies.json",
-          "src/client.tsx"
+          "src/client.tsx",
+          "agent-surface.json"
         ]
       }
     },

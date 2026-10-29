@@ -1,6 +1,7 @@
+import { agentResponse } from './features/agent-door';
 import { restBearer, registerRestCredentialRoutes } from './features/rest'
 import { handleApprovalMail } from './features/work/approval-mail-provider'
-import { mcpProtocol, registerMcpCredentialRoutes } from './features/mcp'
+import { registerMcpCredentialRoutes } from './features/mcp'
 import { deploymentHealth } from './base/deployment-health'
 import { Hono } from 'hono'
 import type { AppEnv } from './platform/types'
@@ -36,7 +37,7 @@ export function createApplication() {
   })
   app.get('/health', c => c.json({ status: 'ok', ...deploymentHealth(c.env) }))
 
-  app.all('/api/mcp',mcpProtocol)
+  app.use('*',async(c,next)=>{const response=await agentResponse(c.req.raw,c.env);if(response)return response;await next()})
   app.use('/api/v1/*',async(c,next)=>{
     if(/^Bearer linen_(?:rest|mcp)_/.test(c.req.header('Authorization')??''))return restBearer(c,next)
     await next()

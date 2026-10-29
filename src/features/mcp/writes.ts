@@ -1,3 +1,4 @@
+import type { PreparedBy } from '../../modules/agent-door/types.ts';
 import type { Env } from '../../platform/types';
 import { ApiError, id, now } from '../../platform/http';
 import { hashToken } from '../../platform/crypto';
@@ -17,7 +18,7 @@ function authorityGuard(env: Env, c: Credential, tool: 'work.create' | 'work.com
     .bind(guardId, c.id, c.grant_version);
 }
 /** Write and audit roll back together, including authority withdrawn by a concurrent commit or trigger. */
-export async function createTicket(env: Env, c: Credential, input: Record<string, any>) {
+export async function createTicket(env: Env, c: Credential, input: Record<string, any>, actor?: PreparedBy, approvers: readonly {id:string;name:string}[] = []) {
   const workId = id(), at = now(), guard = id(), finish = id(), originalGuard = id();
   const fingerprint = await hashToken(JSON.stringify(['mcp', input.title, input.body, input.kind ?? 'request']));
   const existing = await env.DB.prepare('SELECT id,request_hash FROM work_records WHERE workspace_id=? AND requester_id=? AND dedup_key=?')
@@ -30,7 +31,7 @@ export async function createTicket(env: Env, c: Credential, input: Record<string
         VALUES(?,?,?,?,?,?,'normal',?,?,?,?)`).bind(workId, c.workspace_id, c.principal_id, c.principal_id,
           input.kind ?? 'request', input.title, at, at, input.deduplicationKey, fingerprint),
       env.DB.prepare(`INSERT INTO audit_events SELECT ?,?,?,'mcp.work_created',?,?,? WHERE changes()=1`)
-        .bind(id(), c.workspace_id, c.principal_id, workId, JSON.stringify({ credentialId: c.id, workId }), at),
+        .bind(id(), c.workspace_id, c.principal_id, workId, JSON.stringify({ credentialId: c.id, workId, ...(actor?{preparedBy:actor,approvers}:{}) }), at),
       env.DB.prepare(`INSERT OR IGNORE INTO work_messages SELECT ?,workspace_id,id,requester_id,'public',?,'initial',?
         FROM work_records WHERE workspace_id=? AND requester_id=? AND dedup_key=? AND request_hash=?`)
         .bind(id(), input.body, at, c.workspace_id, c.principal_id, input.deduplicationKey, fingerprint),
@@ -58,7 +59,7 @@ export async function createTicket(env: Env, c: Credential, input: Record<string
   return projectTicket(env, c, current);
 }
 
-export async function commentTicket(env: Env, c: Credential, input: Record<string, any>) {
+export async function commentTicket(env: Env, c: Credential, input: Record<string, any>, actor?: PreparedBy, approvers: readonly {id:string;name:string}[] = []) {
   const row = await ticket(env, c, 'work.comment', input.workId);
   if (row.revision !== input.revision) throw new ApiError(409, 'revision_conflict', 'Refresh the ticket before commenting');
   const at = now(), messageId = id(), key = 'mcp:' + c.principal_id + ':' + input.deduplicationKey;
@@ -83,7 +84,7 @@ export async function commentTicket(env: Env, c: Credential, input: Record<strin
         .bind(messageId, c.workspace_id, row.id, c.principal_id, input.body, key, at),
       env.DB.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)')
         .bind(id(), c.workspace_id, c.principal_id, 'mcp.work_commented', row.id,
-          JSON.stringify({ credentialId: c.id, workId: row.id, messageId }), at),
+          JSON.stringify({ credentialId: c.id, workId: row.id, messageId, ...(actor?{preparedBy:actor,approvers}:{}) }), at),
       callAudit(env, c, 'work.comment', row.id, at),
       env.DB.prepare(`INSERT INTO work_fulfilment_link_guards SELECT ?,CASE WHEN EXISTS(
         SELECT 1 FROM work_records w,mcp_credentials c WHERE c.id=? AND c.grant_version=? AND w.id=? AND w.revision=?
