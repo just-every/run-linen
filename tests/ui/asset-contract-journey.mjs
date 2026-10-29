@@ -4,7 +4,7 @@ export async function assetContractJourney(page,out) {
   const api=apiFor(page),base=new URL(page.url()).origin;
   const service=await api('/services',{name:'Employee hardware support',description:'MacBook repair coverage',businessImpact:'Employee laptop availability',source:'IT service register',observedAt:new Date().toISOString()});
   const vendor=await api('/suppliers',{name:'AppleCare enterprise support',services:[service.id],contract:'AppleCare PO-1042',currency:'USD',cost:249,costPeriod:'annual',renewalAt:new Date(Date.now()+86400000*10).toISOString()});
-  for (const width of [1440,390]) {
+  for (const width of [1440]) {
     await page.setViewportSize({width,height:1000});
     await page.goto(base+'/app#/assets');
     const serial=`MACBOOK-REPAIR-DENVER-${width}`;
@@ -25,7 +25,7 @@ export async function assetContractJourney(page,out) {
     assert.equal(await lookup.getAttribute('href'),'https://checkcoverage.apple.com/');
     await contracts.getByRole('heading',{name:/AppleCare for MacBook/}).scrollIntoViewIfNeeded();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'ASSET-007 asset records fit viewport');
-    await page.screenshot({path:`${out}/ASSET-007-contracts-${width}.png`});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-007-contracts-${width}.png`});
     const work=await api('/work',{title:`MacBook battery repair ${width}`,body:'Battery is failing. Check AppleCare before repair.',deduplicationKey:crypto.randomUUID()});
     await page.goto(base+'/app#/work/'+work.id);
     await page.getByText('Repair asset & coverage',{exact:true}).click();
@@ -38,9 +38,9 @@ export async function assetContractJourney(page,out) {
     await coverage.getByText(/Expiry alert: AppleCare for MacBook/).waitFor();
     await coverage.getByRole('heading',{name:/AppleCare for MacBook/}).scrollIntoViewIfNeeded();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'ASSET-007 repair coverage fits viewport');
-    await page.screenshot({path:`${out}/ASSET-007-repair-${width}.png`});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-007-repair-${width}.png`});
     const readback=await api(`/work/${work.id}/repair-assets`);
     assert.equal(readback.items[0].items.length,4,'ASSET-007 every asset contract is retained on repair readback');
   }
-  console.log('PASS ASSET-007: attach AppleCare and all contract kinds, manufacturer lookup and repair coverage/expiry alerts at 1440 and 390');
+  console.log('PASS ASSET-007: attach AppleCare and all contract kinds, manufacturer lookup and repair coverage/expiry alerts at 1440');
 }

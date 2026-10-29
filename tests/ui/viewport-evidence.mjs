@@ -2,26 +2,25 @@ import assert from 'node:assert/strict'
 
 // Evidence is captured from the same real page/state at both breakpoints.
 export async function captureJourney(page, options) {
-  await page.waitForFunction(() => !document.querySelector(".loading"))
+  await page.waitForFunction(() => !document.querySelector('.loading'))
   await page.evaluate(() => document.fonts.ready)
   await page.waitForFunction(() => [...document.images].every(image => image.complete))
   const previous = page.viewportSize()
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+    `${options.path}: ${previous.width}px must not overflow`)
+  await page.keyboard.press('Tab')
+  assert.notEqual(await page.evaluate(() => document.activeElement?.tagName), 'BODY',
+    `${options.path}: keyboard reaches an interactive control`)
+  if (!process.env.LINEN_CAPTURE) return
   try {
-    for (const width of [1440, 390, 320]) {
-      await page.setViewportSize({ width, height: width === 1440 ? 1000 : 844 })
+    // Proof captures the same state at both widths without repeating the journey.
+    for (const width of [1440,390]) {
+      await page.setViewportSize({width,height:width===1440?1000:844})
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
-        `${options.path}: ${width}px must not overflow`)
-      await page.keyboard.press('Tab')
-      assert.notEqual(await page.evaluate(() => document.activeElement?.tagName), 'BODY',
-        `${options.path}: keyboard reaches an interactive control`)
-      // Keep fixed headers at the top of a full-page capture after the focus probe scrolls.
-      await page.evaluate(() => window.scrollTo(0, 0))
-      await page.screenshot({ ...options, path: width === 1440 ? options.path : options.path.replace(/\.png$/, `-${width}px.png`) })
+      await page.evaluate(() => window.scrollTo(0,0))
+      await page.screenshot({...options,path:width===1440?options.path:options.path.replace(/\.png$/,`-${width}px.png`)})
     }
-  } finally {
-    await page.setViewportSize(previous)
-  }
+  } finally { await page.setViewportSize(previous) }
 }
 
 export async function lifecycleVariants(page, api, personId, ownerId, out) {

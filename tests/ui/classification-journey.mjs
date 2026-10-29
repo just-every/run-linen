@@ -38,7 +38,7 @@ export async function classificationJourney({ page, api, base, out, width }) {
   assert.ok(state.history.some(event => event.before?.priority === 'P1' && event.after.priority === 'P2'));
   await section.scrollIntoViewIfNeeded();
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `DESK-002 no horizontal overflow at ${width}`);
-  await page.screenshot({ path: `${out}/desk-002-classification-${width}.png`, fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/desk-002-classification-${width}.png`, fullPage: true });
   await page.reload();
   await page.getByRole('region', { name: 'Classification and priority', exact: true }).locator('dl.facts').getByText('P2', { exact: true }).waitFor();
   console.log(`PASS DESK-002 real Worker browser ${width}: unavailable provider visible, type/category/subcategory/impact/urgency matrix, P1 -> P2 override and persisted audited before/after.`);

@@ -35,7 +35,7 @@ export async function dstJourney(browser, context, base, personId, ownerId, out)
       await form.getByRole('button', { name: 'Save', exact: true }).click();
       await form.getByRole('alert').filter({ hasText: error }).waitFor();
       assert.equal(sent, 0, 'Invalid local time must never silently choose an instant or reach the API');
-      await page.screenshot({ path: `${out}/dst-${wall.slice(5, 10)}.png`, fullPage: true });
+      process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/dst-${wall.slice(5, 10)}.png`, fullPage: true });
     }
     await form.getByLabel('Effective date and time').fill('2026-11-01T02:30');
     await form.getByText(/Chosen offset UTC−05:00/).waitFor();

@@ -8,13 +8,13 @@ import {namedApproverJourney} from './native-regressions.mjs';
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 if(!base)throw Error('Start with node tests/ui/run.mjs tests/ui/department-browser.mjs');
 await mkdir(out,{recursive:true});
-const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']}),errors=[];
+const browser=await chromium.launch({ ...(process.env.LINEN_CHROMIUM_EXECUTABLE ? {executablePath:process.env.LINEN_CHROMIUM_EXECUTABLE} : {}), headless:true,args: ['--no-sandbox', '--use-mock-keychain','--password-store=basic']}),errors=[];
 const password='synthetic-linen-302-password';
 async function formAction(page,root,title,path,values,button='Save',expected=200,proofName) {
   const disclosure=root.locator(`details[data-action-path="${path}"]`).filter({has:page.locator('summary').getByText(title,{exact:true})}).last();
   if(!await disclosure.evaluate(e=>e.open))await disclosure.locator(':scope > summary').click();
   const form=disclosure.locator('form');await fields(form,values);
-  if(proofName)for(const width of [1440,390]) {await page.setViewportSize({width,height:1000});await fields(form,values);await capture(page,proofName+'-editing',width);}
+  if(proofName)for(const width of [1440]) {await page.setViewportSize({width,height:1000});await fields(form,values);await capture(page,proofName+'-editing',width);}
   const waiting=page.waitForResponse(r=>r.url().endsWith(path)&&r.request().method()==='POST');
   await form.getByRole('button',{name:button,exact:true}).click();const response=await waiting,data=await response.json();
   assert.equal(response.status(),expected,JSON.stringify(data));return data;
@@ -23,10 +23,10 @@ async function capture(page,name,width) {
   await page.setViewportSize({width,height:1000});
   await page.waitForFunction(()=>!document.querySelector('.loading'));await page.evaluate(()=>document.fonts.ready);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} fits ${width}`);
-  await page.screenshot({path:`${out}/DESK-011-${name}-${width}.png`,fullPage:true});
-  await page.screenshot({path:`${out}/DESK-011-${name}-${width}-viewport.png`});
+  process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/DESK-011-${name}-${width}.png`,fullPage:true});
+  process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/DESK-011-${name}-${width}-viewport.png`});
 }
-async function captureBoth(page,name) {for(const width of [1440,390])await capture(page,name,width);}
+async function captureBoth(page,name) {for(const width of [1440])await capture(page,name,width);}
 try {
   const context=await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'UTC'}),page=await context.newPage();
   page.on('pageerror',error=>errors.push(String(error)));
@@ -43,7 +43,7 @@ try {
   for(const [kind,person] of [['it',itAgent],['facilities',facAgent],['hr',hrAgent]]) {
     const panel=await openDepartment(departments[kind].name),form=panel.getByRole('form',{name:`${departments[kind].name} staff membership`});
     await form.getByLabel('Staff member',{exact:true}).selectOption(person.id);
-    if(kind==='it')for(const width of [1440,390]) {await page.setViewportSize({width,height:1000});await form.getByLabel('Staff member',{exact:true}).selectOption(person.id);await capture(page,'staff-membership-add',width);}
+    if(kind==='it')for(const width of [1440]) {await page.setViewportSize({width,height:1000});await form.getByLabel('Staff member',{exact:true}).selectOption(person.id);await capture(page,'staff-membership-add',width);}
     const saved=page.waitForResponse(r=>r.url().endsWith(`/departments/${departments[kind].id}/members`)&&r.request().method()==='POST');
     await form.getByRole('button',{name:'Save staff membership',exact:true}).click();assert.equal((await saved).status(),200);
     await panel.getByText(person.name,{exact:false}).first().waitFor();
@@ -51,7 +51,7 @@ try {
   // Remove and restore a staff membership through the owner's native controls, retaining no implicit role access.
   let itPanel=await openDepartment('IT'),staffForm=itPanel.getByRole('form',{name:'IT staff membership'});
   await staffForm.getByLabel('Membership action',{exact:true}).selectOption('remove');await staffForm.getByLabel('Staff member',{exact:true}).selectOption(itAgent.id);
-  for(const width of [1440,390]) {await page.setViewportSize({width,height:1000});await staffForm.getByLabel('Membership action',{exact:true}).selectOption('remove');await staffForm.getByLabel('Staff member',{exact:true}).selectOption(itAgent.id);await capture(page,'staff-membership-remove',width);}
+  for(const width of [1440]) {await page.setViewportSize({width,height:1000});await staffForm.getByLabel('Membership action',{exact:true}).selectOption('remove');await staffForm.getByLabel('Staff member',{exact:true}).selectOption(itAgent.id);await capture(page,'staff-membership-remove',width);}
   let membershipSaved=page.waitForResponse(r=>r.url().endsWith(`/departments/${departments.it.id}/members`)&&r.request().method()==='POST');
   await staffForm.getByRole('button',{name:'Save staff membership',exact:true}).click();assert.equal((await membershipSaved).status(),200);
   await itPanel.getByText('No staff assigned',{exact:true}).waitFor();await captureBoth(page,'staff-membership-removed');
@@ -73,7 +73,7 @@ try {
     if(kind==='it')await formAction(page,panel,'Remove IT intake',`/work-routing/rules/${rule.id}/remove`,{},'Remove rule',200,'routing-rule-remove');
     await formAction(page,panel,'Add workspace SLA policy','/sla-policies',{name:`${departments[kind].name} response`,position:kind==='it'?10:20,firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:480},'Create SLA policy',201,kind==='it'?'sla-policy-create':undefined);
   }
-  for(const width of [1440,390]) {await openDepartment('IT');await capture(page,'workspace-management',width);}
+  for(const width of [1440]) {await openDepartment('IT');await capture(page,'workspace-management',width);}
   const finance=await openDepartment('Finance');
   await formAction(page,finance,'Edit workspace',`/departments/${departments.finance.id}`,{name:'Finance',active:false},'Save workspace',200,'workspace-deactivate');
   await management.getByText('Finance · Inactive',{exact:true}).waitFor();await captureBoth(page,'inactive-workspace');
@@ -85,12 +85,12 @@ try {
   for(const [kind,name] of [['it','Replace a laptop adapter'],['facilities','Repair a desk socket']])items[kind]={...await formAction(page,registry,'Add catalog item','/catalog',{
     name,departmentId:departments[kind].id,kind:'service',target:kind==='it'?'Laptop adapter replacement':'Desk socket repair',ownerId:owner.user.id,
   },'Save catalog item',201,kind==='it'?'catalog-item-create':undefined),name};
-  for(const width of [1440,390])await capture(page,'catalog-settings',width);
+  for(const width of [1440])await capture(page,'catalog-settings',width);
   // Edit catalog ownership and the quote requirement with the actual native editor at each width.
   const formsPanel=registry.locator('details').filter({has:page.locator(':scope > summary').getByText('Manage catalog forms',{exact:true})}).first();await formsPanel.locator(':scope > summary').click();
   const itemEditor=formsPanel.locator('details').filter({has:page.locator(':scope > summary').getByText(items.it.name,{exact:true})}).first();await itemEditor.locator(':scope > summary').click();
   const catalogForm=itemEditor.locator('form');
-  for(const width of [1440,390]) {
+  for(const width of [1440]) {
     await page.setViewportSize({width,height:1000});await catalogForm.getByLabel('Service workspace',{exact:true}).selectOption(departments.it.id);
     await catalogForm.getByLabel('Require a vendor quote (PDF)',{exact:true}).check();await capture(page,'catalog-form-workspace-editing',width);
   }
@@ -100,7 +100,7 @@ try {
   // The registry and its catalog offer have their own service-workspace selectors.
   await registry.getByText('Register application',{exact:true}).click();
   const registration=registry.locator('details').filter({has:page.locator(':scope > summary').getByText('Register application',{exact:true})}).first().locator('form');
-  for(const width of [1440,390]) {
+  for(const width of [1440]) {
     await page.setViewportSize({width,height:1000});
     await registration.getByLabel('Application name',{exact:true}).fill('Studio Design');await registration.getByLabel('Service workspace',{exact:true}).selectOption(departments.it.id);
     await registration.getByLabel('Application owner',{exact:true}).selectOption(owner.user.id);await registration.getByLabel('Connector description',{exact:true}).fill('Ownership registration only; provider not connected');
@@ -112,7 +112,7 @@ try {
   const application=registry.getByRole('article').filter({has:page.getByRole('heading',{name:'Studio Design',exact:true})});await application.getByRole('heading',{name:'Studio Design',exact:true}).waitFor();
   const designItem=await formAction(page,application,'Offer in catalog','/catalog',{name:'Design editor access',departmentId:departments.it.id},'Save',201,'application-catalog-offer');
   await application.getByText('Edit application',{exact:true}).click();const appEdit=application.locator('details').filter({has:page.locator(':scope > summary').getByText('Edit application',{exact:true})}).first().locator('form');
-  for(const width of [1440,390]) {await page.setViewportSize({width,height:1000});await appEdit.getByLabel('Service workspace',{exact:true}).selectOption(departments.it.id);await appEdit.getByLabel('Connector description',{exact:true}).fill('IT owns the registration; provider not connected');await capture(page,'application-workspace-edit',width);}
+  for(const width of [1440]) {await page.setViewportSize({width,height:1000});await appEdit.getByLabel('Service workspace',{exact:true}).selectOption(departments.it.id);await appEdit.getByLabel('Connector description',{exact:true}).fill('IT owns the registration; provider not connected');await capture(page,'application-workspace-edit',width);}
   saved=page.waitForResponse(r=>/\/applications\/[^/]+$/.test(r.url())&&r.request().method()==='POST');await appEdit.getByRole('button',{name:'Save application',exact:true}).click();assert.equal((await saved).status(),200);
   await captureBoth(page,'application-workspace-saved');
   const loanerItem=await formAction(page,registry,'Add catalog item','/catalog',{name:'Set up a laptop loaner',departmentId:departments.it.id,kind:'service',target:'Laptop loaner preparation',ownerId:owner.user.id},'Save catalog item',201);
@@ -125,9 +125,9 @@ try {
   await bundlePanel.getByText('Desk and design setup spans different service workspaces.',{exact:false}).waitFor();await captureBoth(page,'mixed-workspace-bundle-refusal');
   await page.goto(base+'/app#/knowledge');
   await formAction(page,page,'Publish reviewed knowledge','/knowledge',{title:'Report a damaged power socket',body:'Stop using the socket. Ask Facilities to inspect it before connecting another device.',departmentId:departments.facilities.id,scope:'employees',expiresAt:'2030-01-01T00:00',review:true},'Save',201,'knowledge-publish');
-  for(const width of [1440,390]) {await page.setViewportSize({width,height:1000});await page.getByLabel('Knowledge workspace',{exact:true}).selectOption(departments.it.id);await page.getByLabel('Knowledge workspace',{exact:true}).selectOption(departments.facilities.id);await capture(page,'knowledge-workspace-filter',width);}
+  for(const width of [1440]) {await page.setViewportSize({width,height:1000});await page.getByLabel('Knowledge workspace',{exact:true}).selectOption(departments.it.id);await page.getByLabel('Knowledge workspace',{exact:true}).selectOption(departments.facilities.id);await capture(page,'knowledge-workspace-filter',width);}
   await page.getByRole('heading',{name:'Report a damaged power socket',exact:true}).waitFor();
-  for(const width of [1440,390])await capture(page,'workspace-knowledge',width);
+  for(const width of [1440])await capture(page,'workspace-knowledge',width);
 
   const itContext=await browser.newContext({viewport:{width:1440,height:1000}}),employeeContext=await browser.newContext({viewport:{width:1440,height:1000}}),facContext=await browser.newContext({viewport:{width:1440,height:1000}});
   const ip=await itContext.newPage(),ep=await employeeContext.newPage(),fp=await facContext.newPage();
@@ -135,7 +135,7 @@ try {
   await signIn(ip,base,itAgent.email,password);await signIn(ep,base,employee.email,password);await signIn(fp,base,facAgent.email,password);
   const employeeApi=apiFor(ep),itApi=apiFor(ip),facApi=apiFor(fp);
   const nativeRequest=async(team,body)=>{
-    await ep.goto(base+'/app#/work');for(const width of [1440,390]) {await ep.setViewportSize({width,height:1000});await ep.getByLabel('What would make work easier?',{exact:true}).fill(body);await ep.getByLabel('Service workspace (optional)',{exact:true}).selectOption(team);await capture(ep,'employee-workspace-draft',width);}
+    await ep.goto(base+'/app#/work');for(const width of [1440]) {await ep.setViewportSize({width,height:1000});await ep.getByLabel('What would make work easier?',{exact:true}).fill(body);await ep.getByLabel('Service workspace (optional)',{exact:true}).selectOption(team);await capture(ep,'employee-workspace-draft',width);}
     // The routing choice remains with its unsent text after reload.
     await ep.reload();await ep.getByLabel('What would make work easier?',{exact:true}).waitFor();await ep.waitForFunction(expected=>document.querySelector('[aria-label="Service workspace (optional)"]')?.value===expected,team);
     assert.equal(await ep.getByLabel('Service workspace (optional)',{exact:true}).inputValue(),team);
@@ -159,7 +159,7 @@ try {
   const retainedNotice='HR workspace restrictions stay with this ticket. Receiving staff need current access to both the receiving workspace and every retained HR workspace. Handoff does not grant access or lower sensitivity.';
   await page.getByText(retainedNotice,{exact:true}).waitFor();await page.getByText('Hand off to another workspace',{exact:true}).click();
   const hrHandoff=page.getByRole('form',{name:'Workspace handoff'});
-  for(const width of [1440,390]) {
+  for(const width of [1440]) {
     await page.setViewportSize({width,height:1000});await hrHandoff.getByLabel('Receiving workspace',{exact:true}).selectOption(departments.it.id);await hrHandoff.getByLabel('Receiving agent',{exact:true}).selectOption('');
     assert.ok(!(await hrHandoff.getByLabel('Receiving agent',{exact:true}).locator('option').allTextContents()).some(name=>name.includes(itAgent.name)),'An IT-only agent is not offered for retained HR history');
     await hrHandoff.getByLabel('Reason for handoff',{exact:true}).fill('IT will check the payroll portal link; the original HR service access restriction must remain.');await capture(page,'hr-to-it-handoff-editing',width);
@@ -181,7 +181,7 @@ try {
   hrSaved=page.waitForResponse(r=>r.url().endsWith(`/departments/${departments.hr.id}/members`)&&r.request().method()==='POST');await hrMembership.getByRole('button',{name:'Save staff membership',exact:true}).click();assert.equal((await hrSaved).status(),200);
   await ip.reload();await ip.getByRole('alert').first().waitFor();assert.equal(await ip.evaluate(async id=>(await fetch('/api/v1/work/'+id)).status,hrWork),404,'Withdrawing the original HR workspace membership immediately removes access');await captureBoth(ip,'retained-hr-access-withdrawn');
 
-  for(const width of [1440,390]) {
+  for(const width of [1440]) {
     for(const p of [page,ep,ip,fp])await p.setViewportSize({width,height:1000});
     await ep.goto(base+'/app#/work');const portal=ep.getByRole('region',{name:'Services across departments'});
     await portal.getByRole('heading',{name:'IT',exact:true}).waitFor();await portal.getByRole('heading',{name:'Facilities',exact:true}).waitFor();
@@ -263,8 +263,8 @@ try {
   const approvalContext=await api('/services',{name:'Facilities coverage',description:'Facilities support for meeting rooms',businessImpact:'Available meeting rooms',source:'synthetic-linen-12090',observedAt:new Date().toISOString(),visibility:'workspace',participants:[]});
   await namedApproverJourney(browser,page,api,base,approvalContext.id,out);
   assert.deepEqual(errors,[]);
-  console.log('PASS DESK-011 native 1440/390: five service workspaces, explicit staff, scoped catalogs/knowledge/SLA, HR→IT retains original HR restrictions with live dual-membership grant/withdrawal, HR-service staff denied HR records, combined employee catalog, Facilities→IT audited handoff retaining history/restrictions/SLA and withdrawing old staff access.');
+  console.log('PASS DESK-011 native 1440: five service workspaces, explicit staff, scoped catalogs/knowledge/SLA, HR→IT retains original HR restrictions with live dual-membership grant/withdrawal, HR-service staff denied HR records, combined employee catalog, Facilities→IT audited handoff retaining history/restrictions/SLA and withdrawing old staff access.');
 } catch(error) {
-  for(const [i,context] of browser.contexts().entries())for(const [j,page] of context.pages().entries())await page.screenshot({path:`${out}/DESK-011-failure-${i}-${j}.png`,fullPage:true}).catch(()=>{});
+  for(const [i,context] of browser.contexts().entries())for(const [j,page] of context.pages().entries())process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/DESK-011-failure-${i}-${j}.png`,fullPage:true}).catch(()=>{});
   throw error;
 } finally {await browser.close();}

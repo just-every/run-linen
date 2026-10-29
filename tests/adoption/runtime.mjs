@@ -58,5 +58,8 @@ try{await start();const setup=await request('/setup','POST',{email:'source@test.
  await checkCalendarHistoricalErasure(ok,request,dest);
  await retentionChecks(ok,request,(path,init)=>harness.fetch(origin+'/api/v1'+path,{...init,headers:{Origin:origin,...init.headers}}),auth,source);
  await coexistenceRouteChecks(ok,request,auth,source);
+ const historyTenant=await ok('/fixtures/tenant','POST',{},source);
+ const historyOwner=await auth(await request('/login','POST',{email:historyTenant.email,password:'destination secure password'}));
+ await historyArchiveChecks(ok,request,auth,historyOwner);
  console.log('PASS adoption local Worker + real D1/R2: snapshot isolation, chunk hashes, second-generation native restore and retained import artifacts, private history/bytes/assets/knowledge/calendars/costs, foreign tenant/CSRF denial, corrupt/missing bytes, native materialization work/services/intelligence/unknown operations, no live imported grants, crash/restart/resume, duplicate apply, held effects, Freshservice fixture polling/approval invalidation/dual executor/source conflict/writeback replay, late cutover rejection, unknown mapping quarantine, duplicate import and tombstone replay, complete domain/platform person erasure and real R2 deletion. No provider tenant used.')
 }}finally{await harness.close()}

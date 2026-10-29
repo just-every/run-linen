@@ -11,7 +11,7 @@ assert.ok(base && out && token,'Run the connected browser harness through the he
 const identityResponse=await fetch('https://api.github.com/user',{headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','User-Agent':'Linen'},redirect:'manual'});
 assert.equal(identityResponse.status,200);
 const identity=await identityResponse.json();assert.ok(Number.isSafeInteger(identity.id)&&typeof identity.login==='string');
-const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+const browser=await chromium.launch({ ...(process.env.LINEN_CHROMIUM_EXECUTABLE ? {executablePath:process.env.LINEN_CHROMIUM_EXECUTABLE} : {}), headless:true,args: ['--no-sandbox', '--use-mock-keychain','--password-store=basic']});
 try {
     const context=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}}),page=await context.newPage();
     await page.goto(base+'/app');

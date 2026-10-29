@@ -28,5 +28,5 @@ export async function archiveJourney({page,api,base,out}) {
   await page.getByRole('link',{name:'Download file '+(chunk.ordinal+1),exact:true}).click();
   const bytes=await file;assert.ok(JSON.parse(await readFile(await bytes.path(),'utf8')).length);
   await captureJourney(page,{path:out+'/A6-fresh-portable-snapshot.png',fullPage:true});
-  console.log('PASS A6 native erased business record and fresh owner snapshot/summary/file download at 1440/390');
+  console.log('PASS A6 native erased business record and fresh owner snapshot/summary/file download at 1440');
 }

@@ -23,7 +23,7 @@ export async function unsentReplyJourney({ page, api, base, out, width }) {
   assert.equal((await unavailable).status(), 503);
   await tools.getByText('Configure a model connection before generating a draft or summary', { exact: true }).waitFor();
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-  await page.screenshot({ path: `${out}/desk-008-unsent-${width}.png`, fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/desk-008-unsent-${width}.png`, fullPage: true });
   const sent = page.waitForResponse(r => r.url().endsWith(`/work/${work.id}/messages`) && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Send message', exact: true }).click();
   assert.equal((await sent).status(), 201);
@@ -70,7 +70,7 @@ export async function responseJourney({ page, api, base, out, width }) {
   await summary.getByRole('link', { name: `VPN client restart ${width}`, exact: true }).waitFor();
   assert.equal((await api(`/work/${work.id}`)).messages.length, 21, 'DESK-008 summary never posts');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-  await page.screenshot({ path: `${out}/desk-008-summary-${width}.png`, fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/desk-008-summary-${width}.png`, fullPage: true });
   await tools.getByRole('button', { name: 'Dismiss generated text', exact: true }).click();
   await composer.fill('');
   const drafted = page.waitForResponse(r => r.url().endsWith(`/work/${work.id}/response-assistance`));
@@ -88,11 +88,11 @@ export async function responseJourney({ page, api, base, out, width }) {
   await page.reload();
   await page.waitForFunction(() => document.querySelector('#conversation-message')?.value.includes('restart the VPN client'));
   assert.equal((await api(`/work/${work.id}`)).messages.length, 21, 'DESK-008 restored model draft remains unsent');
-  await page.screenshot({ path: `${out}/desk-008-model-draft-${width}.png`, fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/desk-008-model-draft-${width}.png`, fullPage: true });
   const sent = page.waitForResponse(r => r.url().endsWith(`/work/${work.id}/messages`) && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Send message', exact: true }).click(); assert.equal((await sent).status(), 201);
   assert.equal((await api(`/work/${work.id}`)).messages.length, 22);
   await page.locator('.message-body').getByText('Please restart the VPN client using the reviewed guidance and reply here if it still disconnects.', { exact: true }).waitFor();
-  await page.screenshot({ path: `${out}/desk-008-sent-${width}.png`, fullPage: true });
+  process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/desk-008-sent-${width}.png`, fullPage: true });
   console.log(`PASS DESK-008 native ${width}: canned requester name, twenty-message cited summary with knowledge, private-source isolation and unsent generated reply until agent Send.`);
 }

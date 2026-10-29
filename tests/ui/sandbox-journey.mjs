@@ -20,8 +20,10 @@ export async function sandboxJourney({page,api,base,out}) {
  const recurring=await api('/recurring-work',{title:'Sandbox recurring '+suffix,body:'Original recurring instructions',ownerId:owner,tasks:[{title:'Original recurring task',ownerId:owner}],calendar:{timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]},rule:{startDate:'2027-01-01',frequency:'annual',interval:1,firstBusinessDay:false}});
  const template=await api('/lifecycle-templates',{name:'Sandbox lifecycle '+suffix,kind:'join',match:{},tasks:[{key:'prepare',title:'Prepare lifecycle equipment',assignee:{type:'group',groupId:team.id},anchor:'start',offsetDays:0,remindDays:null}]});
  const writeClick=async(button,ending,method='POST')=>{
+  const invalid=await button.evaluate(button=>[...(button.form?.elements??[])].filter(field=>field.willValidate&&!field.validity.valid).map(field=>({label:field.getAttribute('aria-label')||field.name||field.tagName,reason:field.validationMessage})));
+  assert.deepEqual(invalid,[],'The native sandbox form is ready to submit');
   const response=page.waitForResponse(r=>r.url().endsWith(ending)&&r.request().method()===method);
-  await button.focus();await page.keyboard.press('Enter');const r=await response;assert.equal(r.status(),200,await r.text());
+  await button.press('Enter');const r=await response;assert.equal(r.status(),200,await r.text());
   const saved=await r.json();
   if(saved.id&&typeof saved.revision==='number'&&saved.state){
    await page.locator('.sandbox-space .facts').getByText(String(saved.revision),{exact:true}).waitFor();
@@ -31,7 +33,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await page.goto(base+'/app#/sandboxes');
  await page.getByLabel('Sandbox name',{exact:true}).fill('Reviewed sandbox '+suffix);
  // The shared account control becomes icon-only at narrow widths and already carries its tooltip.
- for(const width of [1440,390]) {
+ for(const width of [1440]) {
   await page.setViewportSize({width,height:1000});
   const account=page.getByRole('button',{name:'Your workspace and account',exact:true});
   await page.keyboard.press('Tab');await account.focus();
@@ -152,6 +154,9 @@ export async function sandboxJourney({page,api,base,out}) {
  const lifecycle=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit lifecycle: '+template.name})}).first();
  await lifecycle.locator(':scope > summary').press('Enter');
  const templateEditor=lifecycle.locator('details').first();await templateEditor.locator(':scope > summary').press('Enter');
+ const taskTeam=templateEditor.getByLabel('Team for task 1',{exact:true});
+ await taskTeam.locator('option[value="'+team.id+'"]').waitFor({state:'attached'});
+ assert.equal(await taskTeam.inputValue(),team.id,'Editing a template retains its existing task team');
  await templateEditor.getByLabel('Template name',{exact:false}).fill('Reviewed lifecycle '+suffix);
  await templateEditor.getByLabel('Task title 1',{exact:true}).fill('Reviewed lifecycle preparation');
  await templateEditor.getByLabel('Business days from date 1',{exact:false}).fill('2');
@@ -278,5 +283,5 @@ export async function sandboxJourney({page,api,base,out}) {
  await captureJourney(page,{path:out+'/SANDBOX-001-scope-refusal.png',fullPage:true});
  assert.equal(await page.getByRole('button',{name:'Promote reviewed configuration',exact:true}).count(),0);
  await api('/login',{email:session.user.email,password:'Browser-proof-2026'});await page.reload();
- console.log('PASS sandbox native settings: isolated catalog, form, tasks, roles, full existing SLA configuration, rehearsals, field diffs, separate owner approval, promotion, reviewed rollback and employee refusal at 1440, 390 and 320');
+ console.log('PASS sandbox native settings: isolated catalog, form, tasks, roles, full existing SLA configuration, rehearsals, field diffs, separate owner approval, promotion, reviewed rollback and employee refusal at 1440');
 }

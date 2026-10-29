@@ -54,23 +54,3 @@ export async function approvalChainJourney(page,api,base,ownerId){
 }
 
 // Run this same native journey alone while iterating; Verify also reaches it from browser.mjs.
-if (process.argv[1] && import.meta.url === new URL('file://' + process.argv[1]).href) {
- const {chromium}=await import('playwright');
- const {apiFor,finishFirstRun}=await import('./connected-helpers.mjs');
- const base=process.env.LINEN_TEST_URL;
- if(!base || !process.env.LINEN_TEST_OUTPUT)throw Error('Use tests/ui/run.mjs');
- const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
- try {
-  const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
-  await page.goto(base+'/app');
-  await page.getByLabel('Your name').fill('Approval owner');
-  await page.getByLabel('Workspace name').fill('Approval proof');
-  await page.getByLabel('Work email').fill('synthetic-linen-760@example.test');
-  await page.getByLabel('Password',{exact:true}).fill('synthetic-linen-761');
-  await page.getByRole('button',{name:'Create workspace'}).click();
-  await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();
-  await finishFirstRun(page,base);
-  const api=apiFor(page),session=await api('/session');
-  await approvalChainJourney(page,api,base,session.user.id);
- } finally {await browser.close();}
-}

@@ -50,7 +50,7 @@ async function port() {
 try {
   let url = process.env.LINEN_TEST_URL;
   if (!url) {
-    await command("pnpm", ["build"]);
+    if (!process.env.LINEN_TEST_BUILT) await command("pnpm", ["run", "build:app"]);
     await cp(join(root, "dist"), join(scratch, "dist"), { recursive: true });
     if (!liveReadOnly) await cp(join(root, 'tests/ui/provider-boundary.mjs'), join(scratch, 'dist/server/provider-boundary.mjs'));
     await writeFile(join(scratch, 'dist/server/journey-wrapper.js'), `import product from './index.js';

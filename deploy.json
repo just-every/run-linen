@@ -34,26 +34,6 @@
     {
       "binding": "ENCRYPTION_KEY",
       "environment": "ENCRYPTION_KEY"
-    },
-    {
-      "binding": "MAIL_PROVIDER",
-      "environment": "MAIL_PROVIDER",
-      "verifyStandIn": "resend"
-    },
-    {
-      "binding": "MAIL_FROM",
-      "environment": "MAIL_FROM",
-      "verifyStandIn": "auth@example.test"
-    },
-    {
-      "binding": "MAIL_RELAY_URL",
-      "environment": "MAIL_RELAY_URL",
-      "optional": true
-    },
-    {
-      "binding": "MAIL_ACCOUNT_ID",
-      "environment": "MAIL_ACCOUNT_ID",
-      "optional": true
     }
   ],
   "crons": [

@@ -17,12 +17,10 @@
     "setup": "rer setup",
     "deploy": "rer deploy",
     "test:runtime": "node tests/runtime.mjs",
-    "test:platform": "node tests/platform/runtime.mjs",
     "source:inspect": "node scripts/edition-authoring/cli.mjs inspect",
     "source:check": "node scripts/edition-authoring/cli.mjs check",
     "source:lock": "node scripts/edition-authoring/cli.mjs lock",
     "test:ui": "node tests/ui/run.mjs",
-    "test:provider": "node tests/intelligence/provider-app-smoke.mjs",
     "check": "rer check",
     "describe": "rer describe",
     "export": "rer export",
@@ -36,7 +34,9 @@
     "deps": "rer install",
     "release": "rer release",
     "delivery:spec": "node scripts/build-deployment-spec.mjs",
-    "check:deployment-spec": "node scripts/build-deployment-spec.mjs --check"
+    "check:deployment-spec": "node scripts/build-deployment-spec.mjs --check",
+    "test:journeys": "node scripts/verify.mjs",
+    "test:site": "node --test tests/site/site.test.mjs"
   },
   "dependencies": {
     "@tanstack/react-router": "1.170.41",

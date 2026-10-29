@@ -41,5 +41,5 @@ export async function deskFieldJourney({page,api,base,out}) {
   const byCode=page.getByRole('region',{name:'Resolutions by code'});
   await byCode.getByRole('row',{name:/^Solved \(permanent fix\) \d+$/}).waitFor();
   await captureJourney(page,{path:`${out}/DESK-010-report.png`,fullPage:true});
-  console.log('PASS DESK-010: Office field and Awaiting parts status set in the console; close without a code refused, closed with code and notes, counted by code in the report at 1440/390');
+  console.log('PASS DESK-010: Office field and Awaiting parts status set in the console; close without a code refused, closed with code and notes, counted by code in the report at 1440');
 }

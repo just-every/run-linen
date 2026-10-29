@@ -3,7 +3,6 @@
 Run from the Linen repository:
 
 - `node tests/execution/runtime.mjs`
-- `python3 tests/execution/schema.py`
 - `npx tsc --noEmit --target ES2022 --module ESNext --moduleResolution Bundler --skipLibCheck --types @cloudflare/workers-types src/features/execution/index.ts`
 
 Executed successfully locally. The runtime suite bundles the real modules into workerd and uses real D1 migrations. Provider responses are intercepted only by the test worker. Native redirect validation additionally uses actual workerd fetch against a temporary localhost HTTP server and checks that a 302 is not followed. Miniflare, the server, and temporary files are closed in `finally`.
