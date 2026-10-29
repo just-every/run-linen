@@ -1,3 +1,4 @@
+import {releaseConsoleJourney,operationsKpiJourney} from './operations-console-journeys.mjs';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {mkdir} from 'node:fs/promises';
@@ -22,6 +23,8 @@ try {
  await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();
  await finishFirstRun(page,base);
  const env={browser,context,page,api:apiFor(page),base,out,errors};
+ await operationsKpiJourney(env);
+ await releaseConsoleJourney(env);
  await monitoringJourney(env);
  await serviceNoticeJourney(env);
  await mailboxJourney(env);

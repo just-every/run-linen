@@ -588,7 +588,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "f6cafa4c21f2e6d37ed953cc488107744a1fb93d15da090b8f8d65c65572e11b",
+      "sha256": "cdfcc759ed3c696cac3bc73f060a5b139f6e3903c9cc23f44fa49ccf9b54c22d",
       "executable": false
     },
     ".gitignore": {
@@ -600,7 +600,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "43cc5cf63ee3aaaad22cf3ee5ae6d9a21eb59c6f885d4d0237febf76b5a1c80c",
+      "sha256": "26770da2fe90ec5b5007c23a1fe18215a0525512fe6f17ba3bfd5969926e0a25",
       "executable": false
     },
     "ADOPTION.md": {
@@ -632,7 +632,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ae30d71fce8515f0071ddbba41f32bdfc641b3eaf54ce100684a507c3839dbff",
+      "sha256": "afa872f4b9ec8d3fcb95f443b44be3ab3494c0b40a4f6f61e25fd80e545f0c95",
       "executable": false
     },
     "DEMO.md": {
@@ -1236,7 +1236,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "4bf6134ee1a2255623f9d41fded6b8a66323807c97074e347893411308f3c0f2",
+      "sha256": "752520cc0c72d8e553fe016b5796f788c6a03648039b2ee25ba2804729e16fad",
       "executable": false
     },
     "packaging.json": {
@@ -1244,7 +1244,7 @@
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "e45cc6a90ef48c33d5da8cfb512e0ad80c33a8078334961d9ca95e3594ba8638",
+      "sha256": "1cfb0ebbb771cacbf50d6fe5136591d1cece099aefe36d70a71952ee2727e44d",
       "executable": false
     },
     "public/apple-touch-icon.png": {
@@ -1720,7 +1720,7 @@
       "executable": false
     },
     "scripts/verify.mjs": {
-      "sha256": "1340c1de177c45b8fd9c026f196305f714a09af4e8b8552ed728f4b3c989fb37",
+      "sha256": "0ea9fba087cfff1ed48c66edf369799187df4e774e016870ce3b35eb0f230e56",
       "executable": false
     },
     "seed.json": {
@@ -6288,7 +6288,7 @@
       "executable": false
     },
     "tests/adoption/harness.mjs": {
-      "sha256": "44d4ae8ed8a38ed978e3f108ac98e643d8694205e057c71b0727ec7d040df52a",
+      "sha256": "b5fff45e558c4947deee22ce0a5c197ff24016183c9a47d679b0fd0203531eaa",
       "executable": false
     },
     "tests/adoption/history-cases.mjs": {
@@ -6305,6 +6305,10 @@
     },
     "tests/adoption/lightweight-import-cases.mjs": {
       "sha256": "695bfb828173bc313f805427efcbc79a5aea4511bea1d47ee886b0a68cc9ba7b",
+      "executable": false
+    },
+    "tests/adoption/platform-privacy-cases.mjs": {
+      "sha256": "5b21d942f9ad0b8afb8e44448c600fa79525e4b2d4f8fc8416a0d74d027b1bef",
       "executable": false
     },
     "tests/adoption/prior-data-harness.mjs": {
@@ -6336,7 +6340,7 @@
       "executable": false
     },
     "tests/adoption/runtime.mjs": {
-      "sha256": "ab98eeb6c9ae848221f887f0c8fe2b28bc9f1ab7e4ce1d82cf1cce1922714b0a",
+      "sha256": "5fd6a8944e3cd61714998d9d776396236ae16a84634780328c664310893388be",
       "executable": false
     },
     "tests/adoption/servicenow-import-cases.mjs": {
@@ -6463,6 +6467,10 @@
       "sha256": "6bd69ee14f00da1e1cf3aa9ebe5d284830d9fcdf273e17d281262d149f9eba00",
       "executable": false
     },
+    "tests/intelligence/ticket-mining-scale.mjs": {
+      "sha256": "30c9ef65c212f5474004674a9fa30ae6b932f1b5d029fe0f1badb312e781881d",
+      "executable": false
+    },
     "tests/intelligence/worker.ts": {
       "sha256": "87c532001ebe38627f285b81ec61043d3db9b4a0e411e59ba7d8000a9247240b",
       "executable": false
@@ -6480,7 +6488,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "2b289cd3021fb223156909b6b278b61de76fd8f01e53ff50a01546f7962578df",
+      "sha256": "d89ab19b150284bf1d2cefbe63bcafe2c403cd03fa622fddd95617c0a1e137f6",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
@@ -6517,6 +6525,10 @@
     },
     "tests/platform/sandbox-routing-cases.mjs": {
       "sha256": "d2c15a023c5faecdf63ebe4c9ef9d7f629930542826a1860777281a55d60b2d6",
+      "executable": false
+    },
+    "tests/platform/source-custody-journey.mjs": {
+      "sha256": "1f86e59ee956597f0c70afd29d8043513065f1ca620246fd37a33773e30c37bb",
       "executable": false
     },
     "tests/platform/tsconfig.json": {
@@ -6636,7 +6648,7 @@
       "executable": false
     },
     "tests/ui/browser.mjs": {
-      "sha256": "b987ce1dadbefe38be132df82e433738d70a898f5a4a32bc9aaa41998d89435a",
+      "sha256": "ca9c63fe5e7e8a60de7c05232a7c60b117e95a97c4a4298edc2e5f3b4b0f8fe6",
       "executable": false
     },
     "tests/ui/calendar-journey.mjs": {
@@ -6668,7 +6680,7 @@
       "executable": false
     },
     "tests/ui/communication-browser.mjs": {
-      "sha256": "cbb46f337a7e09861226799b4701c44697c7f3b687f0526f3c8a8463bfea98f5",
+      "sha256": "7feb4d35f9df0d6f3098558b449bdb0dc4e71ac70ee83108f122e5a0b5c4754d",
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {
@@ -6727,6 +6739,10 @@
       "sha256": "e0cc1aebddc81bbca76f63843591e763574cbbb8f0567e35bc47ca1f2a80cbfd",
       "executable": false
     },
+    "tests/ui/desk-console-journeys.mjs": {
+      "sha256": "5999ef9aca3a5dafe460810de4b92ca3b48ee593d37167be20bcc01f752431fc",
+      "executable": false
+    },
     "tests/ui/desk-field-journey.mjs": {
       "sha256": "a495ec32eb71b8724f432918fab2cf911945598bf3d5c102a56b6041b2cf0756",
       "executable": false
@@ -6761,6 +6777,10 @@
     },
     "tests/ui/okta-browser.mjs": {
       "sha256": "06eb59f4280f57b0591524345409fb633000ab2b346d4acb4deaeb1a62baa397",
+      "executable": false
+    },
+    "tests/ui/operations-console-journeys.mjs": {
+      "sha256": "74cfcf98c976925a534d256c8fd80cadf623b81f7212ccf61807411ec91c3928",
       "executable": false
     },
     "tests/ui/pending-person-journey.mjs": {

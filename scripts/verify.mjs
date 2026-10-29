@@ -51,7 +51,7 @@ if (shardValue !== undefined) {
 const measuredSeconds = {
   "Native sign-in and scoped API": 30,
   "Native archive and recovery": 315,
-  "Employee service desk browser": 280,
+  "Employee service desk browser": 455,
   "Emitted HTTP": 50,
   "Configuration and sandbox": 70,
   "Service desk and lifecycle": 80,
@@ -70,11 +70,11 @@ const measuredSeconds = {
   "Intelligence protocols and budgets": 30,
   "Conversational intake and evidence": 35,
   "Incumbent import": 75,
-  "Archive restore and erasure": 130,
+  "Archive restore and erasure": 210,
   "Department privacy browser": 100,
   "Connected service recovery browser": 250,
   "Connection and authority browser": 70,
-  "Communications browser": 155,
+  "Communications browser": 315,
   "Billing browser": 30
 }
 function shardChecks(count) {
