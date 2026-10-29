@@ -1,3 +1,4 @@
+import {sourceCustodyJourney} from './source-custody-journey.mjs'
 import {captureArchiveAliasStatements,captureKnownArchiveAliasStatements} from '../../src/features/history/archive-identities.mjs'
 import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {mailEdge} from './mail-edge.mjs'
@@ -23,6 +24,7 @@ async function run(args,expected=0){let output='';const child=spawn('pnpm',args,
 async function open(){proxy=await getPlatformProxy({configPath:join(root,'wrangler.jsonc'),persist:{path:join(root,'.wrangler/state/v3')},remoteBindings:false});return {...proxy.env,ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}
 async function close(){await proxy?.dispose();proxy=null}
 try{
+ sourceCustodyJourney();
  await cp(source,root,{recursive:true,filter:p=>{const rel=p.slice(source.length+1);return !rel||!['.git','node_modules','.wrangler','.rer','.seed','dist','exports','.dev.vars','.dev.vars.previous'].some(x=>rel===x||rel.startsWith(x+'/'))}})
  await symlink(resolve('node_modules'),join(root,'node_modules'),'dir')
  await writeFile(join(root,'.dev.vars'),'ENCRYPTION_KEY='+Buffer.alloc(32,7).toString('base64')+'\n')

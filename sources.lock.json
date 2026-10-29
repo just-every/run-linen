@@ -599,7 +599,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "43cc5cf63ee3aaaad22cf3ee5ae6d9a21eb59c6f885d4d0237febf76b5a1c80c",
+      "sha256": "4b6cce399a53d9f20ad207dc35d73e31cce594a71d163b914442d240e06940a8",
       "executable": false
     },
     "ADOPTION.md": {
@@ -627,7 +627,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "653a8519032d3056b4db2b889401a3e3b9b84ececa7d4e636fd9e4ce877b41d7",
+      "sha256": "0f9ffcdcb8974650299b37de4b160fd06bfbcbf004b065317d855699679d221c",
       "executable": false
     },
     "DEMO.md": {
@@ -6071,7 +6071,7 @@
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
-      "sha256": "eefda5004ae6ad9ce393bc5176a7e8515fe2c4a74266f777bba92f92a5c59735",
+      "sha256": "396434be0e6c2fdec20b38610c5b2692249f2247f5d5e10e97a4b6b42daefdac",
       "executable": false
     },
     "tests/platform/config-runtime.mjs": {
@@ -6108,6 +6108,10 @@
     },
     "tests/platform/sandbox-routing-cases.mjs": {
       "sha256": "d2c15a023c5faecdf63ebe4c9ef9d7f629930542826a1860777281a55d60b2d6",
+      "executable": false
+    },
+    "tests/platform/source-custody-journey.mjs": {
+      "sha256": "1f86e59ee956597f0c70afd29d8043513065f1ca620246fd37a33773e30c37bb",
       "executable": false
     },
     "tests/platform/tsconfig.json": {
