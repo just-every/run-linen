@@ -3329,3 +3329,31 @@ The commit is the landing-main baseline for this judgement; this candidate also 
 | `F5` | Executable service models and experiments | published | partial | `src/features/intelligence/protocol.ts`, `src/features/intelligence/protocol-bindings.ts`, `src/features/intelligence/probe.ts`, `tests/intelligence/protocol-cases.mjs`, `tests/intelligence/protocol-binding-cases.mjs`, `tests/intelligence/runtime.mjs` | Authenticated public-door local replay asserts uncertainty, reconciliation, authority, mutation, explicit assumptions and restart; bound checks assert scoped dependency closure, persisted probe provenance, changed/failed/stale observations, dependency/source drift and deletion, role withdrawal and append-only dated rechecks. Gap: representative observed-provider replay and separately verified live effects remain unproven; fixture probes and supplied traces cannot certify the external service. |
 | `F6` | Reusable capabilities from solved cases | published | partial | `src/features/intelligence/capabilities.ts`, `tests/ui/connected-browser.mjs` | Frontier evidence gate in ACCEPTANCE.md not demonstrated on held-out cases. |
 | `F7` | Continuous service simplification | published | partial | `src/features/intelligence/simplification.ts`, `tests/ui/connected-browser.mjs` | No substantive redesign compared with continued repair on service outcomes. |
+
+
+## Agent door adoption — 29 October 2026
+
+This is the implemented ticket subset, not a change to the product target or
+to ct's unmerged Agent surface at
+`c6ef2267888cfd960a8e9e385e1da8bcff7a5f15`. Its four tool names implement the
+six previously callable MCP ticket verbs: read (list/get/history), search,
+create and internal reply. Native APIs, screens and broader specialist clauses
+retain their existing judgments. See [company agents](docs/agents.md) and
+`agent-surface.json` for the registry, scopes, clauses and executable journey.
+
+| Scope | Status | Evidence | Gap |
+| --- | --- | --- | --- |
+| CORE tools, policy, Pause, audit, idempotency | partial | Base runtime `2135c394939f4a737adabdc8003b0e667b31ac5a`, released rer 0.2.91. Own output on 29 October: `LINEN_VERIFY_SHARD=15/27 LINEN_TEST_BUILT=1 npx -y @runeditrun/rer@0.2.91 verify` exits 0, native API-001/API-003/auth journeys pass, hosted output/hydration pass, and agent door conformance is 524/524 with `differs_from_policy` zero. Unknown-subject and changed-email sponsor refusals pass. The native browser ticket journey uses the four shared tool names and agent-for-person attribution; a long workspace brand and populated connection status fit at 1440px and 390px. The inherited ticket-wide link display rule is scoped to ticket content so it preserves the shell's responsive visibility. | Exact-head CI must establish the complete existing suite. This does not complete the full specialist target. |
+| Owner-bound sponsorship and principal authority | partial | Native `platform_first_run.completed_by`, `users`, `memberships`, live native admission and original automation grant guards. | Business team provisioning is not supported; a non-null roster refuses atomically as `business_team_not_supported`. Admin/member bindings are read only if native accounts were durably mapped; no email-derived adoption. |
+| Resources / BASE-AGENT-003 | partial | Explicit CORE capability declaration; empty resource catalogue and typed refusal. | Undeclared family: resources. The eleven ct resource templates are not exposed. |
+| Events / BASE-AGENT-010 | partial | Explicit CORE capability declaration excludes the built-in event tool. | Undeclared family: events. The nineteen ct event types and handoffs are not exposed. |
+| Subscriptions | partial | Explicit CORE capability declaration removes subscription advertising and returns a typed refusal. | Undeclared family: subscriptions. |
+| Specialist prompts / BASE-AGENT-013 | partial | Discovery and `/docs/agents` describe the actual ticket jobs and limitations. | Undeclared family: prompts. The ten proposed specialist prompts are not exposed. |
+| Multi-sponsor, mail edges, resource refresh, timed/dual-host/queued lifecycle and owner-native administration | partial | No optional family is declared by this seed. The refreshed runtime includes consent-preserving continuation, history hooks, review checks and the agent initializer, but this ticket subset does not implement those optional journeys. | No optional family completion is claimed. Native company writes still require the existing automation grant; no broad person-to-executor adapter is supplied. |
+| ct SURFACE-001..SURFACE-008 | partial | Implemented names align read/search/create/reply to the ct table. No ct branch was merged or rewritten. | Four of 67 target tools; normal tickets only, no broad UI parity, remaining 63 tools, eleven resources, nineteen events, ten prompts and IT-week specialist journey. These ct clause definitions are not on main. There is no seed AGENT-013; that identifier is BASE-AGENT-013. |
+| Base CLI native archive/deploy boundary | partial | Own output on 29 October: `node tests/platform/base-auth-transfer.mjs` passes native archive export/reset/import and retained authority checks, then the production dry run fails. Direct installed rer 0.2.91 `owner-cli.mjs local-plan` reproduces `ENOENT .../migrations/core`. | Retested on rer 0.2.91: `modules/deploy-kit/prepare.mjs` unconditionally packages `migrations/core` instead of Linen's declared `migrations_dir: "migrations"`. Preserve the existing migration history and native test assertion pending a Base fix. No provider request or deployment was made. |
+| Shared clause generation | partial | `pnpm exec rer door clauses --write` reports all thirteen shared clauses missing, then refuses before changes. | Main has no `contract-docs` generator or Lander-Regenerate declaration. Do not hand-edit generated clause projections or promote missing shared definitions. |
+
+The normal contract status table above remains authoritative for the employee
+floor and product target. No existing specialist clause is promoted by source
+copying or a subset conformance result.

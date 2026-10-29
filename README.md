@@ -113,7 +113,7 @@ A development companion is not endpoint management.
 
 Linen's source is developed in the public repository
 [just-every/run-linen](https://github.com/just-every/run-linen). The RER package is
-`@runeditrun/rer` version `0.2.79`. Publishing source does not deploy Linen,
+`@runeditrun/rer` version `0.2.91`. Publishing source does not deploy Linen,
 configure a provider, or satisfy an acceptance gate.
 
 ## Preserved product requirements
@@ -128,3 +128,5 @@ and [ADOPTION.md](ADOPTION.md) preserve the requirements.
 Linen's comparative advantage has not been measured.
 
 The Linen site is at https://run-linen.com.
+
+Company agents use the [shared ticket door](docs/agents.md). Its declared CORE subset preserves native automation grants; broader specialist jobs remain partial.
