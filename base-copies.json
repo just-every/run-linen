@@ -949,7 +949,6 @@
         "src/modules/business-settings/schema/0002_business_people.sql": "51aa39622d866b987d71b6e37c9a8300e7f24c54a55611edaab669ed051b01cd",
         "src/modules/business-settings/store.ts": "3645f9e9f282f2aa5fc5f189188ddd7a139de6361ad1966bf50dfad83cee29d5",
         "src/modules/business-settings/team.ts": "95ced6e343f16a4c92c8d26ada90c7d5790e86c4b82e87f978f4f8a4a33dfd06",
-        "src/modules/business-settings/testing/index.mjs": "942949cc72fcc7e3c9e53345cbb6232a4d5075e4733672a41c23656a811e90ed",
         "src/modules/business-settings/types.ts": "4ada2afb8c4108a42ac8cecb33b231e25f20c05b5843662bda2cc354d995cf31",
         "src/modules/business-settings/validation.ts": "610a85823641c2a7b87e7bad819ba2d13f309d3a4e3922d356c4be6a7b5cf8a8",
         "src/modules/business-settings/verify.ts": "021a40087050c4ef1189f80052ef3274e4826be13f21d203021ed138267ad80f"
@@ -967,7 +966,6 @@
         "src/modules/business-settings/schema/0002_business_people.sql": "100644",
         "src/modules/business-settings/store.ts": "100644",
         "src/modules/business-settings/team.ts": "100644",
-        "src/modules/business-settings/testing/index.mjs": "100644",
         "src/modules/business-settings/types.ts": "100644",
         "src/modules/business-settings/validation.ts": "100644",
         "src/modules/business-settings/verify.ts": "100644"
