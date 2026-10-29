@@ -2132,7 +2132,7 @@
       "executable": false
     },
     "src/features/agent-door/tools.ts": {
-      "sha256": "e8b638d580d2ff5db83a8ad93790229cda6e6fd6770eeb5f37685ba1a38b056e",
+      "sha256": "51541a01e85182c0b3ee9165498ecbcbc4b3dde8fe5576d866ec831ae5933e72",
       "executable": false
     },
     "src/features/connections/API.md": {
