@@ -6120,7 +6120,7 @@
       "executable": false
     },
     "src/ui/work-activity.tsx": {
-      "sha256": "3de874a3f75db2894ecedf9e292ee29d789cfcec6658a1434b1c2e958008bd9e",
+      "sha256": "af0113cd9262afff1fd07ce87656f4f5363fb8a8912348f7488d3c5c75df5d9a",
       "executable": false
     },
     "src/ui/work-bulk.tsx": {
