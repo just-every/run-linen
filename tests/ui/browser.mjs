@@ -1,3 +1,4 @@
+import {deskQueueJourney,deskScenarioJourney,mcpCommentJourney} from './desk-console-journeys.mjs';
 import { pendingPersonJourney } from './pending-person-journey.mjs';
 import { catalogTaskJourney } from './catalog-task-journey.mjs';
 import { sandboxJourney } from './sandbox-journey.mjs';
@@ -589,6 +590,9 @@ try {
   checks.push("PROB-001 reviewed expiring workaround published from three incidents and offered on a matching request");
   for (const width of [1440]) await unsentReplyJourney({ page, api, base, out, width });
   checks.push("DESK-008 unsent reply drafts survive reload and post only on explicit Send");
+  await deskQueueJourney({browser,page,api,base,out,errors});
+  await deskScenarioJourney({browser,page,api,base,out,errors});
+  await mcpCommentJourney({browser,page,api,base,out});
   assert.deepEqual(errors, []);
   await writeFile(
     out + "/results.json",
