@@ -6058,6 +6058,10 @@
       "sha256": "6bd69ee14f00da1e1cf3aa9ebe5d284830d9fcdf273e17d281262d149f9eba00",
       "executable": false
     },
+    "tests/intelligence/ticket-mining-scale.mjs": {
+      "sha256": "30c9ef65c212f5474004674a9fa30ae6b932f1b5d029fe0f1badb312e781881d",
+      "executable": false
+    },
     "tests/intelligence/worker.ts": {
       "sha256": "87c532001ebe38627f285b81ec61043d3db9b4a0e411e59ba7d8000a9247240b",
       "executable": false
