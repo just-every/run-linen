@@ -29,7 +29,7 @@ function ConnectionDots() {
       {items.slice(0, 3).map((c) => (
         <span key={text(c.id)} className="sync-item">
           <span className={`dot tone-${tone(c.status)}`} />
-          {text(c.name)}
+          <span className="sync-name">{text(c.name)}</span>
         </span>
       ))}
       {items.length > 3 && <span className="sync-item">+{items.length - 3}</span>}

@@ -1,6 +1,7 @@
 export type Role = 'owner' | 'operator' | 'employee' | 'approver' | 'hr' | 'auditor' | 'integration' | 'sandbox-admin'
 export interface Principal { userId: string; workspaceId: string; roles: Role[]; departmentIds?: string[]; departmentRoles?: import('../features/work/department-role-authority').DepartmentRoleGrant[] }
 export interface Env {
+  RER_BUSINESS_TRUST?: string
   RER_DEMO?: string
   RER_OWNER_CLAIM_ISSUER?: string
   RER_OWNER_CLAIM_INSTALLATION_ID?: string

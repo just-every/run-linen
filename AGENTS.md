@@ -38,3 +38,15 @@ commands and release identity in edition metadata. Source publication does not
 authorize provider actions, hosting or deployment. Use git/package commands only
 in the repository being changed; publishing, deployment and provider actions need
 the active task's scope and real credentials.
+
+Contract requirements and judgments live in CONTRACT.md. The recorded Base
+contract generator owns ACCEPTANCE.md, docs/CLAIMS.md and summary counts.
+Preserve the original contract in CHANGELOG.md and the historical acceptance
+prose in docs/verify.md; these are history, not current completion evidence.
+Edit the source first, regenerate its views, then regenerate the source lock
+last after staging every intentional source change.
+
+Lander-Regenerate: node src/base/contract-docs.mjs write
+Lander-Check: node src/base/contract-docs.mjs check
+Lander-Lock: pnpm source:lock
+Lander-Lock-Check: pnpm source:check
