@@ -366,9 +366,13 @@ try{
  else await run(['exec','rer','build'])
  const artifact=JSON.parse(await readFile(join(root,'dist/server/wrangler.json'),'utf8'))
  assert.ok((await readFile(resolve(root,'dist/server',artifact.main))).length,'The deploy artifact contains its Worker entry')
- // Base #275 requires target reads even for a dry run; building needs no credentials.
+ // The public dry run validates the local plan without provider credentials or writes.
  commandEnvironment.MAIL_API_KEY='synthetic-dry-run-mail-key'
- const missingCredentials=await run(['exec','rer','deploy','--dry-run','--owner-name','synthetic-linen-4'],3)
+ const localPlan=await run(['exec','rer','deploy','--dry-run','--owner-name','synthetic-linen-4','--json'])
+ const planned=localPlan.trim().split('\n').filter(line=>line.startsWith('{')).map(line=>JSON.parse(line)).findLast(event=>event.event==='result')
+ assert.equal(planned.dryRun,true)
+ assert.equal(planned.deployed,false)
+ assert.equal(planned.providerChecked,false)
  await assert.rejects(readFile(join(root,'.rer/deploy/production.json')),{code:'ENOENT'})
  const configPath=join(root,'wrangler.jsonc'),config=JSON.parse(await readFile(configPath,'utf8'))
  config.d1_databases[0].database_id='retained-remote-database'
@@ -387,5 +391,5 @@ try{
  // verified live legacy bindings before any build, upload or provider mutation.
  commandEnvironment.NODE_OPTIONS=`${commandEnvironment.NODE_OPTIONS??''} --import ${pathToFileURL(join(root,'tests/platform/deploy-edge.mjs'))}`.trim()
  assert.match(await run(['exec','rer','deploy','--non-interactive'],4),/must retain Worker linen/)
- console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; deploy artifact builds without provider access, credential-free deploy dry run refuses with named credentials, and retained deployment identity changes remain refused')
+ console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; deploy artifact and credential-free local plan include native migrations without provider access, and retained deployment identity changes remain refused')
 }finally{await mf?.dispose();await close();await rm(dir,{recursive:true,force:true})}
