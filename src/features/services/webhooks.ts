@@ -1,3 +1,4 @@
+import { ingestDevelopmentEvent } from './development-events';
 import { monitoringSignature } from './monitoring-source';
 import type { Hono } from 'hono';
 import type { AppEnv, Principal } from '../../platform/types';
@@ -6,6 +7,7 @@ import { ingestMonitoring } from './integrations';
 import type { RecordRow } from './store';
 /** Public adapter: the signed event selects no tenant or principal. Stored monitor custody does. */
 export function registerServiceWebhooks(app: Hono<AppEnv>) {
+    app.post('/webhooks/development/:id',async c=>c.json(await ingestDevelopmentEvent(c.env,c.req.param('id'),c.req.raw)));
     app.post('/webhooks/monitoring/:id', async (c) => {
         const row = await c.env.DB.prepare("SELECT * FROM svc_records WHERE id=? AND kind='monitor'").bind(c.req.param('id')).first<RecordRow>();
         if (!row)

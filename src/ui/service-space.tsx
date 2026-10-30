@@ -1,3 +1,4 @@
+import { SoftwareLicenseLink } from './software-licenses';
 import { RecordHistory } from './record-history';
 import { NoticeControls } from './service-notices';
 import { NewRelease, ReleaseDetails } from './releases';
@@ -193,6 +194,7 @@ export function ServiceSpace({
           {label[0]}
         </a>
       )}
+      {section === "software-assets" && canEdit && <SoftwareLicenseLink/>}
       <Hero eyebrow={d ? label[0] : undefined} title={d ? text(d.title ?? d.name) : label[0]}>
         <p className="lead">
           {d
@@ -307,6 +309,13 @@ export function ServiceSpace({
                       ["Canary cohorts", d.canaryCohorts?.join(", ")],
                     ]}
                   />
+                  {d.developmentContext?.provider === 'github' && <section aria-label="Development context"><h3>Development context</h3><ul>
+                    {(['pullRequest','run','deployment'] as const).map(key => {
+                      const url = d.developmentContext[key];
+                      return typeof url === 'string' && /^https:\/\/github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9_.-]+\/(?:pull|actions\/runs|deployments)\/[1-9][0-9]*$/.test(url)
+                        ? <li key={key}><a href={url} rel="noreferrer">{({pullRequest:'GitHub pull request',run:'GitHub Actions run',deployment:'GitHub deployment'})[key]}</a></li> : null;
+                    })}
+                  </ul><p>Deployment reported by GitHub. Execution and recovery still require their own evidence.</p></section>}
                   {['implementationPlan','testPlan','backoutPlan'].filter(name=>d[name]).map((name,i)=><section key={name}><h3>{({implementationPlan:'Implementation plan',testPlan:'Test plan',backoutPlan:'Backout plan'} as Record<string,string>)[name]}</h3><p>{text(d[name])}</p></section>)}
                   <Notice>
                     Source edits invalidate affected decisions. A submission,

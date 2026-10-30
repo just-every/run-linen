@@ -1,4 +1,5 @@
 import { scopedTicketPermission } from './department-role-authority';
+import { notifyWorkEvent } from './notification-port';
 import {obligationHistory,ticketHistory} from './work-history';
 import { workReadable, workPrivateReadable, workDepartmentStaff, workDepartmentScoped, workReplyAllowed, workTransitionAllowed, workAttachmentAllowed } from './scope';
 import { departmentWorkBatch, requestDepartment, workReadSql, departmentNotHrSql } from './department-spaces';
@@ -279,7 +280,8 @@ export async function createWork(
     .bind(p.workspaceId, p.userId, input.deduplicationKey)
     .first<{ id: string }>();
   // DESK-003: a ticket this call created is routed by support group or rule; a replayed request keeps its placement.
-  if (row!.id === workId) await routeUnplaced(ctx, workId, "created");
+  if (row!.id === workId) {await routeUnplaced(ctx, workId, "created");
+    await notifyWorkEvent(ctx,{workId:row!.id,event:'ticket.received',sourceId:'received:'+row!.id});}
   return getWork(ctx, row!.id);
 }
 /** The person a request's own words name, recorded once as a fact of the request. It is never an identity or authority. */
@@ -375,6 +377,7 @@ export async function appendMessage(
       ticketHistory(ctx,work,'work.response_recorded',{responseAt:work.response_at??null},{responseAt},responseAt),
     );
   await departmentWorkBatch(ctx,work,statements,internalAuthority==='transition'?'participantTransition':input.visibility==='private'?'privateReply':internalAuthority??'reply');
+  if(!previous&&input.visibility==='public'&&!input.sourceMessageId.startsWith('transition:'))await notifyWorkEvent(ctx,{workId:input.workId,event:work.requester_id===ctx.principal.userId?'ticket.requester_reply':'ticket.public_update',sourceId:input.sourceMessageId});
   return ctx.env.DB.prepare(
     "SELECT * FROM work_messages WHERE workspace_id=? AND work_id=? AND source_key=?",
   )
@@ -539,5 +542,8 @@ export async function transitionWork(
     visibility: "public",
     sourceMessageId: `transition:${revision + 1}`,
   }, 'transition');
+  if(command==='close'){await notifyWorkEvent(ctx,{workId,event:'ticket.resolved',sourceId:'transition:'+workId+':'+(revision+1)});await notifyWorkEvent(ctx,{workId,event:'ticket.closed',sourceId:'transition:'+workId+':'+(revision+1)});}
+  if(command==='assign')await notifyWorkEvent(ctx,{workId,event:'ticket.assigned',sourceId:'transition:'+workId+':'+(revision+1)});
+  if(command==='pause'&&waiting==='requester')await notifyWorkEvent(ctx,{workId,event:'ticket.waiting_on_you',sourceId:'transition:'+workId+':'+(revision+1)});
   return getWork(ctx, workId);
 }
