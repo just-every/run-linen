@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {ticketCall,ticketTools} from './agent-door-fixture.mjs'
 
 // Public native sessions create the fixtures; SQL supplies a foreign workspace,
 // commit races and storage postconditions, never replacement application paths.
@@ -7,7 +8,7 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const equal=(actual,expected,message)=>assert.deepEqual(actual,expected,'API-003 '+message)
  const quoted=value=>"'"+String(value).replaceAll("'","''")+"'"
  const value=async(promise,status=200)=>{const r=await promise;equal(r.status,status,'native route status');return r.value}
- const call=(secret,name,args={})=>rpc(secret,'tools/call',{name,arguments:args})
+ const call=(secret,name,args={})=>rpc(secret,'tools/call',ticketCall(name,args))
  const tool=async(secret,name,args={})=>{
   const r=await call(secret,name,args);equal(r.status,200,'authenticated tool transport')
   equal(r.value.error,undefined,name+' succeeds');equal(r.value.result.isError,false,name+' has a usable result')
@@ -15,7 +16,14 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  }
  const refused=async(secret,name,args,code)=>{
   const r=await call(secret,name,args);equal(r.status,200,'tool refusal uses protocol response')
-  equal(r.value.error?.data?.code,code,name+' refuses '+code);return r.value.error
+  equal(r.value.error,undefined,'business refusal uses a tool result')
+  equal(r.value.result.isError,true,name+' is refused')
+  const error=r.value.result._meta['com.runeditrun/error']
+  equal(error?.code,code,name+' refuses '+code);return error
+ }
+ const scopeRefused=async(secret,name,args)=>{
+  const r=await call(secret,name,args);equal(r.status,403,'missing tool scope is refused before native execution')
+  equal(r.value.error.data.code,'insufficient_scope',name+' requires its original scope')
  }
  const mint=async(patch={},api=ownerApi)=>value(api('/mcp-credentials',{...grant,...patch}),201)
  const discover=async secret=>(await rpc(secret)).value.result.tools.map(t=>t.name).sort()
@@ -93,15 +101,15 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const classification=await value(ownerApi('/work/'+normal.id+'/classification'))
  await value(ownerApi('/work/'+normal.id+'/classification/override',{revision:classification.revision,workRevision:classification.workRevision,type:'incident',category:'hardware',subcategory:'other',impact:'low',urgency:'medium',priority:'P4',reason:'MCP-HIDDEN-CLASSIFICATION-REASON'}))
 
- equal(await discover(credential.secret),[...grant.tools].sort(),'discovery exactly intersects selected scopes and tools')
+ equal(await discover(credential.secret),ticketTools,'discovery publishes four tools while calls enforce selected subverbs')
  const readonly=await mint({name:'Read only queue',scopes:['work.read'],tools:['work.list','work.get']})
- equal(await discover(readonly.secret),['work.get','work.list'],'readonly discovery excludes writes and unselected reads')
- await refused(readonly.secret,'work.comment',{workId:normal.id,revision:1,body:'MCP-REFUSED-READONLY',deduplicationKey:'API-003-readonly'},'tool_unavailable')
+ equal(await discover(readonly.secret),ticketTools,'readonly discovery describes the registry without widening its scopes or subverbs')
+ await scopeRefused(readonly.secret,'work.comment',{workId:normal.id,revision:1,body:'MCP-REFUSED-READONLY',deduplicationKey:'API-003-readonly'})
  await refused(readonly.secret,'work.search',{query:'monitor'},'tool_unavailable')
- await refused(credential.secret,'work.create',{title:'MCP-REFUSED-CREATE',body:'MCP-REFUSED-CREATE-BODY',deduplicationKey:'API-003-no-create'},'tool_unavailable')
+ await scopeRefused(credential.secret,'work.create',{title:'MCP-REFUSED-CREATE',body:'MCP-REFUSED-CREATE-BODY',deduplicationKey:'API-003-no-create'})
  const allTools=['work.list','work.get','work.search','work.history','work.create','work.comment']
  const full=await mint({name:'Bounded complete ticket tools',scopes:['work.read','work.create','work.comment'],tools:allTools})
- equal(await discover(full.secret),allTools.slice().sort(),'separate credential discovers six selected tools')
+ equal(await discover(full.secret),ticketTools,'complete native grant uses the same four-tool registry')
  const listed=await tool(credential.secret,'work.list')
  equal(listed.items.map(w=>w.id),[normal.id],'Hardware queue lists another employee normal work only')
  projected=await tool(credential.secret,'work.get',{workId:normal.id})
@@ -175,7 +183,7 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const ownMessage=ownerView.messages.find(m=>m.body===ownBody)
  check(ownMessage,'native conversation contains committed MCP comment')
  const nativeActivity=await value(ownerApi('/work/'+normal.id+'/activity'))
- check(nativeActivity.items.some(e=>e.body===ownBody&&e.actorKind==='automation'&&e.actor==='Desk bot'),'native activity labels the actual automation author independently of comment text')
+ check(nativeActivity.items.some(e=>e.body===ownBody&&e.actorKind==='agent'&&e.actor==='Desk bot for Owner'),'native activity labels the preparing agent and its real sponsor independently of comment text')
  equal({author:ownMessage.author_id,visibility:ownMessage.visibility},{author:bot.id,visibility:'private'},'comment is internal and attributed to integration principal')
  check(!(await value(employeeSession.api('/work/'+normal.id))).messages.some(m=>m.body===ownBody),'employee receives no requester reply from MCP internal comment')
  check((await tool(full.secret,'work.get',{workId:normal.id})).messages.some(m=>m.body===ownBody),'principal reads its own internal comment')
@@ -245,7 +253,7 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const narrow=await value(ownerApi('/mcp-credentials/'+narrowed.id+'/narrow',{revision:narrowed.grantVersion,groupIds:[]}))
  equal(narrow.grant_version,narrowed.grantVersion+1,'narrowing advances grant version')
  equal(JSON.parse(narrow.queue_groups_json),[],'narrowing removes Hardware immediately')
- equal(await discover(narrowed.secret),['work.get'],'discovery keeps only own-created get when the queue grant is empty')
+ equal(await discover(narrowed.secret),ticketTools,'queue narrowing retains discovery while removing native record access')
  await refused(narrowed.secret,'work.get',{workId:normal.id},'not_found')
  equal((await ownerApi('/mcp-credentials/'+narrowed.id+'/narrow',{revision:narrow.grant_version,groupIds:[hardware]})).value.error?.code,'mcp_grant_widening_requires_remint','widening requires a new credential')
  equal((await ownerApi('/mcp-credentials/'+narrowed.id+'/narrow',{revision:narrowed.grantVersion,groupIds:[]})).status,409,'stale grant revision refuses narrowing')
@@ -256,7 +264,7 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  await value(ownerApi('/members/'+issuer.id,{roles:['employee'],active:true},'PATCH'))
  const lost=await rpc(issued.secret)
  equal(lost.status,401,'issuer owner loss refuses next call')
- equal(lost.value.error.message,'mcp_issuer_inactive','issuer loss reports explicit refusal')
+ equal(lost.value.error,{code:-32001,message:'Unauthorized'},'issuer loss refuses protocol access without resource disclosure')
  const managed=(await value(ownerApi('/mcp-credentials'))).items
  equal(managed.find(c=>c.id===issued.id).state,'revoked','issuer loss durably revokes its credential')
  check(!JSON.stringify(managed).includes(issued.secret),'management never re-exposes secret')

@@ -4,6 +4,7 @@ import {seedReportingNotifications,assertRestoredReportingNotifications} from '.
 import {captureArchiveAliasStatements,captureKnownArchiveAliasStatements} from '../../src/features/history/archive-identities.mjs'
 import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {mailEdge} from './mail-edge.mjs'
+import {agentRpc} from './agent-door-fixture.mjs'
 // Public rer archive/reset/import flow on disposable actual D1/R2 state.
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
@@ -273,7 +274,7 @@ try{
  mf=new Miniflare({...convertV4MiniflareOptions({port,host:'127.0.0.1',modules:true,script:await readFile(output,'utf8'),compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'local-linen'},r2Buckets:{ATTACHMENTS:'linen-attachments'},bindings:{AUTH_ORIGIN:origin,AUTH_LOCAL:'true',MAIL_PROVIDER:'resend',MAIL_API_KEY:'synthetic-provider-key',MAIL_FROM:'auth@localhost.test',OWNER_EMAIL:'owner@example.test',RER_DEV_KEY:'synthetic-development-entry-key-long-enough',SESSION_SECRET:'synthetic-session-secret-long-enough',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}),resourcePersistencePath:join(root,'.wrangler/state/v3'),isolatedResourcePersistencePath:join(dir,'isolated')})
  await mf.ready
  const request=(path,{body,cookie,headers={}}={})=>fetch(origin+path,{redirect:'manual',method:body?'POST':'GET',headers:{Host:new URL(origin).host,Origin:origin,...(body?{'content-type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...headers},...(body?{body:JSON.stringify(body)}:{})})
- assert.equal((await request('/api/mcp',{body:{jsonrpc:'2.0',id:1,method:'tools/list'},headers:{Authorization:'Bearer linen_mcp_'+('1'.repeat(36))+('2'.repeat(36))}})).status,401,'API-003 credential is refused after actual rer export/reset/import');
+ assert.equal((await agentRpc(request)('linen_mcp_'+('1'.repeat(36))+('2'.repeat(36)))).status,401,'API-003 credential is refused after actual rer export/reset/import');
  assert.equal((await request('/auth/magic-link',{body:{email:'owner@example.test',returnTo:'/app'}})).status,202)
  const detail=await(await request('/fixtures/mail')).text()
  const proof=/[?&](?:amp;)?token=([^"&<>\s]+)/.exec(detail)?.[1];assert.ok(proof)

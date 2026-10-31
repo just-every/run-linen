@@ -35,8 +35,18 @@ export async function ticketActivity(ctx: WorkContext, workId: string) {
     WHERE a.workspace_id=? AND a.user_id IN(SELECT value FROM json_each(?))`)
     .bind(ctx.principal.workspaceId,JSON.stringify(view.messages.map((m: any) => m.author_id))).all<{user_id:string;name:string}>()).results;
   const authors = new Map(automation.map(a => [a.user_id,a.name]));
+  const prepared = (await ctx.env.DB.prepare(`SELECT action,detail_json FROM audit_events a WHERE a.workspace_id=? AND a.target=?
+    AND a.action IN ('mcp.work_created','mcp.work_commented') AND json_type(a.detail_json,'$.preparedBy')='object'
+    AND NOT EXISTS(SELECT 1 FROM platform_identity_erasures e WHERE e.workspace_id=a.workspace_id AND e.user_id=json_extract(a.detail_json,'$.preparedBy.for.id'))
+    AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=a.workspace_id AND e.person_id=json_extract(a.detail_json,'$.preparedBy.for.id'))`).bind(ctx.principal.workspaceId,workId).all<{action:string;detail_json:string}>()).results;
+  const attribution = new Map<string,string>();
+  for(const event of prepared) {
+    const detail=JSON.parse(event.detail_json), message=event.action==='mcp.work_created'?view.messages.find((m:any)=>m.source_key==='initial'):view.messages.find((m:any)=>m.id===detail.messageId);
+    if(message && typeof detail.preparedBy?.label==='string')attribution.set(message.id,detail.preparedBy.label);
+  }
+
   const items: ActivityEntry[] = view.messages.map((message: any) => ({
-    id: message.id, at: message.created_at, kind: 'message', actor: message.author_id==='[erased]'?'Erased person':authors.get(message.author_id) ?? message.author_id, actorKind: authors.has(message.author_id) ? 'automation' : 'person',
+    id: message.id, at: message.created_at, kind: 'message', actor: attribution.get(message.id) ?? (message.author_id==='[erased]'?'Erased person':authors.get(message.author_id) ?? message.author_id), actorKind: attribution.has(message.id)?'agent':authors.has(message.author_id) ? 'automation' : 'person',
     action: message.source_key?.startsWith('transition:') ? 'Public status update' : 'Message',
     visibility: message.visibility, body: message.body, changes: [],
   }));

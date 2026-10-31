@@ -1,0 +1,288 @@
+{
+  "schema": "rer-agent-surface/1",
+  "seed": "linen",
+  "specialist": "IT service desk agent",
+  "capabilities": [
+    "tools",
+    "policy",
+    "pause",
+    "audit",
+    "idempotency"
+  ],
+  "tools": [
+    {
+      "name": "linen.tickets.read",
+      "scope": "work.read",
+      "readOnly": true,
+      "clauses": [
+        "E1",
+        "DESK-017",
+        "API-003"
+      ],
+      "classes": [
+        "standard"
+      ]
+    },
+    {
+      "name": "linen.tickets.search",
+      "scope": "work.read",
+      "readOnly": true,
+      "clauses": [
+        "DESK-016",
+        "API-003"
+      ],
+      "classes": [
+        "standard"
+      ]
+    },
+    {
+      "name": "linen.tickets.create",
+      "scope": "work.create",
+      "readOnly": false,
+      "clauses": [
+        "E1",
+        "API-003"
+      ],
+      "classes": [
+        "standard"
+      ]
+    },
+    {
+      "name": "linen.tickets.reply",
+      "scope": "work.comment",
+      "readOnly": false,
+      "clauses": [
+        "E1",
+        "DESK-007",
+        "API-003"
+      ],
+      "classes": [
+        "standard"
+      ]
+    }
+  ],
+  "notTools": [
+    {
+      "clauses": [
+        "CHANNEL-005"
+      ],
+      "reason": "device"
+    },
+    {
+      "clauses": [
+        "A5",
+        "SSO-001",
+        "DESK-009"
+      ],
+      "reason": "screen"
+    },
+    {
+      "clauses": [
+        "CHANNEL-001",
+        "CHANNEL-002",
+        "INC-002",
+        "ASSET-001"
+      ],
+      "reason": "connector"
+    },
+    {
+      "clauses": [
+        "MIGRATE-001",
+        "MIGRATE-002",
+        "MIGRATE-003",
+        "MIGRATE-004",
+        "MIGRATE-005"
+      ],
+      "reason": "import-door"
+    },
+    {
+      "clauses": [
+        "A1",
+        "A3",
+        "BASE-001",
+        "L10N-001"
+      ],
+      "reason": "installation"
+    }
+  ],
+  "resources": [],
+  "escalations": [],
+  "spend": {
+    "none": true
+  },
+  "journey": [
+    {
+      "id": "person-queue",
+      "tool": "linen.tickets.read",
+      "args": {
+        "action": "list"
+      },
+      "expect": [
+        {
+          "class": "standard",
+          "facts": {
+            "measure": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "queue",
+      "tool": "linen.tickets.read",
+      "args": {
+        "action": "list"
+      },
+      "client": "local",
+      "expect": [
+        {
+          "class": "standard",
+          "facts": {
+            "measure": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ticket",
+      "tool": "linen.tickets.read",
+      "args": {
+        "action": "get",
+        "workId": {
+          "$fixture": "ticket",
+          "pointer": "/id"
+        }
+      },
+      "client": "local",
+      "expect": [
+        {
+          "class": "standard",
+          "facts": {
+            "measure": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "tool": "linen.tickets.read",
+      "args": {
+        "action": "history",
+        "workId": {
+          "$fixture": "ticket",
+          "pointer": "/id"
+        }
+      },
+      "client": "local",
+      "expect": [
+        {
+          "class": "standard",
+          "facts": {
+            "measure": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "tool": "linen.tickets.search",
+      "args": {
+        "query": {
+          "$fixture": "query",
+          "pointer": ""
+        }
+      },
+      "client": "local",
+      "expect": [
+        {
+          "class": "standard",
+          "facts": {
+            "measure": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "create",
+      "tool": "linen.tickets.create",
+      "args": {
+        "title": "Display cable follow-up",
+        "body": "Please obtain a spare USB-C display cable.",
+        "deduplicationKey": {
+          "$fixture": "createKey",
+          "pointer": ""
+        }
+      },
+      "client": "local",
+      "expect": [
+        {
+          "class": "standard",
+          "facts": {
+            "measure": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "created",
+      "tool": "linen.tickets.read",
+      "args": {
+        "action": "get",
+        "workId": {
+          "$from": "create",
+          "pointer": "/id"
+        }
+      },
+      "client": "local",
+      "expect": [
+        {
+          "class": "standard",
+          "facts": {
+            "measure": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "reply",
+      "tool": "linen.tickets.reply",
+      "args": {
+        "workId": {
+          "$fixture": "ticket",
+          "pointer": "/id"
+        },
+        "revision": {
+          "$from": "ticket",
+          "pointer": "/revision"
+        },
+        "body": "Internal triage: a known-good cable is ready for testing.",
+        "deduplicationKey": {
+          "$fixture": "key",
+          "pointer": ""
+        }
+      },
+      "client": "local",
+      "expect": [
+        {
+          "class": "standard",
+          "facts": {
+            "measure": 1
+          }
+        }
+      ]
+    }
+  ],
+  "witness": {
+    "tool": "linen.tickets.read",
+    "args": {
+      "action": "list"
+    }
+  },
+  "verification": {
+    "owner": {
+      "initializer": "tests/agent-door/owner.mjs"
+    },
+    "fixtures": {
+      "module": "tests/agent-door/fixtures.mjs"
+    }
+  }
+}
