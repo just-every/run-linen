@@ -42,11 +42,11 @@ export async function ticketActivity(ctx: WorkContext, workId: string) {
   const attribution = new Map<string,string>();
   for(const event of prepared) {
     const detail=JSON.parse(event.detail_json), message=event.action==='mcp.work_created'?view.messages.find((m:any)=>m.source_key==='initial'):view.messages.find((m:any)=>m.id===detail.messageId);
-    if(message && typeof detail.preparedBy?.label==='string')attribution.set(message.id,detail.preparedBy.label);
+    if(message && typeof detail.preparedBy?.label==='string')attribution.set(String(message.id),detail.preparedBy.label);
   }
 
   const items: ActivityEntry[] = view.messages.map((message: any) => ({
-    id: message.id, at: message.created_at, kind: 'message', actor: attribution.get(message.id) ?? (message.author_id==='[erased]'?'Erased person':authors.get(message.author_id) ?? message.author_id), actorKind: attribution.has(message.id)?'agent':authors.has(message.author_id) ? 'automation' : 'person',
+    id: message.id, at: message.created_at, kind: 'message', actor: attribution.get(String(message.id)) ?? (message.author_id==='[erased]'?'Erased person':authors.get(message.author_id) ?? message.author_id), actorKind: attribution.has(String(message.id))?'agent':authors.has(message.author_id) ? 'automation' : 'person',
     action: message.source_key?.startsWith('transition:') ? 'Public status update' : 'Message',
     visibility: message.visibility, body: message.body, changes: [],
   }));

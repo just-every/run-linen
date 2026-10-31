@@ -628,7 +628,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "d119df148aa38d9ee4004e0ad2b651603c264c18399e0d24ce8c69028d46426f",
+      "sha256": "52daa0a0a7acd6ca8ec2587de029e0db6bdad9645752b712b8faea4719dcc8b2",
       "executable": false
     },
     "CLAUDE.md": {
@@ -2876,7 +2876,7 @@
       "executable": false
     },
     "src/features/work/activity.ts": {
-      "sha256": "294ff569dbeb1b173eeb42069f7de4b9d30f987b279bb086b86023077faf5aa6",
+      "sha256": "893605239e4ee70e8b7fb5535c8cb04719f31fcbb7a2f9b17616f1309b2b947f",
       "executable": false
     },
     "src/features/work/API.md": {
@@ -3961,10 +3961,6 @@
     },
     "src/modules/business-settings/team.ts": {
       "sha256": "95ced6e343f16a4c92c8d26ada90c7d5790e86c4b82e87f978f4f8a4a33dfd06",
-      "executable": false
-    },
-    "src/modules/business-settings/testing/index.mjs": {
-      "sha256": "942949cc72fcc7e3c9e53345cbb6232a4d5075e4733672a41c23656a811e90ed",
       "executable": false
     },
     "src/modules/business-settings/types.ts": {
