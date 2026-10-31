@@ -45,6 +45,20 @@ export function supported(table: string) { return (nativeTables as readonly stri
 // Deliberate exclusions are checked against the actual migrated schema in tests.
 // Credentials, live authority, locks and derivative recovery indexes are never restored.
 export const excludedTables: Record<string,string> = {
+ bs_settings:'signed installation Business settings; never workspace import authority',
+ bs_overrides:'installation Business overrides; retained in full-installation archives',
+ bs_logo:'installation Business branding; retained in full-installation archives',
+ bs_team:'durable installation Business person bindings; never workspace import authority',
+ bs_audit:'installation Business audit history; retained in full-installation archives',
+ bs_assert:'local Business transaction fence; never portable authority',
+ agent_door_state:'installation-bound policy and Pause state; never workspace import authority',
+ agent_door_agents:'installation agent sponsorship and revocation; never workspace import authority',
+ agent_door_audit:'installation agent audit history; retained in full-installation archives',
+ agent_door_calls:'installation execution idempotency and outcomes; never workspace import authority',
+ agent_door_approvals:'installation pending approvals; never workspace import authority',
+ agent_door_reviews:'installation reviews and native Undo authority; never workspace import authority',
+ agent_door_events:'installation agent event history; retained in full-installation archives',
+ agent_door_usage:'installation policy reservations and usage; never workspace import authority',
  configuration_catalog_versions:'non-personal catalog gate history; portable fulfilment snapshots carry the retained manager gate',
  configuration_masked_epochs:'value-free local masked-copy concurrency fence; never portable authority',
  configuration_masked_records:'local fully masked ticket copies; excluded from portable archives and authority',
