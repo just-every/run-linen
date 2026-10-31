@@ -3343,7 +3343,7 @@ retain their existing judgments. See [company agents](docs/agents.md) and
 
 | Scope | Status | Evidence | Gap |
 | --- | --- | --- | --- |
-| CORE tools, policy, Pause, audit, idempotency | partial | Base runtime `114ef7a61f080da053af783c5fbe06f625d692cc`, released rer 0.2.88; native adapter and declared journey. | Integrated normal rer verify and exact-head CI evidence must establish this candidate. This does not complete the full specialist target. |
+| CORE tools, policy, Pause, audit, idempotency | partial | Base runtime `114ef7a61f080da053af783c5fbe06f625d692cc`, released rer 0.2.88. Own output on 29 October: `LINEN_VERIFY_SHARD=15/27 pnpm exec rer verify` exits 0, native API-001/API-003/auth journeys pass, hosted output/hydration pass, and agent door conformance is 502/502 with `differs_from_policy` zero. | Exact-head CI must establish the complete existing suite. This does not complete the full specialist target. |
 | Owner-bound sponsorship and principal authority | partial | Native `platform_first_run.completed_by`, `users`, `memberships`, live native admission and original automation grant guards. | Business team provisioning is not supported; a non-null roster refuses atomically as `business_team_not_supported`. Admin/member bindings are read only if native accounts were durably mapped; no email-derived adoption. |
 | Resources / BASE-AGENT-003 | partial | Explicit CORE capability declaration; empty resource catalogue and typed refusal. | Undeclared family: resources. The eleven ct resource templates are not exposed. |
 | Events / BASE-AGENT-010 | partial | Explicit CORE capability declaration excludes the built-in event tool. | Undeclared family: events. The nineteen ct event types and handoffs are not exposed. |
