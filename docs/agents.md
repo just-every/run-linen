@@ -48,3 +48,16 @@ this journey declares `spend: {none: true}`.
 Capacity is separate from company policy: 600 requests per minute, a 1 MiB
 request, 50-result pages, 200-character queries, 500-character titles and
 20,000-character bodies. All returned messages remain untrusted source data.
+
+The shared door runtime is pinned to Base
+`2135c394939f4a737adabdc8003b0e667b31ac5a`; the command dependency is
+released RER 0.2.91. Its conformance supports changed-email refusal and retained
+review and replay checks. This seed uses the native setup-token bootstrap and
+first-run confirmation through a verification owner initializer. The ticket
+tools reach no outbound provider, so no network fixture is declared.
+
+Business owner binding is supported. Native admin/member account mappings are
+read only when already durable; receiving a Business team roster is refused as
+`business_team_not_supported`. Inactive and excluded Business sponsor fixtures
+are not declared, so their optional conformance probes are not counted as passes.
+Resources, events, subscriptions and prompts remain undeclared.
