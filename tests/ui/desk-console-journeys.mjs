@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {apiFor, signIn} from './connected-helpers.mjs';
 import {captureJourney} from './viewport-evidence.mjs';
+import {ticketCall} from '../platform/agent-door-fixture.mjs';
 import {relationshipActivityJourney} from './relationship-activity-journey.mjs';
 
 export async function deskQueueJourney({browser,page,api,base,out,errors}) {
@@ -283,7 +284,12 @@ export async function mcpCommentJourney({browser,page,api,base,out}) {
  const work=await api('/work',{title:'Monitor flickers during design reviews',body:'The display goes dark when sharing a design review.',beneficiaryId:employee.id,deduplicationKey:'API-003-display'});
  const placed=await api('/work/'+work.id+'/group',{groupId:hardware.id,revision:work.revision,assigneeId:null});
  const credential=await api('/mcp-credentials',{principalId:bot.id,name:'Audit Desk bot',groupIds:[hardware.id],scopes:['work.read','work.comment'],tools:['work.list','work.get','work.comment'],expiresAt:new Date(Date.now()+30*86400000).toISOString()});
- const rpc=async(name,args={})=>{const r=await fetch(base+'/api/mcp',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential.secret},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}})});const v=await r.json();assert.ok(!v.error,JSON.stringify(v.error));return v.result.structuredContent;};
+ await page.goto(base+'/agents');
+ await page.locator('[data-policy-class=standard]').selectOption('autonomous');
+ await page.getByRole('radio',{name:'No',exact:true}).check();
+ await page.getByRole('button',{name:'Save policy',exact:true}).click();
+ await page.locator('[data-create-policy]').waitFor({state:'hidden'});
+ const rpc=async(name,args={})=>{const call=ticketCall(name,args);const r=await fetch(base+'/api/mcp',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential.secret,'MCP-Protocol-Version':'2026-07-28','Mcp-Method':'tools/call','Mcp-Name':call.name},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{...call,_meta:{'io.modelcontextprotocol/protocolVersion':'2026-07-28'}}})});const v=await r.json();assert.ok(!v.error,JSON.stringify(v.error));assert.ok(!v.result.isError,JSON.stringify(v.result));return v.result.structuredContent;};
  const listed=await rpc('work.list');assert.deepEqual(listed.items.map(w=>w.id),[work.id],'API-003 client sees Hardware employee ticket');
  const read=await rpc('work.get',{workId:work.id});
  await rpc('work.comment',{workId:work.id,revision:read.revision,body:'The display team is checking the USB-C connection.',deduplicationKey:'API-003-internal-note'});
@@ -292,7 +298,7 @@ export async function mcpCommentJourney({browser,page,api,base,out}) {
   await page.setViewportSize({width,height:1000});await page.goto(base+'/app#/work/'+work.id);await page.reload();
   await page.getByRole('heading',{level:2,name:'Monitor flickers during design reviews',exact:true}).waitFor();
   await page.getByText('The display team is checking the USB-C connection.',{exact:true}).waitFor();
-  await page.getByText('Automation · Audit Desk bot · Message',{exact:true}).waitFor();
+  await page.locator('li[data-message-id]').filter({hasText:'The display team is checking the USB-C connection.'}).getByText(/Audit Desk bot for .+ · Message/).waitFor();
   await captureJourney(page,{path:out+'/API-003-owner-'+width+'.png',fullPage:true});
   await ep.setViewportSize({width,height:1000});await ep.goto(base+'/app#/work/'+work.id);
   await ep.getByRole('heading',{level:2,name:'Monitor flickers during design reviews',exact:true}).waitFor();

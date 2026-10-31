@@ -4,6 +4,7 @@ import {seedReportingNotifications,assertRestoredReportingNotifications} from '.
 import {captureArchiveAliasStatements,captureKnownArchiveAliasStatements} from '../../src/features/history/archive-identities.mjs'
 import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {mailEdge} from './mail-edge.mjs'
+import {agentRpc} from './agent-door-fixture.mjs'
 // Public rer archive/reset/import flow on disposable actual D1/R2 state.
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
@@ -273,7 +274,7 @@ try{
  mf=new Miniflare({...convertV4MiniflareOptions({port,host:'127.0.0.1',modules:true,script:await readFile(output,'utf8'),compatibilityDate:'2026-09-08',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'local-linen'},r2Buckets:{ATTACHMENTS:'linen-attachments'},bindings:{AUTH_ORIGIN:origin,AUTH_LOCAL:'true',MAIL_PROVIDER:'resend',MAIL_API_KEY:'synthetic-provider-key',MAIL_FROM:'auth@localhost.test',OWNER_EMAIL:'owner@example.test',RER_DEV_KEY:'synthetic-development-entry-key-long-enough',SESSION_SECRET:'synthetic-session-secret-long-enough',ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}}),resourcePersistencePath:join(root,'.wrangler/state/v3'),isolatedResourcePersistencePath:join(dir,'isolated')})
  await mf.ready
  const request=(path,{body,cookie,headers={}}={})=>fetch(origin+path,{redirect:'manual',method:body?'POST':'GET',headers:{Host:new URL(origin).host,Origin:origin,...(body?{'content-type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...headers},...(body?{body:JSON.stringify(body)}:{})})
- assert.equal((await request('/api/mcp',{body:{jsonrpc:'2.0',id:1,method:'tools/list'},headers:{Authorization:'Bearer linen_mcp_'+('1'.repeat(36))+('2'.repeat(36))}})).status,401,'API-003 credential is refused after actual rer export/reset/import');
+ assert.equal((await agentRpc(request)('linen_mcp_'+('1'.repeat(36))+('2'.repeat(36)))).status,401,'API-003 credential is refused after actual rer export/reset/import');
  assert.equal((await request('/auth/magic-link',{body:{email:'owner@example.test',returnTo:'/app'}})).status,202)
  const detail=await(await request('/fixtures/mail')).text()
  const proof=/[?&](?:amp;)?token=([^"&<>\s]+)/.exec(detail)?.[1];assert.ok(proof)
@@ -365,9 +366,13 @@ try{
  else await run(['exec','rer','build'])
  const artifact=JSON.parse(await readFile(join(root,'dist/server/wrangler.json'),'utf8'))
  assert.ok((await readFile(resolve(root,'dist/server',artifact.main))).length,'The deploy artifact contains its Worker entry')
- // Base #275 requires target reads even for a dry run; building needs no credentials.
+ // The public dry run validates the local plan without provider credentials or writes.
  commandEnvironment.MAIL_API_KEY='synthetic-dry-run-mail-key'
- const missingCredentials=await run(['exec','rer','deploy','--dry-run','--owner-name','synthetic-linen-4'],3)
+ const localPlan=await run(['exec','rer','deploy','--dry-run','--owner-name','synthetic-linen-4','--json'])
+ const planned=localPlan.trim().split('\n').filter(line=>line.startsWith('{')).map(line=>JSON.parse(line)).findLast(event=>event.event==='result')
+ assert.equal(planned.dryRun,true)
+ assert.equal(planned.deployed,false)
+ assert.equal(planned.providerChecked,false)
  await assert.rejects(readFile(join(root,'.rer/deploy/production.json')),{code:'ENOENT'})
  const configPath=join(root,'wrangler.jsonc'),config=JSON.parse(await readFile(configPath,'utf8'))
  config.d1_databases[0].database_id='retained-remote-database'
@@ -386,5 +391,5 @@ try{
  // verified live legacy bindings before any build, upload or provider mutation.
  commandEnvironment.NODE_OPTIONS=`${commandEnvironment.NODE_OPTIONS??''} --import ${pathToFileURL(join(root,'tests/platform/deploy-edge.mjs'))}`.trim()
  assert.match(await run(['exec','rer','deploy','--non-interactive'],4),/must retain Worker linen/)
- console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; deploy artifact builds without provider access, credential-free deploy dry run refuses with named credentials, and retained deployment identity changes remain refused')
+ console.log('PASS actual rer export/reset/import: native records and R2 bytes retained, credentials revoked, restored effects held with resumable native reconciliation/release, same-store and later-journal stale-erasure restore refused; deploy artifact and credential-free local plan include native migrations without provider access, and retained deployment identity changes remain refused')
 }finally{await mf?.dispose();await close();await rm(dir,{recursive:true,force:true})}
