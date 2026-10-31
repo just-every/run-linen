@@ -528,3 +528,11 @@ body:has(.request-detail) label:has(input:is([type="checkbox"], [type="radio"]))
   min-height: 44px;
   align-content: center;
 }
+body:has(.request-detail) :is(button, a[href]) {
+  min-width: 44px;
+}
+body:has(.request-detail) a[href] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
