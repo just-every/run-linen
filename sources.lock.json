@@ -636,7 +636,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9b6d80150040d613a4fd09c2c90adf24039036b5306a39d9904da0b5d9c94c4d",
+      "sha256": "c96c98c1312b45984055b9e3b2d74746075c688132221bb106f9ebcb725d0972",
       "executable": false
     },
     "DEMO.md": {
@@ -5896,11 +5896,11 @@
       "executable": false
     },
     "src/styles/request-detail.css": {
-      "sha256": "80f5fc70352f1f57a35601e1500a9522e6881dac1a6a94e1af65e6e566a83c19",
+      "sha256": "43f167e220b9b32bc113de73ecac38ae62169d3375e95404c36298d91bc11fe1",
       "executable": false
     },
     "src/styles/shell.css": {
-      "sha256": "939e8a224dd27510db38f66bf570d29f8634d361d11635754b73e71effce7e37",
+      "sha256": "d1a905cf1663028ba243964966b2ec28a548d6b6c8319620f914b8bdf9f1537f",
       "executable": false
     },
     "src/styles/workbench.css": {
@@ -6308,7 +6308,7 @@
       "executable": false
     },
     "src/ui/shell-top.tsx": {
-      "sha256": "4908a016f65659c983d348d216cc70dc31c2afce462797df974d4f943b9b9035",
+      "sha256": "324df1c7fc5f117c0cbe052d85b3df02b276da58637747c24a77b755fa807f10",
       "executable": false
     },
     "src/ui/software-licenses-authority.tsx": {

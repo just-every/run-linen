@@ -53,6 +53,9 @@
 }
 .sync {
   display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 44px;
   align-items: center;
   gap: 18px;
   margin-left: auto;
@@ -63,10 +66,17 @@
 }
 .sync-item {
   display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 7px;
 }
+.sync-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .sync-when {
+  flex: none;
   color: var(--muted);
 }
 .sync:hover .sync-when {
