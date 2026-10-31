@@ -1,5 +1,4 @@
-import type { Context } from 'hono';
-import type { AppEnv } from '../../platform/types';
+import type { Env } from '../../platform/types';
 import { hashToken } from '../../platform/crypto';
 import { ApiError, id, now } from '../../platform/http';
 import { expireMcpCredentials } from './credentials';
@@ -31,10 +30,7 @@ export function credentialPredicate(alias: string): string {
     AND NOT EXISTS(SELECT 1 FROM work_erasure e WHERE e.workspace_id=${alias}.workspace_id AND e.person_id=${alias}.principal_id)
     AND NOT EXISTS(SELECT 1 FROM platform_identity_erasures e WHERE e.workspace_id=${alias}.workspace_id AND e.user_id=${alias}.principal_id)`;
 }
-export async function authenticateMcp(c: Context<AppEnv>): Promise<Credential> {
-  return authenticateMcpRequest(c.env, c.req.raw);
-}
-export async function authenticateMcpRequest(env: AppEnv['Bindings'], request: Request): Promise<Credential> {
+export async function authenticateMcpRequest(env: Env, request: Request): Promise<Credential> {
   const authorization = request.headers.get('Authorization') ?? '';
   const denied = () => new ApiError(401, 'mcp_auth_required', 'Authentication required');
   if (!/^Bearer linen_mcp_[a-f0-9-]{72}$/.test(authorization)) throw denied();
