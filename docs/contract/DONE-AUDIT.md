@@ -743,7 +743,7 @@ Carried-done audit of `docs/contract` against old reference `56c69fc4674b99f327f
 | `API-005` | 4 | expiry is audited | `tests/platform/base-auth-runtime.mjs:207` | asserted |
 | `API-005` | 5 | erasure revokes the credential and clears its hash | `tests/platform/base-auth-runtime.mjs:224` | asserted |
 | `API-005` | 6 | export carries metadata without its hash and restore leaves it revoked | `tests/platform/base-auth-transfer.mjs:207` | asserted |
-| `API-005` | 6 | an old archive introduces no credential authority | `tests/platform/base-auth-transfer.mjs:54` | asserted |
+| `API-005` | 6 | an old archive introduces no credential authority | `tests/platform/base-auth-transfer.mjs:276` | asserted |
 | `API-005` | 7 | each call audits ids only, never secrets or free text | `tests/platform/mcp-tools-cases.mjs:281` | asserted |
 | `API-006` | 1 | mint records selected queue groups and refuses missing or foreign groups | `tests/platform/mcp-tools-cases.mjs:49` | asserted |
 | `API-006` | 2 | narrowing advances the version; widening requires a new credential | `tests/platform/mcp-tools-cases.mjs:250` | asserted |
