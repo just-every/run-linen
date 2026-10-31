@@ -83,6 +83,7 @@ export function TopBar({ onSignOut, query }: { onSignOut: () => void; query: str
                 <a href="#/operations" onClick={() => setProfile(false)}>Operations & recovery</a>
               </>
             )}
+            <a href="#/preferences" onClick={() => setProfile(false)}>Notification preferences</a>
             <button className="text-button" onClick={onSignOut}>Sign out</button>
           </div>
         )}

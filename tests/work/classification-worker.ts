@@ -16,6 +16,9 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     if(sideMailMode==='unknown') throw new Error('synthetic-linen-1 network interruption');
     return new Response(null,{status:sideMailMode==='failed'?400:202,headers:{'x-message-id':'synthetic-linen-2'}});
   }
+  // Gmail refresh grants and BI service-account JWT grants share Google's token endpoint.
+  // Give each real protocol to its own network-edge fixture.
+  if(url.hostname==='oauth2.googleapis.com' && new URLSearchParams(String(init?.body??'')).get('grant_type')==='urn:ietf:params:oauth:grant-type:jwt-bearer')return providerFetch(input,init);
   const mail = await mailProvider(url, init);
   if (mail) return mail;
   if (url.hostname !== 'api.openai.com') return providerFetch(input, init);

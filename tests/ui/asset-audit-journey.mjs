@@ -22,7 +22,7 @@ export async function assetAuditJourney({page,api,base,out}) {
     await audit.locator('summary').getByText('Not yet scanned (2)').click();
     for (const tag of tags.slice(18)) await audit.getByText(tag,{exact:false}).first().waitFor();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`ASSET-010 audit fits ${width}`);
-    await audit.screenshot({path:`${out}/ASSET-010-scanning-${width}.png`});
+    process.env.LINEN_CAPTURE && await audit.screenshot({path:`${out}/ASSET-010-scanning-${width}.png`});
     const completed=page.waitForResponse(r=>r.url().endsWith('/complete')&&r.request().method()==='POST');
     await audit.getByRole('button',{name:'Complete audit',exact:true}).click();
     assert.equal((await completed).status(),200,'ASSET-010 audit completes');
@@ -30,11 +30,11 @@ export async function assetAuditJourney({page,api,base,out}) {
     await result.getByText('Missing devices and their follow-ups').waitFor();
     const links=result.getByRole('link',{name:'Follow-up request'});
     assert.equal(await links.count(),2,'ASSET-010 two missing devices open two follow-ups');
-    await result.screenshot({path:`${out}/ASSET-010-reconciled-${width}.png`});
+    process.env.LINEN_CAPTURE && await result.screenshot({path:`${out}/ASSET-010-reconciled-${width}.png`});
     await links.first().click();
     await page.getByRole('heading',{name:`Find missing device ${tags[18]} (${prefix}-SN-19)`}).waitFor();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`ASSET-010 follow-up fits ${width}`);
-    await page.screenshot({path:`${out}/ASSET-010-follow-up-${width}.png`});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-010-follow-up-${width}.png`});
     const audits=await api('/asset-audits'),done=audits.items.find(a=>a.location===location);
     assert.deepEqual([done.expected.length,done.found.length,done.missing.length],[20,18,2],'ASSET-010 persisted reconciliation');
   }
@@ -74,14 +74,14 @@ export async function stockJourney({page,api,base,out}) {
     await request.getByText('$2,499.90 (10 × $249.99)').waitFor();
     await request.getByText('Not sent to CDW.',{exact:false}).waitFor();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`ASSET-005 stock fits ${width}`);
-    await line.screenshot({path:`${out}/ASSET-005-raised-${width}.png`});
+    process.env.LINEN_CAPTURE && await line.screenshot({path:`${out}/ASSET-005-raised-${width}.png`});
     await scoped(page,request,'Record the order',{orderReference:`CDW-PO-${width}`},'/order','Record order');
     await request.getByText('Ordered by hand with the buyer').waitFor();
     await scoped(page,request,'Receive into stock',{evidence:'CDW packing slip, 10 monitors'},'/receive','Receive');
     await line.getByText('Received into stock').waitFor();
     const stocked=(await api('/stock-lines')).items.find(l=>l.location===location);
     assert.deepEqual([stocked.on_hand,stocked.purchases[0].state,stocked.purchases[0].order_reference],[10,'received',`CDW-PO-${width}`],'ASSET-005 receipt adds the order to the count');
-    await line.screenshot({path:`${out}/ASSET-005-received-${width}.png`});
+    process.env.LINEN_CAPTURE && await line.screenshot({path:`${out}/ASSET-005-received-${width}.png`});
   }
   console.log('PASS ASSET-005 browser: last two spare monitors in Denver at 390 and 1440 raise a CDW request for 10 at $2,499.90 labelled not sent; order reference recorded and received into stock');
 }

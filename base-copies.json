@@ -356,11 +356,22 @@
       }
     },
     {
+      "path": "src/base/contract-anchor.mjs",
+      "originPath": "foundation/runtime/contract-anchor.mjs",
+      "revision": "e881e6f66ce7cd737d17dbeb945995aab83c30d8",
+      "files": {
+        "src/base/contract-anchor.mjs": "b63993a57cff119f3f1d4407963d2623abe18733fffb0f04de12f43bc503821d"
+      },
+      "modes": {
+        "src/base/contract-anchor.mjs": "100644"
+      }
+    },
+    {
       "path": "src/base/contract-docs.mjs",
       "originPath": "foundation/runtime/contract-docs.mjs",
-      "revision": "0fe27af9a5cb1bd9dc5e41da024784082e609010",
+      "revision": "e881e6f66ce7cd737d17dbeb945995aab83c30d8",
       "files": {
-        "src/base/contract-docs.mjs": "d98e14f489c57f60446c2cc68310db09f298f7974d77026dbaa2c62868cc4838"
+        "src/base/contract-docs.mjs": "9df82c57404ec33c5807973e25dda23514dde977c5d9de7ff025386ebf21a75c"
       },
       "modes": {
         "src/base/contract-docs.mjs": "100644"
@@ -386,6 +397,28 @@
       },
       "modes": {
         "src/base/contract-page.ts": "100644"
+      }
+    },
+    {
+      "path": "src/base/contract-prose-patterns.mjs",
+      "originPath": "foundation/runtime/contract-prose-patterns.mjs",
+      "revision": "e881e6f66ce7cd737d17dbeb945995aab83c30d8",
+      "files": {
+        "src/base/contract-prose-patterns.mjs": "5519a7439e28f7c2635a0170749c43ccdc96eaccc0c313f55a2294d0665c8ba4"
+      },
+      "modes": {
+        "src/base/contract-prose-patterns.mjs": "100644"
+      }
+    },
+    {
+      "path": "src/base/contract-prose.mjs",
+      "originPath": "foundation/runtime/contract-prose.mjs",
+      "revision": "e881e6f66ce7cd737d17dbeb945995aab83c30d8",
+      "files": {
+        "src/base/contract-prose.mjs": "7f606da0b4ac6f259fdaaa2a263250c1b6a20d5c906104c5a961271d23e818e0"
+      },
+      "modes": {
+        "src/base/contract-prose.mjs": "100644"
       }
     },
     {

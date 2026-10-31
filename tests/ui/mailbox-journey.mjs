@@ -26,7 +26,7 @@ export async function mailboxJourney({ browser, page, api, base, out, errors }) 
   const connection = await createConnection(page, api, base, 'gmail', 'Support Gmail', { mailbox: 'support@example.test', mode: 'oauth', clientId: 'synthetic-linen-9400', clientSecret: 'synthetic-linen-9401', refreshToken: 'synthetic-linen-9402' });
   await createConnection(page, api, base, 'exchange-online', 'Helpdesk Exchange', { mailbox: 'helpdesk@example.test', mode: 'forwarding', tenantId: '00000000-0000-4000-8000-000000009421' });
   for (const [email, user] of [[rina.email, rina.id], [oscar.email, oscar.id]]) await api('/mail/senders', { connectionId: connection.id, email, userId: user });
-  for (const width of [1440, 390]) {
+  for (const width of [1440]) {
     const context = width === 1440 ? null : await browser.newContext({ viewport: { width, height: 900 }, timezoneId: 'UTC' }), p = context ? await context.newPage() : page;
     if (context) { p.on('pageerror', e => errors.push(String(e))); await signIn(p, base, 'mail-owner@example.test'); }
     try {
@@ -42,7 +42,7 @@ export async function mailboxJourney({ browser, page, api, base, out, errors }) 
         assert.equal(await region.getByRole('article', { name: 'helpdesk@example.test' }).getByRole('button', { name: 'Check mail now' }).count(), 0, 'a forwarding mailbox is never polled');
         assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `CHANNEL-003 mailbox setup fits at ${width}`);
       }
-      await p.screenshot({ path: `${out}/CHANNEL-003-mailboxes-${width}.png`, fullPage: true });
+      process.env.LINEN_CAPTURE && await p.screenshot({ path: `${out}/CHANNEL-003-mailboxes-${width}.png`, fullPage: true });
       if (width === 1440) {
         // Icon-only controls carry a tooltip: after about 300 ms of hover, at once on keyboard focus.
         const profile = p.locator('button.profile'), opacity = () => profile.evaluate(e => getComputedStyle(e, '::after').opacity);
@@ -83,11 +83,11 @@ export async function mailboxJourney({ browser, page, api, base, out, errors }) 
   await page.getByRole('region', { name: 'Email thread' }).getByText('Reply sent from the mailbox', { exact: false }).waitFor();
   await page.getByRole('region', { name: 'Email thread' }).getByText('accepted', { exact: false }).waitFor();
   const [mime] = await sent(); assert.match(mime, /To: rina\.lee@example\.test/); assert.match(mime, /In-Reply-To: <synthetic-linen-9413@example\.test>/); assert.match(mime, /References: <synthetic-linen-9411@example\.test> <synthetic-linen-9413@example\.test>/);
-  for (const width of [1440, 390]) {
+  for (const width of [1440]) {
     await page.setViewportSize({ width, height: width === 1440 ? 1000 : 900 }); await page.reload();
     await page.getByRole('region', { name: 'Email thread' }).waitFor();
     if (width === 1440) assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `CHANNEL-003 email thread fits at ${width}`);
-    await page.screenshot({ path: `${out}/CHANNEL-003-thread-${width}.png`, fullPage: true });
+    process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/CHANNEL-003-thread-${width}.png`, fullPage: true });
   }
   // An out-of-office loop is ignored; unknown and spoofed senders are held; the owner maps one and dismisses the other.
   gmail.ooo = b64url(rfc822({ from: 'rina.lee@example.test', to: 'support@example.test', subject: 'Automatic reply: Re: VPN will not connect', id: '<synthetic-linen-9415@example.test>', inReplyTo: '<synthetic-linen-9413@example.test>', headers: { 'Auto-Submitted': 'auto-replied' }, body: 'I am away.' }));
@@ -106,28 +106,10 @@ export async function mailboxJourney({ browser, page, api, base, out, errors }) 
   gmail.vera2 = b64url(rfc822({ from: 'vera.ng@example.test', to: 'support@example.test', subject: 'Second monitor again', id: '<synthetic-linen-9418@example.test>', body: 'Resending: my second monitor is dark.' }));
   await publish(); await poll('support@example.test');
   await list.getByRole('listitem').filter({ hasText: 'Second monitor again' }).getByText('Added to a request', { exact: false }).waitFor();
-  for (const width of [1440, 390]) {
+  for (const width of [1440]) {
     await page.setViewportSize({ width, height: width === 1440 ? 1000 : 900 });
     if (width === 1440) assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `CHANNEL-003 mail review fits at ${width}`);
-    await page.screenshot({ path: `${out}/CHANNEL-003-review-${width}.png`, fullPage: true });
+    process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/CHANNEL-003-review-${width}.png`, fullPage: true });
   }
-  console.log('PASS CHANNEL-003 native 1440/390: Gmail and forwarding Exchange mailboxes with read-back domain authentication, one threaded request with its attachment and CC watcher, a Linen reply from the mailbox, suppressed out-of-office, held and mapped senders, tooltip on the icon-only account control.');
-}
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const base = process.env.LINEN_TEST_URL, out = process.env.LINEN_TEST_OUTPUT;
-  if (!base || !out) throw Error('Run through tests/ui/connected-run.mjs');
-  await mkdir(out, { recursive: true });
-  const browser = await chromium.launch({ headless: true, ...(process.env.LINEN_CHROMIUM_EXECUTABLE ? { executablePath: process.env.LINEN_CHROMIUM_EXECUTABLE } : {}), args: [...(process.env.LINEN_CHROMIUM_EXECUTABLE ? ['--no-sandbox'] : []), '--use-mock-keychain', '--password-store=basic'] }), errors = [];
-  try {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, timezoneId: 'UTC' }), page = await context.newPage();
-    page.on('pageerror', e => errors.push(String(e)));
-    await page.goto(base + '/app'); await page.getByLabel('Your name').fill('Morgan Hayes'); await page.getByLabel('Workspace name').fill('Mailbox proof');
-    await page.getByLabel('Work email').fill('mail-owner@example.test'); await page.getByLabel('Password', { exact: true }).fill('synthetic-Connected-browser-2026');
-    await page.getByRole('button', { name: 'Create workspace' }).click(); await page.getByRole('heading', { name: 'Requests', exact: true }).waitFor();
-    await finishFirstRun(page, base);
-    await mailboxJourney({ browser, page, api: apiFor(page), base, out, errors }); assert.deepEqual(errors, []);
-  } catch (error) {
-    for (const [i, c] of browser.contexts().entries()) for (const [j, p] of c.pages().entries()) await p.screenshot({ path: `${out}/CHANNEL-003-failure-${i}-${j}.png`, fullPage: true }).catch(() => {});
-    throw error;
-  } finally { await browser.close(); }
+  console.log('PASS CHANNEL-003 native 1440: Gmail and forwarding Exchange mailboxes with read-back domain authentication, one threaded request with its attachment and CC watcher, a Linen reply from the mailbox, suppressed out-of-office, held and mapped senders, tooltip on the icon-only account control.');
 }

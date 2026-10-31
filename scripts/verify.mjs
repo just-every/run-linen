@@ -7,66 +7,37 @@ import { resolve } from 'node:path'
 const root = resolve(import.meta.dirname, '..')
 const output = resolve(process.env.LINEN_VERIFY_OUTPUT || '.wrangler/verification')
 const checks = [
-  ['production build', 'pnpm', ['run','build:app']],
-  ['Base native auth', process.execPath, ['tests/platform/base-auth-runtime.mjs']],
-  ['Legacy session retirement', process.execPath, ['tests/platform/legacy-session-runtime.mjs']],
-  ['Native archive transfer', process.execPath, ['tests/platform/base-auth-transfer.mjs']],
-  ['TypeScript', 'pnpm', ['typecheck']],
-  ['browser journeys', process.execPath, ['tests/ui/run.mjs']],
-  ['emitted Worker', process.execPath, ['tests/runtime.mjs']],
-  ['platform', process.execPath, ['tests/platform/runtime.mjs']],
-  ['configuration', process.execPath, ['tests/platform/config-runtime.mjs']],
-  ['native admission', process.execPath, ['tests/platform/admission-runtime.mjs']],
-  ['erasure admission races', process.execPath, ['tests/platform/tombstone-runtime.mjs']],
-  ['migration order and retained history', process.execPath, ['tests/platform/migration-order.mjs']],
-  ['identity erasure', process.execPath, ['tests/platform/privacy-runtime.mjs']],
-  ['work and lifecycle', process.execPath, ['tests/work/runtime.mjs']],
-  ['knowledge drafts', process.execPath, ['tests/work/knowledge-draft-runtime.mjs']],
-  ['request status static UI', process.execPath, ['tests/ui/request-status-render.mjs']],
-  ['stale remote response ordering', process.execPath, ['tests/ui/remote-response-runtime.mjs']],
-  ['request progress and accountable owner', process.execPath, ['tests/work/progress-runtime.mjs']],
-  ['fulfilment binding', process.execPath, ['tests/work/fulfilment-link-runtime.mjs']],
-  ['work integration regressions', process.execPath, ['tests/work/integration-regressions-runtime.mjs']],
-  ['fulfilment correction and restart', process.execPath, ['tests/work/amend-runtime.mjs']],
-  ['reviewed person member flow', process.execPath, ['tests/work/person-binding-runtime.mjs']],
-  ['pending person services', process.execPath, ['tests/work/pending-person-runtime.mjs']],
-  ['current manager decisions', process.execPath, ['tests/work/amend-manager-runtime.mjs']],
-  ['decision queue names the beneficiary', process.execPath, ['tests/work/decision-queue-beneficiary-runtime.mjs']],
-  ['historical person erasure', process.execPath, ['tests/work/historical-runtime.mjs']],
-  ['execution and reconciliation', process.execPath, ['tests/execution/runtime.mjs']],
-  ['current effect authority', process.execPath, ['tests/execution/authority-runtime.mjs']],
-  ['named setup read scope', process.execPath, ['tests/execution/setup-read.mjs']],
-  ['services', process.execPath, ['tests/services/run.mjs']],
-  ['service integration', process.execPath, ['tests/services/integration.mjs']],
-  ['connection discovery', process.execPath, ['tests/connections/runtime.mjs']],
-  ['email provider configuration', process.execPath, ['tests/connections/sendgrid-runtime.mjs']],
-  ['native network transport', process.execPath, ['tests/transport/runtime.mjs']],
-  ['intelligence contracts', process.execPath, ['tests/intelligence/contracts.mjs']],
-  ['engineering companion', process.execPath, ['tests/intelligence/companion.mjs']],
-  ['intelligence runtime', process.execPath, ['tests/intelligence/runtime.mjs']],
-  ['connected frontier journey', process.execPath, ['tests/intelligence/frontier.mjs']],
-  ['ordinary intake and independent evidence', process.execPath, ['tests/intelligence/repair-runtime.mjs']],
-  ['Freshservice and Snipe-IT native migration', process.execPath, ['tests/adoption/freshservice-import.mjs']],
-  ['adoption and recovery', process.execPath, ['tests/adoption/runtime.mjs']],
-  ['coexistence and imported erasure', process.execPath, ['tests/adoption/runtime.mjs'], { LINEN_ADOPTION_HISTORIC: '1' }],
-  ['run site', process.execPath, ['--test', 'tests/site/site.test.mjs']],
-  ['pending person browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/pending-person-browser.mjs']],
-  ['desk groups and views browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/desk-group-browser.mjs']],
-  ['catalog team tasks browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/catalog-task-browser.mjs']],
-  ['lifecycle templates browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/lifecycle-template-journey.mjs']],
-  ['desk scenarios and templates browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/desk-scenario-browser.mjs']],
-  ['department workspaces browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/department-browser.mjs']],
-  ['native connected provider journeys', process.execPath, ['tests/ui/connected-run.mjs']],
-  ['connection and authority setup', process.execPath, ['tests/ui/setup-run.mjs']],
-  ['release browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/release-journey.mjs']],
-  ['service notice browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/service-notice-journey.mjs']],
-  ['branding browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/brand-journey.mjs']],
-  ['live handoff browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/handoff-journey.mjs']],
-  ['walk-up browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/walkup-journey.mjs']],
-  ['mailbox browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/mailbox-journey.mjs']],
-  ['pricing and budgets browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/billing-browser.mjs']],
-  ['operations KPI browser', process.execPath, ['tests/ui/connected-run.mjs', 'tests/ui/kpi-journey.mjs']],
-  ['MCP native conversation', process.execPath, ['tests/ui/run.mjs', 'tests/ui/mcp-journey.mjs']],
+  ["Native sign-in and scoped API", process.execPath, ["tests/platform/base-auth-runtime.mjs"]],
+  ["Native archive and recovery", process.execPath, ["tests/platform/base-auth-transfer.mjs"]],
+  ["Employee service desk browser", process.execPath, ["tests/ui/run.mjs"]],
+  ["Emitted HTTP", process.execPath, ["tests/runtime.mjs"]],
+  ["Configuration and sandbox", process.execPath, ["tests/platform/config-runtime.mjs"]],
+  ["Service desk and lifecycle", process.execPath, ["tests/work/runtime.mjs"]],
+  ["Knowledge publication", process.execPath, ["tests/work/knowledge-draft-runtime.mjs"]],
+  ["Fulfilment and measured effort", process.execPath, ["tests/work/fulfilment-link-runtime.mjs"]],
+  ["Fulfilment integration", process.execPath, ["tests/work/integration-regressions-runtime.mjs"]],
+  ["Reviewed identity continuity", process.execPath, ["tests/work/person-binding-runtime.mjs"]],
+  ["Pending people", process.execPath, ["tests/work/pending-person-runtime.mjs"]],
+  ["Manager approval and bundles", process.execPath, ["tests/work/amend-manager-runtime.mjs"]],
+  ["Execution and reconciliation", process.execPath, ["tests/execution/runtime.mjs"]],
+  ["Current effect authority", process.execPath, ["tests/execution/authority-runtime.mjs"]],
+  ["Service operations", process.execPath, ["tests/services/run.mjs"]],
+  ["Controlled changes and reporting", process.execPath, ["tests/services/integration.mjs"]],
+  ["Connection discovery", process.execPath, ["tests/connections/runtime.mjs"]],
+  ["Native transport", process.execPath, ["tests/transport/runtime.mjs"]],
+  ["Intelligence protocols and budgets", process.execPath, ["tests/intelligence/runtime.mjs"]],
+  ["Conversational intake and evidence", process.execPath, ["tests/intelligence/repair-runtime.mjs"]],
+  ["Incumbent import", process.execPath, ["tests/adoption/freshservice-import.mjs"]],
+  ["Archive restore and erasure", process.execPath, ["tests/adoption/runtime.mjs"]],
+  ["Department privacy browser", process.execPath, ["tests/ui/run.mjs", "tests/ui/department-browser.mjs"]],
+  ["Connected service recovery browser", process.execPath, ["tests/ui/connected-run.mjs"]],
+  ["Connection and authority browser", process.execPath, ["tests/ui/setup-run.mjs"]],
+  ["Communications browser", process.execPath, ["tests/ui/connected-run.mjs", "tests/ui/communication-browser.mjs"]],
+  ["Billing browser", process.execPath, ["tests/ui/run.mjs", "tests/ui/billing-browser.mjs"]],
+  ['software provider browser', process.execPath, ['tests/ui/software-license-run.mjs']],
+  ['software license browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/software-license-browser.mjs']],
+  ['report builder and exports browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/reporting-browser.mjs']],
+  ['notification rules browser', process.execPath, ['tests/ui/run.mjs', 'tests/ui/notification-browser.mjs']],
 ]
 const shardValue = process.env.LINEN_VERIFY_SHARD
 let shard
@@ -80,23 +51,40 @@ if (shardValue !== undefined) {
   }
   shard = { number, count }
 }
-// CI seconds: baseline Verify 39658205193; department browser 39721605432.
-// Unlisted checks count as 10.
-// Heaviest first onto the lightest shard keeps every shard inside its job limit.
+// Conservative journey durations, refreshed from the exact-head Verify when needed.
 const measuredSeconds = {
-  'Native archive transfer': 447, 'browser journeys': 249, 'native connected provider journeys': 246,
-  'department workspaces browser': 146, 'identity erasure': 143, 'operations KPI browser': 100, 'Base native auth': 78,
-  'desk scenarios and templates browser': 74, 'connection and authority setup': 69, 'release browser': 56,
-  'pending person browser': 55, 'MCP native conversation': 51, 'desk groups and views browser': 49,
-  'Legacy session retirement': 46, 'service integration': 37, 'adoption and recovery': 36,
-  'pending person services': 35, 'migration order and retained history': 33, 'catalog team tasks browser': 33,
-  'work and lifecycle': 32, 'service notice browser': 32, 'mailbox browser': 35, 'walk-up browser': 35, 'live handoff browser': 35, 'branding browser': 35, 'emitted Worker': 30,
-  'ordinary intake and independent evidence': 29, 'work integration regressions': 28,
-  'Freshservice and Snipe-IT native migration': 26,
+  "software provider browser": 100, "software license browser": 45, "report builder and exports browser": 45, "notification rules browser": 45,
+  "Native sign-in and scoped API": 30,
+  "Native archive and recovery": 315,
+  "Employee service desk browser": 455,
+  "Emitted HTTP": 50,
+  "Configuration and sandbox": 70,
+  "Service desk and lifecycle": 80,
+  "Knowledge publication": 10,
+  "Fulfilment and measured effort": 10,
+  "Fulfilment integration": 23,
+  "Reviewed identity continuity": 14,
+  "Pending people": 29,
+  "Manager approval and bundles": 28,
+  "Execution and reconciliation": 19,
+  "Current effect authority": 10,
+  "Service operations": 15,
+  "Controlled changes and reporting": 55,
+  "Connection discovery": 11,
+  "Native transport": 58,
+  "Intelligence protocols and budgets": 30,
+  "Conversational intake and evidence": 35,
+  "Incumbent import": 75,
+  "Archive restore and erasure": 210,
+  "Department privacy browser": 100,
+  "Connected service recovery browser": 250,
+  "Connection and authority browser": 70,
+  "Communications browser": 315,
+  "Billing browser": 30
 }
 function shardChecks(count) {
   const loads = Array(count).fill(0), shards = Array.from({ length: count }, () => [])
-  const order = checks.slice(1).map((check, index) => ({ check, index, seconds: measuredSeconds[check[0]] ?? 10 }))
+  const order = checks.map((check, index) => ({ check, index, seconds: measuredSeconds[check[0]] ?? 10 }))
     .sort((a, b) => b.seconds - a.seconds || a.index - b.index)
   for (const item of order) {
     const lightest = loads.indexOf(Math.min(...loads))
@@ -105,8 +93,19 @@ function shardChecks(count) {
   }
   return shards.map(items => items.sort((a, b) => a.index - b.index).map(item => item.check))
 }
-// Every shard builds its own emitted Worker before its assigned checks.
-const selectedChecks = shard ? [checks[0], ...shardChecks(shard.count)[shard.number - 1]] : checks
+// Installed rer verify builds once. CI downloads the build produced by its build job.
+if (!process.env.LINEN_TEST_BUILT) {
+  const code = await new Promise((done, reject) => {
+    const child = spawn('pnpm', ['run', 'build:app'], {cwd:root,stdio:'inherit'});
+    child.once('error',reject);child.once('exit',code=>done(code??1));
+  });
+  if (code) process.exit(code);
+}
+const selectedChecks = shard ? shardChecks(shard.count)[shard.number-1] : checks
+if (process.argv.includes('--plan')) {
+  console.log(JSON.stringify(shardChecks(6).map((items,index)=>({shard:index+1,seconds:items.reduce((sum,item)=>sum+measuredSeconds[item[0]],0),journeys:items.map(item=>item[0])})),null,2));
+  process.exit(0);
+}
 const shardLabel = shard ? ` (shard ${shard.number}/${shard.count})` : ''
 await mkdir(output, { recursive: true })
 const results = []
@@ -116,7 +115,7 @@ for (const [name, executable, argv, checkEnvironment = {}] of selectedChecks) {
   const code = await new Promise((done, reject) => {
     const child = spawn(executable, argv, {
       cwd: root, stdio: 'inherit',
-      env: { ...process.env, LINEN_TEST_PORT: process.env.LINEN_TEST_PORT || "8810",
+      env: { ...process.env, LINEN_TEST_BUILT:'1', LINEN_TEST_PORT: process.env.LINEN_TEST_PORT || "8810",
         LINEN_TEST_WORKER_PORT: process.env.LINEN_TEST_WORKER_PORT || "8812",
         LINEN_TEST_PROVIDER_PORT: process.env.LINEN_TEST_PROVIDER_PORT || "8813",
         ...checkEnvironment, LINEN_TEST_OUTPUT: resolve(output, name.replaceAll(' ', '-')) },

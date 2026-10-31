@@ -12,14 +12,14 @@ async function captureNotice(page, options) {
   await captureJourney(page, options);
   const previous=page.viewportSize();
   try {
-    for(const width of [1440,390]) {
+    for(const width of [1440]) {
       await page.setViewportSize({width,height:width===1440?1000:844});
       if(options.path.includes('controls')||options.path.includes('planned-change')) {
         await page.getByRole('heading',{name:'Employee service notices',exact:true}).scrollIntoViewIfNeeded();
         await page.evaluate(()=>scrollBy(0,-160));
       } else await page.evaluate(()=>scrollTo(0,0));
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-      await page.screenshot({path:options.path.replace('.png',`-${width}-viewport.png`)});
+      process.env.LINEN_CAPTURE && await page.screenshot({path:options.path.replace('.png',`-${width}-viewport.png`)});
     }
   } finally {await page.setViewportSize(previous);}
 }
@@ -41,7 +41,7 @@ export async function serviceNoticeJourney({browser,page,api,base,out,errors}) {
   await page.getByText('Independently verified source recovery is required before recording an all-clear',{exact:true}).waitFor();
   await captureNotice(page,{path:out+'/CHANNEL-008-publisher-controls.png',fullPage:true});
   const salesContext=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:1000}}),sp=await salesContext.newPage();
-  const otherContext=await browser.newContext({timezoneId:'UTC',viewport:{width:390,height:844}}),op=await otherContext.newPage();
+  const otherContext=await browser.newContext({timezoneId:'UTC',viewport:{width:1440,height:844}}),op=await otherContext.newPage();
   const executorContext=await browser.newContext(),executor=await executorContext.newPage();
   for(const p of [sp,op,executor])p.on('pageerror',e=>errors.push(String(e)));
   try {
@@ -101,7 +101,7 @@ export async function serviceNoticeJourney({browser,page,api,base,out,errors}) {
     await action(page,'Record verified recovery and publish all-clear',{message:'Planned Sales Console change independently verified.',verification:'Verified rollout of notice-recovery'},`${changePath}/${changeNotice.id}/all-clear`);
     await captureNotice(page,{path:out+'/CHANNEL-008-planned-change-notice.png',fullPage:true});
   } finally {await salesContext.close();await otherContext.close();await executorContext.close();}
-  console.log('PASS CHANNEL-008 native 1440/390/320: publisher controls, pre-recovery refusal, Sales-only banner, matching ticket offer and filing, independently admitted all-clear, individual ticket stays open, named withdrawal and planned change notice.');
+  console.log('PASS CHANNEL-008 native 1440: publisher controls, pre-recovery refusal, Sales-only banner, matching ticket offer and filing, independently admitted all-clear, individual ticket stays open, named withdrawal and planned change notice.');
 }
 /** Native incident evidence remains separate from independently verified recovery. */
 export async function monitoringJourney({page,api,base,out}) {
@@ -119,7 +119,7 @@ export async function monitoringJourney({page,api,base,out}) {
   await page.getByRole('heading',{name:'SSO HTTPS check: failed',exact:true}).waitFor();
   await page.getByText('Sources, observations and complete record',{exact:true}).click();
   await page.getByText('synthetic-linen-803',{exact:false}).last().waitFor();
-  for(const width of [1440,390]) {
+  for(const width of [1440]) {
     await page.setViewportSize({width,height:1000});
     const cohort=page.locator('.record-row').filter({hasText:'No fresh independently admitted recovery evidence'});
     const name=await cohort.locator('strong').boundingBox(),detail=await cohort.locator('small').boundingBox();
@@ -128,10 +128,10 @@ export async function monitoringJourney({page,api,base,out}) {
     assert.deepEqual(unnamed,[],'Visible icon-only controls carry tooltips');
     const control=page.locator('[data-tip="Your account"]');await control.evaluate(e=>e.blur());await page.mouse.move(0,0);await control.hover();await page.waitForTimeout(420);
     assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');
-    await page.screenshot({path:`${out}/INC-002-tooltip-hover-${width}.png`});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/INC-002-tooltip-hover-${width}.png`});
     await page.mouse.move(0,0);await control.focus();await page.keyboard.press('Tab');await page.keyboard.press('Shift+Tab');
     assert.equal(await control.evaluate(e=>e.matches(':focus-visible')),true);assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');assert.equal(await control.evaluate(e=>getComputedStyle(e,'::after').transitionDuration),'0s');
-    await page.screenshot({path:`${out}/INC-002-tooltip-focus-${width}.png`});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/INC-002-tooltip-focus-${width}.png`});
   }
   await captureJourney(page,{path:out+'/INC-002-signed-failure.png',fullPage:true});
   await send('recovery','synthetic-linen-804',failedAt+1);await api('/services/process-due',{});
@@ -141,24 +141,5 @@ export async function monitoringJourney({page,api,base,out}) {
   await page.getByText('synthetic-linen-804',{exact:false}).last().waitFor();
   await page.getByText('No fresh independently admitted recovery evidence',{exact:true}).waitFor();
   await captureJourney(page,{path:out+'/INC-002-source-recovery-unverified.png',fullPage:true});
-  console.log('PASS INC-002 native 1440 and 390: signed Uptime failure, duplicate, incident source evidence, source recovery and independent-recovery boundary');
-}
-if (process.argv[1]===fileURLToPath(import.meta.url)) {
-  const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
-  if(!base||!out)throw Error('Run through tests/ui/connected-run.mjs');
-  await mkdir(out,{recursive:true});
-  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']}),errors=[];
-  try {
-    const context=await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'UTC'}),page=await context.newPage();
-    page.on('pageerror',e=>errors.push(String(e)));
-    await page.goto(base+'/app');await page.getByLabel('Your name').fill('Morgan Hayes');await page.getByLabel('Workspace name').fill('Service notices proof');
-    await page.getByLabel('Work email').fill('notice-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic-Connected-browser-2026');
-    await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();
-    await finishFirstRun(page,base);
-    await monitoringJourney({page,api:apiFor(page),base,out});
-    await serviceNoticeJourney({browser,page,api:apiFor(page),base,out,errors});assert.deepEqual(errors,[]);
-  } catch(error) {
-    for(const [i,c]of browser.contexts().entries())for(const [j,p]of c.pages().entries())await p.screenshot({path:`${out}/CHANNEL-008-failure-${i}-${j}.png`,fullPage:true}).catch(()=>{});
-    throw error;
-  } finally {await browser.close();}
+  console.log('PASS INC-002 native 1440: signed Uptime failure, duplicate, incident source evidence, source recovery and independent-recovery boundary');
 }

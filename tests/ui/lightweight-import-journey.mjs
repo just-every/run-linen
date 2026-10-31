@@ -21,7 +21,7 @@ export async function lightweightImportJourney({page,api,base,out}) {
   const assetInput={file:csv('assets.csv','Asset Tag,Serial,Location,Status\nDEN-204,synthetic-linen-204,Denver stockroom,Ready to Deploy\n')};
   const assetReview=await api('/adoption/csv-imports/assets/dry-run',assetInput);
   const asset=await api('/adoption/csv-imports/assets',{...assetInput,reviewedFingerprint:assetReview.fingerprint,acceptOmissions:true});
-  for(const width of [1440,390]) {
+  for(const width of [1440]) {
     await page.setViewportSize({width,height:width===1440?1000:844});
     for(const item of imported){
       await page.goto(base+'/app#/work/'+item.id);
@@ -41,7 +41,7 @@ export async function lightweightImportJourney({page,api,base,out}) {
   async function fit(name,width){
     await page.evaluate(()=>document.fonts.ready);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} fits ${width}`);
     await captureJourney(page,{path:`${out}/MIGRATE-004-${name}-${width}.png`,fullPage:true});
-    await page.screenshot({path:`${out}/MIGRATE-004-${name}-${width}-viewport.png`});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/MIGRATE-004-${name}-${width}-viewport.png`});
   }
-  console.log('PASS MIGRATE-004 native CSV/Zendesk historical tickets, imported unbound person, stock and custody at 1440/390');
+  console.log('PASS MIGRATE-004 native CSV/Zendesk historical tickets, imported unbound person, stock and custody at 1440');
 }

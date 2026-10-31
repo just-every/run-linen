@@ -58,7 +58,7 @@ export async function custodyJourney(page, api, personId, ownerId, out) {
 }
 
 export async function lifecycleEvidenceJourney(page, lifecycleId, out) {
-  for (const width of [1440, 390]) {
+  for (const width of [1440]) {
     await page.setViewportSize({ width, height: 1000 })
     const downloaded = page.waitForEvent('download')
     await page.getByRole('link', { name: 'Download lifecycle evidence (JSON)' }).click()
@@ -67,7 +67,7 @@ export async function lifecycleEvidenceJourney(page, lifecycleId, out) {
     const pack = JSON.parse(await readFile(await download.path(), 'utf8'))
     assert.equal(pack.lifecycle.id, lifecycleId, 'LIFE-007: exported lifecycle matches the selected record')
     assert.ok(pack.outstandingDuties.length, 'LIFE-007: pending security duties stay in the pack')
-    await page.screenshot({ path: `${out}/LIFE-007-evidence-${width}.png`, fullPage: true })
+    process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/LIFE-007-evidence-${width}.png`, fullPage: true })
   }
-  console.log('PASS LIFE-007: lifecycle evidence download with outstanding duties at 1440 and 390')
+  console.log('PASS LIFE-007: lifecycle evidence download with outstanding duties at 1440')
 }

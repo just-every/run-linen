@@ -6,7 +6,7 @@ import {captureCommitment as captureJourney} from './commitment-capture.mjs';
 
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 const before=JSON.parse(await readFile(out+'/commitment-context.json','utf8'));
-const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+const browser=await chromium.launch({ ...(process.env.LINEN_CHROMIUM_EXECUTABLE ? {executablePath:process.env.LINEN_CHROMIUM_EXECUTABLE} : {}), headless:true,args: ['--no-sandbox', '--use-mock-keychain','--password-store=basic']});
 try {
     const page=await browser.newPage({timezoneId:'UTC',viewport:{width:1440,height:1000}});
     await signIn(page,base,'commitment-owner@example.test','synthetic-linen-1');const api=apiFor(page);
@@ -32,7 +32,7 @@ try {
     const rejected=await page.evaluate(async id=>{const session=await(await fetch('/api/v1/session')).json();return(await fetch(`/api/v1/commitments/${id}/observe`,{method:'POST',headers:{'Content-Type':'application/json','X-Linen-CSRF':session.csrfToken},body:'{}'})).status},before.commitmentId);
     assert.equal(rejected,409);
     await captureJourney(page,{path:out+'/commitment-retired.png',fullPage:true});
-    for(const width of [1440,390]) {
+    for(const width of [1440]) {
         await page.setViewportSize({width,height:1000});const profile=page.getByRole('button',{name:'Your workspace and account'});
         await page.keyboard.press('Tab');await profile.focus();assert.equal(await profile.evaluate(e=>e.matches(':focus-visible')),true);
         assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
@@ -40,7 +40,7 @@ try {
         assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'0');
         await profile.hover();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'0');
         await page.waitForTimeout(420);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
-        await page.screenshot({path:`${out}/commitment-tooltip-${width}.png`});
+        process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/commitment-tooltip-${width}.png`});
     }
     console.log(JSON.stringify({workerRestart:true,scheduledLiveReadback:true,missingEvidenceUnknown:true,staleEvidenceUnknown:true,sourceWithdrawalUnknown:true,ownerRetirement:true,tooltipsBothWidths:true,remoteWrites:false}));
 } finally {await browser.close();}

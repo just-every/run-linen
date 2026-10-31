@@ -2,7 +2,7 @@
   "schema": 1,
   "seed": "linen-product",
   "old": {
-    "commit": "1a401858c1e58f8392cffdccf7dd3ff0e7e6e4a7",
+    "commit": "56c69fc4674b99f327fdc4e697bed272a56fb432",
     "files": [
       "CONTRACT.md",
       "ACCEPTANCE.md"
@@ -22601,13 +22601,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 2370,
-      "text": "`tests/ui/mcp-journey.mjs` asserts the internal-comment owner/employee views at",
-      "to": "docs",
-      "path": "docs/contract/mechanism.md"
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 2371,
       "text": "1440 and 390. These are local protocol and native-UI results, with no claim",
       "to": "docs",
@@ -30081,13 +30074,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 3207,
-      "cell": "gap",
-      "text": "Public-route and 1440/390 browser proof: an owner-edited team task plan beside the automated step; manager approval before any team works; ordered and parallel tasks with elapsed-hour due dates; team-only completion; a failed automated step owned with the request open; owner waiver with a reason; close only when every responsibility is verified, done or waived; in-flight copies unchanged by plan edits; cancel, erasure and native archive retention. A done task is a recorded completion, not device or provider verification; the MDM install step is CATALOG-005's and inherits this rule.",
-      "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 3208,
       "cell": "gap",
       "text": "Public-route proof: an owner-built hardware/software/access bundle opens one ticket with five child fulfilments; one atomic manager decision covers both gated children (partial and single-child approvals refused); per-child grants run and verify; the bundle stays in progress until the laptop handoff verifies the fifth child, then reads complete; a changed item refuses the stale bundle. Bundle builder, grouped manager decision and per-item progress inspected at 1440/390.",
@@ -30102,20 +30088,6 @@
       "ids": [
         "CATALOG-005"
       ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3210,
-      "cell": "gap",
-      "text": "Local D1/runtime and 1440/390 browser: reviewed creation/edit, held catalog services, native email proof and password sign-in binding, normal fulfillment release, employee visibility, withdrawal/cancellation and attributed audit. Provider delivery and live SSO are not claimed.",
-      "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3211,
-      "cell": "gap",
-      "text": "The DESK-015 scenario shortcut (`x`) is in the reference.",
-      "to": "changelog"
     },
     {
       "file": "CONTRACT.md",
@@ -30216,13 +30188,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 3221,
-      "cell": "gap",
-      "text": "None for this clause. Owner-only administration and audited handoff, intersected current department and retained HR scope were approved as landed by ct (22 October); a mixed-department bundle is refused atomically and CATALOG-004 keeps the routing obligation.",
-      "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 3222,
       "cell": "gap",
       "text": "Local public work/task routes and real 1440/390 browser interval: manual and measured active minutes feed role/request-type effort totals with touches and failed/pending work. Visibility/focus/inactivity pauses, server-bounded sequenced heartbeats, current scope, erasure and inert restored timers are proved. REPORT-004 prices these minutes at owner-declared role rates.",
@@ -30240,27 +30205,10 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 3225,
-      "cell": "gap",
-      "text": "Watchers inherit from DESK-007 and native mobile from CHANNEL-005 before they ship.",
-      "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 3226,
       "cell": "gap",
       "text": "Local public-route and 1440/390 browser evidence: all eight current record types, filters, typo matching, serial-linked asset/ticket/person, native ticket ID, subject/content/requester, recorded asset tags, scoped visible counts and pages. HR/private/restricted/article/current-role fences and generated-source withdrawal are asserted.",
       "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3227,
-      "cell": "gap",
-      "text": "Legacy admission/source-custody tombstones still use plain SHA-256. Cross-generation foreign custom/group classification proof, historical erasure dates/associations absent from already-cleared legacy payloads, and complete every-door custody proof remain unproved; no earlier-cleared values may be rebuilt.",
-      "to": "gap",
-      "ids": [
-        "DESK-027"
-      ]
     },
     {
       "file": "CONTRACT.md",
@@ -30704,13 +30652,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 3270,
-      "cell": "gap",
-      "text": "None for this clause. Network deployment/probe edges are fixtures; notes inherit CHANNEL-008\u2019s future Slack/Teams delivery before those channels ship. No live provider, hosted or owner acceptance claimed.",
-      "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 3271,
       "cell": "gap",
       "text": "No GitHub deployment intake and no automatically raised standard change.",
@@ -30799,13 +30740,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 3282,
-      "cell": "gap",
-      "text": "Public routes and native 1440/390 journey: 40 incidents, 25 actual-engine changes (2 terminal failures, 3 emergency), 300 assets, 92% success and 12% emergency; defined timing groups, major durations, problem/known-error age, physical/software state and age, recorded compliance, utilization/known USD invoices, renewals and refreshes, every tile drill-through, Denver DST and current source scopes. Missing observations and provider capabilities remain explicit unknowns; no live-provider outcome claimed.",
-      "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 3283,
       "cell": "gap",
       "text": "Ct approval pending for explicit acting-role grants, revision reconfirmation and the custom-agent seat default.",
@@ -30822,16 +30756,6 @@
       "to": "gap",
       "ids": [
         "ROLE-001"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3284,
-      "cell": "gap",
-      "text": "No SAML/OIDC with named IdPs, SCIM or MFA enforcement.",
-      "to": "gap",
-      "ids": [
-        "SSO-001"
       ]
     },
     {
@@ -30876,13 +30800,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 3288,
-      "cell": "gap",
-      "text": "Native owner and MCP public-door assertions cover six closed tools, explicit versioned queue grants, narrowing/remint, live issuer/principal/scope checks, filtered reads/search/history, normal own-ticket creation, internal revision-checked comments without effects, content-free auditing, erasure and actual inert archive restore. Native 1440/390 views retain the internal-comment employee boundary. No external agent/provider acceptance claim.",
-      "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 3291,
       "cell": "gap",
       "text": "Public-route proof: no hidden default; a 365-day closed-ticket policy is previewed and needs the owner to confirm the exact counts; the run deletes a ticket closed 400 days ago and its attachment bytes with a content-free receipt the owner and auditor read, keeping tickets closed 300 days ago and open tickets. Owner preview/confirm form inspected at 1440/390.",
@@ -30910,13 +30827,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 3296,
-      "cell": "gap",
-      "text": "None within SANDBOX-001. Configuration promotion does not grant role assignments or execution authority. SANDBOX-002 retains provider workflows and connector configuration; SANDBOX-003 retains notification rules and scenarios; SANDBOX-004 retains administrator approval and explicitly chosen masked copying.",
-      "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 3297,
       "cell": "gap",
       "text": "Provider workflow configuration/execution, all sandbox connector configuration, separately bound sandbox credentials, isolated provider targets/data/effects, provider readback and inherited promotion/rollback/native-screen acceptance remain unbuilt.",
@@ -30933,36 +30843,6 @@
       "to": "gap",
       "ids": [
         "SANDBOX-003"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3299,
-      "cell": "gap",
-      "text": "Message, attachment and person row structures are available through explicit current-owner API selections with complete value masking, no retained source links and workspace-wide retirement. Native family selectors, attachment-content rehearsal, other personal-record families, complete per-family restore and export evidence remain owed.",
-      "to": "gap",
-      "ids": [
-        "SANDBOX-005"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3299,
-      "cell": "gap",
-      "text": "Conservative default ADOPTED beyond the approved ticket slice: owner-only explicit record selection, every value masked, no attachment bytes, identity mappings, authority or outbound effects; ct approval of these broader families remains pending.",
-      "to": "rulings",
-      "ids": [
-        "RL-108"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3299,
-      "cell": "gap",
-      "text": "SANDBOX-004 stays partial.",
-      "to": "gap",
-      "ids": [
-        "SANDBOX-004"
       ]
     },
     {
@@ -31021,13 +30901,6 @@
       "ids": [
         "A5"
       ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3310,
-      "cell": "gap",
-      "text": "None for the currently shipped doors. Additional source classes, attachment-byte adapters, live cutover and scale acceptance remain MIGRATE-001/002/003/005; each inherits these typed custody and inert-restore obligations before shipping. Network edges use fixtures; no live provider, hosted or owner acceptance claimed.",
-      "to": "changelog"
     },
     {
       "file": "CONTRACT.md",
@@ -31098,16 +30971,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 3318,
-      "cell": "gap",
-      "text": "No held-out live case against real IdP, MDM and monitoring logs.",
-      "to": "gap",
-      "ids": [
-        "AGENT-004"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 3319,
       "cell": "gap",
       "text": "No released provider connector.",
@@ -31122,16 +30985,6 @@
       "cell": "gap",
       "text": "Local public-route and inspected 1440/390 proof: REPORT-004's report for two request types with the owner's cohort and windows, a ranked next-automation proposal by human minutes it would remove, realized saving and failures as evidence, not-enough-evidence types unranked, read by REPORT-004's audience.",
       "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3321,
-      "text": "Substantive automation design beyond lexical title patterns and draft outlines, admin-reviewed publication, native screens, and a measured effect after a declared two-week post-publication observation remain unbuilt. No elapsed window or measured savings is claimed.",
-      "cell": "gap",
-      "to": "gap",
-      "ids": [
-        "AGENT-007"
-      ]
     },
     {
       "file": "CONTRACT.md",
@@ -31152,16 +31005,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 3324,
-      "cell": "gap",
-      "text": "No recurrence window measured on a real provider or simplification compared with continued repair.",
-      "to": "gap",
-      "ids": [
-        "AGENT-010"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 3325,
       "cell": "gap",
       "text": "-",
@@ -31175,16 +31018,6 @@
       "to": "gap",
       "ids": [
         "F2"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3327,
-      "cell": "gap",
-      "text": "Frontier evidence gate in ACCEPTANCE.md not demonstrated on a held-out unfamiliar case.",
-      "to": "gap",
-      "ids": [
-        "F3"
       ]
     },
     {
@@ -31205,26 +31038,6 @@
       "to": "gap",
       "ids": [
         "F5"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3330,
-      "cell": "gap",
-      "text": "Frontier evidence gate in ACCEPTANCE.md not demonstrated on held-out cases.",
-      "to": "gap",
-      "ids": [
-        "F6"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 3331,
-      "cell": "gap",
-      "text": "No substantive redesign compared with continued repair on service outcomes.",
-      "to": "gap",
-      "ids": [
-        "F7"
       ]
     },
     {
@@ -31579,13 +31392,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 63,
-      "text": "| **A6 Data and source custody** | Upgrade an archived database and retain every prior row and migration entry; import with an approval that stays inert. Inherit DESK-017\u2019s approved redacted-history restore/replay and never-rebuild checks below. | `tests/adoption/prior-data-upgrade.mjs`; `tests/adoption/runtime.mjs` native restore and execution coexistence; `tests/adoption/coexistence-route-cases.mjs` coexistenceRouteChecks; `tests/adoption/history-cases.mjs` historyArchiveChecks; `tests/platform/base-auth-transfer.mjs`; `tests/ui/archive-journey.mjs` archiveJourney; `scripts/edition-authoring/updates.test.mjs` changed inputs, explicit mapping comparison, offline extraction and portable receipt; `scripts/edition-authoring/base-copies.test.mjs` refresh-base moves every copy to one Base commit and drops a legacy record repository; refresh-base refuses to rewrite an applied migration and leaves every file as it was. | PASS: current rer setup inventories 164 prior rows across 106 tables, retains every prior application/provider-fixture row field and all 46 applied migration entries/SQL, and applies 59 additive migrations. Unproved legacy sessions retire; current sign-in and retained account/privacy checks pass. Public native restore retains private/public records, relationships and exact bytes while approvals and effects stay inert. Actual source routes retain revisions and private flags, refuse duplicate/stale/late cutover, and require explicit reconciliation. Fresh post-erasure legacy export carries typed retained history, stable per-installation aliases and keyed removal markers; stale and untyped identity content refuses, an erasure concurrent with a private-history write rolls it back, and the next generation never rebuilds cleared values. Native owner snapshot/summary/file and erased-record screens inspected at 1440/390. Source comparison retains divergent owner edits and refuses applied migration rewrites. Source-specific live/scale and expanded byte adapters remain MIGRATE-001/002/003/005 and inherit the same custody rules. No live-provider/hosted/owner acceptance claimed. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 64,
       "text": "| **A7 Honest operating and cost boundaries** | Exhaust a budget with unresolved obligations, record an unknown charge and restart; missing configuration returns `needs_configuration`, never data. | `tests/intelligence/runtime.mjs` (script); `tests/work/time-cases.mjs` via `tests/work/runtime.mjs` | A7-named public-route checks: budget-held employee request, unknown reserved charge and both across a Worker restart, `needs_configuration` with no interpretation after the model connection is removed; touches and minutes per kind beside unresolved and failed requests in the effort report. No live model/provider call; hosted and owner acceptance are not claimed. | done |",
       "to": "docs",
@@ -31754,13 +31560,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 97,
-      "text": "| **CHANNEL-003 Email mailboxes** | Connect a Gmail and an Exchange Online mailbox, send a request with an attachment and a CC, reply from a mail client and from Linen, and see one thread, the CC watcher, a suppressed out-of-office loop and a quarantined unknown sender. | `src/features/work/intake.ts` (authenticated mail envelope, sender quarantine); `src/features/execution/mail/sender.ts`; `tests/connections/sendgrid-runtime.mjs`. Gmail and Exchange Online mailbox connectors (OAuth polling or forwarding), header threading, CC watchers, attachments, suppression and quarantine are implemented with fixture network edges (`tests/work/mail-cases.mjs`, `tests/ui/mailbox-journey.mjs`); mailChannelChecks additionally asserts owner-only mapping and dismissal with atomic audits and rollback on audit failure, dismissed senders held again, no re-reading after mapping, a fresh mapped resend accepted, held body and file exclusion, no held sender-supplied threading identity, mapped held-mail erasure, and unknown sends never repeated. Ct approved the conservative mailbox policy with riders on 23 October 2026. Gap: live Gmail and Exchange Online mailbox receipts, live OAuth application registration and owner consent, Exchange client-set Message-ID behavior, and trusted receiving-provider Authentication-Results provenance. The parser currently reads the topmost header without binding its authentication service to the connection. Other outbound mail doors retain the domain-alignment obligation. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 98,
       "text": "| **CHANNEL-004 Employee portal** | As an employee, find an article, submit a catalog item, see its status and approval progress, see one's own assigned laptop, and be denied another department's private catalog item; set a logo, brand colors and `help.example.com`, and see the portal served on that domain over TLS with the branding, and the next notification email carrying the same logo and colors. | `src/ui/work.tsx`; `src/ui/knowledge.tsx`; `tests/ui/browser.mjs`; `tests/ui/connected-request.mjs`; `tests/work/brand-cases.mjs`; `tests/ui/brand-journey.mjs`. My devices and owner branding (name, readable colors, logo; portal and mailbox replies) are implemented; the custom domain with managed TLS is not. | partial |",
       "to": "docs",
@@ -31824,13 +31623,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 111,
-      "text": "| **CATALOG-003 Fulfillment task plans** | A software request creates an approval, an automated license assignment and a manual configuration task; the automated step fails and the request stays open with the failure owned.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `tests/work/catalog-task-cases.mjs` (`catalogTaskChecks`) via `tests/work/amend-manager-runtime.mjs`: an owner-saved plan of ordered and parallel team tasks (`src/features/work/catalog-tasks.ts`) is copied into one software request beside its automated licence step; no team works it before the manager approves; tasks wait for the automated step and earlier tasks and have elapsed-hour due dates; only the named team or the owner completes a task; an automated step that cannot verify stays owned by the item owner with the request open; only that owner waives it, with an audited reason, and a waived step is never shown as verified; the request closes only when every responsibility is verified, done or waived; later plan edits leave the request unchanged; cancel and person erasure keep the record. `tests/ui/catalog-task-journey.mjs` via `tests/ui/catalog-task-browser.mjs` (1440/390/320, keyboard): plan editor, waiting and ready tasks, waiver, team completion and the close refusal. `tests/platform/base-auth-transfer.mjs`: the plan and a done task survive a native archive. A done task is a recorded completion, not device verification; CATALOG-005's MDM install inherits the rule. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 112,
       "text": "| **CATALOG-004 Bundles and kits** | Request the bundle; see one approval, five child fulfilments, and the bundle complete only when all children verify.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `src/features/work/bundles.ts`; `tests/work/bundle-cases.mjs` (one ticket, five child fulfilments, one atomic manager decision, per-child verification, complete only after the last child verifies, stale bundle refused); `src/ui/bundles.tsx`. | done |",
       "to": "docs",
@@ -31845,22 +31637,8 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 114,
-      "text": "| **CATALOG-006 Requests for pending people** | Review name, email, start date and team without creating an account; hold laptop and Figma services with a reason and no fulfillment duties/reservations; bind by authenticated email, release through normal fulfillment and show the person their request; edit or withdraw an unbound person, canceling their request; retain attributed audits.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `tests/work/pending-person-runtime.mjs`: real D1/workerd and native email-link proof, mail delivery fixture only. `tests/ui/pending-person-browser.mjs`: create/edit, held services, password sign-in, release, employee readback and withdrawal at 1440/390. No live provider delivery or SSO claim. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 118,
       "text": "| Clause | Acceptance evidence | Current evidence path | Status |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
-      "line": 120,
-      "text": "| **DESK-001 Queues, groups and views** | Create two groups, save a \"Unassigned P1\" view, bulk-assign five tickets, and see a group lead's view exclude another group's restricted ticket; triage that view keyboard-only (open next, assign to self, send a reply, set status) with no pointer input. | `tests/work/desk-group-cases.mjs` (`deskGroupChecks`) via `tests/work/runtime.mjs`: two owner-created groups with named leads, the owner a group member on placement and assignment, and a group lead's view that excludes another group's tickets and every restricted ticket; a shared \"Unassigned P1\" view, oldest first, that narrows each reader's own scope, a private view other agents cannot run, and five tickets bulk-assigned with the other group's ticket refused. `tests/ui/desk-group-browser.mjs` (1440/390/320): the lead saves the shared view in the console, bulk-assigns its five tickets on the bulk-update screen, reads the lead view without Hardware's restricted ticket, and triages it keyboard-only (open next, shortcut reference, assign to self, send a reply, set status) with no pointer input. `tests/ui/desk-scenario-browser.mjs` adds the DESK-015 `x` scenario shortcut. | done |",
       "to": "docs",
       "path": "docs/verify.md"
     },
@@ -31929,13 +31707,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 130,
-      "text": "| **DESK-011 Department workspaces** | An IT agent cannot read an HR-workspace ticket; a Facilities request handed to IT keeps its history; the employee portal shows both catalogs.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `tests/work/department-space-cases.mjs` departmentSpaceChecks via `tests/work/runtime.mjs`: explicit five-department membership, IT/HR refusal, public manager boundaries, same-ticket Facilities-to-IT history/attachment/SLA retention, retained HR handoffs and revocation. `tests/work/department-ops-cases.mjs` departmentOpsChecks: combined catalogs, atomic admission, department queues/routing/SLA/knowledge/tasks/scenarios and source fences. `tests/work/department-report-cases.mjs` departmentReportChecks and `tests/services/department-source-cases.mjs` departmentSourceChecks: scoped counts, costs and derived sources including retained HR through legacy routing. `tests/platform/mcp-tools-cases.mjs` mcpToolCases: explicit queue grants exclude retained HR. `tests/platform/base-auth-transfer.mjs`: actual archive, inert membership and fresh staff sign-in refusal. `tests/platform/privacy-runtime.mjs`: scoped membership erasure. `tests/ui/department-browser.mjs`: native administration, employee combined catalogs, denied HR reads, handoff and retained restrictions at 1440/390. Proof, by acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR\u2192IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited \"department handed off\" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` (\"Services across departments\" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/platform/privacy-runtime.mjs` (scoped membership erasure). Owner-only administration and audited handoff, intersected current department and retained HR scope were approved as landed by ct (22 October); a mixed-department bundle is refused atomically and CATALOG-004 keeps the routing obligation. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 131,
       "text": "| **DESK-012 Time tracking and effort** | Log 15 minutes manually, work a ticket for a measured interval, and see both in the effort report. | `tests/work/time-cases.mjs`: public ticket/task entries, real measured interval, role attribution, current permissions, sequence fencing, heartbeat gaps, failed/pending effort and inert restore. `tests/ui/time-journey.mjs`: manual 15 minutes and a real browser interval read in the effort report at 1440/390. `tests/adoption/runtime.mjs`: native timer/entry restore. Local evidence; REPORT-004 prices these minutes at owner-declared role rates. | done |",
       "to": "docs",
@@ -31952,13 +31723,6 @@
       "file": "ACCEPTANCE.md",
       "line": 133,
       "text": "| **DESK-014 Remote support handoff** | Launch a BeyondTrust sandbox session from a ticket and see consent, timestamps and the recording link on it. | No remote-support integration. | missing |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
-      "line": 134,
-      "text": "| **DESK-015 Agent scenarios and record templates** | A Service Desk agent runs \"Escalate to Network L2\" on a ticket; category, priority, group and status change and a private note is added in one audit entry listing each change, and the requester sees no note; an agent outside the Service Desk group is not offered the group-scoped scenario and a direct API call to run it is refused; a scenario with a step outside the runner's role applies nothing; a \"New laptop setup\" template pre-fills a new ticket's fields. | `tests/work/desk-scenario-cases.mjs` (`deskScenarioChecks`) via `tests/work/runtime.mjs`: a Service Desk agent runs the group-scoped \"Escalate to Network L2\"; category, priority, group, owner and status change and a private note is added in one audit entry listing each before and after, and the requester sees no note; an agent outside the group is not offered it and a direct run is refused with nothing changed; an HR agent's run of a workspace scenario with a classification step applies nothing; bulk runs; a \"New laptop setup\" template's draft becomes a new ticket. `tests/ui/desk-scenario-browser.mjs` (1440/390/320): run from the ticket by keyboard, bulk run, template pre-fill. Task-plan start and link, role and normal-ticket link refusals before field changes, task template drafts submitted as editable project tasks, all classification fields, named agent assignment, custom field, canned public reply, resume and close with resolution code, and honest audit after a data refusal are asserted in the same public-route test. `tests/services/template-cases.mjs` names DESK-015 and asserts change template pre-fill through `/changes`. The browser journey adds task-plan navigation and editable task template pre-fill at 1440/390; ticket template pre-fill is exercised at both widths. DESK-007 and CHANNEL-005 inherit watchers and native mobile before shipping. | done |",
       "to": "docs",
       "path": "docs/verify.md"
     },
@@ -32314,13 +32078,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 209,
-      "text": "| **CHANGE-007 Release management** | Create a release with three changes, record go/no-go approval, deploy canary then rollout, post release notes to the affected cohort only, and see a failed change hold the release open until it is backed out. | `tests/services/release-cases.mjs` releaseChecks via `tests/services/integration.mjs`: three-change grouping, recorded phases, named go/no-go and live execution fences; `tests/ui/release-journey.mjs` native release journey: canary/rollout, cohort-only notes with outsider denial, failed member held until verified backout/completion, calendar/links and every state at 1440/390; `tests/platform/base-auth-transfer.mjs`: inert native archive decisions. Network edges are fixtures. Future note channels remain inherited from CHANNEL-008. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 210,
       "text": "| **CHANGE-008 Deployment-raised changes** | A GitHub deployment to production creates a standard change linked to its PR and run. |  | missing |",
       "to": "docs",
@@ -32426,13 +32183,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 238,
-      "text": "| **REPORT-005 IT operations and asset KPIs** | For a month in `America/Denver` with 40 incidents, 25 changes (2 failed, 3 emergency) and 300 assets, the KPI page shows MTTA and MTTR by priority, a 92% change success rate and a 12% emergency share, and each tile drills through to the records it counts. | `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/kpi-journey.mjs`: public-route 40/25/300 cohort with actual execution and provider-edge fixtures, 92%/12%, timing by service/priority, all KPI families and source links, recorded versus unknown compliance/cost, native asset/coverage/refresh data, Denver month/DST and 1440/390 drill-throughs. Definitions and source limitations follow CONTRACT.md REPORT-005. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 242,
       "text": "| Clause | Acceptance evidence | Current evidence path | Status |",
       "to": "docs",
@@ -32442,20 +32192,6 @@
       "file": "ACCEPTANCE.md",
       "line": 244,
       "text": "| **ROLE-001 Roles and permissions** | A custom \"Facilities agent\" role reads Facilities tickets only; an approver approves without agent access. Inherit CATALOG-001 audience and quote checks before those surfaces ship; each new door proves the inherited rule. | `tests/work/department-role-cases.mjs` \u2014 departmentRoleChecks: scoped readership, separate capabilities, live revocation, catalog exclusions. `tests/ui/native-regressions.mjs` \u2014 namedApproverJourney: approver without agent access. `tests/ui/department-role-journey.mjs` \u2014 departmentRoleJourney: native owner and member states at 1440 and 390. `tests/ui/billing-browser.mjs`: unique custom-agent seats, free requesters and approvers. `tests/platform/base-auth-transfer.mjs`: inactive restored definitions and grants; `tests/adoption/runtime.mjs`: inert definitions and history-only assignments through two workspace transfers. Gap: ct approved the initial owner-managed public-read floor on 23 October 11:28Z, excluding attachments and staff actions. Explicit acting-role grants, revision reconfirmation and custom-agent seats await ct approval. Custom roles that assign tickets or approve, delegated workspace administration and custom HR roles remain unbuilt. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
-      "line": 245,
-      "text": "| **SSO-001 Sign-in, SSO and SCIM** | Sign in through Okta SAML; a SCIM-deprovisioned user loses access; an SSO user without membership is refused; with MFA required for agents, an agent signing in by email is challenged for a second factor, and an SSO assertion without an MFA authentication-method claim is refused for the agent role.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `src/platform/sso.ts` (Cloudflare Access); `src/platform/base-auth`; `tests/platform/runtime.mjs`; `tests/platform/base-auth-runtime.mjs`. No SAML/OIDC with named IdPs, SCIM or MFA enforcement. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
-      "line": 246,
-      "text": "| **AUDIT-001 Audit log** | Change a grant and export data; the auditor reads both entries; erase the actor's personal data and the entries remain anonymized. Inherit DESK-017\u2019s approved history-value checks below: every surface uses redaction and earlier cleared values are never rebuilt.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `src/platform/privacy.ts`; `tests/platform/privacy-runtime.mjs`; `tests/platform/config-runtime.mjs`. | done |",
       "to": "docs",
       "path": "docs/verify.md"
     },
@@ -32475,22 +32211,8 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 249,
-      "text": "| **API-003 Agent access by MCP** | Connect an MCP client as an automation principal; it lists its permitted queue and is refused an out-of-grant action.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `tests/platform/base-auth-runtime.mjs` with `tests/platform/mcp-tools-cases.mjs` asserts every credential, queue, live authority, tool, read/redaction/history, revision, no-effect and id-only audit point in the journeys below. `tests/platform/base-auth-transfer.mjs` proves old native archive compatibility, hash-free metadata and revoked/inert queue grants after actual export/reset/import. `tests/ui/mcp-journey.mjs` asserts native owner/employee internal-comment views at 1440/390. Local protocol/native-UI proof; no external client-service or provider acceptance claim. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 250,
       "text": "| **PORT-001 Portable native archive** | Export, restore into a fresh workspace, compare counts and hashes, and see the execution hold and inert grants.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `src/features/adoption/export.ts`; `src/features/adoption/import.ts`; `tests/adoption/runtime.mjs`. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
-      "line": 251,
-      "text": "| **ERASURE-001 Authorized erasure** | Erase a person, restore an older archive, and see the content still absent. Inherit DESK-017\u2019s approved history-value checks below: every surface uses redaction and earlier cleared values are never rebuilt.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `src/features/adoption/core.ts`; `src/features/work/privacy.ts`; `tests/adoption/runtime.mjs`; `tests/work/person-binding-runtime.mjs`; `tests/platform/privacy-runtime.mjs`. | done |",
       "to": "docs",
       "path": "docs/verify.md"
     },
@@ -32622,13 +32344,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 273,
-      "text": "| **SANDBOX-001 Sub-production workspace and configuration promotion** | Create a sandbox from production configuration; edit a catalog item, form, non-provider workflow, complete SLA configuration and role configuration without changing production. Review every difference, obtain approval from a separate current non-editor owner or a qualifying sandbox-admin under SANDBOX-004, promote as one versioned audited change, preserve existing request and SLA versions and review and apply rollback. Sandbox and package creation and editing remain owner-only; a current owner applies promotion or rollback. Approval and application re-check current authority, non-contribution and the reviewed revisions. Refuse self or editor approval, withdrawn authority and stale production without partial application. Preserve production grants, secrets and records; retain no rehearsal answers; invalidate pre-restore packages and require fresh packages after restore. Complete native create/edit/test/diff/approval/promotion/rollback journeys at 1440 and 390. Transferred family acceptance remains required in SANDBOX-002\u2013004. | `tests/platform/sandbox-cases.mjs` sandboxChecks through native HTTP and real storage proves isolated catalog forms and team tasks; all existing SLA policy targets, scope and ordering; calendar, escalation and waiting rules; existing custom department role definitions with unchanged assignment rows and revision reconfirmation; complete supported-field diffs; separate current non-editor owner approval; atomic versioned audited mixed promotion and reviewed rollback; preserved in-flight SLA calendars and scheduler rule versions; stale configuration, withdrawn owner, department and recipient refusal; no retained rehearsal answers or outbound calls; restore invalidation and erasure projection. `tests/ui/sandbox-journey.mjs` sandboxJourney through `tests/ui/catalog-task-browser.mjs` proves native lifecycle screens for these families at 1440, 390 and 320 px, conditional answers, task rehearsals, keyboard actions, account tooltips and employee refusal. `tests/platform/base-auth-transfer.mjs` remains the actual rer archive invalidation evidence. `tests/platform/sandbox-cases.mjs` sandboxChecks additionally covers lifecycle templates and dated matching previews, recurring duties and next-occurrence previews, catalog approval workflow fields and previews, mixed promotion and rollback, stale templates, retired match values, preserved admitted lifecycle tasks, recurring occurrences and duties, scheduler cursor and submitted manager gates and approval stages. `tests/ui/sandbox-journey.mjs` sandboxJourney covers these editors and previews through native diff, separate-owner approval, promotion and rollback at 1440 and 390. `tests/platform/sandbox-routing-cases.mjs` sandboxRoutingChecks adds complete routing rules, service support bindings, agent shifts and skills, assignment policies, isolated previews, current-reference and stale-production refusal, mixed promotion and reviewed rollback with admitted work unchanged. `tests/platform/sandbox-approval-version-cases.mjs` sandboxApprovalVersionChecks preserves manager and conditional chain decisions, serial and parallel progress, frozen calendars and timers, decisions entered after promotion and final rejections while current-role withdrawal and work amendments still invalidate authority. `tests/ui/sandbox-routing-journey.mjs` editSandboxRouting and assertSandboxRoutingPromoted through sandboxJourney complete the native routing lifecycle at 1440 and 390. SANDBOX-002 through SANDBOX-004 retain their assigned acceptance. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 274,
       "text": "| **SANDBOX-002 Provider workflows and isolated sandbox connectors** | Configure/edit a provider workflow and connector, execute through the actual product path against its provider sandbox/developer tenant using only separately bound sandbox credentials, and independently read back the isolated effect. Refuse production credentials/targets and wrong-environment bindings; retain partial, failed and unknown outcomes. Review all non-secret workflow/connector differences, including a mixed catalog/provider package; approve, promote and roll back under SANDBOX-001 while production records/effects/grants/secrets remain unchanged and existing requests retain their versions. Credentials, grants and records never enter the package. Complete inherited native journeys; fixtures do not replace required provider proof. | No sandbox provider-workflow or isolated connector-configuration/credential implementation established. Current zero-outbound and unsupported-prerequisite refusals are safety evidence only. Gap: all positive family implementation and acceptance, including isolated provider calls/readback and inherited promotion/rollback/screens. | missing |",
       "to": "docs",
@@ -32638,13 +32353,6 @@
       "file": "ACCEPTANCE.md",
       "line": 275,
       "text": "| **SANDBOX-003 Sandbox notification-rule and scenario configuration** | Edit and exercise a scenario and notification rule in isolation with applicable NOTIFY-001/002 and DESK-015 scope, permissions, atomicity and audit semantics. Rehearsals change no production work and deliver no production notifications; external test delivery inherits SANDBOX-002 isolation. Review every difference, approve/promote a package containing these families, read production configuration/audit and roll back while existing requests retain their versions. Prove out-of-scope refusal and inherited native journeys. NOTIFY-002's absence leaves its prerequisite and sandbox acceptance open; DESK-015's existing implementation requires sandbox integration now. | No sandbox notification-rule or scenario-configuration implementation established. Production DESK-015 is not sandbox evidence; NOTIFY-002 remains missing. Gap: both sandbox family integrations and their inherited configuration lifecycle, isolation and screens. | missing |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
-      "line": 276,
-      "text": "| **SANDBOX-004 Administrator approval and explicitly chosen masked-data copying** | An appropriately authorized non-editor administrator approves a reviewed package; unauthorized, self, editor, revoked-role and stale-revision attempts refuse. Default creation copies no personal records. An owner explicitly selects records for a masked copy; masking precedes persistence or exposure, raw source values are absent from sandbox storage, reads, logs and exports, production records remain unchanged, and scope/retention/erasure apply. Copies confer no production authority and never enter promotion and rollback packages with records, grants or secrets. Rehearsal answers remain unretained; inherited restore and native-screen acceptance applies. Owner-only creation and promotion remains. | `tests/platform/sandbox-cases.mjs` sandboxChecks through `tests/platform/config-runtime.mjs` proves an owner-assigned sandbox administrator reads a reviewed diff and approves promotion and rollback packages; unauthorized, stale-revision and contributing-administrator refusals; session retirement after role changes; refusal of application after administrator revocation without any state or audit mutation; owner-only creation and application. Existing default personal-record exclusion remains enforced. `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks through sandboxChecks proves explicit owner consent and current ticket selection, default exclusion, complete masking before storage, private masked reads, whole-selection refusal, unchanged production records and credentials, source-change invalidation, inherited retention deadlines, durable expiry receipts and refusal to recopy due tickets. The same sandboxChecks flow proves administrator refusal, package and workspace-export exclusion, masked-copy removal with workspace restore and erasure. `tests/platform/base-auth-transfer.mjs` proves actual rer archive exclusion and no revival after reset and import. `tests/ui/sandbox-journey.mjs` sandboxJourney covers native selection, consent and masked inspection with keyboard controls at 1440 and 390 px. Administrator native review and approval screens are proved by `tests/ui/sandbox-journey.mjs` sandboxJourney through `tests/ui/catalog-task-browser.mjs`: owner designation through the native member form, shared reviewed promotion and rollback links, keyboard diff inspection, approval, owner-only application controls and absence of owner-only editor requests at 1440 and 390 px.  `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks additionally asserts explicit ticket, message, attachment-metadata and person selections through the public copy door; exact nonempty family set; fully masked fields; absent source values and identity links in storage, reads and sandbox audit; unchanged source family tables; whole-selection refusal for missing, stale or mismatched parents and a deterministic source change between selection and persistence; retirement after each family source change; and earliest attachment deadline retiring all workspace copies. `tests/platform/sandbox-cases.mjs` sandboxChecks asserts masked reads and writes refuse during restore application.  Gap: Message, attachment and person row structures are available through explicit current-owner API selections with complete value masking, no retained source links and workspace-wide retirement. Native family selectors, attachment-content rehearsal, other personal-record families, complete per-family restore and export evidence remain owed. Conservative default ADOPTED beyond the approved ticket slice: owner-only explicit record selection, every value masked, no attachment bytes, identity mappings, authority or outbound effects; ct approval of these broader families remains pending. SANDBOX-004 stays partial. | partial |",
       "to": "docs",
       "path": "docs/verify.md"
     },
@@ -32797,13 +32505,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 318,
-      "text": "| **O3 Lifecycle and economics** | A full asset and license lifecycle with a supplier breach and a measured reclamation, plus a connector authored through the change lane and kept through an update. | `tests/services/run.mjs`; `tests/work/runtime.mjs`; `tests/intelligence/frontier.mjs` | No full O3 demonstration is established by the candidate checkpoint. Real supplier, reclamation, economics, provider, hosted and owner evidence remain unproven. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 320,
       "text": "The F1\u2013F7 extension evidence table below also remains in full. Its proposed",
       "to": "docs",
@@ -32867,13 +32568,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 334,
-      "text": "| **AGENT-004 Investigate multi-system failures** | A held-out SSO failure caused by an expired SAML certificate; the agent finds it, cites the evidence, and records the rejected network hypothesis (F3). | `src/features/intelligence/research.ts`; `tests/intelligence/frontier.mjs`. No held-out live case against real IdP, MDM and monitoring logs. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 335,
       "text": "| **AGENT-005 Build a missing connector** | With no Zoom connector, the agent authors one, its tests pass against a Zoom sandbox, the owner releases it, and a license change runs under a new grant. | `src/features/intelligence/engineering.ts`; `tests/ui/connected-frontier.mjs`. No released provider connector. | partial |",
       "to": "docs",
@@ -32888,13 +32582,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 337,
-      "text": "| **AGENT-007 Mine ticket history for automations** | From 1,000 imported Freshservice tickets, the agent proposes three automations; one is published and its measured effect is reported after two weeks. | `tests/intelligence/ticket-mining-cases.mjs` ticketMiningChecks through `tests/adoption/freshservice-import.mjs` proves current importing-owner custody, exact three lexical clusters and source membership, declared historic and recent counts, inert catalog, workflow, grant and article draft outlines, conditional handling upper bounds with unknown minutes and effect, sparse, duplicate, corrupt and reversed source refusal and no publication or grant issuance. `tests/intelligence/ticket-mining-scale.mjs` proves the same public doors with 1,000 imported tickets outside push Verify. Gap: substantive automation design beyond lexical title patterns and draft outlines, admin-reviewed publication, native screens and measured effect after a declared two-week post-publication observation remain unbuilt. No elapsed window or measured savings is claimed. | partial |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 338,
       "text": "| **AGENT-008 Keep devices and licenses healthy** | A Mac with FileVault off gets a Slack message and a Jamf policy push, and compliance reads back; 10 idle seats are reclaimed with owner approval. | No MDM/EDR signals. | missing |",
       "to": "docs",
@@ -32904,13 +32591,6 @@
       "file": "ACCEPTANCE.md",
       "line": 339,
       "text": "| **AGENT-009 Carry service commitments across tickets** | A commitment survives ticket closure and restart and flags a hire whose GitHub access never verified. | `tests/intelligence/commitment-cases.mjs` commitmentChecks through `tests/intelligence/runtime.mjs`: owner-only GitHub definition and retirement, closed case and persisted restart, scheduled continuation, unobserved cohort, denied and uncertain provider results, source identity drift, staff withdrawal and erasure. `tests/ui/commitment-browser.mjs` livePermissionReadback, closedCase and unobservedHireFlagged; `tests/ui/commitment-restart.mjs` workerRestart and scheduledLiveReadback: fixture-free emitted Worker with held-key GitHub permission reads and native 1440 and 390 screens. | done |",
-      "to": "docs",
-      "path": "docs/verify.md"
-    },
-    {
-      "file": "ACCEPTANCE.md",
-      "line": 340,
-      "text": "| **AGENT-010 Prevent recurrence and simplify** | A preventive change with recurrence observed over a declared window, and one simplification compared with continued repair on total work. | `src/features/intelligence/simplification.ts`; `tests/intelligence/frontier.mjs`. No recurrence window measured on a real provider or simplification compared with continued repair. | partial |",
       "to": "docs",
       "path": "docs/verify.md"
     },
@@ -34192,6 +33872,326 @@
       "file": "ACCEPTANCE.md",
       "line": 550,
       "text": "local protocol boundary, without an external agent-service integration claim.",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 2370,
+      "text": "`tests/platform/base-auth-runtime.mjs` asserts the internal-comment owner/employee views at",
+      "to": "docs",
+      "path": "docs/contract/mechanism.md"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3207,
+      "cell": "gap",
+      "text": "Public-route and 1440/390 browser proof: an owner-edited team task plan beside the automated step; manager approval before any team works; ordered and parallel tasks with elapsed-hour due dates; team-only completion; a failed automated step owned with the request open; owner waiver with a reason; close only when every responsibility is verified, done or waived; in-flight copies unchanged by plan edits; cancel, erasure and native archive retention. A done task is a recorded completion, not device or provider verification; the MDM install step is CATALOG-005's and inherits this rule.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3210,
+      "cell": "gap",
+      "text": "Local D1/runtime and 1440/390 browser: reviewed creation/edit, held catalog services, native email proof and password sign-in binding, normal fulfillment release, employee visibility, withdrawal/cancellation and attributed audit. Provider delivery and live SSO are not claimed.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3211,
+      "cell": "gap",
+      "text": "The DESK-015 scenario shortcut (`x`) is in the reference.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3221,
+      "cell": "gap",
+      "text": "None for this clause. Owner-only administration and audited handoff, intersected current department and retained HR scope were approved as landed by ct (22 October); a mixed-department bundle is refused atomically and CATALOG-004 keeps the routing obligation.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3225,
+      "cell": "gap",
+      "text": "Watchers inherit from DESK-007 and native mobile from CHANNEL-005 before they ship.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3227,
+      "cell": "gap",
+      "text": "Legacy admission/source-custody tombstones still use plain SHA-256. Cross-generation foreign custom/group classification proof, historical erasure dates/associations absent from already-cleared legacy payloads, and complete every-door custody proof remain unproved; no earlier-cleared values may be rebuilt.",
+      "to": "gap",
+      "ids": [
+        "DESK-027"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3270,
+      "cell": "gap",
+      "text": "None for this clause. Network deployment/probe edges are fixtures; notes inherit CHANNEL-008\u2019s future Slack/Teams delivery before those channels ship. No live provider, hosted or owner acceptance claimed.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3282,
+      "cell": "gap",
+      "text": "Public routes and native 1440/390 journey: 40 incidents, 25 actual-engine changes (2 terminal failures, 3 emergency), 300 assets, 92% success and 12% emergency; defined timing groups, major durations, problem/known-error age, physical/software state and age, recorded compliance, utilization/known USD invoices, renewals and refreshes, every tile drill-through, Denver DST and current source scopes. Missing observations and provider capabilities remain explicit unknowns; no live-provider outcome claimed.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3284,
+      "cell": "gap",
+      "text": "No SAML/OIDC with named IdPs, SCIM or MFA enforcement.",
+      "to": "gap",
+      "ids": [
+        "SSO-001"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3288,
+      "cell": "gap",
+      "text": "Native owner and MCP public-door assertions cover six closed tools, explicit versioned queue grants, narrowing/remint, live issuer/principal/scope checks, filtered reads/search/history, normal own-ticket creation, internal revision-checked comments without effects, content-free auditing, erasure and actual inert archive restore. Native 1440/390 views retain the internal-comment employee boundary. No external agent/provider acceptance claim.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3296,
+      "cell": "gap",
+      "text": "None within SANDBOX-001. Configuration promotion does not grant role assignments or execution authority. SANDBOX-002 retains provider workflows and connector configuration; SANDBOX-003 retains notification rules and scenarios; SANDBOX-004 retains administrator approval and explicitly chosen masked copying.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3299,
+      "cell": "gap",
+      "text": "Message, attachment and person row structures are available through explicit current-owner API selections with complete value masking, no retained source links and workspace-wide retirement. Native family selectors, attachment-content rehearsal, other personal-record families, complete per-family restore and export evidence remain owed.",
+      "to": "gap",
+      "ids": [
+        "SANDBOX-005"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3299,
+      "cell": "gap",
+      "text": "Conservative default ADOPTED beyond the approved ticket slice: owner-only explicit record selection, every value masked, no attachment bytes, identity mappings, authority or outbound effects; ct approval of these broader families remains pending.",
+      "to": "rulings",
+      "ids": [
+        "RL-108"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3299,
+      "cell": "gap",
+      "text": "SANDBOX-004 stays partial.",
+      "to": "gap",
+      "ids": [
+        "SANDBOX-004"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3310,
+      "cell": "gap",
+      "text": "None for the currently shipped doors. Additional source classes, attachment-byte adapters, live cutover and scale acceptance remain MIGRATE-001/002/003/005; each inherits these typed custody and inert-restore obligations before shipping. Network edges use fixtures; no live provider, hosted or owner acceptance claimed.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3318,
+      "cell": "gap",
+      "text": "No held-out live case against real IdP, MDM and monitoring logs.",
+      "to": "gap",
+      "ids": [
+        "AGENT-004"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3321,
+      "text": "Substantive automation design beyond lexical title patterns and draft outlines, admin-reviewed publication, native screens, and a measured effect after a declared two-week post-publication observation remain unbuilt. No elapsed window or measured savings is claimed.",
+      "cell": "gap",
+      "to": "gap",
+      "ids": [
+        "AGENT-007"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3324,
+      "cell": "gap",
+      "text": "No recurrence window measured on a real provider or simplification compared with continued repair.",
+      "to": "gap",
+      "ids": [
+        "AGENT-010"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3327,
+      "cell": "gap",
+      "text": "Frontier evidence gate in ACCEPTANCE.md not demonstrated on a held-out unfamiliar case.",
+      "to": "gap",
+      "ids": [
+        "F3"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3330,
+      "cell": "gap",
+      "text": "Frontier evidence gate in ACCEPTANCE.md not demonstrated on held-out cases.",
+      "to": "gap",
+      "ids": [
+        "F6"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 3331,
+      "cell": "gap",
+      "text": "No substantive redesign compared with continued repair on service outcomes.",
+      "to": "gap",
+      "ids": [
+        "F7"
+      ]
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 63,
+      "text": "| **A6 Data and source custody** | Upgrade an archived database and retain every prior row and migration entry; import with an approval that stays inert. Inherit DESK-017\u2019s approved redacted-history restore/replay and never-rebuild checks below. | `tests/adoption/prior-data-upgrade.mjs`; `tests/adoption/runtime.mjs` native restore and execution coexistence; `tests/adoption/coexistence-route-cases.mjs` coexistenceRouteChecks; `tests/adoption/history-cases.mjs` historyArchiveChecks; `tests/platform/base-auth-transfer.mjs`; `tests/ui/archive-journey.mjs` archiveJourney; `tests/platform/source-custody-journey.mjs` sourceCustodyJourney through `tests/platform/base-auth-transfer.mjs`: changed inputs, explicit mapping comparison, offline extraction and portable receipt; sourceCustodyJourney refresh-base moves every copy to one Base commit and drops a legacy record repository; refresh-base refuses to rewrite an applied migration and leaves every file as it was. | PASS: current rer setup inventories 164 prior rows across 106 tables, retains every prior application/provider-fixture row field and all 46 applied migration entries/SQL, and applies 59 additive migrations. Unproved legacy sessions retire; current sign-in and retained account/privacy checks pass. Public native restore retains private/public records, relationships and exact bytes while approvals and effects stay inert. Actual source routes retain revisions and private flags, refuse duplicate/stale/late cutover, and require explicit reconciliation. Fresh post-erasure legacy export carries typed retained history, stable per-installation aliases and keyed removal markers; stale and untyped identity content refuses, an erasure concurrent with a private-history write rolls it back, and the next generation never rebuilds cleared values. Native owner snapshot/summary/file and erased-record screens inspected at 1440/390. Source comparison retains divergent owner edits and refuses applied migration rewrites. Source-specific live/scale and expanded byte adapters remain MIGRATE-001/002/003/005 and inherit the same custody rules. No live-provider/hosted/owner acceptance claimed. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 97,
+      "text": "| **CHANNEL-003 Email mailboxes** | Connect a Gmail and an Exchange Online mailbox, send a request with an attachment and a CC, reply from a mail client and from Linen, and see one thread, the CC watcher, a suppressed out-of-office loop and a quarantined unknown sender. | `src/features/work/intake.ts` (authenticated mail envelope, sender quarantine); `src/features/execution/mail/sender.ts`; `tests/platform/config-runtime.mjs`. Gmail and Exchange Online mailbox connectors (OAuth polling or forwarding), header threading, CC watchers, attachments, suppression and quarantine are implemented with fixture network edges (`tests/work/mail-cases.mjs`, `tests/ui/mailbox-journey.mjs`); mailChannelChecks additionally asserts owner-only mapping and dismissal with atomic audits and rollback on audit failure, dismissed senders held again, no re-reading after mapping, a fresh mapped resend accepted, held body and file exclusion, no held sender-supplied threading identity, mapped held-mail erasure, and unknown sends never repeated. Ct approved the conservative mailbox policy with riders on 23 October 2026. Gap: live Gmail and Exchange Online mailbox receipts, live OAuth application registration and owner consent, Exchange client-set Message-ID behavior, and trusted receiving-provider Authentication-Results provenance. The parser currently reads the topmost header without binding its authentication service to the connection. Other outbound mail doors retain the domain-alignment obligation. | partial |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 111,
+      "text": "| **CATALOG-003 Fulfillment task plans** | A software request creates an approval, an automated license assignment and a manual configuration task; the automated step fails and the request stays open with the failure owned.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `tests/work/catalog-task-cases.mjs` (`catalogTaskChecks`) via `tests/work/amend-manager-runtime.mjs`: an owner-saved plan of ordered and parallel team tasks (`src/features/work/catalog-tasks.ts`) is copied into one software request beside its automated licence step; no team works it before the manager approves; tasks wait for the automated step and earlier tasks and have elapsed-hour due dates; only the named team or the owner completes a task; an automated step that cannot verify stays owned by the item owner with the request open; only that owner waives it, with an audited reason, and a waived step is never shown as verified; the request closes only when every responsibility is verified, done or waived; later plan edits leave the request unchanged; cancel and person erasure keep the record. `tests/ui/catalog-task-journey.mjs` via `tests/ui/browser.mjs` (1440/390/320, keyboard): plan editor, waiting and ready tasks, waiver, team completion and the close refusal. `tests/platform/base-auth-transfer.mjs`: the plan and a done task survive a native archive. A done task is a recorded completion, not device verification; CATALOG-005's MDM install inherits the rule. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 114,
+      "text": "| **CATALOG-006 Requests for pending people** | Review name, email, start date and team without creating an account; hold laptop and Figma services with a reason and no fulfillment duties/reservations; bind by authenticated email, release through normal fulfillment and show the person their request; edit or withdraw an unbound person, canceling their request; retain attributed audits.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `tests/work/pending-person-runtime.mjs`: real D1/workerd and native email-link proof, mail delivery fixture only. `tests/ui/browser.mjs`: create/edit, held services, password sign-in, release, employee readback and withdrawal at 1440/390. No live provider delivery or SSO claim. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 120,
+      "text": "| **DESK-001 Queues, groups and views** | Create two groups, save a \"Unassigned P1\" view, bulk-assign five tickets, and see a group lead's view exclude another group's restricted ticket; triage that view keyboard-only (open next, assign to self, send a reply, set status) with no pointer input. | `tests/work/desk-group-cases.mjs` (`deskGroupChecks`) via `tests/work/runtime.mjs`: two owner-created groups with named leads, the owner a group member on placement and assignment, and a group lead's view that excludes another group's tickets and every restricted ticket; a shared \"Unassigned P1\" view, oldest first, that narrows each reader's own scope, a private view other agents cannot run, and five tickets bulk-assigned with the other group's ticket refused. `tests/work/runtime.mjs` (1440/390/320): the lead saves the shared view in the console, bulk-assigns its five tickets on the bulk-update screen, reads the lead view without Hardware's restricted ticket, and triages it keyboard-only (open next, shortcut reference, assign to self, send a reply, set status) with no pointer input. `tests/work/runtime.mjs` adds the DESK-015 `x` scenario shortcut. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 130,
+      "text": "| **DESK-011 Department workspaces** | An IT agent cannot read an HR-workspace ticket; a Facilities request handed to IT keeps its history; the employee portal shows both catalogs.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `tests/work/department-space-cases.mjs` departmentSpaceChecks via `tests/work/runtime.mjs`: explicit five-department membership, IT/HR refusal, public manager boundaries, same-ticket Facilities-to-IT history/attachment/SLA retention, retained HR handoffs and revocation. `tests/work/department-ops-cases.mjs` departmentOpsChecks: combined catalogs, atomic admission, department queues/routing/SLA/knowledge/tasks/scenarios and source fences. `tests/work/department-report-cases.mjs` departmentReportChecks and `tests/services/department-source-cases.mjs` departmentSourceChecks: scoped counts, costs and derived sources including retained HR through legacy routing. `tests/platform/mcp-tools-cases.mjs` mcpToolCases: explicit queue grants exclude retained HR. `tests/platform/base-auth-transfer.mjs`: actual archive, inert membership and fresh staff sign-in refusal. `tests/adoption/runtime.mjs`: scoped membership erasure. `tests/ui/department-browser.mjs`: native administration, employee combined catalogs, denied HR reads, handoff and retained restrictions at 1440/390. Proof, by acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR\u2192IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited \"department handed off\" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` (\"Services across departments\" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure). Owner-only administration and audited handoff, intersected current department and retained HR scope were approved as landed by ct (22 October); a mixed-department bundle is refused atomically and CATALOG-004 keeps the routing obligation. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 134,
+      "text": "| **DESK-015 Agent scenarios and record templates** | A Service Desk agent runs \"Escalate to Network L2\" on a ticket; category, priority, group and status change and a private note is added in one audit entry listing each change, and the requester sees no note; an agent outside the Service Desk group is not offered the group-scoped scenario and a direct API call to run it is refused; a scenario with a step outside the runner's role applies nothing; a \"New laptop setup\" template pre-fills a new ticket's fields. | `tests/work/desk-scenario-cases.mjs` (`deskScenarioChecks`) via `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs`: a Service Desk agent runs the group-scoped \"Escalate to Network L2\"; category, priority, group, owner and status change and a private note is added in one audit entry listing each before and after, and the requester sees no note; an agent outside the group is not offered it and a direct run is refused with nothing changed; an HR agent's run of a workspace scenario with a classification step applies nothing; bulk runs; a \"New laptop setup\" template's draft becomes a new ticket. `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs` (1440/390/320): run from the ticket by keyboard, bulk run, template pre-fill. Task-plan start and link, role and normal-ticket link refusals before field changes, task template drafts submitted as editable project tasks, all classification fields, named agent assignment, custom field, canned public reply, resume and close with resolution code, and honest audit after a data refusal are asserted in the same public-route test. `tests/services/template-cases.mjs` names DESK-015 and asserts change template pre-fill through `/changes`. The browser journey adds task-plan navigation and editable task template pre-fill at 1440/390; ticket template pre-fill is exercised at both widths. DESK-007 and CHANNEL-005 inherit watchers and native mobile before shipping. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 209,
+      "text": "| **CHANGE-007 Release management** | Create a release with three changes, record go/no-go approval, deploy canary then rollout, post release notes to the affected cohort only, and see a failed change hold the release open until it is backed out. | `tests/services/release-cases.mjs` releaseChecks via `tests/services/integration.mjs`: three-change grouping, recorded phases, named go/no-go and live execution fences; `tests/ui/operations-console-journeys.mjs` releaseConsoleJourney through `tests/ui/communication-browser.mjs`: canary/rollout, cohort-only notes with outsider denial, failed member held until verified backout/completion, calendar/links and every state at 1440/390; `tests/platform/base-auth-transfer.mjs`: inert native archive decisions. Network edges are fixtures. Future note channels remain inherited from CHANNEL-008. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 238,
+      "text": "| **REPORT-005 IT operations and asset KPIs** | For a month in `America/Denver` with 40 incidents, 25 changes (2 failed, 3 emergency) and 300 assets, the KPI page shows MTTA and MTTR by priority, a 92% change success rate and a 12% emergency share, and each tile drills through to the records it counts. | `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`; native exact 40/25/300 cohort, Denver month/DST, 92%/12%, every tile definition/source link, drill-through, acknowledgement and audience: `tests/ui/operations-console-journeys.mjs` operationsKpiJourney through `tests/ui/communication-browser.mjs`: public-route 40/25/300 cohort with actual execution and provider-edge fixtures, 92%/12%, timing by service/priority, all KPI families and source links, recorded versus unknown compliance/cost, native asset/coverage/refresh data, Denver month/DST and 1440/390 drill-throughs. Definitions and source limitations follow CONTRACT.md REPORT-005. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 245,
+      "text": "| **SSO-001 Sign-in, SSO and SCIM** | Sign in through Okta SAML; a SCIM-deprovisioned user loses access; an SSO user without membership is refused; with MFA required for agents, an agent signing in by email is challenged for a second factor, and an SSO assertion without an MFA authentication-method claim is refused for the agent role.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `src/platform/sso.ts` (Cloudflare Access); `src/platform/base-auth`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/base-auth-runtime.mjs`. No SAML/OIDC with named IdPs, SCIM or MFA enforcement. | partial |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 246,
+      "text": "| **AUDIT-001 Audit log** | Change a grant and export data; the auditor reads both entries; erase the actor's personal data and the entries remain anonymized. Inherit DESK-017\u2019s approved history-value checks below: every surface uses redaction and earlier cleared values are never rebuilt.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `src/platform/privacy.ts`; `tests/adoption/runtime.mjs`; `tests/platform/config-runtime.mjs`; anonymous event identity/target, dated clearing and foreign-workspace isolation after public erasure: `tests/adoption/platform-privacy-cases.mjs` platformPrivacyChecks through runtime.mjs. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 249,
+      "text": "| **API-003 Agent access by MCP** | Connect an MCP client as an automation principal; it lists its permitted queue and is refused an out-of-grant action.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `tests/platform/base-auth-runtime.mjs` with `tests/platform/mcp-tools-cases.mjs` asserts every credential, queue, live authority, tool, read/redaction/history, revision, no-effect and id-only audit point in the journeys below. `tests/platform/base-auth-transfer.mjs` proves old native archive compatibility, hash-free metadata and revoked/inert queue grants after actual export/reset/import. `tests/platform/base-auth-runtime.mjs` asserts native owner/employee internal-comment views at 1440/390. Local protocol/native-UI proof; no external client-service or provider acceptance claim. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 251,
+      "text": "| **ERASURE-001 Authorized erasure** | Erase a person, restore an older archive, and see the content still absent. Inherit DESK-017\u2019s approved history-value checks below: every surface uses redaction and earlier cleared values are never rebuilt.  Inherit CATALOG-001's approved audience/quote checks before those surfaces ship (including current carriers); each new door must prove the inherited rule. | `src/features/adoption/core.ts`; `src/features/work/privacy.ts`; `tests/adoption/runtime.mjs`; `tests/work/person-binding-runtime.mjs`; `tests/adoption/runtime.mjs`. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 273,
+      "text": "| **SANDBOX-001 Sub-production workspace and configuration promotion** | Create a sandbox from production configuration; edit a catalog item, form, non-provider workflow, complete SLA configuration and role configuration without changing production. Review every difference, obtain approval from a separate current non-editor owner or a qualifying sandbox-admin under SANDBOX-004, promote as one versioned audited change, preserve existing request and SLA versions and review and apply rollback. Sandbox and package creation and editing remain owner-only; a current owner applies promotion or rollback. Approval and application re-check current authority, non-contribution and the reviewed revisions. Refuse self or editor approval, withdrawn authority and stale production without partial application. Preserve production grants, secrets and records; retain no rehearsal answers; invalidate pre-restore packages and require fresh packages after restore. Complete native create/edit/test/diff/approval/promotion/rollback journeys at 1440 and 390. Transferred family acceptance remains required in SANDBOX-002\u2013004. | `tests/platform/sandbox-cases.mjs` sandboxChecks through native HTTP and real storage proves isolated catalog forms and team tasks; all existing SLA policy targets, scope and ordering; calendar, escalation and waiting rules; existing custom department role definitions with unchanged assignment rows and revision reconfirmation; complete supported-field diffs; separate current non-editor owner approval; atomic versioned audited mixed promotion and reviewed rollback; preserved in-flight SLA calendars and scheduler rule versions; stale configuration, withdrawn owner, department and recipient refusal; no retained rehearsal answers or outbound calls; restore invalidation and erasure projection. `tests/ui/sandbox-journey.mjs` sandboxJourney through `tests/ui/browser.mjs` proves native lifecycle screens for these families at 1440, 390 and 320 px, conditional answers, task rehearsals, keyboard actions, account tooltips and employee refusal. `tests/platform/base-auth-transfer.mjs` remains the actual rer archive invalidation evidence. `tests/platform/sandbox-cases.mjs` sandboxChecks additionally covers lifecycle templates and dated matching previews, recurring duties and next-occurrence previews, catalog approval workflow fields and previews, mixed promotion and rollback, stale templates, retired match values, preserved admitted lifecycle tasks, recurring occurrences and duties, scheduler cursor and submitted manager gates and approval stages. `tests/ui/sandbox-journey.mjs` sandboxJourney covers these editors and previews through native diff, separate-owner approval, promotion and rollback at 1440 and 390. `tests/platform/sandbox-routing-cases.mjs` sandboxRoutingChecks adds complete routing rules, service support bindings, agent shifts and skills, assignment policies, isolated previews, current-reference and stale-production refusal, mixed promotion and reviewed rollback with admitted work unchanged. `tests/platform/sandbox-approval-version-cases.mjs` sandboxApprovalVersionChecks preserves manager and conditional chain decisions, serial and parallel progress, frozen calendars and timers, decisions entered after promotion and final rejections while current-role withdrawal and work amendments still invalidate authority. `tests/ui/sandbox-routing-journey.mjs` editSandboxRouting and assertSandboxRoutingPromoted through sandboxJourney complete the native routing lifecycle at 1440 and 390. SANDBOX-002 through SANDBOX-004 retain their assigned acceptance. | done |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 276,
+      "text": "| **SANDBOX-004 Administrator approval and explicitly chosen masked-data copying** | An appropriately authorized non-editor administrator approves a reviewed package; unauthorized, self, editor, revoked-role and stale-revision attempts refuse. Default creation copies no personal records. An owner explicitly selects records for a masked copy; masking precedes persistence or exposure, raw source values are absent from sandbox storage, reads, logs and exports, production records remain unchanged, and scope/retention/erasure apply. Copies confer no production authority and never enter promotion and rollback packages with records, grants or secrets. Rehearsal answers remain unretained; inherited restore and native-screen acceptance applies. Owner-only creation and promotion remains. | `tests/platform/sandbox-cases.mjs` sandboxChecks through `tests/platform/config-runtime.mjs` proves an owner-assigned sandbox administrator reads a reviewed diff and approves promotion and rollback packages; unauthorized, stale-revision and contributing-administrator refusals; session retirement after role changes; refusal of application after administrator revocation without any state or audit mutation; owner-only creation and application. Existing default personal-record exclusion remains enforced. `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks through sandboxChecks proves explicit owner consent and current ticket selection, default exclusion, complete masking before storage, private masked reads, whole-selection refusal, unchanged production records and credentials, source-change invalidation, inherited retention deadlines, durable expiry receipts and refusal to recopy due tickets. The same sandboxChecks flow proves administrator refusal, package and workspace-export exclusion, masked-copy removal with workspace restore and erasure. `tests/platform/base-auth-transfer.mjs` proves actual rer archive exclusion and no revival after reset and import. `tests/ui/sandbox-journey.mjs` sandboxJourney covers native selection, consent and masked inspection with keyboard controls at 1440 and 390 px. Administrator native review and approval screens are proved by `tests/ui/sandbox-journey.mjs` sandboxJourney through `tests/ui/browser.mjs`: owner designation through the native member form, shared reviewed promotion and rollback links, keyboard diff inspection, approval, owner-only application controls and absence of owner-only editor requests at 1440 and 390 px.  `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks additionally asserts explicit ticket, message, attachment-metadata and person selections through the public copy door; exact nonempty family set; fully masked fields; absent source values and identity links in storage, reads and sandbox audit; unchanged source family tables; whole-selection refusal for missing, stale or mismatched parents and a deterministic source change between selection and persistence; retirement after each family source change; and earliest attachment deadline retiring all workspace copies. `tests/platform/sandbox-cases.mjs` sandboxChecks asserts masked reads and writes refuse during restore application.  Gap: Message, attachment and person row structures are available through explicit current-owner API selections with complete value masking, no retained source links and workspace-wide retirement. Native family selectors, attachment-content rehearsal, other personal-record families, complete per-family restore and export evidence remain owed. Conservative default ADOPTED beyond the approved ticket slice: owner-only explicit record selection, every value masked, no attachment bytes, identity mappings, authority or outbound effects; ct approval of these broader families remains pending. SANDBOX-004 stays partial. | partial |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 318,
+      "text": "| **O3 Lifecycle and economics** | A full asset and license lifecycle with a supplier breach and a measured reclamation, plus a connector authored through the change lane and kept through an update. | `tests/services/run.mjs`; `tests/work/runtime.mjs`; `tests/ui/connected-browser.mjs` | No full O3 demonstration is established by the candidate checkpoint. Real supplier, reclamation, economics, provider, hosted and owner evidence remain unproven. | partial |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 334,
+      "text": "| **AGENT-004 Investigate multi-system failures** | A held-out SSO failure caused by an expired SAML certificate; the agent finds it, cites the evidence, and records the rejected network hypothesis (F3). | `src/features/intelligence/research.ts`; `tests/ui/connected-browser.mjs`. No held-out live case against real IdP, MDM and monitoring logs. | partial |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 337,
+      "text": "| **AGENT-007 Mine ticket history for automations** | From 1,000 imported Freshservice tickets, the agent proposes three automations; one is published and its measured effect is reported after two weeks. | `tests/intelligence/ticket-mining-cases.mjs` ticketMiningChecks through `tests/adoption/freshservice-import.mjs` proves current importing-owner custody, exact three lexical clusters and source membership, declared historic and recent counts, inert catalog, workflow, grant and article draft outlines, conditional handling upper bounds with unknown minutes and effect, sparse, duplicate, corrupt and reversed source refusal and no publication or grant issuance. `tests/ui/browser.mjs` proves the same public doors with 1,000 imported tickets outside push Verify. Gap: substantive automation design beyond lexical title patterns and draft outlines, admin-reviewed publication, native screens and measured effect after a declared two-week post-publication observation remain unbuilt. No elapsed window or measured savings is claimed. | partial |",
+      "to": "docs",
+      "path": "docs/verify.md"
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 340,
+      "text": "| **AGENT-010 Prevent recurrence and simplify** | A preventive change with recurrence observed over a declared window, and one simplification compared with continued repair on total work. | `src/features/intelligence/simplification.ts`; `tests/ui/connected-browser.mjs`. No recurrence window measured on a real provider or simplification compared with continued repair. | partial |",
       "to": "docs",
       "path": "docs/verify.md"
     }

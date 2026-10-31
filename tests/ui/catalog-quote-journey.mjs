@@ -6,7 +6,7 @@ const quotePdf = Buffer.from('%PDF-1.7\n% synthetic-linen-quote-body-marker\n%%E
 /**
  * CATALOG-001 on native screens: the owner adds a software item, requires a vendor quote, edits its questions and
  * audience; an eligible employee is refused without the quote, then submits it; the approver reads it in the approval
- * view; another employee gets a 404. Evidence is captured at 1440, 390 and 320.
+ * view; another employee gets a 404. Evidence is captured at 1440.
  */
 export async function catalogQuoteJourney({browser,page,api,base,out}) {
   const {apiFor,signIn}=await import('./connected-helpers.mjs');
@@ -119,20 +119,8 @@ export async function catalogQuoteJourney({browser,page,api,base,out}) {
     const other=sessions.colleague.page;
     assert.equal((await other.request.get(base+href)).status(),404,'CATALOG-001 another employee gets a 404 for the quote');
     assert.equal((await other.request.get(base+'/api/v1/attachments/'+quote.id)).status(),404,'CATALOG-001 the generic attachment door never serves it');
-    console.log('PASS CATALOG-001 native item creation, quote requirement, audience editor, quote refusal and upload, approver reading and colleague 404 at 1440/390/320');
+    console.log('PASS CATALOG-001 native item creation, quote requirement, audience editor, quote refusal and upload, approver reading and colleague 404 at 1440');
   } finally {for(const s of Object.values(sessions))await s.context.close();}
 }
 
 // Developer-only focused entry point; the ordinary browser suite also runs this journey.
-if(process.argv[1] && import.meta.url===new URL('file://'+process.argv[1]).href) {
-  const {chromium}=await import('playwright');const {apiFor,finishFirstRun}=await import('./connected-helpers.mjs');
-  const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;if(!base||!out)throw Error('Use tests/ui/run.mjs');
-  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
-  try {
-    const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
-    await page.goto(base+'/app');await page.getByLabel('Your name').fill('Quote owner');await page.getByLabel('Workspace name').fill('Quote proof');
-    await page.getByLabel('Work email').fill('quote-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic-Connected-browser-2026');
-    await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();await finishFirstRun(page,base);
-    await catalogQuoteJourney({browser,page,api:apiFor(page),base,out});
-  } finally {await browser.close();}
-}

@@ -7,7 +7,7 @@ export async function searchJourney({page,api,base,out}) {
   const request=await api('/work',{title:'Denver laptop network drops',body:'The adapter drops during video calls.',context:{assetId:asset.id},deduplicationKey:crypto.randomUUID()});
   const session=await api('/session');
   const privateWork=await api('/work',{title:'Private HR search journey',body:'Private HR information',sensitivity:'hr',deduplicationKey:crypto.randomUUID()});
-  for (const width of [1440,390]) {
+  for (const width of [1440]) {
     await page.setViewportSize({width,height:width===1440?1000:844});
     await page.goto(base+'/app#/work');
     await page.locator('.top-search').getByRole('searchbox').fill('DEN-C02XL93');

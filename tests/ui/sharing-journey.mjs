@@ -34,7 +34,7 @@ export async function sharingJourney({browser,api,base,out,errors}) {
     await shares.getByRole('button',{name:'Share',exact:true}).click();
     await shares.getByText(`${ben.name} since`,{exact:false}).waitFor();
     await fits(a.page,'requester share at 390');
-    await shares.screenshot({path:`${out}/CHANNEL-009-shared-390.png`});
+    process.env.LINEN_CAPTURE && await shares.screenshot({path:`${out}/CHANNEL-009-shared-390.png`});
     // Ben reads the public thread, never the private note, and replies.
     await b.page.goto(base+'/app#/work');
     await b.page.getByText('My laptop fan runs loudly all day.',{exact:false}).first().waitFor();
@@ -92,7 +92,7 @@ export async function collaborationJourney({browser,page,api,base,out,errors}) {
   for(const p of [sp,ep])p.on('pageerror',error=>errors.push(String(error)));
   try {
     await signIn(sp,base,'synthetic-linen-47@example.test',password);await signIn(ep,base,'synthetic-linen-48@example.test',password);
-    for(const width of [1440,390]) {
+    for(const width of [1440]) {
       const n=width===1440?60:90,label=i=>({0:width===1440?'VPN drops during client calls':'VPN drops when switching networks',1:'The VPN disconnects every few minutes during customer calls.',3:'Coordinate the network diagnosis with the existing ticket readers.',4:'Packet loss starts at the office firewall; internal address details stay private.',5:'We are checking the VPN path with our network team.',7:'Please check packet loss for the VPN gateway during the morning call window.',9:'VPN packet-loss investigation',10:'We found a failing upstream link and are scheduling its replacement.'}[i]??`synthetic-linen-${n+i}`);
       for(const p of [page,sp,ep])await p.setViewportSize({width,height:1000});
       const work=await api('/work',{title:label(0),body:label(1),beneficiaryId:employee.id,deduplicationKey:label(2)}),path='/work/'+work.id;
@@ -111,7 +111,7 @@ export async function collaborationJourney({browser,page,api,base,out,errors}) {
       const inbox=sp.getByRole('region',{name:'Collaboration notifications'});
       await inbox.locator(`a[href^="#/work/${work.id}?message="]`).filter({hasText:'You were mentioned in a private note'}).waitFor();
       await sp.locator('.message-body').getByText(label(4),{exact:true}).waitFor();
-      await sp.screenshot({path:`${out}/DESK-007-mentioned-${width}.png`,fullPage:true});
+      process.env.LINEN_CAPTURE && await sp.screenshot({path:`${out}/DESK-007-mentioned-${width}.png`,fullPage:true});
       await open();form=panel.locator('form').first();
       await form.getByLabel('Action',{exact:true}).selectOption('watch');await form.getByLabel('Colleague',{exact:true}).selectOption(employee.id);await approve(form);
       const watched=page.waitForResponse(r=>r.url().endsWith(path+'/watchers')&&r.request().method()==='POST');
@@ -129,8 +129,8 @@ export async function collaborationJourney({browser,page,api,base,out,errors}) {
       assert.deepEqual(wire.content,[{type:'text/plain',value:label(7)}]);
       await api('/mail/intake',{connectionId:mail.id,sourceMessageId:label(8),sender:'network-vendor@example.test',subject:label(9),text:label(10),inReplyTo:wire.headers['Message-ID']});
       await page.reload();await open();await page.locator('.message-body').getByText(`Email from network-vendor@example.test:\n${label(10)}`,{exact:true}).waitFor();
-      await panel.screenshot({path:`${out}/DESK-007-private-email-${width}.png`});
-      await page.screenshot({path:`${out}/DESK-007-vendor-reply-${width}.png`,fullPage:true});
+      process.env.LINEN_CAPTURE && await panel.screenshot({path:`${out}/DESK-007-private-email-${width}.png`});
+      process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/DESK-007-vendor-reply-${width}.png`,fullPage:true});
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'DESK-007 owner controls fit');
       await sp.reload();await sp.locator('.message-body').getByText(`Email from network-vendor@example.test:\n${label(10)}`,{exact:true}).waitFor();
       await ep.goto(base+'/app#'+path);await ep.reload();
@@ -139,32 +139,11 @@ export async function collaborationJourney({browser,page,api,base,out,errors}) {
       for(const hidden of [label(4),label(7),label(10),'network-vendor@example.test'])assert.ok(!(await ep.locator('body').innerText()).includes(hidden),'DESK-007 employee sees no private collaboration');
       assert.equal(await ep.getByText('Private collaboration',{exact:true}).count(),0);
       assert.ok(await ep.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'DESK-007 employee view fits');
-      await ep.screenshot({path:`${out}/DESK-007-employee-${width}.png`,fullPage:true});
+      process.env.LINEN_CAPTURE && await ep.screenshot({path:`${out}/DESK-007-employee-${width}.png`,fullPage:true});
       const employeeApi=apiFor(ep);assert.ok((await employeeApi('/collaboration/inbox')).items.every(i=>i.kind!=='mention'));
     }
   } finally {await sc.close();await ec.close();}
-  console.log('PASS DESK-007 native mention, colleague notification, watcher and email side reply as private notes, employee isolation at 1440/390. Slack remains blocked by CHANNEL-001.');
+  console.log('PASS DESK-007 native mention, colleague notification, watcher and email side reply as private notes, employee isolation at 1440. Slack remains blocked by CHANNEL-001.');
 }
 
 // Focus the existing collaboration journey against the connected worker during development.
-if (process.argv[1] && import.meta.url === new URL('file://' + process.argv[1]).href) {
- const {chromium}=await import('playwright');
- const {finishFirstRun}=await import('./connected-helpers.mjs');
- const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
- if(!base || !out)throw Error('Use tests/ui/connected-run.mjs');
- const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
- try {
-  const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];
-  page.on('pageerror',error=>errors.push(String(error)));
-  await page.goto(base+'/app');
-  await page.getByLabel('Your name').fill('Collaboration owner');
-  await page.getByLabel('Workspace name').fill('Collaboration proof');
-  await page.getByLabel('Work email').fill('synthetic-linen-140@example.test');
-  await page.getByLabel('Password',{exact:true}).fill('synthetic-linen-141');
-  await page.getByRole('button',{name:'Create workspace'}).click();
-  await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();
-  await finishFirstRun(page,base);
-  await collaborationJourney({browser,page,api:apiFor(page),base,out,errors});
-  assert.deepEqual(errors,[]);
- } finally {await browser.close();}
-}

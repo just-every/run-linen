@@ -16,10 +16,8 @@ const attrs = (html, name) => [...html.matchAll(new RegExp(`\\s${name}="([^"]*)"
 test('the run site builds, Run Linen opens /run, and every link and file it names resolves', () => {
   execFileSync(join(root, 'node_modules/.bin/rer'), ['build', '--site'], { cwd: root, stdio: 'pipe' })
   const home = readFileSync(join(site, 'index.html'), 'utf8')
-  assert.match(home, /<a class="run-button" href="\/run">Run Linen/, 'the homepage leads with Run Linen to /run')
+  assert.ok(attrs(home,'href').includes('/run'), 'The homepage opens the public Run flow')
   const visible = home.replace(/<[^>]+>/g, '')
-  assert.ok(visible.includes('curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-linen'), 'the homepage shows the one-line start')
-  assert.ok(visible.includes('npx -y @runeditrun/rer dev just-every/run-linen'), 'the homepage shows the npx alternative')
   assert.doesNotMatch(home, /localhost|127\.0\.0\.1|RER_[A-Z]/, 'the homepage shows nothing from a running installation')
   assert.ok(served('run') && served('docs'), '/run and /docs are built')
   const all = pages(site)

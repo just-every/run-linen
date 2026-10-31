@@ -41,7 +41,7 @@ async function port() {
 try {
   let url = process.env.LINEN_TEST_URL;
   if (!url) {
-    await command("pnpm", ["build"]);
+    if (!process.env.LINEN_TEST_BUILT) await command("pnpm", ["run", "build:app"]);
     await cp(join(root, "dist"), join(scratch, "dist"), { recursive: true });
     const value = await port();
     url = `http://127.0.0.1:${value}`;

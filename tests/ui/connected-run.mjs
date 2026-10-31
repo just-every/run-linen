@@ -50,9 +50,9 @@ async function port() {
 try {
   let url = process.env.LINEN_TEST_URL;
   if (!url) {
-    await command("pnpm", ["build"]);
+    if (!process.env.LINEN_TEST_BUILT) await command("pnpm", ["run", "build:app"]);
     await cp(join(root, "dist"), join(scratch, "dist"), { recursive: true });
-    if (!liveReadOnly) await cp(join(root, 'tests/ui/provider-boundary.mjs'), join(scratch, 'dist/server/provider-boundary.mjs'));
+    if (!liveReadOnly) await cp(resolve(root, process.env.LINEN_TEST_PROVIDER_BOUNDARY || 'tests/ui/provider-boundary.mjs'), join(scratch, 'dist/server/provider-boundary.mjs'));
     await writeFile(join(scratch, 'dist/server/journey-wrapper.js'), `import product from './index.js';
 ${liveReadOnly ? '' : "import {bind, fixtureRequest} from './provider-boundary.mjs';"}
 export default {...product, async fetch(request, env, ctx) { ${liveReadOnly ? '' : 'bind(env);'} if (new URL(request.url).pathname === '${liveReadOnly ? '/__journey/tick' : '/__fixture/tick'}') { await product.scheduled({scheduledTime:Date.now(),cron:'* * * * *'},env,ctx); return Response.json({ticked:true}); } return ${liveReadOnly ? '' : 'await fixtureRequest(request, env) || '}product.fetch(request, env, ctx); }};

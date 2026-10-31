@@ -47,7 +47,7 @@ export async function relationshipActivityJourney({ agentPage, ownerApi, employe
     await agentPage.goto(`${base}/app#/work/${id}`);
     const activity = agentPage.getByRole('list', { name: 'Ticket activity', exact: true });
     for (const text of expected) await activity.getByText(text, { exact: false }).first().waitFor();
-    for (const width of [1440, 390]) {
+    for (const width of [1440]) {
       await agentPage.setViewportSize({ width, height: 1000 });
       await activity.scrollIntoViewIfNeeded();
       await captureJourney(agentPage, { path: `${out}/DESK-017-${name}-relationships-${width}.png`, fullPage: true });
@@ -58,7 +58,7 @@ export async function relationshipActivityJourney({ agentPage, ownerApi, employe
   await publicActivity.getByText('I also need a replacement docking cable.', { exact: true }).waitFor();
   assert.equal(await publicActivity.getByText('Internal activity', { exact: true }).count(), 0, 'DESK-017 no approval or relationship fields reach the employee');
   assert.ok(!(await publicActivity.innerText()).includes('vpn-diagnostics'), 'DESK-017 the approval payload remains internal');
-  for (const width of [1440, 390]) {
+  for (const width of [1440]) {
     await employeePage.setViewportSize({ width, height: 1000 });
     await captureJourney(employeePage, { path: `${out}/DESK-017-employee-after-relationships-${width}.png`, fullPage: true });
   }

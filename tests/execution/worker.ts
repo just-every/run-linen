@@ -1,4 +1,5 @@
 import { registerWorkRoutes } from '../../src/features/work';
+import { registerConnectionRoutes } from '../../src/features/connections';
 import { providerFetch } from "../../src/features/execution/transport";
 import { Hono } from "hono";
 import {
@@ -24,6 +25,7 @@ let present = false,
   identity: any = null,
   mailWrites = 0,
   mailLost = false,
+  notificationPackets: unknown[] = [],
   memberId = "person",
   probeMutation = "";
 // Provider fixtures are exclusively in the test worker, never application modules.
@@ -59,7 +61,14 @@ globalThis.fetch = async (input: any, init: any = {}) => {
     return Response.json({ access_token: "test-token" });
   }
   if (u.hostname === "api.sendgrid.com") {
+    if (!init.method || init.method === 'GET') {
+      if(u.pathname==='/v3/scopes')return Response.json({scopes:['mail.send']});
+      if(u.pathname==='/v3/user/username')return Response.json({user_id:1,username:'synthetic-linen-20000'});
+      if(u.pathname==='/v3/verified_senders')return Response.json({results:[{id:1,from_email:'linen@example.test',verified:true}]});
+      return new Response(null,{status:404});
+    }
     mailWrites++;
+    notificationPackets.push(JSON.parse(String(init.body)));
     if (mailLost) {
       mailLost = false;
       throw new Error("mail receipt lost");
@@ -178,7 +187,7 @@ app.post("/fixture", async (c) => {
   if (b.mailLost) mailLost = true;
   invalidProbe = !!b.invalidProbe;
   probeMutation = b.probeMutation || "";
-  return c.json({ present, writes, mailWrites, oktaWrites });
+  return c.json({ present, writes, mailWrites, oktaWrites, ...(b.notificationPackets?{notificationPackets}: {}) });
 });
 app.post("/fixture/secret", async (c) =>
   c.json({
@@ -231,6 +240,7 @@ app.post("/fixture/native-fetch", async (c) => {
   return c.json({ status: r.status });
 });
 registerExecutionRoutes(app);
+registerConnectionRoutes(app);
 registerWorkRoutes(app);
 app.onError((e, c) =>
   c.json(

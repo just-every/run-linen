@@ -20,7 +20,7 @@ API-004. REST tokens authorize `/api/v1/*` only and are refused by API-003. This
 
 API-003, API-005, API-006, API-007. Native owner routes at `/api/v1/mcp-credentials` mint, list and revoke separate-audience grants. `/api/mcp` authenticates before protocol discovery. Losing the issuing owner returns `mcp_issuer_inactive`; narrowing a grant audits a versioned `mcp.queue_grant_narrowed` event. Queue grants narrow through `/api/v1/mcp-credentials/:id/narrow`, using the current grant revision; widening requires re-minting. Only dropdowns can be owner-classified nonpersonal through `/api/v1/mcp-fields/:id/classification`. Missing, out-of-grant, HR and restricted tickets all return `not_found`.
 
-`tests/platform/base-auth-runtime.mjs` and its `mcp-tools-cases.mjs` journey assert the full native owner/Desk bot boundary. `tests/platform/base-auth-transfer.mjs` asserts actual native archive compatibility and inert restored grants; `tests/ui/mcp-journey.mjs` asserts the internal-comment owner/employee views at 1440 and 390. These are local protocol and native-UI results, with no claim that an external agent service or provider has accepted an integration.
+`tests/platform/base-auth-runtime.mjs` and its `mcp-tools-cases.mjs` journey assert the full native owner/Desk bot boundary. `tests/platform/base-auth-transfer.mjs` asserts actual native archive compatibility and inert restored grants; `tests/platform/base-auth-runtime.mjs` asserts the internal-comment owner/employee views at 1440 and 390. These are local protocol and native-UI results, with no claim that an external agent service or provider has accepted an integration.
 
 ## Post-implementation review
 

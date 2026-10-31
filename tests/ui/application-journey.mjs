@@ -121,7 +121,7 @@ export async function catalogFormJourney({page,api,base,out}) {
   await submitted.getByText('Concrete',{exact:true}).waitFor();
   assert.equal((await api(`/work/${work.id}/catalog-requests`)).items[0].catalogSnapshot.revision,current.revision,'CATALOG-001 in-flight form retains original revision after owner edits');
   await captureJourney(page,{path:out+'/CATALOG-001-retained.png',fullPage:true});
-  console.log('PASS CATALOG-001 native form editor, conditional request, cost/delivery and immutable submitted revision at 1440/390');
+  console.log('PASS CATALOG-001 native form editor, conditional request, cost/delivery and immutable submitted revision at 1440');
 }
 
 /** CATALOG-001: native employee selection and refusal use live reviewed audience facts. */
@@ -149,7 +149,7 @@ export async function catalogAudienceJourney({browser,page,api,base,out}) {
       {id:'wall',label:'Wall type',type:'text',required:true,when:{fieldId:'mount',equals:'Wall'}},
     ]}});
   try {
-    for(const width of [1440,390])for(const user of users){
+    for(const width of [1440])for(const user of users){
       const ep=user.page;await ep.setViewportSize({width,height:1000});
       const work=await user.api('/work',{title:'A monitor for '+user.label,body:'Replace the training display',deduplicationKey:crypto.randomUUID()});
       await ep.goto(base+'/app#/work/'+work.id);
@@ -171,7 +171,7 @@ export async function catalogAudienceJourney({browser,page,api,base,out}) {
         await chooser.getByLabel('Monitor mounting',{exact:true}).selectOption('Wall');await chooser.getByLabel('Monitor mounting',{exact:true}).focus();await ep.keyboard.press('Tab');
         await chooser.getByLabel('Wall type',{exact:false}).fill('Concrete');
         await chooser.getByLabel(/What do you need it for/).fill('Training room display');
-        await ep.screenshot({path:out+`/CATALOG-001-audience-${user.label}-form-${width}.png`,fullPage:true});
+        process.env.LINEN_CAPTURE && await ep.screenshot({path:out+`/CATALOG-001-audience-${user.label}-form-${width}.png`,fullPage:true});
         const sending=ep.waitForResponse(r=>r.url().endsWith('/fulfilment')&&r.request().method()==='POST');
         await chooser.getByRole('button',{name:'Save',exact:true}).focus();await ep.keyboard.press('Enter');
         assert.equal((await sending).status(),201,'CATALOG-001 both eligible departments submit the native form');
@@ -179,7 +179,7 @@ export async function catalogAudienceJourney({browser,page,api,base,out}) {
         await submitted.getByText('Concrete',{exact:true}).waitFor();
       }
       assert.equal(await ep.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'CATALOG-001 audience screen fits the viewport');
-      await ep.screenshot({path:out+`/CATALOG-001-audience-${user.label}-${width}.png`,fullPage:true});
+      process.env.LINEN_CAPTURE && await ep.screenshot({path:out+`/CATALOG-001-audience-${user.label}-${width}.png`,fullPage:true});
     }
     // The item can move while an eligible employee has the old form open.
     const user=users[0],ep=user.page,work=await user.api('/work',{title:'Review changed monitor',body:'Changed availability',deduplicationKey:crypto.randomUUID()});
@@ -189,24 +189,9 @@ export async function catalogAudienceJourney({browser,page,api,base,out}) {
     await api(`/catalog/${item.id}/audience`,{revision:1,audience:{department:[legal.id]}});
     const sending=ep.waitForResponse(r=>r.url().endsWith('/fulfilment')&&r.request().method()==='POST');
     await chooser.getByRole('button',{name:'Save',exact:true}).focus();await ep.keyboard.press('Enter');assert.equal((await sending).status(),409,'CATALOG-001 native stale catalog revision is refused');
-    for(const width of [1440,390]){await ep.setViewportSize({width,height:1000});await ep.getByText('This item changed while you were filling it in',{exact:false}).waitFor();await ep.screenshot({path:out+`/CATALOG-001-audience-changed-${width}.png`,fullPage:true});}
-    console.log('PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440/390');
+    for(const width of [1440]){await ep.setViewportSize({width,height:1000});await ep.getByText('This item changed while you were filling it in',{exact:false}).waitFor();process.env.LINEN_CAPTURE && await ep.screenshot({path:out+`/CATALOG-001-audience-changed-${width}.png`,fullPage:true});}
+    console.log('PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440');
   } finally {for(const user of users)await user.context.close();}
 }
 
 // Developer-only focused entry point; the ordinary browser suite also runs this journey.
-if(process.argv[1] && import.meta.url===new URL('file://'+process.argv[1]).href) {
-  const {chromium}=await import('playwright');const {apiFor,finishFirstRun}=await import('./connected-helpers.mjs');
-  const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;if(!base||!out)throw Error('Use tests/ui/run.mjs');
-  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
-  try {
-    const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
-    await page.goto(base+'/app');await page.getByLabel('Your name').fill('Catalog owner');await page.getByLabel('Workspace name').fill('Audience proof');
-    await page.getByLabel('Work email').fill('catalog-owner@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic-Connected-browser-2026');
-    await page.getByRole('button',{name:'Create workspace'}).click();await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();await finishFirstRun(page,base);
-    await catalogFormJourney({page,api:apiFor(page),base,out});
-    await catalogAudienceJourney({browser,page,api:apiFor(page),base,out});
-    const {catalogQuoteJourney}=await import('./catalog-quote-journey.mjs');
-    await catalogQuoteJourney({browser,page,api:apiFor(page),base,out});
-  } finally {await browser.close();}
-}

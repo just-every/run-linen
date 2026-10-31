@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 16 | 133 | 29 | 178 |
+| Core | 15 | 134 | 29 | 178 |
 | Agent surface | 0 | 0 | 8 | 8 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 16 | 133 | 37 | 186 |
+| Full target | 15 | 134 | 37 | 186 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -143,7 +143,7 @@ Core · published · **partial** · Cites BASE-ROLE-001, BASE-ACCESS-004, BASE-D
 4. Revoked membership prevents later access.
 5. Erasure prevents later access and replay.
 
-**Evidence.** `src/platform/auth.ts`, `src/features/work/privacy.ts`, `tests/ui/browser.mjs`, `tests/platform/privacy-runtime.mjs`, `tests/work/person-binding-runtime.mjs`
+**Evidence.** `src/platform/auth.ts`, `src/features/work/privacy.ts`, `tests/ui/browser.mjs`, `tests/adoption/runtime.mjs`, `tests/work/person-binding-runtime.mjs`; public erasure revokes native sessions and scoped memberships, retains foreign memberships/profile/audit, refuses self-lockout and replay after restart: `tests/adoption/platform-privacy-cases.mjs` platformPrivacyChecks
 **Gap.** Not asserted: denial of the private note, attachment and HR record through search, notifications, exports and AI context, and that revoked membership prevents later access. Conversation, direct-download and lifecycle denial and erasure without replay are asserted.
 
 #### A2 — Granted action
@@ -213,7 +213,7 @@ Core · published · **done** · Cites BASE-DATA-001, BASE-OPS-002, BASE-BACKUP-
 2. The upgrade retains every prior migration entry.
 3. Import with an approval that stays inert.
 
-**Evidence.** `tests/adoption/runtime.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/adoption/lightweight-import-cases.mjs`, `tests/adoption/coexistence-route-cases.mjs`, `tests/adoption/prior-data-upgrade.mjs`, `scripts/edition-authoring/updates.test.mjs`, `scripts/edition-authoring/base-copies.test.mjs`, `tests/adoption/history-cases.mjs`, `tests/ui/archive-journey.mjs`
+**Evidence.** (1) Preserved identities, relationships, private/public history, attachment bytes and inert approval/policy/effect history: `tests/adoption/runtime.mjs` native two-generation restore, `tests/platform/base-auth-transfer.mjs` actual rer export/reset/import, and `tests/adoption/lightweight-import-cases.mjs` lightweightImportChecks. (2) Reviewed source counts, replay, dual execution, current final delta and late-arrival reconciliation: `tests/adoption/coexistence-route-cases.mjs` coexistenceRouteChecks through production routes, plus runtime.mjs execution coexistence checks. (3) Every prior application/provider-fixture row field and migration entry survives actual rer setup; unproved legacy sessions retire and current sign-in is required, with account/privacy and unknown-effect readbacks: `tests/adoption/prior-data-upgrade.mjs`. (4) Owner source changes and useful upstream comparison remain portable; refresh refuses owner-edit loss and applied migration rewrites: `tests/platform/source-custody-journey.mjs` sourceCustodyJourney through `tests/platform/base-auth-transfer.mjs`: changed inputs, explicit mapping comparison, offline extraction and portable receipt; sourceCustodyJourney refresh-base moves every copy to one Base commit and drops a legacy record repository; refresh-base refuses to rewrite an applied migration and leaves every file as it was. (5) Post-erasure typed business/history retention, stable aliases, keyed markers, untyped/stale refusal, concurrent-erasure fencing and two-generation never-rebuild: `tests/adoption/history-cases.mjs` historyArchiveChecks via runtime.mjs. (6) Owner erased-record and fresh snapshot/summary/file controls at 1440/390: `tests/ui/archive-journey.mjs` archiveJourney via connectedLifecycle.
 **Gap.** None.
 
 #### A8 — Erasure in exports and archives
@@ -232,7 +232,7 @@ Core · published · **done** · From A6 · Cites BASE-DATA-001, BASE-DATA-003
 7. Fresh imports stay held and inert.
 8. No field is exempted from the tombstone check and no retained business row is deleted to pass it.
 
-**Evidence.** `tests/adoption/runtime.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/adoption/lightweight-import-cases.mjs`, `tests/adoption/coexistence-route-cases.mjs`, `tests/adoption/prior-data-upgrade.mjs`, `scripts/edition-authoring/updates.test.mjs`, `scripts/edition-authoring/base-copies.test.mjs`, `tests/adoption/history-cases.mjs`, `tests/ui/archive-journey.mjs`
+**Evidence.** (1) Preserved identities, relationships, private/public history, attachment bytes and inert approval/policy/effect history: `tests/adoption/runtime.mjs` native two-generation restore, `tests/platform/base-auth-transfer.mjs` actual rer export/reset/import, and `tests/adoption/lightweight-import-cases.mjs` lightweightImportChecks. (2) Reviewed source counts, replay, dual execution, current final delta and late-arrival reconciliation: `tests/adoption/coexistence-route-cases.mjs` coexistenceRouteChecks through production routes, plus runtime.mjs execution coexistence checks. (3) Every prior application/provider-fixture row field and migration entry survives actual rer setup; unproved legacy sessions retire and current sign-in is required, with account/privacy and unknown-effect readbacks: `tests/adoption/prior-data-upgrade.mjs`. (4) Owner source changes and useful upstream comparison remain portable; refresh refuses owner-edit loss and applied migration rewrites: `tests/platform/source-custody-journey.mjs` sourceCustodyJourney through `tests/platform/base-auth-transfer.mjs`: changed inputs, explicit mapping comparison, offline extraction and portable receipt; sourceCustodyJourney refresh-base moves every copy to one Base commit and drops a legacy record repository; refresh-base refuses to rewrite an applied migration and leaves every file as it was. (5) Post-erasure typed business/history retention, stable aliases, keyed markers, untyped/stale refusal, concurrent-erasure fencing and two-generation never-rebuild: `tests/adoption/history-cases.mjs` historyArchiveChecks via runtime.mjs. (6) Owner erased-record and fresh snapshot/summary/file controls at 1440/390: `tests/ui/archive-journey.mjs` archiveJourney via connectedLifecycle.
 **Gap.** None.
 
 #### A7 — Honest operating and cost boundaries
@@ -337,7 +337,7 @@ Core · published · **partial**
 2. Resolve an unfamiliar multi-system regression with rival explanations, predicted observations and discriminating probes; retain rejected explanations and all attempts.
 3. Include an incorrect fast classification that does not suppress an independently warranted deep investigation.
 
-**Evidence.** `src/features/intelligence/research.ts`, `tests/intelligence/frontier.mjs`
+**Evidence.** `src/features/intelligence/research.ts`, `tests/ui/connected-browser.mjs`
 **Gap.** Frontier evidence gate in ACCEPTANCE.md not demonstrated on a held-out unfamiliar case.
 
 #### F4 — Autonomous service engineering
@@ -384,7 +384,7 @@ Core · published · **partial**
 2. A similar symptom with a different cause rejects reuse and starts fresh investigation.
 3. Context/provider/action/model drift invalidates affected decisions and packages until revalidated; report both wrong reuse and unnecessarily rejected valid reuse.
 
-**Evidence.** `src/features/intelligence/capabilities.ts`, `tests/intelligence/frontier.mjs`
+**Evidence.** `src/features/intelligence/capabilities.ts`, `tests/ui/connected-browser.mjs`
 **Gap.** Frontier evidence gate in ACCEPTANCE.md not demonstrated on held-out cases.
 
 #### F7 — Continuous service simplification
@@ -398,7 +398,7 @@ Core · published · **partial**
 2. Execute a worthwhile granted change and observe subsequent exposure, recurrence, employee impact and net work/cost.
 3. Include migration effort, displaced burden and adverse outcomes; proposals or fewer tickets alone do not pass.
 
-**Evidence.** `src/features/intelligence/simplification.ts`, `tests/intelligence/frontier.mjs`
+**Evidence.** `src/features/intelligence/simplification.ts`, `tests/ui/connected-browser.mjs`
 **Gap.** No substantive redesign compared with continued repair on service outcomes.
 
 ### Employee channels
@@ -725,7 +725,7 @@ Core · target · **partial**
 7. Only the obligation's owner or the workspace owner waives a responsibility, with a reason, which is audited; an automated step with an applied or uncertain effect must be reconciled instead.
 8. A waived step is shown as waived, never as verified, and releases what follows it; a request closes only when every catalog responsibility (automated step and tasks) is verified, done or waived, and cancelling the request cancels the open ones.
 
-**Evidence.** `src/features/work/catalog-task-plan.ts`, `src/features/work/catalog-tasks.ts`, `src/features/work/requests.ts`, `src/features/work/progress.ts`, `src/ui/catalog-task-plan-editor.tsx`, `src/ui/obligation-actions.tsx`, `tests/work/catalog-task-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/ui/catalog-task-journey.mjs`, `tests/ui/catalog-task-browser.mjs`, `tests/platform/base-auth-transfer.mjs`
+**Evidence.** `src/features/work/catalog-task-plan.ts`, `src/features/work/catalog-tasks.ts`, `src/features/work/requests.ts`, `src/features/work/progress.ts`, `src/ui/catalog-task-plan-editor.tsx`, `src/ui/obligation-actions.tsx`, `tests/work/catalog-task-cases.mjs`, `tests/work/amend-manager-runtime.mjs`, `tests/ui/catalog-task-journey.mjs`, `tests/ui/browser.mjs`, `tests/platform/base-auth-transfer.mjs`
 **Gap.** Not asserted: that no team works a request before capacity is in place, and that an automated step with an applied or uncertain effect must be reconciled rather than waived. Plan, ordering, ownership, completion, waiver and close outcomes are asserted.
 
 #### CATALOG-004 — Bundles and kits
@@ -788,7 +788,7 @@ Core · target · **partial**
 4. Withdraw one and see its request canceled.
 5. A person without review cannot be named.
 
-**Evidence.** `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/pending-person-browser.mjs`
+**Evidence.** `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/browser.mjs`
 **Gap.** Not asserted in the cited files: the reason shown on a service held for a pending hire (asserted in tests/ui/pending-person-journey.mjs:52, which this clause does not cite; the cited runtime reads only the audience reason of a service still held after binding). The hold, release into fulfilment on binding, editing, withdrawal cancelling the request, and the refusal of an unreviewed person are asserted.
 
 ### Agent workspace and ticket operations
@@ -809,7 +809,7 @@ Core · target · **partial**
 7. An agent saves a view (filters: open or closed, unassigned or assigned to them, priority, ticket type, group; sort: recently updated, newest, oldest or priority, P1 first and unclassified last) under a name, private to them or shared with every agent in the workspace; running a view narrows its reader's own queue and never widens it, and only its creator or the workspace owner removes it.
 8. The bulk-update screen applies one command (assign, pause, resume or close) to the tickets an agent chooses from the current view, changing or refusing each ticket on its own under the single-ticket rules and reporting both counts.
 
-**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/ui/desk-group-browser.mjs`, `tests/ui/desk-scenario-browser.mjs`
+**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/work/runtime.mjs`; native saved/shared view, five-ticket bulk assignment, scoped lead view and pointer-free keyboard next/assign/reply/status: `tests/ui/desk-console-journeys.mjs` deskQueueJourney through `tests/ui/browser.mjs`
 **Gap.** Not asserted: that an MCP queue grant is not group membership and an integration principal is never a group member, lead or assignee. Groups, leads, ownership refusals, lead views, saved views and bulk update are asserted.
 
 #### DESK-018 — Keyboard triage
@@ -828,7 +828,7 @@ Core · target · **partial** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
 7. `?` shows the shortcut reference.
 8. `x` runs a DESK-015 scenario on the open ticket.
 
-**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/ui/desk-group-browser.mjs`, `tests/ui/desk-scenario-browser.mjs`
+**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/work/runtime.mjs`; native saved/shared view, five-ticket bulk assignment, scoped lead view and pointer-free keyboard next/assign/reply/status: `tests/ui/desk-console-journeys.mjs` deskQueueJourney through `tests/ui/browser.mjs`
 **Gap.** Not asserted: k (previous ticket), n (private note), c (close) and Escape leaving a field. Keyboard-only triage with j, a, r, s, Ctrl/⌘+Enter, ? and x is asserted.
 
 #### DESK-002 — Classification and priority
@@ -1085,7 +1085,7 @@ Core · target · **partial** · Rules D-4
 7. Catalog audience, form revisions and exact quote readers remain those of CATALOG-007, CATALOG-001 and CATALOG-008; department staff membership grants no quote access, and a request uses its item's department.
 8. A new mixed-department bundle refuses atomically with its reasons; same-department and legacy bundles retain their existing atomic behavior.
 
-**Evidence.** `tests/work/department-space-cases.mjs`, `tests/ui/department-browser.mjs`, `tests/work/department-ops-cases.mjs`, `tests/work/department-report-cases.mjs`, `tests/services/department-source-cases.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/platform/privacy-runtime.mjs`
+**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).
 **Gap.** Not asserted: that employee department attributes grant no staff authority. Department reads, catalogs, ownership, legacy permissions, quote exclusion and bundle refusal are asserted.
 
 #### DESK-024 — Department handoff and retained HR restriction
@@ -1104,7 +1104,7 @@ Core · target · **partial** · From DESK-011 · Rules D-4
 7. Membership withdrawal applies to ticket reads, private writes, assignments, scenarios, tasks, knowledge sources, derived service/execution views and reports before aggregation; HR sources cannot be copied by a project-plan scenario into a globally visible project.
 8. Native archives retain department metadata and HR restrictions while restoring staff memberships inert; owners explicitly confirm authority again.
 
-**Evidence.** `tests/work/department-space-cases.mjs`, `tests/ui/department-browser.mjs`, `tests/work/department-ops-cases.mjs`, `tests/work/department-report-cases.mjs`, `tests/services/department-source-cases.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/platform/privacy-runtime.mjs`
+**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).
 **Gap.** Not asserted: that a handoff at a stale revision is refused, and that the ticket's submitted forms remain after a handoff (the handed-off request has none). The kept history, owner-only handoff with an audited reason, identity, messages, attachments, sensitivity and the frozen SLA clock, cleared incompatible assignments, the retained HR requirement across later moves, staff-door membership, the requester's public view, HR-service limits, no recovery through relationships, withdrawal before aggregation and inert archived memberships are asserted.
 
 #### DESK-012 — Time tracking and effort
@@ -1169,8 +1169,8 @@ Core · target · **partial**
 7. Steps then apply in that fixed order through each step's own door; a step refused while applying (a concurrent edit, a missing resolution code) stops the run and the run's one audit entry lists only the changes made, each with its before and after.
 8. Runs start from the ticket (keyboard `x`), from the bulk-update screen (one run per chosen ticket) and from the same console at phone width.
 
-**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/ui/desk-scenario-browser.mjs`
-**Gap.** Not asserted: that an HR runner's field and status steps apply (only HR refusals, of classification and task-plan steps, are asserted). The one-entry audited run with no note for the requester, group scoping and refused unoffered runs, role checks that apply nothing, the saving rules, every step kind, a run stopped by a refused step with only its changes audited, and runs from the ticket with x, from bulk update and at phone width are asserted.
+**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs`
+**Gap.** Not asserted: that an HR runner's field and status steps apply (only HR refusals, of classification and task-plan steps, are asserted). The one-entry audited run with no note for the requester, group scoping and refused unoffered runs, role checks that apply nothing, the saving rules, every step kind, a run stopped by a refused step with only its changes audited, and runs from the ticket with x, from bulk update and at phone width are asserted. Missing journey: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney applies the ticket and bulk scenarios at 1440; it no longer starts a run at 390 px.
 
 #### DESK-025 — Record templates and scenario task plans
 
@@ -1187,7 +1187,7 @@ Core · target · **partial** · From DESK-015
 6. Task record templates pre-fill an editable project task title, owner and due date under PROJECT-001's existing read/write roles.
 7. Change record templates use CHANGE-001's exact-version standard change catalog, retaining its standard-change approval and separate grant rules.
 
-**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/ui/desk-scenario-browser.mjs`
+**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs`
 **Gap.** Not asserted: that starting a scenario task plan grants no provider authority and that the run audit links to the plan. Ticket, task and change templates and the project link and boundary are asserted.
 
 #### DESK-016 — Global agent search
@@ -1242,7 +1242,7 @@ Core · target · **partial**
 7. Original message and delivery states remain chronological.
 8. Custom dropdown, multi-select, number, boolean and date inputs use typed values; text remains personal.
 
-**Evidence.** `tests/work/desk-scenario-cases.mjs`, `tests/execution/runtime.mjs`, `tests/work/project-cases.mjs`, `tests/work/catalog-task-cases.mjs`, `tests/work/lifecycle-template-cases.mjs`, `tests/work/desk-field-cases.mjs`, `tests/work/history-erasure-cases.mjs`, `tests/services/run.mjs`, `tests/services/integration.mjs`, `tests/work/asset-contract-cases.mjs`, `tests/adoption/servicenow-import-cases.mjs`, `tests/adoption/history-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/ui/typed-history-journey.mjs`, `tests/ui/desk-scenario-browser.mjs`
+**Evidence.** `tests/work/desk-scenario-cases.mjs` deskActivityChecks and `tests/execution/runtime.mjs`: agent/scenario/rule original changes and employee public-only history. `tests/work/project-cases.mjs`, `tests/work/catalog-task-cases.mjs`, `tests/work/lifecycle-template-cases.mjs`, `tests/work/desk-field-cases.mjs`: typed task, approval, field and SLA mutations. `tests/work/history-erasure-cases.mjs` historyErasureChecks: Alice/Bob/Carol/Dave, classified values, singleton groups, HR restriction, unlinkable people, dates, search and auditor scope. `tests/services/run.mjs`, `tests/services/integration.mjs`, `tests/work/asset-contract-cases.mjs`: original service/asset changes, rollback and private reverse-link scope. `tests/adoption/servicenow-import-cases.mjs` serviceNowImportChecks: original imported priority/actor/time, immutable identity, native scope, retained bytes and erasure/replay. `tests/adoption/history-cases.mjs`: typed export/restore and old-archive refusal. `tests/platform/base-auth-transfer.mjs` actual rer export/reset/import: stable opaque registered-person aliases, preserved rule identities and second-generation re-export without live credential authority. `tests/platform/mcp-tools-cases.mjs`: actor-only retained MCP history with unchanged subject erasure refusal. `tests/ui/typed-history-journey.mjs` via `tests/work/runtime.mjs`: typed editors and record/source timelines at 1440/390.
 **Gap.** Complete every-door custody proof remains unproved.
 
 #### DESK-027 — Imported history and history privacy custody
@@ -1261,7 +1261,7 @@ Core · target · **partial** · From DESK-017 · Rules D-6
 7. Native exports refuse pending history privacy reconciliation instead of copying unevaluated payloads.
 8. Native archives retain stable opaque aliases for registered erased actors, person fields and human initiators while retaining the actual rule identity.
 
-**Evidence.** `tests/work/desk-scenario-cases.mjs`, `tests/execution/runtime.mjs`, `tests/work/project-cases.mjs`, `tests/work/catalog-task-cases.mjs`, `tests/work/lifecycle-template-cases.mjs`, `tests/work/desk-field-cases.mjs`, `tests/work/history-erasure-cases.mjs`, `tests/services/run.mjs`, `tests/services/integration.mjs`, `tests/work/asset-contract-cases.mjs`, `tests/adoption/servicenow-import-cases.mjs`, `tests/adoption/history-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/ui/typed-history-journey.mjs`, `tests/ui/desk-scenario-browser.mjs`
+**Evidence.** `tests/work/desk-scenario-cases.mjs` deskActivityChecks and `tests/execution/runtime.mjs`: agent/scenario/rule original changes and employee public-only history. `tests/work/project-cases.mjs`, `tests/work/catalog-task-cases.mjs`, `tests/work/lifecycle-template-cases.mjs`, `tests/work/desk-field-cases.mjs`: typed task, approval, field and SLA mutations. `tests/work/history-erasure-cases.mjs` historyErasureChecks: Alice/Bob/Carol/Dave, classified values, singleton groups, HR restriction, unlinkable people, dates, search and auditor scope. `tests/services/run.mjs`, `tests/services/integration.mjs`, `tests/work/asset-contract-cases.mjs`: original service/asset changes, rollback and private reverse-link scope. `tests/adoption/servicenow-import-cases.mjs` serviceNowImportChecks: original imported priority/actor/time, immutable identity, native scope, retained bytes and erasure/replay. `tests/adoption/history-cases.mjs`: typed export/restore and old-archive refusal. `tests/platform/base-auth-transfer.mjs` actual rer export/reset/import: stable opaque registered-person aliases, preserved rule identities and second-generation re-export without live credential authority. `tests/platform/mcp-tools-cases.mjs`: actor-only retained MCP history with unchanged subject erasure refusal. `tests/ui/typed-history-journey.mjs` via `tests/work/runtime.mjs`: typed editors and record/source timelines at 1440/390.
 **Gap.** Legacy admission/source-custody tombstones still use plain SHA-256; cross-generation foreign custom/group classification proof and historical erasure dates/associations absent from already-cleared legacy payloads remain unproved, and no earlier-cleared values may be rebuilt.
 
 #### DESK-028 — Erasure of history values
@@ -1280,7 +1280,7 @@ Core · target · **partial** · From DESK-017 · Cites BASE-DATA-003
 7. One redacted history serves agent, auditor, REST, MCP, search, notifications, export, restore and replay; no raw payload is exposed and scrubbed values leave search; employee history remains public-only; older archives receive the same scrub or are refused under A8, and ServiceNow history inherits the same classification on import.
 8. Erasure receipts report counts per class without content.
 
-**Evidence.** `tests/work/desk-scenario-cases.mjs`, `tests/execution/runtime.mjs`, `tests/work/project-cases.mjs`, `tests/work/catalog-task-cases.mjs`, `tests/work/lifecycle-template-cases.mjs`, `tests/work/desk-field-cases.mjs`, `tests/work/history-erasure-cases.mjs`, `tests/services/run.mjs`, `tests/services/integration.mjs`, `tests/work/asset-contract-cases.mjs`, `tests/adoption/servicenow-import-cases.mjs`, `tests/adoption/history-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/ui/typed-history-journey.mjs`, `tests/ui/desk-scenario-browser.mjs`
+**Evidence.** `tests/work/desk-scenario-cases.mjs` deskActivityChecks and `tests/execution/runtime.mjs`: agent/scenario/rule original changes and employee public-only history. `tests/work/project-cases.mjs`, `tests/work/catalog-task-cases.mjs`, `tests/work/lifecycle-template-cases.mjs`, `tests/work/desk-field-cases.mjs`: typed task, approval, field and SLA mutations. `tests/work/history-erasure-cases.mjs` historyErasureChecks: Alice/Bob/Carol/Dave, classified values, singleton groups, HR restriction, unlinkable people, dates, search and auditor scope. `tests/services/run.mjs`, `tests/services/integration.mjs`, `tests/work/asset-contract-cases.mjs`: original service/asset changes, rollback and private reverse-link scope. `tests/adoption/servicenow-import-cases.mjs` serviceNowImportChecks: original imported priority/actor/time, immutable identity, native scope, retained bytes and erasure/replay. `tests/adoption/history-cases.mjs`: typed export/restore and old-archive refusal. `tests/platform/base-auth-transfer.mjs` actual rer export/reset/import: stable opaque registered-person aliases, preserved rule identities and second-generation re-export without live credential authority. `tests/platform/mcp-tools-cases.mjs`: actor-only retained MCP history with unchanged subject erasure refusal. `tests/ui/typed-history-journey.mjs` via `tests/work/runtime.mjs`: typed editors and record/source timelines at 1440/390.
 **Gap.** The retained-value rule is applied to registered history only; its proof across every read, export, restore and replay door remains owed, and until it is complete the existing blanket clearing stays (RL-10).
 
 ### Notifications
@@ -2077,7 +2077,7 @@ Core · target · **partial**
 7. Build and test are results an owner or operator records with a reference; Linen does not run them; a test needs a passed build, and recording either result withdraws earlier decisions.
 8. Each named approver records go or no-go with a reason; the latest decision per approver counts, one no-go holds the release, go needs passed build and test, and a release owner without the owner role cannot decide their own release.
 
-**Evidence.** `tests/services/release-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/release-journey.mjs`, `tests/platform/base-auth-transfer.mjs`
+**Evidence.** (1) Three related changes, build/test references, shared calendar/ICS and ticket/problem/CI links: `tests/services/release-cases.mjs` releaseChecks via `tests/services/integration.mjs`; `tests/ui/operations-console-journeys.mjs` releaseConsoleJourney through `tests/ui/communication-browser.mjs`. (2) Named go/no-go, canary then rollout with live revision/role/grant fences: releaseChecks and the native release journey. (3) Cohort-only release notes: the native release journey asserts member visibility and outsider refusal. (4) Failed member holds completion until verified backout: releaseChecks and native release journey. Every native state is inspected at 1440/390. (5) Inert native archive decisions: `tests/platform/base-auth-transfer.mjs`.
 **Gap.** Not asserted: that tickets link to a release, that a test needs a passed build, that recording a result withdraws earlier decisions, and that a release owner without the owner role cannot decide their own release. Grouping, CIs, approvers, no-go holds, deployment, notes and the failed-change hold are asserted.
 
 #### CHANGE-011 — Release go/no-go gates, notes and completion
@@ -2095,7 +2095,7 @@ Core · target · **partial** · From CHANGE-007 · Rules D-2
 6. A release completes only when every member change is verified (successful) or compensated (explicitly backed out), recording each outcome.
 7. Native and domain restore keep go/no-go decisions as inert history and put the release in review; erasing a person in a release withdraws its decisions.
 
-**Evidence.** `tests/services/release-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/release-journey.mjs`, `tests/platform/base-auth-transfer.mjs`
+**Evidence.** (1) Three related changes, build/test references, shared calendar/ICS and ticket/problem/CI links: `tests/services/release-cases.mjs` releaseChecks via `tests/services/integration.mjs`; `tests/ui/operations-console-journeys.mjs` releaseConsoleJourney through `tests/ui/communication-browser.mjs`. (2) Named go/no-go, canary then rollout with live revision/role/grant fences: releaseChecks and the native release journey. (3) Cohort-only release notes: the native release journey asserts member visibility and outsider refusal. (4) Failed member holds completion until verified backout: releaseChecks and native release journey. Every native state is inspected at 1440/390. (5) Inert native archive decisions: `tests/platform/base-auth-transfer.mjs`.
 **Gap.** Not asserted: that a release all-clear needs a completed release, and that erasing a person withdraws their release decisions. The go gate, approver recheck, backout, phases, calendar span, cohort notes, completion and restore review are asserted.
 
 #### CHANGE-008 — Deployment-raised changes
@@ -2304,7 +2304,7 @@ Core · target · **partial** · Rules D-5
 7. Causal incident rates require evidenced causal assessments: absent assessments remain unknown, never zero by inference.
 8. Problems remain in the backlog, with age and reviewed known errors, until permanent-fix effectiveness is verified.
 
-**Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/kpi-journey.mjs`
+**Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`; native exact 40/25/300 cohort, Denver month/DST, 92%/12%, every tile definition/source link, drill-through, acknowledgement and audience: `tests/ui/operations-console-journeys.mjs` operationsKpiJourney through `tests/ui/communication-browser.mjs`
 **Gap.** Not asserted: a problem leaving the backlog once permanent-fix effectiveness is verified (the only problem has a known error and no verified fix). The month's tiles and rates, drill-through to every counted record, the range in its time zone with Denver midnight boundaries, acknowledgement and restoration timing with missing observations disclosed, recorded priority and explicit major designation, the change denominator, the unknown causal rate, and problem backlog, age and known errors are asserted.
 
 #### REPORT-006 — Asset, compliance, license and spend measures
@@ -2323,7 +2323,7 @@ Core · target · **partial** · From REPORT-005 · Rules D-5
 7. Counts and means retain their source records, definitions, denominators and unknowns; elapsed milliseconds display as minutes to two decimals, USD displays to cents, percentages and other numbers round to two decimals with redundant trailing zeroes omitted, and JSON retains numeric precision.
 8. The report uses existing report and source scopes; an auditor's unavailable native-device scope is disclosed, and a missing feed or outcome is unknown.
 
-**Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/kpi-journey.mjs`
+**Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`; native exact 40/25/300 cohort, Denver month/DST, 92%/12%, every tile definition/source link, drill-through, acknowledgement and audience: `tests/ui/operations-console-journeys.mjs` operationsKpiJourney through `tests/ui/communication-browser.mjs`
 **Gap.** Not asserted: the first-custody-record age basis and the service-asset record-creation basis; separate counting of source records that could share an identity; the operator-recorded or provider-verified compliance label; an expired observation staying unknown; utilization from each asset's latest usage period and the exclusion of a period not wholly within the range; dates outside the upcoming window and the planning-indicator label; and USD to cents and two-decimal rounding in the display. Current-state counts with the snapshot age, the native in-service age basis, noncompliant and unobserved devices, seat utilization, known USD spend without conversion, upcoming renewals and refreshes, definitions, units and records, minutes display, whole percentages, numeric precision and the report scopes are asserted.
 
 ### Platform, administration and integration
@@ -2360,7 +2360,7 @@ Core · target · **partial** · Cites BASE-SIGNIN-001, BASE-SIGNIN-002, BASE-AC
 4. With MFA required for agents, an agent signing in by email is challenged for a second factor.
 5. An SSO assertion without an MFA authentication-method claim is refused for the agent role.
 
-**Evidence.** `src/platform/sso.ts`, `src/platform/base-auth`, `tests/platform/runtime.mjs`, `tests/platform/base-auth-runtime.mjs`
+**Evidence.** `src/platform/sso.ts`, `src/platform/base-auth`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/base-auth-runtime.mjs`
 **Gap.** No SAML/OIDC with named IdPs, SCIM or MFA enforcement.
 
 #### AUDIT-001 — Audit log
@@ -2374,7 +2374,7 @@ Core · target · **partial** · Cites BASE-AUDIT-001, BASE-OPS-005, BASE-DATA-0
 2. Export data, and the auditor reads the entry.
 3. Erase the actor's personal data, and the entries remain anonymized.
 
-**Evidence.** `src/platform/privacy.ts`, `tests/platform/privacy-runtime.mjs`, `tests/platform/config-runtime.mjs`
+**Evidence.** `src/platform/privacy.ts`, `tests/adoption/runtime.mjs`, `tests/platform/config-runtime.mjs`; anonymous event identity/target, dated clearing and foreign-workspace isolation after public erasure: `tests/adoption/platform-privacy-cases.mjs` platformPrivacyChecks through runtime.mjs
 **Gap.** Not asserted: that an auditor reads the entries for a grant change and for a data export. Anonymized audit entries after the actor's erasure are asserted.
 
 #### API-001 — REST API and webhooks
@@ -2438,7 +2438,7 @@ Core · target · **partial** · Cites BASE-AGENT-001 · Rules D-1
 5. Launch refuses approval/decisions, credential minting, grants, role/configuration changes, export, restore, erasure, connectors/provider/external effects, task plans and bulk changes; a future external-effect tool needs an A2 grant and carries its risk class, which the company's policy decides.
 6. Minting never grants agent approval rights or changes existing approvals/grants.
 
-**Evidence.** `src/features/mcp/credentials.ts`, `src/features/mcp/authority.ts`, `src/features/mcp/tools.ts`, `src/features/mcp/projection.ts`, `src/features/mcp/writes.ts`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/ui/mcp-journey.mjs`
+**Evidence.** `src/features/mcp/credentials.ts`; `src/features/mcp/authority.ts`; `src/features/mcp/tools.ts`; `src/features/mcp/projection.ts`; `src/features/mcp/writes.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/mcp-tools-cases.mjs`; `tests/platform/base-auth-transfer.mjs`; real MCP queue/get/comment and native owner attribution/employee isolation: `tests/ui/desk-console-journeys.mjs` mcpCommentJourney through `tests/ui/browser.mjs`
 **Gap.** Not asserted: that unauthenticated discovery returns only a protocol auth error without tool or resource names, and that minting never grants agent approval rights. Session refusal, initialize, scoped discovery, the six closed tools and out-of-grant refusal are asserted.
 
 #### API-005 — MCP credentials
@@ -2456,7 +2456,7 @@ Core · target · **done** · From API-003 · Cites BASE-SECRET-001, BASE-AGENT-
 6. Export carries credential metadata without its hash; native restore retains revoked metadata only and leaves it inert until freshly minted; legacy workspace import retains metadata as history without materializing credentials.
 7. Each call audits credential id, principal, tool, target ids, outcome/refusal code and time, never secrets, request bodies or argument free text.
 
-**Evidence.** `src/features/mcp/credentials.ts`, `src/features/mcp/authority.ts`, `src/features/mcp/tools.ts`, `src/features/mcp/projection.ts`, `src/features/mcp/writes.ts`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/ui/mcp-journey.mjs`
+**Evidence.** `src/features/mcp/credentials.ts`; `src/features/mcp/authority.ts`; `src/features/mcp/tools.ts`; `src/features/mcp/projection.ts`; `src/features/mcp/writes.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/mcp-tools-cases.mjs`; `tests/platform/base-auth-transfer.mjs`; real MCP queue/get/comment and native owner attribution/employee isolation: `tests/ui/desk-console-journeys.mjs` mcpCommentJourney through `tests/ui/browser.mjs`
 **Gap.** None.
 
 #### API-006 — MCP queue readership
@@ -2475,7 +2475,7 @@ Core · target · **done** · From API-003 · Cites BASE-AGENT-003, BASE-AGENT-0
 7. Missing, out-of-grant, HR and restricted tickets all read as not found, audited with a refusal code.
 8. Mint group ids, versioned grant narrowing, issuer loss and calls are audited with ids only; AUDIT-001 inherits these events.
 
-**Evidence.** `src/features/mcp/credentials.ts`, `src/features/mcp/authority.ts`, `src/features/mcp/tools.ts`, `src/features/mcp/projection.ts`, `src/features/mcp/writes.ts`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/ui/mcp-journey.mjs`
+**Evidence.** `src/features/mcp/credentials.ts`; `src/features/mcp/authority.ts`; `src/features/mcp/tools.ts`; `src/features/mcp/projection.ts`; `src/features/mcp/writes.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/mcp-tools-cases.mjs`; `tests/platform/base-auth-transfer.mjs`; real MCP queue/get/comment and native owner attribution/employee isolation: `tests/ui/desk-console-journeys.mjs` mcpCommentJourney through `tests/ui/browser.mjs`
 **Gap.** None.
 
 #### API-007 — MCP ticket projection and writes
@@ -2493,7 +2493,7 @@ Core · target · **partial** · From API-003
 6. No assign/claim/group/state/priority/field/pause/close/merge/bulk/scenario/approve/share action is allowed.
 7. Existing custom fields support text and dropdowns; only dropdowns can be owner-classified nonpersonal, and DESK-010 inherits this classification and projection boundary before adding further field types.
 
-**Evidence.** `src/features/mcp/credentials.ts`, `src/features/mcp/authority.ts`, `src/features/mcp/tools.ts`, `src/features/mcp/projection.ts`, `src/features/mcp/writes.ts`, `tests/platform/base-auth-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/ui/mcp-journey.mjs`
+**Evidence.** `src/features/mcp/credentials.ts`; `src/features/mcp/authority.ts`; `src/features/mcp/tools.ts`; `src/features/mcp/projection.ts`; `src/features/mcp/writes.ts`; `tests/platform/base-auth-runtime.mjs`; `tests/platform/mcp-tools-cases.mjs`; `tests/platform/base-auth-transfer.mjs`; real MCP queue/get/comment and native owner attribution/employee isolation: `tests/ui/desk-console-journeys.mjs` mcpCommentJourney through `tests/ui/browser.mjs`
 **Gap.** Not asserted: that a read returns the ticket number, title, state, type, priority, impact, urgency, category and service ids and labels, the group label, SLA and timestamps, and the principal's own comments. The id, group id and revision, display-only requester and beneficiary, the public thread, classified dropdown fields and redacted history, search limits, the excluded content, the internal revision-checked comment, normal-only creation without placement, the refused actions and the field classification boundary are asserted.
 
 #### PORT-001 — Portable native archive
@@ -2519,7 +2519,7 @@ Core · target · **done** · Cites BASE-DATA-003, BASE-DATA-006
 **Acceptance.**
 1. Erase a person, restore an older archive, and see the content still absent.
 
-**Evidence.** `src/features/adoption/core.ts`, `src/features/work/privacy.ts`, `tests/adoption/runtime.mjs`, `tests/work/person-binding-runtime.mjs`, `tests/platform/privacy-runtime.mjs`, `tests/intelligence/commitment-cases.mjs`, `tests/intelligence/runtime.mjs`
+**Evidence.** `src/features/adoption/core.ts`, `src/features/work/privacy.ts`, `tests/adoption/runtime.mjs`, `tests/work/person-binding-runtime.mjs`, `tests/adoption/platform-privacy-cases.mjs` platformPrivacyChecks through `tests/adoption/runtime.mjs`; `tests/intelligence/commitment-cases.mjs` commitmentChecks through `tests/intelligence/runtime.mjs`: public erasure clears active and disconnected GitHub member bindings, labels, credentials and validation evidence, retires their observations and refuses binding replay.
 **Gap.** None.
 
 #### RETENTION-001 — Retention policies
@@ -2590,7 +2590,7 @@ Core · target · **missing** · Rules D-2
 
 #### SANDBOX-001 — Sub-production workspace and configuration promotion
 
-Core · target · **done** · Rules D-2
+Core · target · **partial** · Rules D-2
 
 **Requirement.** Owners create a sandbox workspace from production configuration, without production personal data unless explicitly chosen and masked under SANDBOX-005. Catalog items, forms, non-provider workflows, complete SLA configuration and roles are changed and tested there. Non-provider workflows include the existing isolated team task workflows and all remaining non-provider workflow configuration. SLA scope includes policy names, first-response, next-response and resolution targets, waiting-on pauses, policy scope and ordering, business calendars and escalation rules under DESK-004 and DESK-005. Provider workflows and all connector configuration belong to SANDBOX-002; notification rules and scenarios belong to SANDBOX-003. These are retained parts of the original sandbox obligation. A promotion package lists every configuration difference across its included families. A separate current owner who contributed no edits reviews and approves it, or an explicitly owner-assigned current sandbox-admin approves under SANDBOX-004's interim rule. Sandbox and package creation and editing remain owner-only; a current owner applies promotion or rollback. Approval and application re-check current authority, non-contribution and the reviewed revisions. Self-approval, editor approval, withdrawn reviewer authority and stale production configuration refuse the whole package without partial application. Promotion applies to production as one versioned, audited configuration change, with reviewed rollback to the prior version. In-flight requests keep their configuration and SLA versions. Promotion and rollback never copy grants, secrets or records and leave production grants and secrets unchanged. Native create, edit, test, diff, approval, promotion and rollback screens cover every configuration family at 1440 and 390 px with keyboard and scope checks. Workspace restore invalidates pre-restore packages and approvals, fences use while restore is applying, and requires fresh packages afterward. Form and workflow rehearsal answers are not retained. The corresponding provider, notification, scenario, administrator approval and masked-copy acceptance remains required under SANDBOX-002, SANDBOX-003, SANDBOX-004 and SANDBOX-005. SANDBOX-001 to SANDBOX-004 preserve the complete incumbent category job: all of them inherit A1–A7 and the applicable CATALOG-007 audience and CATALOG-008 quote, DESK-004/005 SLA, DESK-015 scenario, NOTIFY-001/002 notification, ROLE-001 authority, PORT-001 restore, ERASURE-001 and RETENTION-001 rules, and any Slack or Teams surface inherits CHANNEL-001 or CHANNEL-002 (D-2). Shared infrastructure does not establish completion of a transferred family, and the split itself enables no provider action or personal-record copy.
 
@@ -2604,8 +2604,8 @@ Core · target · **done** · Rules D-2
 7. Restore invalidates packages and approvals.
 8. Complete the native journeys at 1440 and 390 px.
 
-**Evidence.** `tests/platform/sandbox-cases.mjs`, `tests/platform/config-runtime.mjs`, `tests/ui/sandbox-journey.mjs`, `tests/ui/catalog-task-browser.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/platform/sandbox-routing-cases.mjs`, `tests/platform/sandbox-approval-version-cases.mjs`, `tests/ui/sandbox-routing-journey.mjs`
-**Gap.** None.
+**Evidence.** `tests/platform/sandbox-cases.mjs` sandboxChecks via `tests/platform/config-runtime.mjs`: owner-only configuration copying and promotion; self and editor approval refusal; no data-bearing writes, copied personal records, grants, credentials or retained rehearsal answers; positive-control outbound observer and zero outbound attempts; isolated catalog forms and parallel team tasks with dependency, concurrency and revision fences; complete supported-field diffs; separate current non-editor owner approval; atomic versioned audited promotion and reviewed rollback; unchanged production records, settings, grants and credentials; stale production and withdrawn reviewer refusal; restore applying fence, old package invalidation, fresh unapproved drafts and foreign-workspace preservation. The same flow proves all existing SLA targets, pauses, scope and ordering swaps, business calendars, escalation levels and waiting rules; custom department role definitions within current ROLE-001 limits with unchanged assignment rows and revision reconfirmation; mixed and SLA-only packages; retained in-flight calendar and follow-up rule versions consumed by the real scheduler; current department and recipient refusal; and retained-recipient erasure with package invalidation. `tests/ui/sandbox-journey.mjs` sandboxJourney via `tests/ui/browser.mjs` proves native creation, supported editors, conditional form rehearsals, task completion, complete supported-field diffs, separate-owner review, promotion, reviewed rollback, keyboard actions, account tooltips and employee refusal at 1440, 390 and 320 px. `tests/platform/base-auth-transfer.mjs` retains actual rer archive invalidation evidence. `tests/platform/sandbox-cases.mjs` sandboxChecks additionally proves isolated lifecycle template fields and dated rehearsal matching, recurring duty fields and next-occurrence previews, and catalog approval fields and stage previews in mixed packages; current references, stale-template and retired-value refusals; preserved admitted lifecycle tasks, recurring occurrences, duties and scheduler cursor; and retained submitted manager gates and approval stages through rollback. `tests/ui/sandbox-journey.mjs` sandboxJourney covers the corresponding native editors, previews, complete diffs, approval, promotion and rollback at 1440 and 390 px.  `tests/platform/sandbox-routing-cases.mjs` sandboxRoutingChecks through sandboxChecks proves every routing rule field, service support bindings, agent skills and shift calendars, assignment modes and caps; isolated destination previews; complete mixed-family diffs; atomic promotion and reviewed rollback; preserved admitted assignments and cursor; changed production and withdrawn-reference refusal without partial application. `tests/platform/sandbox-approval-version-cases.mjs` sandboxApprovalVersionChecks proves retained manager approvals and rejections, conditional thresholds, parallel and serial decisions, frozen calendars and pending timers, decisions entered after promotion, current-role withdrawal and work-amendment invalidation, and refusal to carry decisions through ordinary production edits. `tests/ui/sandbox-routing-journey.mjs` editSandboxRouting and assertSandboxRoutingPromoted through sandboxJourney prove routing edits and tests, destination rehearsal, complete diff, separate-owner approval, promotion and reviewed rollback at 1440 and 390.
+**Gap.** Missing journey: `tests/ui/sandbox-journey.mjs` sandboxJourney performs native create, edit, test, diff, approval, promotion and rollback at 1440 px; `tests/ui/viewport-evidence.mjs` captureJourney can capture those states at 390 px, but the native journeys no longer run at 390 px.
 
 #### SANDBOX-002 — Provider workflows and isolated sandbox connectors
 
@@ -2653,7 +2653,7 @@ Core · target · **partial**
 7. Restore invalidates packages and approvals and cannot revive role authority.
 8. Complete administrator native journeys at 1440 and 390 with keyboard and scope checks.
 
-**Evidence.** `tests/platform/sandbox-cases.mjs`, `tests/platform/config-runtime.mjs`, `tests/platform/sandbox-masked-record-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/ui/sandbox-journey.mjs`, `tests/ui/catalog-task-browser.mjs`
+**Evidence.** `tests/platform/sandbox-cases.mjs` sandboxChecks through `tests/platform/config-runtime.mjs` proves an owner-assigned sandbox administrator reads a reviewed diff and approves promotion and rollback packages; unauthorized, stale-revision and contributing-administrator refusals; session retirement after role changes; refusal of application after administrator revocation without any state or audit mutation; owner-only creation and application. Existing default personal-record exclusion remains enforced. `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks through sandboxChecks proves explicit owner consent and current ticket selection, default exclusion, complete masking before storage, private masked reads, whole-selection refusal, unchanged production records and credentials, source-change invalidation, inherited retention deadlines, durable expiry receipts and refusal to recopy due tickets. The same sandboxChecks flow proves administrator refusal, package and workspace-export exclusion, masked-copy removal with workspace restore and erasure. `tests/platform/base-auth-transfer.mjs` proves actual rer archive exclusion and no revival after reset and import. `tests/ui/sandbox-journey.mjs` sandboxJourney covers native selection, consent and masked inspection with keyboard controls at 1440 and 390 px. Administrator native review and approval screens are proved by `tests/ui/sandbox-journey.mjs` sandboxJourney through `tests/ui/browser.mjs`: owner designation through the native member form, shared reviewed promotion and rollback links, keyboard diff inspection, approval, owner-only application controls and absence of owner-only editor requests at 1440 and 390 px. `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks additionally asserts explicit ticket, message, attachment-metadata and person selections through the public copy door; exact nonempty family set; fully masked fields; absent source values and identity links in storage, reads and sandbox audit; unchanged source family tables; whole-selection refusal for missing, stale or mismatched parents and a deterministic source change between selection and persistence; retirement after each family source change; and earliest attachment deadline retiring all workspace copies. `tests/platform/sandbox-cases.mjs` sandboxChecks asserts masked reads and writes refuse during restore application.
 **Gap.** Complete administrator native journeys, and any interim-role assertions above not already evidenced, remain owed.
 
 #### SANDBOX-005 — Explicitly chosen masked-data copying
@@ -2672,7 +2672,7 @@ Core · target · **partial** · From SANDBOX-004 · Cites BASE-DATA-003
 7. Copies confer no production authority, assignments, grants, credentials or provider execution rights, and production records remain unchanged.
 8. Rehearsal answers remain unretained.
 
-**Evidence.** `tests/platform/sandbox-cases.mjs`, `tests/platform/config-runtime.mjs`, `tests/platform/sandbox-masked-record-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/ui/sandbox-journey.mjs`, `tests/ui/catalog-task-browser.mjs`
+**Evidence.** `tests/platform/sandbox-cases.mjs` sandboxChecks through `tests/platform/config-runtime.mjs` proves an owner-assigned sandbox administrator reads a reviewed diff and approves promotion and rollback packages; unauthorized, stale-revision and contributing-administrator refusals; session retirement after role changes; refusal of application after administrator revocation without any state or audit mutation; owner-only creation and application. Existing default personal-record exclusion remains enforced. `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks through sandboxChecks proves explicit owner consent and current ticket selection, default exclusion, complete masking before storage, private masked reads, whole-selection refusal, unchanged production records and credentials, source-change invalidation, inherited retention deadlines, durable expiry receipts and refusal to recopy due tickets. The same sandboxChecks flow proves administrator refusal, package and workspace-export exclusion, masked-copy removal with workspace restore and erasure. `tests/platform/base-auth-transfer.mjs` proves actual rer archive exclusion and no revival after reset and import. `tests/ui/sandbox-journey.mjs` sandboxJourney covers native selection, consent and masked inspection with keyboard controls at 1440 and 390 px. Administrator native review and approval screens are proved by `tests/ui/sandbox-journey.mjs` sandboxJourney through `tests/ui/browser.mjs`: owner designation through the native member form, shared reviewed promotion and rollback links, keyboard diff inspection, approval, owner-only application controls and absence of owner-only editor requests at 1440 and 390 px. `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks additionally asserts explicit ticket, message, attachment-metadata and person selections through the public copy door; exact nonempty family set; fully masked fields; absent source values and identity links in storage, reads and sandbox audit; unchanged source family tables; whole-selection refusal for missing, stale or mismatched parents and a deterministic source change between selection and persistence; retirement after each family source change; and earliest attachment deadline retiring all workspace copies. `tests/platform/sandbox-cases.mjs` sandboxChecks asserts masked reads and writes refuse during restore application.
 **Gap.** The complete owner-selected masked personal-record target remains owed beyond the interim ticket-row and API-selected message, attachment and person row slice: native family selectors, attachment-content rehearsal, other personal-record families and complete per-family proof that unmasked values are absent from storage, reads, logs and exports remain owed (RL-108).
 
 #### SANDBOX-006 — Masked copy retirement, deadlines and exclusion
@@ -2689,7 +2689,7 @@ Core · target · **partial** · From SANDBOX-004 · Cites BASE-DATA-002
 5. Retirement retains only the minimal non-content control information needed to prevent revival.
 6. Applicable scope, erasure and retention remain enforced on masked copies.
 
-**Evidence.** `tests/platform/sandbox-cases.mjs`, `tests/platform/config-runtime.mjs`, `tests/platform/sandbox-masked-record-cases.mjs`, `tests/platform/base-auth-transfer.mjs`, `tests/ui/sandbox-journey.mjs`, `tests/ui/catalog-task-browser.mjs`
+**Evidence.** `tests/platform/sandbox-cases.mjs` sandboxChecks through `tests/platform/config-runtime.mjs` proves an owner-assigned sandbox administrator reads a reviewed diff and approves promotion and rollback packages; unauthorized, stale-revision and contributing-administrator refusals; session retirement after role changes; refusal of application after administrator revocation without any state or audit mutation; owner-only creation and application. Existing default personal-record exclusion remains enforced. `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks through sandboxChecks proves explicit owner consent and current ticket selection, default exclusion, complete masking before storage, private masked reads, whole-selection refusal, unchanged production records and credentials, source-change invalidation, inherited retention deadlines, durable expiry receipts and refusal to recopy due tickets. The same sandboxChecks flow proves administrator refusal, package and workspace-export exclusion, masked-copy removal with workspace restore and erasure. `tests/platform/base-auth-transfer.mjs` proves actual rer archive exclusion and no revival after reset and import. `tests/ui/sandbox-journey.mjs` sandboxJourney covers native selection, consent and masked inspection with keyboard controls at 1440 and 390 px. Administrator native review and approval screens are proved by `tests/ui/sandbox-journey.mjs` sandboxJourney through `tests/ui/browser.mjs`: owner designation through the native member form, shared reviewed promotion and rollback links, keyboard diff inspection, approval, owner-only application controls and absence of owner-only editor requests at 1440 and 390 px. `tests/platform/sandbox-masked-record-cases.mjs` maskedCopyChecks additionally asserts explicit ticket, message, attachment-metadata and person selections through the public copy door; exact nonempty family set; fully masked fields; absent source values and identity links in storage, reads and sandbox audit; unchanged source family tables; whole-selection refusal for missing, stale or mismatched parents and a deterministic source change between selection and persistence; retirement after each family source change; and earliest attachment deadline retiring all workspace copies. `tests/platform/sandbox-cases.mjs` sandboxChecks asserts masked reads and writes refuse during restore application.
 **Gap.** Workspace-wide retirement, source deadlines and restore fencing are implemented for the interim slice; complete per-family restore and export evidence and package and portable-copy exclusion proof for every family remain owed.
 
 ### Migration and coexistence
@@ -2885,7 +2885,7 @@ Core · push-further · **partial** · Rules D-7
 2. The agent cites the evidence.
 3. The agent records the rejected network hypothesis (F3).
 
-**Evidence.** `src/features/intelligence/research.ts`, `tests/intelligence/frontier.mjs`
+**Evidence.** `src/features/intelligence/research.ts`, `tests/ui/connected-browser.mjs`
 **Gap.** No held-out live case against real IdP, MDM and monitoring logs.
 
 #### AGENT-005 — Build a missing connector
@@ -2931,7 +2931,7 @@ Core · push-further · **partial** · Rules D-7
 2. One is published.
 3. Its measured effect is reported after two weeks.
 
-**Evidence.** `tests/intelligence/ticket-mining-cases.mjs`, `tests/adoption/freshservice-import.mjs`, `tests/intelligence/ticket-mining-scale.mjs`
+**Evidence.** `tests/intelligence/ticket-mining-cases.mjs` ticketMiningChecks through `tests/adoption/freshservice-import.mjs`: current importing owner only; completed source-custodied Freshservice jobs; exact three lexical clusters and source membership; declared historic and recent counts; four inert draft outlines; conditional handling upper bounds with unknown minutes and effect; sparse, duplicate, corrupt and reversed source refusals; no publication or grant issuance. `tests/ui/browser.mjs` runs the same public-door journey with 1,000 imported tickets outside push Verify.
 **Gap.** Substantive automation design beyond lexical title patterns and draft outlines, publication with admin review where the company's policy requires it, native screens, and a measured effect after a declared two-week post-publication observation remain unbuilt. No elapsed window or measured savings is claimed.
 
 #### AGENT-008 — Keep devices and licenses healthy
@@ -2972,7 +2972,7 @@ Core · push-further · **partial** · Rules D-7
 1. A preventive change with recurrence observed over a declared window.
 2. One simplification compared with continued repair on total work.
 
-**Evidence.** `src/features/intelligence/simplification.ts`, `tests/intelligence/frontier.mjs`
+**Evidence.** `src/features/intelligence/simplification.ts`, `tests/ui/connected-browser.mjs`
 **Gap.** No recurrence window measured on a real provider or simplification compared with continued repair.
 
 ## Agent surface

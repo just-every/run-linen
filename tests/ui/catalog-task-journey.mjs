@@ -11,7 +11,7 @@ export async function catalogTaskJourney({page,api,base,out}) {
   const registry=page.getByRole('region',{name:'Application registry',exact:true});
   await registry.locator('details > summary',{hasText:'Manage catalog task plans'}).click();
   const plans=registry.locator('details > summary',{hasText:'Manage catalog task plans'}).locator('..');
-  const card=plans.locator('details').filter({has:page.locator('summary',{hasText:item.name})});
+  const card=plans.locator('details').filter({has:page.locator('summary',{hasText:'Design tool '+suffix})});
   await card.locator(':scope > summary').click();
   const editor=card.locator('form');
   for(const [index,title,hours] of [[1,'Configure the design tool',48],[2,'Welcome the employee',72]]) {
@@ -75,5 +75,5 @@ export async function catalogTaskJourney({page,api,base,out}) {
   assert.deepEqual(states,['done','done','waived'],'CATALOG-003 the request holds one waived step and two done tasks');
   await api(`/work/${work.id}/commands`,{command:'close',reason:'All responsibilities settled',revision:(await api('/work/'+work.id)).work.revision});
   assert.equal((await api('/work/'+work.id)).work.state,'closed','CATALOG-003 the request closes once every responsibility is settled');
-  console.log('PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440/390');
+  console.log('PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440');
 }

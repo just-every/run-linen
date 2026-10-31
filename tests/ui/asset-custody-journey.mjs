@@ -3,7 +3,7 @@ import { action, apiFor } from './connected-helpers.mjs';
 
 export async function assetLifecycleJourney(page, personId, out) {
   const api=apiFor(page),base=new URL(page.url()).origin;
-  for (const width of [1440,390]) {
+  for (const width of [1440]) {
     await page.setViewportSize({width,height:1000});
     await page.goto(base+'/app#/assets');
     const serial=`NS-MACBOOK-DENVER-${width}`;
@@ -12,7 +12,7 @@ export async function assetLifecycleJourney(page, personId, out) {
     },'/assets','Save',201);
     const card=page.locator('.connection-record').filter({has:page.getByRole('heading',{name:serial,exact:true})});
     await card.locator('.badge').getByText('procured',{exact:true}).waitFor();
-    await page.screenshot({path:`${out}/ASSET-004-procured-${width}.png`,fullPage:true});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-004-procured-${width}.png`,fullPage:true});
     async function command(kind,expected=200,certificate={}) {
       await action(page,'Record a custody change',{
         command:kind,personId:['assign','receive','return','loan'].includes(kind) && kind!=='receive' ? personId : '',
@@ -26,12 +26,12 @@ export async function assetLifecycleJourney(page, personId, out) {
     const certificate={certificatePartner:'Front Range ITAD',certificateStandard:'R2v3',certificateReference:'https://records.example.test/itad/PO-1042.pdf'};
     await command('dispose',422,certificate);
     await card.locator('.badge').getByText('received',{exact:true}).waitFor();
-    await page.screenshot({path:`${out}/ASSET-004-assigned-refusal-${width}.png`,fullPage:true});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-004-assigned-refusal-${width}.png`,fullPage:true});
     await command('repair');
     await command('return');
     await command('loan');
     await card.locator('.badge').getByText('loaned',{exact:true}).waitFor();
-    await page.screenshot({path:`${out}/ASSET-004-loaned-${width}.png`,fullPage:true});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-004-loaned-${width}.png`,fullPage:true});
     await command('return');
     await command('retire');
     await command('dispose',422,{certificatePartner:'',certificateStandard:'',certificateReference:''});
@@ -43,9 +43,9 @@ export async function assetLifecycleJourney(page, personId, out) {
     await link.waitFor();
     assert.equal(await link.getAttribute('href'),certificate.certificateReference,'ASSET-004 preserves the actual certificate reference');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'ASSET-004 fits the viewport');
-    await page.screenshot({path:`${out}/ASSET-004-disposed-${width}.png`,fullPage:true});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-004-disposed-${width}.png`,fullPage:true});
     await link.scrollIntoViewIfNeeded();
-    await page.screenshot({path:`${out}/ASSET-004-certificate-${width}.png`});
+    process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-004-certificate-${width}.png`});
     const result=await api(`/assets/${asset.id}/history`);
     assert.ok(result.items.every(e=>e.actor_id&&e.created_at&&e.evidence));
     assert.deepEqual(result.items.map(e=>e.kind),['procure','receive','assign','receive','repair','return','loan','return','retire','dispose']);

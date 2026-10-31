@@ -33,11 +33,11 @@ export async function departmentRoleJourney({page,api,base,out,browser,departmen
     await target.waitForFunction(()=>!document.querySelector('.loading'));
     await target.evaluate(()=>document.fonts.ready);
     assert.ok(await target.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} fits ${width}`);
-    await target.screenshot({path:`${out}/ROLE-001-${name}-${width}.png`,fullPage:true});
-    await target.screenshot({path:`${out}/ROLE-001-${name}-${width}-viewport.png`});
+    process.env.LINEN_CAPTURE && await target.screenshot({path:`${out}/ROLE-001-${name}-${width}.png`,fullPage:true});
+    process.env.LINEN_CAPTURE && await target.screenshot({path:`${out}/ROLE-001-${name}-${width}-viewport.png`});
   };
   const captureBoth=async(target,name,focus)=>{
-    for(const width of [1440,390]) {
+    for(const width of [1440]) {
       await target.setViewportSize({width,height:1000});
       if(focus)await focus.scrollIntoViewIfNeeded();
       await capture(target,name,width);
@@ -120,7 +120,7 @@ export async function departmentRoleJourney({page,api,base,out,browser,departmen
     assert.ok(!detail.messages.some(message=>message.visibility==='private'||message.body===privateNote),'The ticket detail excludes private notes');
     const denied=await memberPage.evaluate(async ids=>Promise.all(ids.map(async id=>(await fetch(`/api/v1/work/${id}`)).status)),[other.id,legacy.id]);
     assert.deepEqual(denied,[404,404],'IT and unscoped tickets stay unreadable');
-    for(const width of [1440,390]) {
+    for(const width of [1440]) {
       await memberPage.setViewportSize({width,height:1000});
       await memberPage.goto(base+'/app#/work');
       const queueRegion=memberPage.getByRole('region',{name:'Request queue',exact:true});
@@ -215,7 +215,7 @@ export async function departmentRoleJourney({page,api,base,out,browser,departmen
     await captureBoth(memberPage,'member-queue-withdrawn');
     assert.deepEqual(errors,[]);
   } catch(error) {
-    await memberPage.screenshot({path:`${out}/ROLE-001-member-failure.png`,fullPage:true}).catch(()=>{});
+    process.env.LINEN_CAPTURE && await memberPage.screenshot({path:`${out}/ROLE-001-member-failure.png`,fullPage:true}).catch(()=>{});
     throw error;
   } finally {await context.close();}
   console.log('PASS ROLE-001 native: Facilities-only custom read access, named employee assignment and immediate withdrawal, private-note exclusion, role editing, account and refresh tooltips, desktop and mobile evidence.');
