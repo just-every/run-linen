@@ -521,14 +521,14 @@
 }
 
 /* The open-ticket page keeps touch targets large enough alongside agent activity. */
-.request-detail :is(button, input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
+body:has(.request-detail) :is(button, input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
   min-height: 44px;
 }
-.request-detail label:has(input:is([type="checkbox"], [type="radio"])) {
+body:has(.request-detail) label:has(input:is([type="checkbox"], [type="radio"])) {
   min-height: 44px;
   align-content: center;
 }
-.request-detail :is(button, a[href]) {
+body:has(.request-detail) :is(button, a[href]) {
   min-width: 44px;
 }
 .request-detail a[href] {
