@@ -51,7 +51,13 @@ export function nativeTools(env:Env):ToolDefinition[] {
    outputSchema:output,classes:['standard'],untrusted:true,
    async classify(args,ctx){await native(args,ctx);return [{class:'standard',facts:{measure:1}}];},
    async target(args,ctx){const row=await native(args,ctx);return row?{kind:'ticket',id:row.id}:null;},
-   ...(!d.readOnly?{async summary(args:Record<string,any>,ctx:ToolContext){const row=await native(args,ctx);return {target:row?{id:row.id,name:row.title}:{id:ctx.person.id,name:ctx.person.name},items:[String(args.title??row?.title??''),String(args.body)]};}}:{}),
+   ...(!d.readOnly?{async summary(args:Record<string,any>,ctx:ToolContext){
+    const row=await native(args,ctx);
+    const client=await requireClient(env,ctx);
+    const requester=await env.DB.prepare('SELECT id,name FROM users WHERE id=?').bind(client.principal_id).first<{id:string;name:string}>();
+    if(!requester)throw new ToolRefusal('not_found');
+    return {target:row?{id:row.id,name:row.title}:requester,items:[String(args.title??row?.title??''),String(args.body)]};
+   }}:{}),
    ...(d.name==='linen.tickets.reply'?{async revision(args:Record<string,any>,ctx:ToolContext){return (await native(args,ctx))?.revision??null;}}:{}),
    async run(args,ctx){return translate(async()=>{
     const v=verb(d.name,args),client=await nativeClient(env,ctx);
