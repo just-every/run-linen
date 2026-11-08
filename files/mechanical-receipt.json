@@ -1,0 +1,21 @@
+{
+  "head": "5e52e541ebd2e0ec760df7ec132559d75e647ad4",
+  "base": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "main_equals_candidate": false,
+  "changed_files": [
+    "sources.lock.json",
+    "tests/work/sla-policy-cases.mjs",
+    "tests/work/worker.ts"
+  ],
+  "contract_counts": {
+    "partial": 147,
+    "done": 15,
+    "missing": 37
+  },
+  "status_diff_empty": true,
+  "new_test_registrations": 0,
+  "new_email_shaped_fixture_strings": 0,
+  "identity_check": "PASS",
+  "publication_scan": "NOT_RUN: guarded Mac lander owns scan",
+  "full_history": true
+}

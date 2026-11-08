@@ -1,0 +1,45 @@
+{
+  "tag": "sx-linen-c-f7",
+  "head": "5e52e541ebd2e0ec760df7ec132559d75e647ad4",
+  "branch": "cloud/sx-linen-c-f7",
+  "timestamp": "2026-11-08T17:27:36.896608+00:00",
+  "checks": [
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "seconds": 60.54,
+      "output": "work-runtime.log",
+      "sha256": "4a29ca6f383968da5b3cf10de279e27b5b2384b03c3f444c08d67aa047c3f42f"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "seconds": 12.45,
+      "output": "typecheck.log",
+      "sha256": "a66c4db422dbbf466f647fb17ef46b089836f9d234d7a6f3a91f47dac6a9f41e"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "seconds": 0.67,
+      "output": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "seconds": 0.21,
+      "output": "source-lock-check.json",
+      "sha256": "94e47aecf6aec9062cbb2aa8dd66ad5426d2e509edb35116fa5613d2ae59ed5a"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "seconds": 0.22,
+      "output": "views-check.log",
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    }
+  ],
+  "node": "v24.19.0",
+  "test_file_sha256": "67b215cd176a5f1c93c902b719c1fde0a0b4f74cb1eca7e4768b27e1049b7ffc"
+}

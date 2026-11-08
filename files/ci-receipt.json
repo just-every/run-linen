@@ -1,0 +1,19 @@
+{
+  "repository": "just-every/run-linen",
+  "head": "5e52e541ebd2e0ec760df7ec132559d75e647ad4",
+  "pr": "https://github.com/just-every/run-linen/pull/145",
+  "run_id": 42504939771,
+  "event": "pull_request",
+  "status": "completed",
+  "conclusion": "success",
+  "observed_at": "2026-11-08T17:36:51.550787+00:00",
+  "api_calls_used": 6,
+  "main": {
+    "head": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+    "verify": 41346803124,
+    "verify_conclusion": "success",
+    "run_site": 41209839706,
+    "run_site_conclusion": "success"
+  },
+  "html_url": "https://github.com/just-every/run-linen/actions/runs/42504939771"
+}

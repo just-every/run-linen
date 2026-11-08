@@ -1,0 +1,94 @@
+{
+  "files": [
+    {
+      "blob": "45b8a5652da763f81c4999e663ad4004852382f4",
+      "bytes": 12293,
+      "path": "REPORT.md",
+      "sha256": "672285cb7c05dadf49c29c1329692f5ae875c30c6b2d8ff182c52f1702331ef7"
+    },
+    {
+      "blob": "1467ea3173b43038a16ce2c96c701a68cae6cb40",
+      "bytes": 9665,
+      "path": "candidate.diff",
+      "sha256": "4f38c3a49e7534a4e989698232ac01ffa1cba83a606bf4ef3b23e1955d88b20f"
+    },
+    {
+      "blob": "86fae777631e70bcd1ac3f1767f928801bb3c7ae",
+      "bytes": 621,
+      "path": "ci-receipt.json",
+      "sha256": "0061495dcdb332b7ed778850dc6348c469274552b18b01b300597c398fb8288d"
+    },
+    {
+      "blob": "f6757a35cb99671ff4240547747a140cba96b85a",
+      "bytes": 230,
+      "path": "commit-identities.txt",
+      "sha256": "30c34dcbd937a2c611b8adf49e93c3ff03bc48c1cdca0915158ce6d7dad3a350"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "5e6440376405b8811509305c5ad5b94c1f33e757",
+      "bytes": 1430,
+      "path": "local-receipt.json",
+      "sha256": "a8e7e8033ff32cddd9dd161260ca6588f26207f767b2a6abb23bb89a1ef409fa"
+    },
+    {
+      "blob": "922fcf234cf859fb016de236034f7ba5dd1a32ab",
+      "bytes": 560,
+      "path": "mechanical-receipt.json",
+      "sha256": "5836075ca9914c9aa9627d535e4b935be1ab5036ca4e2d6f20f3537ab3735e9f"
+    },
+    {
+      "blob": "a8feec8dcc91a4eea6f1ec290bcf1de88abad3b6",
+      "bytes": 72,
+      "path": "product-remote-ref.txt",
+      "sha256": "f3f60098b32390f834915a1a36825e8f3b4ebf7dc3aaeccb45121548cfe7c69f"
+    },
+    {
+      "blob": "3a9e7c43b46f5152b55d92951788d80b22f2ff5e",
+      "bytes": 309122,
+      "path": "source-lock-check.json",
+      "sha256": "94e47aecf6aec9062cbb2aa8dd66ad5426d2e509edb35116fa5613d2ae59ed5a"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "status-diff.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "6d96a0d71a2aaf06543f5bf1845a7465ec7e1e8b",
+      "bytes": 224,
+      "path": "typecheck.log",
+      "sha256": "a66c4db422dbbf466f647fb17ef46b089836f9d234d7a6f3a91f47dac6a9f41e"
+    },
+    {
+      "blob": "b59d39532e8a030ff74f6339019ab7870ef51548",
+      "bytes": 70,
+      "path": "views-check.log",
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    {
+      "blob": "3c86266104500be8fe132938ed7c2e589cfed5de",
+      "bytes": 98,
+      "path": "views-generation.log",
+      "sha256": "6a3edad7783bf6c13e63dbe5a49f4f1d6a932a81c60be61934495e59874a258a"
+    },
+    {
+      "blob": "976bcd4b5cd3aab3215ea4c932649392dddc034c",
+      "bytes": 7856,
+      "path": "work-runtime.log",
+      "sha256": "4a29ca6f383968da5b3cf10de279e27b5b2384b03c3f444c08d67aa047c3f42f"
+    }
+  ],
+  "product_branch": "cloud/sx-linen-c-f7",
+  "product_head": "5e52e541ebd2e0ec760df7ec132559d75e647ad4",
+  "ref": "refs/heads/evidence/sx-linen-c-f7",
+  "repository": "just-every/run-linen",
+  "schema": 1,
+  "tag": "sx-linen-c-f7"
+}
