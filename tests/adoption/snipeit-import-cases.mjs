@@ -64,4 +64,52 @@ export async function snipeitImportChecks({ok,request,login,owner,snapshot}) {
   const again=await ok(`${base}/dry-run`,'POST',{file},owner);
   assert.deepEqual([again.counts.ready,again.counts.unresolved],[0,498],'Importing the same export again cannot duplicate a device');
   console.log('PASS MIGRATE-004 Snipe-IT export of 500 devices: owner-only read-only dry run reports in-file and existing serial conflicts, apply refused until each is resolved and when Linen changed since review, then one atomic import records devices without Snipe-IT custody');
+
+  // Exercise the file bounds with valid CSV on both sides, using UTF-8 bytes
+  // rather than text length. Notes are disclosed as omitted, never retained.
+  const exportFile=bytes=>({name:'synthetic-linen-assets.csv',base64:bytes.toString('base64')});
+  const csv=rows=>Buffer.from([['Asset Tag','Serial','Notes'],...rows].map(row=>row.map(cell).join(',')).join('\r\n')+'\r\n');
+  const sizedExport=bytes=>{
+    const row=['synthetic-linen-byte-tag','synthetic-linen-byte-1','é'];
+    row[2]+='x'.repeat(bytes-csv([row]).length);
+    return csv([row]);
+  };
+  const byteLimit=sizedExport(2*1024*1024),byteOver=sizedExport(2*1024*1024+1);
+  const rows=Array.from({length:1001},(_,n)=>[`synthetic-linen-row-tag-${pad(n+1)}`,`synthetic-linen-row-${pad(n+1)}`,'']);
+  const rowLimit=csv(rows.slice(0,1000)),rowOver=csv(rows);
+  const invalid=[
+    ['one byte over',byteOver,/at most 2 MiB/],
+    ['one row over',rowOver,/1–1,000 asset rows/],
+    ['missing tag',csv([['synthetic-linen-tag-1','synthetic-linen-tag-1',''],['','synthetic-linen-tag-2','']]),/needs its Snipe-IT asset tag/],
+    ['blank tag',csv([['synthetic-linen-tag-1','synthetic-linen-tag-1',''],['  ','synthetic-linen-tag-2','']]),/needs its Snipe-IT asset tag/],
+    ['duplicate tag',csv([['synthetic-linen-tag-1','synthetic-linen-tag-1',''],['synthetic-linen-tag-1','synthetic-linen-tag-2','']]),/appears twice/],
+    ['case variant tag',csv([['synthetic-linen-tag-1','synthetic-linen-tag-1',''],[' SYNTHETIC-LINEN-TAG-1 ','synthetic-linen-tag-2','']]),/appears twice/],
+  ];
+  for(const [label,bytes,count]of [['exactly 2 MiB',byteLimit,1],['exactly 1,000 rows',rowLimit,1000]]){
+    const file=exportFile(bytes),before=await snapshot();
+    const review=await ok(`${base}/dry-run`,'POST',{file},owner,200,{'X-Test-Read-Only':'1'});
+    assert.deepEqual(review.counts,{rows:count,ready:count,conflicts:0,unresolved:0,rejected:0},label);
+    assert.equal(await snapshot(),before,`${label}: dry run changes no persistent state`);
+    for(const [reason,badBytes,message]of invalid){
+      for(const door of [`${base}/dry-run`,base]){
+        const refused=await request(door,'POST',{file:exportFile(badBytes),reviewedFingerprint:review.fingerprint,acceptOmissions:true},owner);
+        assert.equal(refused.status,422,`${reason} at ${door}: ${await refused.clone().text()}`);
+        const {error}=await refused.json();
+        assert.equal(error.code,'snipeit_input');assert.match(error.message,message);
+        assert.equal(await snapshot(),before,`${reason} at ${door}: refusal changes no persistent state`);
+      }
+    }
+    const prior=(await ok('/assets','GET',undefined,owner)).items;
+    const applied=await ok(base,'POST',{file,reviewedFingerprint:review.fingerprint,acceptOmissions:true},owner,201);
+    assert.equal(applied.created,count,`${label}: reviewed apply succeeds`);
+    const after=(await ok('/assets','GET',undefined,owner)).items,byId=new Map(after.map(asset=>[asset.id,asset]));
+    assert.equal(after.length,prior.length+count,`${label}: every row is persisted once`);
+    for(const asset of prior)assert.deepEqual(byId.get(asset.id),asset,`${label}: existing devices are unchanged`);
+    assert.equal(applied.assets.length,count);
+    for(const {id,assetTag,serial}of applied.assets){
+      const stored=byId.get(id);assert.ok(stored,`${label}: imported device is readable`);
+      assert.deepEqual([stored.asset_tag,stored.serial,stored.state,stored.person_id],[assetTag,serial,'stock',null]);
+    }
+  }
+  console.log('PASS MIGRATE-004 file bounds and unique tags: authenticated dry run and reviewed apply accept exactly 2 MiB and 1,000 rows; both doors refuse one byte or row over, missing or blank tags, duplicate and case variant tags; every dry run and refusal preserves all persistent tables');
 }

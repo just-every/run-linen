@@ -6644,7 +6644,7 @@
       "executable": false
     },
     "tests/adoption/snipeit-import-cases.mjs": {
-      "sha256": "3e477d0ef07bbabdbd314e52afd8e4398489140bddb504d0163b81d38a5de4fd",
+      "sha256": "5eff6011d492cf73f0fe4ccf73ee2ea9cdd65e640331a16b9c432e59b00d224a",
       "executable": false
     },
     "tests/adoption/template-cases.mjs": {
