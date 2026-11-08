@@ -1,0 +1,149 @@
+{
+  "base": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "branch": "cloud/sx-linen-c-f6",
+  "checks": [
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    },
+    {
+      "command": "LINEN_TEST_BUILT=1 LINEN_CAPTURE=1 node tests/ui/run.mjs <packet>/catalog-proof.mjs",
+      "exit": 0,
+      "log": "browser.log"
+    }
+  ],
+  "clauseCountsAfter": {
+    "done": 15,
+    "missing": 37,
+    "partial": 147
+  },
+  "clauseCountsBefore": {
+    "done": 15,
+    "missing": 37,
+    "partial": 147
+  },
+  "clauseCountsIfClaimLands": {
+    "done": 16,
+    "missing": 37,
+    "partial": 146
+  },
+  "contractStatusChanged": false,
+  "generatedViewsCommitted": false,
+  "githubCallsUsed": 4,
+  "head": "6166c604f4597edb03ba52c1a7f2caa30a80daf3",
+  "localToolchain": {
+    "arguments": [
+      "--no-sandbox",
+      "--use-mock-keychain",
+      "--password-store=basic"
+    ],
+    "chromium": "/usr/bin/chromium",
+    "headless": true,
+    "node": "24.19.0",
+    "pnpm": "10.12.4",
+    "rer": "0.2.94"
+  },
+  "mainEquality": false,
+  "mainObserved": {
+    "equalsCandidate": false,
+    "head": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+    "source": "git ls-remote origin refs/heads/main refs/heads/cloud/sx-linen-c-f6"
+  },
+  "newTestRegistrations": 0,
+  "productPush": {
+    "attempt": 1,
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f6",
+    "status": "pushed"
+  },
+  "proofBinding": {
+    "files": {
+      "src/features/work/catalog-form-schema.ts": {
+        "blob": "097c52b93f4613896fde65b99e3d55a9efe3d674",
+        "sha256": "2fc41f2c6d71fe688406e19cc54a34153d36bc633a807a4238dafb31e0c6104e"
+      },
+      "src/features/work/catalog-items.ts": {
+        "blob": "29fb1ca39d798c563a27691627228405d5ed0f0f",
+        "sha256": "d8fff2e2ec7ca34b3be70cf48cbf25a840e07fe6e0f6c5df3c1b8bd6db88b779"
+      },
+      "src/ui/catalog-form-editor.tsx": {
+        "blob": "f05b68cb956c5a70e380cf828b89e82dbff653d6",
+        "sha256": "cad3517525a5e9dae006050a2e2bf453a0bd732f336c03457787b10e718ef582"
+      },
+      "src/ui/catalog-request-form.tsx": {
+        "blob": "ae48a3e9ad29393375f6a7eb75e8f19df792cf1b",
+        "sha256": "ae9cc2365bbc5232d43c8a6b5da6675f0fe472e0bac23869e86c9e3b044deee7"
+      },
+      "tests/ui/application-journey.mjs": {
+        "blob": "7f507c5f417b46b2065e2dd8e36f8bcacb47074d",
+        "sha256": "ea82ff69f2a977dcde65439462285bf4cc06a55587d2f52ef012146d5273f93b"
+      },
+      "tests/work/application-cases.mjs": {
+        "blob": "f965a6d85bf4dcc2747229e42ae9ada1ba9e6a52",
+        "sha256": "8768a86c8bfd3bfe67f6a79e5b4c81ecf4590aacb4247e0de09a7cbf38725775"
+      }
+    },
+    "method": "No relevant file changed between successful local execution and committed candidate; compare sha256 values and Git blobs."
+  },
+  "publicationScan": {
+    "commit": "6166c604f4597edb03ba52c1a7f2caa30a80daf3",
+    "complete": false,
+    "findings": null,
+    "historyScanned": false,
+    "status": "NOT RUN in cloud; guarded lander owns full-history scan"
+  },
+  "recoveryBundle": {
+    "path": "/home/agent/rer-consolidation/work/sx-linen-c-f6/sx-linen-c-f6.bundle",
+    "requiresBase": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+    "sha256": "bb65dc4a3c83922a246c4c098b32c177118bce52b4e187557934cc5f7bea65c3",
+    "verified": true
+  },
+  "repository": "just-every/run-linen",
+  "runSite": "not run; main unchanged",
+  "schema": 1,
+  "tag": "sx-linen-c-f6",
+  "verifyRun": {
+    "conclusion": null,
+    "event": "pull_request",
+    "head_sha": "6166c604f4597edb03ba52c1a7f2caa30a80daf3",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42504998134",
+    "id": 42504998134,
+    "observedAt": "2026-11-08T17:31:47Z",
+    "status": "in_progress"
+  },
+  "verifyStatus": "in_progress"
+}

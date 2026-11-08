@@ -1,0 +1,101 @@
+{
+  "binding": "Same relevant source and test bytes as candidate; see RECEIPT.json",
+  "conclusion": "passed",
+  "door": "Authenticated native session with CSRF at the catalog create, form edit and catalog read routes",
+  "head": "6166c604f4597edb03ba52c1a7f2caa30a80daf3",
+  "journey": "catalogFormJourney",
+  "pageErrors": [],
+  "probes": [
+    {
+      "configurationUnchanged": true,
+      "create": 422,
+      "edit": 422,
+      "patch": {
+        "costCents": -1
+      },
+      "revision": 1
+    },
+    {
+      "configurationUnchanged": true,
+      "create": 422,
+      "edit": 422,
+      "patch": {
+        "costCents": 0.5
+      },
+      "revision": 1
+    },
+    {
+      "configurationUnchanged": true,
+      "create": 422,
+      "edit": 422,
+      "patch": {
+        "deliveryHours": -1
+      },
+      "revision": 1
+    },
+    {
+      "configurationUnchanged": true,
+      "create": 422,
+      "edit": 422,
+      "patch": {
+        "deliveryHours": 0
+      },
+      "revision": 1
+    },
+    {
+      "configurationUnchanged": true,
+      "create": 422,
+      "edit": 422,
+      "patch": {
+        "deliveryHours": 1.5
+      },
+      "revision": 1
+    },
+    {
+      "costCents": 0,
+      "deliveryHours": 1,
+      "form": {
+        "costCents": 0,
+        "deliveryHours": 1,
+        "fields": []
+      }
+    },
+    {
+      "costCents": null,
+      "deliveryHours": null,
+      "form": {
+        "fields": []
+      }
+    },
+    {
+      "costCents": null,
+      "deliveryHours": null,
+      "form": {
+        "costCents": null,
+        "deliveryHours": null,
+        "fields": []
+      }
+    },
+    {
+      "costCents": 0,
+      "deliveryHours": null,
+      "form": {
+        "costCents": 0,
+        "fields": []
+      }
+    },
+    {
+      "costCents": null,
+      "deliveryHours": 48,
+      "form": {
+        "deliveryHours": 48,
+        "fields": []
+      }
+    }
+  ],
+  "schema": 1,
+  "widths": [
+    1440,
+    390
+  ]
+}

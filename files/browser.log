@@ -1,0 +1,3 @@
+PASS CATALOG-001 native form editor, conditional request, known and unknown estimates and immutable submitted revision at 1440
+PASS authenticated catalog estimates: invalid create and edit leave configuration and revision unchanged; zero and unknown read back; native unknown submission persists
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-c-f6/packet/browser
