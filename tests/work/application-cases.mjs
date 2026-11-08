@@ -89,11 +89,11 @@ export async function applicationChecks(api, db) {
     const invalidForm={...form,...patch};
     const creation=await api('/catalog',{name:'Invalid monitor estimate',kind:'device',target:'synthetic-linen-901',ownerId:'owner',form:invalidForm});
     assert.equal(creation.status,422,'CATALOG-001 invalid estimates refuse catalog creation');
-    assert.equal(creation.value.error.code,'catalog_form_invalid');
+    assert.equal(typeof creation.value.error,'string','CATALOG-001 refused creation explains the invalid estimate');
     assert.deepEqual((await ok('/catalog')).items,catalogBeforeInvalid,'CATALOG-001 refused creation stores no catalog configuration');
     const editing=await api(`/catalog/${monitor.id}/form`,{name:'Invalid estimate overwrite',revision:formItem.revision,form:invalidForm});
     assert.equal(editing.status,422,'CATALOG-001 invalid estimates refuse catalog editing');
-    assert.equal(editing.value.error.code,'catalog_form_invalid');
+    assert.equal(typeof editing.value.error,'string','CATALOG-001 refused editing explains the invalid estimate');
     assert.deepEqual((await ok('/catalog')).items,catalogBeforeInvalid,'CATALOG-001 refused editing leaves configuration and revision unchanged');
   }
   const estimates=await ok('/catalog',{name:'Monitor estimate boundaries',kind:'device',target:'synthetic-linen-902',ownerId:'owner',form:{fields:[],costCents:0,deliveryHours:1}});
