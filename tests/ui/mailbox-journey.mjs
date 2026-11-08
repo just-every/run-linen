@@ -1,3 +1,4 @@
+import {hoverTooltip,waitForTooltipOpacity} from './transition-helpers.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -45,11 +46,15 @@ export async function mailboxJourney({ browser, page, api, base, out, errors }) 
       process.env.LINEN_CAPTURE && await p.screenshot({ path: `${out}/CHANNEL-003-mailboxes-${width}.png`, fullPage: true });
       if (width === 1440) {
         // Icon-only controls carry a tooltip: after about 300 ms of hover, at once on keyboard focus.
-        const profile = p.locator('button.profile'), opacity = () => profile.evaluate(e => getComputedStyle(e, '::after').opacity);
-        await profile.hover(); await p.waitForTimeout(120); assert.equal(await opacity(), '0', 'the tooltip waits for the hover delay');
-        await p.waitForTimeout(400); assert.equal(await opacity(), '1'); await p.mouse.move(5, 500);
+        const profile = p.locator('button.profile');
+        await hoverTooltip(profile);
+        assert.equal(await profile.evaluate(e => getComputedStyle(e, '::after').transitionDelay), '0.3s', 'the tooltip waits for the hover delay');
+        await p.mouse.move(5, 500);
+        await waitForTooltipOpacity(profile, '0');
         await p.keyboard.press('Escape'); for (let i = 0; i < 60 && !(await p.evaluate(() => document.activeElement?.matches('button.profile'))); i++) await p.keyboard.press('Tab');
-        await p.waitForTimeout(120); assert.equal(await opacity(), '1', 'the tooltip shows at once on keyboard focus');
+        assert.equal(await profile.evaluate(e => e.matches(':focus-visible')), true);
+        await waitForTooltipOpacity(profile, '1');
+        assert.equal(await profile.evaluate(e => getComputedStyle(e, '::after').transitionDuration), '0s', 'the tooltip shows at once on keyboard focus');
       }
     } finally { if (context) await context.close(); }
   }

@@ -1,3 +1,4 @@
+import {hoverTooltip,waitForTooltipOpacity} from './transition-helpers.mjs';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {mkdir} from 'node:fs/promises';
@@ -25,8 +26,8 @@ try {
   const estimate=page.getByRole('region',{name:'Invoice estimate'});await estimate.getByText('$53.30',{exact:true}).waitFor();assert.match(await estimate.innerText(),/Agent seats\s+2/);assert.match(await estimate.innerText(),/Free requesters and approvers\s+2/);
   const profile=page.getByRole('button',{name:'Your workspace and account'});await page.keyboard.press('Tab');await profile.focus();
   assert.equal(await profile.evaluate(e=>e.matches(':focus-visible')),true);
-  assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
-  await profile.evaluate(e=>e.blur());await page.evaluate(()=>window.scrollTo(0,0));await page.mouse.move(0,0);await profile.hover();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');await page.waitForTimeout(420);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');assert.notEqual(await profile.evaluate(e=>getComputedStyle(e,'::after').color),await profile.evaluate(e=>getComputedStyle(e,'::after').backgroundColor));
+  await waitForTooltipOpacity(profile, '1');
+  await page.evaluate(()=>window.scrollTo(0,0));await hoverTooltip(profile);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');assert.notEqual(await profile.evaluate(e=>getComputedStyle(e,'::after').color),await profile.evaluate(e=>getComputedStyle(e,'::after').backgroundColor));
   process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/billing-invoice-${width}.png`,fullPage:true});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No horizontal overflow');
   await page.reload();await page.getByRole('heading',{name:'Pricing & budgets',exact:true}).waitFor();assert.equal((await api('/billing/plan')).agent_seat_cents,2500);assert.equal((await api('/intelligence/budget')).limit_usd,50);

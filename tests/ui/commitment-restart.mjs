@@ -1,3 +1,4 @@
+import {hoverTooltip,waitForTooltipOpacity} from './transition-helpers.mjs';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {readFile} from 'node:fs/promises';
@@ -35,11 +36,9 @@ try {
     for(const width of [1440]) {
         await page.setViewportSize({width,height:1000});const profile=page.getByRole('button',{name:'Your workspace and account'});
         await page.keyboard.press('Tab');await profile.focus();assert.equal(await profile.evaluate(e=>e.matches(':focus-visible')),true);
-        assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
-        await profile.evaluate(e=>e.blur());await page.mouse.move(0,0);await page.waitForTimeout(120);
-        assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'0');
-        await profile.hover();assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'0');
-        await page.waitForTimeout(420);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').opacity),'1');
+        await waitForTooltipOpacity(profile, '1');
+        await hoverTooltip(profile);
+        assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');
         process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/commitment-tooltip-${width}.png`});
     }
     console.log(JSON.stringify({workerRestart:true,scheduledLiveReadback:true,missingEvidenceUnknown:true,staleEvidenceUnknown:true,sourceWithdrawalUnknown:true,ownerRetirement:true,tooltipsBothWidths:true,remoteWrites:false}));

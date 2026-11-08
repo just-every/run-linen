@@ -6960,7 +6960,7 @@
       "executable": false
     },
     "tests/ui/billing-browser.mjs": {
-      "sha256": "87da172189d5eea84a6278039cfce0ad048f148bc641a26258c444910fa9ee40",
+      "sha256": "375097d1b75aa3264722b03fe852fd88bd491c94c3eece09544b9b0aa2047371",
       "executable": false
     },
     "tests/ui/brand-journey.mjs": {
@@ -6996,7 +6996,7 @@
       "executable": false
     },
     "tests/ui/commitment-restart.mjs": {
-      "sha256": "b59a8df5cd155a78c01ae86ff6bd860d45cf75ae1b4baa75f4b763d3735b6906",
+      "sha256": "41bd4388ad74f9562467e588fc89409cf4753c270fcf8db41fc2cea36a3f4c0e",
       "executable": false
     },
     "tests/ui/communication-browser.mjs": {
@@ -7052,7 +7052,7 @@
       "executable": false
     },
     "tests/ui/department-role-journey.mjs": {
-      "sha256": "f2405ff96f2e32f5d58bf0ac59b092d172378b605874f810e1dbf0aaf5c96fc8",
+      "sha256": "b5c96b392a235b92362c8247e88874b2c142392657afba5fbfab3d052e15a334",
       "executable": false
     },
     "tests/ui/dependency-journey.mjs": {
@@ -7088,7 +7088,7 @@
       "executable": false
     },
     "tests/ui/mailbox-journey.mjs": {
-      "sha256": "89149045eeda50c86500ddcb59cb07397500162647590f5f0dc5edd39e70c8e0",
+      "sha256": "8bcd0cd941c40a689f4911b10323d8787b9b8b279731767409a2e7cd2522e131",
       "executable": false
     },
     "tests/ui/native-regressions.mjs": {
@@ -7100,7 +7100,7 @@
       "executable": false
     },
     "tests/ui/okta-browser.mjs": {
-      "sha256": "06eb59f4280f57b0591524345409fb633000ab2b346d4acb4deaeb1a62baa397",
+      "sha256": "70ed038db412943b0b431332c9a78a64446a6b828e577ef3917d61d5f1fea135",
       "executable": false
     },
     "tests/ui/operations-console-journeys.mjs": {
@@ -7148,7 +7148,7 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "e7112e329478ee6848513860eb26589f238338e6ee29512ec280921ad0ff0f01",
+      "sha256": "37a7a9725be81085cbe64ee6c972c9ead1078e2441a308b9e720e743877125ec",
       "executable": false
     },
     "tests/ui/sandbox-routing-journey.mjs": {
@@ -7164,7 +7164,7 @@
       "executable": false
     },
     "tests/ui/service-notice-journey.mjs": {
-      "sha256": "b7670788434604057f166023b316843bdcda643033dbc98b1105d257dcd82722",
+      "sha256": "4ed0366e62fbeac752531d5784254141232f5acacc66919ccc7fe3e1acc340f6",
       "executable": false
     },
     "tests/ui/setup-browser.mjs": {

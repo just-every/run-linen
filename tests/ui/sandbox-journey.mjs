@@ -1,3 +1,4 @@
+import {hoverTooltip,waitForTooltipOpacity} from './transition-helpers.mjs';
 import {seedSandboxRouting,editSandboxRouting,assertSandboxRoutingPromoted} from './sandbox-routing-journey.mjs';
 import assert from 'node:assert/strict';
 import {captureJourney} from './viewport-evidence.mjs';
@@ -37,9 +38,8 @@ export async function sandboxJourney({page,api,base,out}) {
   await page.setViewportSize({width,height:1000});
   const account=page.getByRole('button',{name:'Your workspace and account',exact:true});
   await page.keyboard.press('Tab');await account.focus();
-  assert.equal(await account.evaluate(node=>getComputedStyle(node,'::after').opacity),'1');
-  await page.getByLabel('Sandbox name',{exact:true}).focus();await page.mouse.move(0,0);await account.hover();
-  await page.waitForFunction(()=>getComputedStyle(document.querySelector('.profile'),'::after').opacity==='1');
+  await waitForTooltipOpacity(account, '1');
+  await page.getByLabel('Sandbox name',{exact:true}).focus();await page.mouse.move(0,0);await hoverTooltip(account);
  }
  await page.setViewportSize({width:1440,height:1000});
 
