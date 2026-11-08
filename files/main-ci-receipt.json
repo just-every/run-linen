@@ -1,0 +1,27 @@
+{
+  "head_sha": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "source": "REST actions runs exact-SHA discovery observed 2026-11-08; compact transcription of tool response",
+  "runs": [
+    {
+      "id": 41346803124,
+      "name": "Verify",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41209839706,
+      "name": "Run site",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41209839714,
+      "name": "Verify",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure"
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "tag": "sx-linen-c-f8",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f8",
+  "head": "6e2c621999c666abc23667ff7166f4e7f87ac0b8",
+  "base": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "predecessor": "8427a0e45e1da64e2456c26bfa1fc61718b7babc",
+  "recordedAt": "2026-11-08T17:37:10.275745+00:00",
+  "commandResults": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email [fleet identity] --non-interactive",
+      "exit": 0,
+      "result": "local owner setup complete; no provider action"
+    },
+    {
+      "command": "cloud_run timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "result": "Wrote 0 contract documents"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "result": "Contract prose: 0 errors, 0 warnings. Contract documents are current."
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "mechanical.log"
+    },
+    {
+      "command": "LINEN_TEST_BUILT=1 LINEN_CAPTURE=1 LINEN_TEST_OUTPUT=<packet>/browser cloud_run timeout 1200 node tests/ui/run.mjs <packet>/catalog-browser.mjs",
+      "exit": 0,
+      "log": "browser.log",
+      "result": "focused existing catalogQuoteJourney; screenshots at 1440 and 390"
+    },
+    {
+      "command": "cloud-push.py origin cloud/sx-linen-c-f8",
+      "exit": 0,
+      "log": "product-push.log"
+    }
+  ],
+  "sourceIdentity": [
+    {
+      "path": "tests/work/catalog-quote-cases.mjs",
+      "sha256": "a6262b3f25f8672507532a436bb4b527204b9c0a6544a59dfd2e3614d39460a7",
+      "blob": "e459a827acbcfadb0ca08f3c1da9c4c42b7248f3"
+    },
+    {
+      "path": "tests/work/runtime.mjs",
+      "sha256": "61675c906158146f7873b614c52acf3290605c5af9a55a38206f060d343e849c",
+      "blob": "644a27d03a50fb3ccfea28ddb5f68e493164ae0d"
+    },
+    {
+      "path": "src/features/work/catalog-quotes.ts",
+      "sha256": "a72c937851f67a8c26166f369613e3731c7185fd9dd98a6f74e9456605a8c0f5",
+      "blob": "cc28706c78e556f197f1e9098e5911e7dc452c86"
+    },
+    {
+      "path": "tests/ui/catalog-quote-journey.mjs",
+      "sha256": "40bab9e232dbfb7cdd09eecb8e3323b83ef1a9e4858710325b901c3119cfb55b",
+      "blob": "08076912b3d983ef9fadb05737c443e2f3fe85b5"
+    },
+    {
+      "path": "tests/ui/browser.mjs",
+      "sha256": "ca9c63fe5e7e8a60de7c05232a7c60b117e95a97c4a4298edc2e5f3b4b0f8fe6",
+      "blob": "9efec7decf3d1bd864306df260e45572aabb0016"
+    },
+    {
+      "path": "CONTRACT.md",
+      "sha256": "af7a10d884f34b8130dbebcce12eeb652d387643c3c79d1198f7571f4a640a76",
+      "blob": "3050010c0ef4b7de39c0144a913305bf43cd9346"
+    },
+    {
+      "path": "sources.lock.json",
+      "sha256": "2cd05d25193cc33f03bd725b9ef40a3a91d3cfe6403532462cdea118ff83e402",
+      "blob": "c610bc951c1a8061b3ac646489b288c58825a2c3"
+    }
+  ],
+  "proofBinding": "All runtime, UI, and contract source bytes tested before commit equal the listed candidate blobs. No relevant source or test byte changed after these runs. Only source-lock regeneration records the new test hash.",
+  "testBudget": {
+    "registeredTestsAdded": 0,
+    "registeredTestsRemoved": 0,
+    "assertionsRemoved": 0,
+    "newDraftAssertionBlockLines": 28
+  },
+  "counts": {
+    "before": {
+      "done": 15,
+      "partial": 147,
+      "missing": 37,
+      "total": 199
+    },
+    "candidate": {
+      "done": 15,
+      "partial": 147,
+      "missing": 37,
+      "total": 199
+    },
+    "proposedAfterGuardedLanding": {
+      "done": 16,
+      "partial": 146,
+      "missing": 37,
+      "total": 199
+    }
+  },
+  "publicationScan": {
+    "commit": "6e2c621999c666abc23667ff7166f4e7f87ac0b8",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "status": "NOT RUN in cloud; maintained Mac lander must perform COMPLETE full-history scan and require zero findings"
+  },
+  "migrations": {
+    "changed": false,
+    "ledgerCheck": "not applicable"
+  },
+  "mainEquality": false,
+  "runSiteCandidate": "not applicable before guarded landing",
+  "policyDefaultsAdded": false,
+  "providerEffects": false,
+  "ci": {
+    "id": 42505785833,
+    "event": "pull_request",
+    "conclusion": null,
+    "head_sha": "6e2c621999c666abc23667ff7166f4e7f87ac0b8",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42505785833",
+    "status": "in_progress"
+  },
+  "handoff": "Local proof passed and product is pushed. Cloud route hands exact-SHA Verify and landing gates to maintained Mac lander; no green CI claim."
+}
