@@ -101,16 +101,26 @@ export async function applicationChecks(api, db) {
   let estimateItem=await readEstimate(estimates.id);
   assert.equal(estimateItem.form.costCents,0,'CATALOG-001 zero cents is a known free cost on creation');
   assert.equal(estimateItem.form.deliveryHours,1,'CATALOG-001 one elapsed hour is a valid estimate');
-  for(const unknownForm of [{fields:[]},{fields:[],costCents:null,deliveryHours:null}]) {
+  for(const unknownForm of [{fields:[]},{fields:[],costCents:null,deliveryHours:null},
+    {fields:[],costCents:0},{fields:[],costCents:null,deliveryHours:48},
+    {fields:[],deliveryHours:48},{fields:[],costCents:0,deliveryHours:null}]) {
+    const expectedCost=unknownForm.costCents??null,expectedDelivery=unknownForm.deliveryHours??null;
     const unknown=await ok('/catalog',{name:'Unknown monitor estimates',kind:'device',target:'synthetic-linen-903',ownerId:'owner',form:unknownForm});
     const createdUnknown=await readEstimate(unknown.id);
-    assert.equal(createdUnknown.form.costCents,null,'CATALOG-001 omitted or null cost is unknown on creation');
-    assert.equal(createdUnknown.form.deliveryHours,null,'CATALOG-001 omitted or null delivery is unknown on creation');
+    assert.equal(createdUnknown.form.costCents,expectedCost,'CATALOG-001 creation preserves free cost independently of unknown delivery');
+    assert.equal(createdUnknown.form.deliveryHours,expectedDelivery,'CATALOG-001 creation preserves delivery independently of unknown cost');
+    await ok(`/catalog/${estimates.id}/form`,{name:'Known monitor estimates',revision:estimateItem.revision,form:{fields:[],costCents:25000,deliveryHours:48}},undefined,200);
+    estimateItem=await readEstimate(estimates.id);
     await ok(`/catalog/${estimates.id}/form`,{name:'Unknown monitor estimates',revision:estimateItem.revision,form:unknownForm},undefined,200);
     const editedUnknown=await readEstimate(estimates.id);
     assert.equal(editedUnknown.revision,estimateItem.revision+1,'CATALOG-001 clearing estimates saves a new revision');
-    assert.equal(editedUnknown.form.costCents,null,'CATALOG-001 omitted or null cost remains unknown after editing');
-    assert.equal(editedUnknown.form.deliveryHours,null,'CATALOG-001 omitted or null delivery remains unknown after editing');
+    assert.equal(editedUnknown.form.costCents,expectedCost,'CATALOG-001 editing clears omitted or null cost without losing a free estimate');
+    assert.equal(editedUnknown.form.deliveryHours,expectedDelivery,'CATALOG-001 editing clears omitted or null delivery independently of cost');
+    const estimateWork=await ok('/work',{title:'Monitor estimate readback',body:'Confirm the recorded estimates',deduplicationKey:crypto.randomUUID()},formEmployee);
+    await ok(`/work/${estimateWork.id}/fulfilment`,{catalogId:estimates.id,catalogRevision:editedUnknown.revision,beneficiaryId:'catalog-user',purpose:'Desk setup',answers:{}},formEmployee);
+    const snapshot=(await ok(`/work/${estimateWork.id}/catalog-requests`,undefined,formEmployee)).items[0].catalogSnapshot;
+    assert.equal(snapshot.form.costCents,expectedCost,'CATALOG-001 submitted request preserves free and unknown costs distinctly');
+    assert.equal(snapshot.form.deliveryHours,expectedDelivery,'CATALOG-001 submitted request preserves unknown delivery independently of cost');
     estimateItem=editedUnknown;
   }
   await ok(`/catalog/${estimates.id}/form`,{name:'Free monitor estimate',revision:estimateItem.revision,form:{fields:[],costCents:0,deliveryHours:1}},undefined,200);

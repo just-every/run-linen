@@ -140,6 +140,20 @@ export async function catalogFormJourney({page,api,base,out}) {
     await fact.locator('dd').getByText('Unknown',{exact:true}).waitFor();
   }
   await captureJourney(page,{path:out+'/CATALOG-001-unknown-estimates-request.png',fullPage:true});
+  await chooser.getByLabel('Monitor mounting',{exact:false}).selectOption('Desk');
+  await chooser.getByLabel(/What do you need it for/).fill('Confirm estimates before delivery');
+  const sendingUnknown=page.waitForResponse(r=>r.url().endsWith(`/work/${unknownWork.id}/fulfilment`)&&r.request().method()==='POST');
+  await chooser.getByRole('button',{name:'Save',exact:true}).click();
+  assert.equal((await sendingUnknown).status(),201,'CATALOG-001 unknown estimates do not prevent submitting a valid request');
+  await page.reload();
+  for(const label of ['Request cost','Expected delivery']) {
+    const fact=submitted.locator('.facts > div').filter({has:page.getByText(label,{exact:true})});
+    await fact.locator('dd').getByText('Unknown',{exact:true}).waitFor();
+  }
+  const unknownSnapshot=(await api(`/work/${unknownWork.id}/catalog-requests`)).items[0].catalogSnapshot;
+  assert.equal(unknownSnapshot.form.costCents,null,'CATALOG-001 submitted unknown cost never becomes zero');
+  assert.equal(unknownSnapshot.form.deliveryHours,null,'CATALOG-001 submitted unknown delivery stays unknown');
+  await captureJourney(page,{path:out+'/CATALOG-001-unknown-estimates-submitted.png',fullPage:true});
   assert.equal((await api(`/work/${work.id}/catalog-requests`)).items[0].catalogSnapshot.form.costCents,25000,'CATALOG-001 clearing estimates does not rewrite the submitted cost');
   assert.equal((await api(`/work/${work.id}/catalog-requests`)).items[0].catalogSnapshot.form.deliveryHours,48,'CATALOG-001 clearing estimates does not rewrite the submitted delivery');
   console.log('PASS CATALOG-001 native form editor, conditional request, known and unknown estimates and immutable submitted revision at 1440');

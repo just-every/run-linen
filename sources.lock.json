@@ -6928,7 +6928,7 @@
       "executable": false
     },
     "tests/ui/application-journey.mjs": {
-      "sha256": "849da6ebd5537a5528de0bfe69020f3d464dcc40ae35e7f9f7a25df52ab2ac1a",
+      "sha256": "ea82ff69f2a977dcde65439462285bf4cc06a55587d2f52ef012146d5273f93b",
       "executable": false
     },
     "tests/ui/approval-chain-journey.mjs": {
@@ -7248,7 +7248,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "1a8a124bc0b1316ea0e5b417220087659d0e9f33ba171ee7e1b8b2f81f8d8a14",
+      "sha256": "8768a86c8bfd3bfe67f6a79e5b4c81ecf4590aacb4247e0de09a7cbf38725775",
       "executable": false
     },
     "tests/work/approval-chain-cases.mjs": {
