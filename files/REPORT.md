@@ -50,7 +50,7 @@ No DONE claim is made. These rows describe the selected scope and preserve the e
 | 8 | PASS for selected doors | Lines 18–19 deny employee review and apply, lines 72–84 fence revocation; owner clean undo and later-native-change refusal both execute. No new authority. |
 | 9 | PARTIAL boundary retained | Only synthetic documented file exports and real local application storage are claimed. Maintained Base port and legacy marker migration remain held. No live provider, scale, settlement or device assertion. |
 | 10 | NOT APPLICABLE | No custody, consent, spending or authority policy changed. |
-| 11 | PENDING guarded landing | The named cloud branch is pushed. Main remains c4e9852d1098215b0371a6c67a9a721be85a88cf. Candidate publication scan, main equality and candidate Run site belong to the fleet lander. |
+| 11 | PENDING guarded landing | The named cloud branch is pushed. Main advanced after the candidate push to 0cae7fe338def5f96f52df2468f91f078a36827f. Candidate publication scan, main integration and candidate Run site belong to the fleet lander. |
 
 ## Checks and receipts
 
