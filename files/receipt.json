@@ -1,0 +1,138 @@
+{
+  "repository": "just-every/run-linen",
+  "head": "34f3e3c94465fbf86e2326892df67b88aca4baaf",
+  "branch": "cloud/sx-linen-c-f25",
+  "pr": 161,
+  "full_history": true,
+  "checks": [
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log",
+      "phase": "before commit; tested relevant source bytes match candidate"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log",
+      "output": "quiet success"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write then check",
+      "exit": 0,
+      "log": "views.log",
+      "restored_views_from_main": true
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock then check",
+      "exit": 0,
+      "log": "lock.log"
+    },
+    {
+      "command": "npx -y @runeditrun/rer build through cloud_run",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "LINEN_TEST_BUILT=1 LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium LINEN_CAPTURE=1 node tests/ui/run.mjs /tmp/linen-department-proof.mjs through cloud_run with 1200 second alarm",
+      "exit": 0,
+      "log": "browser.log",
+      "assertion_width": 1440,
+      "capture_widths": [
+        1440,
+        390
+      ],
+      "candidate": "34f3e3c94465fbf86e2326892df67b88aca4baaf",
+      "adapter": "capture-adapter.mjs"
+    }
+  ],
+  "relevant_sources": [
+    {
+      "path": "tests/work/department-space-cases.mjs",
+      "sha256": "7dafdf3ce8d2a8e147b2d5a1858b5c983f7a2986871b69156fef6d393b883796",
+      "matches_candidate": true
+    },
+    {
+      "path": "tests/work/runtime.mjs",
+      "sha256": "181ef2276a92950caeb23433a36e79b458a204771d1209f21d06798e35a4e833",
+      "matches_candidate": true
+    },
+    {
+      "path": "src/features/work/scope.ts",
+      "sha256": "b818d86baffca4026487a3b19791209ae8fe1969154453c792447efc123ab7f8",
+      "matches_candidate": true
+    },
+    {
+      "path": "src/features/work/department-spaces.ts",
+      "sha256": "e7bea38c27416d4d5371cd67214d87a820ef3c639ac74f8e2138b5e24a904292",
+      "matches_candidate": true
+    },
+    {
+      "path": "sources.lock.json",
+      "sha256": "02e0f9d6152bb50092ccea5122d650e9e1947ab116fcb96fde44fb29b59a4e92",
+      "matches_candidate": true
+    }
+  ],
+  "test_registration_delta": 0,
+  "contract_diff_bytes": 0,
+  "generated_views_diff_bytes": 0,
+  "publication_scan": {
+    "complete": false,
+    "historyScanned": "not-run-in-cloud",
+    "findings": null,
+    "custodian": "maintained fleet lander"
+  },
+  "browser_capture_count": 232,
+  "selected_browser_evidence": [
+    "browser/DESK-011-staff-membership-add-1440-viewport.png",
+    "browser/DESK-011-staff-membership-add-390-viewport.png",
+    "browser/DESK-011-it-denied-hr-workspace-1440-viewport.png",
+    "browser/DESK-011-it-denied-hr-workspace-390-viewport.png"
+  ],
+  "additional_local_captures": "Broader unchanged department journey captures retained outside the packet in browser-all. Selected captures show the leased authority boundary at both widths.",
+  "final_product_clean": true,
+  "remote_refs": {
+    "cloud/sx-linen-c-f25": "34f3e3c94465fbf86e2326892df67b88aca4baaf",
+    "main": "83d80f33869145ff2853f4e6d6b08e46b23acde1"
+  },
+  "main_equals_candidate": false,
+  "github_api_calls": 5,
+  "verify": {
+    "id": 42527282242,
+    "event": "pull_request",
+    "head": "34f3e3c94465fbf86e2326892df67b88aca4baaf",
+    "latest_observation_file": "CI-terminal.json",
+    "conclusion": "success",
+    "head_sha": "34f3e3c94465fbf86e2326892df67b88aca4baaf",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42527282242",
+    "status": "completed"
+  },
+  "mechanical": {
+    "views_write": 0,
+    "views_check": 0,
+    "lock": 0,
+    "lock_check": 0,
+    "migration_ledger": "not-applicable"
+  },
+  "claim": {
+    "clause": "DESK-011",
+    "status": "DONE",
+    "points": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "newly_closed": "acceptance point 3 employee-attribute authority exclusion",
+    "landing": "pending maintained fleet gate"
+  }
+}
