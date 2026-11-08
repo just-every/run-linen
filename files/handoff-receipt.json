@@ -1,0 +1,67 @@
+{
+  "tag": "sx-linen-c-f17",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f17",
+  "head": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+  "base": "3bf801acbe2ed85026ba5aa397dd4982fed09b37",
+  "pr": "https://github.com/just-every/run-linen/pull/155",
+  "verifyRun": 42524298160,
+  "verifyEvent": "pull_request",
+  "changedFiles": [
+    "tests/work/runtime.mjs",
+    "sources.lock.json"
+  ],
+  "contractChanged": false,
+  "sourceApplicationChanged": false,
+  "uiChanged": false,
+  "addedTestRegistrations": 0,
+  "removedAssertions": 0,
+  "mechanical": {
+    "viewsWriteCommand": "node src/base/contract-docs.mjs write",
+    "viewsWriteExit": 0,
+    "viewsCheckCommand": "node src/base/contract-docs.mjs check",
+    "viewsCheckExit": 0,
+    "generatedDocumentsWritten": 0,
+    "viewsRestored": true,
+    "lockCommand": "node scripts/edition-authoring/cli.mjs lock",
+    "lockExit": 0,
+    "lockCheckCommand": "node scripts/edition-authoring/cli.mjs check",
+    "lockCheckExit": 0,
+    "migrationLedger": "not applicable; no migration changes"
+  },
+  "sourceLockOnlyDelta": "tests/work/runtime.mjs sha256",
+  "productPush": {
+    "status": "success",
+    "attempts": 1,
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f17"
+  },
+  "publicationScan": {
+    "commit": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+    "status": "NOT RUN IN CLOUD; delegated to guarded Mac lander",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "mainEquality": false,
+  "runSiteCandidate": null,
+  "runtime": {
+    "node": "v24.19.0",
+    "pnpm": "10.12.4",
+    "ciNodePin": "22.20.0",
+    "fullHistory": true
+  },
+  "verifyStatus": "in_progress",
+  "verifyConclusion": null,
+  "verifyObservedAt": "2026-11-08T21:25:50.410750+00:00",
+  "terminalCustody": "PUSHED",
+  "claimStatus": "PARTIAL",
+  "locallyProvenPoints": [
+    1,
+    2
+  ],
+  "selectedPointClosed": 2,
+  "githubCalls": 5,
+  "sourceLockFresh": true,
+  "contractViewsFresh": true,
+  "blocker": null
+}

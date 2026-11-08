@@ -1,0 +1,83 @@
+diff --git a/sources.lock.json b/sources.lock.json
+index 2cec6bd..0677197 100644
+--- a/sources.lock.json
++++ b/sources.lock.json
+@@ -7448,7 +7448,7 @@
+       "executable": false
+     },
+     "tests/work/runtime.mjs": {
+-      "sha256": "181ef2276a92950caeb23433a36e79b458a204771d1209f21d06798e35a4e833",
++      "sha256": "32cd4e4829a090385aa7bead730cd9d3625b93e8bfbc830e2edc9967477a2e6e",
+       "executable": false
+     },
+     "tests/work/search-cases.mjs": {
+diff --git a/tests/work/runtime.mjs b/tests/work/runtime.mjs
+index 9148fc3..0a12ca6 100644
+--- a/tests/work/runtime.mjs
++++ b/tests/work/runtime.mjs
+@@ -33,6 +33,7 @@ import { accessPolicyChecks } from "./access-policy-cases.mjs";
+ import { lifecycleTemplateChecks } from "./lifecycle-template-cases.mjs";
+ import { lifecycleReplayChecks, lifecycleIntegrationChecks, contractorSponsorChecks } from "./lifecycle-regressions.mjs";
+ import assert from "node:assert/strict";
++import { setTimeout as delay } from "node:timers/promises";
+ import { readFile, readdir, mkdtemp, rm } from "node:fs/promises";
+ import { tmpdir } from "node:os";
+ import { join } from "node:path";
+@@ -569,11 +570,12 @@ try {
+     "employee",
+   );
+   await timeChecks(api, db, w, accessDuty.id);
++  const articleExpiry = Date.now() + 10_000;
+   const article = await api("/knowledge", {
+     title: "VPN",
+     body: "Reviewed network guidance",
+     scope: "employees",
+-    expiresAt: "2030-01-01T00:00:00Z",
++    expiresAt: new Date(articleExpiry).toISOString(),
+     review: true,
+   });
+   assert.equal(article.status, 201, JSON.stringify(article));
+@@ -599,6 +601,43 @@ try {
+   );
+   assert.equal(escalated.status, 201);
+   assert.equal(JSON.parse(escalated.value.context_json).articleRevision, 1);
++  const currentArticle = await api("/knowledge", {
++    title: "VPN current guidance",
++    body: "Reviewed network guidance that remains available",
++    scope: "employees",
++    expiresAt: new Date(articleExpiry + 60_000).toISOString(),
++    review: true,
++  });
++  assert.equal(currentArticle.status, 201, JSON.stringify(currentArticle));
++  const beforeExpiry = await api("/knowledge?q=VPN", undefined, employee);
++  assert.equal(beforeExpiry.status, 200, JSON.stringify(beforeExpiry));
++  assert.deepEqual(
++    beforeExpiry.value.items.map((item) => item.id).sort(),
++    [article.value.id, currentArticle.value.id].sort(),
++    "Employee search includes both reviewed matching articles before expiry",
++  );
++  const beforeExpiryAt = Date.now();
++  assert.ok(beforeExpiryAt < articleExpiry, "The reviewed article was observed before its deadline");
++  // Cross the real deadline without changing stored expiry or the Worker clock.
++  await delay(Math.max(0, articleExpiry - Date.now()) + 100);
++  const afterExpiry = await api("/knowledge?q=VPN", undefined, employee);
++  assert.equal(afterExpiry.status, 200, JSON.stringify(afterExpiry));
++  assert.deepEqual(
++    afterExpiry.value.items.map((item) => item.id),
++    [currentArticle.value.id],
++    "Employee search removes the expired article and retains the unexpired match",
++  );
++  assert.deepEqual(
++    afterExpiry.value.items[0],
++    beforeExpiry.value.items.find((item) => item.id === currentArticle.value.id),
++    "The remaining article keeps its reviewed content and revision",
++  );
++  console.log("KB-001 reviewed article expires from employee search", JSON.stringify({
++    articleId: article.value.id, currentArticleId: currentArticle.value.id,
++    beforeExpiryAt, expiresAt: articleExpiry, afterExpiryAt: Date.now(),
++    beforeIds: beforeExpiry.value.items.map((item) => item.id),
++    afterIds: afterExpiry.value.items.map((item) => item.id),
++  }));
+   const upload = await mf.dispatchFetch(
+     `http://localhost/work/${w}/attachments`,
+     {

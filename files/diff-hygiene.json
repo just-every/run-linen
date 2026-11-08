@@ -1,0 +1,10 @@
+{
+  "head": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+  "emailShapedAdded": false,
+  "credentialShapedAdded": false,
+  "proseRepositoryTokenAdded": false,
+  "nodeBuiltinImport": "node:timers/promises",
+  "contractDiffEmpty": true,
+  "productWorktreeClean": true,
+  "packetSymlinks": false
+}

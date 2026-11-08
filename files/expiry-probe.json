@@ -1,0 +1,23 @@
+{
+  "articleId": "afb59623-4c24-4072-abd2-0741b2c2e7cf",
+  "currentArticleId": "fde59a29-a861-43f9-9a3a-99638be5cc87",
+  "beforeExpiryAt": 1794172587434,
+  "expiresAt": 1794172597392,
+  "afterExpiryAt": 1794172597508,
+  "beforeIds": [
+    "fde59a29-a861-43f9-9a3a-99638be5cc87",
+    "afb59623-4c24-4072-abd2-0741b2c2e7cf"
+  ],
+  "afterIds": [
+    "fde59a29-a861-43f9-9a3a-99638be5cc87"
+  ],
+  "beforeExpiryAtISO": "2026-11-08T21:16:27.434000+00:00",
+  "expiresAtISO": "2026-11-08T21:16:37.392000+00:00",
+  "afterExpiryAtISO": "2026-11-08T21:16:37.508000+00:00",
+  "head": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+  "journey": "tests/work/runtime.mjs",
+  "name": "KB-001 reviewed article expires from employee search",
+  "runId": "sx-linen-c-f17-work-runtime-20261108T211536Z",
+  "clock": "actual elapsed time; no D1 expiry mutation or request clock header",
+  "exit": 0
+}

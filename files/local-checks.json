@@ -1,0 +1,80 @@
+{
+  "head": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+  "checks": [
+    {
+      "name": "work-runtime",
+      "command": [
+        "timeout",
+        "600",
+        "python3",
+        "/tmp/rer-reap.py",
+        "node",
+        "tests/work/runtime.mjs"
+      ],
+      "head": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+      "startedAt": "2026-11-08T21:15:36.947840+00:00",
+      "elapsedSeconds": 71.161,
+      "exit": 0,
+      "log": "work-runtime.log",
+      "sha256": "3b0325b0819c0e925df10a385d47fc50971c1bd404a22a4cd4517a88f0760ae8"
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "head": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+      "startedAt": "2026-11-08T21:16:48.109392+00:00",
+      "elapsedSeconds": 11.856,
+      "exit": 0,
+      "log": "typecheck.log",
+      "sha256": "621068e5599b0cb0f0aa08806e9a2dfa50724ac37108e7ae4fbea59de47f2bf5"
+    },
+    {
+      "name": "first-party",
+      "command": [
+        "pnpm",
+        "exec",
+        "rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "head": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+      "startedAt": "2026-11-08T21:16:59.966047+00:00",
+      "elapsedSeconds": 0.644,
+      "exit": 0,
+      "log": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-lock",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "head": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+      "startedAt": "2026-11-08T21:17:00.609987+00:00",
+      "elapsedSeconds": 0.178,
+      "exit": 0,
+      "log": "source-lock.log",
+      "sha256": "bba41a5012a30bde8c744e66e9c298fc89d37e8ca182cd7b946ec428dcd009d5"
+    },
+    {
+      "name": "contract-views",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "check"
+      ],
+      "head": "d7e6c7dc15809b4af88aacd108dad41bb0595bcd",
+      "startedAt": "2026-11-08T21:17:00.788626+00:00",
+      "elapsedSeconds": 0.199,
+      "exit": 0,
+      "log": "contract-views.log",
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    }
+  ]
+}
