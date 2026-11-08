@@ -21,6 +21,27 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   await member('it',itUser);await member('hr',hrUser);await member('facilities',facUser);
   await call('/departments/'+spaces.hr.id+'/members',{revision:1,userId:itUser,active:true},it,403);
   await call('/departments/'+spaces.hr.id,{revision:1,name:'HR',active:false},owner,409);
+  // Reviewed employment facts describe the operator; only explicit staff membership authorizes service work.
+  const authority=async()=>{
+    const {items,people}=await call('/departments/admin');
+    return {people,departments:items.map(({id,members})=>({id,members}))};
+  };
+  const authorityBefore=await authority();
+  assert.deepEqual(authorityBefore.people.find(p=>p.id===itUser).roles,['operator']);
+  assert.ok(!authorityBefore.departments.find(d=>d.id===spaces.hr.id).members.some(m=>m.userId===itUser));
+  const hrAttribute=await call('/catalog-values',{dimension:'department',label:spaces.hr.name},owner,201);
+  const person=await call('/people',{
+    source:'synthetic-linen-11248',sourceId:itUser,name:itUser,
+    effectiveAt:'2026-01-01T00:00:00.000Z',observedAt:'2026-01-01T00:00:00.000Z',
+    attributes:{department:hrAttribute.id},
+  },owner,201);
+  await call('/people/'+person.id+'/binding',{expectedRevision:person.revision,memberId:itUser});
+  const reviewed=(await call('/people')).items.find(p=>p.id===person.id);
+  assert.equal(reviewed.active,1);
+  assert.equal(reviewed.member_id,itUser);
+  assert.ok(reviewed.binding_id);
+  assert.equal(JSON.parse(reviewed.attributes_json).department,hrAttribute.id);
+  assert.deepEqual(await authority(),authorityBefore,'Reviewing and binding HR employment facts grants no roles or staff memberships');
   const metadata=(await call('/departments',undefined,it)).items;
   assert.equal(metadata.find(d=>d.id===spaces.it.id).canStaff,true);
   assert.equal(metadata.find(d=>d.id===spaces.hr.id).canStaff,false);
@@ -43,6 +64,9 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   await call('/work/'+own.id+'/messages',{body:'synthetic-linen-11211',visibility:'private',sourceMessageId:'synthetic-linen-11212'},it,403);
   await call('/work/'+own.id+'/commands',{revision:own.revision,command:'close',reason:'synthetic-linen-11213'},it,403);
   await call('/work/'+own.id+'/classification/override',{type:'question',category:'general',subcategory:'guidance',impact:'low',urgency:'low',workRevision:own.revision,revision:0,reason:'synthetic-linen-11214'},it,403);
+  assert.deepEqual((await call('/work/'+own.id)).work,ownView.work,'Refused staff actions leave the HR service request unchanged');
+  assert.deepEqual((await call('/work/'+own.id)).messages,ownView.messages,'Refused private reply creates no message');
+  assert.deepEqual(await authority(),authorityBefore,'Department discovery and refused staff actions never promote employee facts into authority');
   assert.ok((await call('/search?q=confidentialsalaryadjustment')).items.some(item=>item.id===own.id),'Owner can search the actual private evidence');
   assert.equal((await call('/search?q=confidentialsalaryadjustment',undefined,it)).total,0);
   await member('hr',itUser);
