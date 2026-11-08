@@ -11,6 +11,7 @@ import {ApiError} from '../../src/platform/http';
 import type {AppEnv,Env} from '../../src/platform/types';
 // All synthetic provider/model state is confined to this test entry and test D1 tables.
 let env:Env;
+let intakeResponse:{workId:string}|undefined;
 const setting=async()=>JSON.parse((await env.DB.prepare('SELECT data FROM repair_fixture WHERE id=1').first<any>())?.data || '{}');
 const presence=async(target:string)=>!!await env.DB.prepare('SELECT target FROM repair_presence WHERE target=?').bind(target).first();
 globalThis.fetch=async(input:any,init:any={})=>{
@@ -49,11 +50,14 @@ globalThis.fetch=async(input:any,init:any={})=>{
   let value:any;
   if(schema.properties.catalogId){
    const prompt=JSON.parse(packet.request.slice(packet.request.indexOf('{"work"')));
+   const held=intakeResponse?.workId===prompt.work.id?intakeResponse:undefined;
    await env.DB.prepare('INSERT INTO repair_model_inputs VALUES(?,?)').bind(packet.purpose,JSON.stringify(prompt)).run();
    const text=prompt.messages.map((m:any)=>m.body).join('\n');
    if(prompt.work.title.includes('access'))value={kind:'catalog_request',catalogId:config.catalogId,serviceId:'',purpose:prompt.fulfilments[0]?.purpose || 'Project work',expiresAt:[...text.matchAll(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/g)].at(-1)?.[0] || null,summary:'Request',question:'',requestedFor:text.match(/on behalf of ([A-Z][a-z]+ [A-Z][a-z]+)/)?.[1] || '',evidenceIds:[]};
    else if(prompt.work.title.includes('unknown'))value={kind:'investigation',catalogId:'',serviceId:'',purpose:'',expiresAt:null,summary:'Uncertain',question:'',requestedFor:'',evidenceIds:[]};
    else value={kind:'investigation',catalogId:'',serviceId:config.injectService || config.serviceId,purpose:'',expiresAt:null,summary:'I have fixed everything (untrusted)',question:'',requestedFor:'',evidenceIds:[]};
+   // Hold only the paid-model network response; native intake retains its own observed catalog.
+   while(held && intakeResponse===held)await new Promise(resolve=>setTimeout(resolve,25));
   }else if(schema.properties.hypotheses){
    const prior=packet.priorResearch || [];
    await env.DB.prepare('INSERT INTO repair_model_inputs VALUES(?,?)').bind(packet.purpose,JSON.stringify(packet)).run();
@@ -70,6 +74,16 @@ api.post('/fixture/compile/:id',async c=>c.json(await compileVerifiedCase({env:c
 api.post('/fixture/reuse/:id',async c=>c.json(await processCapabilityReuse({env:c.env,principal:c.get('principal')},c.req.param('id'))));
 api.get('/fixture/versions/:id',async c=>c.json(await currentVersions({env:c.env,principal:c.get('principal')},c.req.param('id'))));
 app.route('/api/v1',api);
+app.post('/fixture/intake-hold',async c=>{
+ if(intakeResponse)throw new Error('An intake response is already held');
+ const {workId}=await c.req.json();
+ intakeResponse={workId};return c.json({workId});
+});
+app.post('/fixture/intake-release',async c=>{
+ const {workId}=await c.req.json();
+ if(!intakeResponse || intakeResponse.workId!==workId)throw new Error('No matching held intake response');
+ intakeResponse=undefined;return c.json({workId});
+});
 app.post('/fixture/config',async c=>{
  const b=await c.req.json();await c.env.DB.prepare('INSERT INTO repair_fixture VALUES(1,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data').bind(JSON.stringify({...await setting(),...b})).run();return c.json({ok:true});
 });
