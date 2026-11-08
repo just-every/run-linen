@@ -165,6 +165,10 @@ export async function escalationChecks(workspaceApi, db) {
   let pending = await firstLevel();
   assert.deepEqual([pending.id, pending.state, pending.next_due_at, pending.fired_at], [scheduled.id, 'scheduled', null, null], 'DESK-005 an applicable open pause clears the persisted deadline without firing or replacing the row');
   assert.equal((await heldNotes()).length, 0);
+  testAt = '2026-02-02T10:59:00.000Z';
+  check(await tick());
+  assert.deepEqual(await firstLevel(), pending, 'DESK-005 a later tick during the open pause keeps the same held row with no deadline');
+  assert.equal((await heldNotes()).length, 0, 'DESK-005 a repeated paused tick creates no escalation note');
   testAt = '2026-02-02T11:00:00.000Z';
   held = check(await api(`/work/${held.id}/commands`, { revision: held.revision, command: 'resume', reason: 'Vendor answered' }));
   assert.equal(check(await api(`/work/${held.id}/sla`)).firstResponse.dueAt, '2026-02-02T18:00:00.000Z');
@@ -190,6 +194,11 @@ export async function escalationChecks(workspaceApi, db) {
   check(await tick());
   assert.deepEqual(await firstLevel(), fired, 'DESK-005 a repeated tick preserves the fired row');
   assert.deepEqual(await heldNotes(), privateNotes, 'DESK-005 a repeated tick adds no duplicate private note');
+  testAt = '2026-02-02T17:47:00.000Z';
+  check(await tick());
+  assert.deepEqual(await firstLevel(), fired, 'DESK-005 a later tick after the recomputed deadline preserves its original firing time');
+  assert.deepEqual(await heldNotes(), privateNotes, 'DESK-005 a later tick adds no duplicate private note');
+  console.log(`PROBE DESK-005 6: public SLA, pause, resume, process-due and followup reads: ${scheduled.next_due_at} -> ${pending.next_due_at}; open pause deadline null; former deadline silent; fired=${fired.fired_at}; private notes=${privateNotes.length}; requester notes=${(await heldNotes(employee)).length}; repeated and later ticks unchanged`);
   testAt = undefined;
 
   // Awaiting the requester: reminder after 3 business days, resolution with disclosure after 5.
