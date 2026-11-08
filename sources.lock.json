@@ -6784,7 +6784,7 @@
       "executable": false
     },
     "tests/platform/base-auth-runtime.mjs": {
-      "sha256": "8b6e417342c9f8f93423df52262f1d1533c1e49a3d33381aff9591338f268078",
+      "sha256": "08288dcd7aaa0d4927e1bc7fd0f942e491e100105a5fd595a8d60cc9b9f2425e",
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
@@ -6808,7 +6808,7 @@
       "executable": false
     },
     "tests/platform/mcp-tools-cases.mjs": {
-      "sha256": "b7d185eee137aed325d0488682224f11595ade27b73494a064d29b39427932f6",
+      "sha256": "f1e9461c3487a7b47010297f5994318d48e8342210f2eb0b49dca1e6eb66eec6",
       "executable": false
     },
     "tests/platform/reporting-transfer-cases.mjs": {
