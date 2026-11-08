@@ -6836,7 +6836,7 @@
       "executable": false
     },
     "tests/platform/mcp-tools-cases.mjs": {
-      "sha256": "79da80688aaf1806f3014c75b8f9d89e12a3cf3a5dac50b1e8c4998f4fa818c9",
+      "sha256": "cb718c71f1e70177f0f66b9edaafb6a58de2497429e8409808ee089f1d5a3aae",
       "executable": false
     },
     "tests/platform/reporting-transfer-cases.mjs": {
