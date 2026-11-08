@@ -47,6 +47,24 @@
       "log": "browser.log"
     }
   ],
+  "claim": {
+    "clause": "CATALOG-001",
+    "disposition": "ACCEPT ON LANDING; product branch only",
+    "newlyClosedPoints": [
+      5
+    ],
+    "points": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "status": "DONE"
+  },
   "clauseCountsAfter": {
     "done": 15,
     "missing": 37,
@@ -63,8 +81,27 @@
     "partial": 146
   },
   "contractStatusChanged": false,
+  "doneRiders": {
+    "1": "PASS",
+    "10": "PASS",
+    "11": "ACCEPT ON LANDING",
+    "2": "PASS",
+    "3": "PASS",
+    "4": "PASS",
+    "5": "PASS",
+    "6": "PASS",
+    "7": "PASS",
+    "8": "PASS",
+    "9": "PASS"
+  },
+  "evidenceReadback": {
+    "files": 30,
+    "head": "3a00f01146944bab0797609df84fbb8107c82e63",
+    "scope": "Initial packet; final publication adds exact-SHA green CI receipt",
+    "status": "restored"
+  },
   "generatedViewsCommitted": false,
-  "githubCallsUsed": 4,
+  "githubCallsUsed": 6,
   "head": "6166c604f4597edb03ba52c1a7f2caa30a80daf3",
   "localToolchain": {
     "arguments": [
@@ -85,6 +122,7 @@
     "source": "git ls-remote origin refs/heads/main refs/heads/cloud/sx-linen-c-f6"
   },
   "newTestRegistrations": 0,
+  "processCleanup": "Browser contexts and isolated worker closed; no workerd or chromium remained after proof",
   "productPush": {
     "attempt": 1,
     "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f6",
@@ -137,13 +175,13 @@
   "schema": 1,
   "tag": "sx-linen-c-f6",
   "verifyRun": {
-    "conclusion": null,
+    "conclusion": "success",
     "event": "pull_request",
     "head_sha": "6166c604f4597edb03ba52c1a7f2caa30a80daf3",
     "html_url": "https://github.com/just-every/run-linen/actions/runs/42504998134",
     "id": 42504998134,
-    "observedAt": "2026-11-08T17:31:47Z",
-    "status": "in_progress"
+    "observedAt": "2026-11-08T17:41:53Z",
+    "status": "completed"
   },
-  "verifyStatus": "in_progress"
+  "verifyStatus": "completed/success"
 }
