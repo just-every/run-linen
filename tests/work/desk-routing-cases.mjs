@@ -102,5 +102,38 @@ export async function deskRoutingChecks(workspaceApi, db) {
   assert.equal(history[0].method, 'round_robin');
   check(await api(`/work/${rr.id}/assignments`, undefined, employee), 403);
   assert.equal(check(await api('/work', undefined, employee)).items.find(i => i.id === rr.id).group_name, undefined, 'DESK-003 requesters do not read routing');
+  // Both automatic methods keep the chosen group when no member has the rule's required skill.
+  const unavailable = await group('No eligible agents', ['d3-ben', 'd3-cara']);
+  const unavailableRule = check(await api('/work-routing/rules', {
+    name: 'Needs unavailable skill', position: 3, requesterId: 'd3-employee',
+    skill: 'synthetic-linen-19', groupId: unavailable.id,
+  }), 201);
+  for (const mode of ['round_robin', 'load']) {
+    check(await api(`/work-groups/${unavailable.id}/assignment`, { mode }));
+    const unassigned = await ticket(`no-candidate-${mode}`);
+    assert.deepEqual([unassigned.group_id, unassigned.assignee_id], [unavailable.id, null],
+      'DESK-019 creation keeps the chosen group unassigned when no agent holds the required skill');
+    const created = await current(unassigned);
+    assert.deepEqual([created.group_id, created.assignee_id], [unavailable.id, null],
+      'DESK-019 the empty-cohort placement persists');
+    const result = check(await api(`/work/${unassigned.id}/route`, { revision: created.revision }, agentC));
+    assert.deepEqual(result.routing, {
+      trigger: 'agent', from: { groupId: unavailable.id, assigneeId: null },
+      to: { groupId: unavailable.id, assigneeId: null }, ruleId: unavailableRule.id,
+      method: mode, unassigned: 'no_available_agent',
+    }, 'DESK-019 explicit rerouting truthfully reports automatic assignment with no available agent');
+    const persisted = await current(unassigned);
+    assert.deepEqual([result.work.group_id, result.work.assignee_id, persisted.group_id, persisted.assignee_id],
+      [unavailable.id, null, unavailable.id, null], 'DESK-019 rerouting retains the group and null assignee');
+    assert.equal(persisted.revision, created.revision + 1, 'DESK-019 rerouting records a new revision');
+    const placements = check(await api(`/work/${unassigned.id}/assignments`, undefined, agentC)).items;
+    assert.deepEqual(placements.map(h => [h.action, h.from.groupId, h.from.assigneeId, h.to.groupId, h.to.assigneeId, h.method]), [
+      ['work.routed', null, null, unavailable.id, null, mode],
+      ['work.routed', unavailable.id, null, unavailable.id, null, mode],
+    ], 'DESK-019 creation and explicit rerouting retain truthful unassigned history');
+    assert.ok(placements.every(h => h.actorId === unavailableRule.id && Number.isFinite(Date.parse(h.at))),
+      'DESK-019 unassigned routing history identifies the rule actor and time');
+    check(await api(`/work/${unassigned.id}/assignments`, undefined, employee), 403);
+  }
   console.log('PASS DESK-003 public routes: support group of the Payroll service and a laptop CI ahead of owner-ordered rules by VIP requester group, requester, category and skill; round-robin and load-based assignment skip the off-shift and overloaded agents; restricted tickets never auto-assigned; reassignment history');
 }
