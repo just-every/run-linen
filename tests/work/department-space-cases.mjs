@@ -49,7 +49,13 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
   const hrWork=await make(spaces.hr.id,'synthetic-linen-11205',employee,{body:'Employee payrollcorrectiondetailsrestricted request for the payroll form'});
   const hrPath='/work/'+hrWork.id;
   await call(hrPath+'/messages',{body:'synthetic-linen-11206 private HR diagnosis',visibility:'private',sourceMessageId:'synthetic-linen-11207'},owner,201);
+  const hrBefore=await call(hrPath);
   await call(hrPath,undefined,it,404);
+  await call(hrPath+'/messages',{body:'synthetic-linen-11249',visibility:'private',sourceMessageId:'synthetic-linen-11250'},it,404);
+  await call(hrPath+'/commands',{revision:hrBefore.work.revision,command:'close',reason:'synthetic-linen-11251'},it,404);
+  await call(hrPath+'/classification/override',{type:'question',category:'general',subcategory:'guidance',impact:'low',urgency:'low',workRevision:hrBefore.work.revision,revision:0,reason:'synthetic-linen-11252'},it,404);
+  assert.deepEqual(await call(hrPath),hrBefore,'Matching employee department facts permit no changes to another employee’s HR ticket');
+  assert.deepEqual(await authority(),authorityBefore,'Refused HR ticket writes leave staff memberships and roles unchanged');
   assert.ok(!(await call('/work',undefined,it)).items.some(w=>w.id===hrWork.id));
   assert.ok(!(await call('/search?q=synthetic-linen-11205',undefined,it)).items.some(w=>w.id===hrWork.id));
   assert.ok((await call(hrPath,undefined,employee)).messages.every(m=>m.visibility==='public'));
