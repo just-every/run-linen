@@ -136,7 +136,7 @@ try {
   assert.ok(expiredDuties.every(o => o.state === 'verified'));
   const expiryCount = await count(); await ok('/work/process-due', {}); assert.equal(await count(), expiryCount);
   assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_fulfilment_link_guards').first()).n, 0);
-  await workSavedChecks({ api, ok, actor });
+  await workSavedChecks({ api, ok, actor, db });
   console.log('REPORT-004 passed: baseline vs automated request type, role minutes at declared rates, request-attributed model charges, unknown provider charges and the failure in the same period');
   console.log('FULFILMENT LINK passed: real D1/workerd; employee + automation/grants + reviewed distinct provider mapping; initial/expiry atomic binding and replay; stranger/workspace/work/provider/change/amendment rejection; no duplicate dispatch; independent verification and pending revocation; truthful missing configuration/unknown/cancellation; no external provider traffic');
 } finally { await mf.dispose(); await rm(dir, { recursive: true, force: true }); }
