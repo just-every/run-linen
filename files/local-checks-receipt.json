@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f9",
+  "repository": "just-every/run-linen",
+  "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+  "branch": "cloud/sx-linen-c-f9",
+  "origin_main": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "new_commits_this_continuation": 0,
+  "retained_product_commit": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+  "worktree_clean": true,
+  "checks": [
+    {
+      "name": "runtime",
+      "command": "cloud_run node tests/work/fulfilment-link-runtime.mjs",
+      "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+      "exit": 0,
+      "output_file": "runtime.log",
+      "output_sha256": "2377200d35e295cfcd8b3584df28443bc09e67c5e5a40716d243a1292bc2e3d1"
+    },
+    {
+      "name": "browser",
+      "command": "cloud_run env LINEN_TEST_BUILT=1 LINEN_CAPTURE=1 LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium perl -e 'alarm 1200; exec @ARGV' -- node tests/ui/run.mjs ../time-proof.mjs",
+      "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+      "exit": 0,
+      "output_file": "browser.log",
+      "output_sha256": "e2f573b32a83449f1b9988a56d330dad975b6abbef76fcf657c7a5f81da23303"
+    },
+    {
+      "name": "typecheck",
+      "command": "pnpm typecheck",
+      "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+      "exit": 0,
+      "output_file": "typecheck.log",
+      "output_sha256": "a6b320cd943bc0034c0b3f051b38fbd19bf467aa0eb697e19b77d0c3e554052e"
+    },
+    {
+      "name": "first-party",
+      "command": "cloud_run pnpm exec rer check --profile first-party",
+      "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+      "exit": 0,
+      "output_file": "first-party.log",
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "views-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+      "exit": 0,
+      "output_file": "views-write.log",
+      "output_sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+    },
+    {
+      "name": "views-check",
+      "command": "node src/base/contract-docs.mjs check",
+      "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+      "exit": 0,
+      "output_file": "views-check.log",
+      "output_sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    {
+      "name": "lock-write",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+      "exit": 0,
+      "output_file": "lock.log",
+      "output_sha256": "4219a6b28f9084e74e5e5ac9905e1d8f11d2d5ef4fac175255cb530733e42fa0"
+    },
+    {
+      "name": "lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+      "exit": 0,
+      "output_file": "lock-check.log",
+      "output_sha256": "8ff86adca7754b0f9885a5a92ff099eb20549617b138220c49998ebee0abb23b"
+    }
+  ],
+  "verify": {
+    "id": 42503246010,
+    "event": "pull_request",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401"
+  },
+  "candidate_land_status": "branch-only",
+  "scan": {
+    "commit": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "reason": "Cloud adaptation assigns publication scan to guarded Mac lander"
+  },
+  "counts": {
+    "before": {
+      "done": 15,
+      "partial": 147,
+      "missing": 37
+    },
+    "current": {
+      "done": 15,
+      "partial": 147,
+      "missing": 37
+    },
+    "proposed_on_acceptance": {
+      "done": 16,
+      "partial": 146,
+      "missing": 37
+    }
+  },
+  "current_pr_verify": {
+    "id": 42506325991,
+    "event": "pull_request",
+    "head_sha": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+    "status": "in_progress",
+    "conclusion": null,
+    "observed_at": "2026-11-08 17:45 UTC"
+  },
+  "github_rest_calls": 5,
+  "remote_ref_readback_file": "remote-product-provenance.txt"
+}

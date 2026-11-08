@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "journey": "tests/ui/time-journey.mjs#timeJourney",
+  "assertionWidth": 1440,
+  "captureWidths": [
+    1440,
+    390
+  ],
+  "passed": true,
+  "pageErrors": [],
+  "screenAudit": {
+    "fonts": [
+      {
+        "tag": "H3",
+        "size": "15px"
+      },
+      {
+        "tag": "P",
+        "size": "14px"
+      },
+      {
+        "tag": "P",
+        "size": "14px"
+      },
+      {
+        "tag": "P",
+        "size": "14px"
+      }
+    ],
+    "iconOnly": []
+  }
+}

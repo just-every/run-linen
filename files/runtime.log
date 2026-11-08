@@ -1,0 +1,2 @@
+REPORT-004 passed: baseline vs automated request type, role minutes at declared rates, request-attributed model charges, unknown provider charges and the failure in the same period
+FULFILMENT LINK passed: real D1/workerd; employee + automation/grants + reviewed distinct provider mapping; initial/expiry atomic binding and replay; stranger/workspace/work/provider/change/amendment rejection; no duplicate dispatch; independent verification and pending revocation; truthful missing configuration/unknown/cancellation; no external provider traffic

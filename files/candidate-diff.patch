@@ -1,0 +1,145 @@
+diff --git a/sources.lock.json b/sources.lock.json
+index 5b4548f..3ed7009 100644
+--- a/sources.lock.json
++++ b/sources.lock.json
+@@ -7212,7 +7212,7 @@
+       "executable": false
+     },
+     "tests/ui/time-journey.mjs": {
+-      "sha256": "67a4f81b4d456f91b83be77278163212a72046b37792a53de363a97e6a993ade",
++      "sha256": "8cf304d369bc4f988187c51782513b8fd124239ca3471eba55ac729696638a36",
+       "executable": false
+     },
+     "tests/ui/typed-history-journey.mjs": {
+@@ -7336,7 +7336,7 @@
+       "executable": false
+     },
+     "tests/work/fulfilment-link-runtime.mjs": {
+-      "sha256": "dc393af1aeabddff45cda71cb108bf2ec8fd6059f82609354c693dc152f31b56",
++      "sha256": "9c7b84f98e726bb283a51ac704b1b5b7dc4dfe59c58ebfb7ec6c9cdb9152164a",
+       "executable": false
+     },
+     "tests/work/fulfilment-link-worker.ts": {
+@@ -7464,7 +7464,7 @@
+       "executable": false
+     },
+     "tests/work/work-saved-cases.mjs": {
+-      "sha256": "7e7a9c0b38587d3db37b13807217a39b591765aa70ecf33a3436c99aea32d2d0",
++      "sha256": "5613ebeafda8d0c11f6cfca98a4123090fba2e4854ec0bf48f2ef5faf752d969",
+       "executable": false
+     },
+     "tests/work/worker.ts": {
+diff --git a/tests/ui/time-journey.mjs b/tests/ui/time-journey.mjs
+index 1602c53..e2961da 100644
+--- a/tests/ui/time-journey.mjs
++++ b/tests/ui/time-journey.mjs
+@@ -48,6 +48,12 @@ export async function timeJourney({page,base,api,workId,out}) {
+   await page.getByRole('heading',{name:'Human effort',exact:true}).waitFor();
+   await captureJourney(page,{path:`${out}/DESK-012-effort.png`,fullPage:true});
+   console.log('PASS DESK-012: manual and real measured active work feed the effort report at 1440');
++  // A native pending request makes the insufficient-evidence explanation observable.
++  const ownerId = (await api('/session')).principal.userId;
++  const pendingType = 'Synthetic linen pending tool';
++  const pendingCatalog = await api('/catalog', { name: pendingType, kind: 'access', target: 'synthetic-linen-603', ownerId });
++  const pending = await api('/work', { title: 'Synthetic linen pending request', body: 'Tool access awaiting fulfilment', deduplicationKey: 'synthetic-linen-604' });
++  await api(`/work/${pending.id}/fulfilment`, { catalogId: pendingCatalog.id, beneficiaryId: ownerId, purpose: 'Project work', expiresAt: null });
+   // REPORT-004: the owner declares a role rate, then reads a baseline window beside this period.
+   await page.getByText('Declare labor rates',{exact:true}).click();
+   await page.getByLabel('Owner rate (USD/hour)',{exact:true}).fill('90');
+@@ -68,7 +74,14 @@ export async function timeJourney({page,base,api,workId,out}) {
+   // AGENT-006: the same report carries the ranked proposal, or says why nothing is ranked.
+   const proposal=page.getByRole('region',{name:'Next automation proposal'}),next=saved.automationProposal.next;
+   await proposal.getByText(next?`Automate ${next.requestType} next`:'No ranked request type still takes human minutes.',{exact:false}).first().waitFor();
++  const pendingRow = saved.requestTypes.find(r => r.requestType === pendingType);
++  assert.equal(pendingRow.current.verified, 0); assert.equal(pendingRow.current.pending, 1);
++  assert.ok(saved.automationProposal.notEnoughEvidence.includes(pendingType));
++  assert.ok(saved.automationProposal.ranked.every(r => r.requestType !== pendingType));
++  assert.notEqual(next?.requestType, pendingType);
+   for(const type of saved.automationProposal.notEnoughEvidence)await proposal.getByText(type,{exact:false}).first().waitFor();
++  await proposal.getByText(/not enough evidence.*no verified outcome this period.*Synthetic linen pending tool/i).waitFor();
++  await proposal.getByText(/proposal; it authorizes nothing/i).waitFor();
+   await proposal.scrollIntoViewIfNeeded();
+   await captureJourney(page,{path:`${out}/AGENT-006-next-automation.png`,fullPage:true});
+   console.log('PASS REPORT-004: owner-declared role rate prices recorded minutes in the baseline/current work-saved report at 1440');
+diff --git a/tests/work/fulfilment-link-runtime.mjs b/tests/work/fulfilment-link-runtime.mjs
+index 33187cb..4b10481 100644
+--- a/tests/work/fulfilment-link-runtime.mjs
++++ b/tests/work/fulfilment-link-runtime.mjs
+@@ -136,7 +136,7 @@ try {
+   assert.ok(expiredDuties.every(o => o.state === 'verified'));
+   const expiryCount = await count(); await ok('/work/process-due', {}); assert.equal(await count(), expiryCount);
+   assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_fulfilment_link_guards').first()).n, 0);
+-  await workSavedChecks({ api, ok, actor });
++  await workSavedChecks({ api, ok, actor, db });
+   console.log('REPORT-004 passed: baseline vs automated request type, role minutes at declared rates, request-attributed model charges, unknown provider charges and the failure in the same period');
+   console.log('FULFILMENT LINK passed: real D1/workerd; employee + automation/grants + reviewed distinct provider mapping; initial/expiry atomic binding and replay; stranger/workspace/work/provider/change/amendment rejection; no duplicate dispatch; independent verification and pending revocation; truthful missing configuration/unknown/cancellation; no external provider traffic');
+ } finally { await mf.dispose(); await rm(dir, { recursive: true, force: true }); }
+diff --git a/tests/work/work-saved-cases.mjs b/tests/work/work-saved-cases.mjs
+index 596e903..59cc2ce 100644
+--- a/tests/work/work-saved-cases.mjs
++++ b/tests/work/work-saved-cases.mjs
+@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
+  * touches/minutes by role, model/provider/labor USD per verified outcome and the failures
+  * in the same period, through public work, report and execution doors.
+  */
+-export async function workSavedChecks({ api, ok, actor }) {
++export async function workSavedChecks({ api, ok, actor, db }) {
+   const at = () => new Date().toISOString(), tick = () => new Promise(resolve => setTimeout(resolve, 15));
+   // Request type is the catalog service name; a second provider group backs the same service.
+   const catalogs = {};
+@@ -59,6 +59,10 @@ export async function workSavedChecks({ api, ok, actor }) {
+   const analytics = await request('report-analytics-manual', { target: 'analytics-tool' });
+   await time(analytics.work, 'report-analytics-handling', 25);
+   await fulfil(analytics);
++  // A real queued plan has human effort but no verified current-window outcome.
++  catalogs['pending-tool'] = await ok('/catalog', { name: 'Pending tool access', kind: 'access', target: 'pending-tool', ownerId: 'owner' });
++  const pending = await request('synthetic-linen-601', { target: 'pending-tool' });
++  await time(pending.work, 'synthetic-linen-602', 120);
+   await tick(); const currentTo = at();
+ 
+   // Only the owner declares role rates; they are costing assumptions validated per role.
+@@ -66,6 +70,14 @@ export async function workSavedChecks({ api, ok, actor }) {
+   assert.equal((await api('/reports/labor-rates', { rates: { owner: -1 } })).status, 422);
+   assert.equal((await api('/reports/labor-rates', { rates: { intern: 10 } })).status, 422);
+   assert.deepEqual((await ok('/reports/labor-rates', { rates: { owner: 90, employee: 40 } })).rates, { owner: 90, employee: 40 });
++  const executionTables = ['execution_grants', 'execution_grant_revocations', 'execution_plans',
++    'execution_decisions', 'execution_operations', 'execution_outbox', 'execution_attempts',
++    'execution_provider_attempts', 'execution_receipts', 'execution_verifications', 'execution_fences'];
++  const executionState = async () => Object.fromEntries(await Promise.all(executionTables.map(async table =>
++    [table, (await db.prepare(`SELECT * FROM ${table} WHERE workspace_id='w' ORDER BY rowid`).all()).results])));
++  const beforeProposalReads = await executionState(), beforeDispatches = await ok('/test/writes');
++  for (const table of ['execution_grants', 'execution_plans', 'execution_operations', 'execution_attempts'])
++    assert.ok(beforeProposalReads[table].length > 0, `${table}: the inert-read check uses populated execution records`);
+   const path = `/reports/work-saved?baselineFrom=${baselineFrom}&baselineTo=${boundary}&currentFrom=${boundary}&currentTo=${currentTo}`;
+   const read = async () => (await ok(path)).requestTypes.find(row => row.requestType === 'Design tool access');
+   let row = await read();
+@@ -99,7 +111,15 @@ export async function workSavedChecks({ api, ok, actor }) {
+   const effort = (await ok(`/reports/effort?from=${boundary}&to=${currentTo}`)).byRequestType.find(r => r.requestType === 'Design tool access');
+   assert.equal(effort.failed, 1); assert.equal(effort.model.unknownCharges, 1);
+   // AGENT-006: REPORT-004's report for two request types names the next automation by human work it removes.
+-  const proposal = (await ok(path)).automationProposal;
++  const report = await ok(path), proposal = report.automationProposal;
++  const pendingRow = report.requestTypes.find(r => r.requestType === 'Pending tool access');
++  assert.equal(pendingRow.current.incoming, 1);
++  assert.equal(pendingRow.current.pending, 1);
++  assert.equal(pendingRow.current.verified, 0);
++  assert.equal(pendingRow.current.activeMinutes, 120);
++  assert.ok(proposal.notEnoughEvidence.includes(pendingRow.requestType));
++  assert.ok(proposal.ranked.every(r => r.requestType !== pendingRow.requestType));
++  assert.notEqual(proposal.next?.requestType, pendingRow.requestType);
+   assert.deepEqual(proposal.ranked.map(r => [r.rank, r.requestType, r.humanMinutesToRemove]), [[1, 'Analytics access', 25], [2, 'Design tool access', 0]],
+     'AGENT-006 ranks by human minutes per verified outcome × verified outcomes, not tickets closed');
+   assert.deepEqual(proposal.next, { requestType: 'Analytics access', humanMinutesToRemove: 25 });
+@@ -114,6 +134,12 @@ export async function workSavedChecks({ api, ok, actor }) {
+   assert.deepEqual(cohort.automationProposal.ranked.map(r => r.requestType), ['Design tool access']);
+   const empty = (await ok(`/reports/work-saved?baselineFrom=${baselineFrom}&baselineTo=${boundary}&currentFrom=${currentTo}&currentTo=${new Date(Date.parse(currentTo) + 1000).toISOString()}`)).automationProposal;
+   assert.deepEqual(empty.ranked, []); assert.equal(empty.next, null);
++  const pendingOnly = (await ok(`${path}&requestType=${encodeURIComponent(pendingRow.requestType)}`)).automationProposal;
++  assert.deepEqual(pendingOnly.notEnoughEvidence, [pendingRow.requestType]);
++  assert.deepEqual(pendingOnly.ranked, []); assert.equal(pendingOnly.next, null);
++  assert.deepEqual(await executionState(), beforeProposalReads,
++    'proposal reads never issue grants, create or approve plans, enqueue outbox work or change dispatch records');
++  assert.deepEqual(await ok('/test/writes'), beforeDispatches, 'proposal reads never dispatch a provider write');
+   await ok('/reports/labor-rates', { rates: { vendor: null } });
+   assert.deepEqual((await ok('/reports/labor-rates')).rates, { owner: 90, employee: 40 });
+   assert.deepEqual((await read()).baseline.labor.unpricedRoles, ['vendor']);
