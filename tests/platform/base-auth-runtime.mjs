@@ -231,7 +231,7 @@ try{
  assert.equal((await ownerApi('/mcp-credentials',grant)).status,403,'API-003 erased principal cannot mint another grant');
  assert.ok((await sql("SELECT state,secret_hash FROM mcp_credentials WHERE principal_id='"+bot.id+"'")).every(row=>row.state==='revoked'&&row.secret_hash===null),'API-003 erasure clears all principal credential hashes');
  assert.equal((await restCall(erasedRest.secret,restBody)).status,401);assert.deepEqual((await sql("SELECT state,secret_hash FROM rest_credentials WHERE id='"+erasedRest.id+"'"))[0],{state:'revoked',secret_hash:null},'REST principal erasure clears hash');
- console.log('PASS API-003 native owner mint/list/revoke; SHA-256 one-time secret; closed scopes/tools and expiry; separate audiences; published registry and scoped ticket calls; live roles/membership; audit without bodies or secret; principal erasure/hash removal');
+ console.log('PASS API-003 native owner mint/list/revoke; populated approval and grant preservation; no minted approval or decision authority; SHA-256 one-time secret; closed scopes/tools and expiry; separate audiences; published registry and scoped ticket calls; live roles/membership; audit without bodies or secret; principal erasure/hash removal');
  console.log('PASS Base native claim race, Lobby/setup, ordinary provider email-link replay, native membership/password/session retention and revocation, bound step-up proof, CSRF/origin, dev gate and production denial')
 }catch(error){console.error(output.slice(-12000));throw error;}finally{
  await proxy?.dispose();
