@@ -6960,7 +6960,7 @@
       "executable": false
     },
     "tests/ui/billing-browser.mjs": {
-      "sha256": "375097d1b75aa3264722b03fe852fd88bd491c94c3eece09544b9b0aa2047371",
+      "sha256": "b8b728926703a384994aef3e04d14e2def650091a520bed2c84c96b6323c4e1e",
       "executable": false
     },
     "tests/ui/brand-journey.mjs": {
@@ -6968,7 +6968,7 @@
       "executable": false
     },
     "tests/ui/browser.mjs": {
-      "sha256": "ca9c63fe5e7e8a60de7c05232a7c60b117e95a97c4a4298edc2e5f3b4b0f8fe6",
+      "sha256": "702d601b51bd438fbd073464a1577098e67003187d79b755189ead33d75d4763",
       "executable": false
     },
     "tests/ui/calendar-journey.mjs": {
@@ -6996,7 +6996,7 @@
       "executable": false
     },
     "tests/ui/commitment-restart.mjs": {
-      "sha256": "41bd4388ad74f9562467e588fc89409cf4753c270fcf8db41fc2cea36a3f4c0e",
+      "sha256": "f20425f6725a2d6cf4740d272596a92bba8f33024c93fb68a17eec4838189d95",
       "executable": false
     },
     "tests/ui/communication-browser.mjs": {
@@ -7099,8 +7099,12 @@
       "sha256": "3ab3f9efe86dfc5a8fee34e74b9cbca01c4f01acbbdff3551452a16de6697ac0",
       "executable": false
     },
+    "tests/ui/offline-reply-journey.mjs": {
+      "sha256": "116f2469a6ad8440a9772b21768594f7827914400c929cdefa3f3ddff58e7320",
+      "executable": false
+    },
     "tests/ui/okta-browser.mjs": {
-      "sha256": "70ed038db412943b0b431332c9a78a64446a6b828e577ef3917d61d5f1fea135",
+      "sha256": "c559dad92ebbedd1c4ea414fd9a334da1492af2083af61369d947a2f8d43dc7c",
       "executable": false
     },
     "tests/ui/operations-console-journeys.mjs": {
@@ -7148,7 +7152,7 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "37a7a9725be81085cbe64ee6c972c9ead1078e2441a308b9e720e743877125ec",
+      "sha256": "d3f71aa113369ae931f81b73d76003cbc0555b29ac4d29c208018a7446be54b6",
       "executable": false
     },
     "tests/ui/sandbox-routing-journey.mjs": {
@@ -7213,6 +7217,10 @@
     },
     "tests/ui/time-journey.mjs": {
       "sha256": "8cf304d369bc4f988187c51782513b8fd124239ca3471eba55ac729696638a36",
+      "executable": false
+    },
+    "tests/ui/transition-helpers.mjs": {
+      "sha256": "6e89f0a9e0d7505435e16012a48fb062397c627470906bb53bc6629eb6f448f4",
       "executable": false
     },
     "tests/ui/typed-history-journey.mjs": {

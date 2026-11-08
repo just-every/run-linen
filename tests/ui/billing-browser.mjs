@@ -27,6 +27,7 @@ try {
   const profile=page.getByRole('button',{name:'Your workspace and account'});await page.keyboard.press('Tab');await profile.focus();
   assert.equal(await profile.evaluate(e=>e.matches(':focus-visible')),true);
   await waitForTooltipOpacity(profile, '1');
+  assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDuration),'0s','Keyboard focus shows the tooltip without an animation');
   await page.evaluate(()=>window.scrollTo(0,0));await hoverTooltip(profile);assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');assert.notEqual(await profile.evaluate(e=>getComputedStyle(e,'::after').color),await profile.evaluate(e=>getComputedStyle(e,'::after').backgroundColor));
   process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/billing-invoice-${width}.png`,fullPage:true});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No horizontal overflow');

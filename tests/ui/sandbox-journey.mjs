@@ -39,6 +39,7 @@ export async function sandboxJourney({page,api,base,out}) {
   const account=page.getByRole('button',{name:'Your workspace and account',exact:true});
   await page.keyboard.press('Tab');await account.focus();
   await waitForTooltipOpacity(account, '1');
+  assert.equal(await account.evaluate(e=>getComputedStyle(e,'::after').transitionDuration),'0s','Keyboard focus shows the tooltip without an animation');
   await page.getByLabel('Sandbox name',{exact:true}).focus();await page.mouse.move(0,0);await hoverTooltip(account);
  }
  await page.setViewportSize({width:1440,height:1000});

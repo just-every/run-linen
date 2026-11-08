@@ -30,6 +30,7 @@ try {
     const account = page.getByRole('button', { name: 'Your workspace and account', exact: true });
     await page.keyboard.press('Tab'); await account.focus();
     await waitForTooltipOpacity(account, '1');
+  assert.equal(await account.evaluate(e=>getComputedStyle(e,'::after').transitionDuration),'0s','Keyboard focus shows the tooltip without an animation');
     await page.getByRole('button', {name:'Connect a service'}).focus();
     await page.mouse.move(0, 0); await hoverTooltip(account);
     process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/ACCESS-002-connection-${width}.png`, fullPage: true });
