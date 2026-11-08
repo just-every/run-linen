@@ -7324,7 +7324,7 @@
       "executable": false
     },
     "tests/work/department-space-cases.mjs": {
-      "sha256": "97b01bb9bb0cc43a04de27734d8f80250fe8f92cef9f71d5a62aa5f1627dddb0",
+      "sha256": "97fada746d83c17c5d3c9468994cc17a6c43c44fe73e7f82757634b78c9998d2",
       "executable": false
     },
     "tests/work/desk-field-cases.mjs": {
