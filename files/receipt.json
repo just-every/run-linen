@@ -83,13 +83,19 @@
     "worktreeClean": true
   },
   "ci": {
-    "conclusion": null,
+    "conclusion": "success",
     "head_sha": "0541d6cfdb64829d55c8bdb4892504097f0db108",
     "html_url": "https://github.com/just-every/run-linen/actions/runs/42515785018",
-    "status": "in_progress",
+    "status": "completed",
     "id": 42515785018,
     "event": "pull_request"
   },
-  "githubCallsUsed": 4,
-  "lastCiReadAt": "2026-11-08T19:40:46.614136+00:00"
+  "githubCallsUsed": 6,
+  "lastCiReadAt": "2026-11-08T19:50:47.399042+00:00",
+  "remoteRefs": {
+    "refs/heads/cloud/sx-linen-c-f13": "0541d6cfdb64829d55c8bdb4892504097f0db108",
+    "refs/heads/main": "0cae7fe338def5f96f52df2468f91f078a36827f"
+  },
+  "ready": true,
+  "landing": "pending fleet guards"
 }

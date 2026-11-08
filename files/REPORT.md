@@ -40,9 +40,9 @@ No DONE claim is made. These rows describe the selected scope and preserve the e
 
 | Rider | Result | Evidence |
 | --- | --- | --- |
-| 1 | PASS locally for selected points; exact-head Verify pending | Public route journey reaches both targeted outcomes, including readback. Acceptance map above. |
+| 1 | PASS for selected points; exact-head Verify completed successfully | Public route journey reaches both targeted outcomes, including readback. Acceptance map above; Verify 42515785018, pull_request, completed success on the exact candidate. |
 | 2 | PASS | Lines 126–141 exercise clean undo and unsafe undo with seeded records; lines 85–118 verify admitted facts as well as absence of source files. |
-| 3 | PENDING | Verify pull_request run 42515785018 on 0541d6cfdb64829d55c8bdb4892504097f0db108 invokes the unchanged existing journey entrypoint. No unrecorded browser flag is needed. |
+| 3 | PASS | Verify pull_request run 42515785018 completed successfully on 0541d6cfdb64829d55c8bdb4892504097f0db108 invokes the unchanged existing journey entrypoint. No unrecorded browser flag is needed. |
 | 4 | PASS | Exact-head runtime rerun PASS, exit 0 in 80.584 seconds; the worktree remains clean. import-exact-head-receipt.json records the full SHA and command. |
 | 5 | INSPECTED | The receiving clause explicitly names current-owner, A1 and A6 rules in its Requirement and D-6 metadata. No new inheritance claim. |
 | 6 | PASS mechanical; status judgment deferred | Contract generation write and check passed, wrote zero documents, and generated views were restored from origin/main. Status cells remain untouched under the single-writer rule. |
@@ -68,8 +68,12 @@ MECHANICAL lock=node scripts/edition-authoring/cli.mjs lock and check exit=0; vi
 
 PROBES.md records the public-door input and observed result for each selected point. receipt.json binds local checks, file digests, clean worktree, identity inspection and successful product custody to the full candidate SHA. import-exact-head-receipt.json records the additional exact-head runtime execution: exit 0 in 80.584 seconds on the clean committed candidate.
 
-Pre-ready self-check: targeted data-loss and privacy outcomes have meaningful route assertions; no existing assertion was removed or weakened; existing revocation, erasure and replay paths still pass; no screens were touched; the source lock is fresh. Candidate Verify, guarded publication scan and Run site are reported separately, never inferred from local proof. A broader DONE claim is withheld because the brief retains the Base obligation.
+Pre-ready self-check: targeted data-loss and privacy outcomes have meaningful route assertions; no existing assertion was removed or weakened; existing revocation, erasure and replay paths still pass; no screens were touched; the source lock is fresh. Candidate Verify 42515785018 completed successfully on the exact head. Guarded publication scan and Run site remain with the fleet and are never inferred from local proof. A broader DONE claim is withheld because the brief retains the Base obligation.
 
 Publication scan: NOT RUN in cloud, as directed. commit=0541d6cfdb64829d55c8bdb4892504097f0db108 complete=unestablished historyScanned=unestablished findings=unestablished. The Mac lander must perform the complete full-history scan and require zero findings. Main's baseline Verify 42514121758 and Run site 42514121732 were completed successfully on c4e9852d1098215b0371a6c67a9a721be85a88cf; they do not certify the candidate.
 
-Candidate Verify: 42515785018, pull_request, still in_progress at the permitted 19:40:45 UTC status read on the exact candidate. GH calls used: 4 of 10. No workflow was dispatched or rerun. verify-status.json and receipt.json carry the final observed result.
+Candidate Verify: 42515785018, pull_request, completed SUCCESS on 0541d6cfdb64829d55c8bdb4892504097f0db108 at the permitted final status read. GH calls used: 6 of 10. No workflow was dispatched or rerun. verify-status.json and receipt.json carry the actual final response.
+
+READY branch=cloud/sx-linen-c-f13 head=0541d6cfdb64829d55c8bdb4892504097f0db108
+
+Final remote custody: product branch 0541d6cfdb64829d55c8bdb4892504097f0db108; observed main 0cae7fe338def5f96f52df2468f91f078a36827f. Main equality is false. No default branch was pushed. The maintained lander owns main integration, the complete publication scan and Run site.
