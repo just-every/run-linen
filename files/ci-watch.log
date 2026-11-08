@@ -2,3 +2,5 @@ CI_CALL 3 exit 0
 {"id": 42518243082, "name": "Verify", "event": "pull_request", "status": "in_progress", "conclusion": null, "head_sha": "30646fdeb3e2564d9f702ac2c716c3a1ba843396", "html_url": "https://github.com/just-every/run-linen/actions/runs/42518243082", "github_calls": 3, "observedAt": "2026-11-08T20:09:45.506525+00:00"}
 CI_CALL 4 exit 0
 {"id": 42518243082, "name": "Verify", "event": "pull_request", "status": "in_progress", "conclusion": null, "head_sha": "30646fdeb3e2564d9f702ac2c716c3a1ba843396", "html_url": "https://github.com/just-every/run-linen/actions/runs/42518243082", "github_calls": 4, "observedAt": "2026-11-08T20:14:46.027862+00:00"}
+CI_CALL 5 exit 0
+{"id": 42518243082, "name": "Verify", "event": "pull_request", "status": "completed", "conclusion": "success", "head_sha": "30646fdeb3e2564d9f702ac2c716c3a1ba843396", "html_url": "https://github.com/just-every/run-linen/actions/runs/42518243082", "github_calls": 5, "observedAt": "2026-11-08T20:19:46.488470+00:00"}

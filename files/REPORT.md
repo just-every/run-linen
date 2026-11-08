@@ -8,7 +8,7 @@ Integrated main: 0cae7fe338def5f96f52df2468f91f078a36827f
 
 CLAIM API-003 PARTIAL points=6 tests=tests/platform/mcp-tools-cases.mjs#mcpToolCases; tests/platform/base-auth-runtime.mjs#Native sign-in and scoped API
 
-GAP API-003: Selected point 6 is proven locally. Broader discovery proof and held scope remain unchanged: ROLE-001 acting-role grants, revision reconfirmation and custom-agent seat decisions, wider tools, Base resources, prompts and events, external effects and existing account, Base and device holds are not claimed. Exact-SHA Verify and guarded landing are recorded separately below.
+GAP API-003: Selected point 6 is proven locally. Broader discovery proof and held scope remain unchanged: ROLE-001 acting-role grants, revision reconfirmation and custom-agent seat decisions, wider tools, Base resources, prompts and events, external effects and existing account, Base and device holds are not claimed. Exact-SHA Verify 42518243082 is green; guarded landing remains pending.
 
 No DEFAULT: this uses the existing RL-18 credential semantic and creates no new policy or authority.
 
@@ -51,7 +51,7 @@ This is a PARTIAL point claim. These rows do not assert a clause-wide DONE.
 | --- | --- | --- |
 | 1 | PASS for selected point; clause-wide claim withheld | mcpToolCases lines 77 to 143 performs mint, full snapshots, unsafe decision refusal and native authorized completion; exact-SHA runtime receipt |
 | 2 | PASS | Nonempty manager approvals, recorded stage decision, pending manager and stage inputs, active service grant; dangerous path both ways with unchanged state on refusal |
-| 3 | Pending exact-SHA Verify | scripts/verify.mjs includes tests/platform/base-auth-runtime.mjs unconditionally as Native sign-in and scoped API; final CI receipt below |
+| 3 | PASS | Exact-SHA Verify 42518243082, pull_request, completed success. scripts/verify.mjs includes tests/platform/base-auth-runtime.mjs unconditionally as Native sign-in and scoped API |
 | 4 | PASS | runtime-exact-sha.log and runtime-receipt.json name candidate 30646fdeb3e2564d9f702ac2c716c3a1ba843396 |
 | 5 | PASS, INSPECTED | API-003 explicitly cites BASE-AGENT-001; no inherited acceptance text changed |
 | 6 | PASS mechanically | contract-docs write and check both exit 0; views restored from main; Status, Gap, Evidence and counts unchanged |
@@ -99,3 +99,17 @@ Product blocker: none for the selected point. Held remainder remains unchanged. 
 Verify run 42518243082, event pull_request, head 30646fdeb3e2564d9f702ac2c716c3a1ba843396, was in progress at the first permitted discovery (2026-11-08T20:09:45Z).
 URL: https://github.com/just-every/run-linen/actions/runs/42518243082
 No Verify dispatch or rerun was needed. One watcher performs at most one request per 300 seconds for this run. The current receipt and terminal observation are in ci-receipt.json and ci-watch.log. A terminal CI result is appended after this observation.
+
+
+## Terminal CI and custody
+
+Verify 42518243082 completed SUCCESS on 30646fdeb3e2564d9f702ac2c716c3a1ba843396, event pull_request, observed 2026-11-08T20:19:46Z. This exact-SHA green run executes the journey named in every acceptance evidence row above. DONE-RIDERS row 3 now passes. The selected point-6 security proof passes both local exact-SHA runtime and Verify; broader held scope is unchanged. Row 11 remains the guarded lander's responsibility.
+
+Five GitHub API calls were used: draft PR creation, initial exact-head discovery before the run appeared, delayed discovery, and two run polls spaced at least 300 seconds apart. No dispatch, rerun or failed-job log read was needed. No real CI failure was observed.
+
+Final product custody: READY for the guarded lander; branch cloud/sx-linen-c-f15 at 30646fdeb3e2564d9f702ac2c716c3a1ba843396. This does not claim main equality, publication scan completion, Run site success or clause-wide DONE. Evidence is published separately on refs/heads/evidence/sx-linen-c-f15. The cloud clone and dependencies are deleted after publication as requested.
+
+CLAIM API-003 PARTIAL points=6 tests=tests/platform/mcp-tools-cases.mjs#mcpToolCases; tests/platform/base-auth-runtime.mjs#Native sign-in and scoped API
+GAP API-003: Point 6 closed; broader discovery proof and all explicitly held scope unchanged. Guarded landing, publication scan and Run site remain with the fleet.
+POST lanes/sx/INBOX.md: sx-linen-c-f15 API-003 point 6 proven; no contract cell changes; counts 18 DONE, 144 PARTIAL, 37 MISSING unchanged; cloud/sx-linen-c-f15 30646fdeb3e2564d9f702ac2c716c3a1ba843396; PR 154; Verify 42518243082 pull_request success; guarded landing pending.
+READY repo=just-every/run-linen branch=cloud/sx-linen-c-f15 head=30646fdeb3e2564d9f702ac2c716c3a1ba843396
