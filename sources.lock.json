@@ -7256,7 +7256,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "8768a86c8bfd3bfe67f6a79e5b4c81ecf4590aacb4247e0de09a7cbf38725775",
+      "sha256": "2c8b6343aa5010fc3b303e3c3d4964a68c140046323a88643d580f827bfcb811",
       "executable": false
     },
     "tests/work/approval-chain-cases.mjs": {
