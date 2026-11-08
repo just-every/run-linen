@@ -1,0 +1,97 @@
+{
+  "product_head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+  "files": {
+    "REPORT.md": {
+      "bytes": 11090,
+      "sha256": "c1e07235945c6568352af8530400ab9b7ba25b4aa8bf6e141c4f4b5427f93985"
+    },
+    "RECEIPT.json": {
+      "bytes": 6297,
+      "sha256": "a175b2f225900fe175b594fa39307cb800454781d7811db225f82fe6bfe0b3c5"
+    },
+    "mechanical-receipt.json": {
+      "bytes": 764,
+      "sha256": "9e898ff28da77a5fe41fd78cdff68dd1a5c0f8476637e1dc995210ba6075f523"
+    },
+    "work-saved.log": {
+      "bytes": 546,
+      "sha256": "2377200d35e295cfcd8b3584df28443bc09e67c5e5a40716d243a1292bc2e3d1"
+    },
+    "typecheck.log": {
+      "bytes": 224,
+      "sha256": "6048d7d1fb831803561ae6750f646dbd641d9cd36c27c7e90957ebb0700ab786"
+    },
+    "first-party.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "contract-write.log": {
+      "bytes": 28,
+      "sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+    },
+    "contract-check.log": {
+      "bytes": 70,
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    "restore-views.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "source-lock-write.log": {
+      "bytes": 309108,
+      "sha256": "4219a6b28f9084e74e5e5ac9905e1d8f11d2d5ef4fac175255cb530733e42fa0"
+    },
+    "source-lock-check.log": {
+      "bytes": 309122,
+      "sha256": "8ff86adca7754b0f9885a5a92ff099eb20549617b138220c49998ebee0abb23b"
+    },
+    "final-source-check.log": {
+      "bytes": 309122,
+      "sha256": "8ff86adca7754b0f9885a5a92ff099eb20549617b138220c49998ebee0abb23b"
+    },
+    "browser.log": {
+      "bytes": 5759,
+      "sha256": "a5d53df14800cf009007b00c7029be49d7fd150aeb8b351be552f57a8d490b84"
+    },
+    "browser-results.json": {
+      "bytes": 2486,
+      "sha256": "42fb4195ee93fac618410a6f4cde6a7b48efec44b7cff5b1a1ec77118f34a7b1"
+    },
+    "main-ci.json": {
+      "bytes": 1518,
+      "sha256": "c301d43a7b0a3b2cf29dd2f89463adb33351a0e9ab2703ea720fb118244b1266"
+    },
+    "main-failed-jobs.json": {
+      "bytes": 795,
+      "sha256": "07936cd420f83c6086a9cf35bc1bfe5e8c4aad509c42846f190ae7eb6a9c3638"
+    },
+    "main-ci-failure.txt": {
+      "bytes": 166,
+      "sha256": "31ee7fbe9de7b31d66f309b1bd6596add5374dc9a6a412e25b0e3ab9d2fd7033"
+    },
+    "pr.json": {
+      "bytes": 177,
+      "sha256": "77b779c387284a3080935cfe4f9dfb9c50a9bf38aa6c6c8486acf913026dbd96"
+    },
+    "candidate-ci.json": {
+      "bytes": 478,
+      "sha256": "cf81e8e591e40b211fc75f029ebe9383b2ec0d0554bd05fc046ca0d681cfc842"
+    },
+    "AGENT-006-next-automation.png": {
+      "bytes": 1613125,
+      "sha256": "614d23763efb1fcb3a0b5126bd61b72194643052bb2f229eb5121cd142e59aef"
+    },
+    "AGENT-006-next-automation-390px.png": {
+      "bytes": 1100350,
+      "sha256": "549018430afdc439b88d097e314e2ddca87b16a809693c7039bf62eaccdcab2e"
+    },
+    "selection.json": {
+      "bytes": 802,
+      "sha256": "cdc9e07f52988a065dc24eef081acb02a07b7cc7885f2949df1a9e635073594a"
+    },
+    "candidate-verify.json": {
+      "bytes": 243,
+      "sha256": "00ef8d926a7435b2e82fb011693295a143a97b2d1cf8a900b448b371cf84648a"
+    }
+  }
+}

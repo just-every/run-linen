@@ -1,0 +1,201 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f4",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f4",
+  "base_head": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "relevant_sha256": {
+    "tests/work/work-saved-cases.mjs": "5613ebeafda8d0c11f6cfca98a4123090fba2e4854ec0bf48f2ef5faf752d969",
+    "tests/work/fulfilment-link-runtime.mjs": "9c7b84f98e726bb283a51ac704b1b5b7dc4dfe59c58ebfb7ec6c9cdb9152164a",
+    "tests/ui/time-journey.mjs": "8cf304d369bc4f988187c51782513b8fd124239ca3471eba55ac729696638a36",
+    "src/ui/work-saved.tsx": "d61dadf564b8969f2ee2643e6d411ad4fd3bb5cc53d0d6a6dfd3fa98961fc316",
+    "src/features/work/automation-proposal.ts": "18a2e534feb0c81f8241d0a15aba2c66613bf4cdf7ec9c880c3a17417fd2a786"
+  },
+  "checks": [
+    {
+      "command": "node tests/work/fulfilment-link-runtime.mjs",
+      "exit": 0,
+      "log": "work-saved.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write then check",
+      "exit": 0,
+      "log": "contract-views.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock then check",
+      "exit": 0,
+      "log": "source-lock.log"
+    },
+    {
+      "command": "LINEN_TEST_BUILT=1 LINEN_CAPTURE=1 LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium timeout 1200 node tests/ui/run.mjs",
+      "exit": 0,
+      "log": "browser.log",
+      "assertion_width": 1440,
+      "proof_widths": [
+        1440,
+        390
+      ]
+    }
+  ],
+  "registration_delta": 0,
+  "status_counts": {
+    "done": 15,
+    "partial": 147,
+    "missing": 37
+  },
+  "requested_status_counts_after_gate": {
+    "done": 16,
+    "partial": 146,
+    "missing": 37
+  },
+  "main_verify": {
+    "id": 41209839714,
+    "conclusion": "failure",
+    "failed_job": 128795671846,
+    "class": "artifact unavailable before tests"
+  },
+  "main_run_site": {
+    "id": 41209839706,
+    "conclusion": "success"
+  },
+  "publication_scan": {
+    "commit": null,
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "custody": "Mac guarded lander; not run or claimed in cloud"
+  },
+  "github_calls_used": 8,
+  "mechanical_receipt": "mechanical-receipt.json",
+  "contract_source_unchanged": true,
+  "generated_views_match_origin_main": true,
+  "full_history": true,
+  "changed_files": [
+    "sources.lock.json",
+    "tests/ui/time-journey.mjs",
+    "tests/work/fulfilment-link-runtime.mjs",
+    "tests/work/work-saved-cases.mjs"
+  ],
+  "new_email_shaped_strings": 0,
+  "proof_scope": "Native pending outcomes and inert report reads only",
+  "screens": [
+    {
+      "file": "AGENT-006-next-automation.png",
+      "width": 1440,
+      "sha256": "614d23763efb1fcb3a0b5126bd61b72194643052bb2f229eb5121cd142e59aef",
+      "inspected": true
+    },
+    {
+      "file": "AGENT-006-next-automation-390px.png",
+      "width": 390,
+      "sha256": "549018430afdc439b88d097e314e2ddca87b16a809693c7039bf62eaccdcab2e",
+      "inspected": true
+    }
+  ],
+  "product_head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+  "post_fetch_base": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "rebase": "already up to date",
+  "product_push": true,
+  "product_clean": true,
+  "local_proof_matches_candidate_bytes": true,
+  "pr": {
+    "base": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+    "head": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+    "html_url": "https://github.com/just-every/run-linen/pull/144",
+    "number": 144
+  },
+  "candidate_ci": {
+    "workflow_runs": [
+      {
+        "conclusion": null,
+        "event": "pull_request",
+        "head_sha": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42503246010",
+        "id": 42503246010,
+        "name": "Verify",
+        "status": "in_progress"
+      },
+      {
+        "conclusion": null,
+        "event": "dynamic",
+        "head_sha": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42503243296",
+        "id": 42503243296,
+        "name": "PR #144",
+        "status": "in_progress"
+      }
+    ]
+  },
+  "ci_last_observed_unix": 1794158483.5511575,
+  "exact_head_verify": {
+    "conclusion": "success",
+    "head_sha": "8d2e02d949f2c1164e677cddce84d2e0d6ec8401",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42503246010",
+    "status": "completed",
+    "id": 42503246010,
+    "event": "pull_request"
+  },
+  "done_riders": {
+    "1": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "2": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "3": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "4": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "5": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "6": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "7": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "8": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "9": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "10": {
+      "result": "PASS",
+      "evidence": "Exact-head Verify 42503246010 and the acceptance proof register in REPORT.md"
+    },
+    "11": {
+      "result": "PENDING_LANDING",
+      "evidence": "Mac guarded lander owns main equality, scan and Run site"
+    }
+  },
+  "candidate_verify_green": true,
+  "remaining_blockers": []
+}

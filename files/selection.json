@@ -1,0 +1,29 @@
+{
+  "selected": [
+    "REPORT.md",
+    "RECEIPT.json",
+    "mechanical-receipt.json",
+    "work-saved.log",
+    "typecheck.log",
+    "first-party.log",
+    "contract-write.log",
+    "contract-check.log",
+    "restore-views.log",
+    "source-lock-write.log",
+    "source-lock-check.log",
+    "final-source-check.log",
+    "browser.log",
+    "browser-results.json",
+    "main-ci.json",
+    "main-failed-jobs.json",
+    "main-ci-failure.txt",
+    "pr.json",
+    "candidate-ci.json",
+    "AGENT-006-next-automation.png",
+    "AGENT-006-next-automation-390px.png",
+    "selection.json",
+    "local-file-receipt.json",
+    "candidate-verify.json"
+  ],
+  "review": "Explicit regular non-secret reports, receipts and two native report screens; unrelated screens, worker log and credential metadata excluded"
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "command": "pnpm typecheck",
+    "exit": 0,
+    "log": "typecheck.log"
+  },
+  {
+    "command": "pnpm exec rer check --profile first-party",
+    "exit": 0,
+    "log": "first-party.log"
+  },
+  {
+    "command": "node src/base/contract-docs.mjs write",
+    "exit": 0,
+    "log": "contract-write.log"
+  },
+  {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 0,
+    "log": "contract-check.log"
+  },
+  {
+    "command": "restore generated views",
+    "exit": 0,
+    "log": "restore-views.log"
+  },
+  {
+    "command": "node scripts/edition-authoring/cli.mjs lock",
+    "exit": 0,
+    "log": "source-lock-write.log"
+  },
+  {
+    "command": "node scripts/edition-authoring/cli.mjs check",
+    "exit": 0,
+    "log": "source-lock-check.log"
+  }
+]
