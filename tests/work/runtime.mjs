@@ -616,10 +616,17 @@ try {
     [article.value.id, currentArticle.value.id].sort(),
     "Employee search includes both reviewed matching articles before expiry",
   );
+  const reviewedArticle = beforeExpiry.value.items.find((item) => item.id === article.value.id);
+  assert.equal(reviewedArticle.body, "Reviewed network guidance");
+  assert.equal(reviewedArticle.revision, article.value.revision);
+  assert.ok(reviewedArticle.reviewed_at, "The employee reads the reviewed article");
+  assert.equal(Date.parse(reviewedArticle.expires_at), articleExpiry);
   const beforeExpiryAt = Date.now();
   assert.ok(beforeExpiryAt < articleExpiry, "The reviewed article was observed before its deadline");
   // Cross the real deadline without changing stored expiry or the Worker clock.
   await delay(Math.max(0, articleExpiry - Date.now()) + 100);
+  const afterExpiryAt = Date.now();
+  assert.ok(afterExpiryAt > articleExpiry, "The second employee search starts after the real deadline");
   const afterExpiry = await api("/knowledge?q=VPN", undefined, employee);
   assert.equal(afterExpiry.status, 200, JSON.stringify(afterExpiry));
   assert.deepEqual(
@@ -634,7 +641,7 @@ try {
   );
   console.log("KB-001 reviewed article expires from employee search", JSON.stringify({
     articleId: article.value.id, currentArticleId: currentArticle.value.id,
-    beforeExpiryAt, expiresAt: articleExpiry, afterExpiryAt: Date.now(),
+    beforeExpiryAt, expiresAt: articleExpiry, afterExpiryAt,
     beforeIds: beforeExpiry.value.items.map((item) => item.id),
     afterIds: afterExpiry.value.items.map((item) => item.id),
   }));
