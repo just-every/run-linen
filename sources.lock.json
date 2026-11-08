@@ -6748,11 +6748,11 @@
       "executable": false
     },
     "tests/intelligence/repair-runtime.mjs": {
-      "sha256": "b29c1c313a8df66b100d1dc491c80837e79360aad0b89dc9b5691531478774cf",
+      "sha256": "42f5ca14c5f725ad92659c2b7c616860ee210c1a6791f40fafdcac5d27d612dd",
       "executable": false
     },
     "tests/intelligence/repair-worker.ts": {
-      "sha256": "15d4baba6ab6bb665d197b09b7747063b36efa73e5128ba28623823751dfda3c",
+      "sha256": "14c017cded123b55fc761216b86d0f7f2ee2fe31fefb752167386c85a39d2c84",
       "executable": false
     },
     "tests/intelligence/runtime-harness.mjs": {
