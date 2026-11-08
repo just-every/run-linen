@@ -1,0 +1,8 @@
+API retry attempt=3/5 delay_seconds=45
+fleet Git: decrypted-bundle helper installed; inherited GitHub helpers reset
+fleet Git: removed 0 credential-bearing GitHub URL rewrite sections
+API attempt=3 exit=1 gh: Bad credentials (HTTP 401)
+API retry attempt=4/5 delay_seconds=90
+fleet Git: decrypted-bundle helper installed; inherited GitHub helpers reset
+fleet Git: removed 0 credential-bearing GitHub URL rewrite sections
+API attempt=4 exit=0 

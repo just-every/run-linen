@@ -1,0 +1,44 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f11",
+  "head": "aa04f912a23befd32c390ca877f4e5a0d1c2da98",
+  "base": "c4e9852d1098215b0371a6c67a9a721be85a88cf",
+  "product_push": "succeeded on attempt 4",
+  "verify_run_ids": [
+    42515978740
+  ],
+  "pr": "https://github.com/just-every/run-linen/pull/153",
+  "counts_before": {
+    "done": 18,
+    "partial": 144,
+    "missing": 37
+  },
+  "counts_after": {
+    "done": 18,
+    "partial": 144,
+    "missing": 37
+  },
+  "bundle": {
+    "path": "/home/agent/rer-consolidation/work/sx-linen-c-f11/sx-linen-c-f11-product.bundle",
+    "sha256": "24da28b16b9eff9f500bbeecce5d4d2bb1465848ba8041197d42b64e7ed0bb6e",
+    "verified": true,
+    "prerequisite": "c4e9852d1098215b0371a6c67a9a721be85a88cf"
+  },
+  "contract_changed": false,
+  "generated_views_committed": false,
+  "new_test_registrations": 0,
+  "main_integration": "fresh origin main fetched; merge already up to date",
+  "github_api_calls": 8,
+  "main_verify_run_id": 42514121758,
+  "main_run_site_id": 42514121732,
+  "verify_event": "pull_request",
+  "verify_conclusion": null,
+  "main_equality": false,
+  "publication_scan": "not run in cloud; guarded fleet lander responsibility",
+  "product_remote_verified": true,
+  "verify_status_checked_at": "2026-11-08T19:47:59.647367+00:00",
+  "verify_status": "in_progress",
+  "terminal_product_provenance": "PUSHED",
+  "blockers": [],
+  "evidence_publication": "selected packet ready to publish"
+}

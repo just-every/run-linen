@@ -1,0 +1,19 @@
+{
+  "candidate": "aa04f912a23befd32c390ca877f4e5a0d1c2da98",
+  "source_changes": false,
+  "test_registration_delta": 0,
+  "generated_views_committed": false,
+  "contract_status_diff": false,
+  "fixture_data": "synthetic-linen markers, existing native fixture identities reused",
+  "ui_changes": false,
+  "provider_calls_added": false,
+  "authority_snapshot_tables": 11,
+  "snapshot_nonempty_witnesses": [
+    "integration membership",
+    "automation principal",
+    "manager approval",
+    "recorded stage decision",
+    "service execution grant"
+  ],
+  "native_decision_after_refusal": "satisfied"
+}

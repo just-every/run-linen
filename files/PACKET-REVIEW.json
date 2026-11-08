@@ -1,0 +1,116 @@
+{
+  "explicit_regular_files": [
+    {
+      "file": "REPORT.md",
+      "bytes": 10700,
+      "sha256": "ef055b4ddf390bc3587df313090dd676dae154c8be37699edcfabe2217fc51e9"
+    },
+    {
+      "file": "PLAN.md",
+      "bytes": 1344,
+      "sha256": "e56c5d760e73cf4afc823bf3dbe8ad752d9bcd5a621fadd3444e3da14cda21ec"
+    },
+    {
+      "file": "CHECKS.json",
+      "bytes": 1476,
+      "sha256": "e1705c851670e74c17c5fb9f9163b0a880a7f4660d84b7fc52b071032cd984c2"
+    },
+    {
+      "file": "CUSTODY.json",
+      "bytes": 1472,
+      "sha256": "9dc4d52058389443225c44e03b795654a3cfed3b2877bea9968723bb184b8b5b"
+    },
+    {
+      "file": "PROOF.json",
+      "bytes": 602,
+      "sha256": "7902c690d1521fa77a6dc021107faf9286a250064e2439a26a950f3d5ef036f1"
+    },
+    {
+      "file": "runtime.log",
+      "bytes": 982,
+      "sha256": "28a4538c988fd3b271bb9935c85293d5478cf292a7b980c512b064c62742aec4"
+    },
+    {
+      "file": "typecheck.log",
+      "bytes": 225,
+      "sha256": "e548c6c79bb5954019ac5d94eae3cceb56ac3ea197e8bbfb1cea1a1d0bcb0eee"
+    },
+    {
+      "file": "first-party.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "views-write.log",
+      "bytes": 28,
+      "sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+    },
+    {
+      "file": "views-check.log",
+      "bytes": 70,
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    {
+      "file": "views.log",
+      "bytes": 70,
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    {
+      "file": "lock.log",
+      "bytes": 309108,
+      "sha256": "2684721c244bb4babd92ee9e56d156dcb8dea27d9ff575b99302ec407e859483"
+    },
+    {
+      "file": "lock-check.log",
+      "bytes": 309122,
+      "sha256": "90557b4ba5888165f4cdf9c524ff727347b07ba52c27cbc78a595a4d61b8e3c1"
+    },
+    {
+      "file": "product-push.log",
+      "bytes": 2965,
+      "sha256": "1caf29b9d2480c1a13d55c73821e4018c9f74a9fb641dcb5ce46651053dbd9d5"
+    },
+    {
+      "file": "api-recovery.log",
+      "bytes": 442,
+      "sha256": "3cdd56811ad3bb177c336d73f0107c6acce825f4574bf2ba666b4962669a88fb"
+    },
+    {
+      "file": "main-ci.json",
+      "bytes": 1156,
+      "sha256": "2e314b337dbd645f0f2bd9c8221bd2c36a7d219e5f8bad01e559109f7b26a755"
+    },
+    {
+      "file": "candidate-ci.json",
+      "bytes": 458,
+      "sha256": "e9248b6195e6a41b128d3f2486d63ff7b6b2e5b81d5f503070c875b72235847a"
+    },
+    {
+      "file": "verify-status.json",
+      "bytes": 215,
+      "sha256": "42808271efef5343fcbd6a903c397ee509b37d75794019111f0148a04af9f83b"
+    },
+    {
+      "file": "ci-watch.log",
+      "bytes": 950,
+      "sha256": "47e1ea91c5f5a43b942bf69cf0ced69d90f15b7d4c8b5db170a0b56724bb0229"
+    },
+    {
+      "file": "PR.json",
+      "bytes": 190,
+      "sha256": "9c345ea7f751758ae7eb293f4cc46cde856bbbf98ce0f337b82a6b5684a1d806"
+    },
+    {
+      "file": "REMOTE.txt",
+      "bytes": 130,
+      "sha256": "5bafb66c1e67d8a633a5a190322b0435406a11e49f829bb79a04b72eb8c1d0bd"
+    }
+  ],
+  "excluded": [
+    "product bundle",
+    "private runtime settings",
+    "credentials",
+    "environment dumps",
+    "working repository"
+  ]
+}

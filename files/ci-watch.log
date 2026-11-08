@@ -1,0 +1,15 @@
+CI watcher next permitted read in 229 seconds
+CI watcher next permitted read in 169 seconds
+CI watcher next permitted read in 109 seconds
+CI watcher next permitted read in 49 seconds
+CI read=1 exit=0 at=2026-11-08T19:42:58.178209+00:00
+{"conclusion":null,"event":"pull_request","head_sha":"aa04f912a23befd32c390ca877f4e5a0d1c2da98","html_url":"https://github.com/just-every/run-linen/actions/runs/42515978740","id":42515978740,"status":"in_progress"}
+
+CI watcher next permitted read in 300 seconds
+CI watcher next permitted read in 240 seconds
+CI watcher next permitted read in 180 seconds
+CI watcher next permitted read in 120 seconds
+CI watcher next permitted read in 60 seconds
+CI read=2 exit=0 at=2026-11-08T19:47:59.647367+00:00
+{"conclusion":null,"event":"pull_request","head_sha":"aa04f912a23befd32c390ca877f4e5a0d1c2da98","html_url":"https://github.com/just-every/run-linen/actions/runs/42515978740","id":42515978740,"status":"in_progress"}
+
