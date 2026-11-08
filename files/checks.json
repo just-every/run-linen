@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "head": "1c74fb353303c6318c937bd385b9b54d32a09ce0",
+  "branch": "cloud/sx-linen-c-f24",
+  "startedAt": "2026-11-08T21:45:17.093252+00:00",
+  "checks": [
+    {
+      "name": "native intake with changed-item refusal and durable retry",
+      "command": [
+        "timeout",
+        "300",
+        "node",
+        "tests/intelligence/repair-runtime.mjs"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 34.164,
+      "log": "repair-exact.log"
+    },
+    {
+      "name": "TypeScript",
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 12.444,
+      "log": "typecheck-exact.log"
+    },
+    {
+      "name": "first-party profile",
+      "command": [
+        "pnpm",
+        "exec",
+        "rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 0.64,
+      "log": "first-party-exact.log"
+    },
+    {
+      "name": "source lock freshness",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 0.185,
+      "log": "lock-exact.log"
+    },
+    {
+      "name": "contract document freshness",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 0.183,
+      "log": "views-exact.log"
+    }
+  ],
+  "completedAt": "2026-11-08T21:46:04.710777+00:00",
+  "complete": true
+}

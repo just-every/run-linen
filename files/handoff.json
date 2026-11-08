@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "repository": "just-every/run-linen",
+  "tag": "sx-linen-c-f24",
+  "branch": "cloud/sx-linen-c-f24",
+  "head": "1c74fb353303c6318c937bd385b9b54d32a09ce0",
+  "basedOnMain": "83d80f33869145ff2853f4e6d6b08e46b23acde1",
+  "suppliedPredecessor": "c8d5a87bc7f4d5f4df65a5cecbc6bddd9b04eefc",
+  "predecessorReplayedAs": "1ece5a28e10aa3ff63e5b6893c1c16e5cb7e5150",
+  "productPush": {
+    "succeeded": true,
+    "attempts": 1,
+    "forced": false
+  },
+  "pullRequest": {
+    "draft": true,
+    "head": "1c74fb353303c6318c937bd385b9b54d32a09ce0",
+    "html_url": "https://github.com/just-every/run-linen/pull/160",
+    "number": 160
+  },
+  "candidateCi": {
+    "runs": [
+      {
+        "conclusion": null,
+        "event": "pull_request",
+        "head_sha": "1c74fb353303c6318c937bd385b9b54d32a09ce0",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42526771797",
+        "id": 42526771797,
+        "name": "Verify",
+        "status": "queued"
+      },
+      {
+        "conclusion": null,
+        "event": "dynamic",
+        "head_sha": "1c74fb353303c6318c937bd385b9b54d32a09ce0",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42526769679",
+        "id": 42526769679,
+        "name": "PR #160",
+        "status": "in_progress"
+      }
+    ]
+  },
+  "countsBefore": {
+    "done": 20,
+    "partial": 142,
+    "missing": 37
+  },
+  "countsAfter": {
+    "done": 20,
+    "partial": 142,
+    "missing": 37
+  },
+  "claim": {
+    "clause": "CATALOG-009",
+    "status": "PARTIAL",
+    "points": [
+      5
+    ]
+  },
+  "mechanical": {
+    "viewsWrite": {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "changedFiles": 0
+    },
+    "viewsCheck": {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    "viewsRestoredFromMain": [
+      "ACCEPTANCE.md",
+      "docs/CLAIMS.md"
+    ],
+    "lockWrite": {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    "lockCheck": {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    "ledger": {
+      "command": null,
+      "exit": 0,
+      "reason": "No migration changed"
+    },
+    "contractStatusDiff": false,
+    "generatedViewsCommitted": false
+  },
+  "publicationScan": {
+    "commit": "1c74fb353303c6318c937bd385b9b54d32a09ce0",
+    "complete": false,
+    "historyScanned": null,
+    "findings": null,
+    "reason": "Cloud handoff; guarded Mac lander owns publication scan"
+  },
+  "landing": {
+    "mainEqualsCandidate": false,
+    "runSiteCandidate": null,
+    "reason": "Branch only; no default branch push"
+  },
+  "diffHygiene": {
+    "addedEmailStrings": 0,
+    "addedBareSlashTokens": 0,
+    "assertionsRemovedOrWeakened": false
+  },
+  "githubApiCalls": 4,
+  "ciPolled": false,
+  "ciReruns": 0,
+  "browser": {
+    "required": false,
+    "reason": "Test-only native runtime proof; no UI changes"
+  },
+  "providerBoundary": "Model and receiving provider are network-edge fixtures; no live provider claim"
+}

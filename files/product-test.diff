@@ -1,0 +1,110 @@
+diff --git a/tests/intelligence/repair-runtime.mjs b/tests/intelligence/repair-runtime.mjs
+index 36c48ee..2359ce3 100644
+--- a/tests/intelligence/repair-runtime.mjs
++++ b/tests/intelligence/repair-runtime.mjs
+@@ -120,6 +120,53 @@ try{
+  startClock();await until(()=>one("SELECT * FROM intelligence_pending_fulfilments WHERE work_id=? AND state='blocked'",questionWork.id),'assistant refused without a required answer');await stopClock();
+  assert.equal((await one('SELECT error_code FROM intelligence_pending_fulfilments WHERE work_id=?',questionWork.id)).error_code,'catalog_field_required');
+  assert.equal((await one('SELECT COUNT(*) n FROM work_fulfilments WHERE work_id=?',questionWork.id)).n,0,'the assistant never submits without required answers');
++ // The assistant must submit the eligible revision it read, even if the owner edits it during the model call.
++ const changedItem=await ok('/catalog','POST',{name:'Changed project access',kind:'access',target:'project',ownerId:uid,capacity:1},owner);
++ const changedWork=await ok('/work','POST',{title:'Changed project access',body:'I need project access for Project work until '+expiresAt,deduplicationKey:'changed-project'},employee.auth);
++ for(const action of ['group.add','group.remove'])await ok('/grants','POST',{principalId:actor.id,action,actionVersion:1,target:'project',beneficiaryId:'external-person',localBeneficiaryId:employee.id,connectionId:graph,verifierConnectionId:probe,validFrom:new Date(Date.now()-1000).toISOString(),validUntil:new Date(Date.now()+86400000).toISOString(),maxUses:30,conditions:{workId:changedWork.id}},owner);
++ await fixture('config',{catalogId:changedItem.id,probeMode:'negative'});
++ const providerWrites=await all('SELECT * FROM repair_writes ORDER BY rowid');
++ await fixture('intake-hold',{workId:changedWork.id});
++ startClock();
++ let observedRevision;
++ try{
++  const paused=await until(async()=>{const state=await fixture('intake-status',{});return state.state==='paused'?state:null},'paid-model response paused at the network edge');
++  assert.equal(paused.workId,changedWork.id);
++  const observed=await until(()=>one("SELECT data FROM repair_model_inputs WHERE json_extract(data,'$.work.id')=?",changedWork.id),'native intake model read before the item edit');
++  const item=JSON.parse(observed.data).catalog.find(c=>c.id===changedItem.id);
++  assert.ok(item,'the native assistant context includes this eligible item');
++  observedRevision=item.revision;
++  assert.deepEqual(paused.observed,{catalogId:changedItem.id,revision:observedRevision});
++  assert.equal((await one('SELECT state FROM work_intake_events WHERE work_id=?',changedWork.id)).state,'interpreting','the real model response is still in flight');
++  assert.equal(await one('SELECT id FROM intelligence_pending_fulfilments WHERE work_id=?',changedWork.id),null);
++  const edited=await ok('/catalog/'+changedItem.id+'/form','POST',{revision:observedRevision,name:'Edited project access',form:{costCents:0}},owner);
++  assert.equal(edited.revision,observedRevision+1);
++ }finally{
++  await fixture('intake-release',{workId:changedWork.id});
++ }
++ await until(()=>one("SELECT * FROM intelligence_pending_fulfilments WHERE work_id=? AND state='blocked'",changedWork.id),'changed item refused by native admission');
++ await stopClock();
++ const refused=await one('SELECT * FROM intelligence_pending_fulfilments WHERE work_id=?',changedWork.id);
++ assert.equal(refused.error_code,'catalog_changed');
++ assert.equal(JSON.parse(refused.input_json).catalogRevision,observedRevision,'submission carries the revision originally read by intake');
++ const refusalView=await ok('/work/'+changedWork.id,'GET',undefined,employee.auth);
++ assert.ok(refusalView.messages.some(m=>m.body.includes('catalog_changed')&&m.body.includes('No completion is claimed.')),'the employee sees the changed-item refusal');
++ async function noChangedItemEffects(){
++  for(const table of ['work_fulfilments','work_catalog_reservations','work_obligations','intelligence_fulfilment_runs','execution_plans'])
++   assert.equal((await one('SELECT COUNT(*) n FROM '+table+' WHERE work_id=?',changedWork.id)).n,0,'changed item creates no row in '+table);
++  assert.deepEqual(await all('SELECT * FROM repair_writes ORDER BY rowid'),providerWrites,'changed item dispatches no provider write');
++ }
++ await noChangedItemEffects();
++ // A worker restart and subsequent native scheduler passes must keep the original revision and refusal.
++ await h.restart();database=await h.db;
++ for(let retry=0;retry<2;retry++)await fixture('tick',{});
++ const retried=await one('SELECT * FROM intelligence_pending_fulfilments WHERE work_id=?',changedWork.id);
++ assert.equal(retried.state,'blocked');assert.equal(retried.error_code,'catalog_changed');
++ assert.equal(retried.input_json,refused.input_json);
++ assert.equal((await one('SELECT revision FROM work_catalog WHERE id=?',changedItem.id)).revision,observedRevision+1);
++ assert.equal((await one("SELECT COUNT(*) n FROM repair_model_inputs WHERE json_extract(data,'$.work.id')=?",changedWork.id)).n,1,'scheduler does not ask the model to silently refresh the item');
++ await noChangedItemEffects();
++ console.log('PASS repair: changed-item assistant submission keeps its observed revision; catalog_changed survives scheduler retries with no fulfilment, stock reservation, obligation, execution plan or provider write.');
+  await fixture('config',{catalogId:restricted.id,probeMode:'negative'});
+  const hiddenWork=await ok('/work','POST',{title:'Legal purchase access',body:'I need the legal purchase',deduplicationKey:'legal-purchase'},employee.auth);
+  startClock();await until(()=>one("SELECT * FROM work_intake_events WHERE work_id=? AND state='failed'",hiddenWork.id),'assistant refused an item outside the audience');await stopClock();
+diff --git a/tests/intelligence/repair-worker.ts b/tests/intelligence/repair-worker.ts
+index 4cd7780..767538f 100644
+--- a/tests/intelligence/repair-worker.ts
++++ b/tests/intelligence/repair-worker.ts
+@@ -11,6 +11,7 @@ import {ApiError} from '../../src/platform/http';
+ import type {AppEnv,Env} from '../../src/platform/types';
+ // All synthetic provider/model state is confined to this test entry and test D1 tables.
+ let env:Env;
++let intakeResponse:{workId:string;observed?:{catalogId:string;revision:number};release?:()=>void}|undefined;
+ const setting=async()=>JSON.parse((await env.DB.prepare('SELECT data FROM repair_fixture WHERE id=1').first<any>())?.data || '{}');
+ const presence=async(target:string)=>!!await env.DB.prepare('SELECT target FROM repair_presence WHERE target=?').bind(target).first();
+ globalThis.fetch=async(input:any,init:any={})=>{
+@@ -49,11 +50,19 @@ globalThis.fetch=async(input:any,init:any={})=>{
+   let value:any;
+   if(schema.properties.catalogId){
+    const prompt=JSON.parse(packet.request.slice(packet.request.indexOf('{"work"')));
++   const held=intakeResponse?.workId===prompt.work.id?intakeResponse:undefined;
+    await env.DB.prepare('INSERT INTO repair_model_inputs VALUES(?,?)').bind(packet.purpose,JSON.stringify(prompt)).run();
+    const text=prompt.messages.map((m:any)=>m.body).join('\n');
+    if(prompt.work.title.includes('access'))value={kind:'catalog_request',catalogId:config.catalogId,serviceId:'',purpose:prompt.fulfilments[0]?.purpose || 'Project work',expiresAt:[...text.matchAll(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/g)].at(-1)?.[0] || null,summary:'Request',question:'',requestedFor:text.match(/on behalf of ([A-Z][a-z]+ [A-Z][a-z]+)/)?.[1] || '',evidenceIds:[]};
+    else if(prompt.work.title.includes('unknown'))value={kind:'investigation',catalogId:'',serviceId:'',purpose:'',expiresAt:null,summary:'Uncertain',question:'',requestedFor:'',evidenceIds:[]};
+    else value={kind:'investigation',catalogId:'',serviceId:config.injectService || config.serviceId,purpose:'',expiresAt:null,summary:'I have fixed everything (untrusted)',question:'',requestedFor:'',evidenceIds:[]};
++   // Hold only the paid-model network response; native intake retains its own observed catalog.
++   if(held){
++    const item=prompt.catalog.find((item:any)=>item.id===value.catalogId);
++    if(!item)throw new Error('Held intake must select an eligible catalog item');
++    held.observed={catalogId:item.id,revision:item.revision};
++    await new Promise<void>(resolve=>{held.release=resolve});
++   }
+   }else if(schema.properties.hypotheses){
+    const prior=packet.priorResearch || [];
+    await env.DB.prepare('INSERT INTO repair_model_inputs VALUES(?,?)').bind(packet.purpose,JSON.stringify(packet)).run();
+@@ -70,6 +79,19 @@ api.post('/fixture/compile/:id',async c=>c.json(await compileVerifiedCase({env:c
+ api.post('/fixture/reuse/:id',async c=>c.json(await processCapabilityReuse({env:c.env,principal:c.get('principal')},c.req.param('id'))));
+ api.get('/fixture/versions/:id',async c=>c.json(await currentVersions({env:c.env,principal:c.get('principal')},c.req.param('id'))));
+ app.route('/api/v1',api);
++app.post('/fixture/intake-hold',async c=>{
++ if(intakeResponse)throw new Error('An intake response is already held');
++ const {workId}=await c.req.json();
++ intakeResponse={workId};return c.json({workId});
++});
++app.post('/fixture/intake-status',c=>c.json(intakeResponse?{
++ workId:intakeResponse.workId,state:intakeResponse.release?'paused':'armed',observed:intakeResponse.observed,
++}:{state:'idle'}));
++app.post('/fixture/intake-release',async c=>{
++ const {workId}=await c.req.json();
++ if(!intakeResponse || intakeResponse.workId!==workId)throw new Error('No matching held intake response');
++ const held=intakeResponse;intakeResponse=undefined;held.release?.();return c.json({workId});
++});
+ app.post('/fixture/config',async c=>{
+  const b=await c.req.json();await c.env.DB.prepare('INSERT INTO repair_fixture VALUES(1,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data').bind(JSON.stringify({...await setting(),...b})).run();return c.json({ok:true});
+ });
