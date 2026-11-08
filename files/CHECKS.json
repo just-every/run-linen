@@ -1,0 +1,113 @@
+{
+  "tag": "sx-linen-c-f14",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f14",
+  "head": "4d92be77dfa148bb8842828248b1aceb340adcf3",
+  "base": "c4e9852d1098215b0371a6c67a9a721be85a88cf",
+  "checks": [
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "receipt": "work-runtime.log",
+      "scope": "same test and source bytes as candidate"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "receipt": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "receipt": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "receipt": "contract-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "receipt": "contract-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "receipt": "source-lock.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "receipt": "source-check.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "all candidate commit identities and trailers inspection",
+      "exit": 0,
+      "receipt": "identity.txt"
+    },
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "receipt": "exact-work-runtime.log",
+      "head": "4d92be77dfa148bb8842828248b1aceb340adcf3",
+      "scope": "exact committed candidate"
+    }
+  ],
+  "ledger": "not applicable, no migration changes",
+  "views_committed": false,
+  "contract_changed": false,
+  "test_registration_delta": 0,
+  "clause_counts_before": {
+    "done": 18,
+    "partial": 144,
+    "missing": 37,
+    "total": 199
+  },
+  "clause_counts_after_product_branch": {
+    "done": 18,
+    "partial": 144,
+    "missing": 37,
+    "total": 199
+  },
+  "proposed_counts_after_lander_promotion": {
+    "done": 19,
+    "partial": 143,
+    "missing": 37,
+    "total": 199
+  },
+  "product_push": "success",
+  "pr": 152,
+  "verify_run": 42515863782,
+  "publication_scan": {
+    "head": "4d92be77dfa148bb8842828248b1aceb340adcf3",
+    "complete": "not run in cloud",
+    "historyScanned": "not established",
+    "findings": "not established",
+    "owner": "guarded Mac lander"
+  },
+  "landing": "pending",
+  "run_site_candidate": "pending main landing",
+  "local_toolchain": {
+    "node": "v24.19.0",
+    "pnpm": "10.12.4",
+    "repository_node_pin": "22.20.0",
+    "rer_pin": "0.2.94"
+  },
+  "verify_observed": {
+    "conclusion": "success",
+    "head_sha": "4d92be77dfa148bb8842828248b1aceb340adcf3",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42515863782",
+    "status": "completed",
+    "run_id": 42515863782,
+    "observed_at": "2026-11-08T19:51:30.426860+00:00"
+  },
+  "remote_refs": {
+    "refs/heads/cloud/sx-linen-c-f14": "4d92be77dfa148bb8842828248b1aceb340adcf3",
+    "refs/heads/main": "0cae7fe338def5f96f52df2468f91f078a36827f"
+  }
+}

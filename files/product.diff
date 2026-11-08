@@ -1,0 +1,86 @@
+diff --git a/sources.lock.json b/sources.lock.json
+index c7af816..f98b383 100644
+--- a/sources.lock.json
++++ b/sources.lock.json
+@@ -7448,7 +7448,7 @@
+       "executable": false
+     },
+     "tests/work/sla-policy-cases.mjs": {
+-      "sha256": "67b215cd176a5f1c93c902b719c1fde0a0b4f74cb1eca7e4768b27e1049b7ffc",
++      "sha256": "dc46171b954ffaa715ea35829892ac07e87e0599c4ccdbe1a85094e6dfc9c409",
+       "executable": false
+     },
+     "tests/work/time-cases.mjs": {
+diff --git a/tests/work/sla-policy-cases.mjs b/tests/work/sla-policy-cases.mjs
+index 2f8bd01..c9cc46f 100644
+--- a/tests/work/sla-policy-cases.mjs
++++ b/tests/work/sla-policy-cases.mjs
+@@ -210,16 +210,17 @@ export async function escalationChecks(workspaceApi, db) {
+     for (const [table, column, key] of [['work_records', 'created_at', 'id'], ['work_messages', 'created_at', 'work_id'], ['work_sla_pauses', 'paused_at', 'work_id']])
+       await db.prepare(`UPDATE ${table} SET ${column}=strftime('%Y-%m-%dT%H:%M:%fZ', julianday(${column}) - ?/86400000.0) WHERE ${key}=? AND ${column}<=?`).bind(shift, id, pause.paused_at).run();
+   };
++  testAt = '2026-02-02T09:00:00.000Z';
+   let quiet = await ticket('quiet', 'P3', 'medium');
+   quiet = await pauseFor(quiet, 'quiet');
+-  await pausedAt(quiet.id, daysAgo(3));
++  testAt = '2026-02-05T09:00:00.000Z';
+   check(await tick());
+   let reminders = (await followups(quiet.id)).filter(r => r.kind === 'requester_reminder');
+   assert.deepEqual(reminders.map(r => [r.level, r.state]), [[1, 'fired'], [2, 'scheduled']], 'DESK-005 the reminder fires and the resolution stays persisted with its due time');
+   const reminder = (await notes(quiet.id, employee)).find(m => m.body.startsWith('Reminder: we are waiting for your reply.'));
+   assert.ok(reminder && reminder.visibility === 'public', 'DESK-005 the requester sees the reminder');
+   assert.equal(check(await api(`/work/${quiet.id}`)).work.state, 'paused');
+-  await pausedAt(quiet.id, daysAgo(5));
++  testAt = '2026-02-07T09:00:00.000Z';
+   check(await tick());
+   const closed = check(await api(`/work/${quiet.id}`, undefined, employee));
+   assert.equal(closed.work.state, 'closed', 'DESK-005 the ticket resolves after 5 business days without a reply');
+@@ -228,6 +229,48 @@ export async function escalationChecks(workspaceApi, db) {
+   assert.equal(resolution.code, 'No response', 'DESK-010 the automatic close records the No response code');
+   assert.ok(resolution.closeNotes.startsWith('Resolved without a reply'), 'DESK-010 the automatic close records its disclosure as close notes');
+ 
++  const closedReminders = (await followups(quiet.id)).filter(r => r.kind === 'requester_reminder');
++  assert.deepEqual(closedReminders.map(r => [r.level, r.state]), [[1, 'fired'], [2, 'fired']], 'DESK-021 both waiting-rule actions genuinely fired before the requester reopens');
++  testAt = '2026-02-07T09:01:00.000Z';
++  const reopened = check(await api(`/work/${quiet.id}/commands`, { revision: closed.work.revision, command: 'reopen', reason: 'The payroll export still fails' }, employee));
++  assert.equal(reopened.state, 'open', 'DESK-021 the requester can reopen the rule-closed ticket');
++  const reopenedConversation = check(await api(`/work/${quiet.id}`, undefined, employee));
++  assert.equal(reopenedConversation.work.state, 'open');
++  assert.equal(reopenedConversation.work.closed_at, null);
++  assert.equal(reopenedConversation.work.revision, closed.work.revision + 1);
++  assert.ok(reopenedConversation.messages.some(m => m.author_id === 'employee' && m.visibility === 'public' && m.body === 'Reopened: The payroll export still fails'), 'DESK-021 the requester sees their reopen in the conversation');
++  testAt = '2026-02-10T09:00:00.000Z';
++  check(await tick());
++  assert.deepEqual((await followups(quiet.id)).filter(r => r.kind === 'requester_reminder'), closedReminders, 'DESK-021 reopening never rearms the completed waiting episode');
++  assert.deepEqual(check(await api(`/work/${quiet.id}`, undefined, employee)), reopenedConversation, 'DESK-021 a later tick leaves the reopened ticket and its public conversation unchanged');
++  console.log('PROBE DESK-021 4: requester commands reopen after process-due rule closure -> open, closed_at null, revision advanced, public requester reopen message; later tick leaves the conversation and fired waiting rows unchanged');
++
++  // A staff resume ends an awaiting-requester episode before either action is due, without a requester reply.
++  testAt = '2026-02-02T09:00:00.000Z';
++  let resumed = await ticket('resumed', 'P3', 'medium');
++  resumed = await pauseFor(resumed, 'resumed');
++  check(await tick());
++  const waitingRows = (await followups(resumed.id)).filter(r => r.kind === 'requester_reminder');
++  assert.deepEqual(waitingRows.map(r => [r.level, r.state, r.next_due_at]), [[1, 'scheduled', '2026-02-05T09:00:00.000Z'], [2, 'scheduled', '2026-02-07T09:00:00.000Z']], 'DESK-021 both future actions are persisted while the ticket awaits its requester');
++  testAt = '2026-02-03T09:00:00.000Z';
++  const active = check(await api(`/work/${resumed.id}/commands`, { revision: resumed.revision, command: 'resume', reason: 'The team can continue without the error text' }));
++  assert.equal(active.state, 'open');
++  const activeConversation = check(await api(`/work/${resumed.id}`, undefined, employee));
++  assert.equal(activeConversation.work.state, 'open');
++  assert.equal(activeConversation.work.paused_at, null);
++  check(await tick());
++  const stoppedRows = (await followups(resumed.id)).filter(r => r.kind === 'requester_reminder');
++  assert.deepEqual(stoppedRows.map(r => r.id), waitingRows.map(r => r.id), 'DESK-021 the existing scheduled actions stop rather than being replaced');
++  assert.deepEqual(stoppedRows.map(r => [r.state, r.stop_reason, r.next_due_at, r.fired_at, r.stopped_at]), [['stopped', 'no longer awaiting the requester', null, null, testAt], ['stopped', 'no longer awaiting the requester', null, null, testAt]], 'DESK-021 leaving awaiting-requester stops both actions with a reason and no firing');
++  for (const at of [waitingRows[0].next_due_at, waitingRows[1].next_due_at, '2026-02-10T09:00:00.000Z']) {
++    testAt = at;
++    check(await tick());
++    assert.deepEqual((await followups(resumed.id)).filter(r => r.kind === 'requester_reminder'), stoppedRows, 'DESK-021 later ticks preserve both stopped actions');
++    assert.deepEqual(check(await api(`/work/${resumed.id}`, undefined, employee)), activeConversation, 'DESK-021 ticks at and after both former deadlines add no reminder or closure to the resumed ticket');
++  }
++  console.log('PROBE DESK-021 5: owner commands resume before both waiting deadlines -> both existing rows stopped, reason recorded, due times cleared, never fired; ticks at reminder, closure and later times preserve open state and the requester conversation');
++  testAt = undefined;
++
+   let answered = await ticket('answered', 'P3', 'medium');
+   answered = await pauseFor(answered, 'answered');
+   await pausedAt(answered.id, daysAgo(2));

@@ -1,0 +1,44 @@
+{
+  "budget": 10,
+  "calls": [
+    {
+      "call": 1,
+      "command": "main exact-SHA run discovery",
+      "receipt": "main-ci.jsonl"
+    },
+    {
+      "call": 2,
+      "command": "create draft pull request",
+      "receipt": "pr.json"
+    },
+    {
+      "call": 3,
+      "command": "candidate exact-SHA run discovery",
+      "receipt": "candidate-ci.jsonl"
+    },
+    {
+      "call": 4,
+      "command": "exact-SHA Verify status",
+      "receipt": "verify-status.json",
+      "observed_at": "2026-11-08T19:41:28.457082+00:00",
+      "status": "in_progress"
+    },
+    {
+      "call": 5,
+      "command": "exact-SHA Verify status",
+      "observed_at": "2026-11-08T19:46:29.398694+00:00",
+      "status": "in_progress"
+    },
+    {
+      "call": 6,
+      "command": "exact-SHA Verify status",
+      "receipt": "verify-status.json",
+      "observed_at": "2026-11-08T19:51:30.426860+00:00",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "watcher": "one",
+  "poll_interval_seconds": 300,
+  "used": 6
+}

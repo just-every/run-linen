@@ -1,0 +1,3 @@
+4d92be77dfa148bb8842828248b1aceb340adcf3
+Prove requester reopen and waiting-rule cancellation
+
