@@ -6568,7 +6568,7 @@
       "executable": false
     },
     "tests/adoption/freshservice-import-harness.mjs": {
-      "sha256": "efd53f4571da47f0fdf430b16700fc2916caf7460d3687db75192cac44527137",
+      "sha256": "2958032f93ed5c5d27261c76d79c1d2fffd7caa2b0012930aaf93450744a1f8e",
       "executable": false
     },
     "tests/adoption/freshservice-import-worker.ts": {
@@ -6600,7 +6600,7 @@
       "executable": false
     },
     "tests/adoption/lightweight-import-cases.mjs": {
-      "sha256": "695bfb828173bc313f805427efcbc79a5aea4511bea1d47ee886b0a68cc9ba7b",
+      "sha256": "0ce9e8c4c31c16a6000cfed0ee51ba35ee3792e67dc89936031e9d85216783ef",
       "executable": false
     },
     "tests/adoption/platform-privacy-cases.mjs": {
