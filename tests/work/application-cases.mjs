@@ -84,6 +84,37 @@ export async function applicationChecks(api, db) {
   const formItem=(await ok('/catalog')).items.find(i=>i.id===monitor.id);
   assert.equal(formItem.form.costCents,25000,'CATALOG-001 recorded USD request cost');
   assert.equal(formItem.form.deliveryHours,48,'CATALOG-001 recorded delivery estimate');
+  const catalogBeforeInvalid=(await ok('/catalog')).items;
+  for(const patch of [{costCents:-1},{costCents:0.5},{deliveryHours:-1},{deliveryHours:0},{deliveryHours:1.5}]) {
+    const invalidForm={...form,...patch};
+    const creation=await api('/catalog',{name:'Invalid monitor estimate',kind:'device',target:'synthetic-linen-901',ownerId:'owner',form:invalidForm});
+    assert.equal(creation.status,422,'CATALOG-001 invalid estimates refuse catalog creation');
+    assert.equal(creation.value.error.code,'catalog_form_invalid');
+    assert.deepEqual((await ok('/catalog')).items,catalogBeforeInvalid,'CATALOG-001 refused creation stores no catalog configuration');
+    const editing=await api(`/catalog/${monitor.id}/form`,{name:'Invalid estimate overwrite',revision:formItem.revision,form:invalidForm});
+    assert.equal(editing.status,422,'CATALOG-001 invalid estimates refuse catalog editing');
+    assert.equal(editing.value.error.code,'catalog_form_invalid');
+    assert.deepEqual((await ok('/catalog')).items,catalogBeforeInvalid,'CATALOG-001 refused editing leaves configuration and revision unchanged');
+  }
+  const estimates=await ok('/catalog',{name:'Monitor estimate boundaries',kind:'device',target:'synthetic-linen-902',ownerId:'owner',form:{fields:[],costCents:0,deliveryHours:1}});
+  const readEstimate=async id=>(await ok('/catalog',undefined,formEmployee)).items.find(i=>i.id===id);
+  let estimateItem=await readEstimate(estimates.id);
+  assert.equal(estimateItem.form.costCents,0,'CATALOG-001 zero cents is a known free cost on creation');
+  assert.equal(estimateItem.form.deliveryHours,1,'CATALOG-001 one elapsed hour is a valid estimate');
+  for(const unknownForm of [{fields:[]},{fields:[],costCents:null,deliveryHours:null}]) {
+    const unknown=await ok('/catalog',{name:'Unknown monitor estimates',kind:'device',target:'synthetic-linen-903',ownerId:'owner',form:unknownForm});
+    const createdUnknown=await readEstimate(unknown.id);
+    assert.equal(createdUnknown.form.costCents,null,'CATALOG-001 omitted or null cost is unknown on creation');
+    assert.equal(createdUnknown.form.deliveryHours,null,'CATALOG-001 omitted or null delivery is unknown on creation');
+    await ok(`/catalog/${estimates.id}/form`,{name:'Unknown monitor estimates',revision:estimateItem.revision,form:unknownForm},undefined,200);
+    const editedUnknown=await readEstimate(estimates.id);
+    assert.equal(editedUnknown.revision,estimateItem.revision+1,'CATALOG-001 clearing estimates saves a new revision');
+    assert.equal(editedUnknown.form.costCents,null,'CATALOG-001 omitted or null cost remains unknown after editing');
+    assert.equal(editedUnknown.form.deliveryHours,null,'CATALOG-001 omitted or null delivery remains unknown after editing');
+    estimateItem=editedUnknown;
+  }
+  await ok(`/catalog/${estimates.id}/form`,{name:'Free monitor estimate',revision:estimateItem.revision,form:{fields:[],costCents:0,deliveryHours:1}},undefined,200);
+  assert.equal((await readEstimate(estimates.id)).form.costCents,0,'CATALOG-001 editing accepts zero cents rather than treating it as unknown');
   const monitorWork=await ok('/work',{title:'Monitor for desk',body:'Replace our old monitor',deduplicationKey:'catalog-monitor'},formEmployee);
   const answers={mount:'Desk',count:1,returning:false,needed:'2028-02-29',notes:'Deliver by reception'};
   const submission={catalogId:monitor.id,catalogRevision:formItem.revision,beneficiaryId:'catalog-user',purpose:'Desk setup',answers};
