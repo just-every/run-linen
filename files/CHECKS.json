@@ -1,0 +1,68 @@
+{
+  "base": "3bf801acbe2ed85026ba5aa397dd4982fed09b37",
+  "branch": "cloud/sx-linen-c-f19",
+  "checks": [
+    {
+      "command": "timeout 600 node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log",
+      "log_sha256": "581d75d6c7ad9a194fafe22ae77f74880b89a71450900d3264c4a33209125aeb",
+      "name": "work runtime"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log",
+      "log_sha256": "f18c3982272bd3f4fc8b2f6d1a1adc0c2eb2e5a5af257f3d839e65c44167db12",
+      "name": "typecheck"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "first-party check"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write; node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views.log",
+      "log_sha256": "6a3edad7783bf6c13e63dbe5a49f4f1d6a932a81c60be61934495e59874a258a",
+      "name": "contract generation"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock; node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "source-lock.log",
+      "log_sha256": "2b0900466065a8ae970d7b47de33026b03187cb5df591707218dda47e6e12679",
+      "name": "source lock"
+    }
+  ],
+  "github_api_calls": 3,
+  "head": "e8dd72e6b634e11559de32489a60388912fa53e7",
+  "migration_ledger": "not applicable: no migration changed",
+  "product_push_attempts": 1,
+  "product_pushed": true,
+  "proof_binding": "Final source and test bytes ran before the first candidate commit. The commit contains those same bytes. The last source lock generation and check ran after the final rebase.",
+  "publication_scan": {
+    "commit": "e8dd72e6b634e11559de32489a60388912fa53e7",
+    "complete": false,
+    "findings": null,
+    "historyScanned": null,
+    "status": "not run in cloud; guarded lander owns the full-history scan"
+  },
+  "repository": "just-every/run-linen",
+  "schema": 1,
+  "scope": "Only applicationChecks was extended; no product runtime or contract prose changed.",
+  "tag": "sx-linen-c-f19",
+  "tracked_files": {
+    "sources.lock.json": "f9c686c894b9c6b7b73e1c9047df2b8fb1692d55c9bd6b9544d06b2088211307",
+    "src/features/work/application-catalog.ts": "6bb7cfa2f063539b79bf6937385259fa3245124ce117cf550e3b7b7bde2d71d6",
+    "src/features/work/application-registry.ts": "f5f25d0843eef99bf2c5000043abb5ed2bb01978c5c4f5f8b3290a38ae3c89e0",
+    "src/features/work/approval-decisions.ts": "ad0076ad2d286e02735f5a14e87ecbb25b0c0224fbec081d5a52bf768da4a958",
+    "src/features/work/approval-stages.ts": "cb4a0e150e7f2e84dca34c92aba07f4046a87b238dbe289c52c2dce40fa31b53",
+    "tests/work/application-cases.mjs": "2c8b6343aa5010fc3b303e3c3d4964a68c140046323a88643d580f827bfcb811",
+    "tests/work/runtime.mjs": "181ef2276a92950caeb23433a36e79b458a204771d1209f21d06798e35a4e833"
+  },
+  "ui": "not applicable: no screen changed"
+}
