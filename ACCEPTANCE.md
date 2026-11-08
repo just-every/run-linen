@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 17 | 132 | 29 | 178 |
+| Core | 18 | 131 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 17 | 145 | 37 | 199 |
+| Full target | 18 | 144 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -619,7 +619,7 @@ Core · target · **partial** · From CATALOG-001 · Rules D-1
 
 #### CATALOG-008 — Quote attachments for catalog requests
 
-Core · target · **partial** · From CATALOG-001 · Rules D-1
+Core · target · **done** · From CATALOG-001 · Rules D-1
 
 **Requirement.** An item's form can require a quote: a PDF the requester or beneficiary attaches before submitting, frozen with the request and readable only by the people who decide or fulfil it. Quote attachments are their own record kind, immutable after submission; replacement is an amendment. The upload, download and refusal mechanism is in [docs/contract/mechanism.md](docs/contract/mechanism.md#catalog-quotes).
 
@@ -633,8 +633,8 @@ Core · target · **partial** · From CATALOG-001 · Rules D-1
 7. Every read by someone other than the requester or beneficiary is audited by relation and id; uploads, replacement and attachment are audited by id and size; no file name or content enters any audit.
 8. Linen never reads an amount from a quote: the price is a form question; quotes grant no approval and no provider authority, and the approval view carries the frozen quote for the current approver.
 
-**Evidence.** `tests/work/application-cases.mjs`, `tests/work/catalog-quote-cases.mjs`, `tests/ui/application-journey.mjs`, `tests/ui/catalog-quote-journey.mjs`, `tests/work/pending-person-runtime.mjs`, `tests/intelligence/repair-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/adoption/retention-cases.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** Not asserted: an unsubmitted quote is readable by the requester, beneficiary and owner. Upload, freeze, readers, exclusions, export, erasure, retention and audit outcomes are asserted.
+**Evidence.** `tests/work/application-cases.mjs`, `tests/work/catalog-quote-cases.mjs`, `tests/ui/application-journey.mjs`, `tests/ui/catalog-quote-journey.mjs`, `tests/work/pending-person-runtime.mjs`, `tests/intelligence/repair-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/adoption/retention-cases.mjs`, `tests/platform/base-auth-transfer.mjs`; `tests/work/catalog-quote-cases.mjs` (catalogQuoteChecks); `tests/ui/catalog-quote-journey.mjs` (catalogQuoteJourney); `tests/adoption/application-cases.mjs` (checkArchiveApplications); `tests/adoption/retention-cases.mjs` (retentionChecks); `tests/platform/mcp-tools-cases.mjs` (mcpToolCases)
+**Gap.** None.
 
 #### CATALOG-009 — Catalog admission for bundles, pending people and the assistant
 
