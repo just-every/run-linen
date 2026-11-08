@@ -1,0 +1,117 @@
+{
+  "base": "3bf801acbe2ed85026ba5aa397dd4982fed09b37",
+  "branch": "cloud/sx-linen-c-f21",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "note": "Setup completed, including its application build and local migrations; terminal result, no setup log retained."
+    },
+    {
+      "command": "cloud_run timeout 300 node tests/intelligence/repair-runtime.mjs",
+      "exit": 0,
+      "head": "c8d5a87bc7f4d5f4df65a5cecbc6bddd9b04eefc",
+      "log": "repair-runtime-exact-sha.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log",
+      "note": "Same committed test source; final hook fixture correction included."
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "contractDiffEmpty": true,
+  "counts": {
+    "after": {
+      "done": 20,
+      "missing": 37,
+      "partial": 142,
+      "total": 199
+    },
+    "before": {
+      "done": 20,
+      "missing": 37,
+      "partial": 142,
+      "total": 199
+    }
+  },
+  "createdAt": "2026-11-08T21:19:15.179761+00:00",
+  "generatedViewsCommitted": false,
+  "githubApiCalls": 3,
+  "head": "c8d5a87bc7f4d5f4df65a5cecbc6bddd9b04eefc",
+  "initialFixtureAttempt": {
+    "exit": 143,
+    "log": "fixture-initial.log",
+    "note": "Stopped only owned Node and Workerd PIDs after the first fixture used a promise created in a completed request. Fixed fixture waits inside the active model request. Final focused run and exact-SHA run both pass. No CI repair rounds."
+  },
+  "pr": {
+    "draft": true,
+    "head": "c8d5a87bc7f4d5f4df65a5cecbc6bddd9b04eefc",
+    "number": 156,
+    "url": "https://github.com/just-every/run-linen/pull/156"
+  },
+  "probe": {
+    "door": "Native employee POST /work; scheduler; authenticated owner POST /catalog/:id/form; employee GET /work/:id",
+    "observed": "catalog_changed; observed item revision preserved; zero fulfilments, catalog reservations, obligations, intelligence fulfilment runs and execution plans; no additional provider writes; two subsequent native scheduler ticks preserve input and refusal; one model call.",
+    "point": 5
+  },
+  "productClean": true,
+  "productDiff": "sources.lock.json                     |  4 ++--\n tests/intelligence/repair-runtime.mjs | 43 +++++++++++++++++++++++++++++++++++\n tests/intelligence/repair-worker.ts   | 14 ++++++++++++\n 3 files changed, 59 insertions(+), 2 deletions(-)",
+  "repository": "just-every/run-linen",
+  "scan": {
+    "commit": "c8d5a87bc7f4d5f4df65a5cecbc6bddd9b04eefc",
+    "complete": null,
+    "findings": null,
+    "historyScanned": null,
+    "note": "Not run in cloud; guarded lander must establish the publication scan, main equality and Run site."
+  },
+  "schema": 1,
+  "scope": {
+    "claimedStatus": "PARTIAL",
+    "clause": "CATALOG-009",
+    "closed": "Changed-item assistant refusal",
+    "held": "Unselected clause points and all declared external, policy, device and Base holds unchanged.",
+    "points": [
+      5
+    ]
+  },
+  "sourceLockSha256": "2f5ae75560374b00847adeb0b08c5b19416064c02466c4d8ee4c8ea8b3d7a07f",
+  "tag": "sx-linen-c-f21",
+  "verify": {
+    "conclusion": null,
+    "event": "pull_request",
+    "head_sha": "c8d5a87bc7f4d5f4df65a5cecbc6bddd9b04eefc",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42524420260",
+    "id": 42524420260,
+    "status": "in_progress"
+  }
+}
