@@ -177,5 +177,42 @@
   },
   "remote_product_head": "501d996be75cc8ffa3429cf9af05cfec1dcde098",
   "remote_main_head": "c4e9852d1098215b0371a6c67a9a721be85a88cf",
-  "git_history_shallow": false
+  "git_history_shallow": false,
+  "candidate_verify": {
+    "repository": "just-every/run-linen",
+    "head": "501d996be75cc8ffa3429cf9af05cfec1dcde098",
+    "run_id": 42515650403,
+    "event": "pull_request",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/just-every/run-linen/actions/runs/42515650403",
+    "last_observed_at": "2026-11-08T19:49:24Z",
+    "github_calls_used": 6,
+    "budget": 10,
+    "poll_interval_seconds": 300,
+    "parent_main": {
+      "head": "c4e9852d1098215b0371a6c67a9a721be85a88cf",
+      "verify": 42514121758,
+      "verify_conclusion": "success",
+      "run_site": 42514121732,
+      "run_site_conclusion": "success"
+    },
+    "head_sha": "501d996be75cc8ffa3429cf9af05cfec1dcde098",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42515650403"
+  },
+  "claim": {
+    "clause": "CHANNEL-009",
+    "status": "DONE",
+    "points": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "riders_1_to_10": "pass",
+    "rider_11": "pending guarded landing"
+  }
 }

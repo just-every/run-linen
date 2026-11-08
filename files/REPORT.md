@@ -5,7 +5,7 @@ Product branch: cloud/sx-linen-c-f10.
 Candidate: 501d996be75cc8ffa3429cf9af05cfec1dcde098.
 Parent main: c4e9852d1098215b0371a6c67a9a721be85a88cf.
 Draft PR: https://github.com/just-every/run-linen/pull/150.
-Verify: pull_request run 42515650403, exact candidate SHA; initial observation in progress. Final conclusion is recorded in CI-RECEIPT.json and the final report update below.
+Verify: pull_request run 42515650403, exact candidate SHA; completed/success, observed 2026-11-08T19:49:24Z. Final conclusion is recorded in CI-RECEIPT.json.
 
 CHANNEL-009 point 2's remaining native proof is closed by extending the existing sharingChecks journey. Product behavior already implements the boundaries, so no production source change was necessary. All earlier assertions remain, with two changed test files and a regenerated source lock. CONTRACT.md and both generated views are unchanged. No Base refresh, workflow change, homepage edit, migration or authority expansion occurred.
 
@@ -45,9 +45,9 @@ Every row below uses the exact source bytes recorded in checks-receipt.json. The
 
 | Rider | Result | Proof or boundary |
 | --- | --- | --- |
-| 1 | PASS local, exact-SHA CI recorded below | R1–R9 map every native acceptance outcome to the existing public-door sanity journeys. New point 2 proof is nonempty, with actual uploads, successful owner reads and colleague refusals. |
+| 1 | PASS | R1–R9 map every native acceptance outcome to the existing public-door sanity journeys. New point 2 proof is nonempty, with actual uploads, successful owner reads and colleague refusals. |
 | 2 | PASS | sharingChecks:118–169 exercises successful share and reply, stored bytes, denied metadata and downloads, and refused HR share with no side effect. Assertions would fail on each selected regression. |
-| 3 | Pending CI observation, final result below | Work runtime and sharing browser are already loaded by Verify. pull_request run 42515650403 is bound to 501d996be75cc8ffa3429cf9af05cfec1dcde098. No new env gate or nightly-only proof added. |
+| 3 | PASS | Work runtime and sharing browser are already loaded by Verify. pull_request run 42515650403 is bound to 501d996be75cc8ffa3429cf9af05cfec1dcde098. No new env gate or nightly-only proof added. |
 | 4 | PASS | checks-receipt.json records exact source hashes matching committed HEAD; no relevant byte changed after runtime proof. Browser build and proof use this candidate. |
 | 5 | PASS | CONTRACT.md:522 and points 2 and 5 explicitly name HR exclusions, native HR facts pending LIFE-001 inheritance and DESK-011's workspace obligation. No Base duty or external completion is newly claimed. |
 | 6 | PASS mechanical; status promotion belongs to lander | Generator write and check pass; generated views restored whole from origin/main and uncommitted. Source lock regenerated and checked. CONTRACT.md cells remain exactly main's; its old gap is intentionally not hand-edited. |
@@ -80,3 +80,15 @@ Focused sharingJourney PASS at committed candidate 501d996be75cc8ffa3429cf9af05c
 Rows R1, R3, R5, R6 and R7 have passing focused browser execution as well as their listed native runtime proof where applicable.
 
 Evidence selection excludes the raw browser Worker operational log and private setup files. The packet contains actual reports, check receipts, public-source lock reports, synthetic browser captures and the non-secret focused driver. No credentials, environment dump, real provider data or held gate material is selected.
+
+## Final exact-head result and claim
+
+Verify run 42515650403, event pull_request, completed/success on exact candidate 501d996be75cc8ffa3429cf9af05cfec1dcde098, observed 2026-11-08T19:49:24Z through REST. All R1–R9 acceptance and inherited-duty rows now carry this successful exact-head Verify result. DONE-RIDERS 1 through 10 PASS; rider 11 remains pending the guarded lander. No failed jobs, repair rounds, dispatches or reruns occurred. Six GitHub API calls used of ten; status requests were separated by at least 300 seconds, including discovery.
+
+CLAIM CHANNEL-009 DONE points=1,2,3,4,5,6,7 tests=tests/work/relationship-cases.mjs#sharingChecks; tests/ui/sharing-journey.mjs#sharingJourney; tests/work/department-space-cases.mjs#departmentSpaceChecks
+
+No DEFAULT or GAP line is introduced: no native acceptance gap remains and no policy changed. External connector and device holds belong to their existing clauses and remain unchanged. The claim is ready for guarded acceptance, not a statement that the candidate is already landed or its count already promoted.
+
+Final checks: clean committed product tree; fleet author and committer, no trailers; no modified CONTRACT.md status cells or generated views; fresh checked source lock; public-door runtime, typecheck, first-party check and focused browser proof passed; exact candidate Verify green. Main equality, candidate Run site and COMPLETE full-history publication scan remain explicitly unestablished until landing.
+
+Requested plan row update: CHANNEL-009 native point 2 proof complete at 501d996be75cc8ffa3429cf9af05cfec1dcde098, PR 150, Verify 42515650403 success. Counts remain 18 DONE, 144 PARTIAL, 37 MISSING in this branch; after independent guarded promotion the requested counts are 19 DONE, 143 PARTIAL, 37 MISSING.
