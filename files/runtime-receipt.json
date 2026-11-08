@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "runId": "sx-linen-c-f23-local-work-runtime-node22",
+  "head": "9516135389877bbde497af650c1f8eebe89ff78f",
+  "recordedAt": "2026-11-08T21:48:20.480961+00:00",
+  "command": "node tests/work/runtime.mjs",
+  "node": "v22.20.0",
+  "exit": 0,
+  "proof": {
+    "articleId": "37774671-26c9-45b0-813c-c00945c1c9c2",
+    "currentArticleId": "3f759cd9-3a2d-42de-8450-6d83d0fceaaf",
+    "beforeExpiryAt": 1794174394816,
+    "expiresAt": 1794174404774,
+    "afterExpiryAt": 1794174404875,
+    "beforeIds": [
+      "3f759cd9-3a2d-42de-8450-6d83d0fceaaf",
+      "37774671-26c9-45b0-813c-c00945c1c9c2"
+    ],
+    "afterIds": [
+      "3f759cd9-3a2d-42de-8450-6d83d0fceaaf"
+    ]
+  },
+  "log": "work-runtime-node22.log",
+  "logSha256": "d6ee099f731e3573b62bea4861447c1fd153aab2b7f866c25aa6f850efa6ca2b",
+  "workingTree": "",
+  "priorNode24Invocation": {
+    "command": "cloud_run timeout 600 node tests/work/runtime.mjs",
+    "outerExit": 1,
+    "assertionsPrintedPassed": true,
+    "diagnostic": null,
+    "acceptedAsCleanReceipt": false
+  }
+}

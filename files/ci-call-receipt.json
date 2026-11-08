@@ -1,0 +1,32 @@
+{
+  "used": 5,
+  "budget": 10,
+  "calls": [
+    {
+      "sequence": 1,
+      "purpose": "Inspect exact main workflows"
+    },
+    {
+      "sequence": 2,
+      "purpose": "Create draft PR 159"
+    },
+    {
+      "sequence": 3,
+      "purpose": "Discover exact candidate run",
+      "observedAt": "2026-11-08T21:44:01Z"
+    },
+    {
+      "sequence": 4,
+      "purpose": "Poll Verify 42526639827",
+      "observedAt": "2026-11-08T21:49:08Z"
+    },
+    {
+      "sequence": 5,
+      "purpose": "Poll Verify 42526639827",
+      "observedAt": "2026-11-08T21:54:17Z",
+      "conclusion": "success",
+      "head": "9516135389877bbde497af650c1f8eebe89ff78f"
+    }
+  ],
+  "pollIntervalSeconds": 300
+}

@@ -1,0 +1,45 @@
+{
+  "head": "9516135389877bbde497af650c1f8eebe89ff78f",
+  "command": "node tests/ui/run.mjs ../browser-proof.mjs",
+  "assertionWidth": 1440,
+  "captureWidths": [
+    1440,
+    390
+  ],
+  "beforeAt": 1794174429873,
+  "expiresAt": 1794174449104,
+  "afterAt": 1794174449204,
+  "beforeIds": [
+    "9b99a673-b41b-48c9-b429-15cb6daf02ce",
+    "fb95ef16-2b39-4976-aa58-5d4d24b086e7"
+  ],
+  "afterIds": [
+    "9b99a673-b41b-48c9-b429-15cb6daf02ce"
+  ],
+  "pageErrors": [],
+  "result": "passed",
+  "captureEnabled": true,
+  "exit": 0,
+  "screenshots": [
+    {
+      "file": "knowledge-after-390px.png",
+      "bytes": 113787,
+      "sha256": "17289609665c91f3615b8c8709f9f3b3f96e0a6d7d6c28d18f2275a0815f18aa"
+    },
+    {
+      "file": "knowledge-after.png",
+      "bytes": 240390,
+      "sha256": "3e5a24f744be98242ab6921596ebe14e02be2bbd72fc63d810b6dd7cfd907775"
+    },
+    {
+      "file": "knowledge-before-390px.png",
+      "bytes": 183641,
+      "sha256": "36127b353d2270f5c792d3f2175ae3455fcf15d0b6ebbc7e376ee31527d2819d"
+    },
+    {
+      "file": "knowledge-before.png",
+      "bytes": 240732,
+      "sha256": "d8554c9625ef8ffa8217b749ec29545a0870797ebbbaa585e1c116a022bbb2d3"
+    }
+  ]
+}

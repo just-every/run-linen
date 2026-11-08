@@ -1,0 +1,19 @@
+{
+  "head": "9516135389877bbde497af650c1f8eebe89ff78f",
+  "branch": "cloud/sx-linen-c-f23",
+  "productPush": "success",
+  "productHeadOnRemote": "9516135389877bbde497af650c1f8eebe89ff78f",
+  "identitiesAndTrailers": "Run Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>\n\nRun Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>\n\n",
+  "contractDiff": "",
+  "workingTree": "",
+  "typecheckExit": 0,
+  "firstPartyExit": 0,
+  "precommitRuntimeExit": 0,
+  "exactRuntimeNode22Exit": 0,
+  "browserCaptureExit": 0,
+  "testRegistrationDelta": 0,
+  "removedAssertions": 0,
+  "sourceDiff": " sources.lock.json      |  2 +-\n tests/work/runtime.mjs | 48 +++++++++++++++++++++++++++++++++++++++++++++++-\n 2 files changed, 48 insertions(+), 2 deletions(-)\n",
+  "packetSafety": "Explicit regular files, no symlinks, no credential-shaped string found; no credential files or environment dumps selected",
+  "recordedAt": "2026-11-08T21:48:50.120968+00:00"
+}

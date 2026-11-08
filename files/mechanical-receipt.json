@@ -1,0 +1,25 @@
+{
+  "head": "9516135389877bbde497af650c1f8eebe89ff78f",
+  "lock": {
+    "command": "node scripts/edition-authoring/cli.mjs lock; node scripts/edition-authoring/cli.mjs check",
+    "exit": 0,
+    "sha256": "7054adc6c3247028adefd661ace9f34ad5ec2cb324fbaa8e119695da350de663",
+    "filesChecked": 1733,
+    "ok": true
+  },
+  "views": {
+    "write": "node src/base/contract-docs.mjs write",
+    "check": "node src/base/contract-docs.mjs check",
+    "writeExit": 0,
+    "checkExit": 0,
+    "restoredFrom": "origin/main",
+    "committed": false
+  },
+  "ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migrations changed"
+  },
+  "contractDiff": "",
+  "workingTree": ""
+}
