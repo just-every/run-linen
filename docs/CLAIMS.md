@@ -19,7 +19,7 @@ A product claim is done when every clause behind it is done, missing when every 
 | 11 | Off everything by 5:03 PM. At the end of a leaver's last day, Linen revokes every app, hands his files to his manager and gets the laptop back. | `LIFE-005` partial; `AGENT-002` partial | partial |
 | 12 | Every laptop accounted for: locked, returned, wiped with readback and custody closed. | `ASSET-004` partial; `ASSET-002` missing | partial |
 | 13 | New team, new apps. Linen adds what the new team uses, removes what the old team used and keeps the rest. | `LIFE-003` partial | partial |
-| 14 | Work saved, counted in minutes. Linen reports the time people spent on each kind of request, before and after, beside anything still open. | `REPORT-004` partial; `AGENT-006` partial | partial |
+| 14 | Work saved, counted in minutes. Linen reports the time people spent on each kind of request, before and after, beside anything still open. | `REPORT-004` partial; `AGENT-006` done | partial |
 | 15 | Licenses: unused seats reclaimed, installs beyond licenses removed and renewal notices sent. | `ASSET-006` partial | partial |
 | 16 | Switch desks, keep every ticket. Tickets, private notes, assets, catalog and knowledge come across. Run both until you switch. | `MIGRATE-001` partial; `MIGRATE-005` partial | partial |
 | 17 | Also from Jira Service Management, ServiceNow and CSV. | `MIGRATE-002` missing; `MIGRATE-003` missing; `MIGRATE-004` partial | partial |

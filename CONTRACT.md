@@ -2949,8 +2949,8 @@ Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0c
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 21 | 0 | 25 |
-| Target and push further | 11 | 126 | 37 | 174 |
-| All | 15 | 147 | 37 | 199 |
+| Target and push further | 12 | 125 | 37 | 174 |
+| All | 16 | 146 | 37 | 199 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -3135,7 +3135,7 @@ Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0c
 | `AGENT-003` | Verify the employee can work again | push-further | partial | `src/features/execution/verification.ts`, `tests/ui/connected-request.mjs` | No sign-in, device-compliance or installed-app signals. |
 | `AGENT-004` | Investigate multi-system failures | push-further | partial | `src/features/intelligence/research.ts`, `tests/ui/connected-browser.mjs` | No held-out live case against real IdP, MDM and monitoring logs. |
 | `AGENT-005` | Build a missing connector | push-further | partial | `src/features/intelligence/engineering.ts`, `tests/ui/connected-frontier.mjs` | No released provider connector. |
-| `AGENT-006` | Measure human work saved | push-further | partial | `src/features/work/automation-proposal.ts`, `tests/work/work-saved-cases.mjs`, `tests/ui/time-journey.mjs` | Not asserted: that a type with no verified outcome in the current window is listed as not enough evidence and never ranked, and that the proposal authorizes nothing. Ranking, realized saving, cohort choice and the shared audience are asserted. |
+| `AGENT-006` | Measure human work saved | push-further | done | `src/features/work/automation-proposal.ts`, `tests/work/work-saved-cases.mjs`, `tests/ui/time-journey.mjs`; `tests/work/work-saved-cases.mjs` (workSavedChecks); `tests/ui/time-journey.mjs` (timeJourney) | |
 | `AGENT-007` | Mine ticket history for automations | push-further | partial | `tests/intelligence/ticket-mining-cases.mjs` ticketMiningChecks through `tests/adoption/freshservice-import.mjs`: current importing owner only; completed source-custodied Freshservice jobs; exact three lexical clusters and source membership; declared historic and recent counts; four inert draft outlines; conditional handling upper bounds with unknown minutes and effect; sparse, duplicate, corrupt and reversed source refusals; no publication or grant issuance. `tests/ui/browser.mjs` runs the same public-door journey with 1,000 imported tickets outside push Verify. | Substantive automation design beyond lexical title patterns and draft outlines, publication with admin review where the company's policy requires it, native screens, and a measured effect after a declared two-week post-publication observation remain unbuilt. No elapsed window or measured savings is claimed. |
 | `AGENT-008` | Keep devices and licenses healthy | push-further | missing |  | No MDM/EDR signals. |
 | `AGENT-009` | Carry service commitments across tickets | push-further | done | `tests/intelligence/commitment-cases.mjs`, `tests/intelligence/runtime.mjs`, `tests/ui/commitment-browser.mjs`, `tests/ui/commitment-restart.mjs` |  |

@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 15 | 134 | 29 | 178 |
+| Core | 16 | 133 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 15 | 147 | 37 | 199 |
+| Full target | 16 | 146 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -2905,7 +2905,7 @@ Core · push-further · **partial** · Rules D-7
 
 #### AGENT-006 — Measure human work saved
 
-Core · push-further · **partial** · Rules D-7
+Core · push-further · **done** · Rules D-7
 
 **Requirement.** The agent reports total human touches and minutes, model/provider cost and failures per verified outcome for each request type over time, and names the next most valuable automation by work saved, not tickets closed. The owner chooses the cohort and comparison period.
 
@@ -2917,8 +2917,8 @@ Core · push-further · **partial** · Rules D-7
 5. The proposal authorizes nothing.
 6. Its audience is REPORT-004's: the owner, operators and auditors read the same ranking and evidence, including cost at the declared role rates.
 
-**Evidence.** `src/features/work/automation-proposal.ts`, `tests/work/work-saved-cases.mjs`, `tests/ui/time-journey.mjs`
-**Gap.** Not asserted: that a type with no verified outcome in the current window is listed as not enough evidence and never ranked, and that the proposal authorizes nothing. Ranking, realized saving, cohort choice and the shared audience are asserted.
+**Evidence.** `src/features/work/automation-proposal.ts`, `tests/work/work-saved-cases.mjs`, `tests/ui/time-journey.mjs`; `tests/work/work-saved-cases.mjs` (workSavedChecks); `tests/ui/time-journey.mjs` (timeJourney)
+**Gap.** None.
 
 #### AGENT-007 — Mine ticket history for automations
 
