@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 16 | 133 | 29 | 178 |
+| Core | 17 | 132 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 16 | 146 | 37 | 199 |
+| Full target | 17 | 145 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -581,7 +581,7 @@ Core · target · **partial**
 
 #### CATALOG-001 — Catalog items with forms
 
-Core · target · **partial** · Rules D-1
+Core · target · **done** · Rules D-1
 
 **Requirement.** Admins build catalog items (access, software, hardware, accounts, general services) with field types, conditional logic, required attachments, audience visibility by department/location/employment type, a USD cost and an expected delivery time. Items are versioned; in-flight requests keep their version. Audiences are CATALOG-007, quote files CATALOG-008, and bundle, pending-person and assistant admission CATALOG-009.
 
@@ -595,8 +595,8 @@ Core · target · **partial** · Rules D-1
 7. Answers inherit A1's ticket scopes and ERASURE-001's content removal; bundle submission validates every child's empty answers before opening work.
 8. Item kinds are access, software, hardware (`device`), account and general service; an account or general-service item is a task its owner completes, never a provider action.
 
-**Evidence.** `tests/work/application-cases.mjs`, `tests/work/catalog-quote-cases.mjs`, `tests/ui/application-journey.mjs`, `tests/ui/catalog-quote-journey.mjs`, `tests/work/pending-person-runtime.mjs`, `tests/intelligence/repair-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/adoption/retention-cases.mjs`, `tests/platform/base-auth-transfer.mjs`
-**Gap.** Not asserted: a negative or fractional cost or a nonpositive or fractional delivery is refused, and an empty cost or delivery reads as unknown. The other form, revision, scope, erasure, bundle and kind outcomes are asserted.
+**Evidence.** `tests/work/application-cases.mjs`, `tests/work/catalog-quote-cases.mjs`, `tests/ui/application-journey.mjs`, `tests/ui/catalog-quote-journey.mjs`, `tests/work/pending-person-runtime.mjs`, `tests/intelligence/repair-runtime.mjs`, `tests/platform/mcp-tools-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/adoption/retention-cases.mjs`, `tests/platform/base-auth-transfer.mjs`; `tests/work/application-cases.mjs` (applicationChecks); `tests/work/application-cases.mjs` (catalogAudienceChecks); `tests/work/catalog-quote-cases.mjs` (catalogQuoteChecks); `tests/ui/application-journey.mjs` (catalogFormJourney); `tests/ui/application-journey.mjs` (catalogAudienceJourney)
+**Gap.** None.
 
 #### CATALOG-007 — Catalog audiences
 
