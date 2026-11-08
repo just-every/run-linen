@@ -130,10 +130,13 @@ try{
  startClock();
  let observedRevision;
  try{
+  const paused=await until(async()=>{const state=await fixture('intake-status',{});return state.state==='paused'?state:null},'paid-model response paused at the network edge');
+  assert.equal(paused.workId,changedWork.id);
   const observed=await until(()=>one("SELECT data FROM repair_model_inputs WHERE json_extract(data,'$.work.id')=?",changedWork.id),'native intake model read before the item edit');
   const item=JSON.parse(observed.data).catalog.find(c=>c.id===changedItem.id);
   assert.ok(item,'the native assistant context includes this eligible item');
   observedRevision=item.revision;
+  assert.deepEqual(paused.observed,{catalogId:changedItem.id,revision:observedRevision});
   assert.equal((await one('SELECT state FROM work_intake_events WHERE work_id=?',changedWork.id)).state,'interpreting','the real model response is still in flight');
   assert.equal(await one('SELECT id FROM intelligence_pending_fulfilments WHERE work_id=?',changedWork.id),null);
   const edited=await ok('/catalog/'+changedItem.id+'/form','POST',{revision:observedRevision,name:'Edited project access',form:{costCents:0}},owner);
@@ -154,7 +157,8 @@ try{
   assert.deepEqual(await all('SELECT * FROM repair_writes ORDER BY rowid'),providerWrites,'changed item dispatches no provider write');
  }
  await noChangedItemEffects();
- // Subsequent native scheduler passes must keep the refusal, rather than refreshing the observed revision.
+ // A worker restart and subsequent native scheduler passes must keep the original revision and refusal.
+ await h.restart();database=await h.db;
  for(let retry=0;retry<2;retry++)await fixture('tick',{});
  const retried=await one('SELECT * FROM intelligence_pending_fulfilments WHERE work_id=?',changedWork.id);
  assert.equal(retried.state,'blocked');assert.equal(retried.error_code,'catalog_changed');
