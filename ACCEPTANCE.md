@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 18 | 131 | 29 | 178 |
+| Core | 20 | 129 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 18 | 144 | 37 | 199 |
+| Full target | 20 | 142 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -561,7 +561,7 @@ Core · target · **partial** · Cites BASE-MAIL-001 · Rules D-2, D-3
 
 #### CHANNEL-009 — Request sharing and manager visibility
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** A requester shares a request with named colleagues, who can read and reply to its public thread but never see private notes; a request filed on behalf of someone shows to both the submitter and the beneficiary; managers see their direct and indirect reports' requests in "My team's requests", following the HRIS reporting line (LIFE-001), with sensitive categories (HR, security, health, leaver) excluded by policy. Every share is audited and revocable (RL-3). Linen's taxonomy has no separate security, health or leaver categories: security and health requests are restricted, and leaver lifecycle work is not a request. HR facts arrive through the people API until LIFE-001's HRIS connectors inherit it, and DESK-011's department workspaces inherit the HR exclusion (D-4).
 
@@ -574,8 +574,8 @@ Core · target · **partial**
 6. Visibility follows each person's current manager on their reviewed HR-fact record at read time: after an HR change of the report's manager, the old manager loses visibility and the new one gains it.
 7. The request portal tells requesters and beneficiaries that their managers can read the public thread of their normal requests.
 
-**Evidence.** `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs`
-**Gap.** Not asserted: a shared colleague never sees attachments, a colleague's reply opens no new intake, and an HR request cannot be shared. The share, revoke, audit, on-behalf, team-view and HR-change outcomes are asserted.
+**Evidence.** `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs`; `tests/work/relationship-cases.mjs` (sharingChecks); `tests/ui/sharing-journey.mjs` (sharingJourney); `tests/work/department-space-cases.mjs` (departmentSpaceChecks)
+**Gap.** None.
 
 ### Service catalog and approvals
 
@@ -866,7 +866,7 @@ Core · target · **partial**
 
 #### DESK-019 — Automatic assignment and routing history
 
-Core · target · **partial** · From DESK-003
+Core · target · **done** · From DESK-003
 
 **Requirement.** Within the group a rule chose, Linen hands the ticket to one candidate by the group's method, never to an agent for a restricted or HR ticket, and keeps every routing step.
 
@@ -878,8 +878,8 @@ Core · target · **partial** · From DESK-003
 5. Every routing, group placement and manual assignment is kept with its actor, time, before and after, readable by agents only.
 6. Requesters do not read groups or routing.
 
-**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`
-**Gap.** Not asserted: that with no candidate the ticket stays in its group unassigned. Round-robin, load, restricted placement, routing history and requester exclusion are asserted.
+**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`; `tests/work/desk-routing-cases.mjs` (deskRoutingChecks); `tests/work/desk-group-cases.mjs` (deskGroupChecks)
+**Gap.** None.
 
 #### DESK-004 — SLA policies
 

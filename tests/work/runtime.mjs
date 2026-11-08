@@ -735,7 +735,7 @@ try {
   await searchChecks(api,db);
   const taskHistoryProof = await projectChecks(api, db);
   await relationshipChecks(api,db);
-  await sharingChecks(api, db);
+  await sharingChecks(api, db, uploadBytes);
   await mf.dispose();
   mf = new Miniflare({
     ...convertV4MiniflareOptions({ ...options, port: Number(process.env.LINEN_TEST_WORKER_PORT || 0) }),

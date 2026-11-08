@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 const file=(name,text)=>({name,base64:Buffer.from(text).toString('base64')});
 const dates='2026-01-02T10:00:00Z,2026-01-03T11:00:00Z';
 
@@ -17,6 +18,31 @@ export async function lightweightImportChecks({ok,request,login,owner,steward,sn
     assert.equal((await request(base+'/dry-run','POST',body,employeeAuth)).status,403,'Only the current owner may review a file import');
     assert.equal((await request(base,'POST',{...body,acceptOmissions:true,reviewedFingerprint:'unreviewed',operationKey:'synthetic-linen-1'},employeeAuth)).status,403);
   }
+  const persistentState=async()=>{
+    const bucket=await h.artifacts(),artifacts=[];let cursor;
+    do{
+      const page=await bucket.list({cursor});
+      for(const object of page.objects){const stored=await bucket.get(object.key);const bytes=Buffer.from(await stored.arrayBuffer());artifacts.push({key:object.key,metadata:object,text:bytes.toString('utf8'),base64:bytes.toString('base64')});}
+      cursor=page.truncated?page.cursor:undefined;
+    }while(cursor);
+    return {rows:JSON.parse(await snapshot()),artifacts};
+  };
+  const noCsvRetention=async(input,label)=>{
+    const original=Buffer.from(input.file.base64,'base64').toString('utf8');
+    const inspect=value=>{
+      if(typeof value==='string'){
+        assert.ok(!value.includes(original),label+' must not persist the original CSV text');
+        assert.ok(!value.includes(input.file.base64),label+' must not persist the original CSV base64');
+        let nested;try{nested=JSON.parse(value);}catch{return;}
+        if(nested!==value)inspect(nested);
+      }else if(value&&typeof value==='object'){
+        if(Array.isArray(value)&&value.length&&value.every(v=>Number.isInteger(v)&&v>=0&&v<=255))inspect(Buffer.from(value).toString('utf8'));
+        for(const child of Object.values(value))inspect(child);
+      }
+    };
+    const state=await persistentState();inspect(state);return state;
+  };
+  const fileDigest=input=>createHash('sha256').update(Buffer.from(input.file.base64,'base64')).digest('hex');
   const importTickets=async(base,input,key)=>{
     const before=await snapshot(),review=await ok(base+'/dry-run','POST',{input},owner,200,{'X-Test-Read-Only':'1'});
     assert.equal(await snapshot(),before,'A dry run does not write source or native state');
@@ -33,6 +59,8 @@ export async function lightweightImportChecks({ok,request,login,owner,steward,sn
     assert.equal((await request('/adoption/freshservice-imports/'+job.id,'GET',undefined,owner)).status,404,'A job is scoped to its source door');
     assert.deepEqual(Buffer.from(await (await request(`${base}/${job.id}/artifacts/0`,'GET',undefined,owner)).arrayBuffer()),Buffer.from(input.files[0].base64,'base64'));
     for(const record of records){assert.equal(record.work.state,'paused');assert.equal(record.work.sensitivity,'restricted');}
+    assert.equal((await ok(`${base}/${job.id}/resume`,'POST',{},owner)).state,'completed');
+    for(const record of records)assert.deepEqual(await ok('/work/'+record.work.id,'GET',undefined,owner),record,'A completed resume cannot duplicate native history');
     return {review,job,records};
   };
   const csv=await importTickets(csvBase,csvInput,'synthetic-linen-csv');
@@ -54,15 +82,21 @@ export async function lightweightImportChecks({ok,request,login,owner,steward,sn
   }finally{controller.enqueue(bodyBytes.subarray(1));controller.close();}
   const revoked=await pending;assert.equal(revoked.status,409,await revoked.clone().text());assert.equal(await snapshot(),revokedSnapshot,'A revoked streamed people import writes nothing');
   owner=await login('owner@example.test','fixture owner password');
+  const beforePeopleStorage=await persistentState();
   const beforePeople=await snapshot(),pr=await ok(peopleBase+'/dry-run','POST',peopleBody,owner,200,{'X-Test-Read-Only':'1'});assert.equal(await snapshot(),beforePeople);
+  assert.deepEqual(await noCsvRetention(peopleBody,'People dry run'),beforePeopleStorage,'People review writes neither D1 rows nor private artifacts');
   assert.deepEqual(pr.counts,{rows:2,ready:2,conflicts:0,unresolved:0});assert.ok(pr.omissions.some(o=>o.field==='email'));
   const pb={...peopleBody,reviewedFingerprint:pr.fingerprint,acceptOmissions:true};
   assert.equal((await request(peopleBase,'POST',{...pb,file:file('changed.csv',Buffer.from(peopleBody.file.base64,'base64').toString())},owner)).status,409);
   assert.equal((await request(peopleBase,'POST',{...pb,acceptOmissions:false},owner)).status,422);
   const created=await ok(peopleBase,'POST',pb,owner,201);assert.equal(created.created,2);
+  await noCsvRetention(peopleBody,'People apply');
+  const peopleAudit=(await db.prepare("SELECT target,detail_json FROM audit_events WHERE action='adoption.csv.people' AND target=?").bind(fileDigest(peopleBody)).all()).results;
+  assert.equal(peopleAudit.length,1,'People import keeps the exact file digest for audit');
+  assert.deepEqual(JSON.parse(peopleAudit[0].detail_json).personIds,created.people.map(p=>p.id));
   const people=(await ok('/people','GET',undefined,owner)).items.filter(p=>created.people.some(q=>q.id===p.id));
   assert.deepEqual(people.map(p=>p.name).sort(),['Avery Morgan','Casey Rivera']);
-  for(const p of people){assert.equal(p.member_id,null);assert.equal(p.manager_id,null);assert.equal(p.source,'csv:synthetic-linen-1');assert.equal(p.effective_at,'2026-01-02T10:00:00.000Z');}
+  for(const p of people){assert.equal(p.member_id,null);assert.equal(p.manager_id,null);assert.equal(p.source,'csv:synthetic-linen-1');assert.equal(p.effective_at,'2026-01-02T10:00:00.000Z');assert.equal(p.observed_at,'2026-01-03T11:00:00.000Z');assert.equal(p.source_id,created.people.find(q=>q.id===p.id).sourceId);}
   const existing=await ok(peopleBase+'/dry-run','POST',peopleBody,owner);assert.equal(existing.counts.unresolved,2);
   assert.equal((await request(peopleBase,'POST',{...pb,reviewedFingerprint:existing.fingerprint},owner)).status,409);
   const skip=await ok(peopleBase+'/dry-run','POST',{...peopleBody,skipIds:['synthetic-linen-1','synthetic-linen-2']},owner);assert.equal(skip.counts.unresolved,0);assert.equal(skip.counts.ready,0);
@@ -73,9 +107,15 @@ export async function lightweightImportChecks({ok,request,login,owner,steward,sn
   assert.ok(!(await ok('/people','GET',undefined,owner)).items.some(p=>p.source==='csv:synthetic-linen-race'&&p.source_id==='synthetic-linen-1'));
   console.log('PASS CSV people: review, atomic source facts, no account/manager binding, explicit omissions, no overwrite, skip conflicts and concurrent destination refusal');
 
-  const ar=await ok(assetBase+'/dry-run','POST',assetBody,owner,200,{'X-Test-Read-Only':'1'}),assets=await ok(assetBase,'POST',{...assetBody,reviewedFingerprint:ar.fingerprint,acceptOmissions:true},owner,201);
+  const beforeAssetStorage=await persistentState();
+  const ar=await ok(assetBase+'/dry-run','POST',assetBody,owner,200,{'X-Test-Read-Only':'1'});
+  assert.deepEqual(await noCsvRetention(assetBody,'Asset dry run'),beforeAssetStorage,'Asset review writes neither D1 rows nor private artifacts');
+  const assets=await ok(assetBase,'POST',{...assetBody,reviewedFingerprint:ar.fingerprint,acceptOmissions:true},owner,201);
+  await noCsvRetention(assetBody,'Asset apply');
+  const assetAudit=await db.prepare("SELECT target FROM audit_events WHERE action='adoption.csv.import' AND target=?").bind(fileDigest(assetBody)).all();
+  assert.equal(assetAudit.results.length,1,'Asset import keeps the exact file digest for audit');
   const asset=(await ok('/assets','GET',undefined,owner)).items.find(a=>a.id===assets.assets[0].id);assert.deepEqual([asset.serial,asset.state,asset.person_id,asset.location],['synthetic-linen-1001','stock',null,'Denver']);
-  const custody=await ok(`/assets/${asset.id}/history`,'GET',undefined,owner);assert.equal(custody.items[0].kind,'record');assert.match(custody.items[0].evidence,/CSV status "Deployed"/);
+  const custody=await ok(`/assets/${asset.id}/history`,'GET',undefined,owner);assert.equal(custody.items[0].kind,'record');assert.ok(custody.items[0].evidence.includes('SHA-256 '+fileDigest(assetBody)));assert.equal(asset.asset_tag,'CSV-1');assert.match(custody.items[0].evidence,/CSV status "Deployed"/);
   assert.equal((await ok(assetBase+'/dry-run','POST',assetBody,owner)).counts.unresolved,1);
   console.log('PASS CSV assets: owner-reviewed atomic stock record and typed custody, preserved source status without invented assignment, duplicate serial conflict');
 
@@ -83,6 +123,24 @@ export async function lightweightImportChecks({ok,request,login,owner,steward,sn
   assert.equal(zd.records.length,2);assert.deepEqual(zd.records.map(r=>r.work.created_at),['2026-10-01T09:00:00.000Z','2026-10-02T00:00:00.000Z']);assert.ok(zd.records.flatMap(r=>r.messages).some(m=>m.visibility==='private'&&m.body.includes('PRIVATE')));
   assert.ok(zd.records.flatMap(r=>r.messages).some(m=>m.visibility==='public'&&m.body.includes('Public')));
   assert.ok(zd.records.every(r=>JSON.parse(r.work.context_json).importedFrom==='zendesk'));
+  for(const [base,input,imported,key]of [[csvBase,csvInput,csv,'synthetic-linen-csv'],[zendeskBase,zendeskInput,zd,'synthetic-linen-zendesk']]){
+    const clean=await importTickets(base,{...input,account:input.account+'-undo'},key+'-undo');
+    let undone;for(let n=0;n<clean.records.length+2;n++){undone=await ok(`${base}/${clean.job.id}/undo`,'POST',{},owner);if(undone.state==='undone')break;}
+    assert.equal(undone.state,'undone','Unchanged imported history remains undoable');
+    for(const record of clean.records)assert.equal((await request('/work/'+record.work.id,'GET',undefined,owner)).status,404);
+    const target=imported.records.at(-1).work.id,body=key+' later native correction';
+    await ok(`/work/${target}/messages`,'POST',{body,visibility:'private',sourceMessageId:key+'-native-edit'},owner,201);
+    const edited=await ok('/work/'+target,'GET',undefined,owner);
+    assert.equal(edited.messages.filter(m=>m.body===body&&m.visibility==='private').length,1);
+    const refused=await request(`${base}/${imported.job.id}/undo`,'POST',{},owner);
+    assert.equal(refused.status,409,await refused.clone().text());assert.equal((await refused.json()).error.code,'NATIVE_EDIT_CONFLICT');
+    assert.deepEqual(await ok('/work/'+target,'GET',undefined,owner),edited,'Refused undo preserves the complete native record and later correction');
+    for(const record of imported.records.filter(r=>r.work.id!==target))assert.deepEqual(await ok('/work/'+record.work.id,'GET',undefined,owner),record,'Refused undo preserves the other imported tickets');
+    assert.equal((await request(`${base}/${imported.job.id}/undo`,'POST',{},owner)).status,409,'Retry cannot bypass the later native edit');
+    assert.deepEqual(await ok('/work/'+target,'GET',undefined,owner),edited);
+  }
+  console.log('PASS CSV and Zendesk undo: unchanged imports reverse; later native private corrections refuse undo and retry without losing native records or messages');
+  console.log('PASS people and asset CSV non-retention: dry runs leave D1 and private artifacts unchanged, apply retains no original text or base64, source facts and exact SHA-256 audit digests survive');
   const raw=JSON.parse(zendeskBytes.toString().split('\n')[0]).ticket;
   for(const bad of [{...raw,comments:undefined},{...raw,comments:[{...raw.comments[0],public:undefined}]},{...raw,id:9007199254740992}]){
     const input={...zendeskInput,files:[{...zendeskInput.files[0],base64:Buffer.from(JSON.stringify({ticket:bad})).toString('base64')}]};

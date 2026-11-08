@@ -1,3 +1,4 @@
+import {hoverTooltip,waitForTooltipOpacity} from './transition-helpers.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
@@ -28,10 +29,10 @@ try {
     await card.waitFor();
     const account = page.getByRole('button', { name: 'Your workspace and account', exact: true });
     await page.keyboard.press('Tab'); await account.focus();
-    assert.equal(await account.evaluate(node => getComputedStyle(node, '::after').opacity), '1');
+    await waitForTooltipOpacity(account, '1');
+  assert.equal(await account.evaluate(e=>getComputedStyle(e,'::after').transitionDuration),'0s','Keyboard focus shows the tooltip without an animation');
     await page.getByRole('button', {name:'Connect a service'}).focus();
-    await page.mouse.move(0, 0); await account.hover();
-    await page.waitForFunction(() => getComputedStyle(document.querySelector('.profile'), '::after').opacity === '1');
+    await page.mouse.move(0, 0); await hoverTooltip(account);
     process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/ACCESS-002-connection-${width}.png`, fullPage: true });
     await card.locator(':scope > details > summary').filter({hasText:'Manage'}).press('Enter');
     await card.getByRole('button', { name: 'Edit connection', exact: true }).click();
