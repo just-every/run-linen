@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 19 | 130 | 29 | 178 |
+| Core | 20 | 129 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 19 | 143 | 37 | 199 |
+| Full target | 20 | 142 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -866,7 +866,7 @@ Core · target · **partial**
 
 #### DESK-019 — Automatic assignment and routing history
 
-Core · target · **partial** · From DESK-003
+Core · target · **done** · From DESK-003
 
 **Requirement.** Within the group a rule chose, Linen hands the ticket to one candidate by the group's method, never to an agent for a restricted or HR ticket, and keeps every routing step.
 
@@ -878,8 +878,8 @@ Core · target · **partial** · From DESK-003
 5. Every routing, group placement and manual assignment is kept with its actor, time, before and after, readable by agents only.
 6. Requesters do not read groups or routing.
 
-**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`
-**Gap.** Not asserted: that with no candidate the ticket stays in its group unassigned. Round-robin, load, restricted placement, routing history and requester exclusion are asserted.
+**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`; `tests/work/desk-routing-cases.mjs` (deskRoutingChecks); `tests/work/desk-group-cases.mjs` (deskGroupChecks)
+**Gap.** None.
 
 #### DESK-004 — SLA policies
 
