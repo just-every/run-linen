@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
  * touches/minutes by role, model/provider/labor USD per verified outcome and the failures
  * in the same period, through public work, report and execution doors.
  */
-export async function workSavedChecks({ api, ok, actor }) {
+export async function workSavedChecks({ api, ok, actor, db }) {
   const at = () => new Date().toISOString(), tick = () => new Promise(resolve => setTimeout(resolve, 15));
   // Request type is the catalog service name; a second provider group backs the same service.
   const catalogs = {};
@@ -59,6 +59,10 @@ export async function workSavedChecks({ api, ok, actor }) {
   const analytics = await request('report-analytics-manual', { target: 'analytics-tool' });
   await time(analytics.work, 'report-analytics-handling', 25);
   await fulfil(analytics);
+  // A real queued plan has human effort but no verified current-window outcome.
+  catalogs['pending-tool'] = await ok('/catalog', { name: 'Pending tool access', kind: 'access', target: 'pending-tool', ownerId: 'owner' });
+  const pending = await request('synthetic-linen-601', { target: 'pending-tool' });
+  await time(pending.work, 'synthetic-linen-602', 120);
   await tick(); const currentTo = at();
 
   // Only the owner declares role rates; they are costing assumptions validated per role.
@@ -66,6 +70,14 @@ export async function workSavedChecks({ api, ok, actor }) {
   assert.equal((await api('/reports/labor-rates', { rates: { owner: -1 } })).status, 422);
   assert.equal((await api('/reports/labor-rates', { rates: { intern: 10 } })).status, 422);
   assert.deepEqual((await ok('/reports/labor-rates', { rates: { owner: 90, employee: 40 } })).rates, { owner: 90, employee: 40 });
+  const executionTables = ['execution_grants', 'execution_grant_revocations', 'execution_plans',
+    'execution_decisions', 'execution_operations', 'execution_outbox', 'execution_attempts',
+    'execution_provider_attempts', 'execution_receipts', 'execution_verifications', 'execution_fences'];
+  const executionState = async () => Object.fromEntries(await Promise.all(executionTables.map(async table =>
+    [table, (await db.prepare(`SELECT * FROM ${table} WHERE workspace_id='w' ORDER BY rowid`).all()).results])));
+  const beforeProposalReads = await executionState(), beforeDispatches = await ok('/test/writes');
+  for (const table of ['execution_grants', 'execution_plans', 'execution_operations', 'execution_attempts'])
+    assert.ok(beforeProposalReads[table].length > 0, `${table}: the inert-read check uses populated execution records`);
   const path = `/reports/work-saved?baselineFrom=${baselineFrom}&baselineTo=${boundary}&currentFrom=${boundary}&currentTo=${currentTo}`;
   const read = async () => (await ok(path)).requestTypes.find(row => row.requestType === 'Design tool access');
   let row = await read();
@@ -99,7 +111,15 @@ export async function workSavedChecks({ api, ok, actor }) {
   const effort = (await ok(`/reports/effort?from=${boundary}&to=${currentTo}`)).byRequestType.find(r => r.requestType === 'Design tool access');
   assert.equal(effort.failed, 1); assert.equal(effort.model.unknownCharges, 1);
   // AGENT-006: REPORT-004's report for two request types names the next automation by human work it removes.
-  const proposal = (await ok(path)).automationProposal;
+  const report = await ok(path), proposal = report.automationProposal;
+  const pendingRow = report.requestTypes.find(r => r.requestType === 'Pending tool access');
+  assert.equal(pendingRow.current.incoming, 1);
+  assert.equal(pendingRow.current.pending, 1);
+  assert.equal(pendingRow.current.verified, 0);
+  assert.equal(pendingRow.current.activeMinutes, 120);
+  assert.ok(proposal.notEnoughEvidence.includes(pendingRow.requestType));
+  assert.ok(proposal.ranked.every(r => r.requestType !== pendingRow.requestType));
+  assert.notEqual(proposal.next?.requestType, pendingRow.requestType);
   assert.deepEqual(proposal.ranked.map(r => [r.rank, r.requestType, r.humanMinutesToRemove]), [[1, 'Analytics access', 25], [2, 'Design tool access', 0]],
     'AGENT-006 ranks by human minutes per verified outcome × verified outcomes, not tickets closed');
   assert.deepEqual(proposal.next, { requestType: 'Analytics access', humanMinutesToRemove: 25 });
@@ -114,6 +134,12 @@ export async function workSavedChecks({ api, ok, actor }) {
   assert.deepEqual(cohort.automationProposal.ranked.map(r => r.requestType), ['Design tool access']);
   const empty = (await ok(`/reports/work-saved?baselineFrom=${baselineFrom}&baselineTo=${boundary}&currentFrom=${currentTo}&currentTo=${new Date(Date.parse(currentTo) + 1000).toISOString()}`)).automationProposal;
   assert.deepEqual(empty.ranked, []); assert.equal(empty.next, null);
+  const pendingOnly = (await ok(`${path}&requestType=${encodeURIComponent(pendingRow.requestType)}`)).automationProposal;
+  assert.deepEqual(pendingOnly.notEnoughEvidence, [pendingRow.requestType]);
+  assert.deepEqual(pendingOnly.ranked, []); assert.equal(pendingOnly.next, null);
+  assert.deepEqual(await executionState(), beforeProposalReads,
+    'proposal reads never issue grants, create or approve plans, enqueue outbox work or change dispatch records');
+  assert.deepEqual(await ok('/test/writes'), beforeDispatches, 'proposal reads never dispatch a provider write');
   await ok('/reports/labor-rates', { rates: { vendor: null } });
   assert.deepEqual((await ok('/reports/labor-rates')).rates, { owner: 90, employee: 40 });
   assert.deepEqual((await read()).baseline.labor.unpricedRoles, ['vendor']);
