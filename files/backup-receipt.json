@@ -1,0 +1,7 @@
+{
+  "path": "/home/agent/rer-consolidation/work/sx-linen-flake-1/product-backup.bundle",
+  "head": "5d749efb4578335e7ac54c907b8bd190d59d56bf",
+  "sha256": "8a58546c9f0d2ed746ad4a362b3b2d7294c9ff0fbdd09599536c5061d6688876",
+  "verified": true,
+  "note": "Local recovery data outside the clone. Not a product push, READY or acceptance signal."
+}

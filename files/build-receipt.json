@@ -1,0 +1,10 @@
+{
+  "command": "cloud_run npx -y @runeditrun/rer build",
+  "exitCode": 0,
+  "sourceHeadAtBuild": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "note": "RER build completed before the first commit; all task changes are tests and source lock. Application source equals the recorded main base.",
+  "setupCommand": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+  "setupExitCode": 0,
+  "node": "24.19.0",
+  "pnpm": "10.12.4"
+}

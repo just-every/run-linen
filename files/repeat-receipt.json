@@ -1,0 +1,197 @@
+{
+  "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+  "complete": true,
+  "totalJourneyPasses": 30,
+  "results": [
+    {
+      "iteration": 1,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 1,
+      "exitCode": 0,
+      "elapsedSeconds": 58.174,
+      "log": "focused-1.log",
+      "sha256": "d8b0355c455e2badc29cba04a307b8d32b416da977b4731c4280034d3313bcb7"
+    },
+    {
+      "iteration": 2,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 1,
+      "exitCode": 0,
+      "elapsedSeconds": 63.345,
+      "log": "focused-2.log",
+      "sha256": "36c58577961376190b5e51720279567e6ca11149618af26d7b5a0622b5704c67"
+    },
+    {
+      "iteration": 3,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 1,
+      "exitCode": 0,
+      "elapsedSeconds": 60.4,
+      "log": "focused-3.log",
+      "sha256": "f58142ea45ef7ea46543ce54d3627e0c4225529bc0f4744fe0cd23423299e045"
+    },
+    {
+      "iteration": 4,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 1,
+      "exitCode": 0,
+      "elapsedSeconds": 63.562,
+      "log": "focused-4.log",
+      "sha256": "8182988b9ff92ec13ae390f05ffd32c48062337920f5c5e7ab00e5e29a39080c"
+    },
+    {
+      "iteration": 5,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 1,
+      "exitCode": 0,
+      "elapsedSeconds": 61.476,
+      "log": "focused-5.log",
+      "sha256": "3f29b2fbe5ce5c22266e4f016b65eaadc572cc9a6638633a5e7f19947f14f445"
+    },
+    {
+      "iteration": 6,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 1,
+      "exitCode": 0,
+      "elapsedSeconds": 55.096,
+      "log": "focused-6.log",
+      "sha256": "e4c3b0dfab4910661b059f4fe295bf589ba6b2f5a885a2ea1123910b8197a599"
+    },
+    {
+      "iteration": 7,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 1,
+      "exitCode": 0,
+      "elapsedSeconds": 58.444,
+      "log": "focused-7.log",
+      "sha256": "b7ccdf0898d95cd621a1e4605944a1bef13ea19ff93a1deb3292d5ca7de99e95"
+    },
+    {
+      "iteration": 8,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 1,
+      "exitCode": 0,
+      "elapsedSeconds": 56.725,
+      "log": "focused-8.log",
+      "sha256": "087553cd6c4191ddc6f3ed3ee3545d664c4350f931ae79355b7b84f38c80158a"
+    },
+    {
+      "iteration": 9,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 1,
+      "exitCode": 0,
+      "elapsedSeconds": 64.104,
+      "log": "focused-9.log",
+      "sha256": "03301a2e72766ceed55ba9f1e677bd35ba98fd3166344c1768acfb0d1b77b7c3"
+    },
+    {
+      "iteration": 10,
+      "journeys": [
+        "monitoringJourney",
+        "mailboxJourney",
+        "offlineReplyJourney"
+      ],
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "/home/agent/rer-consolidation/work/sx-linen-flake-1/packet/focused-browser.mjs"
+      ],
+      "throttleRate": 4,
+      "exitCode": 0,
+      "elapsedSeconds": 73.145,
+      "log": "focused-10.log",
+      "sha256": "260a497393ef25a3332134b264ff6852be5dc548a5311207629a237bb157ff9e"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "head": "b2e25325bc25622b0dee19b1b3239691f974ec34",
+  "command": "node tests/ui/run.mjs tests/ui/department-browser.mjs",
+  "exitCode": 0,
+  "log": "department.log",
+  "sha256": "a72e7b1736b9228638988892405a5573cff89a0adb02923589c2adbff5adcabb"
+}

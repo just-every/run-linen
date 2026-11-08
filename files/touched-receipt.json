@@ -1,0 +1,57 @@
+{
+  "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+  "complete": true,
+  "results": [
+    {
+      "name": "employee",
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/run.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 395.761,
+      "log": "final-employee.log",
+      "sha256": "16752c223fa3b9ee93da57991c2f4a7edae6c9ae03ca00fc7fedd3728c4fd14d"
+    },
+    {
+      "name": "communications",
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/connected-run.mjs",
+        "tests/ui/communication-browser.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 148.102,
+      "log": "final-communications.log",
+      "sha256": "bf2bc75c67af942a7b323c7b086ba153be5bc6ce6c863f0d7672ec90898a785e"
+    },
+    {
+      "name": "billing",
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/run.mjs",
+        "tests/ui/billing-browser.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 56.465,
+      "log": "final-billing.log",
+      "sha256": "6f814931e2624ecc140a1d6c2b99aa93dc7c6de53bf4c1f33ef1459e00fd2fac"
+    },
+    {
+      "name": "department",
+      "head": "818cec20ac50404dcef1923bfa026440ed404b9a",
+      "command": [
+        "node",
+        "tests/ui/run.mjs",
+        "tests/ui/department-browser.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 99.375,
+      "log": "final-department.log",
+      "sha256": "d21355ff63f50fad26b35ab90a2c918dd47a3dc2fbb158033a405cbc09271bd2"
+    }
+  ]
+}

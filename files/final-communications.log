@@ -1,0 +1,12 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PASS REPORT-005 native 40/25/300 month, 92%/12%, all tile records, DST and audience
+PASS CHANGE-007 native release decisions, phases, calendar, cohort notes, failed member and verified backout
+PASS INC-002 native 1440: signed Uptime failure, duplicate, incident source evidence, source recovery and independent-recovery boundary
+PASS CHANNEL-008 native 1440: publisher controls, pre-recovery refusal, Sales-only banner, matching ticket offer and filing, independently admitted all-clear, individual ticket stays open, named withdrawal and planned change notice.
+PASS CHANNEL-003 native 1440: Gmail and forwarding Exchange mailboxes with read-back domain authentication, one threaded request with its attachment and CC watcher, a Linen reply from the mailbox, suppressed out-of-office, held and mapped senders, tooltip on the icon-only account control.
+PASS CHANNEL-007 native 1440: RingCentral sandbox line check, badge and number mapping, call-log call to ticket with recording link and staff-only transcript, held unknown number, walk-up check-in by name and badge, serve, resolve and left visits, employee view.
+PASS CHANNEL-006 native 1440: portal ask-for-a-person with no agent, accepted live chat with transcript in view and agent reply, and an after-hours request filed with its reply time. Slack handoff remains blocked by CHANNEL-001.
+PASS CHANNEL-004 native 1440: owner branding with a refused unreadable color, a public logo, the portal name, logo and colors for an employee, and my devices shown only to the device holder. Custom domain with managed TLS remains unbuilt.
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-flake-1/local/final-communications

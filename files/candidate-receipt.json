@@ -1,0 +1,18 @@
+{
+  "head": "5d749efb4578335e7ac54c907b8bd190d59d56bf",
+  "localRunnerStartedHead": "818cec20ac50404dcef1923bfa026440ed404b9a",
+  "runnerStartTestsTree": "120e3945b00e5699883f66ef023de9b240f7bcf9",
+  "candidateTestsTree": "120e3945b00e5699883f66ef023de9b240f7bcf9",
+  "changedPathsSinceRunnersStarted": [
+    "sources.lock.json"
+  ],
+  "typecheck": {
+    "command": "pnpm typecheck",
+    "exitCode": 0,
+    "log": "typecheck.log"
+  },
+  "sourceCheck": {
+    "command": "node scripts/edition-authoring/cli.mjs check",
+    "exitCode": 0
+  }
+}

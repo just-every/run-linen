@@ -1,0 +1,5 @@
+{
+  "head": "5d749efb4578335e7ac54c907b8bd190d59d56bf",
+  "command": "node scripts/edition-authoring/cli.mjs check",
+  "ok": true
+}

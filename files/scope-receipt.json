@@ -1,0 +1,22 @@
+{
+  "head": "5d749efb4578335e7ac54c907b8bd190d59d56bf",
+  "verifyEntrypointsBefore": 31,
+  "verifyEntrypointsAfter": 31,
+  "registrationsAdded": 0,
+  "clausesChanged": 0,
+  "generatedAcceptanceViewsChanged": false,
+  "applicationSourceChanged": false,
+  "diffFiles": [
+    "sources.lock.json",
+    "tests/ui/billing-browser.mjs",
+    "tests/ui/browser.mjs",
+    "tests/ui/commitment-restart.mjs",
+    "tests/ui/department-role-journey.mjs",
+    "tests/ui/mailbox-journey.mjs",
+    "tests/ui/offline-reply-journey.mjs",
+    "tests/ui/okta-browser.mjs",
+    "tests/ui/sandbox-journey.mjs",
+    "tests/ui/service-notice-journey.mjs",
+    "tests/ui/transition-helpers.mjs"
+  ]
+}
