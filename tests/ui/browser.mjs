@@ -1,3 +1,4 @@
+import {offlineReplyJourney} from './offline-reply-journey.mjs';
 import {deskQueueJourney,deskScenarioJourney,mcpCommentJourney} from './desk-console-journeys.mjs';
 import { pendingPersonJourney } from './pending-person-journey.mjs';
 import { catalogTaskJourney } from './catalog-task-journey.mjs';
@@ -408,19 +409,7 @@ try {
     "BODY",
   );
   checks.push("Mobile width and keyboard focus");
-  await context.setOffline(true);
-  await page
-    .getByLabel("Keep the conversation going")
-    .fill("Still not working while offline");
-  await page.getByRole("button", { name: "Send message", exact: true }).click();
-  await page
-    .getByText("Linen could not reach the service.", { exact: false })
-    .waitFor();
-  assert.equal(
-    await page.getByLabel("Keep the conversation going").inputValue(),
-    "Still not working while offline",
-  );
-  await context.setOffline(false);
+  await offlineReplyJourney({page, context});
   checks.push("Offline submit preserves unsent message");
   await page.setViewportSize({width:1440,height:1000});
   await page

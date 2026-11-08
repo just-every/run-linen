@@ -37,6 +37,7 @@ try {
         await page.setViewportSize({width,height:1000});const profile=page.getByRole('button',{name:'Your workspace and account'});
         await page.keyboard.press('Tab');await profile.focus();assert.equal(await profile.evaluate(e=>e.matches(':focus-visible')),true);
         await waitForTooltipOpacity(profile, '1');
+  assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDuration),'0s','Keyboard focus shows the tooltip without an animation');
         await hoverTooltip(profile);
         assert.equal(await profile.evaluate(e=>getComputedStyle(e,'::after').transitionDelay),'0.3s');
         process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/commitment-tooltip-${width}.png`});
