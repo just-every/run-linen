@@ -1,0 +1,1 @@
+PROBE DESK-019 3: POST /work and POST /work/:id/route with automatic round_robin and load assignment and two members lacking the required skill -> GET /work/:id keeps chosen group and null assignee; reroute reports no_available_agent, increments revision, and GET /work/:id/assignments records creation and reroute truthfully; requester history reads return 403.

@@ -1,0 +1,8 @@
+{
+  "conclusion": "success",
+  "event": "pull_request",
+  "head_sha": "3ed22f7464b132584cc0f895531da83b918ef4c3",
+  "html_url": "https://github.com/just-every/run-linen/actions/runs/42515634381",
+  "id": 42515634381,
+  "status": "completed"
+}
