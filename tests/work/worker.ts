@@ -14,6 +14,18 @@ import {
 import type { AppEnv } from "../../src/platform/types";
 import { ApiError } from "../../src/platform/http";
 const app = new Hono<AppEnv>();
+// Serial clock-controlled requests exercise scheduler boundaries without changing product timekeeping.
+app.use('*', async (c, next) => {
+  const stamp = c.req.header('x-test-now');
+  if (!stamp) return next();
+  const realDate = Date, at = realDate.parse(stamp);
+  if (!Number.isFinite(at)) throw new Error('Invalid test clock');
+  globalThis.Date = new Proxy(realDate, {
+    construct(target, args) { return Reflect.construct(target, args.length ? args : [at]); },
+    get(target, key) { return key === 'now' ? () => at : Reflect.get(target, key); },
+  });
+  try { await next(); } finally { globalThis.Date = realDate; }
+});
 app.use("*", async (c, next) => {
   c.set("principal", {
     userId: c.req.header("x-user") || "owner",

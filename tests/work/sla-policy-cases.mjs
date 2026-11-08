@@ -92,13 +92,14 @@ export async function slaPolicyChecks(api, db) {
 /** DESK-005: escalation levels before and after an SLA breach and the awaiting-requester reminder rule, through public routes and the scheduler duty. */
 export async function escalationChecks(workspaceApi, db) {
   // An own workspace keeps these rules from escalating or resolving other suites' tickets.
-  const api = (path, body, headers = {}) => workspaceApi(path, body, { 'x-workspace': 'desk005', ...headers });
+  let testAt;
+  const api = (path, body, headers = {}) => workspaceApi(path, body, { 'x-workspace': 'desk005', ...(testAt ? { 'x-test-now': testAt } : {}), ...headers });
   const check = (r, status = 200) => { assert.equal(r.status, status, 'DESK-005 ' + JSON.stringify(r)); return r.value; };
   const employee = { 'x-user': 'employee', 'x-roles': '["employee"]' };
   await db.exec(`INSERT INTO workspaces VALUES('desk005','Desk 005','2026-01-01'); INSERT INTO users VALUES('desk-agent','agent@test','Avery Agent','unused','2026-01-01'); INSERT INTO users VALUES('desk-lead','lead@test','Lee Lead','unused','2026-01-01'); INSERT INTO users VALUES('it-manager','manager@test','Morgan Manager','unused','2026-01-01'); INSERT INTO memberships VALUES('desk005','owner','["owner"]',1); INSERT INTO memberships VALUES('desk005','employee','["employee"]',1); INSERT INTO memberships VALUES('desk005','desk-agent','["operator"]',1); INSERT INTO memberships VALUES('desk005','desk-lead','["operator"]',1); INSERT INTO memberships VALUES('desk005','it-manager','["operator"]',1);`);
   const calendar = check(await api('/calendars', { name: 'New York office', location: 'New York', timezone: 'America/New_York', weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [], holidayCatalog: 'us-federal' }), 201);
   check(await api('/sla-policies', { name: 'P2 business hours', position: 1, priority: 'P2', calendarId: calendar.id, firstResponseMinutes: 60, nextResponseMinutes: 120, resolutionMinutes: 240 }), 201);
-  check(await api('/sla-policies', { name: 'Everything else', position: 2, firstResponseMinutes: 480, nextResponseMinutes: 480, resolutionMinutes: 2880 }), 201);
+  check(await api('/sla-policies', { name: 'Everything else', position: 2, firstResponseMinutes: 480, nextResponseMinutes: 480, resolutionMinutes: 2880, pauseOn: ['requester', 'vendor'] }), 201);
   const level = (n, offsetMinutes, notify, label) => ({ target: 'first_response', level: n, offsetMinutes, notify, label });
   check(await api('/escalation-levels', level(1, -15, 'assignee', 'Agent'), employee), 403);
   check(await api('/escalation-levels', level(2, -5, 'employee', 'Group lead')), 422);
@@ -146,6 +147,50 @@ export async function escalationChecks(workspaceApi, db) {
   check(await tick());
   rows = (await followups(p1.id)).filter(r => r.kind === 'escalation');
   assert.deepEqual([rows[2].state, rows[2].stop_reason], ['stopped', 'target met'], 'DESK-005 an agent response stops the remaining level');
+
+  // A vendor pause before the target holds the same persisted escalation, then moves its deadline one hour.
+  testAt = '2026-02-02T09:00:00.000Z';
+  let held = await ticket('paused-deadline', 'P1', 'high');
+  held = check(await api(`/work/${held.id}/commands`, { revision: held.revision, command: 'assign', reason: 'On shift', assigneeId: 'desk-agent' }));
+  const firstLevel = async () => (await followups(held.id)).find(r => r.kind === 'escalation' && r.level === 1);
+  const heldNotes = async headers => (await notes(held.id, headers)).filter(m => m.body.includes('escalation'));
+  check(await tick());
+  const scheduled = await firstLevel();
+  assert.equal(scheduled.state, 'scheduled');
+  assert.equal(scheduled.next_due_at, '2026-02-02T16:45:00.000Z');
+  testAt = '2026-02-02T10:00:00.000Z';
+  held = check(await api(`/work/${held.id}/commands`, { revision: held.revision, command: 'pause', reason: 'Waiting for the payroll vendor', waitingOn: 'vendor' }));
+  assert.equal(check(await api(`/work/${held.id}/sla`)).firstResponse.state, 'paused');
+  check(await tick());
+  let pending = await firstLevel();
+  assert.deepEqual([pending.id, pending.state, pending.next_due_at, pending.fired_at], [scheduled.id, 'scheduled', null, null], 'DESK-005 an applicable open pause clears the persisted deadline without firing or replacing the row');
+  assert.equal((await heldNotes()).length, 0);
+  testAt = '2026-02-02T11:00:00.000Z';
+  held = check(await api(`/work/${held.id}/commands`, { revision: held.revision, command: 'resume', reason: 'Vendor answered' }));
+  assert.equal(check(await api(`/work/${held.id}/sla`)).firstResponse.dueAt, '2026-02-02T18:00:00.000Z');
+  check(await tick());
+  pending = await firstLevel();
+  assert.deepEqual([pending.id, pending.state, pending.next_due_at], [scheduled.id, 'scheduled', '2026-02-02T17:45:00.000Z'], 'DESK-005 resuming moves the same scheduled row by the one-hour pause');
+  testAt = scheduled.next_due_at;
+  check(await tick());
+  assert.equal((await firstLevel()).state, 'scheduled', 'DESK-005 the former deadline no longer fires');
+  assert.equal((await heldNotes()).length, 0);
+  testAt = '2026-02-02T17:44:59.999Z';
+  check(await tick());
+  assert.equal((await firstLevel()).state, 'scheduled', 'DESK-005 the recomputed deadline does not fire early');
+  testAt = '2026-02-02T17:45:00.000Z';
+  check(await tick());
+  const fired = await firstLevel();
+  assert.deepEqual([fired.id, fired.state, fired.next_due_at, fired.fired_at], [scheduled.id, 'fired', testAt, testAt], 'DESK-005 the first tick at the recomputed deadline fires the persisted row');
+  const privateNotes = await heldNotes();
+  assert.equal(privateNotes.length, 1);
+  assert.equal(privateNotes[0].visibility, 'private');
+  assert.match(privateNotes[0].body, /^Level 1 escalation \(Agent: Avery Agent\): first response due .*6:00 PM.*Everything else\./);
+  assert.equal((await heldNotes(employee)).length, 0, 'DESK-005 the requester cannot read the recomputed escalation note');
+  check(await tick());
+  assert.deepEqual(await firstLevel(), fired, 'DESK-005 a repeated tick preserves the fired row');
+  assert.deepEqual(await heldNotes(), privateNotes, 'DESK-005 a repeated tick adds no duplicate private note');
+  testAt = undefined;
 
   // Awaiting the requester: reminder after 3 business days, resolution with disclosure after 5.
   const pauseFor = async (work, key) => check(await api(`/work/${work.id}/commands`, { revision: work.revision, command: 'pause', reason: `Asked for the error text ${key}`, waitingOn: 'requester' }));

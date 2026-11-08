@@ -7448,7 +7448,7 @@
       "executable": false
     },
     "tests/work/sla-policy-cases.mjs": {
-      "sha256": "ef7ca99645aa77f549d8d5728ed7a3185868d7889af89aba1de932d5c018a647",
+      "sha256": "286086c982723f9c9a57c3258e3572b3d5139d62492bb58cbfa7abaabdd7f627",
       "executable": false
     },
     "tests/work/time-cases.mjs": {
@@ -7468,7 +7468,7 @@
       "executable": false
     },
     "tests/work/worker.ts": {
-      "sha256": "a9c76fc22aa7a4897f17ff8f19bad32ef792611343368bf4e91bf2b6b9d14a74",
+      "sha256": "52b90860087957d278e03bac4a92a99f6708c7043b9e529a377471b54b25bf6a",
       "executable": false
     },
     "tsconfig.json": {
