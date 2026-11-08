@@ -7288,7 +7288,7 @@
       "executable": false
     },
     "tests/work/catalog-quote-cases.mjs": {
-      "sha256": "62eb89b34f8bccce5e07f0f90a79dbab57d4ec70ff25e5b0c86d5b7976e80316",
+      "sha256": "a6262b3f25f8672507532a436bb4b527204b9c0a6544a59dfd2e3614d39460a7",
       "executable": false
     },
     "tests/work/catalog-task-cases.mjs": {
