@@ -127,10 +127,10 @@
       "sha256": "f9919c1a6569f0a64c98aa06f07d429458418804fff9d7fb967b67a5f3166d87"
     },
     {
-      "blob": "45e842729ffe71192efbfca6865f2f65d0d90e85",
-      "bytes": 3624,
+      "blob": "8673c39a203b80ea5028b36f8e8152f1b5ca191a",
+      "bytes": 3927,
       "path": "packet-inventory.json",
-      "sha256": "892a04a8ccd54c7ff8a2175d18bc02df0f588356f8970cea276525d775711650"
+      "sha256": "93274777f1beb8d52082d72ea79910de09c88bf5b580fd2b08ddf113006b08e8"
     },
     {
       "blob": "4c7325c8396dc7ecb05ae143321c6ece21335cac",
