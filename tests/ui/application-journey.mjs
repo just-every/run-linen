@@ -121,7 +121,28 @@ export async function catalogFormJourney({page,api,base,out}) {
   await submitted.getByText('Concrete',{exact:true}).waitFor();
   assert.equal((await api(`/work/${work.id}/catalog-requests`)).items[0].catalogSnapshot.revision,current.revision,'CATALOG-001 in-flight form retains original revision after owner edits');
   await captureJourney(page,{path:out+'/CATALOG-001-retained.png',fullPage:true});
-  console.log('PASS CATALOG-001 native form editor, conditional request, cost/delivery and immutable submitted revision at 1440');
+  await page.goto(base+'/app#/connections');
+  await registry.getByText('Manage catalog forms',{exact:true}).click();await card.locator(':scope > summary').click();
+  await editor.getByLabel('Request cost in USD',{exact:true}).fill('');
+  await editor.getByLabel('Expected delivery in elapsed hours',{exact:true}).fill('');
+  await captureJourney(page,{path:out+'/CATALOG-001-empty-estimates-editor.png',fullPage:true});
+  const clearing=page.waitForResponse(r=>r.url().endsWith(`/catalog/${item.id}/form`)&&r.request().method()==='POST');
+  await editor.getByRole('button',{name:'Save catalog form',exact:true}).click();assert.equal((await clearing).status(),200);
+  await page.reload();
+  await registry.getByText('Manage catalog forms',{exact:true}).click();await card.locator(':scope > summary').click();
+  assert.equal(await editor.getByLabel('Request cost in USD',{exact:true}).inputValue(),'','CATALOG-001 cleared cost stays empty after reload');
+  assert.equal(await editor.getByLabel('Expected delivery in elapsed hours',{exact:true}).inputValue(),'','CATALOG-001 cleared delivery stays empty after reload');
+  const unknownWork=await api('/work',{title:'Monitor with estimates to confirm',body:'Delivery and cost have not been estimated',deduplicationKey:crypto.randomUUID()});
+  await page.goto(base+'/app#/work/'+unknownWork.id);
+  await chooser.locator(':scope > summary').click();await chooser.getByLabel('Service',{exact:true}).selectOption(item.id);
+  for(const label of ['Recorded request cost','Expected delivery']) {
+    const fact=chooser.locator('.facts > div').filter({has:page.getByText(label,{exact:true})});
+    await fact.locator('dd').getByText('Unknown',{exact:true}).waitFor();
+  }
+  await captureJourney(page,{path:out+'/CATALOG-001-unknown-estimates-request.png',fullPage:true});
+  assert.equal((await api(`/work/${work.id}/catalog-requests`)).items[0].catalogSnapshot.form.costCents,25000,'CATALOG-001 clearing estimates does not rewrite the submitted cost');
+  assert.equal((await api(`/work/${work.id}/catalog-requests`)).items[0].catalogSnapshot.form.deliveryHours,48,'CATALOG-001 clearing estimates does not rewrite the submitted delivery');
+  console.log('PASS CATALOG-001 native form editor, conditional request, known and unknown estimates and immutable submitted revision at 1440');
 }
 
 /** CATALOG-001: native employee selection and refusal use live reviewed audience facts. */
