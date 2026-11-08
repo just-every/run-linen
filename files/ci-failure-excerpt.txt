@@ -1,0 +1,26 @@
+Verify run 42515978740; job 128839089567; saved head aa04f912a23befd32c390ca877f4e5a0d1c2da98.
+Archive read once through gh run view; empty formatted output, cached archive inspected locally.
+2026-11-08T19:40:33.6229335Z locator.waitFor: Error: strict mode violation: getByText('Linen could not reach the service.') resolved to 2 elements:
+2026-11-08T19:40:33.6232340Z     1) <p>Linen could not reach the service. Your unsent ch…</p> aka getByLabel('Workspace handoff').getByText('Linen could not reach the')
+2026-11-08T19:40:33.6234457Z     2) <p>Linen could not reach the service. Your unsent ch…</p> aka getByRole('region', { name: 'Linen' }).getByText('Linen could not reach the')
+2026-11-08T19:40:33.6235473Z 
+2026-11-08T19:40:33.6235742Z Call log:
+2026-11-08T19:40:33.6236507Z   - waiting for getByText('Linen could not reach the service.') to be visible
+2026-11-08T19:40:33.6237977Z     - locator resolved to hidden <p>Linen could not reach the service. Your unsent ch…</p>
+2026-11-08T19:40:33.6238626Z 
+2026-11-08T19:40:33.6239006Z     at [REDACTED]/tests/ui/browser.mjs:418:6 {
+2026-11-08T19:40:33.6239653Z   log: [
+2026-11-08T19:40:33.6240450Z     "  - waiting for getByText('Linen could not reach the service.') to be visible",
+2026-11-08T19:40:33.6241851Z     '    - locator resolved to hidden <p>Linen could not reach the service. Your unsent ch…</p>'
+2026-11-08T19:40:33.6242691Z   ]
+2026-11-08T19:40:33.6243100Z }
+2026-11-08T19:40:33.6243368Z 
+2026-11-08T19:40:33.6243617Z Node.js v22.20.0
+2026-11-08T19:40:33.6890417Z file://[REDACTED]/tests/ui/run.mjs:108
+2026-11-08T19:40:33.6891087Z       code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+2026-11-08T19:40:33.6891621Z                               ^
+2026-11-08T19:40:33.6891867Z 
+2026-11-08T19:40:33.6892091Z Error: Browser acceptance exited 1
+2026-11-08T19:40:33.6892809Z     at ChildProcess.<anonymous> (file://[REDACTED]/tests/ui/run.mjs:108:31)
+2026-11-08T19:40:33.6893580Z     at ChildProcess.emit (node:events:519:28)
+2026-11-08T19:40:33.6894336Z     at ChildProcess._handle.onexit (node:internal/child_process:293:12)

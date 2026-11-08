@@ -1,0 +1,198 @@
+{
+  "branch": "cloud/sx-linen-c-f11-pc1",
+  "checks": [
+    {
+      "command": "pnpm install --frozen-lockfile",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "CI": true,
+      "base_conformance": {
+        "passed": 601,
+        "total": 601
+      },
+      "browser": "/usr/bin/chromium",
+      "built": true,
+      "command": "pnpm exec rer verify",
+      "exit": 0,
+      "head": "aa04f912a23befd32c390ca877f4e5a0d1c2da98",
+      "local_checks": 1,
+      "log": "reproduce-shard-1.log",
+      "node": "22.20.0",
+      "shard": "1/6"
+    },
+    {
+      "candidate_relevant_bytes_unchanged_since_execution": true,
+      "command": "node tests/platform/base-auth-runtime.mjs",
+      "exit": 0,
+      "log": "api-003-integrated-runtime.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck-integrated.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party-integrated.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "documents_written": 0,
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "git diff --exit-code origin/main...HEAD -- CONTRACT.md ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "git diff --quiet aa04f912a23befd32c390ca877f4e5a0d1c2da98 HEAD -- src migrations package.json pnpm-lock.yaml tests/platform/base-auth-runtime.mjs tests/platform/mcp-tools-cases.mjs",
+      "exit": 0
+    },
+    {
+      "CI": true,
+      "browser": "/usr/bin/chromium",
+      "built": true,
+      "command": "node tests/ui/run.mjs",
+      "exit": 0,
+      "head": "83d80f33869145ff2853f4e6d6b08e46b23acde1",
+      "isolated_port": 8814,
+      "log": "main-browser.log",
+      "node": "22.20.0",
+      "page_errors": [],
+      "unchanged_application_build": true
+    }
+  ],
+  "ci": {
+    "candidate_conclusion": "success",
+    "candidate_event": "pull_request",
+    "candidate_run": 42529338326,
+    "candidate_status": "completed",
+    "candidate_url": "https://github.com/just-every/run-linen/actions/runs/42529338326",
+    "dispatches": 0,
+    "github_calls_used": 8,
+    "local_repair_rounds": 0,
+    "polls": 2,
+    "prior_failed_jobs": [
+      128839089567,
+      128841778777
+    ],
+    "prior_failed_run": 42515978740,
+    "reruns": 0,
+    "resolution": "Merge published main fixes; no speculative repair after non-reproduction",
+    "saved_shard_replay_exit": 0
+  },
+  "completed_at": "2026-11-08T22:26:21.861351+00:00",
+  "contract_views_equal_merged_main": true,
+  "counts": {
+    "merged_main_and_candidate": {
+      "done": 20,
+      "missing": 37,
+      "partial": 142,
+      "total": 199
+    },
+    "saved_start": {
+      "done": 18,
+      "missing": 37,
+      "partial": 144,
+      "total": 199
+    },
+    "selected_points_closed": [
+      6
+    ],
+    "target_status_delta": 0,
+    "test_registrations_added": 0,
+    "test_registrations_removed": 0
+  },
+  "head": "edd950f35fc0966f86828c1220b83f18bc31135f",
+  "identity": {
+    "all_candidate_commits": "Run Edit Run fleet",
+    "candidate_commit_count": 2,
+    "log": "commit-identities.txt",
+    "trailers": []
+  },
+  "main_browser_comparison": {
+    "exit": 0,
+    "head": "83d80f33869145ff2853f4e6d6b08e46b23acde1",
+    "includes_offline_reply_assertion": true,
+    "log": "main-browser.log"
+  },
+  "main_equality": false,
+  "merged_main": "83d80f33869145ff2853f4e6d6b08e46b23acde1",
+  "migration_ledger": {
+    "applicable": false,
+    "reason": "No migration added or edited"
+  },
+  "packet_source_files": {
+    "migrations/0769_mcp_credentials.sql": "c9db221578907b83f974e734d56ee24168432f1bc0b9a34d6ac0949145bc7510",
+    "src/features/mcp/authority.ts": "d33d038be1240b55841692cbb954df2ca6f503f331dd2075a5cf78a6ffdd07c4",
+    "src/features/mcp/credentials.ts": "2310699a7eda859dae1c82f3ab500724295aab4e9451e8ff346315c3780a72e8",
+    "tests/platform/base-auth-runtime.mjs": "08288dcd7aaa0d4927e1bc7fd0f942e491e100105a5fd595a8d60cc9b9f2425e",
+    "tests/platform/mcp-tools-cases.mjs": "f1e9461c3487a7b47010297f5994318d48e8342210f2eb0b49dca1e6eb66eec6"
+  },
+  "pr": {
+    "head": "edd950f35fc0966f86828c1220b83f18bc31135f",
+    "html_url": "https://github.com/just-every/run-linen/pull/162",
+    "number": 162
+  },
+  "product_checkout_clean": true,
+  "publication_scan": {
+    "commit": "edd950f35fc0966f86828c1220b83f18bc31135f",
+    "complete": null,
+    "findings": null,
+    "historyScanned": null,
+    "status": "not run in cloud; fleet publication scan pending"
+  },
+  "published_saved_history_preserved": true,
+  "push": {
+    "attempts": 1,
+    "command": "python3 /home/agent/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f11-pc1",
+    "exit": 0,
+    "log": "product-push.log",
+    "remote_head_verified": "edd950f35fc0966f86828c1220b83f18bc31135f"
+  },
+  "ready_custody": {
+    "claim": "PARTIAL",
+    "exact_sha_verify_green": true,
+    "landing": false,
+    "points": [
+      6
+    ],
+    "product_push_verified": true
+  },
+  "repository": "just-every/run-linen",
+  "run_site": {
+    "run_id": null,
+    "status": "main-only guarded landing pending"
+  },
+  "saved_head": "aa04f912a23befd32c390ca877f4e5a0d1c2da98",
+  "saved_head_is_ancestor": true,
+  "schema": 1,
+  "tag": "sx-linen-c-f11-pc1",
+  "tree": "f69a8aa16b20afb00afbecfdb425fba85674cbb1"
+}

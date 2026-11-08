@@ -1,0 +1,4 @@
+
+> @linen-foundation/linen@0.1.1 typecheck /workspace/run-linen
+> tsc --noEmit
+
