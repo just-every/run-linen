@@ -29,5 +29,5 @@ print(json.dumps(out))`],{input:JSON.stringify(sources),encoding:'utf8'});
   await mf.ready;
   if(!initialized){const db=await mf.getD1Database('DB');for(const sql of JSON.parse(parsed.stdout))await db.prepare(sql).run();initialized=true;}
  }
- return {start,stop:()=>mf.dispose(),db:()=>mf.getD1Database('DB'),fetch:(...args)=>mf.dispatchFetch(...args),close:async()=>{if(mf)await mf.dispose();await rm(dir,{recursive:true,force:true});}};
+ return {start,stop:()=>mf.dispose(),db:()=>mf.getD1Database('DB'),artifacts:()=>mf.getR2Bucket('ATTACHMENTS'),fetch:(...args)=>mf.dispatchFetch(...args),close:async()=>{if(mf)await mf.dispose();await rm(dir,{recursive:true,force:true});}};
 }
