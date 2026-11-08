@@ -155,6 +155,34 @@ export async function catalogQuoteChecks(api, db, upload, r2) {
   // Staff on behalf: the requester is staff, the beneficiary reads, and a team-view manager does not (the item needs no approval).
   const behalf = await newWork('q-op', 'q-on-behalf', { beneficiaryId: 'q-ben' });
   const behalfQuote = await put(behalf, service, 'q-op'); assert.equal(behalfQuote.status, 201);
+
+  // Before submission, requester, beneficiary and owner are three distinct readers.
+  const draftReads = async () => (await db.prepare("SELECT actor_id,detail_json FROM audit_events WHERE action='work.catalog_quote_read' AND target=?")
+    .bind(behalf.id).all()).results.map(row => ({ actor: row.actor_id, ...JSON.parse(row.detail_json) }));
+  assert.deepEqual((await ok(`/work/${behalf.id}/catalog-requests`, undefined, as('q-op', 'operator'))).items, [],
+    'the quote has no submitted catalog request');
+  assert.equal((await db.prepare('SELECT fulfilment_id FROM work_attachments WHERE id=?').bind(behalfQuote.value.id).first()).fulfilment_id, null);
+  assert.deepEqual(await draftReads(), []);
+  for (const [user, role] of [['q-op', 'operator'], ['q-ben', 'employee'], ['owner', 'owner']]) {
+    const draft = await read(behalfQuote.value.id, user, role);
+    assert.equal(draft.status, 200, `${user} reads the unsubmitted quote`);
+    assert.deepEqual(new TextEncoder().encode(draft.value), quoteBytes, `${user} downloads the identical draft PDF bytes`);
+    assert.match(draft.headers.get('content-disposition'), /^attachment(?:;|$)/, 'a draft quote is downloaded, never inline');
+    assert.equal(draft.headers.get('x-content-type-options'), 'nosniff');
+    assert.deepEqual(await draftReads(), user === 'owner' ? [{ actor: 'owner', attachmentId: behalfQuote.value.id, relation: 'owner' }] : [],
+      'only the owner draft read produces a privileged-read audit, by id and relation without file content');
+  }
+  const beforeDeniedDraftReads = await draftReads();
+  for (const [user, role] of [['q-req', 'employee'], ['q-out', 'employee'], ['q-mgr', 'approver'], ['q-mgr2', 'approver'], ['q-fulfil', 'operator']]) {
+    const denied = await read(behalfQuote.value.id, user, role);
+    assert.equal(denied.status, 404, `${role} ${user} cannot read an unsubmitted quote`);
+    assert.equal(denied.headers.get('content-disposition'), null);
+    assert.ok(!JSON.stringify(denied.value).includes(quoteName) && !JSON.stringify(denied.value).includes('synthetic-linen-quote-body-marker'));
+  }
+  assert.deepEqual(await draftReads(), beforeDeniedDraftReads, 'refused draft readers record no successful privileged read');
+  assert.deepEqual((await ok(`/work/${behalf.id}/catalog-requests`, undefined, as('q-op', 'operator'))).items, [],
+    'reading or refusing the draft never submits it');
+
   assert.equal((await submit(behalf, service, 'q-op', { beneficiaryId: 'q-ben' })).status, 201, 'CATALOG-001 staff file a quote-backed item on someone\'s behalf');
   assert.equal((await read(behalfQuote.value.id, 'q-ben')).status, 200, 'CATALOG-001 the beneficiary reads the quote');
   assert.equal((await read(behalfQuote.value.id, 'q-op', 'operator')).status, 200);
