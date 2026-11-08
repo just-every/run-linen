@@ -48,6 +48,12 @@ export async function timeJourney({page,base,api,workId,out}) {
   await page.getByRole('heading',{name:'Human effort',exact:true}).waitFor();
   await captureJourney(page,{path:`${out}/DESK-012-effort.png`,fullPage:true});
   console.log('PASS DESK-012: manual and real measured active work feed the effort report at 1440');
+  // A native pending request makes the insufficient-evidence explanation observable.
+  const ownerId = (await api('/session')).principal.userId;
+  const pendingType = 'Synthetic linen pending tool';
+  const pendingCatalog = await api('/catalog', { name: pendingType, kind: 'access', target: 'synthetic-linen-603', ownerId });
+  const pending = await api('/work', { title: 'Synthetic linen pending request', body: 'Tool access awaiting fulfilment', deduplicationKey: 'synthetic-linen-604' });
+  await api(`/work/${pending.id}/fulfilment`, { catalogId: pendingCatalog.id, beneficiaryId: ownerId, purpose: 'Project work', expiresAt: null });
   // REPORT-004: the owner declares a role rate, then reads a baseline window beside this period.
   await page.getByText('Declare labor rates',{exact:true}).click();
   await page.getByLabel('Owner rate (USD/hour)',{exact:true}).fill('90');
@@ -68,7 +74,14 @@ export async function timeJourney({page,base,api,workId,out}) {
   // AGENT-006: the same report carries the ranked proposal, or says why nothing is ranked.
   const proposal=page.getByRole('region',{name:'Next automation proposal'}),next=saved.automationProposal.next;
   await proposal.getByText(next?`Automate ${next.requestType} next`:'No ranked request type still takes human minutes.',{exact:false}).first().waitFor();
+  const pendingRow = saved.requestTypes.find(r => r.requestType === pendingType);
+  assert.equal(pendingRow.current.verified, 0); assert.equal(pendingRow.current.pending, 1);
+  assert.ok(saved.automationProposal.notEnoughEvidence.includes(pendingType));
+  assert.ok(saved.automationProposal.ranked.every(r => r.requestType !== pendingType));
+  assert.notEqual(next?.requestType, pendingType);
   for(const type of saved.automationProposal.notEnoughEvidence)await proposal.getByText(type,{exact:false}).first().waitFor();
+  await proposal.getByText(/not enough evidence.*no verified outcome this period.*Synthetic linen pending tool/i).waitFor();
+  await proposal.getByText(/proposal; it authorizes nothing/i).waitFor();
   await proposal.scrollIntoViewIfNeeded();
   await captureJourney(page,{path:`${out}/AGENT-006-next-automation.png`,fullPage:true});
   console.log('PASS REPORT-004: owner-declared role rate prices recorded minutes in the baseline/current work-saved report at 1440');
