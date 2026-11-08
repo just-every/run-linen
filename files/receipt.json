@@ -1,0 +1,95 @@
+{
+  "repository": "just-every/run-linen",
+  "base": "c4e9852d1098215b0371a6c67a9a721be85a88cf",
+  "checks": [
+    {
+      "command": "timeout 1200 node tests/adoption/freshservice-import.mjs",
+      "exit": 0,
+      "proof": "Final test completed before commit; identical source bytes verified by clean working tree after commit and rebase."
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "ledger": "not applicable; no migrations changed",
+  "counts": {
+    "before": {
+      "done": 18,
+      "partial": 144,
+      "missing": 37,
+      "total": 199
+    },
+    "after": {
+      "done": 18,
+      "partial": 144,
+      "missing": 37,
+      "total": 199
+    }
+  },
+  "newTestRegistrations": 0,
+  "removedAssertions": 0,
+  "uiChanges": false,
+  "head": "0541d6cfdb64829d55c8bdb4892504097f0db108",
+  "tree": "cddb082945ab9137fc1fa22a8cab38cb459f825f",
+  "branch": "cloud/sx-linen-c-f13",
+  "recordedAt": "2026-11-08T19:35:35.704432+00:00",
+  "productPush": {
+    "status": "success",
+    "attempts": 1,
+    "remote": "https://github.com/just-every/run-linen.git",
+    "ref": "refs/heads/cloud/sx-linen-c-f13",
+    "head": "0541d6cfdb64829d55c8bdb4892504097f0db108"
+  },
+  "identityAudit": "Run Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>\n\n",
+  "files": {
+    "tests/adoption/lightweight-import-cases.mjs": "0ce9e8c4c31c16a6000cfed0ee51ba35ee3792e67dc89936031e9d85216783ef",
+    "tests/adoption/freshservice-import-harness.mjs": "2958032f93ed5c5d27261c76d79c1d2fffd7caa2b0012930aaf93450744a1f8e",
+    "sources.lock.json": "162054ce78eaa5bc97b872415a70420adb67316f31a109c0fcd5f8728e289ee7"
+  },
+  "exactHeadRuntime": {
+    "head": "0541d6cfdb64829d55c8bdb4892504097f0db108",
+    "command": "python3 /tmp/rer-reap.py timeout 1200 node tests/adoption/freshservice-import.mjs",
+    "exit": 0,
+    "elapsedSeconds": 80.584,
+    "worktreeClean": true
+  },
+  "ci": {
+    "conclusion": null,
+    "head_sha": "0541d6cfdb64829d55c8bdb4892504097f0db108",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42515785018",
+    "status": "in_progress",
+    "id": 42515785018,
+    "event": "pull_request"
+  },
+  "githubCallsUsed": 4,
+  "lastCiReadAt": "2026-11-08T19:40:46.614136+00:00"
+}

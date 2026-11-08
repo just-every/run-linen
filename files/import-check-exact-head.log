@@ -1,0 +1,17 @@
+PASS SELECT-only dry-run, explicit omissions, current-role denial and changed-review rejection
+PASS native session version revocation fences an already authenticated streaming import without persisting data
+PASS durable partial apply/restart/resume, idempotence, native relational readback, private-note fences, exact retained artifacts and inert import
+PASS conflict-safe undo preserves later native edits; unchanged import undo and partial rollback remove only owned data
+PASS tenant/mapped-identity denial and native adoption erasure removes retained custody, withdraws originals and rejects unsanitized replay
+PASS unrelated saved-ticket JSON job retains exact original through erasure, resumes into native work and remains undoable
+PASS unproved legacy session denied; freshly authenticated owner resumes, reads retained bytes and undoes
+PASS ticketMiningChecks: 14 source-custodied Freshservice tickets, exact three clusters and source membership, inert four-family drafts, estimates without measured savings, denied employee, duplicate and withdrawn sources
+PASS MIGRATE-004 Snipe-IT export of 500 devices: owner-only read-only dry run reports in-file and existing serial conflicts, apply refused until each is resolved and when Linen changed since review, then one atomic import records devices without Snipe-IT custody
+Fixture D1 batch failed Error: D1_ERROR: malformed JSON: SQLITE_ERROR
+PASS saved ServiceNow incident/sys_audit native import: SELECT-only review, source actor/time/priority, private owner scope, no inferred accounts/effects, durable replay, exact artifacts, conflicting audit/orphan/display-value refusal, source erasure and replay denial
+PASS CSV tickets: authenticated read-only review, exact quoted text/timestamps, reviewed checkpoint apply, inert restricted native readback, exact originals, idempotence and source/employee denial
+PASS CSV people: review, atomic source facts, no account/manager binding, explicit omissions, no overwrite, skip conflicts and concurrent destination refusal
+PASS CSV assets: owner-reviewed atomic stock record and typed custody, preserved source status without invented assignment, duplicate serial conflict
+PASS CSV and Zendesk undo: unchanged imports reverse; later native private corrections refuse undo and retry without losing native records or messages
+PASS people and asset CSV non-retention: dry runs leave D1 and private artifacts unchanged, apply retains no original text or base64, source facts and exact SHA-256 audit digests survive
+PASS Zendesk documented NDJSON/wrapped export: exact timestamps/visibility/attribution, inert native records, strict malformed-history refusal, scoped originals, erasure and replay refusal

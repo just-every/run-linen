@@ -1,0 +1,7 @@
+{
+  "head": "0541d6cfdb64829d55c8bdb4892504097f0db108",
+  "command": "python3 /tmp/rer-reap.py timeout 1200 node tests/adoption/freshservice-import.mjs",
+  "exit": 0,
+  "elapsedSeconds": 80.584,
+  "worktreeClean": true
+}
