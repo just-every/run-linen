@@ -7336,7 +7336,7 @@
       "executable": false
     },
     "tests/work/desk-routing-cases.mjs": {
-      "sha256": "1b23fa944564677659cd230ead5d0f85611fec43c4291d2388a2ab6c2b64f6db",
+      "sha256": "82184e5929786206da0f713166d8cf0e0d543a990fb43b441d7d161d9cc16a87",
       "executable": false
     },
     "tests/work/desk-scenario-cases.mjs": {
