@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f10",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f10",
+  "head": "501d996be75cc8ffa3429cf9af05cfec1dcde098",
+  "base": "c4e9852d1098215b0371a6c67a9a721be85a88cf",
+  "checks": [
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log",
+      "note": "Executed before commit with the identical source and test bytes recorded below."
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    },
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "note": "Private setup settings and its output are not in the evidence packet."
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "LINEN_TEST_BUILT=1 LINEN_CAPTURE=1 LINEN_TEST_OUTPUT=<packet>/browser cloud_run timeout 1200 node tests/ui/connected-run.mjs /tmp/linen-sharing-proof.mjs",
+      "exit": 0,
+      "log": "browser.log",
+      "driver": "browser-driver.mjs",
+      "head": "501d996be75cc8ffa3429cf9af05cfec1dcde098",
+      "note": "Calls the unchanged committed sharingJourney with Chromium /usr/bin/chromium and --no-sandbox; isolated native sign-in, no real sessions."
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "candidate-views-check.log",
+      "head": "501d996be75cc8ffa3429cf9af05cfec1dcde098"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "candidate-lock-check.log",
+      "head": "501d996be75cc8ffa3429cf9af05cfec1dcde098"
+    }
+  ],
+  "source_identity": [
+    {
+      "path": "tests/work/relationship-cases.mjs",
+      "sha256": "9b5b7dd29e6388979e8a128c8787d9d4a0109dc474df25fde88d42102d086fb3",
+      "working_tree_matches_head": true
+    },
+    {
+      "path": "tests/work/runtime.mjs",
+      "sha256": "181ef2276a92950caeb23433a36e79b458a204771d1209f21d06798e35a4e833",
+      "working_tree_matches_head": true
+    },
+    {
+      "path": "src/features/work/sharing.ts",
+      "sha256": "36429c3d0e9a2a3abeb93f5551518233f705b79431546bf39c57ad006ef55f01",
+      "working_tree_matches_head": true
+    },
+    {
+      "path": "src/features/work/core.ts",
+      "sha256": "c1297ba17383f750859c0c4539ac1a80c940ac7db9f81306506f920814720268",
+      "working_tree_matches_head": true
+    },
+    {
+      "path": "src/features/work/attachments.ts",
+      "sha256": "69deab61540b404cf459e6a46f7d43556e9f0b9ea8fe6bc42b0093a4cfbc08c1",
+      "working_tree_matches_head": true
+    },
+    {
+      "path": "tests/ui/sharing-journey.mjs",
+      "sha256": "65e657b8f62408a6c655cfaff97676124bc52fd5eeff06a089157d58990b2820",
+      "working_tree_matches_head": true
+    }
+  ],
+  "registered_test_delta": 0,
+  "contract_status_changes": [],
+  "generated_views_committed": false,
+  "migration_changes": false,
+  "scan": {
+    "commit": "501d996be75cc8ffa3429cf9af05cfec1dcde098",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "status": "NOT RUN in cloud; guarded Mac lander owns full-history publication scan"
+  },
+  "landing": {
+    "status": "pending",
+    "main_equals_candidate": false,
+    "run_site_on_candidate": null
+  },
+  "probes": [
+    {
+      "clause": "CHANNEL-009",
+      "point": 2,
+      "door": "ticket, attachment, share, message and download routes",
+      "result": "Public and private bytes uploaded and served to owner; colleague metadata empty and downloads 404; public reply 201 without new work or intake; HR share 422, no share or successful-share audit; private writes and revoked reads and replies 404"
+    }
+  ],
+  "browser_screens": [
+    {
+      "path": "browser/CHANNEL-009-colleague-1440.png",
+      "bytes": 282650,
+      "sha256": "58011ba15d4bec6703826e26076dd3a6723536bf9fb460a24dca9a1a276ea8ac"
+    },
+    {
+      "path": "browser/CHANNEL-009-manager-390.png",
+      "bytes": 68436,
+      "sha256": "6a9b54570d1106293bc7681d2ec0a3557ea8d14f6624fc2995eeda873d245061"
+    },
+    {
+      "path": "browser/CHANNEL-009-new-manager-1440.png",
+      "bytes": 257705,
+      "sha256": "541623c2526bd91b012d12a11baf3ecc032bc6e24363194507a475c28561158a"
+    },
+    {
+      "path": "browser/CHANNEL-009-shared-390.png",
+      "bytes": 42732,
+      "sha256": "b537038f1c3356ae18d690bada515e836d85e6fe1ec9cc328aea1c896fb747af"
+    }
+  ],
+  "pr": {
+    "base": "c4e9852d1098215b0371a6c67a9a721be85a88cf",
+    "draft": true,
+    "head": "501d996be75cc8ffa3429cf9af05cfec1dcde098",
+    "html_url": "https://github.com/just-every/run-linen/pull/150",
+    "number": 150
+  },
+  "counts": {
+    "before": {
+      "done": 18,
+      "partial": 144,
+      "missing": 37
+    },
+    "committed_after": {
+      "done": 18,
+      "partial": 144,
+      "missing": 37
+    },
+    "requested_after_gate": {
+      "done": 19,
+      "partial": 143,
+      "missing": 37
+    }
+  },
+  "remote_product_head": "501d996be75cc8ffa3429cf9af05cfec1dcde098",
+  "remote_main_head": "c4e9852d1098215b0371a6c67a9a721be85a88cf",
+  "git_history_shallow": false
+}
