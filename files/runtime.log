@@ -1,0 +1,7 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PASS API-001 scoped REST creation, audience isolation, one-time hash, expiry, revocation, live authority and transactional replay fences
+PASS API-003 point 6 native mint preserves populated membership, roles, approvals and service execution grants; MCP approval and decision refusals leave them unchanged
+PASS API-003 native owner mint/list/revoke; populated approval and grant preservation; no minted approval or decision authority; SHA-256 one-time secret; closed scopes/tools and expiry; separate audiences; published registry and scoped ticket calls; live roles/membership; audit without bodies or secret; principal erasure/hash removal
+PASS Base native claim race, Lobby/setup, ordinary provider email-link replay, native membership/password/session retention and revocation, bound step-up proof, CSRF/origin, dev gate and production denial

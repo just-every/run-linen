@@ -1,0 +1,46 @@
+{
+  "head": "30646fdeb3e2564d9f702ac2c716c3a1ba843396",
+  "base": "0cae7fe338def5f96f52df2468f91f078a36827f",
+  "product_files": [
+    "sources.lock.json",
+    "tests/platform/base-auth-runtime.mjs",
+    "tests/platform/mcp-tools-cases.mjs"
+  ],
+  "contract_changes": false,
+  "generated_view_changes": false,
+  "added_email_shaped_strings": [],
+  "identity_and_trailers": "PASS; all candidate commits, including side parents",
+  "counts_before": {
+    "done": 18,
+    "partial": 144,
+    "missing": 37
+  },
+  "counts_after": {
+    "done": 18,
+    "partial": 144,
+    "missing": 37
+  },
+  "tests_added": 0,
+  "tests_removed": 0,
+  "test_registration": "existing Native sign-in and scoped API journey extended",
+  "local_gates": {
+    "runtime": 0,
+    "typecheck": 0,
+    "first_party": 0,
+    "views_write": 0,
+    "views_check": 0,
+    "lock": 0,
+    "lock_check": 0,
+    "migration_ledger": "not applicable; no migration changes"
+  },
+  "publication_scan": {
+    "commit": "30646fdeb3e2564d9f702ac2c716c3a1ba843396",
+    "complete": false,
+    "historyScanned": false,
+    "findings": null,
+    "reason": "deferred to maintained Mac lander under cloud instructions; no cloud scan performed"
+  },
+  "main_equality": false,
+  "guarded_landing": "pending",
+  "run_site": "pending; main only"
+}

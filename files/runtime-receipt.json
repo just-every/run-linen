@@ -1,0 +1,8 @@
+{
+  "command": "node tests/platform/base-auth-runtime.mjs",
+  "exit": 0,
+  "head": "30646fdeb3e2564d9f702ac2c716c3a1ba843396",
+  "tree": "3eb7654322229e8143ec092e22e09e3cb86eb15e",
+  "completedAt": "2026-11-08T20:05:31.546501+00:00",
+  "log": "runtime-exact-sha.log"
+}

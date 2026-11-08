@@ -1,0 +1,8 @@
+{
+  "selection": "explicit regular report and receipt files only",
+  "symlinks": false,
+  "secret_pattern_findings": 0,
+  "private_gate_material": false,
+  "environment_dumps": false,
+  "public_repository_handling": true
+}

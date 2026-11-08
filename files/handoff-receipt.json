@@ -1,0 +1,32 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f15",
+  "head": "30646fdeb3e2564d9f702ac2c716c3a1ba843396",
+  "pr": "https://github.com/just-every/run-linen/pull/154",
+  "point": 6,
+  "clause": "API-003",
+  "claim": "PARTIAL",
+  "local_checks": "pass",
+  "counts_before": [
+    18,
+    144,
+    37
+  ],
+  "counts_after": [
+    18,
+    144,
+    37
+  ],
+  "ci": {
+    "id": 42518243082,
+    "name": "Verify",
+    "event": "pull_request",
+    "status": "in_progress",
+    "conclusion": null,
+    "head_sha": "30646fdeb3e2564d9f702ac2c716c3a1ba843396",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42518243082",
+    "github_calls": 3,
+    "observedAt": "2026-11-08T20:09:45.506525+00:00"
+  },
+  "custody": "pushed, exact-SHA Verify running"
+}
