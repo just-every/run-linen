@@ -1,0 +1,12 @@
+{
+  "head": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "job_compared": 128798332501,
+  "command": "LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 CI=true pnpm exec rer verify",
+  "cloud_browser_override": "LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium",
+  "node": "22.20.0",
+  "same_vm_as_candidate": true,
+  "built_application_unchanged_from_candidate": true,
+  "test": "sandboxJourney: Save catalog form",
+  "exit": 0,
+  "log": "reproduce-main-shard-1.log"
+}

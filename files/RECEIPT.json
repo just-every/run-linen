@@ -1,0 +1,743 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f5",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f5",
+  "head": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+  "base": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+  "recorded_at": "2026-11-08T17:24:04.300157+00:00",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "note": "Setup completed locally, including the application build and local migrations; private settings excluded."
+    },
+    {
+      "command": "cloud_run timeout 1200 node tests/adoption/freshservice-import.mjs",
+      "exit": 0,
+      "log": "import-check.log",
+      "tested_source_sha256": "5eff6011d492cf73f0fe4ccf73ee2ea9cdd65e640331a16b9c432e59b00d224a"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party-check.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "contract-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "contract-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "source-lock.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "source-check.log"
+    },
+    {
+      "command": "cloud_run timeout 1200 node tests/adoption/freshservice-import.mjs",
+      "head": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+      "exit": 0,
+      "log": "exact-head-import.log",
+      "source_sha256": "5eff6011d492cf73f0fe4ccf73ee2ea9cdd65e640331a16b9c432e59b00d224a",
+      "note": "Repeated after committing and pushing the final source to bind proof to the exact candidate.",
+      "elapsed_seconds_observed_from_log_birth_and_final_write": 113
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "counts_before": {
+    "done": 15,
+    "partial": 147,
+    "missing": 37,
+    "total": 199
+  },
+  "counts_after": {
+    "done": 15,
+    "partial": 147,
+    "missing": 37,
+    "total": 199
+  },
+  "status_changes": [],
+  "new_test_registrations": 0,
+  "removed_test_registrations": 0,
+  "migration_ledger": {
+    "applicable": false,
+    "reason": "No migrations changed"
+  },
+  "browser_proof": {
+    "applicable": false,
+    "reason": "Test-only change; no screens changed"
+  },
+  "publication_scan": {
+    "commit": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "status": "NOT RUN: reserved for the Mac guarded lander"
+  },
+  "product_push": {
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f5",
+    "exit": 0,
+    "attempts": 1,
+    "log": "product-push.log"
+  },
+  "main_equals_candidate": false,
+  "main_note": "Product branch only; landing reserved for fleet",
+  "github_calls_used": 7,
+  "identity_check": {
+    "candidate_commits": 1,
+    "including_side_parents": true,
+    "authors_and_committers": "Run Edit Run fleet",
+    "trailers": [],
+    "exit": 0
+  },
+  "tracked_files_changed": [
+    "sources.lock.json",
+    "tests/adoption/snipeit-import-cases.mjs"
+  ],
+  "contract_diff_empty": true,
+  "generated_views_diff_empty": true,
+  "test_source_unchanged_since_first_passing_run": true,
+  "worktree_clean": true,
+  "pr": {
+    "base": "main",
+    "draft": true,
+    "head": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+    "html_url": "https://github.com/just-every/run-linen/pull/143",
+    "number": 143
+  },
+  "ci_discovery": [
+    {
+      "conclusion": null,
+      "event": "pull_request",
+      "head_sha": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42502549539",
+      "id": 42502549539,
+      "name": "Verify",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": null,
+      "event": "dynamic",
+      "head_sha": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42502546582",
+      "id": 42502546582,
+      "name": "PR #143",
+      "status": "in_progress"
+    }
+  ],
+  "local_gates_complete": true,
+  "remote_refs": {
+    "refs/heads/cloud/sx-linen-c-f5": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+    "refs/heads/main": "8c800ef6a0097af750b5b91ed7ce46ff187f094f"
+  },
+  "verify": {
+    "conclusion": "failure",
+    "head_sha": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42502549539",
+    "status": "completed",
+    "id": 42502549539,
+    "event": "pull_request",
+    "github_calls_used": 5,
+    "observed_at": "2026-11-08T17:09:01Z"
+  },
+  "full_history_available": true,
+  "verify_jobs": [
+    {
+      "conclusion": "success",
+      "id": 128798239200,
+      "name": "light",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm install --frozen-lockfile"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm exec rer check --profile first-party"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run node src/base/contract-docs.mjs check"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm typecheck"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm source:check"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm test:site"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "success",
+      "id": 128798239409,
+      "name": "build",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm install --frozen-lockfile"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm exec rer build"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/upload-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "success",
+      "id": 128798332476,
+      "name": "journeys (2)",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm install --frozen-lockfile"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Install browser and engineering sandbox"
+        },
+        {
+          "conclusion": "success",
+          "name": "Check Linux engineering sandbox prerequisites"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm exec rer verify"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/upload-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "success",
+      "id": 128798332477,
+      "name": "journeys (4)",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm install --frozen-lockfile"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Install browser and engineering sandbox"
+        },
+        {
+          "conclusion": "success",
+          "name": "Check Linux engineering sandbox prerequisites"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm exec rer verify"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/upload-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "success",
+      "id": 128798332487,
+      "name": "journeys (6)",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm install --frozen-lockfile"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Install browser and engineering sandbox"
+        },
+        {
+          "conclusion": "success",
+          "name": "Check Linux engineering sandbox prerequisites"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm exec rer verify"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/upload-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "id": 128798332501,
+      "name": "journeys (1)",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm install --frozen-lockfile"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Install browser and engineering sandbox"
+        },
+        {
+          "conclusion": "success",
+          "name": "Check Linux engineering sandbox prerequisites"
+        },
+        {
+          "conclusion": "failure",
+          "name": "Run pnpm exec rer verify"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/upload-artifact@v4"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Post Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "success",
+      "id": 128798332525,
+      "name": "journeys (5)",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm install --frozen-lockfile"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Install browser and engineering sandbox"
+        },
+        {
+          "conclusion": "success",
+          "name": "Check Linux engineering sandbox prerequisites"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm exec rer verify"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/upload-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "success",
+      "id": 128798332537,
+      "name": "journeys (3)",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm install --frozen-lockfile"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Install browser and engineering sandbox"
+        },
+        {
+          "conclusion": "success",
+          "name": "Check Linux engineering sandbox prerequisites"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm exec rer verify"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/upload-artifact@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run pnpm/action-setup@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "id": 128800800461,
+      "name": "verify",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "failure",
+          "name": "Require every verification tier"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    }
+  ],
+  "failed_job_log_command": "gh run view 42502549539 --repo just-every/run-linen --job 128798332501 --log-failed",
+  "failed_job_log_exit": 0,
+  "failed_job_log": "failed-journey-1.log",
+  "import_journey_ci": {
+    "run": 42502549539,
+    "event": "pull_request",
+    "job": 128798332525,
+    "shard": "5/6",
+    "conclusion": "success",
+    "head": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975"
+  },
+  "unexpected_ci_failure": {
+    "job": 128798332501,
+    "shard": "1/6",
+    "test": "sandboxJourney: Save catalog form",
+    "failure": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\" at tests/ui/sandbox-journey.mjs:25 and :85",
+    "reproduction_pending": false,
+    "changed_code_in_failure_path": false,
+    "candidate_reproduction_exit": 0,
+    "reproduced": false,
+    "main_comparison_pending": false,
+    "main_comparison_exit": 0
+  },
+  "candidate_failed_shard_reproduction": {
+    "head": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+    "job": 128798332501,
+    "command": "LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 CI=true pnpm exec rer verify",
+    "cloud_browser_override": "LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium",
+    "node": "22.20.0",
+    "test": "sandboxJourney: Save catalog form",
+    "exit": 0,
+    "ci_failure": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\" at tests/ui/sandbox-journey.mjs:25 and :85",
+    "log": "reproduce-candidate-shard-1.log",
+    "result": "NOT REPRODUCED: full failed shard passed locally",
+    "failure": null
+  },
+  "repair_rounds": 0,
+  "ci_reruns": 0,
+  "main_failed_shard_comparison": {
+    "head": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+    "job_compared": 128798332501,
+    "command": "LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 CI=true pnpm exec rer verify",
+    "cloud_browser_override": "LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium",
+    "node": "22.20.0",
+    "same_vm_as_candidate": true,
+    "built_application_unchanged_from_candidate": true,
+    "test": "sandboxJourney: Save catalog form",
+    "exit": 0,
+    "log": "reproduce-main-shard-1.log"
+  },
+  "terminal_status": "BLOCKED",
+  "blocker": "Exact-SHA Verify failed in unchanged sandboxJourney on a 30-second response timeout; full failed shard passes locally on both candidate and main. The brief requires stopping when the failure cannot be reproduced.",
+  "product_changes_after_push": false,
+  "product_commit": {
+    "head": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+    "tree": "830a78245adde12fc42a6f968d61404d4dabad36",
+    "parent": "8c800ef6a0097af750b5b91ed7ce46ff187f094f",
+    "subject": "Prove Snipe-IT import file bounds and unique tags"
+  }
+}

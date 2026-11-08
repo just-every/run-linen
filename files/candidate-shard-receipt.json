@@ -1,0 +1,13 @@
+{
+  "head": "981a98a223faf9ff2ae0e6c8041a0c8c5baf4975",
+  "job": 128798332501,
+  "command": "LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 CI=true pnpm exec rer verify",
+  "cloud_browser_override": "LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium",
+  "node": "22.20.0",
+  "test": "sandboxJourney: Save catalog form",
+  "exit": 0,
+  "ci_failure": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\" at tests/ui/sandbox-journey.mjs:25 and :85",
+  "log": "reproduce-candidate-shard-1.log",
+  "result": "NOT REPRODUCED: full failed shard passed locally",
+  "failure": null
+}

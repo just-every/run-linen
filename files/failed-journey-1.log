@@ -1,0 +1,84 @@
+journeys (1)	Run pnpm exec rer verify	﻿2026-11-08T16:59:31.2986317Z ##[group]Run pnpm exec rer verify
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:31.2986587Z [36;1mpnpm exec rer verify[0m
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:31.3004116Z shell: /usr/bin/bash -e {0}
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:31.3004345Z env:
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:31.3004520Z   LINEN_VERIFY_SHARD: 1/6
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:31.3004719Z   LINEN_TEST_BUILT: 1
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:31.3004903Z   CI: true
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:31.3005110Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:31.3005375Z ##[endgroup]
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:31.9725564Z Checking pinned pnpm
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:32.1746831Z 10.12.4
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:32.4475754Z Verifying application
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:32.6627697Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:32.6628714Z > @linen-foundation/linen@0.1.1 verify:app [REDACTED]
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:32.6629126Z > node scripts/verify.mjs
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:32.6629273Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:32.6860501Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T16:59:32.6861237Z Checking Employee service desk browser (shard 1/6)
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:00:45.5812066Z PASS LIFE-007: lifecycle evidence download with outstanding duties at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:01:09.5601085Z PASS ASSET-004: physical lifecycle, loan, assigned/certificate refusals and attributed disposal at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:01:15.2720460Z PASS ASSET-007: attach AppleCare and all contract kinds, manufacturer lookup and repair coverage/expiry alerts at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:01:24.0383679Z PASS DESK-002 real Worker browser 1440: unavailable provider visible, type/category/subcategory/impact/urgency matrix, P1 -> P2 override and persisted audited before/after.
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:02:18.8854436Z CATALOG-002 native item, cost, explicit finance stage/calendar, OOO delegation, manager and finance decisions with keyboard and responsive evidence.
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:08.8837150Z PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8172350Z node:internal/modules/run_main:123
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8172913Z     triggerUncaughtException(
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8173309Z     ^
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8173545Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8174120Z page.waitForResponse: Timeout 30000ms exceeded while waiting for event "response"
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8174940Z     at writeClick ([REDACTED]/tests/ui/sandbox-journey.mjs:25:23)
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8175577Z     at async sandboxJourney ([REDACTED]/tests/ui/sandbox-journey.mjs:85:2)
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8176002Z     at async file://[REDACTED]/tests/ui/browser.mjs:569:3 {
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8176389Z   log: [],
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8176643Z   name: 'TimeoutError'
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8176913Z }
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8177049Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8177148Z Node.js v22.20.0
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8792090Z file://[REDACTED]/tests/ui/run.mjs:108
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8792733Z       code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8793225Z                               ^
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8793469Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8793663Z Error: Browser acceptance exited 1
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8794425Z     at ChildProcess.<anonymous> (file://[REDACTED]/tests/ui/run.mjs:108:31)
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8795154Z     at ChildProcess.emit (node:events:519:28)
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8795725Z     at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8795972Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8796059Z Node.js v22.20.0
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.8999470Z  ELIFECYCLE  Command failed with exit code 1.
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9696596Z Verifying application: exit 1, signal none.
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9697039Z Command: pnpm
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9697270Z Last output (up to 40 lines):
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9697422Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9697593Z > @linen-foundation/linen@0.1.1 verify:app [REDACTED]
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9697885Z > node scripts/verify.mjs
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9698024Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9698030Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9698181Z Checking Employee service desk browser (shard 1/6)
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9698603Z PASS LIFE-007: lifecycle evidence download with outstanding duties at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9699161Z PASS ASSET-004: physical lifecycle, loan, assigned/certificate refusals and attributed disposal at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9700253Z PASS ASSET-007: attach AppleCare and all contract kinds, manufacturer lookup and repair coverage/expiry alerts at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9701158Z PASS DESK-002 real Worker browser 1440: unavailable provider visible, type/category/subcategory/impact/urgency matrix, P1 -> P2 override and persisted audited before/after.
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9702123Z CATALOG-002 native item, cost, explicit finance stage/calendar, OOO delegation, manager and finance decisions with keyboard and responsive evidence.
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9702939Z PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9703423Z node:internal/modules/run_main:123
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9703690Z     triggerUncaughtException(
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9704098Z     ^
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9704197Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9704472Z page.waitForResponse: Timeout 30000ms exceeded while waiting for event "response"
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9705044Z   log: [],
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9705240Z   name: 'TimeoutError'
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9705441Z }
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9705541Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9705625Z Node.js v22.20.0
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9705881Z file://[REDACTED]/tests/ui/run.mjs:108
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9706233Z       code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9706553Z                               ^
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9706707Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9706813Z Browser acceptance exited 1
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9706960Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9707038Z Node.js v22.20.0
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9707618Z  ELIFECYCLE  Command failed with exit code 1.
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9707956Z Log: [REDACTED]/.seed/installer/install.log
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9708335Z verify: failed (exit 1)
+journeys (1)	Run pnpm exec rer verify	2026-11-08T17:03:56.9898162Z ##[error]Process completed with exit code 1.
