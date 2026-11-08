@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 20 | 129 | 29 | 178 |
+| Core | 21 | 128 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 20 | 142 | 37 | 199 |
+| Full target | 21 | 141 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -933,7 +933,7 @@ Core · target · **partial**
 
 #### DESK-021 — Awaiting-requester reminders and closure
 
-Core · target · **partial** · From DESK-005
+Core · target · **done** · From DESK-005
 
 **Requirement.** A ticket waiting on its requester is reminded, then closed with a disclosure the requester can undo by reopening.
 
@@ -945,8 +945,8 @@ Core · target · **partial** · From DESK-005
 5. A public message from the requester or beneficiary after the pause stops both, as does the ticket leaving the paused-awaiting-requester state.
 6. A business day is one working day's hours on the ticket's SLA calendar, skipping non-working days and holidays, or 24 hours without a calendar.
 
-**Evidence.** `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs`
-**Gap.** Not asserted: that the requester can reopen the automatically closed ticket, and that leaving the paused-awaiting-requester state stops the reminder and resolution. Reminder, disclosed close and reply-stops-both are asserted.
+**Evidence.** `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (escalationChecks)
+**Gap.** None.
 
 #### DESK-006 — Ticket relationships
 
