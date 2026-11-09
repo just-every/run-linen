@@ -44,12 +44,30 @@ export async function bundleChecks({ ok, api, db, actor, future }) {
       return children;
     };
     const childrenBefore = await readChildren();
+    const expiryDuties = (await ok(`/work/${requested.workId}/obligations`, undefined, 'employee')).items
+      .filter(o => o.kind === 'access.revoke');
+    assert.equal(expiryDuties.length, 2, 'each software child keeps its own expiry duty even when capacity is held');
+    for (const item of capacityItems.slice(2)) {
+      const duty = expiryDuties.find(o => o.target === `synthetic-linen-bundle-${capacityItems.indexOf(item)}`);
+      assert.ok(duty, 'each software child has an expiry responsibility');
+      assert.equal(duty.beneficiary_id, submitted.beneficiaryId);
+      assert.equal(duty.due_at, submitted.expiresAt, 'the native expiry responsibility retains the submitted expiry');
+    }
     // The first request reserves a device and a licence; the second has stock but no licence; the third has neither.
     const reserved = round === 0 ? [0, 2] : round === 1 ? [0] : [];
     for (const index of reserved) expectedReservations.push({ catalog_id: capacityItems[index].id, work_id: requested.workId, beneficiary_id: 'employee', released_at: null });
     const sortedReservations = () => [...expectedReservations].sort((a, b) => a.catalog_id.localeCompare(b.catalog_id) || a.work_id.localeCompare(b.work_id));
     assert.deepEqual(await reservations(), sortedReservations(), 'CATALOG-004 each child reserves only its own remaining stock or licence capacity');
     assert.deepEqual(await executionSnapshot(), existingExecution, 'CATALOG-004 requesting a bundle preserves existing execution grants and dispatch state');
+    assert.deepEqual(await ok(`/catalog-bundles/${capacityBundle.id}/request`, input), requested,
+      'replaying the bundle request keeps the same ticket and child responsibilities');
+    assert.deepEqual(await readChildren(), childrenBefore, 'request replay keeps the same child identities and shared facts');
+    assert.deepEqual(await reservations(), sortedReservations(), 'request replay consumes no extra child capacity');
+    const changedReplay = await api(`/catalog-bundles/${capacityBundle.id}/request`, { ...input, expiresAt: future(172800000) });
+    assert.equal(changedReplay.status, 409, 'a captured request cannot be replayed with a different expiry');
+    assert.deepEqual(await readChildren(), childrenBefore, 'refused replay preserves every original child expiry');
+    assert.deepEqual(await reservations(), sortedReservations(), 'refused replay changes no child reservation');
+    assert.deepEqual(await executionSnapshot(), existingExecution, 'request replays supply no execution authority');
     const queue = (await ok('/fulfilment-decisions', undefined, holder)).items.filter(i => i.workId === requested.workId);
     assert.equal(queue.length, capacityItems.length);
     const decision = { idempotencyKey: `synthetic-linen-bundle-approval-${round}`, approvals: queue.map(q => ({ ...q, expectedHolderId: q.holderId })) };
@@ -76,6 +94,10 @@ export async function bundleChecks({ ok, api, db, actor, future }) {
       assert.equal(child.reason, reserved.includes(index) ? null : index < 2 ? 'No stock; acquisition owner required' : 'No license capacity; license owner required');
     }
     assert.deepEqual(await reservations(), sortedReservations(), 'CATALOG-004 approval neither borrows capacity nor reserves a child twice');
+    assert.deepEqual(await ok(`/work/${requested.workId}/bundle/approve`, decision, holder), approved,
+      'approval replay keeps one bundle decision and the same exact child approval identities');
+    assert.deepEqual(await readChildren(), childrenBefore, 'approval replay preserves every submitted child fact');
+    assert.deepEqual(await reservations(), sortedReservations(), 'approval replay consumes no extra child capacity');
     assert.deepEqual(await executionSnapshot(), existingExecution, 'CATALOG-004 manager approval leaves all existing execution-grant identities and effects unchanged');
   }
   console.log('PASS CATALOG-004 native child facts and capacity: shared submitted person, purpose and expiry; independent stock and licence exhaustion; current-manager approval creates no grant or dispatch');
