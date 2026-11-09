@@ -1,0 +1,236 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f78",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f78",
+  "startingHead": "80968f079012c867367f68a4c550ecad7f50dd13",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "result": "Dependencies installed, application built and local migrations applied. No provider setup or deployment."
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "result": "Wrote 0 contract documents."
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "result": "Contract prose: 0 errors, 0 warnings. Contract documents are current."
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node --check tests/work/project-cases.mjs",
+      "exit": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "result": "WORK runtime passed, including both selected project probes, D1 and R2 restart, revoked membership, erasure and replay denial."
+    }
+  ],
+  "scope": {
+    "clause": "PROJECT-001",
+    "claim": "PARTIAL",
+    "points": [
+      4,
+      7
+    ],
+    "productionSourceChanges": false,
+    "registeredTestDelta": 0,
+    "contractCellsChanged": false,
+    "generatedViewsCommitted": false
+  },
+  "countsBefore": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37
+  },
+  "countsAfter": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37
+  },
+  "publicationScan": {
+    "status": "not-run-cloud-handoff",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "mainEquality": false,
+  "runSite": {
+    "status": "pending-guarded-landing"
+  },
+  "head": "f211ab56f11a02373744745fefe0c7f519b954c2",
+  "observedAt": "2026-11-09T16:19:48.498098+00:00",
+  "mainHead": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+  "productPush": {
+    "exit": 0,
+    "attempts": 1,
+    "branch": "cloud/sx-linen-c-f78",
+    "head": "f211ab56f11a02373744745fefe0c7f519b954c2"
+  },
+  "candidateCommitCount": 2,
+  "identityAudit": {
+    "exit": 0,
+    "allSideParentsIncluded": true,
+    "unexpectedTrailers": 0,
+    "openAiCoauthors": 0
+  },
+  "finalMechanical": {
+    "viewsWrite": {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    "viewsCheck": {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    "generatedViewsRestored": true,
+    "lock": {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    "lockCheck": {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    "migrationLedger": {
+      "command": null,
+      "exit": 0,
+      "reason": "No migration added or changed."
+    },
+    "finalGitDiffExit": 0
+  },
+  "sourceHashes": {
+    "tests/work/project-cases.mjs": "f751641a1d42250b8dc8c9a936c3d67e7590f7844f67ee54cec79479ccce79dc",
+    "tests/work/runtime.mjs": "2e669ea118062aabdd3b1ebe99037002131ac0899ed2484af1f5817d3cedd8be",
+    "src/features/work/projects.ts": "066974b3fb87c0daa11b7ffb9ec3d8bd1d2069064bee526e61a66e6e80c61018",
+    "src/features/work/project-routes.ts": "3c400f9fa96445efbe291caf694405a2880b227487f8359ac93bb61f52522301",
+    "sources.lock.json": "176554c83a9e981af2d511fe5c5c971853bb5a881fd5cd51e7b476a27fd1a793"
+  },
+  "apiCallsUsed": 6,
+  "pullRequest": {
+    "draft": true,
+    "head_sha": "f211ab56f11a02373744745fefe0c7f519b954c2",
+    "html_url": "https://github.com/just-every/run-linen/pull/207",
+    "number": 207
+  },
+  "ciDiscovery": {
+    "observedAt": "2026-11-09T16:20:02Z",
+    "runs": [
+      {
+        "conclusion": null,
+        "event": "dynamic",
+        "head_sha": "f211ab56f11a02373744745fefe0c7f519b954c2",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42653629474",
+        "id": 42653629474,
+        "name": "PR #207",
+        "status": "in_progress"
+      }
+    ]
+  },
+  "committedSourceMatchesLocalProof": true,
+  "verifyDispatch": {
+    "command": "gh api --method POST repos/just-every/run-linen/actions/workflows/verify.yml/dispatches -f ref=cloud/sx-linen-c-f78",
+    "exit": 0,
+    "reason": "No Verify in first exact-head workflow discovery after PR creation.",
+    "observedAt": "2026-11-09T16:21:24Z"
+  },
+  "githubApiLedger": [
+    {
+      "call": 1,
+      "action": "Exact initial-main workflow run discovery",
+      "head": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b"
+    },
+    {
+      "call": 2,
+      "action": "Create draft PR 207 for named product branch"
+    },
+    {
+      "call": 3,
+      "action": "Exact candidate-head run discovery at 16:20:02 UTC",
+      "head": "f211ab56f11a02373744745fefe0c7f519b954c2"
+    },
+    {
+      "call": 4,
+      "action": "Single Verify dispatch after no Verify found",
+      "head": "f211ab56f11a02373744745fefe0c7f519b954c2"
+    },
+    {
+      "call": 5,
+      "action": "Exact candidate-head discovery after five-minute interval",
+      "head": "f211ab56f11a02373744745fefe0c7f519b954c2"
+    },
+    {
+      "call": 6,
+      "action": "Cancel dispatch duplicate after delayed PR Verify appeared",
+      "run": 42653914646
+    }
+  ],
+  "ciFinalObservation": {
+    "observedAt": "2026-11-09T16:25:27Z",
+    "runs": [
+      {
+        "conclusion": null,
+        "event": "workflow_dispatch",
+        "head_sha": "f211ab56f11a02373744745fefe0c7f519b954c2",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42653914646",
+        "id": 42653914646,
+        "name": "Verify",
+        "status": "in_progress"
+      },
+      {
+        "conclusion": null,
+        "event": "pull_request",
+        "head_sha": "f211ab56f11a02373744745fefe0c7f519b954c2",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42653691847",
+        "id": 42653691847,
+        "name": "Verify",
+        "status": "in_progress"
+      },
+      {
+        "conclusion": "success",
+        "event": "dynamic",
+        "head_sha": "f211ab56f11a02373744745fefe0c7f519b954c2",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42653629474",
+        "id": 42653629474,
+        "name": "PR #207",
+        "status": "completed"
+      }
+    ],
+    "exactHead": "f211ab56f11a02373744745fefe0c7f519b954c2"
+  },
+  "terminalProductCustody": "PUSHED; exact-head PR Verify in progress, no green claim",
+  "duplicateCancellation": {
+    "run": 42653914646,
+    "command": "gh api --method POST repos/just-every/run-linen/actions/runs/42653914646/cancel",
+    "exit": 0,
+    "result": "Cancellation request accepted; no subsequent status poll."
+  }
+}
