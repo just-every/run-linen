@@ -192,7 +192,8 @@ svg {
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 80ms linear 0s;
+  /* Keep the hover dwell without animating the tooltip's appearance. */
+  transition: opacity 0s linear 0s;
 }
 [data-tip]:hover::after {
   opacity: 1;

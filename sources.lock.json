@@ -3604,7 +3604,7 @@
       "executable": false
     },
     "src/features/work/search-match.ts": {
-      "sha256": "58b9d3122ba9e3a403852addf7dc3db9748df85835e2e543760357185ba21ddd",
+      "sha256": "b4ff46992a725f01bdb169d65223051df3ad8d9983f15a47d92efeed3f44b96b",
       "executable": false
     },
     "src/features/work/search-sources.ts": {
@@ -5944,7 +5944,7 @@
       "executable": false
     },
     "src/styles/base.css": {
-      "sha256": "46de1992ee55b9133b946c77bbfb56364671593725ce5d1406ac7eeecc1c65e4",
+      "sha256": "8ee51b408f61719971e476c80b3b4570681052c33204d7f29a92bb443f37df55",
       "executable": false
     },
     "src/styles/commitments.css": {
@@ -7256,7 +7256,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "8768a86c8bfd3bfe67f6a79e5b4c81ecf4590aacb4247e0de09a7cbf38725775",
+      "sha256": "2c8b6343aa5010fc3b303e3c3d4964a68c140046323a88643d580f827bfcb811",
       "executable": false
     },
     "tests/work/approval-chain-cases.mjs": {
@@ -7452,7 +7452,7 @@
       "executable": false
     },
     "tests/work/search-cases.mjs": {
-      "sha256": "2271cdbcaf08439fcf645289facbd7de71cc3933c0de461d311119887922a3b8",
+      "sha256": "4ff17c09dca8a5248662bb45ed298943b0f1558f4f3ce169cb1b0666910c43b2",
       "executable": false
     },
     "tests/work/sla-policy-cases.mjs": {
