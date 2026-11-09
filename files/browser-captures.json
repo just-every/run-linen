@@ -1,0 +1,48 @@
+{
+  "head": "fab12d8d54a56ed3512268e2632888aeddd21ade",
+  "journey": "tests/ui/desk-field-journey.mjs#deskFieldJourney",
+  "images": [
+    {
+      "file": "browser/DESK-010-awaiting-parts-390px.png",
+      "width": 390,
+      "height": 3399,
+      "sha256": "eaf300e6c2d0e5d4b1807e9d0b70a795a40a1550d8854d2b7f018164cfd7680d"
+    },
+    {
+      "file": "browser/DESK-010-awaiting-parts.png",
+      "width": 1440,
+      "height": 2657,
+      "sha256": "60269d616ae766568b89badc6c969167feb44e96c1cf35e0e32c31bff79d9d41"
+    },
+    {
+      "file": "browser/DESK-010-report-390px.png",
+      "width": 390,
+      "height": 3830,
+      "sha256": "e6e7b0a884563b3b764fd83afb76d66436537f9aee9640c25a316098b61779e6"
+    },
+    {
+      "file": "browser/DESK-010-report.png",
+      "width": 1440,
+      "height": 2426,
+      "sha256": "ddcb85011e0483e6c45974efe07d25cc4c97417f9292f54a822278017c810b29"
+    },
+    {
+      "file": "browser/DESK-010-resolved-390px.png",
+      "width": 390,
+      "height": 3930,
+      "sha256": "efea0d906575eb8714d34461920c3b13502e238a64b4048ca9ed562481b0b86c"
+    },
+    {
+      "file": "browser/DESK-010-resolved.png",
+      "width": 1440,
+      "height": 2989,
+      "sha256": "1112ee9cae2ddbd7c483f1ebfb176a7fcfc34822a406ad898f697029bcf78050"
+    }
+  ],
+  "screenStates": [
+    "paused",
+    "closed",
+    "report"
+  ],
+  "assertionWidth": 1440
+}

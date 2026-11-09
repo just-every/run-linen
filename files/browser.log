@@ -1,0 +1,3 @@
+PASS DESK-010: Office field and Awaiting parts status set in the console; close without a code refused, closed with code and notes, counted by code in the report at 1440
+PASS focused deskFieldJourney with browser proof at 1440 and 390
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-c-f40/packet/browser

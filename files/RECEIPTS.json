@@ -1,0 +1,288 @@
+{
+  "tag": "sx-linen-c-f40",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f40",
+  "head": "fab12d8d54a56ed3512268e2632888aeddd21ade",
+  "base": "fcc2e53de937ab2ae17938147920b871b5fe70f5",
+  "pr": "https://github.com/just-every/run-linen/pull/173",
+  "checks": [
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log",
+      "scope": "full touched work runtime; includes deskFieldChecks and sharingChecks"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "node tests/ui/run.mjs /tmp/sx-linen-c-f40-desk-browser.mjs",
+      "exit": 0,
+      "log": "browser.log",
+      "environment": {
+        "LINEN_TEST_BUILT": "1",
+        "LINEN_CAPTURE": "1",
+        "LINEN_CHROMIUM_EXECUTABLE": "/usr/bin/chromium"
+      },
+      "scope": "existing deskFieldJourney only, with native browser setup and cleanup"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log",
+      "note": "generated files restored from main after check, committed neither view"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "candidate-lock-check.log"
+    },
+    {
+      "command": "node /tmp/sx-linen-c-f40-desk-runtime.mjs",
+      "exit": 0,
+      "log": "candidate-desk-probe.log",
+      "head": "fab12d8d54a56ed3512268e2632888aeddd21ade",
+      "scope": "deskFieldChecks only using existing runtime setup, current candidate bytes"
+    }
+  ],
+  "securitySensitivity": [
+    {
+      "inMemoryRegression": "conversation-field-leak",
+      "expectedNonzeroExit": 1,
+      "actualExit": 1,
+      "assertion": "DESK-010 shared reads omit populated fields, custom status details and the structured resolution",
+      "line": 95,
+      "log": "mutation-conversation-field-leak.log"
+    },
+    {
+      "inMemoryRegression": "activity-history-leak",
+      "expectedNonzeroExit": 1,
+      "actualExit": 1,
+      "assertion": "DESK-010 shared activity contains the public messages only",
+      "line": 90,
+      "log": "mutation-activity-history-leak.log"
+    }
+  ],
+  "contractCounts": {
+    "before": {
+      "done": 27,
+      "partial": 135,
+      "missing": 37,
+      "total": 199
+    },
+    "candidate": {
+      "done": 27,
+      "partial": 135,
+      "missing": 37,
+      "total": 199
+    },
+    "requestedAfterIndependentPromotion": {
+      "done": 28,
+      "partial": 134,
+      "missing": 37,
+      "total": 199
+    }
+  },
+  "testRegistrationDelta": 0,
+  "migrationCheck": "not applicable; no migration changed",
+  "publicationScan": {
+    "commit": "fab12d8d54a56ed3512268e2632888aeddd21ade",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "reason": "cloud branch-only route; fleet performs full-history publication scan before landing"
+  },
+  "landing": {
+    "mainEqualsCandidate": false,
+    "main": "fcc2e53de937ab2ae17938147920b871b5fe70f5",
+    "runSite": "pending guarded landing"
+  },
+  "productPush": {
+    "exit": 0,
+    "log": "product-push.log"
+  },
+  "ci": [
+    {
+      "conclusion": null,
+      "created_at": "2026-11-09T05:55:30Z",
+      "event": "pull_request",
+      "head_sha": "fab12d8d54a56ed3512268e2632888aeddd21ade",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42570037392",
+      "id": 42570037392,
+      "name": "Verify",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": null,
+      "created_at": "2026-11-09T05:55:28Z",
+      "event": "dynamic",
+      "head_sha": "fab12d8d54a56ed3512268e2632888aeddd21ade",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42570034757",
+      "id": 42570034757,
+      "name": "PR #173",
+      "status": "in_progress"
+    }
+  ],
+  "proofFileDigests": {
+    "mutation-conversation-field-leak.log": {
+      "bytes": 749,
+      "sha256": "9a6f19af72f10c8457d775a0b2726c6d9efd393e006f1dc83b58451edf928698"
+    },
+    "product-push.log": {
+      "bytes": 893,
+      "sha256": "2846ffe58b3b80924d4f05ff16717684f6ed9d37ef7edba66fdd90015584f177"
+    },
+    "browser-captures.json": {
+      "bytes": 1371,
+      "sha256": "11335a198a34265ea3fa9051469dbd2956448b80420833213b5dd4748c8d1735"
+    },
+    "PLAN.md": {
+      "bytes": 2195,
+      "sha256": "f611241e6dc2c0478c3672f7696416d9723c8032c2de17cae69ecd3fea2d2291"
+    },
+    "typecheck.log": {
+      "bytes": 220,
+      "sha256": "06af2cba3d6bebf30eba88726cee3013fe2a8953a64aa7ded2e6f5c87d294025"
+    },
+    "candidate-desk-probe.log": {
+      "bytes": 540,
+      "sha256": "8216ffdf8ec17627eb9e7f74ad8e9e5028c6cbd02c51058e50ad248a421a501c"
+    },
+    "ci-status.json": {
+      "bytes": 280,
+      "sha256": "2cadc8eaa63ecbddfc474a545f022ca6e66e4425669bf66b7b86ec2d83088e9c"
+    },
+    "work-runtime.log": {
+      "bytes": 9750,
+      "sha256": "24e3d0d059c4f2c20baf71c46911829775ace80432442eea9137ccf48aeecf0f"
+    },
+    "REPORT.md": {
+      "bytes": 11276,
+      "sha256": "4d69300162b1e1bdaa7ba9e48f0db00bfb46f25738ae04d60e680e271e6434f6"
+    },
+    "remote-custody.txt": {
+      "bytes": 130,
+      "sha256": "aea4f68b1a294e858b881aef853f585454e3afc5cdd07df4645ba6290e1ca241"
+    },
+    "ci-discovery.json": {
+      "bytes": 532,
+      "sha256": "9ba4d00111404c138281651e6730692c9b5ef7a13646a47b515f0e945ebc7b04"
+    },
+    "pr.json": {
+      "bytes": 154,
+      "sha256": "4944612ffa96c5431d1831f188f9105955edb19a4056d34eba20d047f0f28148"
+    },
+    "views-write.log": {
+      "bytes": 28,
+      "sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+    },
+    "candidate-lock-check.log": {
+      "bytes": 309441,
+      "sha256": "72db957cdef7c8337baf359458f4a8036f61ce617936c13531f241e55c9e78ba"
+    },
+    "lock-check.log": {
+      "bytes": 309441,
+      "sha256": "72db957cdef7c8337baf359458f4a8036f61ce617936c13531f241e55c9e78ba"
+    },
+    "build.log": {
+      "bytes": 3529,
+      "sha256": "40e752452029b3baca2e9f2ea9c49ea04c861fc4e69faa8a5f9f034214b9ca17"
+    },
+    "first-party.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "mutation-activity-history-leak.log": {
+      "bytes": 2620,
+      "sha256": "dbdb0ff9075982ee8513b5807867abc66edf6a06c9e536653749ebcb153d3061"
+    },
+    "change-summary.txt": {
+      "bytes": 171,
+      "sha256": "73aa0875f19619eac91a54381159bd157af542f1adb7bbe69f42b144dc05fa09"
+    },
+    "desk-probe.log": {
+      "bytes": 540,
+      "sha256": "8216ffdf8ec17627eb9e7f74ad8e9e5028c6cbd02c51058e50ad248a421a501c"
+    },
+    "candidate-source-binding.json": {
+      "bytes": 1146,
+      "sha256": "4adc4ce8d3840bc655f09f6f7231015e34c64e7f08eb249cb7ed1828a03b04ac"
+    },
+    "views-check.log": {
+      "bytes": 70,
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    "lock-write.log": {
+      "bytes": 309427,
+      "sha256": "b6139d15a88a0a4efa931626ac9db2d4050109a4bac1fe7e4498ef58ea970236"
+    },
+    "commit.txt": {
+      "bytes": 181,
+      "sha256": "9d2af47e54b464b6d48814e5fd3cf277abb1e0a2913b837036fb27c3408dfcd0"
+    },
+    "contract-unchanged.diff": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "browser.log": {
+      "bytes": 313,
+      "sha256": "defb40d199cd3622d7c6aeb880326d6c5c962fb18c8c912b2ac198a257921dca"
+    },
+    "browser/DESK-010-report.png": {
+      "bytes": 599148,
+      "sha256": "ddcb85011e0483e6c45974efe07d25cc4c97417f9292f54a822278017c810b29"
+    },
+    "browser/DESK-010-resolved-390px.png": {
+      "bytes": 307378,
+      "sha256": "efea0d906575eb8714d34461920c3b13502e238a64b4048ca9ed562481b0b86c"
+    },
+    "browser/DESK-010-resolved.png": {
+      "bytes": 759419,
+      "sha256": "1112ee9cae2ddbd7c483f1ebfb176a7fcfc34822a406ad898f697029bcf78050"
+    },
+    "browser/DESK-010-awaiting-parts-390px.png": {
+      "bytes": 260378,
+      "sha256": "eaf300e6c2d0e5d4b1807e9d0b70a795a40a1550d8854d2b7f018164cfd7680d"
+    },
+    "browser/DESK-010-awaiting-parts.png": {
+      "bytes": 667677,
+      "sha256": "60269d616ae766568b89badc6c969167feb44e96c1cf35e0e32c31bff79d9d41"
+    },
+    "browser/DESK-010-report-390px.png": {
+      "bytes": 434945,
+      "sha256": "e6e7b0a884563b3b764fd83afb76d66436537f9aee9640c25a316098b61779e6"
+    }
+  },
+  "ciLatest": {
+    "conclusion": null,
+    "event": "pull_request",
+    "head_sha": "fab12d8d54a56ed3512268e2632888aeddd21ade",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42570037392",
+    "id": 42570037392,
+    "status": "in_progress",
+    "updated_at": "2026-11-09T05:56:56Z"
+  },
+  "githubApiCalls": 3
+}

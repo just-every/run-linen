@@ -1,0 +1,18 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: DESK-010 shared reads omit populated fields, custom status details and the structured resolution
+    at publicThreadOnly (file:///home/agent/rer-consolidation/work/sx-linen-c-f40/repo/tests/work/desk-field-cases.mjs:95:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async deskFieldChecks (file:///home/agent/rer-consolidation/work/sx-linen-c-f40/repo/tests/work/desk-field-cases.mjs:111:3)
+    at async file:///tmp/sx-linen-c-f40-desk-mutation.mjs:128:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

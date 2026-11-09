@@ -1,0 +1,35 @@
+{
+  "head": "fab12d8d54a56ed3512268e2632888aeddd21ade",
+  "checkedAt": "2026-11-09T05:56:40.305591+00:00",
+  "files": [
+    {
+      "path": "tests/work/desk-field-cases.mjs",
+      "sha256": "f22b461a4c8c1e6302889c12934aecc236f4c5d97152e8e02b093fda075b23b8"
+    },
+    {
+      "path": "tests/work/runtime.mjs",
+      "sha256": "93f45afe1817e4b3afe89d55c7fccac052537b68216e730ff8e3276fccf81688"
+    },
+    {
+      "path": "tests/work/relationship-cases.mjs",
+      "sha256": "9b5b7dd29e6388979e8a128c8787d9d4a0109dc474df25fde88d42102d086fb3"
+    },
+    {
+      "path": "tests/ui/desk-field-journey.mjs",
+      "sha256": "a495ec32eb71b8724f432918fab2cf911945598bf3d5c102a56b6041b2cf0756"
+    },
+    {
+      "path": "src/features/work/desk-fields.ts",
+      "sha256": "03c6a0b90f3518699aa6f7ff0c1e56f43e07c8c61a4f4d900b39d11b670c1dd3"
+    },
+    {
+      "path": "src/features/work/sharing.ts",
+      "sha256": "36429c3d0e9a2a3abeb93f5551518233f705b79431546bf39c57ad006ef55f01"
+    },
+    {
+      "path": "src/features/work/activity.ts",
+      "sha256": "893605239e4ee70e8b7fb5535c8cb04719f31fcbb7a2f9b17616f1309b2b947f"
+    }
+  ],
+  "clean": true
+}

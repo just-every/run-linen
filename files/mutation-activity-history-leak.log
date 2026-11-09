@@ -1,0 +1,98 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: DESK-010 shared activity contains the public messages only
++ actual - expected
+... Skipped lines
+
+  [
+    [
+      '015bd6ed-952c-47f9-9209-63791a6893b4',
+      'Paused: Replacement charger ordered'
+    ],
+...
+    ],
++   [
++     '3547d5a8-9885-4e82-8078-256ea4bd5dbf',
++     undefined
++   ],
++   [
++     '641743cb-e10a-48ff-92d1-c4a04a28ece0',
++     undefined
++   ],
++   [
++     '804cb39a-fd98-4f95-a6ee-db1933163d61',
++     undefined
++   ],
++   [
++     'b707945b-4020-4260-9486-ca7799813281',
++     undefined
++   ],
++   [
++     'bdf7b0f2-523f-4e46-b885-362456cbdffc',
++     undefined
++   ],
++   [
++     'ddb8d647-e37e-491e-ad77-7826ec4810e1',
++     undefined
++   ],
++   [
++     'f0f001e1-d321-4e0a-b21b-4eee112aeb45',
++     undefined
++   ],
++   [
++     'f26628c8-7496-414b-b75f-90561271e98e',
++     undefined
++   ],
++   [
++     'f8eaf1cf-39a0-403b-bbef-18f0b2a72d19',
++     undefined
++   ],
++   [
++     'fd9a1aa3-3a51-415f-b3d2-1272f69fa90f',
++     undefined
++   ]
+  ]
+
+    at publicThreadOnly (file:///home/agent/rer-consolidation/work/sx-linen-c-f40/repo/tests/work/desk-field-cases.mjs:90:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async deskFieldChecks (file:///home/agent/rer-consolidation/work/sx-linen-c-f40/repo/tests/work/desk-field-cases.mjs:111:3)
+    at async file:///tmp/sx-linen-c-f40-desk-mutation.mjs:128:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    [
+      '015bd6ed-952c-47f9-9209-63791a6893b4',
+      'Paused: Replacement charger ordered'
+    ],
+    [
+      '21ba1314-bda8-4683-8cc6-e289ec2ab618',
+      'The laptop will not charge.'
+    ],
+    [ '3547d5a8-9885-4e82-8078-256ea4bd5dbf', undefined ],
+    [ '641743cb-e10a-48ff-92d1-c4a04a28ece0', undefined ],
+    [ '804cb39a-fd98-4f95-a6ee-db1933163d61', undefined ],
+    [ 'b707945b-4020-4260-9486-ca7799813281', undefined ],
+    [ 'bdf7b0f2-523f-4e46-b885-362456cbdffc', undefined ],
+    [ 'ddb8d647-e37e-491e-ad77-7826ec4810e1', undefined ],
+    [ 'f0f001e1-d321-4e0a-b21b-4eee112aeb45', undefined ],
+    [ 'f26628c8-7496-414b-b75f-90561271e98e', undefined ],
+    [ 'f8eaf1cf-39a0-403b-bbef-18f0b2a72d19', undefined ],
+    [ 'fd9a1aa3-3a51-415f-b3d2-1272f69fa90f', undefined ]
+  ],
+  expected: [
+    [
+      '015bd6ed-952c-47f9-9209-63791a6893b4',
+      'Paused: Replacement charger ordered'
+    ],
+    [
+      '21ba1314-bda8-4683-8cc6-e289ec2ab618',
+      'The laptop will not charge.'
+    ]
+  ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

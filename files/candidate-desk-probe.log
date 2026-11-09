@@ -1,0 +1,2 @@
+PROBE DESK-010 4: requester shares a populated paused ticket, then closes it -> colleague reads only public conversation and activity, including the closing message; internal values, named status and structured resolution absent; desk 404; full readers retain desk data; revoke makes all three reads 404
+PASS DESK-010 public routes: Office dropdown per ticket type, Awaiting parts as a vendor wait under the bound policy, resolution code and close notes required on API, bulk and merge closes, owner-edited codes, REPORT-001 counts by code
