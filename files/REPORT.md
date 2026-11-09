@@ -5,7 +5,7 @@ Branch: `cloud/sx-linen-c-f47`
 Candidate: `2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d`  
 Base at final integration: `e9aa94360d01ae5c8ae48557a61aca3c565f3236`  
 Draft PR: https://github.com/just-every/run-linen/pull/181  
-Verify: 42583652209, event `pull_request`, exact candidate, initially in_progress; see CHECKS.json for terminal observation.
+Verify: 42583652209, event `pull_request`, exact candidate, completed with conclusion success; see CHECKS.json for terminal observation.
 
 CLAIM CHANGE-009 PARTIAL points=2,6 tests=tests/services/calendar-cases.mjs#calendarChecks
 GAP CHANGE-009: Point 3 restored emergency scheduling authority remains unproved; every unselected calendar obligation and all existing held dependencies remain owed.
@@ -33,7 +33,7 @@ Completed plan rows: selected CHANGE-009 points 2 and 6 only. No full plan rebui
 | R4 | Owner deactivation removes that window without losing other events | calendarChecks lines 82–89; native update and subsequent JSON and ICS reads | PASS local |
 | R5 | Explicit current-owner reactivation retains stable UID and other records | calendarChecks lines 90–97; current revision, same UID, current sequence | PASS local |
 | R6 | Unsafe operator update is refused without successful history or feed changes | calendarChecks lines 73–81 | PASS local |
-| R7 | The service journey is loaded by exact-head Verify | scripts/verify.mjs line 24 invokes tests/services/run.mjs; run.mjs invokes calendarChecks; Verify 42583652209 | Pending CI at first observation |
+| R7 | The service journey is loaded by exact-head Verify | scripts/verify.mjs line 24 invokes tests/services/run.mjs; run.mjs invokes calendarChecks; Verify 42583652209 | PASS exact-head Verify |
 
 The expected audit tuple is explicit and compared against all newly persisted audit rows, so omitted audit writes, a wrong actor, hardcoded workspace, wrong action or wrong target fail the journey. The lifecycle uses nonempty public-created records and an observed event UID: removing the active filter fails the inactive assertion, regenerating identities fails reactivation, and losing another event fails complete event-map comparison. These failure sensitivities are INSPECTED, not mutation-run receipts.
 
@@ -62,7 +62,7 @@ This is a PARTIAL claim. PASS below refers to the selected delta only and never 
 | --- | --- | --- |
 | 1 | PARTIAL overall; selected points PASS locally | R1–R6 above; restored emergency-authority outcome remains owed |
 | 2 | PASS selected | Real maintenance and change records; owner update succeeds and operator update is refused with no history or feed change; lines 67–97 |
-| 3 | Pending exact-head CI at first observation | Verify 42583652209, pull_request, head 2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d; the existing Verify command includes this runner |
+| 3 | PASS exact-head CI | Verify 42583652209, pull_request, head 2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d; the existing Verify command includes this runner |
 | 4 | PASS source identity | No relevant source or test byte changed between successful local checks and the committed head; commit added only the tested file and generated lock |
 | 5 | PASS citation, INSPECTED | CHANGE-009 cites BASE-ACCESS-002 and BASE-DATA-003 in CONTRACT.md; unchanged |
 | 6 | PASS mechanical; judgments retained | Contract generator write and check exit 0; views then restored; no status, Gap or Evidence edits; clause stays PARTIAL |
@@ -100,3 +100,15 @@ Main equality: false (unlanded). Baseline main e9aa94360d01ae5c8ae48557a61aca3c5
 Retained holds: point 3 restored emergency authority; every other unselected calendar obligation; DESK-017, DESK-027 and DESK-028 maintained keyed-identity import port and coordinated legacy-marker migration; supplied ROLE-001 acting-role, revision reconfirmation and seat holds; all account, Base, device and other ct holds. No helper patch, reconstruction of erased values, audit-reader authority expansion, restore-policy change or provider execution is selected.
 
 No runtime blocker was found for points 2 and 6. Whole-clause DONE is not claimed. See CHECKS.json for the final CI observation and product custody receipt.
+
+## Terminal exact-head result
+
+Verify 42583652209: event=pull_request; status=completed; conclusion=success; head=2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d.
+Run URL: https://github.com/just-every/run-linen/actions/runs/42583652209
+
+Scoped rubric R7 and DONE-RIDERS row 3 now PASS: the existing Verify command loads the service runner containing calendarChecks on this exact head. All selected point 2 and point 6 assertions are proven. Local checks passed without a repair; no dispatch or rerun was made. GitHub calls used: 6 of 10.
+
+CLAIM CHANGE-009 PARTIAL points=2,6 tests=tests/services/calendar-cases.mjs#calendarChecks
+GAP CHANGE-009: Restored emergency scheduling authority in point 3 and all unselected obligations remain owed. Contract cells and all existing holds are unchanged. Counts remain 28 DONE, 134 PARTIAL, 37 MISSING.
+
+The product is ready for the maintained lander's independent publication scan and guarded landing. This receipt does not claim main equality, a completed cloud publication scan or candidate Run site. Product branch and exact head have been observed at origin; the report-only evidence transport does not modify that head or signal product landing.

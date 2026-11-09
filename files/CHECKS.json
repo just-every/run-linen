@@ -99,11 +99,11 @@
     "id": 42583652209,
     "event": "pull_request",
     "head_sha": "2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d",
-    "status": "in_progress",
-    "conclusion": null,
+    "status": "completed",
+    "conclusion": "success",
     "html_url": "https://github.com/just-every/run-linen/actions/runs/42583652209",
-    "observed_at": "2026-11-09T08:18:12.907797+00:00",
-    "calls_used": 5
+    "observed_at": "2026-11-09T08:22:35.197807+00:00",
+    "calls_used": 6
   },
   "publication_scan": {
     "commit": "2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d",
@@ -138,5 +138,7 @@
       "input": "Real active maintenance window, refused operator edit, owner deactivation and explicit owner reactivation",
       "output": "403 operator edit with unchanged feed and history; owner updates succeed; stable UID present then absent then present; unrelated events identical"
     }
-  ]
+  ],
+  "terminal_product_status": "READY",
+  "selected_points_result": "PASS, local public-door proof and exact-head Verify success"
 }
