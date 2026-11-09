@@ -7004,7 +7004,7 @@
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {
-      "sha256": "5c2a7f141e8675291e4ae642b1bee8ca35e469e48f64e08a815b60ced8a36062",
+      "sha256": "6a8acba66ba41de2651bae35a952802e90a3963aaee065fed04cf43f2c92a75d",
       "executable": false
     },
     "tests/ui/connected-cancellation.mjs": {
@@ -7144,7 +7144,7 @@
       "executable": false
     },
     "tests/ui/response-journey.mjs": {
-      "sha256": "520ba9c24c1d30abf6c628b3f375204911f4a18e8cfb127d8dfdb7d44268c897",
+      "sha256": "3e289e4fa8e044f0213dc7b249e97e5f2d325a01ac09de38aad06c09df399239",
       "executable": false
     },
     "tests/ui/run.mjs": {
