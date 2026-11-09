@@ -1,0 +1,3 @@
+PASS KB-004 restricted known-error admission: reviewed restricted owner-readable problem excluded from candidates and source references; comparable normal problem eligible; discovery model calls unchanged
+PASS KB-004 public routes: three-source draft, known errors, explicit paid generation/budget, schema/citations, private exclusion, reviewer publication/rejection, durable dedup and source withdrawal
+PASS KB-003 public routes: VPN question answered before filing, confirmed deflection counted, filing anyway never counted, scoped articles, asker-only confirmation, capped word-match and recency ranking, question non-retention with attributed revision and outcome receipt

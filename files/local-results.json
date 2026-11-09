@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "checks": [
+    {
+      "name": "knowledge-public-routes",
+      "command": "cloud_run node tests/work/knowledge-draft-runtime.mjs",
+      "exit": 0,
+      "output": "knowledge-runtime.log",
+      "sha256": "814bcde95114f28f85e0338cb97edb64e4a5f77a48c2ffa3406e2b1d4b0a2939"
+    },
+    {
+      "name": "first-party",
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "output": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "contract-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "output": "views-write.log",
+      "sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+    },
+    {
+      "name": "contract-check",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "output": "views-check.log",
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    {
+      "name": "source-lock-write",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "output": "lock-write.log",
+      "sha256": "1e23953a19eb0381659a7860764121b1e77a1406d37a01328924132e50b307be"
+    },
+    {
+      "name": "source-lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "output": "lock-check.log",
+      "sha256": "d603bcf1071274fa31557e3f72f63a2bc0bba21b509ae08de179b455b88e0b4a"
+    },
+    {
+      "name": "typecheck",
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "output": "typecheck.log",
+      "sha256": "313843a949880a19746dfa5dc8d03d39e8750d37aa2c3df418e6a4de676fcf9c"
+    },
+    {
+      "name": "knowledge-public-routes-committed-head",
+      "command": "cloud_run node tests/work/knowledge-draft-runtime.mjs",
+      "exit": 0,
+      "output": "knowledge-runtime-candidate.log",
+      "sha256": "814bcde95114f28f85e0338cb97edb64e4a5f77a48c2ffa3406e2b1d4b0a2939",
+      "head": "bc09a32684935ef519632e63454628209a13e374"
+    }
+  ],
+  "source_note": "Relevant source and test bytes will be bound to the final candidate; no production source changed.",
+  "verified_files": {
+    "tests/work/knowledge-draft-cases.mjs": "e75863d663aecfe84d126ba3aa907e213217788243f253f6be132ccd78ebcd88",
+    "tests/work/knowledge-draft-runtime.mjs": "e80d1b73ed91bb7a752facacae325a5d671cf1f76e37821a35eb9d86f249aef5",
+    "src/features/work/knowledge-draft-detection.ts": "dfe15e57b9936e54e6e70f7a5f204add8271fbc62ffd8cf61737da3ba4412997",
+    "src/features/work/knowledge-draft-sources.ts": "53d5faf2cafec4d74fd6699abcecb69225c604d9887182424a5a7336c6c2b6c4",
+    "scripts/verify.mjs": "8d3851ae58c3a2633a8aafbb8817e16ca876ece66bf10493c1690b54f8b2c4b1",
+    "CONTRACT.md": "3b6c7d149a9ca630c90a057413848684ce5ab1c4e093b9bef8fc54a95ecdcae0",
+    "sources.lock.json": "cc506c65e2aa5e178aba4413cf075ade518ef6f01ea66ba5db3d81771ca4099b"
+  },
+  "head": "bc09a32684935ef519632e63454628209a13e374",
+  "branch": "cloud/sx-linen-c-f75",
+  "base": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+  "relevant_bytes_match_precommit_checks": true,
+  "setup": {
+    "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+    "exit": 0,
+    "note": "Frozen dependencies, build, native migrations and local first-owner setup completed; no private setup output included."
+  },
+  "recorded_at": "2026-11-09T16:09:25.543362+00:00"
+}
