@@ -1,0 +1,112 @@
+diff --git a/sources.lock.json b/sources.lock.json
+index e6afced..81f63ab 100644
+--- a/sources.lock.json
++++ b/sources.lock.json
+@@ -6884,7 +6884,7 @@
+       "executable": false
+     },
+     "tests/services/risk-cases.mjs": {
+-      "sha256": "3665be41abb8e9826ed65b647516d5a5ebcbcbdf44365422a3913211e78f68dc",
++      "sha256": "4a02d172d01adb88504bd93fb079bccbd9692bb8f75be8be25bac9fc47a14d3e",
+       "executable": false
+     },
+     "tests/services/run.mjs": {
+diff --git a/tests/services/risk-cases.mjs b/tests/services/risk-cases.mjs
+index fc495fe..ab89561 100644
+--- a/tests/services/risk-cases.mjs
++++ b/tests/services/risk-cases.mjs
+@@ -1,5 +1,5 @@
+ import assert from 'node:assert/strict';
+-/** CHANGE-002: the scored band selects the approval path through public change doors. */
++/** CHANGE-002: risk bands select normal review; emergency and catalog paths take precedence. */
+ export async function changeRiskChecks({ ok, call, db, implementation, references }) {
+   const now = new Date().toISOString();
+   await db.prepare('INSERT OR IGNORE INTO users VALUES(?,?,?,?,?)').bind('approver', 'approver@fixture.test', 'approver', 'fixture', now).run();
+@@ -29,5 +29,86 @@ export async function changeRiskChecks({ ok, call, db, implementation, reference
+   assert.equal(edited.data.riskScore.band, 'high'); assert.equal(edited.data.approvalPath, 'cab');
+   assert.deepEqual(edited.data.authorizations, [], 'CHANGE-002 an edit recomputes the score and withdraws approval');
+   assert.equal(edited.data.riskAnswers.touchesSecurity, true, 'CHANGE-002 answers survive an edit');
+-  console.log('PASS CHANGE-002 public routes: questionnaire, production/test CI, schedule and prior failed change scoring; high -> CAB, low -> independent change manager; unanswered as yes; edits recompute and withdraw');
++
++  const writesBefore = (await ok('POST', '/fixture/state', {})).writes;
++  let emergency = await change([ssoTest.id], 8, {
++    riskAnswers: answers, changeType: 'emergency', emergencyReason: 'Restore synthetic sign-in', participants: ['approver'],
++  });
++  emergency = await ok('GET', `/changes/${emergency.id}`);
++  assert.equal(emergency.data.riskScore.score, 3);
++  assert.equal(emergency.data.riskScore.band, 'low');
++  assert.deepEqual(emergency.data.riskScore.factors.map(f => [f.factor, f.points]), [['touchesSecurity', 2], ['schedule', 1]]);
++  assert.equal(emergency.data.approvalPath, 'ecab', 'CHANGE-002 low risk cannot downgrade emergency review to change manager');
++  emergency = await ok('POST', `/changes/${emergency.id}/authorize`, {
++    revision: emergency.revision, reason: 'Independent emergency decision', grantReferences: references,
++  }, 'approver');
++  const emergencyRead = await ok('GET', `/changes/${emergency.id}`);
++  assert.equal(emergencyRead.data.approvalPath, 'ecab');
++  assert.equal(emergencyRead.data.authorizations.at(-1).approvalPath, 'ecab');
++  assert.equal(emergencyRead.data.authorizations.at(-1).riskScore, 3);
++  assert.equal(emergencyRead.data.authorizations.at(-1).actor, 'approver');
++  const emergencyAmended = await ok('PATCH', `/changes/${emergency.id}`, {
++    revision: emergencyRead.revision, riskAnswers: { ...answers, touchesSecurity: false },
++  });
++  const emergencyRecomputed = await ok('GET', `/changes/${emergency.id}`);
++  assert.equal(emergencyRecomputed.revision, emergencyAmended.revision);
++  assert.equal(emergencyRecomputed.data.riskScore.score, 1);
++  assert.equal(emergencyRecomputed.data.riskScore.band, 'low');
++  assert.deepEqual(emergencyRecomputed.data.riskScore.factors.map(f => [f.factor, f.points]), [['schedule', 1]]);
++  assert.equal(emergencyRecomputed.data.approvalPath, 'ecab', 'CHANGE-002 recomputation cannot replace ECAB with low-risk normal review');
++  assert.deepEqual(emergencyRecomputed.data.authorizations, [], 'CHANGE-002 emergency edits withdraw the previous decision');
++  assert.deepEqual(emergencyRecomputed.data.priorAuthorizations, emergencyRead.data.authorizations);
++  await ok('POST', `/changes/${emergency.id}/authorize`, {
++    revision: emergencyRecomputed.revision, reason: 'Review recomputed emergency risk', grantReferences: references,
++  }, 'approver');
++  const emergencyReapproved = await ok('GET', `/changes/${emergency.id}`);
++  assert.equal(emergencyReapproved.data.approvalPath, 'ecab');
++  assert.equal(emergencyReapproved.data.authorizations.length, 1);
++  assert.equal(emergencyReapproved.data.authorizations[0].approvalPath, 'ecab');
++  assert.equal(emergencyReapproved.data.authorizations[0].riskScore, 1);
++  assert.equal(emergencyReapproved.data.authorizations[0].implementationRevision, emergencyRecomputed.data.implementationRevision);
++
++  let template = await ok('POST', '/change-templates', {
++    title: 'Reviewed production certificate rotation', risk: 'Authentication changes', impact: 'Sign-in',
++    services: [sso.id], cohorts: ['a'], canaryCohorts: ['a'], implementation,
++    compensation: { ...implementation, payload: { release: 'r1' } },
++    implementationPlan: 'Apply reviewed certificate', testPlan: 'Verify sign-in independently', backoutPlan: 'Restore prior certificate', active: true,
++  });
++  template = await ok('POST', `/change-templates/${template.id}/approve`, {
++    revision: template.revision, version: template.data.version, reason: 'Owner approves this exact catalog plan',
++  });
++  const standard = await change([sso.id], 10, {
++    changeType: 'standard', templateId: template.id, templateVersion: template.data.version,
++  });
++  const standardRead = await ok('GET', `/changes/${standard.id}`);
++  assert.equal(standardRead.data.riskScore.score, 15);
++  assert.deepEqual(standardRead.data.riskScore.factors.map(f => [f.factor, f.points]), [
++    ['userFacingOutage', 2], ['untestedBackout', 2], ['firstOfKind', 2], ['touchesSecurity', 2],
++    ['production', 3], ['schedule', 1], ['failedChanges', 3],
++  ]);
++  assert.equal(standardRead.data.riskScore.band, 'high');
++  assert.equal(standardRead.data.approvalPath, 'catalog', 'CHANGE-002 high risk cannot replace approved catalog review with CAB');
++  assert.equal(standardRead.data.state, 'preapproved');
++  assert.deepEqual(standardRead.data.cabBypass, {
++    templateId: template.id, version: template.data.version, approvalId: template.data.approval.id,
++    implementationRevision: 1, snapshot: template.data.approval.snapshot,
++  }, 'CHANGE-002 the high-scored standard retains its exact owner-approved catalog version and snapshot');
++  assert.deepEqual(standardRead.data.authorizations, [], 'CHANGE-002 catalog preapproval adds no per-change decision');
++  const normalDecision = await call('POST', `/changes/${standard.id}/authorize`, {
++    revision: standardRead.revision, reason: 'Attempt ordinary CAB decision', grantReferences: references,
++  });
++  assert.equal(normalDecision.status, 409);
++  assert.equal(normalDecision.body.error.code, 'catalog_approval');
++  assert.deepEqual(await ok('GET', `/changes/${standard.id}`), standardRead, 'CHANGE-002 refusing a normal decision preserves the catalog record');
++  assert.deepEqual(emergencyReapproved.data.invocations, []);
++  assert.deepEqual(standardRead.data.invocations, []);
++  const writesAfter = (await ok('POST', '/fixture/state', {})).writes;
++  assert.equal(writesAfter, writesBefore, 'CHANGE-002 risk-path proof dispatches no provider effect');
++  console.log('PROBE CHANGE-002 8: native change and owner-approved template routes -> ' + JSON.stringify({
++    emergency: { score: emergencyRead.data.riskScore.score, band: emergencyRead.data.riskScore.band, path: emergencyRead.data.approvalPath },
++    amendedEmergency: { score: emergencyReapproved.data.riskScore.score, path: emergencyReapproved.data.authorizations[0].approvalPath },
++    standard: { score: standardRead.data.riskScore.score, band: standardRead.data.riskScore.band, path: standardRead.data.approvalPath, version: standardRead.data.cabBypass.version },
++    normalDecision: normalDecision.body.error.code, providerWrites: writesAfter - writesBefore,
++  }));
++  console.log('PASS CHANGE-002 public routes: scoring and recomputation; low emergency retains ECAB through amendment and fresh decision; high standard retains exact approved catalog snapshot and refuses normal review; no provider dispatch');
+ }

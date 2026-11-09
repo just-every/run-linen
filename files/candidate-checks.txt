@@ -1,0 +1,2 @@
+Candidate check: all 2 candidate commits include side parents; fleet identities; allowed trailers; no OpenAI coauthors; contract and generated views unchanged; no added email-shaped fixture text.
+Changed files: sources.lock.json, tests/services/risk-cases.mjs

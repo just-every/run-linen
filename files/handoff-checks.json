@@ -1,0 +1,16 @@
+{
+  "head": "2f5618486317fb5b9db680903e3e3a9c05256bb0",
+  "checks": [
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "ok": true,
+      "manifest": "1fe29b9b108cbe98d16ab500d10173c81bfb069d7a23758d34dad8351ec7e099"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "output": "Contract prose: 0 errors, 0 warnings.\nContract documents are current.\n"
+    }
+  ]
+}

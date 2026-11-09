@@ -1,0 +1,186 @@
+{
+  "base_main": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+  "blockers": [],
+  "branch": "cloud/sx-linen-c-f76",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email <fleet address> --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run timeout 300 node tests/services/integration.mjs",
+      "exit": 124,
+      "log": "initial-timeout.log",
+      "reason": "builder local bound, no assertion failure"
+    },
+    {
+      "command": "cloud_run timeout 1200 node tests/services/integration.mjs",
+      "exit": 0,
+      "log": "integration.log"
+    },
+    {
+      "command": "cloud_run timeout 180 pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "cloud_run timeout 180 pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "cloud_run timeout 600 npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node --check tests/services/risk-cases.mjs",
+      "exit": 0
+    },
+    {
+      "command": "git diff --cached -- CONTRACT.md; git diff origin/main...HEAD -- CONTRACT.md",
+      "exit": 0,
+      "output": "empty"
+    }
+  ],
+  "ci": {
+    "conclusion": null,
+    "event": "pull_request",
+    "head_sha": "2f5618486317fb5b9db680903e3e3a9c05256bb0",
+    "id": 42654092413,
+    "name": "Verify",
+    "status": "in_progress"
+  },
+  "ci_discovery": {
+    "workflow_runs": []
+  },
+  "ci_discovery_final": {
+    "workflow_runs": [
+      {
+        "conclusion": null,
+        "event": "pull_request",
+        "head_sha": "2f5618486317fb5b9db680903e3e3a9c05256bb0",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42654092413",
+        "id": 42654092413,
+        "name": "Verify",
+        "status": "in_progress"
+      },
+      {
+        "conclusion": "success",
+        "event": "dynamic",
+        "head_sha": "2f5618486317fb5b9db680903e3e3a9c05256bb0",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42654084924",
+        "id": 42654084924,
+        "name": "PR #209",
+        "status": "completed"
+      }
+    ]
+  },
+  "clause": {
+    "claim": "PARTIAL",
+    "counts_after": {
+      "done": 31,
+      "missing": 37,
+      "partial": 131
+    },
+    "counts_before": {
+      "done": 31,
+      "missing": 37,
+      "partial": 131
+    },
+    "id": "CHANGE-002",
+    "points": [
+      8
+    ],
+    "scope": "risk-path precedence only"
+  },
+  "clean_product_worktree": true,
+  "github_api_calls": 4,
+  "handoff_checks_file": "handoff-checks.json",
+  "main_at_remote_read": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+  "main_equals_candidate": false,
+  "pr": {
+    "base_sha": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+    "draft": true,
+    "head_sha": "2f5618486317fb5b9db680903e3e3a9c05256bb0",
+    "html_url": "https://github.com/just-every/run-linen/pull/209",
+    "number": 209
+  },
+  "product_head": "2f5618486317fb5b9db680903e3e3a9c05256bb0",
+  "product_push": {
+    "attempt": 1,
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f76",
+    "status": "pushed"
+  },
+  "proof": {
+    "amended_emergency": {
+      "path": "ecab",
+      "score": 1
+    },
+    "emergency": {
+      "band": "low",
+      "path": "ecab",
+      "score": 3
+    },
+    "ordinary_decision": {
+      "code": "catalog_approval",
+      "status": 409,
+      "unchanged_record": true
+    },
+    "provider_write_delta": 0,
+    "standard": {
+      "band": "high",
+      "path": "catalog",
+      "score": 15,
+      "version": 1
+    }
+  },
+  "publication_scan": {
+    "complete": null,
+    "findings": null,
+    "historyScanned": null,
+    "status": "not run in cloud; guarded fleet landing duty"
+  },
+  "remote_product_head": "2f5618486317fb5b9db680903e3e3a9c05256bb0",
+  "repository": "just-every/run-linen",
+  "resumed_checks": {
+    "contract_views_check": 0,
+    "source_hashes_match": true,
+    "source_lock_check": 0,
+    "worktree_clean": true
+  },
+  "schema": 1,
+  "source_sha256": {
+    "CONTRACT.md": "3b6c7d149a9ca630c90a057413848684ce5ab1c4e093b9bef8fc54a95ecdcae0",
+    "sources.lock.json": "5efb7f0763503007282558a0c59d8b0e8012e3c4788bb498af96cf2bed5d8418",
+    "src/features/services/change-risk.ts": "b820593ddf8418d9e39d0e8d9cdc02d9aaeb0708bc9360476d82975a712322fb",
+    "src/features/services/change-templates.ts": "499d9cfdd628088e2d42669a40f9be037a83e78bbba1a4f16461b51203409de4",
+    "src/features/services/changes.ts": "a0dd17a07df9e3de1ed9ed8f1e796fbb8778aaaeede4f1526af8ed7fe49a3726",
+    "tests/services/integration.mjs": "b2d7b91ddd488d9251666c41c4b916c3910c9201ecbae0d38f1c5e1466bbd910",
+    "tests/services/risk-cases.mjs": "4a02d172d01adb88504bd93fb079bccbd9692bb8f75be8be25bac9fc47a14d3e"
+  },
+  "starting_head": "91014eeb01c9c8e28f03a09711a0aaf549ae5cbe",
+  "tag": "sx-linen-c-f76"
+}
