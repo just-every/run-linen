@@ -7256,7 +7256,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "2c8b6343aa5010fc3b303e3c3d4964a68c140046323a88643d580f827bfcb811",
+      "sha256": "ffb04d412809ad8a5e51b9e68205115178f3c0da2e39efdeaec7a8856aed488d",
       "executable": false
     },
     "tests/work/approval-chain-cases.mjs": {
@@ -7448,7 +7448,7 @@
       "executable": false
     },
     "tests/work/runtime.mjs": {
-      "sha256": "93f45afe1817e4b3afe89d55c7fccac052537b68216e730ff8e3276fccf81688",
+      "sha256": "2e669ea118062aabdd3b1ebe99037002131ac0899ed2484af1f5817d3cedd8be",
       "executable": false
     },
     "tests/work/search-cases.mjs": {
