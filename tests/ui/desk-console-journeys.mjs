@@ -84,7 +84,13 @@ export async function deskQueueJourney({browser,page,api,base,out,errors}) {
   await captureJourney(lp, { path: `${out}/DESK-001-lead-view.png`, fullPage: true });
 
   await queue.getByText('Bulk update', { exact: true }).click();
-  // Keyboard-only triage of the lead view: no pointer input from here on.
+  // Fresh requester tickets keep the saved Unassigned P1 view populated after the bulk proof.
+  await ticket('VPN outage awaiting keyboard triage', network.id, 'P1');
+  await ticket('VPN reconnect awaiting keyboard triage', network.id, 'P1');
+  const unassigned = (await api('/work-views')).items.find(view => view.name === 'Unassigned P1');
+  await queue.getByLabel('Queue view').selectOption(`view:${unassigned.id}`);
+  await lp.waitForFunction(() => document.querySelectorAll('.queue-table a.queue-row').length === 2);
+  // Keyboard-only triage of the saved view: no pointer input from here on.
   const countPointers = () => {
     window.pointerInputs = Number(sessionStorage.getItem('desk-triage-pointer-inputs') ?? 0);
     for (const type of ['pointerdown', 'mousedown']) document.addEventListener(type, () => {
@@ -103,12 +109,12 @@ export async function deskQueueJourney({browser,page,api,base,out,errors}) {
   const visibleIds = await rows.evaluateAll(items => items.map(row => row.getAttribute('href').split('/').at(-1)));
   assert.equal(opened, visibleIds[0]);
   await lp.keyboard.press('j');
-  await lp.waitForURL(url => url.hash === `/work/${visibleIds[1]}`);
+  await lp.waitForURL(url => url.hash === `#/work/${visibleIds[1]}`);
   await lp.getByRole('heading', { level: 2, name: await rows.nth(1).locator('.q-subject strong').textContent(), exact: true }).waitFor();
   await lp.keyboard.press('k');
-  await lp.waitForURL(url => url.hash === `/work/${opened}`);
+  await lp.waitForURL(url => url.hash === `#/work/${opened}`);
   await lp.getByRole('heading', { level: 2, name: firstTitle, exact: true }).waitFor();
-  assert.equal(lp.url().split('/').at(-1), visibleIds[0], 'DESK-018 k returns to the previous ticket in the visible lead view');
+  assert.equal(lp.url().split('/').at(-1), visibleIds[0], 'DESK-018 k returns to the previous ticket in the visible saved view');
   await lp.keyboard.press('?');
   await queue.getByRole('definition').filter({ hasText: 'Assign the open ticket to yourself' }).waitFor();
   await lp.keyboard.press('a');
@@ -174,7 +180,11 @@ export async function deskQueueJourney({browser,page,api,base,out,errors}) {
   const after = await api(`/work/${opened}`);
   assert.equal(after.work.assignee_id, lena.id);
   assert.ok(after.messages.some(m => m.visibility === 'public' && m.body === 'We are restoring the VPN concentrator now.'));
+  // Wait for the normal persisted status refresh to remount the ticket's controls.
+  await lp.getByText('Work is paused. Your request and its remaining obligations are preserved.', { exact: true }).waitFor();
+  await lp.getByRole('button', { name: 'Still not working?', exact: true }).waitFor();
   await lp.keyboard.press('Escape');
+  await lp.locator('#main-content').focus();
   await lp.keyboard.press('c');
   const closeNotes = lp.getByLabel('Close notes', { exact: true });
   await closeNotes.waitFor();
@@ -210,6 +220,7 @@ export async function deskQueueJourney({browser,page,api,base,out,errors}) {
   await lp.locator('#main-content').focus();
   await lp.keyboard.press('c');
   await closeNotes.waitFor();
+  await lp.waitForFunction(expected => [...document.querySelectorAll('select[name="resolutionCode"] option')].some(option => option.value === expected), code);
   await lp.keyboard.type(closeReason);
   await lp.keyboard.press('Tab');
   await lp.keyboard.press('Home');

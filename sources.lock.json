@@ -7060,7 +7060,7 @@
       "executable": false
     },
     "tests/ui/desk-console-journeys.mjs": {
-      "sha256": "186a3a45b811d3f4c89c3257506c34e359600e706b63d2602fb8294652805403",
+      "sha256": "ec82827fc6047cbbb4ef6ab9791ecbae1078362633e57b5804d9ce28807a9bb8",
       "executable": false
     },
     "tests/ui/desk-field-journey.mjs": {
