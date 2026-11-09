@@ -76,6 +76,15 @@
     }
   ],
   "ci": {
+    "github_cli_invocations": 6,
+    "latest_status": {
+      "conclusion": "success",
+      "event": "pull_request",
+      "head_sha": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42584124852",
+      "id": 42584124852,
+      "status": "completed"
+    },
     "total_count": 2,
     "workflow_runs": [
       {
@@ -124,11 +133,12 @@
   "landing": {
     "candidate_run_site": "main-only; pending guarded landing",
     "candidate_verify": {
-      "conclusion": null,
+      "conclusion": "success",
       "event": "pull_request",
-      "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+      "head_sha": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42584124852",
       "id": 42584124852,
-      "status": "in_progress"
+      "status": "completed"
     },
     "main_equal_to_candidate": false,
     "publication_scan": {
@@ -137,18 +147,24 @@
       "findings": null,
       "historyScanned": false,
       "reason": "cloud adaptation delegates required exact-SHA publication scan to guarded Mac lander"
-    }
+    },
+    "ready_for_guarded_landing": true
   },
   "logs": [
     {
-      "bytes": 11259,
+      "bytes": 14212,
       "file": "REPORT.md",
-      "sha256": "33e2e272ae07c692c7cfef0daf8573917dec21682aa83f9c0aaf0a853a89be40"
+      "sha256": "fe9fc8e8f92dff1dcbb66ba4ca161e8b9839aa35753efe898d14a0ece1b898fc"
     },
     {
-      "bytes": 37,
+      "bytes": 172,
+      "file": "assertion-preservation.log",
+      "sha256": "b9ca06da0d95fda9aff86f6e83cbff093fdd6bbf18eac653ea902ee02a3f21f7"
+    },
+    {
+      "bytes": 497,
       "file": "candidate-ci.json",
-      "sha256": "fc5753fa7f5380199fb73c07a084e2125b722a06993132cdf348bc7e41367728"
+      "sha256": "920eda38b90a88181e132452a31ff5383e74da0726a2d42db523099d23cdff00"
     },
     {
       "bytes": 0,
@@ -196,9 +212,19 @@
       "sha256": "c8c1f3d0388cf537d2f5cf7e8f54a7cab045fbb868b0d7d53cd665d7471dc833"
     },
     {
+      "bytes": 130,
+      "file": "remote-custody.log",
+      "sha256": "ca9e547471bac36bbb8e6b682171a56bb0302363d8285c7bc14ba292018d9eb7"
+    },
+    {
       "bytes": 225,
       "file": "typecheck.log",
       "sha256": "724ebab35b8205e97ab8a4c098a07df46cc82c765cf4068d1b9d9024658f6d8e"
+    },
+    {
+      "bytes": 218,
+      "file": "verify-status.json",
+      "sha256": "6a30488f358c37b88943aa6de3239124e137da3248d144bdff4fb1158e24f295"
     },
     {
       "bytes": 98,
@@ -219,7 +245,9 @@
   },
   "preservation": {
     "all_product_commits_pushed": true,
-    "evidence_publication": "pending"
+    "evidence_publication": "Final complete packet submitted through cloud_evidence.py to the report-only ref; exact transport head emitted in terminal handoff.",
+    "prior_evidence_head": "f259bc052f2a45dccc8ac5db7fb546a791f051de",
+    "scratch_clone_cleanup": "remove after successful final evidence publication"
   },
   "probes": [
     {
@@ -258,7 +286,11 @@
     "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
     "ref": "refs/heads/cloud/sx-linen-c-f49"
   },
-  "recorded_at": "2026-11-09T08:12:32.233148+00:00",
+  "recorded_at": "2026-11-09T08:27:18.670628+00:00",
+  "remote_custody": [
+    "d2949a4903c2fa30543304d5bb82ec60d85ee585\trefs/heads/cloud/sx-linen-c-f49",
+    "e9aa94360d01ae5c8ae48557a61aca3c565f3236\trefs/heads/main"
+  ],
   "repository": "just-every/run-linen",
   "schema": 1,
   "tag": "sx-linen-c-f49",

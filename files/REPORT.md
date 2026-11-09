@@ -45,7 +45,7 @@ This is a PARTIAL claim with two selected proof points; no claim that all eleven
 | --- | --- | --- |
 | 1 | PASS for selected outcomes; whole-clause claim withheld | Public requests and observable ranking at lines 168–204; non-retention inspection at lines 187–224; other acceptance and channel obligations remain owed |
 | 2 | PASS for selected outcomes | Five real route-authored eligible articles compete; positive receipt retention and negative question retention checked together; existing wrong-asker and wrong-article refusals preserved at lines 150–151 |
-| 3 | Pending exact-SHA CI at initial report creation | Runtime is already loaded by Verify through `scripts/verify.mjs:16`; final CI receipt below records actual event and conclusion |
+| 3 | PASS for selected outcomes | Verify 42584124852, pull_request event, completed SUCCESS on d2949a4903c2fa30543304d5bb82ec60d85ee585; runtime loaded through `scripts/verify.mjs:16` |
 | 4 | PASS locally on candidate | Focused runtime and lock check rerun after commit and rebase; no later source edit |
 | 5 | INSPECTED, unchanged | KB-003's Rules meta names D-2 and its requirement names the inheriting clauses; no inheritance rewrite |
 | 6 | PASS mechanically; status bookkeeping retained | Contract generator write and check pass; generated files restored; no Status, Gap or Evidence cell changed |
@@ -90,3 +90,20 @@ Initial main e9aa94360d01ae5c8ae48557a61aca3c565f3236 had successful Verify 4257
 The initial runtime attempt tried to inspect Cloudflare protected metadata and was refused by D1 with SQLITE_AUTH. The test was corrected to inspect every application table while excluding protected provider and SQLite internals; the final runtime passes on the candidate. This was test development before publication, not a Verify repair. The older `lock.log` is intermediate output; `lock-write.log` and `lock-check.log` are the final lock evidence.
 
 Draft PR: https://github.com/just-every/run-linen/pull/184. Exact-candidate Verify 42584124852, pull_request event, was in progress at the 08:16 UTC REST read. The dynamic PR workflow 42584121783 succeeded and is not substituted for Verify. No dispatch or rerun was made.
+
+At the permitted 08:21 UTC REST read, Verify 42584124852 remained in progress on the exact candidate. The complete local-proof packet was saved on the separate evidence ref while awaiting the next permitted status read. No product commit or history rewrite followed publication.
+
+
+## Final exact-candidate result
+
+Verify 42584124852 completed SUCCESS on d2949a4903c2fa30543304d5bb82ec60d85ee585, pull_request event, as observed by REST at 08:26 UTC. URL: https://github.com/just-every/run-linen/actions/runs/42584124852. Draft PR: https://github.com/just-every/run-linen/pull/184. No Verify repair, dispatch or rerun was needed. Six GitHub CLI invocations were used in total: initial main evidence, PR creation, two exact-SHA discoveries and two five-minute status polls.
+
+Riders 1 and 3 pass for the selected native proof, and local rider 4 is bound to the same candidate. Rider 11 remains the guarded fleet lander's duty; the branch is ready for its publication scan and landing gates. This cloud run has not landed main, run its publication scanner or observed a candidate Run site, and claims no such result. The main baseline's earlier successful Verify and Run site are kept separate.
+
+The final packet includes this full plan and results, actual command logs, assertion-preservation evidence, the PR and CI API responses, fleet identity check and product-push receipt. The final transfer is report-only on refs/heads/evidence/sx-linen-c-f49. Product changes remain only on cloud/sx-linen-c-f49.
+
+Local touched runtime, typecheck, first-party check, contract generation and check, final source lock check and exact-SHA Verify all pass. No local command, model request, browser or development server is left pending. The scratch product clone is removed after evidence publication; packet and transport receipts stay outside it.
+
+CLAIM KB-003 PARTIAL points=4,5 tests=tests/work/knowledge-draft-cases.mjs#deflectionChecks
+
+GAP KB-003: Unselected acceptance and inherited channel obligations remain owed; CHANNEL-001 and CHANNEL-002 installations, identity mapping, recipient consent and adapter acceptance, D-2 notice-only delivery, ROLE-001 decisions and every supplied account, ct, Base and device hold are unchanged.

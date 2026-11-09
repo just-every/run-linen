@@ -1,1 +1,1 @@
-{"conclusion":null,"event":"pull_request","head_sha":"d2949a4903c2fa30543304d5bb82ec60d85ee585","html_url":"https://github.com/just-every/run-linen/actions/runs/42584124852","id":42584124852,"status":"in_progress"}
+{"conclusion":"success","event":"pull_request","head_sha":"d2949a4903c2fa30543304d5bb82ec60d85ee585","html_url":"https://github.com/just-every/run-linen/actions/runs/42584124852","id":42584124852,"status":"completed"}
