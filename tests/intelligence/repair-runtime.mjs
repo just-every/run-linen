@@ -120,6 +120,49 @@ try{
  startClock();await until(()=>one("SELECT * FROM intelligence_pending_fulfilments WHERE work_id=? AND state='blocked'",questionWork.id),'assistant refused without a required answer');await stopClock();
  assert.equal((await one('SELECT error_code FROM intelligence_pending_fulfilments WHERE work_id=?',questionWork.id)).error_code,'catalog_field_required');
  assert.equal((await one('SELECT COUNT(*) n FROM work_fulfilments WHERE work_id=?',questionWork.id)).n,0,'the assistant never submits without required answers');
+ // The assistant must submit the eligible revision it read, even if the owner edits it during the model call.
+ const changedItem=await ok('/catalog','POST',{name:'Changed project access',kind:'access',target:'project',ownerId:uid,capacity:1},owner);
+ const changedWork=await ok('/work','POST',{title:'Changed project access',body:'I need project access for Project work until '+expiresAt,deduplicationKey:'changed-project'},employee.auth);
+ for(const action of ['group.add','group.remove'])await ok('/grants','POST',{principalId:actor.id,action,actionVersion:1,target:'project',beneficiaryId:'external-person',localBeneficiaryId:employee.id,connectionId:graph,verifierConnectionId:probe,validFrom:new Date(Date.now()-1000).toISOString(),validUntil:new Date(Date.now()+86400000).toISOString(),maxUses:30,conditions:{workId:changedWork.id}},owner);
+ await fixture('config',{catalogId:changedItem.id,probeMode:'negative'});
+ const providerWrites=await all('SELECT * FROM repair_writes ORDER BY rowid');
+ await fixture('intake-hold',{workId:changedWork.id});
+ startClock();
+ let observedRevision;
+ try{
+  const observed=await until(()=>one("SELECT data FROM repair_model_inputs WHERE json_extract(data,'$.work.id')=?",changedWork.id),'native intake model read before the item edit');
+  const item=JSON.parse(observed.data).catalog.find(c=>c.id===changedItem.id);
+  assert.ok(item,'the native assistant context includes this eligible item');
+  observedRevision=item.revision;
+  assert.equal((await one('SELECT state FROM work_intake_events WHERE work_id=?',changedWork.id)).state,'interpreting','the real model response is still in flight');
+  assert.equal(await one('SELECT id FROM intelligence_pending_fulfilments WHERE work_id=?',changedWork.id),null);
+  const edited=await ok('/catalog/'+changedItem.id+'/form','POST',{revision:observedRevision,name:'Edited project access',form:{costCents:0}},owner);
+  assert.equal(edited.revision,observedRevision+1);
+ }finally{
+  await fixture('intake-release',{workId:changedWork.id});
+ }
+ await until(()=>one("SELECT * FROM intelligence_pending_fulfilments WHERE work_id=? AND state='blocked'",changedWork.id),'changed item refused by native admission');
+ await stopClock();
+ const refused=await one('SELECT * FROM intelligence_pending_fulfilments WHERE work_id=?',changedWork.id);
+ assert.equal(refused.error_code,'catalog_changed');
+ assert.equal(JSON.parse(refused.input_json).catalogRevision,observedRevision,'submission carries the revision originally read by intake');
+ const refusalView=await ok('/work/'+changedWork.id,'GET',undefined,employee.auth);
+ assert.ok(refusalView.messages.some(m=>m.body.includes('catalog_changed')&&m.body.includes('No completion is claimed.')),'the employee sees the changed-item refusal');
+ async function noChangedItemEffects(){
+  for(const table of ['work_fulfilments','work_catalog_reservations','work_obligations','intelligence_fulfilment_runs','execution_plans'])
+   assert.equal((await one('SELECT COUNT(*) n FROM '+table+' WHERE work_id=?',changedWork.id)).n,0,'changed item creates no row in '+table);
+  assert.deepEqual(await all('SELECT * FROM repair_writes ORDER BY rowid'),providerWrites,'changed item dispatches no provider write');
+ }
+ await noChangedItemEffects();
+ // Subsequent native scheduler passes must keep the refusal, rather than refreshing the observed revision.
+ for(let retry=0;retry<2;retry++)await fixture('tick',{});
+ const retried=await one('SELECT * FROM intelligence_pending_fulfilments WHERE work_id=?',changedWork.id);
+ assert.equal(retried.state,'blocked');assert.equal(retried.error_code,'catalog_changed');
+ assert.equal(retried.input_json,refused.input_json);
+ assert.equal((await one('SELECT revision FROM work_catalog WHERE id=?',changedItem.id)).revision,observedRevision+1);
+ assert.equal((await one("SELECT COUNT(*) n FROM repair_model_inputs WHERE json_extract(data,'$.work.id')=?",changedWork.id)).n,1,'scheduler does not ask the model to silently refresh the item');
+ await noChangedItemEffects();
+ console.log('PASS repair: changed-item assistant submission keeps its observed revision; catalog_changed survives scheduler retries with no fulfilment, stock reservation, obligation, execution plan or provider write.');
  await fixture('config',{catalogId:restricted.id,probeMode:'negative'});
  const hiddenWork=await ok('/work','POST',{title:'Legal purchase access',body:'I need the legal purchase',deduplicationKey:'legal-purchase'},employee.auth);
  startClock();await until(()=>one("SELECT * FROM work_intake_events WHERE work_id=? AND state='failed'",hiddenWork.id),'assistant refused an item outside the audience');await stopClock();

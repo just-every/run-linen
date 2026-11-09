@@ -604,7 +604,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "caddf388350cc6e613aa0a1189416342f92deff9fc86b747bc7673db85ea43ce",
+      "sha256": "ed8fcb1b9379989b7e96c3313d8d9b80a942155cb8f31e74162aa03b67b9742b",
       "executable": false
     },
     "ADOPTION.md": {
@@ -640,7 +640,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "da545fc94a8ac6735b191300a2f78b3d23366fc6427301ea3c4d36a7d80ea43b",
+      "sha256": "4d655519e4959f624b695b3934168cee3516e7fe18bb76028cece323d8c47a17",
       "executable": false
     },
     "DEMO.md": {
@@ -6568,7 +6568,7 @@
       "executable": false
     },
     "tests/adoption/freshservice-import-harness.mjs": {
-      "sha256": "efd53f4571da47f0fdf430b16700fc2916caf7460d3687db75192cac44527137",
+      "sha256": "2958032f93ed5c5d27261c76d79c1d2fffd7caa2b0012930aaf93450744a1f8e",
       "executable": false
     },
     "tests/adoption/freshservice-import-worker.ts": {
@@ -6600,7 +6600,7 @@
       "executable": false
     },
     "tests/adoption/lightweight-import-cases.mjs": {
-      "sha256": "695bfb828173bc313f805427efcbc79a5aea4511bea1d47ee886b0a68cc9ba7b",
+      "sha256": "0ce9e8c4c31c16a6000cfed0ee51ba35ee3792e67dc89936031e9d85216783ef",
       "executable": false
     },
     "tests/adoption/platform-privacy-cases.mjs": {
@@ -6748,11 +6748,11 @@
       "executable": false
     },
     "tests/intelligence/repair-runtime.mjs": {
-      "sha256": "b29c1c313a8df66b100d1dc491c80837e79360aad0b89dc9b5691531478774cf",
+      "sha256": "42f5ca14c5f725ad92659c2b7c616860ee210c1a6791f40fafdcac5d27d612dd",
       "executable": false
     },
     "tests/intelligence/repair-worker.ts": {
-      "sha256": "15d4baba6ab6bb665d197b09b7747063b36efa73e5128ba28623823751dfda3c",
+      "sha256": "14c017cded123b55fc761216b86d0f7f2ee2fe31fefb752167386c85a39d2c84",
       "executable": false
     },
     "tests/intelligence/runtime-harness.mjs": {
@@ -6784,7 +6784,7 @@
       "executable": false
     },
     "tests/platform/base-auth-runtime.mjs": {
-      "sha256": "8b6e417342c9f8f93423df52262f1d1533c1e49a3d33381aff9591338f268078",
+      "sha256": "08288dcd7aaa0d4927e1bc7fd0f942e491e100105a5fd595a8d60cc9b9f2425e",
       "executable": false
     },
     "tests/platform/base-auth-transfer.mjs": {
@@ -6808,7 +6808,7 @@
       "executable": false
     },
     "tests/platform/mcp-tools-cases.mjs": {
-      "sha256": "b7d185eee137aed325d0488682224f11595ade27b73494a064d29b39427932f6",
+      "sha256": "19b70923119636ddefb14caecd1ffe35af756fe0abaa9a981b66e0a4f4c070a3",
       "executable": false
     },
     "tests/platform/reporting-transfer-cases.mjs": {
@@ -7456,7 +7456,7 @@
       "executable": false
     },
     "tests/work/sla-policy-cases.mjs": {
-      "sha256": "67b215cd176a5f1c93c902b719c1fde0a0b4f74cb1eca7e4768b27e1049b7ffc",
+      "sha256": "dc46171b954ffaa715ea35829892ac07e87e0599c4ccdbe1a85094e6dfc9c409",
       "executable": false
     },
     "tests/work/time-cases.mjs": {
