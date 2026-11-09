@@ -604,7 +604,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "fb88db7645a9ffbb153c9dc00f0252e539a33b1da9aeafd9978899dd9f0aa7d1",
+      "sha256": "32eb8c7e29c92f1c24097114dff19e9511ad002fa10c93ffa30d9ed2b4bccd88",
       "executable": false
     },
     "ADOPTION.md": {
@@ -640,7 +640,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c1de292aed87326bfa1b9072f19f3412d9deaa4313490b7797eb62606f202337",
+      "sha256": "0d5b6a829f117606c9ef56b8e26b0dfb8d2254455a043a2da953fa2d74e4cff6",
       "executable": false
     },
     "DEMO.md": {
@@ -7256,7 +7256,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "2c8b6343aa5010fc3b303e3c3d4964a68c140046323a88643d580f827bfcb811",
+      "sha256": "57b39f3f1b01387e4278eaaefb7df422fd4f9fdafed9d3d411f3402573428e4b",
       "executable": false
     },
     "tests/work/approval-chain-cases.mjs": {
@@ -7328,7 +7328,7 @@
       "executable": false
     },
     "tests/work/desk-field-cases.mjs": {
-      "sha256": "db9c175a168c4cbd6f3a2f65ce2a9d944662ffb47f09d16ad9ddaf8df0f2dcd5",
+      "sha256": "f22b461a4c8c1e6302889c12934aecc236f4c5d97152e8e02b093fda075b23b8",
       "executable": false
     },
     "tests/work/desk-group-cases.mjs": {
@@ -7448,7 +7448,7 @@
       "executable": false
     },
     "tests/work/runtime.mjs": {
-      "sha256": "93f45afe1817e4b3afe89d55c7fccac052537b68216e730ff8e3276fccf81688",
+      "sha256": "2e669ea118062aabdd3b1ebe99037002131ac0899ed2484af1f5817d3cedd8be",
       "executable": false
     },
     "tests/work/search-cases.mjs": {

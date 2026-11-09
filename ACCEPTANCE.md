@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 28 | 121 | 29 | 178 |
+| Core | 29 | 120 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 28 | 134 | 37 | 199 |
+| Full target | 29 | 133 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -1038,7 +1038,7 @@ Core · target · **missing** · Rules D-2
 
 #### DESK-010 — Custom fields, forms and statuses
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Admins add custom ticket fields, forms per ticket type and custom statuses mapped to SLA behavior. Fields can be required on a status: by default an incident cannot be resolved without a resolution code (from an admin-edited list such as "Solved (workaround)", "Solved (permanent fix)", "Not reproducible" and "Duplicate") and close notes, and a service request cannot be resolved without close notes. The rule holds on every door: console, bulk update, scenario, API and chat action; it is DESK-023.
 
@@ -1048,8 +1048,8 @@ Core · target · **partial**
 3. A custom status is a named pause that waits on the requester, a vendor or nobody outside the desk; whether it stops the SLA clock is the bound policy's pause rule (DESK-020), never an override, so "Awaiting parts" is a vendor wait.
 4. Field values, the status and the resolution are read by whoever can read the ticket and written by the roles that move its state (owner, operator, HR); people a ticket is shared with see its public thread only.
 
-**Evidence.** `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs`
-**Gap.** Not asserted: that people a ticket is shared with see its public thread only. Fields, forms, statuses, pause rules and read/write roles are asserted.
+**Evidence.** `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs`; `tests/work/desk-field-cases.mjs` (deskFieldChecks); `tests/ui/desk-field-journey.mjs` (deskFieldJourney)
+**Gap.** None.
 
 #### DESK-023 — Required resolution fields on every closing door
 
