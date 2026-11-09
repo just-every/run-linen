@@ -179,7 +179,7 @@ app.post('/test/bi-google-key',async c=>{biGooglePublicKey=await c.req.json();re
 app.post('/test/reporting-tick',async c=>{await processDueReporting(c.env);await processDueBiExports(c.env);return c.json({processed:true});});
 
 app.onError((e, c) =>
-  c.json({ error: e.message }, e instanceof ApiError ? (e.status as 400) : 500),
+  c.json({ error: e.message, ...(e instanceof ApiError ? { code: e.code } : {}) }, e instanceof ApiError ? (e.status as 400) : 500),
 );
 registerWorkRoutes(app);
 registerServiceRoutes(app);
