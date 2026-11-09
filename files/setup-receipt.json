@@ -1,0 +1,20 @@
+{
+  "command": [
+    "npx",
+    "-y",
+    "@runeditrun/rer",
+    "setup",
+    "--owner-email",
+    "fleet@runeditrun.com",
+    "--non-interactive"
+  ],
+  "exit": 0,
+  "elapsedSeconds": 77.06,
+  "node": "v22.20.0",
+  "logStoredOutsidePublicPacket": "/tmp/linen-setup-retry.log",
+  "firstAttempt": {
+    "exit": 1,
+    "failure": "wrangler local migration application: other side closed",
+    "build": "passed"
+  }
+}

@@ -1,0 +1,15 @@
+commit f1960013f44052d90999b19e7a174b3abe419eff
+Author:     Run Edit Run fleet <fleet@runeditrun.com>
+AuthorDate: Mon Nov 9 13:03:25 2026 +0000
+Commit:     Run Edit Run fleet <fleet@runeditrun.com>
+CommitDate: Mon Nov 9 13:03:25 2026 +0000
+
+    Keep capacity-gated team completion independent of execution
+
+commit 92fae75c0f4547b207dc950569fece93624e4da3
+Author:     Run Edit Run fleet <fleet@runeditrun.com>
+AuthorDate: Mon Nov 9 12:23:26 2026 +0000
+Commit:     Run Edit Run fleet <fleet@runeditrun.com>
+CommitDate: Mon Nov 9 12:57:36 2026 +0000
+
+    Prove capacity gates approved catalog team tasks

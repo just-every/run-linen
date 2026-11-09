@@ -1,0 +1,10 @@
+{
+  "command": [
+    "node",
+    "tests/work/amend-manager-runtime.mjs"
+  ],
+  "exit": 0,
+  "elapsedSeconds": 188.27,
+  "headAtRun": "92fae75c0f4547b207dc950569fece93624e4da3",
+  "uncommittedTestChanges": true
+}

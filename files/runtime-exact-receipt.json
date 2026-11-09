@@ -1,0 +1,11 @@
+{
+  "head": "f1960013f44052d90999b19e7a174b3abe419eff",
+  "command": [
+    "node",
+    "tests/work/amend-manager-runtime.mjs"
+  ],
+  "exit": 0,
+  "elapsedSeconds": 91.28,
+  "node": "v22.20.0",
+  "cleanAtRun": true
+}

@@ -1,0 +1,17 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f67",
+  "head": "f1960013f44052d90999b19e7a174b3abe419eff",
+  "base": "e2d67da5861defba777d5c82248b3664b38c1481",
+  "fullHistory": true,
+  "commits": [
+    "f1960013f44052d90999b19e7a174b3abe419eff Keep capacity-gated team completion independent of execution",
+    "92fae75c0f4547b207dc950569fece93624e4da3 Prove capacity gates approved catalog team tasks"
+  ],
+  "clean": true,
+  "statusCellsChanged": false,
+  "generatedViewsCommitted": false,
+  "browser": "not applicable: no UI changes",
+  "scan": "not run in cloud; guarded lander required",
+  "runSite": "main-only; guarded lander required"
+}

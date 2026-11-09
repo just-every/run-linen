@@ -1,0 +1,24 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "pnpm",
+      "typecheck"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 127.42
+  },
+  {
+    "name": "first-party",
+    "command": [
+      "pnpm",
+      "exec",
+      "rer",
+      "check",
+      "--profile",
+      "first-party"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 5.0
+  }
+]
