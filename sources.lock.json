@@ -7300,7 +7300,7 @@
       "executable": false
     },
     "tests/work/catalog-task-cases.mjs": {
-      "sha256": "82c6dbd793f70e96052c6f65d2cd9d6eedc6fd877674f7b8ad03feee2844906a",
+      "sha256": "35beec2a816faabcb8ee540b593090196dfc5bf4adb0a79e6cec3d64d30cc956",
       "executable": false
     },
     "tests/work/classification-cases.mjs": {
