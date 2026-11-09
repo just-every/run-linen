@@ -1,0 +1,148 @@
+{
+  "head": "d5c2b0aa29fa538a32ff4fee7eb3c3e59ae7bdb1",
+  "mainAtCandidate": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+  "branch": "cloud/sx-linen-c-f32",
+  "files": {
+    "src/ui/response-tools.tsx": "3f8f685a9c38fde52edcf8e2648aa289b2a00338ab5eb0b07ac0bf8090f0a497",
+    "src/ui/work-composer.tsx": "0c0265a7ce8a00ced22dfed3508a2792ceb98a4e96b9dec859633160f6014811",
+    "tests/ui/response-journey.mjs": "823c0db270dc176f5bc0789142a2a2b49d43cf289871c415f0d69df9d1afb15e",
+    "tests/ui/connected-browser.mjs": "6a8acba66ba41de2651bae35a952802e90a3963aaee065fed04cf43f2c92a75d",
+    "tests/ui/provider-boundary.mjs": "a944e16a056aa5f210e54bb2f3765f3f818c75b5b91fb068d7cb02ce3995470e",
+    "tests/work/response-cases.mjs": "511a1f1a584244f5396d79d333a17aca278715f2c5e0a6c037fd36b73dcde85f",
+    "tests/work/knowledge-draft-cases.mjs": "d918b8cb0ee1920b059267ce544645971abd1599ec3831f16884031921351c64",
+    "scripts/verify.mjs": "8d3851ae58c3a2633a8aafbb8817e16ca876ece66bf10493c1690b54f8b2c4b1",
+    "sources.lock.json": "c09cc3bbe8c1ed8fac981ee1b5c9857749a5a2c0b4aaa384834707589be7380f"
+  },
+  "viewsUnchanged": true,
+  "commands": [
+    {
+      "command": "pnpm typecheck",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write; node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "restoredGeneratedViews": true
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock; node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node tests/work/knowledge-draft-runtime.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node tests/ui/connected-run.mjs <focused response driver>",
+      "exit": 0,
+      "widths": [
+        1440,
+        390
+      ],
+      "matrixCases": 8
+    },
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "head": "d5c2b0aa29fa538a32ff4fee7eb3c3e59ae7bdb1"
+    },
+    {
+      "command": "node tests/ui/connected-run.mjs",
+      "exit": 0,
+      "head": "d5c2b0aa29fa538a32ff4fee7eb3c3e59ae7bdb1",
+      "realViewports": [
+        1440,
+        390
+      ],
+      "restart": true,
+      "pageErrors": []
+    }
+  ],
+  "baselineReplay": {
+    "head": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+    "command": "node tests/work/runtime.mjs",
+    "exit": 0,
+    "reason": "Investigate earlier pre-merge LIFE-002 assertion; current main and current candidate both pass without a repair"
+  },
+  "ci": {
+    "run": 42545417707,
+    "event": "pull_request",
+    "status": "in_progress",
+    "conclusion": null,
+    "head_sha": "d5c2b0aa29fa538a32ff4fee7eb3c3e59ae7bdb1"
+  },
+  "publicationScan": {
+    "head": "d5c2b0aa29fa538a32ff4fee7eb3c3e59ae7bdb1",
+    "complete": "not-run-in-cloud",
+    "historyScanned": false,
+    "findings": null,
+    "owner": "maintained Mac lander"
+  },
+  "generatedViews": {
+    "changedByBranch": false,
+    "contractStatusChangedByBranch": false
+  },
+  "counts": {
+    "initial": {
+      "done": 21,
+      "partial": 141,
+      "missing": 37
+    },
+    "currentMain": {
+      "done": 22,
+      "partial": 140,
+      "missing": 37
+    },
+    "branchDelta": {
+      "done": 0,
+      "partial": 0,
+      "missing": 0
+    },
+    "requestedAfterDESK008Gate": {
+      "done": 23,
+      "partial": 139,
+      "missing": 37
+    }
+  },
+  "initialFailures": [
+    {
+      "command": "node tests/ui/connected-run.mjs",
+      "exit": 1,
+      "failure": "locator.fill: value: expected string, got undefined",
+      "reason": "First-save module loaded before member-lookup correction; fixed in candidate"
+    },
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 1,
+      "failure": "LIFE-002 ordinary operator ticket search cannot recover the subject through reminder text: 3 !== 0",
+      "reason": "Initial pre-merge runtime; unchanged LIFE-002 passed on current main and exact candidate"
+    }
+  ],
+  "hookPath": "/home/agent/rer-consolidation/work/sx-linen-c-f32/run-linen/.git/fleet-cloud-hooks",
+  "productRemoteHead": "d5c2b0aa29fa538a32ff4fee7eb3c3e59ae7bdb1",
+  "productPush": {
+    "exit": 0,
+    "attempts": 1,
+    "head": "d5c2b0aa29fa538a32ff4fee7eb3c3e59ae7bdb1",
+    "branch": "cloud/sx-linen-c-f32"
+  },
+  "publicationTextAudit": {
+    "addedEmailStrings": 0,
+    "addedCredentialShapes": 0,
+    "addedBareSlashTokens": 0
+  },
+  "verifyShards": {
+    "responseJourney": 4,
+    "responseChecks": 6,
+    "knowledgeDraftChecks": 6
+  },
+  "completedAt": "2026-11-09T01:28:20Z"
+}

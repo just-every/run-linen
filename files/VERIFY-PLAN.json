@@ -1,0 +1,27 @@
+[
+  {
+    "shard": 4,
+    "seconds": 434,
+    "journeys": [
+      "Native sign-in and scoped API",
+      "Configuration and sandbox",
+      "Fulfilment and measured effort",
+      "Pending people",
+      "Connected service recovery browser",
+      "software license browser"
+    ]
+  },
+  {
+    "shard": 6,
+    "seconds": 433,
+    "journeys": [
+      "Service desk and lifecycle",
+      "Knowledge publication",
+      "Manager approval and bundles",
+      "Department privacy browser",
+      "Connection and authority browser",
+      "software provider browser",
+      "notification rules browser"
+    ]
+  }
+]

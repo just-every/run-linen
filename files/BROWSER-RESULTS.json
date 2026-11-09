@@ -1,0 +1,15 @@
+{
+  "check": "responseJourney",
+  "widths": [
+    1440,
+    390
+  ],
+  "cases": [
+    "canned public",
+    "canned private",
+    "model public",
+    "model private"
+  ],
+  "complete": true,
+  "pageErrors": []
+}

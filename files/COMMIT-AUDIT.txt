@@ -1,0 +1,12 @@
+Candidate: d5c2b0aa29fa538a32ff4fee7eb3c3e59ae7bdb1
+Run Edit Run fleet <fleet@runeditrun.com>
+Run Edit Run fleet <fleet@runeditrun.com>
+
+Run Edit Run fleet <fleet@runeditrun.com>
+Run Edit Run fleet <fleet@runeditrun.com>
+
+Run Edit Run fleet <fleet@runeditrun.com>
+Run Edit Run fleet <fleet@runeditrun.com>
+
+
+All candidate author and committer lines use fleet identity. All trailer blocks are empty.

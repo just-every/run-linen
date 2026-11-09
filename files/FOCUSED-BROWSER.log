@@ -1,0 +1,14 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PASS DESK-008 1440 canned public: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.
+PASS DESK-008 1440 canned private: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.
+PASS DESK-008 1440 model public: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.
+PASS DESK-008 1440 model private: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.
+PASS DESK-008 native 1440: canned requester name, twenty-message cited summary with knowledge, private-source isolation and unsent generated reply until agent Send.
+PASS DESK-008 390 canned public: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.
+PASS DESK-008 390 canned private: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.
+PASS DESK-008 390 model public: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.
+PASS DESK-008 390 model private: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.
+PASS DESK-008 native 390: canned requester name, twenty-message cited summary with knowledge, private-source isolation and unsent generated reply until agent Send.
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-c-f32/focused-proof
