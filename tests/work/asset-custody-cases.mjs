@@ -87,8 +87,20 @@ export async function assetAuditChecks(api, personId) {
     assert.ok(linked.items.some(i=>i.id===missing.followUpWorkId),'ASSET-010 the follow-up is linked to its device');
   }
   assert.equal(ok(await api(`/work-links?kind=asset&targetId=${done.found[0].assetId}`)).items.length,0,'ASSET-010 found devices open no follow-up');
-  assert.equal((await api(`/asset-audits/${audit.id}/scans`,{code:tags[18]})).status,409,'ASSET-010 a completed audit takes no scans');
+  // A completed audit is immutable: missing, previously found and unknown codes are all refused and the record rereads unchanged.
+  const sealed=ok(await api(`/asset-audits/${audit.id}`));
+  assert.equal(sealed.state,'completed');
+  assert.ok(sealed.completed_by&&sealed.completed_at&&sealed.revision>audit.revision,'ASSET-010 completion records its actor, time and revision');
+  for (const code of [tags[18],tags[19].toLowerCase(),tags[0],tags[17].toLowerCase(),'BLD-AUD-001','NO-SUCH-TAG-AFTER-COMPLETION']) {
+    const refused=await api(`/asset-audits/${audit.id}/scans`,{code});
+    assert.equal(refused.status,409,`ASSET-010 a completed audit takes no scan of ${code}`);
+    assert.equal(refused.value.code,'audit_completed');
+  }
+  assert.deepEqual(ok(await api(`/asset-audits/${audit.id}`)),sealed,'ASSET-010 scans, reconciliation, completion actor, time, revision and follow-up identities are unchanged by refused scans');
+  assert.deepEqual(ok(await api(`/asset-audits/${audit.id}`)).missing.map(m=>[m.assetId,m.followUpWorkId]),done.missing.map(m=>[m.assetId,m.followUpWorkId]));
+  for (const missing of done.missing) assert.equal(ok(await api(`/work-links?kind=asset&targetId=${missing.assetId}`)).items.filter(i=>i.id===missing.followUpWorkId).length,1,'ASSET-010 refused scans open no second follow-up');
   assert.equal((await api(`/asset-audits/${audit.id}/complete`,{revision:done.revision})).status,409,'ASSET-010 completion opens follow-ups once');
+  assert.deepEqual(ok(await api(`/asset-audits/${audit.id}`)),sealed,'ASSET-010 a refused second completion leaves the audit unchanged');
   assert.equal(ok(await api('/asset-audits')).items[0].id,audit.id);
   assert.ok(elsewhere.id);
   console.log('PASS ASSET-010 Denver stock room audit: 18 of 20 expected devices scanned, stray and unknown scans reported, two missing devices open linked follow-up tasks');
