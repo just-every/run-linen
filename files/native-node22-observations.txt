@@ -1,0 +1,10 @@
+PASS sandbox native configuration at 1440: create, all included family edits and rehearsals, complete diff, separate current non-editor owner approval, promotion, reviewed rollback, keyboard and scope refusals, production readback
+PASS sandbox native configuration at 390: create, all included family edits and rehearsals, complete diff, separate current non-editor owner approval, promotion, reviewed rollback, keyboard and scope refusals, production readback
+[wrangler:info] POST /api/v1/sandboxes/7d30ee29-d9b3-4157-8ecd-f976bd204430/approve 403 Forbidden (37ms)
+[wrangler:info] POST /api/v1/sandboxes 403 Forbidden (70ms)
+[wrangler:info] PUT /api/v1/sandboxes/7d30ee29-d9b3-4157-8ecd-f976bd204430/catalog/fbb2c454-4615-4430-8a20-479873541d3b 403 Forbidden (12ms)
+[wrangler:info] POST /api/v1/sandboxes/7d30ee29-d9b3-4157-8ecd-f976bd204430/promote 403 Forbidden (10ms)
+[wrangler:info] POST /api/v1/sandboxes/3b3f693e-00f4-4473-9c9e-562999505266/approve 403 Forbidden (62ms)
+[wrangler:info] POST /api/v1/sandboxes 403 Forbidden (828ms)
+[wrangler:info] PUT /api/v1/sandboxes/3b3f693e-00f4-4473-9c9e-562999505266/catalog/a5dbfd52-edaf-45e2-896c-edb5d6215deb 403 Forbidden (26ms)
+[wrangler:info] POST /api/v1/sandboxes/3b3f693e-00f4-4473-9c9e-562999505266/promote 403 Forbidden (49ms)

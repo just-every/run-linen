@@ -1,0 +1,52 @@
+{
+  "tag": "sx-linen-c-f45",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f45",
+  "base": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "save": "a72ebd2993f3e37f57755d815ba81d099ebad847",
+  "predecessor": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "predecessor_verify": 42570916118,
+  "failed_job": 129025246169,
+  "counts_before": {
+    "partial": 134,
+    "done": 28,
+    "missing": 37
+  },
+  "counts_after": {
+    "partial": 134,
+    "done": 28,
+    "missing": 37
+  },
+  "changed_files": [
+    "sources.lock.json",
+    "tests/ui/browser.mjs",
+    "tests/ui/sandbox-journey.mjs",
+    "tests/ui/sandbox-routing-journey.mjs"
+  ],
+  "contract_diff": "",
+  "github_calls_used": 6,
+  "runtime_footprint_byte_equal": true,
+  "runtime_comparison_command": "git diff --name-only cc284ac cloud/sx-linen-c-f45 -- src package.json pnpm-lock.yaml migrations tests/ui/browser.mjs tests/ui/sandbox-journey.mjs tests/ui/sandbox-routing-journey.mjs",
+  "custody_verified": true,
+  "pr": 180,
+  "pr_url": "https://github.com/just-every/run-linen/pull/180",
+  "predecessor_node24_exit": 0,
+  "predecessor_node22_exit": 242,
+  "predecessor_node22_target_widths_passed": [
+    1440,
+    390
+  ],
+  "predecessor_node22_full_verify_passed": false,
+  "repair_rounds": 0,
+  "predecessor_tree": "8a4d0e7255897cef987c5211e18f18b982cec132",
+  "save_tree": "8a4d0e7255897cef987c5211e18f18b982cec132",
+  "whole_tree_byte_equal": true,
+  "main_comparison_exit": 1,
+  "main_comparison_failure": "ASSET-010 scan DEN1440-016: 500 !== 200",
+  "product_status": "BLOCKED",
+  "claim": "PARTIAL",
+  "points_closed": [],
+  "workflow_dispatches": 0,
+  "workflow_reruns": 0,
+  "publication_scan": null
+}

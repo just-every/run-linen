@@ -1,0 +1,95 @@
+Checking pinned pnpm
+10.12.4
+Verifying application
+
+> @linen-foundation/linen@0.1.1 verify:app [REDACTED]
+> node scripts/verify.mjs
+
+
+Checking Employee service desk browser (shard 1/6)
+PASS LIFE-007: lifecycle evidence download with outstanding duties at 1440
+PASS ASSET-004: physical lifecycle, loan, assigned/certificate refusals and attributed disposal at 1440
+PASS ASSET-007: attach AppleCare and all contract kinds, manufacturer lookup and repair coverage/expiry alerts at 1440
+PASS DESK-002 real Worker browser 1440: unavailable provider visible, type/category/subcategory/impact/urgency matrix, P1 -> P2 override and persisted audited before/after.
+CATALOG-002 native item, cost, explicit finance stage/calendar, OOO delegation, manager and finance decisions with keyboard and responsive evidence.
+PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440
+PASS sandbox native settings: isolated catalog, form, tasks, roles, full existing SLA configuration, rehearsals, field diffs, separate owner approval, promotion, reviewed rollback and employee refusal at 1440
+PASS LIFE-002 native template editor, dated team tasks on the record, owner completion and the manager reminder at 1440
+PASS MIGRATE-004 native CSV/Zendesk historical tickets, imported unbound person, stock and custody at 1440
+PASS CATALOG-001 native form editor, conditional request, known and unknown estimates and immutable submitted revision at 1440
+PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440
+PASS CATALOG-001 native item creation, quote requirement, audience editor, quote refusal and upload, approver reading and colleague 404 at 1440
+PASS ASSET-009 browser: typed CIs and Payroll dependencies, change/incident impact and marked stale relationship at 1440
+PASS PROB-002 browser: eight floor Wi-Fi tickets listed, rejection retained after ninth and reload, human acceptance opens one linked native problem at 1440
+PASS DESK-013 browser: owned monthly recurring work skips holiday, creates ticket and completes task plan at desktop/mobile widths
+PASS ASSET-008 browser: $2400/36-month asset, month-12 book value, fiscal CSV download, persisted declining policy at 1440
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: ASSET-010 scan DEN1440-016
+
+500 !== 200
+
+    at assetAuditJourney (file://[REDACTED]/tests/ui/asset-audit-journey.mjs:17:14)
+    at async file://[REDACTED]/tests/ui/browser.mjs:571:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 500,
+  expected: 200,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.20.0
+file://[REDACTED]/tests/ui/run.mjs:108
+      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+                              ^
+
+Error: Browser acceptance exited 1
+    at ChildProcess.<anonymous> (file://[REDACTED]/tests/ui/run.mjs:108:31)
+    at ChildProcess.emit (node:events:519:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+
+Node.js v22.20.0
+ ELIFECYCLE  Command failed with exit code 1.
+Verifying application: exit 1, signal none.
+Command: pnpm
+Last output (up to 40 lines):
+PASS sandbox native settings: isolated catalog, form, tasks, roles, full existing SLA configuration, rehearsals, field diffs, separate owner approval, promotion, reviewed rollback and employee refusal at 1440
+PASS LIFE-002 native template editor, dated team tasks on the record, owner completion and the manager reminder at 1440
+PASS MIGRATE-004 native CSV/Zendesk historical tickets, imported unbound person, stock and custody at 1440
+PASS CATALOG-001 native form editor, conditional request, known and unknown estimates and immutable submitted revision at 1440
+PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440
+PASS CATALOG-001 native item creation, quote requirement, audience editor, quote refusal and upload, approver reading and colleague 404 at 1440
+PASS ASSET-009 browser: typed CIs and Payroll dependencies, change/incident impact and marked stale relationship at 1440
+PASS PROB-002 browser: eight floor Wi-Fi tickets listed, rejection retained after ninth and reload, human acceptance opens one linked native problem at 1440
+PASS DESK-013 browser: owned monthly recurring work skips holiday, creates ticket and completes task plan at desktop/mobile widths
+PASS ASSET-008 browser: $2400/36-month asset, month-12 book value, fiscal CSV download, persisted declining policy at 1440
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: ASSET-010 scan DEN1440-016
+
+500 !== 200
+
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 500,
+  expected: 200,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.20.0
+file://[REDACTED]/tests/ui/run.mjs:108
+      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+                              ^
+
+Browser acceptance exited 1
+
+Node.js v22.20.0
+ ELIFECYCLE  Command failed with exit code 1.
+Log: [REDACTED]/.seed/installer/install.log
+verify: failed (exit 1)

@@ -1,0 +1,131 @@
+{
+  "schema": 1,
+  "repository": "just-every/run-linen",
+  "tag": "sx-linen-c-f45",
+  "product_head": "a72ebd2993f3e37f57755d815ba81d099ebad847",
+  "product_tree": "8a4d0e7255897cef987c5211e18f18b982cec132",
+  "product_branch": "cloud/sx-linen-c-f45",
+  "predecessor": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "original_failure": {
+    "run": 42570916118,
+    "job": 129025246169,
+    "test": "An employee cannot create, edit or apply configuration through the public doors",
+    "actual": [
+      403,
+      403,
+      500
+    ],
+    "expected": [
+      403,
+      403,
+      403
+    ],
+    "reproduced": false
+  },
+  "local_node24": {
+    "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+    "exit": 0,
+    "full_verify_passed": true,
+    "widths_passed": [
+      1440,
+      390
+    ]
+  },
+  "local_node22": {
+    "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+    "exit": 242,
+    "deadline_seconds": 1200,
+    "full_verify_passed": false,
+    "widths_passed": [
+      1440,
+      390
+    ],
+    "terminated_during": "relationshipActivityJourney after both target flows passed"
+  },
+  "main_comparison": {
+    "head": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+    "exit": 1,
+    "test": "ASSET-010 scan DEN1440-016",
+    "actual": 500,
+    "expected": 200
+  },
+  "checks": [
+    {
+      "label": "typecheck",
+      "head": "a72ebd2993f3e37f57755d815ba81d099ebad847",
+      "command": "pnpm typecheck",
+      "started": "2026-11-09T08:11:42.602937+00:00",
+      "finished": "2026-11-09T08:13:12.215997+00:00",
+      "exit": 0,
+      "log": "typecheck.log",
+      "sha256": "87239c581dba9781878486c5fe7b58a8cefe4cc869d5baa5371d6d5f3a451ea1"
+    },
+    {
+      "label": "first-party",
+      "head": "a72ebd2993f3e37f57755d815ba81d099ebad847",
+      "command": "pnpm exec rer check --profile first-party",
+      "started": "2026-11-09T08:13:12.414369+00:00",
+      "finished": "2026-11-09T08:13:15.339398+00:00",
+      "exit": 0,
+      "log": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "views-write",
+      "head": "a72ebd2993f3e37f57755d815ba81d099ebad847",
+      "command": "node src/base/contract-docs.mjs write",
+      "started": "2026-11-09T08:14:37.574609+00:00",
+      "finished": "2026-11-09T08:14:37.953771+00:00",
+      "exit": 0,
+      "log": "views-write.log",
+      "sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+    },
+    {
+      "label": "views-check",
+      "head": "a72ebd2993f3e37f57755d815ba81d099ebad847",
+      "command": "node src/base/contract-docs.mjs check",
+      "started": "2026-11-09T08:14:38.115412+00:00",
+      "finished": "2026-11-09T08:14:38.866405+00:00",
+      "exit": 0,
+      "log": "views-check.log",
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    {
+      "label": "source-lock",
+      "head": "a72ebd2993f3e37f57755d815ba81d099ebad847",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "started": "2026-11-09T08:14:39.022280+00:00",
+      "finished": "2026-11-09T08:14:39.844605+00:00",
+      "exit": 0,
+      "log": "source-lock.log",
+      "sha256": "3aca0f6a7c800711f9a8f5a3105fae50feaa4b50a130a97c1c864b5f24e31848"
+    },
+    {
+      "label": "source-check",
+      "head": "a72ebd2993f3e37f57755d815ba81d099ebad847",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "started": "2026-11-09T08:14:39.970010+00:00",
+      "finished": "2026-11-09T08:14:40.650201+00:00",
+      "exit": 0,
+      "log": "source-check.log",
+      "sha256": "fd44594b4c743c6e9ed30de60a04a79d02cf315d0de07d6d0f6c4d13e5492d29"
+    },
+    {
+      "label": "configuration-runtime",
+      "head": "a72ebd2993f3e37f57755d815ba81d099ebad847",
+      "command": "perl -e 'alarm 1200; exec @ARGV' -- node tests/platform/config-runtime.mjs",
+      "started": "2026-11-09T08:13:15.502768+00:00",
+      "finished": "2026-11-09T08:16:57.855362+00:00",
+      "exit": 0,
+      "log": "configuration-runtime.log",
+      "sha256": "289feef6a07302e10e96ae3135f4577e75af51c68473c5bfedb9ad21ff3cb278"
+    }
+  ],
+  "repair_rounds": 0,
+  "contract_status_changed": false,
+  "source_lock_fresh": true,
+  "generated_views_committed": false,
+  "ci_verify_on_product_head": null,
+  "publication_scan": null,
+  "pr": "https://github.com/just-every/run-linen/pull/180"
+}
