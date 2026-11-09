@@ -1,0 +1,60 @@
+{
+  "candidate_head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+  "node": "22.20.0",
+  "chromium": "/usr/bin/chromium",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run node tests/platform/config-runtime.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run env LINEN_TEST_BUILT=1 node tests/ui/run.mjs /tmp/linen-sandbox-driver.mjs",
+      "exit": 0,
+      "proof": "STANDARD-RUNNER.log"
+    },
+    {
+      "command": "cloud_run env LINEN_TEST_BUILT=1 SANDBOX_REPEATS=2 node /tmp/linen-native-isolated-run.mjs /tmp/linen-sandbox-driver.mjs",
+      "exit": 0,
+      "proof": "PREEXISTING-RUN.log",
+      "state": "Second journey reuses the first journey database, reviewed/promoted/rollback sandboxes and configuration."
+    }
+  ],
+  "ten_clean_runs": {
+    "total": 10,
+    "passed": 10,
+    "receipt": "CLEAN-RUNS.json"
+  },
+  "publication_scan": "Not run, explicitly excluded by this brief.",
+  "ci": {
+    "id": 42580176836,
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+    "receipt": "CI-RECEIPT.json"
+  },
+  "blockers": []
+}

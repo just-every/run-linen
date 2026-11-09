@@ -1,0 +1,39 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-f42fix1",
+  "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+  "remote_ref": "582a96ae32c7ef9e2edb3d38b1be121c845acebe\trefs/heads/cloud/sx-linen-f42fix1",
+  "verified_at": "2026-11-09T07:35:29.540723+00:00",
+  "product_commit": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+  "retained_parent": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "push_guard": "cloud-push.py",
+  "push_result": "PUSH_OK branch=cloud/sx-linen-f42fix1",
+  "attempt": 1,
+  "working_tree_clean": true,
+  "contract_source_and_views_equal_main": true,
+  "main_at_integration": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "full_history": true,
+  "main_is_ancestor": true,
+  "changed_files": [
+    "sources.lock.json",
+    "src/platform/sandboxes.ts",
+    "tests/platform/sandbox-cases.mjs",
+    "tests/ui/run.mjs"
+  ],
+  "new_test_registrations": 0,
+  "clause_counts_before": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37,
+    "total": 199
+  },
+  "clause_counts_after": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37,
+    "total": 199
+  },
+  "clause_status_changes": [],
+  "target_status": "PARTIAL",
+  "pr": null
+}

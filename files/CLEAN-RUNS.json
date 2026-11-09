@@ -1,0 +1,300 @@
+{
+  "candidate_head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+  "runs": [
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:36:46.708898+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-01.log",
+      "number": 1,
+      "seconds": 78.246,
+      "started_at": "2026-11-09T07:35:28.463390+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/eb8fe693-ca8a-4145-a69c-ec19e4fc18a1/catalog/6381d790-fdcd-4ec6-914d-cdaf9b11235e",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/eb8fe693-ca8a-4145-a69c-ec19e4fc18a1/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-01.log"
+    },
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:38:11.997341+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-02.log",
+      "number": 2,
+      "seconds": 85.284,
+      "started_at": "2026-11-09T07:36:46.713084+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/b23fe83f-cebb-4311-a92d-0600d55474e8/catalog/680fec3d-7fcf-4dad-a6b2-222399c88b6d",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/b23fe83f-cebb-4311-a92d-0600d55474e8/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-02.log"
+    },
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:39:27.286991+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-03.log",
+      "number": 3,
+      "seconds": 75.285,
+      "started_at": "2026-11-09T07:38:12.001894+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/19bf1cb3-dab9-48cb-b1b6-af475d923f19/catalog/350200f7-9b2c-4929-a47d-d083aa911c33",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/19bf1cb3-dab9-48cb-b1b6-af475d923f19/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-03.log"
+    },
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:41:20.873359+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-04.log",
+      "number": 4,
+      "seconds": 113.586,
+      "started_at": "2026-11-09T07:39:27.287667+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/c79a6b42-2d29-4b8f-97fa-df8921c87f8d/catalog/9f31b6d8-80a2-44d3-8872-77b9cd5348ad",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/c79a6b42-2d29-4b8f-97fa-df8921c87f8d/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-04.log"
+    },
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:42:21.830045+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-05.log",
+      "number": 5,
+      "seconds": 60.956,
+      "started_at": "2026-11-09T07:41:20.874146+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/efd5ba28-630b-486a-a81a-983367cd8422/catalog/bc710768-17c4-44cc-aa10-c0a80ea6f818",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/efd5ba28-630b-486a-a81a-983367cd8422/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-05.log"
+    },
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:44:10.053149+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-06.log",
+      "number": 6,
+      "seconds": 108.223,
+      "started_at": "2026-11-09T07:42:21.830661+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/2239be36-b487-4c7f-be2d-c3bda50965a9/catalog/490b4738-2e7c-4042-9a0c-4d0c7692c4db",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/2239be36-b487-4c7f-be2d-c3bda50965a9/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-06.log"
+    },
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:45:09.280863+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-07.log",
+      "number": 7,
+      "seconds": 59.225,
+      "started_at": "2026-11-09T07:44:10.056213+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/1bc3a2b1-77ec-4a32-bf32-8788bf9c7e94/catalog/5c483922-c12f-448a-a1d8-08ca1ef784c3",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/1bc3a2b1-77ec-4a32-bf32-8788bf9c7e94/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-07.log"
+    },
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:46:15.874044+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-08.log",
+      "number": 8,
+      "seconds": 66.592,
+      "started_at": "2026-11-09T07:45:09.281935+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/31787493-fe80-4a05-8b92-337a4e4383c9/catalog/f78c1e6c-cdbd-4db3-8f4c-af88266b8dd1",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/31787493-fe80-4a05-8b92-337a4e4383c9/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-08.log"
+    },
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:47:40.283629+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-09.log",
+      "number": 9,
+      "seconds": 84.407,
+      "started_at": "2026-11-09T07:46:15.877019+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/9aa5dcdf-b81a-4286-8cbe-1cb5b2aa9415/catalog/152458eb-b3db-46e5-9800-c65c8a25b123",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/9aa5dcdf-b81a-4286-8cbe-1cb5b2aa9415/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-09.log"
+    },
+    {
+      "exit": 0,
+      "finished_at": "2026-11-09T07:49:48.162141+00:00",
+      "head": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+      "log": "/tmp/linen-clean-10.log",
+      "number": 10,
+      "seconds": 127.877,
+      "started_at": "2026-11-09T07:47:40.284858+00:00",
+      "state": "fresh isolated database and Worker",
+      "width": 1440,
+      "employee_refusals": [
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes",
+          "status": 403
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/sandboxes/fa4872ff-f470-4020-90c1-c5edf6d067c4/catalog/0b752047-68d1-4cd8-83a8-14795b7bbac6",
+          "status": 403
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/sandboxes/fa4872ff-f470-4020-90c1-c5edf6d067c4/promote",
+          "status": 403
+        }
+      ],
+      "packet_log": "CLEAN-10.log"
+    }
+  ],
+  "total": 10,
+  "passed": 10,
+  "all_consecutive": true,
+  "width": 1440,
+  "fresh_state_per_run": true
+}

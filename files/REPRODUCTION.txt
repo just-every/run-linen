@@ -1,0 +1,7 @@
+Observed locally before the fix, through the emitted Worker and original wrangler-dev transport:
+
+[wrangler:info] POST /api/v1/sandboxes 403 Forbidden (29ms)
+[wrangler:info] PUT /api/v1/sandboxes/bb3b9593-3888-4969-b830-086dddc84104/catalog/74a5e491-1851-43a7-8f7b-0727b5afc0a3 403 Forbidden (39ms)
+✘ [ERROR] Error inside ProxyWorker (the affected request failed; the dev server continues): POST http://127.0.0.1:41041/api/v1/sandboxes/bb3b9593-3888-4969-b830-086dddc84104/promote (failed after 1 attempt): Network connection lost.
+
+No application Request failed stack was emitted for this request. The existing tests/ui/worker-server.mjs documents this exact dropped keep-alive POST failure before application entry. This is transport evidence, not a configuration exception.

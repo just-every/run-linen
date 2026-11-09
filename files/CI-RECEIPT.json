@@ -1,0 +1,12 @@
+{
+  "repository": "just-every/run-linen",
+  "workflow": "Verify",
+  "id": 42580176836,
+  "conclusion": "success",
+  "head_sha": "582a96ae32c7ef9e2edb3d38b1be121c845acebe",
+  "html_url": "https://github.com/just-every/run-linen/actions/runs/42580176836",
+  "status": "completed",
+  "github_calls_used": 5,
+  "checked_at": "2026-11-09T07:50:08.082096+00:00",
+  "dispatch_ref": "cloud/sx-linen-f42fix1"
+}

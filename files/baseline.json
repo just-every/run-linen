@@ -1,0 +1,19 @@
+{
+  "base": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "main": "e9aa943",
+  "clause_counts": {
+    "partial": 134,
+    "done": 28,
+    "missing": 37
+  },
+  "total": 199,
+  "target": "SANDBOX-001",
+  "target_status": "partial",
+  "new_test_registrations_planned": 0,
+  "generated_summary_counts": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37,
+    "total": 199
+  }
+}
