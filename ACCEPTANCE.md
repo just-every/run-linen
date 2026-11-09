@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 21 | 128 | 29 | 178 |
+| Core | 22 | 127 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 21 | 141 | 37 | 199 |
+| Full target | 22 | 140 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -2134,7 +2134,7 @@ Core · target · **partial** · Rules D-4
 
 #### KB-001 — Knowledge base
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Articles with authoring, review, versions, audience scoping, expiry and escalation to a request (E7).
 
@@ -2142,8 +2142,8 @@ Core · target · **partial**
 1. As in E7, an employee searches a reviewed article and escalates it into a request carrying the article revision.
 2. An expired article disappears from employee search.
 
-**Evidence.** `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs`
-**Gap.** Not asserted in the cited files: that an expired article disappears from employee search. Reviewed-article search and escalation with the article revision are asserted.
+**Evidence.** `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs`; `tests/work/runtime.mjs` (Service desk and lifecycle); `tests/work/runtime.mjs` (KB-001 reviewed article expires from employee search)
+**Gap.** None.
 
 #### KB-002 — Federated knowledge sources
 
