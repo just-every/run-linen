@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 26 | 123 | 29 | 178 |
+| Core | 27 | 122 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 26 | 136 | 37 | 199 |
+| Full target | 27 | 135 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -1427,7 +1427,7 @@ Core · target · **missing** · Cites BASE-SECRET-001 · Rules D-2
 
 #### ACCESS-008 — Application catalog and owners
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** A registry of SaaS applications with owner, approvers, roles/entitlements, cost per seat in USD, connector and data sensitivity; catalog items reference these entitlements (RL-11). ACCESS-005 carries SaaS provisioning.
 
@@ -1441,8 +1441,8 @@ Core · target · **partial**
 7. Seat costs are nonnegative integer USD cents per month, year or one-time period, without conversion or a charge claim; connector descriptions are recorded metadata, not provider verification.
 8. Native restore remaps references without activating historical membership or releasing the execution hold; erasure anonymizes retained registry/request actors.
 
-**Evidence.** `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs`
-**Gap.** Not asserted: that approver metadata confers no approval right. Registration, routing, visibility, snapshots, seat costs, restore and erasure are asserted.
+**Evidence.** `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs`; `tests/work/application-cases.mjs` (applicationChecks); `tests/adoption/application-cases.mjs` (checkArchiveApplications); `tests/ui/application-journey.mjs` (applicationJourney)
+**Gap.** None.
 
 #### ACCESS-009 — User access reviews
 

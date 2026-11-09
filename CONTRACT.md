@@ -2949,8 +2949,8 @@ Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0c
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 21 | 0 | 25 |
-| Target and push further | 22 | 115 | 37 | 174 |
-| All | 26 | 136 | 37 | 199 |
+| Target and push further | 23 | 114 | 37 | 174 |
+| All | 27 | 135 | 37 | 199 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -3038,7 +3038,7 @@ Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0c
 | `ACCESS-005` | SaaS application provisioning | target | missing |  | No GitHub, Slack, Salesforce, Atlassian, Zoom or AWS connectors. |
 | `ACCESS-006` | Just-in-time and time-bound access | target | partial | `src/features/work/requests.ts`, `src/features/execution/automation.ts`, `tests/ui/connected-request.mjs` | Not asserted: that access a user already had is kept at expiry. Expiry removal with independent readback is asserted. |
 | `ACCESS-007` | Self-service account recovery | target | missing |  | No password/MFA reset or unlock, in a cloud IdP or in on-premises AD. |
-| `ACCESS-008` | Application catalog and owners | target | partial | `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs` | Not asserted: that approver metadata confers no approval right. Registration, routing, visibility, snapshots, seat costs, restore and erasure are asserted. |
+| `ACCESS-008` | Application catalog and owners | target | done | `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs`; `tests/work/application-cases.mjs` (applicationChecks); `tests/adoption/application-cases.mjs` (checkArchiveApplications); `tests/ui/application-journey.mjs` (applicationJourney) | |
 | `ACCESS-009` | User access reviews | target | missing |  | No access reviews. |
 | `ACCESS-010` | On-premises Active Directory (hybrid identity) | target | missing |  | No on-premises AD relay, source-of-authority routing or domain-controller readback. |
 | `LIFE-001` | HRIS-triggered lifecycle | target | missing |  | No Rippling, Gusto, BambooHR, Workday or Willow connector; lifecycle accepts HR facts through the API only. |
