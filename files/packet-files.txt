@@ -49,3 +49,6 @@ merge-source-lock.log
 merge-source-check.log
 blocked-candidate-job.log
 blocked-candidate-log-transport.txt
+candidate-ci-failure-excerpt.log
+candidate-target-ci.log
+candidate-failed-transport.txt

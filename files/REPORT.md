@@ -47,7 +47,7 @@ The exact candidate's normal work runtime includes existing search serial/tag/na
 
 ## CI, counts and clause custody
 
-Verify 42542451567 is in_progress on exact head fc7a01bf5e248f098736700955713f752a93a7b3. GitHub API budget used: 8/10.
+Verify 42542451567 is completed/failure on exact head fc7a01bf5e248f098736700955713f752a93a7b3. GitHub API budget used: 10/10.
 CI URL: https://github.com/just-every/run-linen/actions/runs/42542451567
 One watcher, no polling more often than 300 seconds, no dispatch or rerun of an existing run.
 
@@ -55,4 +55,17 @@ Starting blocked candidate counts: **20 DONE / 142 PARTIAL / 37 MISSING / 199 to
 
 CLAIM ACCESS-008 DONE points=1,2,3,4,5,6,7,8 tests=tests/work/application-cases.mjs#applicationChecks; tests/adoption/application-cases.mjs#checkArchiveApplications; tests/ui/application-journey.mjs#applicationJourney
 
-This is the builder's existing claim, retained verbatim; the independent gate and fleet own acceptance and landing. This FIX takes no other acceptance point, campaign continuation, redesign, release or provider work. No new ruling or policy default was needed. There is no observed product blocker after the passing local checks; remote Verify custody is recorded above. Publication, deployment and landing are not performed by this cloud task.
+This is the builder's existing claim, retained verbatim; the independent gate and fleet own acceptance and landing. This FIX takes no other acceptance point, campaign continuation, redesign, release or provider work. No new ruling or policy default was needed. The named search failure is corrected locally and in CI shard 6. Exact-SHA Verify remains red: native sign-in returned a lost-connection response and the employee browser shard reached its 12-minute timeout. These failures are outside the one-item search FIX. The ten-call GitHub budget is exhausted, and rerunning an existing Verify is expressly forbidden. The terminal status is BLOCKED; no READY or green workflow result is claimed. Publication, deployment and landing are not performed by this cloud task.
+
+## Terminal blocker and archive evidence
+
+Verify 42542451567 completed **failure** on fc7a01bf5e248f098736700955713f752a93a7b3. The light and build tiers passed; the archived target shard 6 output contains the unchanged ACCESS-008 metadata-only refusal probe, LIFE-002 PASS and the completed work/search runtime. The full Verify is held by:
+
+- journeys (4), Native sign-in and scoped API: `Error: Network connection lost.` became a non-JSON response; the client failed at tests/platform/agent-door-fixture.mjs:34, called from tests/platform/base-auth-runtime.mjs:226.
+- journeys (1), Employee service desk browser: `The operation was canceled.` at 01:04:18Z, at its existing 12-minute job timeout, after hydration-check output.
+
+These are separate from the named search failure and are not a contract-generator-only exception. No unrelated auth, browser, workflow or timeout change is included in this one-blocking-item FIX. No existing test was weakened, and no empty commit, workflow dispatch or rerun was used to obtain another CI result. The final archive invocation was `gh run view 42542451567 --repo just-every/run-linen --log-failed`, once for the completed run; the remaining single budgeted invocation could retrieve the archive without spending another call discovering individual failed job IDs. It succeeded with no transport error. The actual sanitized failure excerpt and passing target-shard lines are in candidate-ci-failure-excerpt.log and candidate-target-ci.log. Total budget: 10/10.
+
+Product code, claim and complete proof are pushed for the lane. The fleet can investigate the independent CI failures under a separate authorized round. The source fix is not READY while this exact-SHA Verify is red.
+
+BLOCKED Verify 42542451567 is red on fc7a01bf5e248f098736700955713f752a93a7b3: native sign-in connection loss and browser shard timeout.

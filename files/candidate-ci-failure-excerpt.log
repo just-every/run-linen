@@ -1,0 +1,29 @@
+2026-11-09T00:53:20.3579010Z 
+2026-11-09T00:53:20.3852943Z <anonymous_script>:1
+2026-11-09T00:53:20.3853694Z Error: Network connection lost.
+2026-11-09T00:53:20.3854117Z ^
+2026-11-09T00:53:20.3854316Z 
+2026-11-09T00:53:20.3854619Z SyntaxError: Unexpected token 'E', "Error: Net"... is not valid JSON
+2026-11-09T00:53:20.3855270Z     at JSON.parse (<anonymous>)
+2026-11-09T00:53:20.3855739Z     at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+2026-11-09T00:53:20.3856430Z     at successSteps (node:internal/deps/undici/undici:5719:27)
+2026-11-09T00:53:20.3856956Z     at fullyReadBody (node:internal/deps/undici/undici:4609:9)
+2026-11-09T00:53:20.3857605Z     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-11-09T00:53:20.3858293Z     at async consumeBody (node:internal/deps/undici/undici:5728:7)
+2026-11-09T00:53:20.3858920Z     at async file://[REDACTED]/tests/platform/agent-door-fixture.mjs:34:40
+2026-11-09T00:53:20.3859712Z     at async file://[REDACTED]/tests/platform/base-auth-runtime.mjs:226:16
+2026-11-09T00:53:20.3860075Z 
+2026-11-09T00:53:20.3860238Z Node.js v22.20.0
+2026-11-09T00:53:20.4130463Z  ELIFECYCLE  Command failed with exit code 1.
+2026-11-09T00:53:20.5219338Z Verifying application: exit 1, signal none.
+2026-11-09T00:53:20.5219983Z Command: pnpm
+2026-11-09T00:53:20.5220304Z Last output (up to 40 lines):
+2026-11-09T00:53:20.5220716Z [wrangler:info] POST /api/v1/mcp-credentials 403 Forbidden (13ms)
+
+2026-11-09T01:03:59.4497045Z Checking that page sections hydrate as separate units
+2026-11-09T01:04:15.4545355Z Hydration check: 4 page(s), 6 load(s)
+2026-11-09T01:04:15.4547540Z   /: skipped, plain HTML: React does not hydrate this page and it loads no application script
+2026-11-09T01:04:15.4549701Z   /app: 3 load(s), 0 section(s)
+2026-11-09T01:04:15.4552802Z   /signin: skipped, plain HTML: React does not hydrate this page and it loads no application script
+2026-11-09T01:04:15.4555457Z   /setup: skipped, plain HTML: React does not hydrate this page and it loads no application script
+2026-11-09T01:04:18.4175487Z ##[error]The operation was canceled.

@@ -131,14 +131,41 @@
     }
   ],
   "ci": {
-    "conclusion": null,
-    "github_calls_used": 8,
+    "archive_read_exit": 0,
+    "blockers": [
+      {
+        "error": "Network connection lost; non-JSON response at tests/platform/agent-door-fixture.mjs:34, called by tests/platform/base-auth-runtime.mjs:226",
+        "job": "journeys (4)",
+        "journey": "Native sign-in and scoped API"
+      },
+      {
+        "error": "Job canceled at the 12-minute timeout after hydration check output",
+        "job": "journeys (1)",
+        "journey": "Employee service desk browser"
+      }
+    ],
+    "conclusion": "failure",
+    "github_calls_used": 10,
     "head_sha": "fc7a01bf5e248f098736700955713f752a93a7b3",
     "html_url": "https://github.com/just-every/run-linen/actions/runs/42542451567",
     "id": 42542451567,
-    "observation": "budgeted watcher ended",
-    "status": "in_progress"
+    "log_read_command": "gh run view 42542451567 --repo just-every/run-linen --log-failed",
+    "status": "completed",
+    "target_checks": "ACCESS-008 point 3, LIFE-002 and search checks passed in shard 6",
+    "terminal": "BLOCKED"
   },
+  "ci_blockers": [
+    {
+      "error": "Network connection lost; non-JSON response at tests/platform/agent-door-fixture.mjs:34, called by tests/platform/base-auth-runtime.mjs:226",
+      "job": "journeys (4)",
+      "journey": "Native sign-in and scoped API"
+    },
+    {
+      "error": "Job canceled at the 12-minute timeout after hydration check output",
+      "job": "journeys (1)",
+      "journey": "Employee service desk browser"
+    }
+  ],
   "contract_counts": {
     "after_fix": {
       "done": 21,
@@ -159,7 +186,7 @@
       "total": 199
     }
   },
-  "generated_at": "2026-11-09T01:05:01.291804+00:00",
+  "generated_at": "2026-11-09T01:09:30.183723+00:00",
   "head": "fc7a01bf5e248f098736700955713f752a93a7b3",
   "migrations": "none added or changed",
   "pr": {
@@ -183,5 +210,6 @@
   "publication_scan": "not run as expressly required by FIX brief",
   "repository": "just-every/run-linen",
   "schema": 1,
-  "tag": "sx-linen-f19fix1"
+  "tag": "sx-linen-f19fix1",
+  "terminal": "BLOCKED"
 }
