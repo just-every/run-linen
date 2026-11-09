@@ -80,13 +80,13 @@
     }
   },
   "ci": {
-    "conclusion": null,
+    "conclusion": "success",
     "event": "pull_request",
     "head_sha": "a20e859324c1d3104d4c4fcb4d59e53499cdaae9",
     "html_url": "https://github.com/just-every/run-linen/actions/runs/42545051614",
     "id": 42545051614,
     "name": "Verify",
-    "status": "in_progress"
+    "status": "completed"
   },
   "publication_scan": {
     "commit": "a20e859324c1d3104d4c4fcb4d59e53499cdaae9",
@@ -120,5 +120,23 @@
       "observed": "active control assigned d3-hw; inactive retained member excluded for round-robin and load at creation and rerouting; stored group membership retained"
     }
   ],
-  "github_api_calls": 4
+  "github_api_calls": 6,
+  "candidate_test_sha256": "431b381a28b1e24da7b2c9d536f811a6b0382f2000e3fc7f082abc76897f0668",
+  "candidate_routing_source_sha256": "f333636027a67aa343f64b8e5fb05e96573a64b37cb734ccc5f10aeee8620626",
+  "candidate_routing_config_sha256": "a7e28c32ad98c4eb279ce90b2351f40001206fd88a2a3be96677aa86d0b6533b",
+  "candidate_patch_sha256": "1a3fa04d2f7a7a3f332b0e10314569848c9e363d1a121e64c64d66dbb438cedf",
+  "riders": {
+    "1": "PASS",
+    "2": "PASS",
+    "3": "PASS",
+    "4": "PASS",
+    "5": "INSPECTED PASS",
+    "6": "PASS",
+    "7": "PASS",
+    "8": "PASS",
+    "9": "PASS",
+    "10": "PASS",
+    "11": "pending guarded landing; ACCEPT ON LANDING"
+  },
+  "custody": "product pushed; exact-head Verify successful; evidence final publication pending"
 }
