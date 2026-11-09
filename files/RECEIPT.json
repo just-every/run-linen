@@ -115,10 +115,50 @@
   "verify": {
     "id": 42570142367,
     "event": "pull_request",
-    "status": "in_progress",
-    "conclusion": null,
+    "status": "completed",
+    "conclusion": "success",
     "head_sha": "8c9641899770d1a0b2d320ed37a9931d6524be71",
-    "url": "https://github.com/just-every/run-linen/actions/runs/42570142367"
+    "url": "https://github.com/just-every/run-linen/actions/runs/42570142367",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42570142367",
+    "observedAt": "2026-11-09T06:13:38.537124+00:00"
   },
-  "apiCallsUsed": 4
+  "apiCallsUsed": 7,
+  "evidenceTransfer": {
+    "status": "verified",
+    "files": 12,
+    "initialHead": "a13028c21fab5e64d1cd21f545a9bfd560d0f528",
+    "productHead": "8c9641899770d1a0b2d320ed37a9931d6524be71"
+  },
+  "claim": {
+    "clause": "DESK-025",
+    "status": "DONE",
+    "points": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "newProof": [
+      5
+    ],
+    "landed": false
+  },
+  "doneRiders": {
+    "1": "PASS",
+    "2": "PASS",
+    "3": "PASS",
+    "4": "PASS",
+    "5": "PASS INSPECTED",
+    "6": "PASS",
+    "7": "PASS INSPECTED",
+    "8": "PASS",
+    "9": "PASS INSPECTED",
+    "10": "PASS INSPECTED",
+    "11": "PENDING guarded landing; scan and main equality and Run site not claimed"
+  },
+  "blockers": [],
+  "terminalCustody": "READY candidate; branch only; fleet gate and guarded landing pending"
 }

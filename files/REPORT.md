@@ -65,3 +65,21 @@ The first real commit was immediately pushed through the fleet guard, on its fir
 Local commands all exited 0: work runtime, service runtime, typecheck, first-party check, public rer build, contract write and check, and source lock regeneration and check. RECEIPT.json binds full source hashes to the committed candidate tree and records exact commands. The work log's PROBE line records the selected outcome. The source-check command output is included as SOURCE-CHECK.json. The setup log is excluded because it contains local setup details that are not evidence for this clause.
 
 Exact-SHA Verify 42570142367, event pull_request, was discovered in progress. No duplicate dispatch or workflow rerun was made. Final status is appended below. Candidate publication scan and main-only Run site are not run in this cloud; the fleet owns them.
+
+## Clause and lane handoff
+
+CLAIM DESK-025 DONE points=1,2,3,4,5,6,7 tests=tests/work/desk-scenario-cases.mjs#deskScenarioChecks; tests/services/template-cases.mjs#templateChecks
+
+The proposed claim closes the live DESK-025 gap using the new point 5 proof and retained proofs for points 1, 2, 3, 4, 6 and 7. Its count effect is pending the exact-SHA Verify conclusion and guarded fleet acceptance. The branch does not itself change a Status, Gap or Evidence cell. No other clause is claimed or retargeted. The supplied retained ROLE-001 hold on acting-role grants, revision reconfirmation and custom-agent seats is not resolved here; no new assignment or approval capability or provider execution is selected. Every other account, ct, Base and device hold stays unchanged.
+
+Plan row note for the lane: sx-linen-c-f39 closes DESK-025 point 5's explicit persisted audit-to-plan identity and no-provider-authority assertions. Update only that target's result note after gate acceptance; do not rebuild or reorder the plan.
+
+## Final exact-SHA conclusion
+
+Verify run 42570142367 completed SUCCESS, event pull_request, on the full candidate 8c9641899770d1a0b2d320ed37a9931d6524be71. Run URL: https://github.com/just-every/run-linen/actions/runs/42570142367 . The REST observation is included in VERIFY.json. Seven GitHub calls were used in total; run polling respected the five-minute floor. There was no CI repair, dispatch, rerun or known failing run.
+
+DONE-RIDERS final assessment: rows 1 PASS, 2 PASS, 3 PASS (exact-SHA Verify success), 4 PASS, 5 PASS INSPECTED, 6 PASS, 7 PASS INSPECTED, 8 PASS, 9 PASS INSPECTED, 10 PASS INSPECTED; row 11 PENDING GUARDED LANDING. The candidate is ACCEPT ON LANDING: no completion count is awarded before the fleet gate, full-history publication scan and landing. Pre-READY checks 1–3 pass for this scope; 4 is not applicable because no screen changed; 5 has exact-SHA Verify success and fresh lock, with the publication scan and resulting main Run site retained as explicit fleet duties.
+
+No local or product blocker remains. DESK-025's selected point 5 proof is closed. Proposed status is PARTIAL to DONE after fleet acceptance; actual before and after branch counts remain 27 DONE, 135 PARTIAL, 37 MISSING. No other clause, policy default, queue entry, account or held scope changes. Full plan and results remain in this packet, which is published only on refs/heads/evidence/sx-linen-c-f39. Product changes exist only on cloud/sx-linen-c-f39 and draft PR 175.
+
+READY repo=just-every/run-linen branch=cloud/sx-linen-c-f39 head=8c9641899770d1a0b2d320ed37a9931d6524be71
