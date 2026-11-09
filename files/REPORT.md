@@ -31,7 +31,7 @@ The item revision also versions its form; there is no separate independent form-
 
 ## Acceptance coverage
 
-Paths and lines refer to the exact candidate. PASS LOCAL means executed through the public routes in the focused work runtime or department browser. INSPECTED means retained source was read and remains in the existing Verify suite; it is not a new local execution claim. The exact candidate Verify result is recorded separately below.
+Paths and lines refer to the exact candidate. PASS LOCAL means executed through the public routes in the focused work runtime or department browser. INSPECTED means retained source was read. Retained journeys subsequently passed in exact-SHA Verify 42556740045; they are not described as additional local executions.
 
 | Point | Acceptance sentence and public outcome | Test and lines | Local result |
 | --- | --- | --- | --- |
@@ -40,15 +40,15 @@ Paths and lines refer to the exact candidate. PASS LOCAL means executed through 
 | 3 | HR source remains a live restriction through later and legacy moves | departmentSpaceChecks lines 162–213, including second HR workspace, both required independently and inactive source refusal; department browser HR to IT journey | PASS LOCAL |
 | 4 | Nonowner requires destination plus every retained HR membership; requester and beneficiary retain their public view | departmentSpaceChecks lines 130–180 and later multi-HR checks; departmentOpsChecks lines 123–150, requester scenario, completion and waiver refusals; department browser dual membership grant and withdrawal | PASS LOCAL |
 | 5 | HR-service membership grants no HR employee-record authority | departmentSpaceChecks sensitive HR-record read refusal; tests/ui/department-browser.mjs lines 151–160 and 184–186, HR-service and dual-service members refused the HR record | PASS LOCAL |
-| 6 | Managers, shares, participants and MCP queue grants cannot recover HR work; ordinary non-HR public relationships continue | departmentSpaceChecks manager and share exclusions, lines 50–86 and 151–180; tests/work/relationship-cases.mjs, relationshipChecks and sharingChecks public-only participant and normal sharing flows; tests/platform/mcp-tools-cases.mjs, mcpToolCases lines 210–242, matching HR, IT and legacy queue grants still return not_found and zero search counts | Native relationship cases PASS LOCAL; retained MCP cases INSPECTED pending candidate Verify |
-| 7 | Withdrawal applies before staff reads, writes, assignment, scenarios, tasks, knowledge, derived views and aggregation; no protected HR copy to global project | departmentOpsChecks lines 105–172; tests/work/department-report-cases.mjs, departmentReportChecks lines 24–51; tests/services/department-source-cases.mjs, departmentSourceChecks lines 22–63, allowed then revoked derived service and plan access | Work cases PASS LOCAL; retained service cases INSPECTED pending candidate Verify |
-| 8 | Archives retain metadata and restrictions and restore memberships inert until owner reconfirmation | tests/platform/base-auth-transfer.mjs, native archive and recovery, lines 244–251 and 312–328: real export, reset and import, protected history, inert memberships, fresh staff sign-in denied; tests/adoption/platform-privacy-cases.mjs, platformPrivacyChecks lines 14–27, own membership erased while foreign membership retained | INSPECTED pending candidate Verify |
+| 6 | Managers, shares, participants and MCP queue grants cannot recover HR work; ordinary non-HR public relationships continue | departmentSpaceChecks manager and share exclusions, lines 50–86 and 151–180; tests/work/relationship-cases.mjs, relationshipChecks and sharingChecks public-only participant and normal sharing flows; tests/platform/mcp-tools-cases.mjs, mcpToolCases lines 210–242, matching HR, IT and legacy queue grants still return not_found and zero search counts | Native relationship cases PASS LOCAL; retained MCP cases PASS exact-SHA Verify 42556740045 |
+| 7 | Withdrawal applies before staff reads, writes, assignment, scenarios, tasks, knowledge, derived views and aggregation; no protected HR copy to global project | departmentOpsChecks lines 105–172; tests/work/department-report-cases.mjs, departmentReportChecks lines 24–51; tests/services/department-source-cases.mjs, departmentSourceChecks lines 22–63, allowed then revoked derived service and plan access | Work cases PASS LOCAL; retained service cases PASS exact-SHA Verify 42556740045 |
+| 8 | Archives retain metadata and restrictions and restore memberships inert until owner reconfirmation | tests/platform/base-auth-transfer.mjs, native archive and recovery, lines 244–251 and 312–328: real export, reset and import, protected history, inert memberships, fresh staff sign-in denied; tests/adoption/platform-privacy-cases.mjs, platformPrivacyChecks lines 14–27, own membership erased while foreign membership retained | PASS exact-SHA Verify 42556740045 |
 
 ## Inherited duty coverage
 
 | Duty | Receiving clause and proof | Result |
 | --- | --- | --- |
-| D-4 department boundary and retained HR restriction | DESK-024 names D-4 in its meta line. Its own points 3–8 retain current department authority, source HR requirements, employee-record exclusion and inert restores. The acceptance matrix above names each public door. Existing other-clause duties remain with their receiving clauses; no delegated role or provider authority was added. | Native work and browser PASS LOCAL; retained archive and MCP coverage await candidate Verify |
+| D-4 department boundary and retained HR restriction | DESK-024 names D-4 in its meta line. Its own points 3–8 retain current department authority, source HR requirements, employee-record exclusion and inert restores. The acceptance matrix above names each public door. Existing other-clause duties remain with their receiving clauses; no delegated role or provider authority was added. | Native work and browser PASS LOCAL; retained archive and MCP coverage PASS exact-SHA Verify 42556740045 |
 | CATALOG-001, CATALOG-007 and CATALOG-008 inherited form, audience and exact quote readers on existing department doors | tests/work/application-cases.mjs, applicationChecks and catalogAudienceChecks; tests/work/catalog-quote-cases.mjs, catalogQuoteChecks; department browser lines 231–252 require a quote, deny receiving staff quote access and deny audience bypass. No quote-reader expansion. | PASS LOCAL |
 | Frozen clock and ordinary assignment semantics | departmentSpaceChecks frozen policy and due time; departmentOpsChecks repeated classification after move retains its bound clock; browser uses a permitted IT agent and clears incompatible HR assignment. | PASS LOCAL |
 
@@ -56,9 +56,9 @@ Paths and lines refer to the exact candidate. PASS LOCAL means executed through 
 
 | Row | Result on candidate | Evidence |
 | --- | --- | --- |
-| 1 | Local outcomes covered; exact-SHA Verify pending | Eight-point matrix. The only two previously named gaps are executed in departmentSpaceChecks, lines 88–150. |
+| 1 | PASS | Eight-point matrix. The only two previously named gaps are executed in departmentSpaceChecks, lines 88–150. |
 | 2 | PASS LOCAL for changed data-preservation boundary | Real submitted form, changed live catalog, successful move, then unsafe stale move refused with complete unchanged reads. No empty-list-only proof. |
-| 3 | Pending exact-SHA Verify | scripts/verify.mjs lines 15 and 32 invoke work runtime and department browser. The workflow uses these existing journeys; nothing is hidden behind a new test flag. Screenshot capture alone is optional. |
+| 3 | PASS exact-SHA Verify 42556740045, pull_request, completed success | scripts/verify.mjs lines 15 and 32 invoke work runtime and department browser. The workflow uses these existing journeys; nothing is hidden behind a new test flag. Screenshot capture alone is optional. |
 | 4 | PASS | Source hashes in checks-receipt.json match the committed candidate. Candidate runtime rerun has its own runtime-receipt.json. Relevant application and browser sources are unchanged since the local captures. |
 | 5 | PASS INSPECTED | DESK-024 cites D-4 and its own acceptance names the retained duty. No inherited obligation is silently removed. |
 | 6 | PASS mechanical; status update belongs to lander | Contract generator write and check both exit 0, then generated views restored whole from main. No Status, Gap, Evidence or summary edit in candidate. |
@@ -92,7 +92,7 @@ Publication scan receipt: commit=6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e comple
 
 No product blocker or new policy default was found. All pre-existing ROLE-001, delegated administration, custom HR, account, Base and device holds remain in their own clauses. No additional campaign target touches this narrow leased change without entering the supplied held queue.
 
-Final CI, claim and terminal custody are appended after the candidate's permitted discovery. Complete packet files are explicitly selected for report-only publication; credentials, environment files, private held-out gates, raw browser Worker log and symlinks are excluded.
+Final CI, claim and terminal custody are appended below. Complete packet files are explicitly selected for report-only publication; credentials, environment files, private held-out gates, raw browser Worker log and symlinks are excluded.
 
 ## Exact-candidate local receipts
 
@@ -102,4 +102,16 @@ Work runtime: node tests/work/runtime.mjs, exit 0, head 6e0f4ce6652fd99a8a3ece6c
 
 Browser: the existing department journey passed; all original assertions stayed at 1440 pixels. Five clause screens have full-page captures at both 1440 and 390 pixels, and viewport captures accompany them. The evidence-only copy adds capture at 390, with no assertion removed or moved. Original committed browser source hashes match checks-receipt.json.
 
-Candidate Verify discovery: run 42556740045, pull_request, head 6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e, in_progress at 03:35 UTC. Dynamic PR run 42556736780 completed success. The next status read is at least five minutes after discovery.
+Candidate Verify discovery: run 42556740045, pull_request, head 6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e, in_progress at 03:35 UTC. Dynamic PR run 42556736780 completed success. A subsequent status read observed completed success at the identical SHA.
+
+## Final result
+
+Exact-SHA Verify: run 42556740045, event pull_request, status completed, conclusion success, head 6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e. URL: https://github.com/just-every/run-linen/actions/runs/42556740045. No failed job, repair, workflow dispatch or rerun. Seven GitHub API calls used in total; CI discovery and status reads stayed at least five minutes apart.
+
+Riders 1–10 pass on the exact candidate with the local and CI proof above; rider 11 awaits the guarded lander. The complete zero-finding publication scan, main equality and the resulting Run site remain unestablished here and are not represented as passed. Initial main Verify 42550063380 and Run site 42550063451 were green on the parent main. No clause status cell changed; proposed DESK-024 promotion remains conditional on the independent gate and landing.
+
+CLAIM DESK-024 DONE points=1,2,3,4,5,6,7,8 tests=tests/work/department-space-cases.mjs#departmentSpaceChecks; tests/work/department-ops-cases.mjs#departmentOpsChecks; tests/work/department-report-cases.mjs#departmentReportChecks; tests/ui/department-browser.mjs#native department handoff journey; tests/services/department-source-cases.mjs#departmentSourceChecks; tests/platform/mcp-tools-cases.mjs#mcpToolCases; tests/platform/base-auth-transfer.mjs#native archive and recovery
+
+No new DEFAULT or GAP line applies to this clause. Retained holds belong to their existing clauses and remain unchanged. Before and after committed counts are 24 DONE, 138 PARTIAL and 37 MISSING; the one proposed promotion yields 25 DONE, 137 PARTIAL and 37 MISSING after the gate. This round's completed plan row is DESK-024 only, closing points 1 and 2's named proof gaps.
+
+The first report-only publication was fetched back from evidence/sx-linen-c-f35 and verified: 39 regular files, exact product SHA and all manifest hashes valid. The final publication updates these files with the completed Verify result. The final EVIDENCE ref and head are reported in the terminal return. The product clone is removed only after final evidence verification; the complete report packet remains outside it.

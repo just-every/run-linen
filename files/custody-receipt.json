@@ -15,5 +15,12 @@
   "source_lock_fresh": true,
   "identity_check": "All candidate commits, including side parents, checked before guard push; fleet author and committer, no trailers.",
   "publication_scan": "pending fleet lander",
-  "run_site": "pending guarded main landing"
+  "run_site": "pending guarded main landing",
+  "verify_run_id": 42556740045,
+  "verify_event": "pull_request",
+  "verify_status": "completed",
+  "verify_conclusion": "success",
+  "github_api_calls": 7,
+  "claim": "DESK-024 DONE on acceptance and landing",
+  "blockers": []
 }
