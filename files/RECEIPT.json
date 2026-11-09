@@ -1,0 +1,134 @@
+{
+  "tag": "sx-linen-c-f38",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f38",
+  "head": "9043ff599964452f9824b1aaa1ad049034e95d53",
+  "base": "fcc2e53de937ab2ae17938147920b871b5fe70f5",
+  "recordedAt": "2026-11-09T06:10:07.547257+00:00",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "log": "not published; local owner setup may print local entry links"
+    },
+    {
+      "command": "cloud_run node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    }
+  ],
+  "executionBinding": "Runtime and typecheck ran before the commit with identical relevant source and test bytes; subsequent changes only generated the source lock. Mechanical checks ran again after the no-op rebase.",
+  "testRegistrationsAdded": 0,
+  "testRegistrationsRemoved": 0,
+  "contractCellsChanged": false,
+  "generatedViewsCommitted": false,
+  "uiChanged": false,
+  "publicScan": {
+    "head": "9043ff599964452f9824b1aaa1ad049034e95d53",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "status": "NOT RUN in cloud; maintained lander must run the complete publication scan"
+  },
+  "landing": {
+    "mainEquality": false,
+    "runSite": null,
+    "status": "branch only"
+  },
+  "candidateBlobs": {
+    "tests/work/sla-policy-cases.mjs": "14107d95073f1066fdad3ad9b2f880879a0da6b9",
+    "tests/work/runtime.mjs": "97587ed1484b90f1a0f60b965e7f175326c6b4ad",
+    "tests/work/worker.ts": "394fc5ecd839c419c67616c0efe7b1786c784dd3",
+    "src/features/work/sla-policies.ts": "0a8ce030f3be54aad8eda78fc662fec8efe7c925",
+    "src/features/work/sla-routes.ts": "f24741fb4a8499e6c60fd4a2146b6f48c2fbcf8e",
+    "src/features/work/knowledge.ts": "e7ddc1d1fd879cec522dacaf1e9a957af27ce21f",
+    "sources.lock.json": "88792d8dcd4e1fa4119af9dc5935f96631c0a3a5",
+    "CONTRACT.md": "07358800f841fe6a5d10bf9551451f81d5f3238e"
+  },
+  "runtimeSourceBinding": {
+    "tests/work/sla-policy-cases.mjs": "14107d95073f1066fdad3ad9b2f880879a0da6b9",
+    "tests/work/runtime.mjs": "97587ed1484b90f1a0f60b965e7f175326c6b4ad",
+    "tests/work/worker.ts": "394fc5ecd839c419c67616c0efe7b1786c784dd3",
+    "src/features/work/sla-policies.ts": "0a8ce030f3be54aad8eda78fc662fec8efe7c925",
+    "src/features/work/sla-routes.ts": "f24741fb4a8499e6c60fd4a2146b6f48c2fbcf8e",
+    "src/features/work/knowledge.ts": "e7ddc1d1fd879cec522dacaf1e9a957af27ce21f"
+  },
+  "verify": {
+    "runId": 42569904535,
+    "event": "pull_request",
+    "conclusion": "success",
+    "head_sha": "9043ff599964452f9824b1aaa1ad049034e95d53",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42569904535",
+    "status": "completed"
+  },
+  "githubApiCallsSoFar": 5,
+  "riders": {
+    "1": "PASS",
+    "2": "PASS",
+    "3": "PASS",
+    "4": "PASS",
+    "5": "INSPECTED",
+    "6": "PASS",
+    "7": "PASS",
+    "8": "PASS",
+    "9": "PASS",
+    "10": "PASS",
+    "11": "PENDING_GUARDED_LANDING"
+  },
+  "claim": {
+    "clause": "DESK-020",
+    "status": "DONE",
+    "points": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "newlyClosedPoints": [
+      4
+    ]
+  },
+  "counts": {
+    "committed": {
+      "done": 27,
+      "partial": 135,
+      "missing": 37
+    },
+    "proposedAfterGatedPromotion": {
+      "done": 28,
+      "partial": 134,
+      "missing": 37
+    }
+  },
+  "blockers": []
+}
