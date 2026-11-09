@@ -1,0 +1,25 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForURL: Timeout 30000ms exceeded.
+=========================== logs ===========================
+waiting for navigation until "load"
+============================================================
+    at deskQueueJourney (/workspace/linen-f31/tests/ui/desk-console-journeys.mjs:112:12)
+    at async file:///tmp/linen-desk-f31.mjs:85:3 {
+  log: [],
+  name: 'TimeoutError'
+}
+
+Node.js v24.19.0
+file:///workspace/linen-f31/tests/ui/run.mjs:108
+      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+                              ^
+
+Error: Browser acceptance exited 1
+    at ChildProcess.<anonymous> (file:///workspace/linen-f31/tests/ui/run.mjs:108:31)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+Node.js v24.19.0

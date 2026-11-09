@@ -1,0 +1,10 @@
+# DESK-018 plan
+
+Scope: close the missing previous-ticket, private-note, close-form and Escape outcomes in points 2, 4, 5 and 6. Keep contract judgments and generated views unchanged. Preserve existing assertions and the single browser registration.
+
+1. Read the clause, current Gap, existing journey, shortcut handler, composer and close controls. Map the missing outcomes to the existing public UI and authenticated requester read.
+2. Extend deskQueueJourney: populate the saved Unassigned P1 view after the existing bulk proof, then move forward and backward within its visible tickets; focus a private draft with n; type shortcut letters and ordinary Enter without commands or posting; Escape blurs without discarding or sending; explicitly send using Command+Enter; prove requester exclusion with real seeded public content as a positive control.
+3. Exercise c through the ordinary close form, requiring notes and resolution code, refusing missing data and stale revision without changes, then successfully closing after refresh with current revision. Preserve the zero-pointer assertion across refreshes. Keep public reply and status checks.
+4. Run the browser entry used by Verify with system Chromium and a hard timeout. Assert at 1440 and capture the actual changed states at 1440 and 390. Run typecheck and the first-party check. Read all retained acceptance and rider evidence; do not broaden accessibility or native-device claims.
+5. Generate and check contract views, restore generated files from main, regenerate and check the source lock last. Merge updated main after the published save. Inspect all candidate identities, trailers and changed prose. Push only the named cloud branch with the guard. Open the repository's required PR entry point and discover exact-SHA Verify using REST, within the ten-call budget.
+6. Record actual checks, screenshots, claim coverage, counts, CI state and remaining custody in this report-only packet. Publish explicit non-secret packet files to the separate evidence ref. Leave guarded landing, publication scan and Run site to the fleet.

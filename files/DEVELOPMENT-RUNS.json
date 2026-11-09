@@ -1,0 +1,35 @@
+{
+  "runs": [
+    {
+      "file": "development-browser-initial.log",
+      "exit": 1,
+      "sha256": "efea02c78ee9bf1836e0f23faecedd5db923d4438ff4d3298629e627fa5cf0a8"
+    },
+    {
+      "file": "development-navigation.log",
+      "exit": 1,
+      "sha256": "44e29437fd38916e4d213f60daaec3d5cbb7be32a18b8e4fae3dd900e662d294"
+    },
+    {
+      "file": "development-pause-refresh.log",
+      "exit": 1,
+      "sha256": "9d7fb8409dce8676e3b5f6f08d3d3b76632ae8b5de4c992cb0befaea77672a59"
+    },
+    {
+      "file": "development-controls-locator.log",
+      "exit": 1,
+      "sha256": "0dfdaa14a86a52e495e1fa3b2c6bead98d7c57f3286c7ac8dfe3bc79f0f23944"
+    },
+    {
+      "file": "development-options-loading.log",
+      "exit": 1,
+      "sha256": "5b961ef37ab949bbc69ed527fbe0fecf75ef17b8c268526cde836e70b3ff63f8"
+    },
+    {
+      "file": "development-focused-pass.log",
+      "exit": 0,
+      "sha256": "363cb57638ba5fbe8866eb0e1c7c5fcc9982e82c93deba2a3bd84c95fc9b2d55"
+    }
+  ],
+  "note": "Local journey-development runs, not CI repair rounds. Earlier code differs from the final candidate; final browser proof has its own exact-head receipt."
+}

@@ -1,0 +1,29 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.waitFor: Error: strict mode violation: locator('section.work-controls') resolved to 4 elements:
+    1) <section class="work-controls" aria-label="Classification and priority">…</section> aka getByRole('region', { name: 'Classification and priority' })
+    2) <section class="work-controls" aria-label="Group and owner">…</section> aka getByRole('region', { name: 'Group and owner' })
+    3) <section class="work-controls" aria-label="SLA targets">…</section> aka getByRole('region', { name: 'SLA targets' })
+    4) <section class="work-controls">…</section> aka locator('section').filter({ hasText: 'Still not working?Cancel this' })
+
+Call log:
+[2m  - waiting for locator('section.work-controls') to be visible[22m
+
+    at deskQueueJourney (/workspace/linen-f31/tests/ui/desk-console-journeys.mjs:185:45)
+    at async file:///tmp/linen-desk-f31.mjs:85:3 {
+  log: [ "  - waiting for locator('section.work-controls') to be visible" ]
+}
+
+Node.js v24.19.0
+file:///workspace/linen-f31/tests/ui/run.mjs:108
+      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+                              ^
+
+Error: Browser acceptance exited 1
+    at ChildProcess.<anonymous> (file:///workspace/linen-f31/tests/ui/run.mjs:108:31)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+Node.js v24.19.0

@@ -1,0 +1,84 @@
+{
+  "checks": [
+    {
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-09T01:30:07.031657+00:00",
+      "finishedAt": "2026-11-09T01:30:19.920543+00:00"
+    },
+    {
+      "command": [
+        "pnpm",
+        "exec",
+        "rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-09T01:30:19.920601+00:00",
+      "finishedAt": "2026-11-09T01:30:20.563928+00:00"
+    },
+    {
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "write"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-09T01:30:20.564020+00:00",
+      "finishedAt": "2026-11-09T01:30:20.710940+00:00"
+    },
+    {
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-09T01:30:20.711015+00:00",
+      "finishedAt": "2026-11-09T01:30:20.918297+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "checkout",
+        "origin/main",
+        "--",
+        "ACCEPTANCE.md",
+        "docs/CLAIMS.md"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-09T01:30:20.918532+00:00",
+      "finishedAt": "2026-11-09T01:30:20.923129+00:00"
+    },
+    {
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "lock"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-09T01:30:20.923157+00:00",
+      "finishedAt": "2026-11-09T01:30:21.109072+00:00"
+    },
+    {
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-09T01:30:21.109120+00:00",
+      "finishedAt": "2026-11-09T01:30:21.305412+00:00"
+    }
+  ],
+  "complete": true,
+  "migrationLedger": "not applicable: no migration changed",
+  "candidateHead": "fc30ae89c4932156a8222aebb5c4efdbdcf84942",
+  "sourceLockSha256": "2c2acaaf048ab00d40fa2fc0f06e27ccfb17323fedaca218cb0750e943094897",
+  "timing": "Checks ran on the final source tree immediately before the candidate commit; no tracked files changed afterward."
+}

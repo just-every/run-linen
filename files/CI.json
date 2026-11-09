@@ -1,0 +1,40 @@
+{
+  "workflow_runs": [
+    {
+      "conclusion": null,
+      "event": "pull_request",
+      "head_sha": "fc30ae89c4932156a8222aebb5c4efdbdcf84942",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42545958129",
+      "id": 42545958129,
+      "name": "Verify",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": null,
+      "event": "dynamic",
+      "head_sha": "fc30ae89c4932156a8222aebb5c4efdbdcf84942",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42545955272",
+      "id": 42545955272,
+      "name": "PR #168",
+      "status": "in_progress"
+    }
+  ],
+  "observedAt": "2026-11-09T01:31:30.772171+00:00",
+  "githubCallsUsed": 4,
+  "observations": [
+    {
+      "conclusion": null,
+      "head_sha": "fc30ae89c4932156a8222aebb5c4efdbdcf84942",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42545958129",
+      "status": "in_progress",
+      "observedAt": "2026-11-09T01:36:49.221577+00:00"
+    },
+    {
+      "conclusion": "success",
+      "head_sha": "fc30ae89c4932156a8222aebb5c4efdbdcf84942",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42545958129",
+      "status": "completed",
+      "observedAt": "2026-11-09T01:41:50.734853+00:00"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "head": "fc30ae89c4932156a8222aebb5c4efdbdcf84942",
+  "branch": "cloud/sx-linen-c-f31",
+  "command": [
+    "timeout",
+    "1200",
+    "node",
+    "tests/ui/run.mjs"
+  ],
+  "startedAt": "2026-11-09T01:30:49.311843+00:00",
+  "viewport": {
+    "assertion": 1440,
+    "captures": [
+      1440,
+      390
+    ]
+  },
+  "browser": "/usr/bin/chromium",
+  "sourceHashes": {
+    "tests/ui/desk-console-journeys.mjs": "ec82827fc6047cbbb4ef6ab9791ecbae1078362633e57b5804d9ce28807a9bb8",
+    "tests/ui/browser.mjs": "702d601b51bd438fbd073464a1577098e67003187d79b755189ead33d75d4763",
+    "src/ui/work-triage.tsx": "7f15d9d99dcaec2947df8c796e8468667bdd8a5f62f3a6c72e94e1797cd2cac6",
+    "src/ui/work-composer.tsx": "0c0265a7ce8a00ced22dfed3508a2792ceb98a4e96b9dec859633160f6014811",
+    "src/ui/work-detail.tsx": "59268c5135289d4fc190825b112e5ea083e45a3cfd1314bfc93152abe6ee6c9d",
+    "sources.lock.json": "2c2acaaf048ab00d40fa2fc0f06e27ccfb17323fedaca218cb0750e943094897"
+  },
+  "exit": 0,
+  "finishedAt": "2026-11-09T01:38:40.754926+00:00",
+  "screens": [
+    {
+      "file": "screens/DESK-018-private-draft.png",
+      "bytes": 1622979,
+      "sha256": "84807656c215d1016762c47c8733fc0e060b67092356822c72406d77abbae11c"
+    },
+    {
+      "file": "screens/DESK-018-private-draft-390px.png",
+      "bytes": 407024,
+      "sha256": "8e4326949d4e2f6625f13a011b8e1ff757c7e531ef5f9fecfc46808dc87d52e2"
+    },
+    {
+      "file": "screens/DESK-018-requester-public-only.png",
+      "bytes": 732364,
+      "sha256": "7bf7b73f9ad4314b0a396c62ee11aa83a9342f0d51fb2592ef2cc83bc3823ac2"
+    },
+    {
+      "file": "screens/DESK-018-requester-public-only-390px.png",
+      "bytes": 194250,
+      "sha256": "0c595ec964246231523b6912f7b04daf00bc5145e038d306561a8872301a9fac"
+    },
+    {
+      "file": "screens/DESK-018-close-form.png",
+      "bytes": 1869492,
+      "sha256": "6e3172535199b7fcb73615e0041804427c41cb19c680ca7942b5b7fa0ccc696e"
+    },
+    {
+      "file": "screens/DESK-018-close-form-390px.png",
+      "bytes": 441248,
+      "sha256": "28712c2137b77a6eaecfd3a09bdbe9f65c13c48f91bc3b81e939475140fd413a"
+    },
+    {
+      "file": "screens/DESK-001-keyboard-triage.png",
+      "bytes": 1742574,
+      "sha256": "4f48038ced363bfce6092166be4a7b856ecd18ad073aabc2b8a22683142704ac"
+    },
+    {
+      "file": "screens/DESK-001-keyboard-triage-390px.png",
+      "bytes": 319815,
+      "sha256": "7ec3e311ddae726f90e1fa946d565962548fbd0de5dbbc0e5b5c7b115d97bd37"
+    }
+  ],
+  "stdout": "BROWSER.log",
+  "verifyRun": 42545958129,
+  "verifyEvent": "pull_request",
+  "verifyConclusion": "success"
+}

@@ -1,0 +1,47 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f31",
+  "head": "fc30ae89c4932156a8222aebb5c4efdbdcf84942",
+  "originMainAtCandidate": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+  "advertisedRefs": {
+    "refs/heads/cloud/sx-linen-c-f31": "fc30ae89c4932156a8222aebb5c4efdbdcf84942",
+    "refs/heads/main": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21"
+  },
+  "identityAudit": {
+    "passed": true,
+    "candidateCommitsIncludingSideParents": [
+      {
+        "head": "fc30ae89c4932156a8222aebb5c4efdbdcf84942",
+        "authorName": "Run Edit Run fleet",
+        "authorEmail": "fleet@runeditrun.com",
+        "committerName": "Run Edit Run fleet",
+        "committerEmail": "fleet@runeditrun.com",
+        "subject": "Complete keyboard triage proof in the saved request view"
+      },
+      {
+        "head": "0def7f7768fe8424e0327bde96a6cf93193d7aac",
+        "authorName": "Run Edit Run fleet",
+        "authorEmail": "fleet@runeditrun.com",
+        "committerName": "Run Edit Run fleet",
+        "committerEmail": "fleet@runeditrun.com",
+        "subject": "Merge remote-tracking branch 'origin/main' into cloud/sx-linen-c-f31"
+      },
+      {
+        "head": "1cd735757016b14e052ff625a1392fe2e41b1451",
+        "authorName": "Run Edit Run fleet",
+        "authorEmail": "fleet@runeditrun.com",
+        "committerName": "Run Edit Run fleet",
+        "committerEmail": "fleet@runeditrun.com",
+        "subject": "Prove remaining keyboard triage actions [skip ci]"
+      }
+    ],
+    "trailers": ""
+  },
+  "productFiles": [
+    "sources.lock.json",
+    "tests/ui/desk-console-journeys.mjs"
+  ],
+  "contractAndViewsDiff": "none",
+  "status": "",
+  "recordedAt": "2026-11-09T01:31:21.317452+00:00"
+}
