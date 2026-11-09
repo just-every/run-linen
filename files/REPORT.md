@@ -5,7 +5,7 @@ Repository: https://github.com/just-every/run-linen
 Branch: cloud/sx-linen-c-f30
 Draft PR: https://github.com/just-every/run-linen/pull/165
 Integrated main: 9b7d3512c1bddf163a3e6d81bbce7b57fae76a21
-Verify: pull_request run 42545168421; exact head matches the candidate. The latest actual conclusion is in candidate-ci.json.
+Verify: pull_request run 42545168421 completed SUCCESS on exact head db0229b015806e49a9dedd3695184335e1dbd7a1, observed 2026-11-09 01:36:11 UTC. See candidate-ci.json.
 
 The selected DESK-024 gaps are closed. The existing department journey now submits a Facilities catalog request with six typed answers through the fulfilment route, reads its saved snapshot, edits the catalog to different questions and estimates, and hands the request to IT as the current owner. IT staff and the requester see the identical original item revision, questions, answers, estimates and submission identity. The journey then tries another handoff with the pre-move revision. It receives 409 with revision_conflict and proves the ticket, messages, attachments, submitted snapshot and successful handoff history remain unchanged.
 
@@ -24,7 +24,7 @@ The only plan row to update is DESK-024: selected stale-revision and submitted-f
 
 ## Acceptance rubric
 
-The clause is scoped to native department handoff, comparable to Freshservice workspace transfers with scoped agent access. Existing unrelated provider, custom role and device holds remain unchanged. Verify event for every permanent journey below is pull_request, run 42545168421, head db0229b015806e49a9dedd3695184335e1dbd7a1. Its recorded conclusion is in candidate-ci.json; pending CI is never described as a completed pass.
+The clause is scoped to native department handoff, comparable to Freshservice workspace transfers with scoped agent access. Existing unrelated provider, custom role and device holds remain unchanged. Verify event for every permanent journey below is pull_request, run 42545168421, head db0229b015806e49a9dedd3695184335e1dbd7a1. Its recorded conclusion is completed SUCCESS in candidate-ci.json. All permanent journeys named in the rubric ran under that successful Verify.
 
 | Row | Acceptance sentence and observed outcome | Public proof on the candidate | Local result |
 | --- | --- | --- | --- |
@@ -51,9 +51,9 @@ No new acceptance point, status cell, Gap cell or Evidence cell was edited. The 
 
 | Rider | Result | Evidence and boundary |
 | --- | --- | --- |
-| 1 | PASS locally; exact-head Verify result recorded separately | R1 to R8 name public journeys; the two missing outcomes now execute on real seeded requests. All are loaded by scripts/verify.mjs. |
+| 1 | PASS | R1 to R8 name public journeys; the two missing outcomes now execute on real seeded requests. All are loaded by scripts/verify.mjs. |
 | 2 | PASS | The form is nonempty and typed; a changed live catalog cannot substitute for its old snapshot. Supported handoff succeeds and unsafe stale and nonowner attempts refuse. Full ticket and form equality and exact handoff history are asserted. |
-| 3 | Exact-head Verify required | Run 42545168421, pull_request, exact candidate head; candidate-ci.json holds the latest actual status and conclusion. Temporary browser probe supplements the permanent journey and does not replace it. |
+| 3 | PASS | Run 42545168421 completed SUCCESS, pull_request, exact candidate head; candidate-ci.json holds the actual status and conclusion. Temporary browser probe supplements the permanent journey and does not replace it. |
 | 4 | PASS | runtime-receipt.json and browser-receipt.json bind runs to db0229b015806e49a9dedd3695184335e1dbd7a1. No product source, dependency or migration byte changed between the successful build and candidate; product-receipt.json records the comparison. |
 | 5 | PASS | DESK-024 explicitly names retained HR, current membership and native archive duties. Its From DESK-011 and Rules D-4 metadata remain unchanged. No new Base inheritance was claimed. |
 | 6 | PASS mechanical; status update is lander-owned | Generator write and check pass. Generated views are restored to main and not committed. Existing status and Gap remain untouched, as required. The report names the closed proof gaps for the lander. |
@@ -105,3 +105,7 @@ Initial checkout counts were 21 DONE, 141 PARTIAL and 37 MISSING. Main advanced 
 Operational note: the first follow-up CI status read was made 253 seconds after discovery, 47 seconds earlier than the specified 300-second minimum. No dispatch or rerun was issued. Later reads use the full minimum interval.
 
 Final diff inspection confirms every previous line in departmentSpaceChecks remains in order. Product scope is exactly the two test files and their generated source-lock hashes. No new test registration, workflow, product source, contract text or generated view is present in the candidate diff.
+
+Evidence custody: the first complete packet was published to refs/heads/evidence/sx-linen-c-f30 at 063d6f6b2933295a30ab7a6a82f802ff17e23514. A separate readback verified its manifest and all 28 selected file hashes, bound to the candidate product SHA; evidence-transfer-receipt.json contains that actual receipt. The final evidence publication additionally carries this receipt and the final observed CI state. Evidence transport grants no product landing or acceptance signal.
+
+Final CI receipt: Verify run 42545168421, event=pull_request, status=completed, conclusion=success, head=db0229b015806e49a9dedd3695184335e1dbd7a1, URL=https://github.com/just-every/run-linen/actions/runs/42545168421. Six GitHub CLI calls were used in total; no workflow dispatch or rerun was made. DONE-RIDERS rows 1 to 10 are satisfied by the retained and extended public journeys plus this exact-head Verify; row 11 awaits guarded landing. Local proof and CI support the full DONE claim; counts remain unchanged until the lander applies it.

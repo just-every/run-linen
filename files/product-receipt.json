@@ -21,5 +21,46 @@
   "permanentRegistrationsAdded": 0,
   "existingAssertionsRemovedOrNarrowed": false,
   "buildSourceUnchangedSince": "ce86a9413f41103d066aa66c3db8d43fb40da248",
-  "lockSha256": "3c771ab44b0a8e8ef11ce18de106b3c42babaebaaadff8fc4b81d84bc1a5b96b"
+  "lockSha256": "3c771ab44b0a8e8ef11ce18de106b3c42babaebaaadff8fc4b81d84bc1a5b96b",
+  "verify": {
+    "id": 42545168421,
+    "event": "pull_request",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "db0229b015806e49a9dedd3695184335e1dbd7a1",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42545168421"
+  },
+  "claim": {
+    "id": "DESK-024",
+    "status": "DONE",
+    "points": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "statusCellsOwnedBy": "fleet lander"
+  },
+  "counts": {
+    "before": {
+      "done": 22,
+      "partial": 140,
+      "missing": 37
+    },
+    "candidate": {
+      "done": 22,
+      "partial": 140,
+      "missing": 37
+    },
+    "afterProposedPromotion": {
+      "done": 23,
+      "partial": 139,
+      "missing": 37
+    }
+  },
+  "githubCliCalls": 6
 }
