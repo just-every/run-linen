@@ -109,5 +109,37 @@
     "total": 199
   },
   "assertions_weakened": false,
-  "registration_delta": 0
+  "registration_delta": 0,
+  "ci": {
+    "conclusion": "success",
+    "head_sha": "91014eeb01c9c8e28f03a09711a0aaf549ae5cbe",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42645867173",
+    "status": "completed",
+    "run_id": 42645867173,
+    "observed_at": "2026-11-09T15:48:55.705878+00:00",
+    "api_call": 5,
+    "event": "pull_request"
+  },
+  "github_api_calls": 5,
+  "pull_request": "https://github.com/just-every/run-linen/pull/201",
+  "publication_scan": {
+    "state": "not_run_in_cloud",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "owner": "guarded fleet lander"
+  },
+  "main_equal_candidate": false,
+  "run_site": {
+    "state": "pending_landing",
+    "run_id": null
+  },
+  "runtime": {
+    "node": "v24.19.0",
+    "pnpm": "10.12.4",
+    "repository_node_pin": "22.20.0",
+    "repository_rer_pin": "0.2.94",
+    "selection": "Provided cloud toolchain retained the existing newer Node"
+  },
+  "handoff": "READY"
 }

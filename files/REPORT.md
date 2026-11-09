@@ -45,7 +45,7 @@ No additional behavior or authority was added outside this rubric.
 
 1. SELECTED SCOPE PASS locally: R1–R3 reach and inspect the required public outcomes. Entire clause not claimed DONE; other acceptance remains held.
 2. PASS for the selected scope: genuinely seeded changes and template; explicit contradictory bands; unsafe ordinary decision refused with the whole record unchanged.
-3. PENDING exact-head Verify. scripts/verify.mjs includes tests/services/integration.mjs as Controlled changes and reporting; integration calls changeRiskChecks unconditionally. No workflow edited.
+3. PASS: exact-head Verify 42645867173, event pull_request, completed with conclusion success on 91014eeb01c9c8e28f03a09711a0aaf549ae5cbe. scripts/verify.mjs includes tests/services/integration.mjs as Controlled changes and reporting; integration calls changeRiskChecks unconditionally. No workflow edited.
 4. PASS locally: exact-candidate checks and file hashes are recorded in RECEIPT.json. No source or test edits after those checks.
 5. NOT APPLICABLE: no new inherited duty or clause edit.
 6. MECHANICAL PASS locally: generator write and check pass; generated views restored from main. Contract cells and counts intentionally remain unchanged for the lander.
@@ -68,3 +68,14 @@ MECHANICAL lock=node scripts/edition-authoring/cli.mjs lock and check exit=0; vi
 Product push succeeded on its first attempt through cloud-push.py. product-refs.txt records the exact remote candidate and main. Product head and index are unchanged by evidence publication. The selected explicitly listed packet files are ordinary public-safe reports, receipts and logs, without secrets, environment dumps, held-out gate material or symlinks.
 
 Verify run 42645867173, event pull_request, was discovered in progress on the exact candidate. A separate dynamic PR run 42645863118 was also in progress. Latest Verify observation and final handoff state are recorded below when available. No CI dispatch or rerun was requested.
+
+## Final CI and handoff
+
+{"api_call": 5, "conclusion": "success", "event": "pull_request", "head_sha": "91014eeb01c9c8e28f03a09711a0aaf549ae5cbe", "html_url": "https://github.com/just-every/run-linen/actions/runs/42645867173", "observed_at": "2026-11-09T15:48:55.705878+00:00", "run_id": 42645867173, "status": "completed"}
+
+Verify is completed with conclusion success on the full candidate SHA, including the existing integration registration that unconditionally invokes changeRiskChecks. Local exact-head integration, typecheck, first-party, view and lock checks all pass. Five GitHub REST calls were used: PR creation, run discovery and three observations at intervals of at least 300 seconds. No dispatch, rerun or workflow edit was needed.
+
+No product blocker. The clause remains PARTIAL with the held GAP above. Product is branch-only; publication scan, main equality and Run site remain unestablished until the guarded fleet lander completes them. No main push was attempted. The preliminary evidence packet was fetched at its exact ref and head and all 21 selected file hashes verified; evidence-preflight.json is that actual transport receipt. The final updated packet is published separately on the same report-only evidence ref.
+
+CLAIM CHANGE-002 PARTIAL points=8 tests=tests/services/risk-cases.mjs#changeRiskChecks
+READY repo=just-every/run-linen branch=cloud/sx-linen-c-f70 head=91014eeb01c9c8e28f03a09711a0aaf549ae5cbe
