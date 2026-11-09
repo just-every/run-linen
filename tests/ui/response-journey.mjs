@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { apiFor, signIn } from './connected-helpers.mjs';
+import { hoverTooltip, waitForTooltipOpacity } from './transition-helpers.mjs';
 
 /** DESK-008: editing and restoring a reply never sends it. */
 export async function unsentReplyJourney({ page, api, base, out, width }) {
@@ -35,7 +37,7 @@ export async function unsentReplyJourney({ page, api, base, out, width }) {
 }
 
 /** Native emitted Worker; only the external paid model protocol is a fixture. */
-export async function responseJourney({ page, api, base, out, width }) {
+export async function responseJourney({ browser, page, api, base, out, width, employee }) {
   await page.setViewportSize({ width, height: 1000 });
   const session = await api('/session');
   const work = await api('/work', { title: 'Denver VPN conversation', body: 'VPN disconnected during call 1.', deduplicationKey: `desk-008-generated-${width}` });
@@ -43,6 +45,14 @@ export async function responseJourney({ page, api, base, out, width }) {
   await api(`/work/${work.id}/messages`, { body: 'PRIVATE service investigation detail', visibility: 'private', sourceMessageId: `desk-008-private-${width}` });
   const article = await api('/knowledge', { title: `VPN client restart ${width}`, body: 'Restart the VPN client. If it fails, keep the ticket open.', scope: 'employees', expiresAt: '2030-01-01T00:00:00Z', review: true });
   await page.goto(`${base}/app#/work/${work.id}`);
+  // Response controls are text-labelled; the shell account control is icon-only.
+  const profile = page.getByRole('button', { name: 'Your workspace and account', exact: true });
+  await page.keyboard.press('Tab');
+  await profile.focus();
+  await waitForTooltipOpacity(profile, '1');
+  assert.equal(await profile.evaluate(element => getComputedStyle(element, '::after').transitionDuration), '0s');
+  await hoverTooltip(profile);
+  assert.equal(await profile.evaluate(element => getComputedStyle(element, '::after').transitionDelay), '0.3s');
   const tools = page.getByLabel('Responses and summaries', { exact: true });
   await tools.locator(':scope > summary').click();
   await tools.locator('summary').filter({ hasText: 'Manage canned responses' }).click();
@@ -94,5 +104,95 @@ export async function responseJourney({ page, api, base, out, width }) {
   assert.equal((await api(`/work/${work.id}`)).messages.length, 22);
   await page.locator('.message-body').getByText('Please restart the VPN client using the reviewed guidance and reply here if it still disconnects.', { exact: true }).waitFor();
   process.env.LINEN_CAPTURE && await page.screenshot({ path: `${out}/desk-008-sent-${width}.png`, fullPage: true });
+  // A separate signed-in requester proves that private content is actually withheld.
+  const requesterContext = await browser.newContext({ timezoneId: 'UTC', viewport: { width, height: 1000 } });
+  try {
+    const requesterPage = await requesterContext.newPage();
+    const requesterErrors = [];
+    requesterPage.on('pageerror', error => requesterErrors.push(String(error)));
+    const requester = (await api('/members')).find(member => member.id === employee.id);
+    assert.ok(requester);
+    await signIn(requesterPage, base, requester.email);
+    const requesterApi = apiFor(requesterPage);
+    for (const insertion of ['canned', 'model']) {
+      for (const visibility of ['public', 'private']) {
+        const label = `synthetic-linen-${width}-${insertion}-${visibility}`;
+        const ticket = await requesterApi('/work', {
+          title: `VPN follow-up ${label}`, body: `VPN disconnects ${label}.`, deduplicationKey: label,
+        });
+        const path = `/work/${ticket.id}`;
+        await page.goto(`${base}/app#${path}`);
+        await composer.fill(label);
+        const picker = page.getByLabel('Message visibility', { exact: true });
+        await picker.selectOption(visibility);
+        const before = (await api(path)).messages;
+        const requesterBefore = (await requesterApi(path)).messages;
+        const unchanged = async stage => {
+          assert.deepEqual((await api(path)).messages, before, `${label}: ${stage} leaves the service conversation unchanged`);
+          assert.deepEqual((await requesterApi(path)).messages, requesterBefore, `${label}: ${stage} leaves the requester conversation unchanged`);
+        };
+        await tools.locator(':scope > summary').click();
+        let insertedText;
+        if (insertion === 'canned') {
+          await tools.getByLabel('Canned response', { exact: true }).selectOption(template.id);
+          const insertionResponse = page.waitForResponse(r => r.url().endsWith(`${path}/canned-response`));
+          await tools.getByRole('button', { name: 'Insert canned response', exact: true }).click();
+          assert.equal((await insertionResponse).status(), 200);
+          insertedText = `Hello ${requester.name}, I am following up on VPN follow-up ${label}.`;
+        } else {
+          await tools.getByLabel('Knowledge to cite').selectOption(article.id);
+          const generationResponse = page.waitForResponse(r => r.url().endsWith(`${path}/response-assistance`));
+          await tools.getByRole('button', { name: 'Draft shared reply', exact: true }).click();
+          assert.equal((await generationResponse).status(), 200);
+          const generated = tools.getByRole('region', { name: 'Unsent assistant reply', exact: true });
+          await generated.waitFor();
+          await unchanged('generating a reply');
+          assert.equal(await picker.inputValue(), visibility);
+          await generated.getByRole('button', { name: 'Use reply draft', exact: true }).click();
+          insertedText = 'Please restart the VPN client using the reviewed guidance and reply here if it still disconnects.';
+        }
+        const expected = `${label}\n\n${insertedText}`;
+        await page.waitForFunction(value => document.querySelector('#conversation-message')?.value === value, expected);
+        assert.equal(await picker.inputValue(), visibility, `${label}: insertion preserves the selected visibility`);
+        await unchanged('inserting text');
+        await page.reload();
+        await page.waitForFunction(value => document.querySelector('#conversation-message')?.value === value, expected);
+        assert.equal(await picker.inputValue(), visibility, `${label}: reload preserves the selected visibility`);
+        await unchanged('restoring the draft');
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+        if (visibility === 'private' && process.env.LINEN_CAPTURE) {
+          await page.screenshot({ path: `${out}/desk-008-${insertion}-private-draft-${width}.png`, fullPage: true });
+        }
+        const sending = page.waitForResponse(r => r.url().endsWith(`${path}/messages`) && r.request().method() === 'POST');
+        await page.getByRole('button', { name: 'Send message', exact: true }).click();
+        assert.equal((await sending).status(), 201);
+        const after = (await api(path)).messages;
+        assert.equal(after.length, before.length + 1, `${label}: explicit Send adds exactly one message`);
+        assert.deepEqual(after.filter(message => before.some(prior => prior.id === message.id)), before);
+        const posted = after.filter(message => message.body === expected);
+        assert.equal(posted.length, 1);
+        assert.equal(posted[0].visibility, visibility);
+        await page.locator('.message-body').getByText(expected, { exact: true }).waitFor();
+        await page.reload();
+        await page.waitForFunction(() => document.querySelector('#conversation-message')?.value === '');
+        assert.deepEqual((await api(path)).messages, after, `${label}: reload after Send never duplicates the message`);
+        await requesterPage.goto(`${base}/app#${path}`);
+        await requesterPage.locator('.message-body').getByText(`VPN disconnects ${label}.`, { exact: true }).waitFor();
+        const requesterMessages = (await requesterApi(path)).messages;
+        assert.equal(requesterMessages.length, requesterBefore.length + (visibility === 'public' ? 1 : 0));
+        if (visibility === 'private') {
+          assert.deepEqual(requesterMessages, requesterBefore, `${label}: private text and metadata never reach the requester`);
+          assert.equal(await requesterPage.locator('.message-body').getByText(expected, { exact: true }).count(), 0);
+          assert.equal((await requesterPage.locator('body').innerText()).includes(insertedText), false);
+          process.env.LINEN_CAPTURE && await requesterPage.screenshot({ path: `${out}/desk-008-${insertion}-requester-${width}.png`, fullPage: true });
+        } else {
+          assert.equal(requesterMessages.filter(message => message.id === posted[0].id && message.body === expected && message.visibility === 'public').length, 1);
+          await requesterPage.locator('.message-body').getByText(expected, { exact: true }).waitFor();
+        }
+        console.log(`PASS DESK-008 ${width} ${insertion} ${visibility}: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.`);
+      }
+    }
+    assert.deepEqual(requesterErrors, []);
+  } finally { await requesterContext.close(); }
   console.log(`PASS DESK-008 native ${width}: canned requester name, twenty-message cited summary with knowledge, private-source isolation and unsent generated reply until agent Send.`);
 }
