@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 25 | 124 | 29 | 178 |
+| Core | 26 | 123 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 25 | 137 | 37 | 199 |
+| Full target | 26 | 136 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -847,7 +847,7 @@ Core · target · **done**
 
 #### DESK-003 — Routing and assignment
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Rules route by category, requester, department, location, VIP status and the impacted configuration item's or business service's support group (ASSET-009); assignment can be round-robin, by current load, by skill, or by business-hours availability, and reassignment keeps history. Assignment within a group is DESK-019.
 
@@ -861,8 +861,8 @@ Core · target · **partial**
 7. Precedence: the support group of the item the ticket names comes first; otherwise the lowest-position rule whose every set condition matches (category, requester, requester group) decides; otherwise nothing changes.
 8. Within the group, the candidates are its active agents who are on shift at that minute in their calendar's time zone, hold the rule's skill if it names one, and own fewer open tickets than the group's cap.
 
-**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`
-**Gap.** Not asserted: a group whose assignment method is none placing the ticket without an agent; a rule with several set conditions deciding only when all of them match; and an inactive agent left out of the candidates. Round-robin and load-based assignment past the off-shift and capped agents, the VIP, Payroll-service and laptop-CI routes, owner-only rules, support groups, shifts and skills, routing on creation, on classification and on request at the revision read, precedence and no change without a match, and skill-based candidates are asserted.
+**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`; `tests/work/desk-routing-cases.mjs` (deskRoutingChecks)
+**Gap.** None.
 
 #### DESK-019 — Automatic assignment and routing history
 
