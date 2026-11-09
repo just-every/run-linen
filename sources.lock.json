@@ -6968,7 +6968,7 @@
       "executable": false
     },
     "tests/ui/browser.mjs": {
-      "sha256": "e9e516d326530a87cabe5689ecf3ff236c6dba4440a3781b97fe935203b7cc6d",
+      "sha256": "6582bc39be1146627654d2d85e0a8ce9c351ff746c499987d65b40a57fd84d17",
       "executable": false
     },
     "tests/ui/calendar-journey.mjs": {
@@ -7112,7 +7112,7 @@
       "executable": false
     },
     "tests/ui/pending-person-journey.mjs": {
-      "sha256": "235652c7e78f8f8308bc703db97e68ef60122818a23c27477782507ef7871740",
+      "sha256": "8482f61a951f66ab707487ee37e1786c95502a1d5a605c0773de83e1e76c403c",
       "executable": false
     },
     "tests/ui/problem-detection-journey.mjs": {
@@ -7400,7 +7400,7 @@
       "executable": false
     },
     "tests/work/pending-person-runtime.mjs": {
-      "sha256": "4b18336365f35b01a17107b2e65592a2ade44f28700c62c484a396bc26ae56f9",
+      "sha256": "6e6e527fc25c3761b5ac96cb0556830a23aaffeaaee83b097e320e924a0bbe38",
       "executable": false
     },
     "tests/work/pending-person-worker.ts": {
