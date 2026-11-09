@@ -1,0 +1,149 @@
+{
+  "publication": {
+    "files": [
+      {
+        "blob": "f136bf13ec1cb360c3a1cf5ac11696c4afcef2fe",
+        "bytes": 2009,
+        "path": "PLAN.md",
+        "sha256": "c09fa24df49fb0feef5772af5dc9b0f2ff7a84350dc25a4de87df32b955a0403"
+      },
+      {
+        "blob": "0a49ca01f78582a19a175d1d6bb0d28d5ec6a6a2",
+        "bytes": 8368,
+        "path": "REPORT.md",
+        "sha256": "41650ba0412a4b39fcd279a2623ad6a1a9195c71ff3ef773831bb14557439445"
+      },
+      {
+        "blob": "770d4524c1892f213ab49c3b37391f2bfd6b2e49",
+        "bytes": 480,
+        "path": "api-budget.json",
+        "sha256": "669eb7cc853f494c9b9b69fedb040f4fffa26be4edcc1cd7de19006f0810a537"
+      },
+      {
+        "blob": "95276a897081a6e4022137b58968c8ce24b21c7c",
+        "bytes": 1871,
+        "path": "baseline-shards.json",
+        "sha256": "60821c5c15219c45717dd62f7695019981eadcaacad1d0a9fb1ded160216e2f2"
+      },
+      {
+        "blob": "d2ff9cc3e0b88410cc19453e134d171595352a8f",
+        "bytes": 2573,
+        "path": "browser-configuration.log",
+        "sha256": "5d2dbfe5df09929181b8a2207dd0295c5dccd0934cbb1b0da001cd3accb03875"
+      },
+      {
+        "blob": "d9674e4d279fbcdd4a34c1f1c1f068b1dc070275",
+        "bytes": 3762,
+        "path": "browser-core.log",
+        "sha256": "3811d3d0408a3881a807c31b7dea1675f9836b967128ad2e5b0b00c6fcd181e0"
+      },
+      {
+        "blob": "f51574fff9e957fdc50d84b48c84b87ca450f096",
+        "bytes": 3872,
+        "path": "browser-operations.log",
+        "sha256": "92579273707f4e50a4015805b1941b173698ca725e701d1217d22f09a1b43a1f"
+      },
+      {
+        "blob": "e65ee417efac2b1db81060d23cbeeb139061686d",
+        "bytes": 3805,
+        "path": "browser-receipt.json",
+        "sha256": "8f49ebcf8a3fbc2fd317f0ee50c1898261ea2330fd7b0c3d7ba661ee8b58d32d"
+      },
+      {
+        "blob": "c87f530e6c7000b3a5f2b76950a90f71463f8781",
+        "bytes": 39062,
+        "path": "candidate-jobs.json",
+        "sha256": "bda2d0323a272864f8e6ec9685cc2e1f3ad71bfc94b71aaeba337c6e9dda05ac"
+      },
+      {
+        "blob": "4a1ecd3097d9232a44fff750ad2ffedddea7a68f",
+        "bytes": 29808,
+        "path": "candidate-runs.json",
+        "sha256": "1676bf4d98bf71fb284cf9a5c989791da414988b626afe6ba6a6148d626c2bca"
+      },
+      {
+        "blob": "6e625227ca0290c5a0351369405e229b90fdfbfb",
+        "bytes": 2723,
+        "path": "ci-receipt.json",
+        "sha256": "d83e0c37a09618109644459f1efc9807212e36aa0b4db4db98562bfe5abad4e8"
+      },
+      {
+        "blob": "14c3a88cb990e2e500e36e1aa19850d82eaed36f",
+        "bytes": 208,
+        "path": "clause-counts.json",
+        "sha256": "3e90f64920152e92ece2dcaad209d13626aeb17c147e03dd6a1f8c5591d5f608"
+      },
+      {
+        "blob": "2e59a75bd2d765a605f857c52129db03b7e2a4f5",
+        "bytes": 612,
+        "path": "coverage-receipt.json",
+        "sha256": "8a11e6b4cf4ae4637935030362fca0f6d6d2dc9978cc4f5aab5c276a39a8b514"
+      },
+      {
+        "blob": "48f7c40118f6f974dc93254d54c2e21b948ca578",
+        "bytes": 27389,
+        "path": "f61-jobs.json",
+        "sha256": "929db37d2829152e3e8ee0f6391d0744857ec09344dab3cb4af20966b1f7a783"
+      },
+      {
+        "blob": "4f10cb309fc5a0d724e29fc7cf7021f2ca40e7b9",
+        "bytes": 29854,
+        "path": "first-candidate-runs.json",
+        "sha256": "52e6c435da77b12f8c7a400c34bb8c5daf2269d5f2d1733d8c1ad671f8f490c3"
+      },
+      {
+        "blob": "80a42eafdc5f43a47c1ee688f976505b9edccdf9",
+        "bytes": 6831,
+        "path": "journey-timings.json",
+        "sha256": "01e7815355d4a4c50dfeb4f032ddddca2b2227aa50f448cab060b884bfec5e3a"
+      },
+      {
+        "blob": "e6c9acd4092c64b348fd171f6bfa55deec77f6b5",
+        "bytes": 703,
+        "path": "local-checks.json",
+        "sha256": "6e02cb7cfd963c25cf67e647b9b76ff4a0e4d74dc72d36e43c55875f336129f0"
+      },
+      {
+        "blob": "3d7a1906cbdd66027c7fc4cacaf7b1b6ac48ffd0",
+        "bytes": 26809,
+        "path": "main-jobs.json",
+        "sha256": "c80b77d015b8a2cfc8c53f5c6422e513d5b6b120d08931d922a94c18b581f7ba"
+      },
+      {
+        "blob": "e6c107c699f2a2f340c2201d20363c09bf6713d3",
+        "bytes": 124093,
+        "path": "main-runs.json",
+        "sha256": "07271d1923762ec3b3f46058230fd9e8c23230e35171059196a3b075d105610e"
+      },
+      {
+        "blob": "edbd3df927b295e93830f2131275e80142cfc81a",
+        "bytes": 16781,
+        "path": "pr-receipt.json",
+        "sha256": "5bd08fb40c4e4172fe82ef477a924f18af70e5cdf1f61d80defc722729958385"
+      },
+      {
+        "blob": "6c2a7beba54d5540588652545a1b454e34071e14",
+        "bytes": 849,
+        "path": "product-receipt.json",
+        "sha256": "81a19f0795cb2bf09e590a3d93a97941f6b551241529c097a8bc2eb83e8a68f0"
+      },
+      {
+        "blob": "1ada74f3dafa38f04dc46961a15a63ea19d1ef1f",
+        "bytes": 1566,
+        "path": "shard-plan.json",
+        "sha256": "0419169e3e81088a4571f5451e670292a7480537787005a0aee2170c82266bd9"
+      },
+      {
+        "blob": "0ec5285e272389a7bc1d12e4abb504eca70f6558",
+        "bytes": 1048,
+        "path": "source-lock-receipt.json",
+        "sha256": "1a69945fa8b5b01bcd5bdcfcb9298388cfe578e3f29bbb39f73b407af500015b"
+      }
+    ],
+    "head": "5c62ea6cb97af48a0686b504516e6f5d2ca40ca5",
+    "ref": "refs/heads/evidence/sx-linen-shard-time-1",
+    "repository": "just-every/run-linen"
+  },
+  "product_unchanged": true,
+  "packet_manifest_hashes_verified_locally": true
+}

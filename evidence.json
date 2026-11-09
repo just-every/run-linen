@@ -91,6 +91,12 @@
       "sha256": "52e6c435da77b12f8c7a400c34bb8c5daf2269d5f2d1733d8c1ad671f8f490c3"
     },
     {
+      "blob": "55e19c91a62859a07ae4e2256eab740cc0b233c4",
+      "bytes": 5402,
+      "path": "first-evidence-publication.json",
+      "sha256": "7fd2df09b912b35bc5bff86b1d7dbbe819389a402c41b11049012a2bc35fb704"
+    },
+    {
       "blob": "80a42eafdc5f43a47c1ee688f976505b9edccdf9",
       "bytes": 6831,
       "path": "journey-timings.json",
