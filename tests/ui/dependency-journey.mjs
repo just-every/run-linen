@@ -16,6 +16,13 @@ export async function dependencyJourney({page,api,base,out}) {
   await action(page,'Record a dependency',{...edge,to:sso.id},'/service-graph/edges','Save',201);
   await page.getByRole('link',{name:'Gusto recorded',exact:true}).waitFor();
   await captureJourney(page,{path:out+'/ASSET-009-dependencies.png',fullPage:true});
+  const unlinked=await item('Denver meeting-room display','hardware');
+  const unknown=await api(`/services/${unlinked.id}/impact`);
+  assert.deepEqual(unknown.upstream,[]);assert.deepEqual(unknown.downstream,[]);
+  const details=page.getByRole('region',{name:'Dependencies and impact',exact:true});
+  await details.getByRole('heading',{name:'Recorded relationships',exact:true}).waitFor();
+  assert.equal(await details.locator('.record-row').count(),0,'Unlinked CI has no invented dependency or impact rows');
+  await captureJourney(page,{path:out+'/ASSET-009-unknown-item.png',fullPage:true});
   const change=await api('/changes',{title:'Upgrade SSO service',risk:'Sign-in interruption',impact:'Payroll users',services:[sso.id],window:{start:new Date().toISOString(),end:new Date(Date.now()+3600000).toISOString()},cohorts:['staff'],canaryCohorts:['staff'],implementation:{release:'new'},compensation:{release:'prior'}});
   await page.goto(base+'/app#/changes/'+change.id);
   await page.getByRole('link',{name:'Payroll recorded',exact:true}).waitFor();
@@ -29,5 +36,5 @@ export async function dependencyJourney({page,api,base,out}) {
   await page.reload();
   await page.getByText('stale',{exact:true}).waitFor();
   await captureJourney(page,{path:out+'/ASSET-009-stale-relationship.png',fullPage:true});
-  console.log('PASS ASSET-009 browser: typed CIs and Payroll dependencies, change/incident impact and marked stale relationship at 1440');
+  console.log('PASS ASSET-009 browser: linked Payroll and unlinked hardware, inferred impact disclosure, change and incident impact and marked stale relationship; assertions at 1440, evidence at 1440 and 390');
 }
