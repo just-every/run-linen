@@ -18,6 +18,35 @@ export async function projectChecks(api, db) {
     tasks.push((await make(`/projects/${projectId}/tasks`, { title, milestoneId: i < 6 ? milestones[0].id : move.id, ownerId: i % 2 ? 'search-agent' : 'owner',
       dueDate: i === 2 ? '2030-03-12' : `2030-0${i < 6 ? 2 : 3}-${String(10 + i).padStart(2, '0')}` })).id);
   await make(`/projects/${projectId}/tasks`, { title: 'Unowned', ownerId: 'employee', dueDate: '2030-02-01' }, undefined, 422);
+  // Retained roles do not make an inactive member eligible to own new or existing tasks.
+  const ownershipBefore = await make(`/projects/${projectId}`, undefined, undefined, 200);
+  const reassignedTask = ownershipBefore.tasks.find(t => t.id === tasks[1]);
+  const ownershipHistoryPath = `/projects/${projectId}/tasks/${reassignedTask.id}/activity`;
+  const ownershipHistory = (await make(ownershipHistoryPath, undefined, undefined, 200)).items;
+  for (const [i, role] of ['owner', 'operator'].entries()) {
+    const candidate = `synthetic-linen-project-${i}`;
+    await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)')
+      .bind(candidate, candidate, `Inactive ${role}`, 'unused', '2026-01-01').run();
+    await db.prepare('INSERT INTO memberships VALUES(?,?,?,0)')
+      .bind('a', candidate, JSON.stringify([role])).run();
+    const refusedCreate = await make(`/projects/${projectId}/tasks`, {
+      title: 'Inactive member task', ownerId: candidate, dueDate: '2030-03-20',
+    }, undefined, 422);
+    assert.equal(refusedCreate.code, 'project_owner', `PROJECT-001 inactive ${role} cannot own a new task`);
+    assert.deepEqual(await make(`/projects/${projectId}`, undefined, undefined, 200), ownershipBefore,
+      'PROJECT-001 refused task creation preserves the project and every task');
+    assert.deepEqual((await make(ownershipHistoryPath, undefined, undefined, 200)).items, ownershipHistory,
+      'PROJECT-001 refused creation appends no existing task history');
+    const refusedUpdate = await make(`/projects/${projectId}/tasks/${reassignedTask.id}`, {
+      revision: reassignedTask.revision, ownerId: candidate, status: 'in_progress', dueDate: '2030-03-21',
+    }, agent, 422);
+    assert.equal(refusedUpdate.code, 'project_owner', `PROJECT-001 inactive ${role} cannot receive a task`);
+    assert.deepEqual(await make(`/projects/${projectId}`, undefined, undefined, 200), ownershipBefore,
+      'PROJECT-001 refused reassignment preserves all task fields and revisions');
+    assert.deepEqual((await make(ownershipHistoryPath, undefined, undefined, 200)).items, ownershipHistory,
+      'PROJECT-001 refused reassignment appends no task history');
+  }
+  console.log('PROBE PROJECT-001 4: inactive owner and operator candidates each refused with 422 project_owner on create and current-revision reassignment; project, task fields, revisions and task history unchanged');
   // "Patch new switches", due 11 March, depends on "Order switches", due 12 March: flagged blocked. "Label desks" waits on the earlier survey.
   let read = await make(`/projects/${projectId}`, undefined, undefined, 200);
   const patch = read.tasks.find(t => t.id === tasks[10]);
@@ -76,6 +105,19 @@ export async function projectChecks(api, db) {
 
   const load = (await make('/workload', undefined, undefined, 200)).items.find(r => r.userId === 'search-agent');
   assert.ok(load.openTickets >= 1 && load.openProjectTasks === 6 && load.total === load.openTickets + 6, 'PROJECT-001 workload combines project tasks and tickets');
+  const assigned = (await make(`/work/${ticket.id}`, undefined, undefined, 200)).work;
+  assert.equal(assigned.state, 'open');
+  assert.equal(assigned.assignee_id, 'search-agent');
+  const paused = await make(`/work/${ticket.id}/commands`, {
+    revision: assigned.revision, command: 'pause', reason: 'Waiting for the seating confirmation', waitingOn: 'requester',
+  }, undefined, 200);
+  assert.equal(paused.state, 'paused');
+  const pausedRead = (await make(`/work/${ticket.id}`, undefined, undefined, 200)).work;
+  assert.equal(pausedRead.state, 'paused');
+  assert.equal(pausedRead.assignee_id, assigned.assignee_id, 'PROJECT-001 pausing retains the assigned agent');
+  const pausedLoad = (await make('/workload', undefined, undefined, 200)).items.find(r => r.userId === assigned.assignee_id);
+  assert.deepEqual(pausedLoad, load, 'PROJECT-001 the paused assigned ticket still counts beside six open project tasks');
+  console.log('PROBE PROJECT-001 7:', JSON.stringify({ state: pausedRead.state, before: load, after: pausedLoad }));
   // DESK-017: every current project-task write emits original field values, never a live reconstruction.
   const historyPath = `/projects/${projectId}/tasks/${tasks[7]}/activity`;
   const history = async (headers) => (await make(historyPath, undefined, headers, 200)).items;
@@ -139,6 +181,6 @@ export async function projectChecks(api, db) {
   await db.prepare("UPDATE memberships SET active=0 WHERE user_id='task-auditor'").run();
   assert.equal((await api(historyPath, undefined, auditor)).status, 404, 'DESK-017 deactivation applies to the next read');
   console.log('PASS DESK-017 project tasks: original creation/edit/link values, actor/time, append-only chronology, no-op/duplicate/refusal, simultaneous CAS, atomic audit rollback, live employee/auditor/project/tenant boundaries');
-  console.log('PASS PROJECT-001 public routes: two milestones and 12 owned tasks, dependency waiting/blocked timeline flags and done refusal, board, 30 asset relocations + 2 changes + ticket links (HR ticket refused), an employee refused every project route and the workload API with nothing changed, agent workload with tickets and project tasks');
+  console.log('PASS PROJECT-001 public routes: two milestones and 12 owned tasks, dependency waiting and blocked timeline flags and done refusal, board, 30 asset relocations + 2 changes + ticket links (HR ticket refused), an employee refused every project route and the workload API with nothing changed, inactive owner and operator refused on task creation and reassignment without task or history changes, agent workload unchanged when an assigned open ticket pauses beside six open project tasks');
   return { historyPath, items: finalHistory };
 }
