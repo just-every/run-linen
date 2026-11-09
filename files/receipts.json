@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f48",
+  "repository": "just-every/run-linen",
+  "base_head": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "log": "setup.log",
+      "log_sha256": "e09e8dd1a53be8ecf4eb3ad1d571670abbd07c15c944bcb9f3230c87364268fe"
+    },
+    {
+      "command": "cloud_run node tests/services/run.mjs",
+      "exit": 0,
+      "log": "services.log",
+      "log_sha256": "d9c8cffed9216e3239063963d562f64935d29d88fa3362f698af57e68d7b91ca"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log",
+      "log_sha256": "65ff49d4bb18330ff87604a4209f1243510c780721161e4f01d2e5e23e12976a"
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log",
+      "log_sha256": "7ce135a02a93399dd0e0c128f55cea800c72cd11b726ebd476808acd5274675a"
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write; node src/base/contract-docs.mjs check; restore generated views; node scripts/edition-authoring/cli.mjs lock; node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "mechanical.log",
+      "log_sha256": "4cbad81aa59b4bf18c406206570fde1a2ae0b305473413117b1d7c6c91c71270"
+    },
+    {
+      "command": "contract generator write and check; restore generated views; source lock and check after final fetch and rebase",
+      "exit": 0,
+      "log": "final-mechanical.log",
+      "log_sha256": "4cbad81aa59b4bf18c406206570fde1a2ae0b305473413117b1d7c6c91c71270"
+    }
+  ],
+  "source_files": {
+    "tests/services/dependency-cases.mjs": "e0cabefbf660de4cae7aeabf5e54d8bdf581a9d941772354c57216c2283ee0f7",
+    "tests/ui/dependency-journey.mjs": "1c651d1db12da39750d5455e6dedc18d3344f9077889ca1aafbe255578ddb5e1",
+    "src/features/services/dependency-impact.ts": "5514351839d4991b2472e61176d761cff8a9c09a3e58d12aa2416ff86cd1c89b",
+    "src/features/services/graph.ts": "4e82dfc42b680bb90867cdccff9d911e59d6c2d5c02b0cd60c204b24602046cc",
+    "src/ui/dependency-details.tsx": "4ac03b022e8f87fd75c2247a7ad0dde22ef6b966104616bfaad4aa4d6b026292",
+    "sources.lock.json": "df1af44919806650ffc4a104ef47f98f3e82a3fc23f558f3f39edf2cf299a46c"
+  },
+  "browser": {
+    "selected_journey": "dependencyJourney passed through tests/ui/browser.mjs",
+    "driver_exit": 242,
+    "driver_timeout_seconds": 1200,
+    "driver_result": "Full screenshot-enabled driver hit SIGALRM later in unrelated sharingJourney; owned descendants stopped. No selected ASSET-009 assertion failed.",
+    "log": "browser.log",
+    "log_sha256": "37f041c539ad6efbde3fa532e58f7b838bfceb8aa6c39c5725cedb6bcaf530b1",
+    "screens": "screens.json"
+  },
+  "product_head": "68c3c916c54265ff262b177759352ddf57c7cb83",
+  "product_branch": "cloud/sx-linen-c-f48",
+  "pushed": true,
+  "contract_diff_from_main": "",
+  "generated_views_diff_from_main": "",
+  "identity_and_trailers": "Run Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>\n\n",
+  "tested_files_match_candidate": true,
+  "publication_scan": {
+    "commit": "68c3c916c54265ff262b177759352ddf57c7cb83",
+    "status": "deferred_to_guarded_lander",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "main_equals_candidate": false,
+  "run_site_candidate": "pending guarded landing; baseline main run is green",
+  "screens": "screens.json",
+  "pr": {
+    "base": "main",
+    "draft": true,
+    "head": "68c3c916c54265ff262b177759352ddf57c7cb83",
+    "html_url": "https://github.com/just-every/run-linen/pull/185",
+    "number": 185
+  },
+  "verify": {
+    "conclusion": null,
+    "event": "pull_request",
+    "head_sha": "68c3c916c54265ff262b177759352ddf57c7cb83",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42584432064",
+    "id": 42584432064,
+    "status": "in_progress"
+  },
+  "clean_product_checkout": true,
+  "product_changes": [
+    "sources.lock.json",
+    "tests/services/dependency-cases.mjs",
+    "tests/ui/dependency-journey.mjs"
+  ],
+  "candidate_commit_messages": "68c3c916c54265ff262b177759352ddf57c7cb83\nProve connection boundaries and unknown service impact\n\n",
+  "github_api_calls": 6,
+  "packet_secret_review": {
+    "regular_files": 35,
+    "injected_value_hits": 0,
+    "github_credential_shape_hits": 0,
+    "explicit_selection": true
+  }
+}

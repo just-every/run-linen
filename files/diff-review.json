@@ -1,0 +1,12 @@
+[
+  {
+    "path": "tests/services/dependency-cases.mjs",
+    "added_prose_slash_tokens": [],
+    "added_email_shapes": false
+  },
+  {
+    "path": "tests/ui/dependency-journey.mjs",
+    "added_prose_slash_tokens": [],
+    "added_email_shapes": false
+  }
+]

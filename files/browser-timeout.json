@@ -1,0 +1,137 @@
+{
+  "supervisor_pid": 2436,
+  "timeout_seconds": 1200,
+  "reason": "Full screenshot-enabled browser driver exceeded its deadline after the selected ASSET-009 journey had passed. Only descendants of this task-owned subreaper were stopped.",
+  "stopped": [
+    {
+      "pid": 4805,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 4752,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 4744,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 4700,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 4688,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 4665,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 4654,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 4630,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 4621,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3539,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3529,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3512,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3490,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3487,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3468,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3467,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3464,
+      "process": "chrome_crashpad",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3462,
+      "process": "chrome_crashpad",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3447,
+      "process": "chromium",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3435,
+      "process": "MainThread",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3429,
+      "process": "workerd",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3423,
+      "process": "workerd",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3414,
+      "process": "esbuild",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3405,
+      "process": "esbuild",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3396,
+      "process": "MainThread",
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 3388,
+      "process": "MainThread",
+      "signal": "SIGTERM"
+    }
+  ]
+}

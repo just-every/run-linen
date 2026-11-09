@@ -1,0 +1,79 @@
+{
+  "head": "68c3c916c54265ff262b177759352ddf57c7cb83",
+  "screens": [
+    {
+      "path": "screens/ASSET-009-change-impact-390px.png",
+      "width": 390,
+      "height": 2667,
+      "sha256": "da116df2dd5491cd2eed7055d566d9a33a5a7e9f4d57184ece7914b04526bf2c"
+    },
+    {
+      "path": "screens/ASSET-009-change-impact.png",
+      "width": 1440,
+      "height": 1833,
+      "sha256": "a96d6acdf6368e9eacf55d2c41cfe406cf428ea81bae41fa3539d6d455ce4504"
+    },
+    {
+      "path": "screens/ASSET-009-create-item-390px.png",
+      "width": 390,
+      "height": 1872,
+      "sha256": "5258beab89b3eb473d28fd82f922ddc0411c954f085301f8f47d505cbe4feb14"
+    },
+    {
+      "path": "screens/ASSET-009-create-item.png",
+      "width": 1440,
+      "height": 1120,
+      "sha256": "eb973ad490be0da83d84ed994b01c2968893e9ccf4f3e6c209cba3f678ca320d"
+    },
+    {
+      "path": "screens/ASSET-009-dependencies-390px.png",
+      "width": 390,
+      "height": 2848,
+      "sha256": "cbb86cea3deba9a5db14f53e76651c83140b2285cc6d3fdae95f696fbf146b6d"
+    },
+    {
+      "path": "screens/ASSET-009-dependencies.png",
+      "width": 1440,
+      "height": 1753,
+      "sha256": "278ac64f9cf1376ef537b4f1c04faf88f7d3e42882e9a75518178b49656ad0e0"
+    },
+    {
+      "path": "screens/ASSET-009-incident-impact-390px.png",
+      "width": 390,
+      "height": 1975,
+      "sha256": "b29837e466fec15e2d2c458ab29711229268bf0d27ef3e36ced330525fdb2bd2"
+    },
+    {
+      "path": "screens/ASSET-009-incident-impact.png",
+      "width": 1440,
+      "height": 1473,
+      "sha256": "7f86bcb3823b6b261c5efdf795fb1a08124683f41353f217bb092aad946ce0d9"
+    },
+    {
+      "path": "screens/ASSET-009-stale-relationship-390px.png",
+      "width": 390,
+      "height": 2070,
+      "sha256": "78729db9523f060ee47e71ca450ba7b8bccf2e789fde3a9b830bad749b18e318"
+    },
+    {
+      "path": "screens/ASSET-009-stale-relationship.png",
+      "width": 1440,
+      "height": 1530,
+      "sha256": "62ce2fba77ac5a977612f87da6e6e09f9c2f89cddbe0b2a499ae9c5be5834e9e"
+    },
+    {
+      "path": "screens/ASSET-009-unknown-item-390px.png",
+      "width": 390,
+      "height": 1731,
+      "sha256": "e0287a138c3450a608b7d29c32af8fcb360f82ac8ba98591d62f428d03350175"
+    },
+    {
+      "path": "screens/ASSET-009-unknown-item.png",
+      "width": 1440,
+      "height": 1063,
+      "sha256": "c937e1ca05038b63f138c0ec10f6449c46760523f7eb899af07bf0fe8cc03baf"
+    }
+  ],
+  "assertion_width": 1440,
+  "inspection": "Linked Payroll and unlinked hardware display the existing unknown coverage and inferred impact disclosure at actual 1440 and 390 widths. No invented relationship row or outage status is shown for the unlinked CI. Text and controls remain readable with no horizontal document overflow."
+}

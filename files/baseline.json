@@ -1,0 +1,21 @@
+{
+  "repository": "just-every/run-linen",
+  "base_head": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "counts": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37,
+    "total": 199
+  },
+  "target_status_row": "| `ASSET-009` | CMDB and service dependencies | target | partial | `tests/services/dependency-cases.mjs`, `tests/ui/dependency-journey.mjs` | Not asserted: that connects_to records a non-dependency connection, and that an absent relationship is unknown and inferred impact establishes no outage. CI types, provenance, impact, freshness and uncertainty are asserted. |",
+  "main_verify": {
+    "id": 42570589451,
+    "event": "push",
+    "conclusion": "success"
+  },
+  "main_run_site": {
+    "id": 42570589486,
+    "event": "push",
+    "conclusion": "success"
+  }
+}
