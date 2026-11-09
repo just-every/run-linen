@@ -1,0 +1,4 @@
+91014ee Prove emergency and catalog risk-path precedence
+ sources.lock.json             |  2 +-
+ tests/services/risk-cases.mjs | 52 +++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 51 insertions(+), 3 deletions(-)
