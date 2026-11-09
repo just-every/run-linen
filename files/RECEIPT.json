@@ -1,0 +1,143 @@
+{
+  "tag": "sx-linen-c-f72",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f72",
+  "head": "5764273d6f3df670a571b7f924474f4fa9d7a992",
+  "main_at_final_fetch": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+  "recorded_at": "2026-11-09T15:39:36.918430+00:00",
+  "claim": {
+    "clause": "PROB-003",
+    "status": "PARTIAL",
+    "points": [
+      3
+    ],
+    "test": "tests/work/problem-detection-cases.mjs#problemDetectionChecks"
+  },
+  "checks": [
+    {
+      "command": "cloud_run timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log",
+      "provenance": "final source bytes; executed immediately before commit"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "cloud_run pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "contract-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "contract-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "source-lock.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "source-check.log"
+    },
+    {
+      "command": "python3 /tmp/fleet-candidate-audit.py",
+      "exit": 0,
+      "log": "identity-audit.txt"
+    }
+  ],
+  "changed_files": [
+    {
+      "path": "tests/work/problem-detection-cases.mjs",
+      "sha256": "cb1a35f8923fad0fb4efa88cff653a3fb4bb918d2ae32dd865e245dcdd517f0e"
+    },
+    {
+      "path": "sources.lock.json",
+      "sha256": "7f407a2f7ea445e6e2922d74fa6841a263571015916f5d2e535f0792a5ea3fbc"
+    }
+  ],
+  "product_push": {
+    "status": "success",
+    "attempt": 1,
+    "ref": "refs/heads/cloud/sx-linen-c-f72",
+    "head": "5764273d6f3df670a571b7f924474f4fa9d7a992"
+  },
+  "pr": {
+    "base": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+    "draft": true,
+    "head": "5764273d6f3df670a571b7f924474f4fa9d7a992",
+    "html_url": "https://github.com/just-every/run-linen/pull/205",
+    "number": 205
+  },
+  "ci_discovery": [
+    {
+      "conclusion": null,
+      "event": "pull_request",
+      "head_sha": "5764273d6f3df670a571b7f924474f4fa9d7a992",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42646894293",
+      "id": 42646894293,
+      "name": "Verify",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": "success",
+      "event": "dynamic",
+      "head_sha": "5764273d6f3df670a571b7f924474f4fa9d7a992",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42646889788",
+      "id": 42646889788,
+      "name": "PR #205",
+      "status": "completed"
+    }
+  ],
+  "ci_discovered_at_epoch": 1794239078.5535762,
+  "counts_before": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37,
+    "total": 199
+  },
+  "counts_after": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37,
+    "total": 199
+  },
+  "contract_changed": false,
+  "generated_views_committed": false,
+  "registrations_added": 0,
+  "assertions_removed": 0,
+  "publication_scan": {
+    "commit": "5764273d6f3df670a571b7f924474f4fa9d7a992",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "status": "NOT RUN in cloud; required by fleet lander"
+  },
+  "main_equality": false,
+  "run_site_for_candidate": null,
+  "defaults": [],
+  "held_remainder": [
+    "unselected acceptance",
+    "PROB-003 rolling-window, accepted later-source and restart persistence proof",
+    "PROB-002 feeder-held remainder",
+    "INC-002 providers",
+    "ROLE-001 decisions",
+    "retained account, ct, Base and device holds"
+  ],
+  "local_toolchain": {
+    "node": "v24.19.0",
+    "pnpm": "10.12.4",
+    "node_pin": "22.20.0"
+  },
+  "github_api_calls_used": 4
+}

@@ -1,0 +1,6 @@
+5764273d6f3df670a571b7f924474f4fa9d7a992
+Run Edit Run fleet <fleet@runeditrun.com>
+Run Edit Run fleet <fleet@runeditrun.com>
+
+test: prove operator reads normal-source problem proposals
+

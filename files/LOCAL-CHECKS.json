@@ -1,0 +1,24 @@
+{
+  "product_head": "5764273d6f3df670a571b7f924474f4fa9d7a992",
+  "local_exit_codes": {
+    "cloud_run timeout 1200 node tests/work/runtime.mjs": 0,
+    "pnpm typecheck": 0,
+    "cloud_run pnpm exec rer check --profile first-party": 0,
+    "node src/base/contract-docs.mjs write": 0,
+    "node src/base/contract-docs.mjs check": 0,
+    "node scripts/edition-authoring/cli.mjs lock": 0,
+    "node scripts/edition-authoring/cli.mjs check": 0,
+    "python3 /tmp/fleet-candidate-audit.py": 0
+  },
+  "generated_views_restored": true,
+  "contract_status_table_diff": "empty",
+  "migration_ledger": "not applicable; no migration changes",
+  "registration_delta": 0,
+  "removed_assertions": 0,
+  "changed_product_paths": [
+    "tests/work/problem-detection-cases.mjs",
+    "sources.lock.json"
+  ],
+  "product_branch_remote_verified": true,
+  "probe": "PROBE PROB-003 3: owner-created normal incidents and proposal -> distinct active operator lists and reads the same proposal and every source reference without changing readership"
+}
