@@ -368,11 +368,23 @@ export async function escalationChecks(workspaceApi, db) {
     assert.deepEqual(await closeFollowup(), waitingClose, 'DESK-023 repeated due passes leave the same close scheduled and never fired');
   }
   testAt = '2026-02-07T09:02:00.000Z';
+  check(await api(`/work/${guarded.id}/fields`, { fieldId: requiredField.id, value: 'Pending diagnostic export' }));
+  const cleared = check(await api(`/work/${guarded.id}/fields`, { fieldId: requiredField.id, value: '   ' }));
+  assert.equal(cleared.fields.find(f => f.id === requiredField.id).value, null, 'DESK-023 clearing a previously filled required field leaves it empty');
+  const afterClear = await guardedConversation();
+  testAt = '2026-02-07T09:02:30.000Z';
+  check(await tick());
+  assert.deepEqual(await guardedConversation(), afterClear, 'DESK-023 a due pass cannot use the old field value after it was cleared');
+  assert.deepEqual(afterClear.messages, beforeClose.messages, 'DESK-023 filling and clearing a field does not post a public closing line');
+  assert.equal((await guardedDesk()).resolution, null);
+  assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_resolutions WHERE workspace_id=? AND work_id=?').bind('desk005', guarded.id).first()).n, 0);
+  assert.deepEqual(await closeFollowup(), waitingClose, 'DESK-023 the automatic close remains scheduled after a cleared-field due pass');
+  testAt = '2026-02-07T09:03:00.000Z';
   const filled = check(await api(`/work/${guarded.id}/fields`, { fieldId: requiredField.id, value: 'Requester did not supply the diagnostic export' }));
   assert.equal(filled.fields.find(f => f.id === requiredField.id).value, 'Requester did not supply the diagnostic export');
   assert.equal(filled.resolution, null);
   assert.equal((await guardedConversation()).work.state, 'paused', 'DESK-023 filling the required field alone does not close the ticket');
-  testAt = '2026-02-07T09:03:00.000Z';
+  testAt = '2026-02-07T09:04:00.000Z';
   check(await tick());
   const guardedClosed = await guardedConversation(), guardedResolution = (await guardedDesk()).resolution, firedClose = await closeFollowup();
   assert.deepEqual([guardedClosed.work.state, guardedClosed.work.closed_at, guardedClosed.work.revision], ['closed', testAt, guarded.revision + 1], 'DESK-023 a later due pass closes the ticket exactly once after the field is filled');
@@ -390,7 +402,7 @@ export async function escalationChecks(workspaceApi, db) {
     assert.deepEqual((await guardedDesk()).resolution, guardedResolution, 'DESK-023 later passes preserve the original resolution');
     assert.deepEqual(await closeFollowup(), firedClose, 'DESK-023 later passes do not fire the close again');
   }
-  console.log('PROBE DESK-023 6: desk-fields, pause, fields and process-due routes -> empty required field preserves paused ticket, null resolution, no public close and unfired scheduled row on repeated due passes; filling the field lets a later pass close once with No response and one public closing line; repeated and later passes unchanged');
+  console.log('PROBE DESK-023 6: desk-fields, pause, fields and process-due routes -> empty or cleared required field preserves paused ticket, null resolution, no public close and unfired scheduled row on repeated due passes; filling the field lets a later pass close once with No response and one public closing line; repeated and later passes unchanged');
   testAt = undefined;
   console.log('PASS DESK-005 public routes: P1 level-1 then level-2 escalation before the response target, private to agents, level 3 stopped by the response; awaiting-requester reminder then disclosed resolution; a reply before the due time stops both; business days on the SLA calendar');
 }
