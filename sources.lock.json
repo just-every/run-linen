@@ -5732,7 +5732,7 @@
       "executable": false
     },
     "src/platform/sandboxes.ts": {
-      "sha256": "69fd0829ffbbbf89187057b699b29fc6f9ba132461e72d57923ee8949b8308e2",
+      "sha256": "9fddb23fe19266e65ecdc4251f96fa3c3242fdb28a56cb42f228b3d9b72f9938",
       "executable": false
     },
     "src/platform/session-status.ts": {
@@ -6820,7 +6820,7 @@
       "executable": false
     },
     "tests/platform/sandbox-cases.mjs": {
-      "sha256": "730edb677e4931661917093994349f11b554526fe864653960d96f9eb83c8423",
+      "sha256": "e7861eb57d751cc9b80691bde04fc9eb07585d8c16580bc935b98efb629d064b",
       "executable": false
     },
     "tests/platform/sandbox-masked-record-cases.mjs": {
@@ -7148,7 +7148,7 @@
       "executable": false
     },
     "tests/ui/run.mjs": {
-      "sha256": "13aac3cd5616e35f540d8b62a8083d6ff397f2746fe0d161760ba08f9cd97a1d",
+      "sha256": "d364dfb2566debafe7fa454275e973f1642fffa3ad811cefbe93f6a7d1b33ee5",
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
