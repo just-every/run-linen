@@ -95,12 +95,17 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const pendingStage=await stagePacket()
  equal(pendingStage.stageKey,'second','second stage remains actionable while first decision is retained')
  const pendingInput={...pendingStage,decision:'approved',idempotencyKey:'synthetic-linen-13010'}
+ const pendingManagerWork=await value(employeeSession.api('/work',{title:'synthetic-linen-13014',body:'synthetic-linen-13015',kind:'request',deduplicationKey:'synthetic-linen-13016'}),201)
+ await value(employeeSession.api('/work/'+pendingManagerWork.id+'/fulfilment',{catalogId:approvalItem.id,catalogRevision:approvalConfig.revision,beneficiaryId:employee.id,purpose:'synthetic-linen-13017'}),201)
+ const pendingManager=(await value(issuerSession.api('/fulfilment-decisions'))).items.find(item=>item.workId===pendingManagerWork.id)
+ check(pendingManager,'independent manager also has a genuinely pending approval at mint time')
+ const pendingManagerInput={...pendingManager,expectedHolderId:pendingManager.holderId,idempotencyKey:'synthetic-linen-13018'}
  const connection=await value(ownerApi('/connections',{provider:'okta',name:'synthetic-linen-13011',config:{orgUrl:'https://synthetic-linen-1.okta.com'}}),201)
  const executionInput={principalId:bot.id,beneficiaryId:employee.id,action:'group.add',actionVersion:1,target:'synthetic-linen-13012',connectionId:connection.id,
   validFrom:new Date(Date.now()-60000).toISOString(),validUntil:new Date(Date.now()+3600000).toISOString(),maxUses:1,conditions:{}}
  const executionGrant=await value(ownerApi('/grants',executionInput),201)
  const authorityTables=['memberships','work_group_members','work_department_roles','work_department_role_members','execution_automation_principals',
-  'work_fulfilment_approvals','work_approval_stages','work_approval_decisions','work_approval_tokens','execution_grants','execution_grant_revocations']
+  'work_fulfilments','work_fulfilment_approvals','work_approval_stages','work_approval_decisions','work_approval_tokens','execution_grants','execution_grant_revocations']
  const authorityState=async()=>Object.fromEntries(await Promise.all(authorityTables.map(async table=>[table,
   await sql(`SELECT * FROM ${table} WHERE workspace_id=${quoted(session.principal.workspaceId)} ORDER BY rowid`)])))
  const beforeMint=await authorityState()
@@ -112,22 +117,28 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const approvalCredential=await mint({name:'synthetic-linen-13013',scopes:['work.read','work.create','work.comment'],tools:['work.list','work.get','work.search','work.history','work.create','work.comment']})
  equal(await authorityState(),beforeMint,'owner mint preserves all memberships, roles, approvals and service execution grants byte for byte')
  equal((await tool(approvalCredential.secret,'work.get',{workId:approvalWork.id})).id,approvalWork.id,'minted credential really reads its granted ticket')
- for(const [name,args] of [['approve',managerInput],['decide',pendingInput],['work.fulfilment.approve',managerInput],['work.approval-stage',pendingInput]]) {
+ for(const [name,args] of [['approve',pendingManagerInput],['decide',pendingInput],['work.fulfilment.approve',pendingManagerInput],['work.approval-stage',pendingInput]]) {
   const protocol=await rpc(approvalCredential.secret,name,args)
   equal(protocol.value.error?.code,-32601,'approval and decision are not MCP methods')
   const offered=await call(approvalCredential.secret,name,args)
   equal(offered.status,400,'unregistered approval tool is refused')
   equal(offered.value.error?.data?.code,'tool_not_found','approval and decision are not callable tools')
  }
- for(const [path,input] of [['/work/'+approvalWork.id+'/fulfilment/approve',managerInput],['/work/'+approvalWork.id+'/approval-stage',pendingInput],['/grants',executionInput]]) {
-  const denied=await issuerSession.raw(path,{method:'POST',body:input,headers:{Authorization:'Bearer '+approvalCredential.secret}})
-  equal(denied.status,401,'MCP bearer cannot borrow the native approver session')
-  equal((await denied.json()).error.code,'rest_auth_required','native decision refuses the MCP audience before execution')
+ for(const [path,input] of [['/work/'+pendingManagerWork.id+'/fulfilment/approve',pendingManagerInput],['/work/'+approvalWork.id+'/approval-stage',pendingInput],['/grants',executionInput]]) {
+  for(const nativeCookie of [false,true]) {
+   const options={method:'POST',body:input,headers:{Authorization:'Bearer '+approvalCredential.secret}}
+   const denied=await (nativeCookie?issuerSession.raw(path,options):request('/api/v1'+path,options))
+   equal(denied.status,401,'MCP bearer alone or with a native approver session is refused')
+   equal((await denied.json()).error.code,'rest_auth_required','native decision refuses the MCP audience before execution')
+  }
  }
  equal(await authorityState(),beforeMint,'refused MCP approvals and decisions change no authority or existing record')
  const preserved=await value(employeeSession.api('/work/'+approvalWork.id+'/approvals/'+approvalItem.id))
  equal(preserved.manager.state,'approved','mint retains existing manager approval')
  equal(preserved.stages.map(stage=>stage.state),['approved','pending'],'mint and refusals retain the recorded approval and open decision')
+ check((await value(issuerSession.api('/fulfilment-decisions'))).items.some(item=>item.workId===pendingManagerWork.id),'MCP attempts leave the pending manager approval actionable by its holder')
+ await value(issuerSession.api('/work/'+pendingManagerWork.id+'/fulfilment/approve',pendingManagerInput))
+ equal((await value(employeeSession.api('/work/'+pendingManagerWork.id+'/approvals/'+approvalItem.id))).manager.state,'approved','the same pending manager approval completes through its authorized native door')
  await value(issuerSession.api('/work/'+approvalWork.id+'/approval-stage',pendingInput))
  check((await value(employeeSession.api('/work/'+approvalWork.id+'/approvals/'+approvalItem.id))).satisfied,'the same decision still completes through its authorized native door')
  console.log('PASS API-003 point 6 native mint preserves populated membership, roles, approvals and service execution grants; MCP approval and decision refusals leave them unchanged')

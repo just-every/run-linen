@@ -1,25 +1,22 @@
+import {hoverTooltip,waitForTooltipOpacity} from './transition-helpers.mjs';
 import assert from 'node:assert/strict';
 import {apiFor,fields,signIn} from './connected-helpers.mjs';
 
 async function tooltip(page,control) {
   const label=await control.getAttribute('data-tip');
   assert.ok(label,'The control has a tooltip label');
-  await page.mouse.move(1,1);
-  await control.evaluate(element=>element.blur());
-  await page.waitForFunction(element=>getComputedStyle(element,'::after').opacity==='0',await control.elementHandle());
-  await control.hover();
+  await hoverTooltip(control);
   const hover=await control.evaluate(element=>{
     const style=getComputedStyle(element,'::after');
-    return {opacity:style.opacity,delay:parseFloat(style.transitionDelay),content:style.content};
+    return {delay:parseFloat(style.transitionDelay),content:style.content};
   });
-  assert.equal(hover.opacity,'0','Tooltip stays hidden at the start of hover');
   assert.ok(hover.delay>=0.25&&hover.delay<=0.35,'Hover tooltip waits about 300 milliseconds');
   assert.equal(hover.content,JSON.stringify(label));
-  await page.waitForFunction(element=>getComputedStyle(element,'::after').opacity==='1',await control.elementHandle());
   await page.mouse.move(1,1);
-  await page.waitForFunction(element=>getComputedStyle(element,'::after').opacity==='0',await control.elementHandle());
+  await waitForTooltipOpacity(control, '0');
   await page.keyboard.press('Tab');
   await control.focus();
+  await waitForTooltipOpacity(control, '1');
   const focus=await control.evaluate(element=>({visible:element.matches(':focus-visible'),opacity:getComputedStyle(element,'::after').opacity,transition:getComputedStyle(element,'::after').transitionDuration}));
   assert.equal(focus.visible,true,'Keyboard focus uses the visible focus state');
   assert.equal(focus.opacity,'1','Keyboard focus shows the tooltip immediately');

@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 18 | 131 | 29 | 178 |
+| Core | 25 | 124 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 18 | 144 | 37 | 199 |
+| Full target | 25 | 137 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -561,7 +561,7 @@ Core · target · **partial** · Cites BASE-MAIL-001 · Rules D-2, D-3
 
 #### CHANNEL-009 — Request sharing and manager visibility
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** A requester shares a request with named colleagues, who can read and reply to its public thread but never see private notes; a request filed on behalf of someone shows to both the submitter and the beneficiary; managers see their direct and indirect reports' requests in "My team's requests", following the HRIS reporting line (LIFE-001), with sensitive categories (HR, security, health, leaver) excluded by policy. Every share is audited and revocable (RL-3). Linen's taxonomy has no separate security, health or leaver categories: security and health requests are restricted, and leaver lifecycle work is not a request. HR facts arrive through the people API until LIFE-001's HRIS connectors inherit it, and DESK-011's department workspaces inherit the HR exclusion (D-4).
 
@@ -574,8 +574,8 @@ Core · target · **partial**
 6. Visibility follows each person's current manager on their reviewed HR-fact record at read time: after an HR change of the report's manager, the old manager loses visibility and the new one gains it.
 7. The request portal tells requesters and beneficiaries that their managers can read the public thread of their normal requests.
 
-**Evidence.** `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs`
-**Gap.** Not asserted: a shared colleague never sees attachments, a colleague's reply opens no new intake, and an HR request cannot be shared. The share, revoke, audit, on-behalf, team-view and HR-change outcomes are asserted.
+**Evidence.** `src/features/work/sharing.ts`, `tests/work/relationship-cases.mjs`, `tests/ui/sharing-journey.mjs`; `tests/work/relationship-cases.mjs` (sharingChecks); `tests/ui/sharing-journey.mjs` (sharingJourney); `tests/work/department-space-cases.mjs` (departmentSpaceChecks)
+**Gap.** None.
 
 ### Service catalog and approvals
 
@@ -814,7 +814,7 @@ Core · target · **partial**
 
 #### DESK-018 — Keyboard triage
 
-Core · target · **partial** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
+Core · target · **done** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
 
 **Requirement.** An agent triages a queue from the keyboard alone. Keyboard triage works outside text fields.
 
@@ -828,8 +828,8 @@ Core · target · **partial** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
 7. `?` shows the shortcut reference.
 8. `x` runs a DESK-015 scenario on the open ticket.
 
-**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/work/runtime.mjs`; native saved/shared view, five-ticket bulk assignment, scoped lead view and pointer-free keyboard next/assign/reply/status: `tests/ui/desk-console-journeys.mjs` deskQueueJourney through `tests/ui/browser.mjs`
-**Gap.** Not asserted: k (previous ticket), n (private note), c (close) and Escape leaving a field. Keyboard-only triage with j, a, r, s, Ctrl/⌘+Enter, ? and x is asserted.
+**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/work/runtime.mjs`; native saved/shared view, five-ticket bulk assignment, scoped lead view and pointer-free keyboard next/assign/reply/status: `tests/ui/desk-console-journeys.mjs` deskQueueJourney through `tests/ui/browser.mjs`; `tests/ui/desk-console-journeys.mjs` (deskQueueJourney); `tests/ui/desk-console-journeys.mjs` (deskScenarioJourney)
+**Gap.** None.
 
 #### DESK-002 — Classification and priority
 
@@ -866,7 +866,7 @@ Core · target · **partial**
 
 #### DESK-019 — Automatic assignment and routing history
 
-Core · target · **partial** · From DESK-003
+Core · target · **done** · From DESK-003
 
 **Requirement.** Within the group a rule chose, Linen hands the ticket to one candidate by the group's method, never to an agent for a restricted or HR ticket, and keeps every routing step.
 
@@ -878,8 +878,8 @@ Core · target · **partial** · From DESK-003
 5. Every routing, group placement and manual assignment is kept with its actor, time, before and after, readable by agents only.
 6. Requesters do not read groups or routing.
 
-**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`
-**Gap.** Not asserted: that with no candidate the ticket stays in its group unassigned. Round-robin, load, restricted placement, routing history and requester exclusion are asserted.
+**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`; `tests/work/desk-routing-cases.mjs` (deskRoutingChecks); `tests/work/desk-group-cases.mjs` (deskGroupChecks)
+**Gap.** None.
 
 #### DESK-004 — SLA policies
 
@@ -933,7 +933,7 @@ Core · target · **partial**
 
 #### DESK-021 — Awaiting-requester reminders and closure
 
-Core · target · **partial** · From DESK-005
+Core · target · **done** · From DESK-005
 
 **Requirement.** A ticket waiting on its requester is reminded, then closed with a disclosure the requester can undo by reopening.
 
@@ -945,8 +945,8 @@ Core · target · **partial** · From DESK-005
 5. A public message from the requester or beneficiary after the pause stops both, as does the ticket leaving the paused-awaiting-requester state.
 6. A business day is one working day's hours on the ticket's SLA calendar, skipping non-working days and holidays, or 24 hours without a calendar.
 
-**Evidence.** `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs`
-**Gap.** Not asserted: that the requester can reopen the automatically closed ticket, and that leaving the paused-awaiting-requester state stops the reminder and resolution. Reminder, disclosed close and reply-stops-both are asserted.
+**Evidence.** `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (escalationChecks)
+**Gap.** None.
 
 #### DESK-006 — Ticket relationships
 
@@ -1006,7 +1006,7 @@ Core · target · **partial** · From DESK-007 · Cites BASE-MAIL-001 · Rules D
 
 #### DESK-008 — Responses and summaries
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Canned responses with placeholders, and assistant-drafted replies and ticket summaries that cite knowledge and ticket history. A drafted reply stays a draft in the composer until a person sends it; when an agent sends a reply through a tool, that call carries its class and the company's policy decides it (RL-8).
 
@@ -1020,8 +1020,8 @@ Core · target · **partial**
 7. Inserting a template or using a reply draft preserves the composer's selected visibility and leaves it unsent: a drafted reply is not sent until the service agent sends it.
 8. For articles generated by KB-004, the requester and beneficiary must each currently be able to read every source before and after reply generation, and a pending beneficiary refuses that article context; these are read-only checks, never a new account or grant.
 
-**Evidence.** `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs`
-**Gap.** Not asserted: that inserting a template or using a reply draft preserves the composer's selected visibility. Canned responses, placeholders, summaries, citations, context rechecks, unsent drafts and generated-knowledge rights are asserted.
+**Evidence.** `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs`; `tests/ui/response-journey.mjs` (responseJourney); `tests/work/response-cases.mjs` (responseChecks); `tests/work/knowledge-draft-cases.mjs` (knowledgeDraftChecks)
+**Gap.** None.
 
 #### DESK-009 — Satisfaction surveys
 
@@ -1071,7 +1071,7 @@ Core · target · **partial** · From DESK-010
 
 #### DESK-011 — Department workspaces
 
-Core · target · **partial** · Rules D-4
+Core · target · **done** · Rules D-4
 
 **Requirement.** IT, HR service, Facilities, Finance and Legal run separate workspaces with their own catalog, queues, SLAs, knowledge and permissions, one employee portal across them, and handoff between workspaces that keeps history and restrictions. HR-service tickets remain service requests; Willow or the buyer's HRIS remains the employee record. Department workspaces are internal to the existing Linen installation, administered by the owner (RL-9). CATALOG-004 keeps the obligation to supply mixed-department bundle routing; its requirement is not narrowed here and it is not an acceptance point of DESK-011. Handoff is DESK-024.
 
@@ -1085,8 +1085,8 @@ Core · target · **partial** · Rules D-4
 7. Catalog audience, form revisions and exact quote readers remain those of CATALOG-007, CATALOG-001 and CATALOG-008; department staff membership grants no quote access, and a request uses its item's department.
 8. A new mixed-department bundle refuses atomically with its reasons; same-department and legacy bundles retain their existing atomic behavior.
 
-**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).
-**Gap.** Not asserted: that employee department attributes grant no staff authority. Department reads, catalogs, ownership, legacy permissions, quote exclusion and bundle refusal are asserted.
+**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).; `tests/work/department-space-cases.mjs` (departmentSpaceChecks); `tests/work/department-ops-cases.mjs` (departmentOpsChecks); `tests/ui/department-browser.mjs` (Department privacy browser)
+**Gap.** None.
 
 #### DESK-024 — Department handoff and retained HR restriction
 
@@ -2134,7 +2134,7 @@ Core · target · **partial** · Rules D-4
 
 #### KB-001 — Knowledge base
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Articles with authoring, review, versions, audience scoping, expiry and escalation to a request (E7).
 
@@ -2142,8 +2142,8 @@ Core · target · **partial**
 1. As in E7, an employee searches a reviewed article and escalates it into a request carrying the article revision.
 2. An expired article disappears from employee search.
 
-**Evidence.** `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs`
-**Gap.** Not asserted in the cited files: that an expired article disappears from employee search. Reviewed-article search and escalation with the article revision are asserted.
+**Evidence.** `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs`; `tests/work/runtime.mjs` (Service desk and lifecycle); `tests/work/runtime.mjs` (KB-001 reviewed article expires from employee search)
+**Gap.** None.
 
 #### KB-002 — Federated knowledge sources
 
