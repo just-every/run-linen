@@ -1,0 +1,124 @@
+{
+  "tag": "sx-linen-c-f39",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f39",
+  "head": "8c9641899770d1a0b2d320ed37a9931d6524be71",
+  "recordedAt": "2026-11-09T05:57:13.341890+00:00",
+  "checks": [
+    {
+      "name": "work-runtime",
+      "command": "cloud_run node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log",
+      "sha256": "7867859f277408334349006cc05da2f4082cc592c10d768f03bb0bf3d9b084ca"
+    },
+    {
+      "name": "service-runtime",
+      "command": "cloud_run node tests/services/run.mjs",
+      "exit": 0,
+      "log": "service-runtime.log",
+      "sha256": "c31cb2a53adb77e66e0c0d389a696f5cf84e4cc7e4fa512fae65eb44ca99be92"
+    },
+    {
+      "name": "typecheck",
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log",
+      "sha256": "891062c7384c218df571cbe27099c72d60403f4f7e85abe12e4a9cc9c710636b"
+    },
+    {
+      "name": "first-party",
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "build",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log",
+      "sha256": "e7f3db19ad8bd8d9eed439899d1d648f32bf42d0d7829c27931f4c03cbf3eec7"
+    },
+    {
+      "name": "views",
+      "command": "node src/base/contract-docs.mjs write and check",
+      "exit": 0,
+      "log": "views.log",
+      "sha256": "6a3edad7783bf6c13e63dbe5a49f4f1d6a932a81c60be61934495e59874a258a"
+    },
+    {
+      "name": "views-final",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-final.log",
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    }
+  ],
+  "sourceFiles": {
+    "tests/work/desk-scenario-cases.mjs": "fbb1d09f04c9c67d024c4e08aed09676d0f498ace76b10618566f9125dc8939c",
+    "tests/work/runtime.mjs": "93f45afe1817e4b3afe89d55c7fccac052537b68216e730ff8e3276fccf81688",
+    "tests/services/template-cases.mjs": "ccad0a74d837ece895067df9da63699840a31da7746fca9778180e330266b9da",
+    "src/features/work/desk-scenario-plans.ts": "b9049d54ccf416f9a9d37b1edc38321eeaff48929b81252d06930dcf2b69122d",
+    "src/features/work/desk-scenarios.ts": "23b9fb6ba0bac815ed78787b161dcadd73468089e0f66fe536d0e0649ec1a673",
+    "sources.lock.json": "4f2598d0bd46ac92454f73a0b17f896e1f9215d269f8444b94cf0ca657013e43"
+  },
+  "sourceLock": {
+    "command": "node scripts/edition-authoring/cli.mjs lock and check",
+    "exit": 0,
+    "log": "SOURCE-CHECK.json",
+    "sha256": "26a83ceda9f223c2ac7464a3076da67b5b8846b1a33d7397b8d4b64ba5653cf5"
+  },
+  "migrationLedger": {
+    "command": null,
+    "reason": "No migrations changed",
+    "exit": 0
+  },
+  "generatedViews": {
+    "writeExit": 0,
+    "checkExit": 0,
+    "committed": false
+  },
+  "productPush": {
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f39",
+    "attempts": 1,
+    "exit": 0,
+    "status": "PUSH_OK"
+  },
+  "statusCellsChanged": false,
+  "testRegistrationsAdded": 0,
+  "testRegistrationsRemoved": 0,
+  "countsBefore": {
+    "done": 27,
+    "partial": 135,
+    "missing": 37
+  },
+  "countsAfter": {
+    "done": 27,
+    "partial": 135,
+    "missing": 37
+  },
+  "publicationScan": {
+    "status": "NOT RUN in cloud; fleet duty",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "mainBaseline": {
+    "head": "fcc2e53de937ab2ae17938147920b871b5fe70f5",
+    "verify": 42566680535,
+    "verifyConclusion": "success",
+    "runSite": 42566680574,
+    "runSiteConclusion": "success"
+  },
+  "pullRequest": "https://github.com/just-every/run-linen/pull/175",
+  "verify": {
+    "id": 42570142367,
+    "event": "pull_request",
+    "status": "in_progress",
+    "conclusion": null,
+    "head_sha": "8c9641899770d1a0b2d320ed37a9931d6524be71",
+    "url": "https://github.com/just-every/run-linen/actions/runs/42570142367"
+  },
+  "apiCallsUsed": 4
+}
