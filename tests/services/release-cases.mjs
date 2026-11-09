@@ -132,7 +132,12 @@ export async function releaseChecks({ok,call,db,implementation}) {
   }
   for(const phase of ['build','test'])boundary=await ok('POST',`/releases/${boundary.id}/phases`,{revision:boundary.revision,phase,outcome:'passed',reference:'Reviewed candidate'});
   const approve=async()=>{for(const actor of ['owner','approver'])boundary=await ok('POST',`/releases/${boundary.id}/decisions`,{revision:boundary.revision,decision:'go',reason:'Reviewed all member implementations'},actor);};
-  for(const [phase,actor,reference] of [['test','operator','synthetic-linen-7003'],['build','owner','synthetic-linen-7004']]){
+  for(const [phase,outcome,actor,reference] of [
+    ['test','passed','operator','synthetic-linen-7003'],['test','failed','owner','synthetic-linen-7006'],
+    ['build','passed','owner','synthetic-linen-7004'],['build','failed','operator','synthetic-linen-7007']
+  ]){
+    if(boundary.data.phases.build?.outcome!=='passed')boundary=await ok('POST',`/releases/${boundary.id}/phases`,{revision:boundary.revision,phase:'build',outcome:'passed',reference:'synthetic-linen-7008'});
+    if(boundary.data.phases.test?.outcome!=='passed')boundary=await ok('POST',`/releases/${boundary.id}/phases`,{revision:boundary.revision,phase:'test',outcome:'passed',reference:'synthetic-linen-7009'});
     await approve();
     const before=await ok('GET',`/releases/${boundary.id}`);
     assert.equal(before.data.state,'go');assert.equal(before.data.goNoGo,'go','Replacement starts with genuine current go decisions');
@@ -142,11 +147,11 @@ export async function releaseChecks({ok,call,db,implementation}) {
       assert.ok(decision.id && decision.at);
       assert.deepEqual(decision.revisions,Object.fromEntries(regression.map(c=>[c.id,c.data.implementationRevision])));
     }
-    const recorded=await ok('POST',`/releases/${boundary.id}/phases`,{revision:before.revision,phase,outcome:'passed',reference},actor);
+    const recorded=await ok('POST',`/releases/${boundary.id}/phases`,{revision:before.revision,phase,outcome,reference},actor);
     boundary=await ok('GET',`/releases/${boundary.id}`);
     assert.deepEqual(boundary,recorded,'Release reads retain the recorded replacement result');
     assert.equal(boundary.revision,before.revision+1);
-    assert.equal(boundary.data.phases[phase].reference,reference);assert.equal(boundary.data.phases[phase].outcome,'passed');
+    assert.equal(boundary.data.phases[phase].reference,reference);assert.equal(boundary.data.phases[phase].outcome,outcome);
     assert.equal(boundary.data.phases[phase].recordedBy,actor);assert.ok(Number.isFinite(Date.parse(boundary.data.phases[phase].recordedAt)));
     assert.deepEqual(boundary.data.decisions,[],`Replacing ${phase} withdraws all current decisions`);
     assert.deepEqual(boundary.data.priorDecisions,[...before.data.priorDecisions,...before.data.decisions],`Replacing ${phase} retains every attributed earlier decision`);
@@ -156,11 +161,19 @@ export async function releaseChecks({ok,call,db,implementation}) {
       assert.ok(before.data.phases.test,'A passed test exists before the replacement build');
       assert.equal(boundary.data.phases.test,null,'A replacement build also clears the old test');
     }
+    if(outcome==='failed'){
+      const historyBefore=await ok('GET',`/service-history/${boundary.id}`);
+      const refused=await call('POST',`/releases/${boundary.id}/decisions`,{revision:boundary.revision,decision:'go',reason:'Attempt while a recorded result is failed'},'approver');
+      assert.equal(refused.status,409);assert.equal(refused.body.error.code,'release_phase');
+      assert.deepEqual(await ok('GET',`/releases/${boundary.id}`),boundary,'A failed recorded result cannot regain go or change release state');
+      assert.deepEqual(await ok('GET',`/service-history/${boundary.id}`),historyBefore,'Refusing go after a failed result adds no history');
+    }
   }
   assert.equal((await ok('POST','/fixture/state',{})).writes,phaseWritesBefore,'Recording results and native decisions dispatches no provider effect');
   assert.deepEqual(await Promise.all(regression.map(c=>ok('GET',`/changes/${c.id}`))),membersBefore,'Recording release results leaves member changes untouched');
+  boundary=await ok('POST',`/releases/${boundary.id}/phases`,{revision:boundary.revision,phase:'build',outcome:'passed',reference:'synthetic-linen-7010'});
   boundary=await ok('POST',`/releases/${boundary.id}/phases`,{revision:boundary.revision,phase:'test',outcome:'passed',reference:'synthetic-linen-7005'});
-  console.log('PASS CHANGE-007 recorded phases: tests require a passed build without mutation on refusal; replacement test and build withdraw current go decisions, retain attributed history and return to planning; replacement build clears the old test; no provider effect');
+  console.log('PASS CHANGE-007 recorded phases: tests require a passed build without mutation on refusal; passed and failed replacement test and build withdraw current go decisions, retain attributed history and return to planning; replacement build clears the old test; no provider effect');
   await approve();
   regression[1]=await ok('PATCH',`/changes/${regression[1].id}`,{revision:regression[1].revision,title:'Materially amended member'});
   assert.equal((await dispatch(regression[0],'canary','old-candidate')).body.error.code,'release_go','Amending one member holds every member');
