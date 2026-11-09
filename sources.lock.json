@@ -7384,7 +7384,7 @@
       "executable": false
     },
     "tests/work/lifecycle-regressions.mjs": {
-      "sha256": "be6765e3e14d176b0d2ffad547288c6e8c0911a6aab6684dc4bf2dac4dd70d30",
+      "sha256": "245a0f68e4f2b9d2ab04875a89c795e486226db6333d70ec4e7f01f409b31d7b",
       "executable": false
     },
     "tests/work/lifecycle-template-cases.mjs": {
@@ -7476,7 +7476,7 @@
       "executable": false
     },
     "tests/work/worker.ts": {
-      "sha256": "bc68b170c589eba094fd51cf0e16bc40d6313cedccf702ac4850e8004dd4a6be",
+      "sha256": "0e2142c7ba6c0abc3f1485942a3b1fd983b92f15d7d0e1f0e0025b49e172fa45",
       "executable": false
     },
     "tsconfig.json": {
