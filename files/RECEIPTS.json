@@ -81,5 +81,17 @@
   "probes": [
     "PROBE DESK-016 5: owner, operator and HR searches with real article matches and unmatched queries create attributed audit rows without raw, encoded or base64 query content",
     "PROBE DESK-016 6: employee knowledge search returns reviewed employee guidance, omits HR and draft identities and content, and both global search variants return 403"
-  ]
+  ],
+  "verify": {
+    "conclusion": null,
+    "head_sha": "a0e8b094e12a6a477beb42a91676ccec34d747ff",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42622783801",
+    "status": "in_progress",
+    "id": 42622783801,
+    "name": "Verify",
+    "event": "pull_request",
+    "observed_at": "2026-11-09T13:18:40.011016+00:00",
+    "github_calls_used": 5
+  },
+  "handoff": "Published product candidate with local proof; exact-head Verify still running at last permitted observation. Maintained lander must establish green Verify and complete scan before landing."
 }
