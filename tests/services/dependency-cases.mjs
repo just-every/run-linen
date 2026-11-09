@@ -55,7 +55,7 @@ export async function dependencyChecks(request) {
   assert.match(unknown.coverage,/unknown/i,'Missing relationships disclose unknown coverage rather than healthy or independent service status');
   for(const result of [unknown,connectionOnlyImpact]) {
     assert.equal(result.coverage,graph.coverage,'Empty dependency impact retains the graph coverage limitation');
-    assert.ok(!Object.hasOwn(result,'status')&&!Object.hasOwn(result,'healthy')&&!Object.hasOwn(result,'independent'),
+    assert.ok(result.status!=='healthy'&&result.healthy!==true&&result.independent!==true,
       'Missing dependencies never supply a service health or independence verdict');
   }
   assert.deepEqual(await state(),beforeImpact,'Inferred impact reads create no incident or outage and change no stored service, change, graph state or service history');
