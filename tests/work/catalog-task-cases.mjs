@@ -56,6 +56,13 @@ export async function catalogTaskChecks({ ok, api, db, actor, future }) {
 
   // Isolate capacity from approval and ordering with the same independent team task.
   const providerBefore = (await db.prepare('SELECT * FROM test_provider ORDER BY target').all()).results;
+  const executionState = async () => {
+    const tables = ['execution_grants', 'execution_plans', 'execution_operations', 'execution_outbox',
+      'execution_attempts', 'execution_provider_attempts'];
+    return Object.fromEntries(await Promise.all(tables.map(async table =>
+      [table, (await db.prepare(`SELECT * FROM ${table} ORDER BY id`).all()).results])));
+  };
+  const executionBefore = await executionState();
   for (const capacity of [0, 1]) {
     const capacityItem = await ok('/catalog', { name: `Capacity ${capacity}`, kind: 'software',
       target: `synthetic-linen-62-${capacity}`, ownerId: 'owner', requiresManager: true, capacity, tasks: [plan[1]] });
@@ -90,10 +97,12 @@ export async function catalogTaskChecks({ ok, api, db, actor, future }) {
         'CATALOG-003 refused completion changes no task, request, fulfilment revision or history');
     } else {
       assert.equal(completion.status, 200, JSON.stringify(completion));
-      const done = task(await duties(id, 'task-hw'), 'seat');
+      const afterCapacity = await duties(id, 'task-hw'), done = task(afterCapacity, 'seat');
       assert.deepEqual([done.state, done.revision, done.completed_by, done.can_complete],
         ['done', row.revision + 1, 'task-hw', false], 'CATALOG-003 the equivalent task with capacity completes');
       assert.ok(done.completed_at);
+      assert.deepEqual(afterCapacity.filter(o => o.id !== row.id), beforeCapacity.duties.filter(o => o.id !== row.id),
+        'CATALOG-003 team completion leaves the independent automated responsibility unfinished');
       const history = (await ok(`/work/${id}/activity`)).items.filter(e => e.action === 'task completed');
       assert.equal(history.length, 1);
       assert.equal(history[0].actor, 'task-hw');
@@ -102,6 +111,8 @@ export async function catalogTaskChecks({ ok, api, db, actor, future }) {
   }
   assert.deepEqual((await db.prepare('SELECT * FROM test_provider ORDER BY target').all()).results, providerBefore,
     'CATALOG-003 capacity and team completion dispatch no provider effect');
+  assert.deepEqual(await executionState(), executionBefore,
+    'CATALOG-003 catalog submission, manager approval and team completion create no execution authority or provider work');
   console.log('PASS CATALOG-003 capacity: approved independent team task unavailable at zero capacity; completion refused with unchanged duties, ticket, fulfilment and history; positive capacity completes with attributed history and no provider effect');
 
   // The automated step still verifies independently (the CATALOG-004 provider boundary).
