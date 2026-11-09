@@ -1,0 +1,4 @@
+{"number": 1, "at": "2026-11-09T14:50:57.957847+00:00", "command": ["gh", "api", "--method", "POST", "repos/just-every/run-linen/actions/workflows/verify.yml/dispatches", "-f", "ref=cloud/sx-linen-c-f69-pc1"], "exit_code": 0}
+{"number": 2, "at": "2026-11-09T14:56:00.407651+00:00", "command": ["gh", "api", "repos/just-every/run-linen/actions/runs?head_sha=3cc7775ff7b84a0362b6236d99aa1476b0ef995b&per_page=100", "--jq", "{total_count,workflow_runs:[.workflow_runs[]|{id,name,status,conclusion,head_sha,html_url,event}]}"], "exit_code": 0}
+{"number": 3, "at": "2026-11-09T15:01:02.982149+00:00", "command": ["gh", "api", "repos/just-every/run-linen/actions/runs/42638687832", "--jq", "{status,conclusion,head_sha,html_url}"], "exit_code": 0}
+{"number": 4, "at": "2026-11-09T15:06:05.237054+00:00", "command": ["gh", "api", "repos/just-every/run-linen/actions/runs/42638687832", "--jq", "{status,conclusion,head_sha,html_url}"], "exit_code": 0}

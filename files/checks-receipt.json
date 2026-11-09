@@ -1,0 +1,103 @@
+{
+  "tag": "sx-linen-c-f69-pc1",
+  "repository": "just-every/run-linen",
+  "original_candidate": "a3c2ca907968fbffea738f4892a8e58c1fcfc667",
+  "merged_main": "2fffbc6cd5d5fc4d92d958923071750ded215fdd",
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit_code": 0,
+      "result": "passed",
+      "recorded_at": "2026-11-09T14:29:12.088276+00:00"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit_code": 0,
+      "result": "passed",
+      "recorded_at": "2026-11-09T14:40:45.772875+00:00",
+      "log": "contract-generate.log",
+      "log_sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2",
+      "log_bytes": 28
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit_code": 0,
+      "result": "passed",
+      "recorded_at": "2026-11-09T14:40:45.772948+00:00",
+      "log": "contract-check.log",
+      "log_sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422",
+      "log_bytes": 70
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "result": "passed",
+      "recorded_at": "2026-11-09T14:29:12.088276+00:00",
+      "log": "typecheck.log",
+      "log_sha256": "c1158479c47b2be9a52bc1858ebf94034f3838290ff5d4675dbf3c9e7ed83ce0",
+      "log_bytes": 229
+    },
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit_code": 0,
+      "result": "passed",
+      "recorded_at": "2026-11-09T14:29:12.088276+00:00",
+      "log": "work-runtime.log",
+      "log_sha256": "59805a24ad2beb1c09ad64a7a64633a2a1e7dbedd8e58738775a78d6b4294b1b",
+      "log_bytes": 11396
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit_code": 0,
+      "result": "passed",
+      "recorded_at": "2026-11-09T14:40:45.774102+00:00",
+      "log": "source-lock.log",
+      "log_sha256": "94f48ba456c9d3f36c46700ad2aecf2898503a7d579df1649616072977344d23",
+      "log_bytes": 309427
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit_code": 0,
+      "result": "passed",
+      "recorded_at": "2026-11-09T14:40:45.776319+00:00",
+      "log": "source-check.log",
+      "log_sha256": "dd0edce3c8b412f4ae31c98a700f81a462afa8a4bb886dc9a1c306a6b7f65d18",
+      "log_bytes": 309441
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit_code": 0,
+      "result": "passed",
+      "recorded_at": "2026-11-09T14:45:03.150271+00:00",
+      "log": "rer-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0
+    },
+    {
+      "command": "LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium LINEN_TEST_BUILT=1 LINEN_CAPTURE=1 node tests/ui/run.mjs",
+      "exit_code": 0,
+      "result": "passed",
+      "recorded_at": "2026-11-09T14:50:30.071520+00:00",
+      "log": "ui-runtime.log",
+      "log_sha256": "112bd79fa4859a2b5f7fe5f51dd8deef28e8137b9d3178897216dd83384db064",
+      "log_bytes": 6666
+    }
+  ],
+  "browser_suite": "passed",
+  "clause_status_changes": [],
+  "counts_before": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37,
+    "total": 199
+  },
+  "counts_after": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37,
+    "total": 199
+  },
+  "node": "v24.19.0",
+  "initial_tested_main": "ad2d004e27cc265842055ff38451d60f49beeb3f",
+  "main_refresh_note": "New main changes only tests/services/calendar-cases.mjs, tests/services/run.mjs, tests/services/worker.ts and sources.lock.json. git diff confirmed src, tests/ui, tests/work, package.json, pnpm-lock.yaml and migrations are unchanged; local typecheck/work/browser results apply to identical code. Contract docs and source lock regenerated and checked again."
+}

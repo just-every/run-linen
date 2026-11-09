@@ -1,0 +1,36 @@
+{
+  "candidate_commits": [
+    {
+      "sha": "3cc7775ff7b84a0362b6236d99aa1476b0ef995b",
+      "author_name": "Run Edit Run fleet",
+      "author_email": "fleet@runeditrun.com",
+      "committer_name": "Run Edit Run fleet",
+      "committer_email": "fleet@runeditrun.com",
+      "trailers": ""
+    },
+    {
+      "sha": "a3c2ca907968fbffea738f4892a8e58c1fcfc667",
+      "author_name": "James Peter",
+      "author_email": "github@zemaj.com",
+      "committer_name": "James Peter",
+      "committer_email": "github@zemaj.com",
+      "trailers": ""
+    },
+    {
+      "sha": "054d0c503f15ccde99c9cb0529acca1c59e66536",
+      "author_name": "Run Edit Run fleet",
+      "author_email": "fleet@runeditrun.com",
+      "committer_name": "James Peter",
+      "committer_email": "github@zemaj.com",
+      "trailers": ""
+    }
+  ],
+  "product_diff_from_main": [
+    "sources.lock.json",
+    "tests/ui/desk-console-journeys.mjs",
+    "tests/work/desk-scenario-cases.mjs"
+  ],
+  "identities_and_trailers": "pass",
+  "candidate_tests_unchanged": true,
+  "contract_and_generated_views_match_main": true
+}

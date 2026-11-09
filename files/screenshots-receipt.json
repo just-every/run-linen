@@ -1,0 +1,53 @@
+{
+  "images": [
+    {
+      "path": "screenshots/desk-015-ticket-1440.png",
+      "source": "DESK-015-ticket-saved-1440.png",
+      "width": 1440,
+      "height": 4425,
+      "bytes": 1982626,
+      "sha256": "18074682ba329246f4ea35854477693bbeb962346493e6870a59d7c37e4a4ada"
+    },
+    {
+      "path": "screenshots/desk-015-ticket-390.png",
+      "source": "DESK-015-ticket-saved-1440-390px.png",
+      "width": 390,
+      "height": 5797,
+      "bytes": 508364,
+      "sha256": "a834f5109f59372396d7925f030400b37fc98fb55ac174efc61e81fb4dbe480e"
+    },
+    {
+      "path": "screenshots/desk-015-bulk-1-1440.png",
+      "source": "DESK-015-bulk-1-saved-1440.png",
+      "width": 1440,
+      "height": 4812,
+      "bytes": 1709524,
+      "sha256": "05b0124caab37a0d20a69cde8cfb3839ea71afc957bf62e19a10473a53d8e31a"
+    },
+    {
+      "path": "screenshots/desk-015-bulk-1-390.png",
+      "source": "DESK-015-bulk-1-saved-1440-390px.png",
+      "width": 390,
+      "height": 5749,
+      "bytes": 504516,
+      "sha256": "4b7393ff93a9e34abf9cf6b7065ebd470c2eeb3d8bf2728e3adef8603070e277"
+    },
+    {
+      "path": "screenshots/desk-015-bulk-2-1440.png",
+      "source": "DESK-015-bulk-2-saved-1440.png",
+      "width": 1440,
+      "height": 4812,
+      "bytes": 1709309,
+      "sha256": "0d7ec0e403d9f2ad10369376060c227b0b37ae4ccfc061e6845e9c593916c954"
+    },
+    {
+      "path": "screenshots/desk-015-bulk-2-390.png",
+      "source": "DESK-015-bulk-2-saved-1440-390px.png",
+      "width": 390,
+      "height": 5749,
+      "bytes": 504184,
+      "sha256": "fd4f28bb8ca60e5ce42a97192ae65595913b3cf28354fadbb6d5b93b3e424f0c"
+    }
+  ],
+  "visual_review": "Ticket saved-state images inspected at both widths; all images are actual screenshots from the passing native test run."
+}

@@ -1,0 +1,17 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f69-pc1",
+  "head_sha": "3cc7775ff7b84a0362b6236d99aa1476b0ef995b",
+  "recorded_at": "2026-11-09T15:06:05.237350+00:00",
+  "github_calls_used": 4,
+  "status": "success",
+  "run": {
+    "conclusion": "success",
+    "event": "workflow_dispatch",
+    "head_sha": "3cc7775ff7b84a0362b6236d99aa1476b0ef995b",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42638687832",
+    "id": 42638687832,
+    "name": "Verify",
+    "status": "completed"
+  }
+}
