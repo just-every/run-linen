@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {attachPrivateTemplate,checkPrivateTemplateErased} from './template-cases.mjs';
 
 /** The public erasure door owns domain cleanup and the platform tombstone. */
 export async function platformPrivacyChecks({ok,request,auth,owner,database,restart}) {
@@ -17,11 +18,13 @@ export async function platformPrivacyChecks({ok,request,auth,owner,database,rest
     db.prepare('INSERT INTO work_department_members(workspace_id,department_id,user_id,active,updated_by,updated_at) VALUES(?,?,?,?,?,?)').bind(foreign,'privacy-foreign-team',person.id,1,person.id,'2026'),
     ...[current.workspaceId,foreign].map((workspace,i)=>db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind('privacy-event-'+i,workspace,person.id,'effect.completed','operation-opaque',JSON.stringify({nested:{email}}),'2026')),
   ]);
+  const privateTemplate=await attachPrivateTemplate(ok,owner,{id:person.id,email,name:'Private shared'});
   const member=await auth(await request('/login','POST',{email,password}));
   assert.equal((await request('/adoption/erase','POST',{identity:person.id},member)).status,403,'Current owner is required');
   assert.equal((await request('/adoption/erase','POST',{identity:current.userId},owner)).status,409,'Self-erasure refuses lockout');
   const erased=await ok('/adoption/erase','POST',{identity:person.id},owner);
   assert.equal(erased.state,'completed');
+  await checkPrivateTemplateErased(ok,owner,privateTemplate);
   assert.deepEqual(await rows('SELECT * FROM memberships WHERE workspace_id=? AND user_id=?',current.workspaceId,person.id),[]);
   assert.deepEqual(await rows('SELECT * FROM work_department_members WHERE workspace_id=? AND user_id=?',current.workspaceId,person.id),[]);
   assert.equal((await rows('SELECT active FROM work_department_members WHERE workspace_id=? AND user_id=?',foreign,person.id))[0].active,1,'Foreign departmental membership survives');
@@ -43,5 +46,5 @@ export async function platformPrivacyChecks({ok,request,auth,owner,database,rest
   assert.equal((await after.prepare('SELECT password_hash FROM users WHERE id=?').bind(local.id).first()).password_hash,'!erased','Case-insensitive email erasure retires a local profile');
   assert.equal((await request('/session','GET',undefined,localSession)).status,401);
   assert.deepEqual((await after.prepare('PRAGMA foreign_key_check').all()).results,[]);
-  console.log('PASS AUDIT-001/A1/ERASURE-001 public erasure: current-owner/self guards, scoped membership and sessions, shared profile and foreign audit isolation, anonymous durable audit, restart replay and canonical email removal');
+  console.log('PASS AUDIT-001/A1/ERASURE-001 public erasure: current-owner/self guards, scoped membership and sessions, shared profile and foreign audit isolation, anonymous durable audit, CHANGE-001 live template approval withdrawn with inert prior approvals and removed subject content, restart replay and canonical email removal');
 }
