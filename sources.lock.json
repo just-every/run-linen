@@ -7148,7 +7148,7 @@
       "executable": false
     },
     "tests/ui/run.mjs": {
-      "sha256": "8ab9a8030660b6464e86b6805b83ffb3bef029d34ef0c923eb6a83deff797ebd",
+      "sha256": "799ce53efeb215c98519a10608f2a579596cb024384bfcef4f7b22b9a724415c",
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {

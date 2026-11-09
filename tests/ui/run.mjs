@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdtemp, rm, mkdir, open, cp } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, open, cp, readFile } from "node:fs/promises";
 import { tmpdir, userInfo } from "node:os";
 import { join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
@@ -78,9 +78,15 @@ try {
       env: { ...process.env, HOME: userInfo().homedir, LINEN_TEST_URL: url, LINEN_TEST_OUTPUT: out },
     });
     child.on("error", no);
-    child.on("exit", (code) =>
-      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
-    );
+    child.on("exit", async (code) => {
+      if (code === 0) return yes();
+      // Include the server exception beside the failing assertion. Do not retry a write
+      // or replace a transport failure with an application permission response.
+      try {
+        const output = await readFile(join(out, "worker.log"), "utf8");
+        no(Error(`Browser acceptance exited ${code}; Worker output:\n${output.split("\n").slice(-80).join("\n")}`));
+      } catch (error) { no(error); }
+    });
   });
   console.log(`UI evidence: ${out}`);
 } finally {
