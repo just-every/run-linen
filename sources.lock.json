@@ -7148,11 +7148,11 @@
       "executable": false
     },
     "tests/ui/run.mjs": {
-      "sha256": "13aac3cd5616e35f540d8b62a8083d6ff397f2746fe0d161760ba08f9cd97a1d",
+      "sha256": "8ab9a8030660b6464e86b6805b83ffb3bef029d34ef0c923eb6a83deff797ebd",
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "d3f71aa113369ae931f81b73d76003cbc0555b29ac4d29c208018a7446be54b6",
+      "sha256": "f595b2311f2572e64b68624206fe13644015f94b08ad35bdd35015a815b15cc2",
       "executable": false
     },
     "tests/ui/sandbox-routing-journey.mjs": {
