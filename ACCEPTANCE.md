@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 21 | 128 | 29 | 178 |
+| Core | 23 | 126 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 21 | 141 | 37 | 199 |
+| Full target | 23 | 139 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -1071,7 +1071,7 @@ Core · target · **partial** · From DESK-010
 
 #### DESK-011 — Department workspaces
 
-Core · target · **partial** · Rules D-4
+Core · target · **done** · Rules D-4
 
 **Requirement.** IT, HR service, Facilities, Finance and Legal run separate workspaces with their own catalog, queues, SLAs, knowledge and permissions, one employee portal across them, and handoff between workspaces that keeps history and restrictions. HR-service tickets remain service requests; Willow or the buyer's HRIS remains the employee record. Department workspaces are internal to the existing Linen installation, administered by the owner (RL-9). CATALOG-004 keeps the obligation to supply mixed-department bundle routing; its requirement is not narrowed here and it is not an acceptance point of DESK-011. Handoff is DESK-024.
 
@@ -1085,8 +1085,8 @@ Core · target · **partial** · Rules D-4
 7. Catalog audience, form revisions and exact quote readers remain those of CATALOG-007, CATALOG-001 and CATALOG-008; department staff membership grants no quote access, and a request uses its item's department.
 8. A new mixed-department bundle refuses atomically with its reasons; same-department and legacy bundles retain their existing atomic behavior.
 
-**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).
-**Gap.** Not asserted: that employee department attributes grant no staff authority. Department reads, catalogs, ownership, legacy permissions, quote exclusion and bundle refusal are asserted.
+**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).; `tests/work/department-space-cases.mjs` (departmentSpaceChecks); `tests/work/department-ops-cases.mjs` (departmentOpsChecks); `tests/ui/department-browser.mjs` (Department privacy browser)
+**Gap.** None.
 
 #### DESK-024 — Department handoff and retained HR restriction
 
@@ -2134,7 +2134,7 @@ Core · target · **partial** · Rules D-4
 
 #### KB-001 — Knowledge base
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Articles with authoring, review, versions, audience scoping, expiry and escalation to a request (E7).
 
@@ -2142,8 +2142,8 @@ Core · target · **partial**
 1. As in E7, an employee searches a reviewed article and escalates it into a request carrying the article revision.
 2. An expired article disappears from employee search.
 
-**Evidence.** `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs`
-**Gap.** Not asserted in the cited files: that an expired article disappears from employee search. Reviewed-article search and escalation with the article revision are asserted.
+**Evidence.** `src/features/work/knowledge.ts`, `tests/work/runtime.mjs`, `tests/adoption/prior-data-upgrade.mjs`; `tests/work/runtime.mjs` (Service desk and lifecycle); `tests/work/runtime.mjs` (KB-001 reviewed article expires from employee search)
+**Gap.** None.
 
 #### KB-002 — Federated knowledge sources
 
