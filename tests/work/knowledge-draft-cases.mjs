@@ -109,8 +109,24 @@ export async function knowledgeDraftChecks(api,db) {
   let restricted=check(await api('/problems',{...problemInput,visibility:'restricted'},owner),201);
   assert.ok(!(await detect()).some(d=>d.group.value===problem.id));
   const review={cause:'A stale session claim repeats redirects',evidenceIds:['session-probe']};
-  problem=check(await api(`/problems/${problem.id}/known-error`,{revision:problem.revision,...review},owner));
   restricted=check(await api(`/problems/${restricted.id}/known-error`,{revision:restricted.revision,...review},owner));
+  const restrictedOnlyCalls=check(await api('/test/knowledge-provider')).calls;
+  const restrictedOnly=check(await api('/knowledge-drafts/detect',{},owner)).items;
+  const beforeNormalReview=check(await api('/knowledge-drafts',undefined,owner)).items;
+  for(const drafts of [restrictedOnly,beforeNormalReview]) {
+    assert.ok(!drafts.some(d=>d.group.type==='known-error'&&[problem.id,restricted.id].includes(d.group.value)),
+      'Reviewing only the restricted problem admits neither it nor the unreviewed normal control');
+    assert.ok(!JSON.stringify(drafts).includes(restricted.id),
+      'Restricted-only discovery leaves no source reference in candidate or draft collections');
+  }
+  for(const item of beforeNormalReview) {
+    const detail=check(await api(`/knowledge-drafts/${item.id}`,undefined,owner));
+    assert.ok(!JSON.stringify(detail).includes(restricted.id),
+      'The detecting owner cannot read a restricted known-error reference through another draft');
+  }
+  assert.equal(check(await api('/test/knowledge-provider')).calls,restrictedOnlyCalls,
+    'Discovery with only a reviewed restricted known error never dispatches a model');
+  problem=check(await api(`/problems/${problem.id}/known-error`,{revision:problem.revision,...review},owner));
   for(const record of [problem,restricted]) {
     const current=check(await api(`/problems/${record.id}`,undefined,owner));
     assert.equal(current.ownerId,'owner');assert.equal(current.visibility,record.visibility);
