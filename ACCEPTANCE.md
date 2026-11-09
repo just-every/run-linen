@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 30 | 119 | 29 | 178 |
+| Core | 31 | 118 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 30 | 132 | 37 | 199 |
+| Full target | 31 | 131 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -1174,7 +1174,7 @@ Core · target · **partial**
 
 #### DESK-025 — Record templates and scenario task plans
 
-Core · target · **partial** · From DESK-015
+Core · target · **done** · From DESK-015
 
 **Requirement.** Record templates pre-fill new tickets, tasks and changes, and a scenario's task plan is a PROJECT-001 IT project.
 
@@ -1187,8 +1187,8 @@ Core · target · **partial** · From DESK-015
 6. Task record templates pre-fill an editable project task title, owner and due date under PROJECT-001's existing read/write roles.
 7. Change record templates use CHANGE-001's exact-version standard change catalog, retaining its standard-change approval and separate grant rules.
 
-**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs`
-**Gap.** Not asserted: that starting a scenario task plan grants no provider authority and that the run audit links to the plan. Ticket, task and change templates and the project link and boundary are asserted.
+**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs`; `tests/work/desk-scenario-cases.mjs` (deskScenarioChecks); `tests/services/template-cases.mjs` (templateChecks)
+**Gap.** None.
 
 #### DESK-016 — Global agent search
 
