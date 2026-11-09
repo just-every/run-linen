@@ -1,0 +1,141 @@
+{
+  "schema": 1,
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f41",
+  "head": "d74f73698b54a5b855ad90dae60de79fb9123ae7",
+  "base": "fcc2e53de937ab2ae17938147920b871b5fe70f5",
+  "pr": {
+    "base": "fcc2e53de937ab2ae17938147920b871b5fe70f5",
+    "draft": true,
+    "head": "d74f73698b54a5b855ad90dae60de79fb9123ae7",
+    "html_url": "https://github.com/just-every/run-linen/pull/174",
+    "number": 174
+  },
+  "local_checked_files": {
+    "tests/work/application-cases.mjs": {
+      "sha256": "57b39f3f1b01387e4278eaaefb7df422fd4f9fdafed9d3d411f3402573428e4b",
+      "checked_tree_matches_commit": true
+    },
+    "tests/work/runtime.mjs": {
+      "sha256": "2e669ea118062aabdd3b1ebe99037002131ac0899ed2484af1f5817d3cedd8be",
+      "checked_tree_matches_commit": true
+    }
+  },
+  "checks": [
+    {
+      "command": "cloud_run node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write then check; restore generated views",
+      "exit": 0,
+      "log": "views.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock then check",
+      "exit": 0,
+      "log": "lock.log"
+    },
+    {
+      "command": "node --check tests/work/application-cases.mjs; node --check tests/work/runtime.mjs; git diff --check",
+      "exit": 0
+    }
+  ],
+  "claim": {
+    "clause": "CATALOG-007",
+    "status": "PARTIAL",
+    "points": [
+      1
+    ],
+    "remaining": "Native restore retains reviewed facts without a live binding; unselected audience acceptance and existing holds unchanged"
+  },
+  "counts_before": {
+    "done": 27,
+    "partial": 135,
+    "missing": 37,
+    "total": 199
+  },
+  "counts_after": {
+    "done": 27,
+    "partial": 135,
+    "missing": 37,
+    "total": 199
+  },
+  "product_push": {
+    "exit": 0,
+    "attempts": 1,
+    "log": "push.log"
+  },
+  "identity_check": {
+    "exit": 0,
+    "all_candidate_commits": true,
+    "log": "identity.log"
+  },
+  "publication_scan": {
+    "run": false,
+    "complete": false,
+    "historyScanned": false,
+    "findings": null,
+    "owner": "fleet lander"
+  },
+  "main_equals_candidate": false,
+  "migration_ledger": "not applicable; no migration changed",
+  "browser": "not applicable; no UI changed",
+  "github_calls": 4,
+  "timestamp": "2026-11-09T05:55:49.235445+00:00",
+  "exact_head_probe": {
+    "head": "d74f73698b54a5b855ad90dae60de79fb9123ae7",
+    "command": "cloud_run node /tmp/linen-f41-probe.mjs",
+    "exit": 0,
+    "log": "probe.log",
+    "description": "Public Worker adapter and D1 setup from committed work runtime; only existing catalogAudienceChecks invoked; no product edit",
+    "finished": "2026-11-09T05:56:44.986942+00:00"
+  },
+  "mechanical_after_rebase": {
+    "views": {
+      "write_exit": 0,
+      "check_exit": 0,
+      "log": "final-views.log"
+    },
+    "lock": {
+      "write_exit": 0,
+      "check_exit": 0,
+      "log": "final-lock.log"
+    },
+    "generated_views_match_main": true,
+    "contract_status_cells_changed": false
+  },
+  "test_registrations": {
+    "added": 0,
+    "removed": 0,
+    "extended": "catalogAudienceChecks",
+    "seed_test_budget_file_present": false
+  },
+  "candidate_verify": {
+    "conclusion": null,
+    "event": "pull_request",
+    "head_sha": "d74f73698b54a5b855ad90dae60de79fb9123ae7",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42570066462",
+    "id": 42570066462,
+    "name": "Verify",
+    "status": "in_progress"
+  },
+  "handoff": {
+    "product_pushed": true,
+    "local_checks_passed": true,
+    "ci_success_claimed": false,
+    "guarded_landing_pending": true,
+    "contract_status": "PARTIAL"
+  }
+}

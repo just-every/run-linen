@@ -1,0 +1,2 @@
+PASS CATALOG-001 stable lists, owner/HR dated reviews, OR/AND/unknown audience, no owner bypass, staff filing, revisions, snapshots, fail-closed multi-item doors and erasure
+PROBE CATALOG-007 1 PASS: rename current revision, stable id and new label, identical person and item and submitted references; actual DELETE 404 unchanged; retirement retains matches and frozen request; new selection 422 unchanged.
