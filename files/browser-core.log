@@ -1,0 +1,27 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+Using secrets defined in ../../tmp/linen-ui-zIC2VW/dist/server/.dev.vars
+verify progress: starting core browser group
+verify progress: starting dstJourney
+verify progress: finished dstJourney in 1219ms
+verify progress: starting custodyJourney
+PASS LIFE-007: lifecycle evidence download with outstanding duties at 1440
+PASS ASSET-004: physical lifecycle, loan, assigned/certificate refusals and attributed disposal at 1440
+PASS ASSET-007: attach AppleCare and all contract kinds, manufacturer lookup and repair coverage/expiry alerts at 1440
+verify progress: finished custodyJourney in 13590ms
+PASS DESK-002 real Worker browser 1440: unavailable provider visible, type/category/subcategory/impact/urgency matrix, P1 -> P2 override and persisted audited before/after.
+verify progress: starting namedApproverJourney
+verify progress: finished namedApproverJourney in 1535ms
+verify progress: starting offlineReplyJourney
+verify progress: finished offlineReplyJourney in 171ms
+verify progress: starting fulfilmentDecisionJourney
+CATALOG-002 native item, cost, explicit finance stage/calendar, OOO delegation, manager and finance decisions with keyboard and responsive evidence.
+verify progress: finished fulfilmentDecisionJourney in 8269ms
+verify progress: starting timeJourney
+PASS DESK-012: manual and real measured active work feed the effort report at 1440
+PASS REPORT-004: owner-declared role rate prices recorded minutes in the baseline/current work-saved report at 1440
+verify progress: finished timeJourney in 12932ms
+verify progress: finished core browser group in 84933ms
+{"checks":["Natural request and private note persist through reload","Temporary access creates a separately persisted expiry obligation","Material decision displays actual persisted options and quote","Material choice persists without minting execution authority","Amendment reopens authority and deferral/rejection persist explicitly","HR lifecycle retains real missing prerequisite duties","HR date correction and cancellation preserve durable duties","Native New York leave rejects fold and gap without a request and displays the chosen valid offset","Distinct move and urgent-leave forms persist obligations through reload at desktop width","Native device creation, assignment, receipt and return verify physical duty without certifying pending security work","Shared incident keeps each unobserved cohort unknown","Native rival diagnostics and notification check persist and preserve missing-provider uncertainty","Distinct named approver choice mints zero grants and material amendment invalidates the decision","Real missing verifier remains uncertain after observation","Unfamiliar-repair attempt exposes missing model configuration and invents no probes","Read-only validation rejects missing credential without activating connection","Mobile width and keyboard focus","Offline submit preserves unsent message","Still-broken correction persists without claiming recovery","Existing catalogue decision UI reaches the current holder and records approval without granting provider rights","Employee sees retained configuration hold and next owner without operator responsibilities","Owner reaches the persisted employee hold from accountable responsibilities and sees its next owner in the same conversation","Delayed old conversation response cannot replace the newly selected request","Employee cannot read private note, private attachment or HR lifecycle","Expired session returns to sign in","DESK-012 manual and measured active effort reaches the role-scoped report at desktop width"],"pageErrors":[]}
+UI evidence: /tmp/linen-browser-core

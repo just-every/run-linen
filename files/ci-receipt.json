@@ -1,0 +1,88 @@
+{
+  "run_id": 42668280526,
+  "head_sha": "9e9333540cd16e9cccb92dc3165433250336cc59",
+  "status": "completed",
+  "conclusion": "success",
+  "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526",
+  "jobs": [
+    {
+      "id": 129337688796,
+      "name": "light",
+      "status": "completed",
+      "conclusion": "success",
+      "seconds": 36,
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526/job/129337688796"
+    },
+    {
+      "id": 129337689019,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "seconds": 27,
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526/job/129337689019"
+    },
+    {
+      "id": 129337949365,
+      "name": "journeys (1)",
+      "status": "completed",
+      "conclusion": "success",
+      "seconds": 420,
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526/job/129337949365"
+    },
+    {
+      "id": 129337949383,
+      "name": "journeys (2)",
+      "status": "completed",
+      "conclusion": "success",
+      "seconds": 427,
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526/job/129337949383"
+    },
+    {
+      "id": 129337949485,
+      "name": "journeys (3)",
+      "status": "completed",
+      "conclusion": "success",
+      "seconds": 376,
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526/job/129337949485"
+    },
+    {
+      "id": 129337949491,
+      "name": "journeys (5)",
+      "status": "completed",
+      "conclusion": "success",
+      "seconds": 589,
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526/job/129337949491"
+    },
+    {
+      "id": 129337949573,
+      "name": "journeys (6)",
+      "status": "completed",
+      "conclusion": "success",
+      "seconds": 561,
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526/job/129337949573"
+    },
+    {
+      "id": 129337949654,
+      "name": "journeys (4)",
+      "status": "completed",
+      "conclusion": "success",
+      "seconds": 478,
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526/job/129337949654"
+    },
+    {
+      "id": 129343391143,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "seconds": 4,
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42668280526/job/129343391143"
+    }
+  ],
+  "longest_shard_seconds": 589,
+  "mean_shard_seconds": 475.1666666666667,
+  "all_shards_under_600_seconds": true,
+  "all_jobs_successful": true,
+  "api_calls_used": 10,
+  "longest_to_mean_ratio": 1.2395650648895125,
+  "ready": true
+}

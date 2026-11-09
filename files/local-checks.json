@@ -1,0 +1,48 @@
+[
+  {
+    "command": [
+      "pnpm",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 14.562
+  },
+  {
+    "command": [
+      "pnpm",
+      "exec",
+      "rer",
+      "check",
+      "--profile",
+      "first-party"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.724
+  },
+  {
+    "command": [
+      "node",
+      "/tmp/validate-plan.mjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.621
+  },
+  {
+    "command": [
+      "node",
+      "--check",
+      "tests/ui/browser.mjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.055
+  },
+  {
+    "command": [
+      "node",
+      "--check",
+      "scripts/verify.mjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.06
+  }
+]

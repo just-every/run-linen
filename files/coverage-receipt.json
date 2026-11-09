@@ -1,0 +1,17 @@
+{
+  "assertions_before": 21,
+  "assertions_after": 21,
+  "all_inline_assertion_expressions_unchanged": true,
+  "browser_journey_calls_before": 43,
+  "browser_journey_calls_after": 43,
+  "planner_entries_before": 31,
+  "planner_entries_after": 33,
+  "shards_before": 6,
+  "shards_after": 6,
+  "timeout_minutes_before": 12,
+  "timeout_minutes_after": 12,
+  "clause_status_changes": [],
+  "generated_contract_views_changed": false,
+  "new_product_behavior_assertions": 0,
+  "validation": "TypeScript AST comparison of every assert.* call, invocation multiset comparison, plan partition probes at 1/2/6/8 shards."
+}

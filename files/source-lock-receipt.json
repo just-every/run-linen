@@ -1,0 +1,39 @@
+{
+  "checks": [
+    {
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "lock"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.275
+    },
+    {
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.371
+    }
+  ],
+  "final_lock_sha256": "a4f53b7217d0042e7a400ccb14ddc040db379a06a63aa4f8aafeded265d58982",
+  "final_lock_and_check_exit_codes": [
+    0,
+    0
+  ],
+  "first_published_tree_check": {
+    "head": "51aa7c539e23f0ed429c2dbe832deb75d488545b",
+    "exit_code": 1,
+    "diagnostic": "Stale lock or source/tool integrity mismatch; docs/ci-shards.md was untracked when lock was generated."
+  },
+  "recovery": "Merge updated origin/main without rewriting published history, then regenerate lock with all new files tracked.",
+  "corrected_lock_and_check_exit_codes": [
+    0,
+    0
+  ],
+  "final_committed_head": "9e9333540cd16e9cccb92dc3165433250336cc59",
+  "final_committed_check_exit_code": 0
+}

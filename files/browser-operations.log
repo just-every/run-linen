@@ -1,0 +1,49 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+Using secrets defined in ../../tmp/linen-ui-YkY4Aw/dist/server/.dev.vars
+verify progress: starting operations browser group
+verify progress: starting dependencyJourney
+PASS ASSET-009 browser: linked Payroll and unlinked hardware, inferred impact disclosure, change and incident impact and marked stale relationship; assertions at 1440, evidence at 1440 and 390
+verify progress: finished dependencyJourney in 3410ms
+verify progress: starting searchJourney
+verify progress: finished searchJourney in 1317ms
+verify progress: starting calendarJourney
+verify progress: finished calendarJourney in 1874ms
+verify progress: starting problemDetectionJourney
+PASS PROB-002 browser: eight floor Wi-Fi tickets listed, rejection retained after ninth and reload, human acceptance opens one linked native problem at 1440
+verify progress: finished problemDetectionJourney in 2897ms
+verify progress: starting recurrenceJourney
+PASS DESK-013 browser: owned monthly recurring work skips holiday, creates ticket and completes task plan at desktop/mobile widths
+verify progress: finished recurrenceJourney in 2622ms
+verify progress: starting assetFinancialJourney
+PASS ASSET-008 browser: $2400/36-month asset, month-12 book value, fiscal CSV download, persisted declining policy at 1440
+verify progress: finished assetFinancialJourney in 2262ms
+verify progress: starting assetAuditJourney
+PASS ASSET-010 browser: Denver stock room audit at 390 and 1440, 18 of 20 scanned, two missing devices open follow-up requests
+verify progress: finished assetAuditJourney in 10797ms
+verify progress: starting stockJourney
+PASS ASSET-005 browser: last two spare monitors in Denver at 390 and 1440 raise a CDW request for 10 at $2,499.90 labelled not sent; order reference recorded and received into stock
+verify progress: finished stockJourney in 23733ms
+verify progress: starting sharingJourney
+PASS CHANNEL-009 browser: share by email at 390, colleague reads and replies at 1440 without the private note, manager read-only team view at 390, revoke, HRIS manager change moves visibility
+verify progress: finished sharingJourney in 34226ms
+verify progress: starting deskFieldJourney
+PASS DESK-010: Office field and Awaiting parts status set in the console; close without a code refused, closed with code and notes, counted by code in the report at 1440
+verify progress: finished deskFieldJourney in 2851ms
+verify progress: starting problemJourney
+verify progress: finished problemJourney in 3497ms
+PASS DESK-008 1440: unsent reply survives reload; only agent Send posts it, then draft clears.
+verify progress: starting deskQueueJourney
+PASS DESK-018 previous ticket, private draft and explicit send, Escape and revision-checked resolution with zero pointer input
+PASS DESK-001 native saved view, five bulk assignments, lead isolation and pointer-free keyboard triage
+verify progress: finished deskQueueJourney in 12351ms
+verify progress: starting deskScenarioJourney
+PASS DESK-015 native keyboard scenario, change list, task and ticket templates and bulk scenario
+verify progress: finished deskScenarioJourney in 17412ms
+verify progress: starting mcpCommentJourney
+PASS API-003 native owner attribution and employee internal-comment isolation
+verify progress: finished mcpCommentJourney in 2751ms
+verify progress: finished operations browser group in 123858ms
+{"group":"operations","checks":["DESK-010 console field, Awaiting parts status, close refused without a resolution code, resolution on the record and counted by code","PROB-001 reviewed expiring workaround published from three incidents and offered on a matching request","DESK-008 unsent reply drafts survive reload and post only on explicit Send"],"pageErrors":[]}
+UI evidence: /tmp/linen-browser-operations

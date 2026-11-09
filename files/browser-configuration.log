@@ -1,0 +1,34 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+Using secrets defined in ../../tmp/linen-ui-EV1Yde/dist/server/.dev.vars
+verify progress: starting configuration browser group
+verify progress: starting pendingPersonJourney
+verify progress: finished pendingPersonJourney in 4919ms
+verify progress: starting catalogTaskJourney
+PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440
+verify progress: finished catalogTaskJourney in 6320ms
+PASS sandbox native configuration at 1440: create, all included family edits and rehearsals, complete diff, separate current non-editor owner approval, promotion, reviewed rollback, keyboard and scope refusals, production readback
+PASS sandbox native configuration at 390: create, all included family edits and rehearsals, complete diff, separate current non-editor owner approval, promotion, reviewed rollback, keyboard and scope refusals, production readback
+verify progress: starting sandboxBoundaryJourney
+verify progress: finished sandboxBoundaryJourney in 4747ms
+verify progress: starting lifecycleTemplateJourney
+PASS LIFE-002 native template editor, dated team tasks on the record, owner completion and the manager reminder at 1440
+verify progress: finished lifecycleTemplateJourney in 5819ms
+verify progress: starting lightweightImportJourney
+PASS MIGRATE-004 native CSV/Zendesk historical tickets, imported unbound person, stock and custody at 1440
+verify progress: finished lightweightImportJourney in 1959ms
+verify progress: starting applicationJourney
+verify progress: finished applicationJourney in 4771ms
+verify progress: starting catalogFormJourney
+PASS CATALOG-001 native form editor, conditional request, known and unknown estimates and immutable submitted revision at 1440
+verify progress: finished catalogFormJourney in 8018ms
+verify progress: starting catalogAudienceJourney
+PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440
+verify progress: finished catalogAudienceJourney in 5056ms
+verify progress: starting catalogQuoteJourney
+PASS CATALOG-001 native item creation, quote requirement, audience editor, quote refusal and upload, approver reading and colleague 404 at 1440
+verify progress: finished catalogQuoteJourney in 6655ms
+verify progress: finished configuration browser group in 94418ms
+{"checks":[],"pageErrors":[]}
+UI evidence: /tmp/linen-browser-configuration

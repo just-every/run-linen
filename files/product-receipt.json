@@ -1,0 +1,24 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-shard-time-1",
+  "head": "9e9333540cd16e9cccb92dc3165433250336cc59",
+  "push": "success, first attempt, guarded",
+  "pull_request": "https://github.com/just-every/run-linen/pull/211",
+  "pull_number": 211,
+  "pushed_at_epoch": 1794246546.2635863,
+  "local_touched_checks": "passed",
+  "contract_status_changes": [],
+  "prior_head": "51aa7c539e23f0ed429c2dbe832deb75d488545b",
+  "merged_main": "902228f850007e262d9404b1f81397ef69e50e95",
+  "prior_verify": {
+    "id": 42666259242,
+    "status": "completed",
+    "conclusion": "failure",
+    "head": "51aa7c539e23f0ed429c2dbe832deb75d488545b"
+  },
+  "final_source_check": "passed on clean committed head",
+  "final_verify_run": 42668280526,
+  "final_verify_conclusion": "success",
+  "ready": true,
+  "longest_shard_seconds": 589
+}

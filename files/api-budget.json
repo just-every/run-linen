@@ -1,0 +1,18 @@
+{
+  "limit": 10,
+  "used": 10,
+  "calls": [
+    "f61 jobs",
+    "latest successful main runs",
+    "main jobs",
+    "f61 cancelled job log-failed (empty output)",
+    "f61 run log archive",
+    "main run log archive",
+    "create pull request through REST",
+    "discover exact-SHA runs via REST",
+    "discover final exact-SHA runs via REST",
+    "read final exact-SHA completed job durations via REST"
+  ],
+  "remaining_plan": [],
+  "last_discovery_epoch": 1794247355.9169242
+}
