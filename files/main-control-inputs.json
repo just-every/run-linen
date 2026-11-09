@@ -1,0 +1,13 @@
+{
+  "mainImplementation": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "candidateTestSource": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "applicationDiff": "",
+  "control": "Main application built in detached worktree; same candidate browser driver supplied as the supported run.mjs script argument, so all new assertions run against main. No main source or history changed.",
+  "environment": {
+    "CI": "true",
+    "LINEN_VERIFY_SHARD": "1/6",
+    "LINEN_TEST_BUILT": "1",
+    "LINEN_CHROMIUM_EXECUTABLE": "/usr/bin/chromium",
+    "node": "22.20.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "branch": "cloud/sx-linen-c-f42",
+  "isShallow": false,
+  "contractDiff": "",
+  "productSourceDiff": "",
+  "files": [
+    "sources.lock.json",
+    "tests/ui/browser.mjs",
+    "tests/ui/sandbox-journey.mjs",
+    "tests/ui/sandbox-routing-journey.mjs"
+  ],
+  "clean": true,
+  "coauthors": ""
+}

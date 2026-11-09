@@ -28,3 +28,5 @@ The frozen rubric is the eight acceptance points in the source clause, plus DONE
 | ROLE-001 | Definition changes confer no assignments; restored role members remain inactive pending revision reconfirmation. Retained plan hold unchanged. |
 | PORT-001, ERASURE-001 and RETENTION-001 | Applying restore fences old packages, fresh unapproved state afterward, and recipient erasure invalidates packages. Existing archive and masking tests retained unchanged. |
 | CHANNEL-001 and CHANNEL-002 | No Slack or Teams surface touched or claimed. |
+
+Terminal CI qualification: exact-head Verify 42570916118 failed the native browser employee promotion refusal (HTTP 500 instead of 403). The configuration runtime and other CI shards passed. Native local proof passed both widths, and exact failed shard replay plus the same browser probe against main returned exit 0. This table establishes local behavioral proof; point 8 and DONE remain uncredited under the non-reproduction stop.

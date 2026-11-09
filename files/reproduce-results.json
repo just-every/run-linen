@@ -1,0 +1,21 @@
+{
+  "completedAt": "2026-11-09T06:32:00.420Z",
+  "label": "Local checks; test provider responses are fixtures, not live provider acceptance.",
+  "shard": {
+    "number": 1,
+    "count": 6
+  },
+  "complete": true,
+  "results": [
+    {
+      "name": "Employee service desk browser",
+      "command": [
+        "/home/agent/.rer/toolchain/node-22.20.0/node_modules/node/bin/node",
+        "tests/ui/run.mjs"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedMs": 726556
+    }
+  ]
+}

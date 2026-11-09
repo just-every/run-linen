@@ -1,0 +1,101 @@
+journeys (1)	Run pnpm exec rer verify	﻿2026-11-09T06:06:26.8923693Z ##[group]Run pnpm exec rer verify
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:26.8923922Z [36;1mpnpm exec rer verify[0m
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:26.8939449Z shell: /usr/bin/bash -e {0}
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:26.8939605Z env:
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:26.8939721Z   LINEN_VERIFY_SHARD: 1/6
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:26.8939859Z   LINEN_TEST_BUILT: 1
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:26.8939984Z   CI: true
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:26.8940128Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:26.8940313Z ##[endgroup]
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:27.4390316Z Checking pinned pnpm
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:27.5947425Z 10.12.4
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:27.8185342Z Verifying application
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:27.9825384Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:27.9826199Z > @linen-foundation/linen@0.1.1 verify:app [REDACTED]
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:27.9826698Z > node scripts/verify.mjs
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:27.9826894Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:28.0022703Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:06:28.0023201Z Checking Employee service desk browser (shard 1/6)
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:07:14.3519309Z PASS LIFE-007: lifecycle evidence download with outstanding duties at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:07:21.5707977Z PASS ASSET-004: physical lifecycle, loan, assigned/certificate refusals and attributed disposal at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:07:24.8641647Z PASS ASSET-007: attach AppleCare and all contract kinds, manufacturer lookup and repair coverage/expiry alerts at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:07:28.3025136Z PASS DESK-002 real Worker browser 1440: unavailable provider visible, type/category/subcategory/impact/urgency matrix, P1 -> P2 override and persisted audited before/after.
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:07:44.9928697Z CATALOG-002 native item, cost, explicit finance stage/calendar, OOO delegation, manager and finance decisions with keyboard and responsive evidence.
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:27.1734912Z PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1793161Z node:internal/modules/run_main:123
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1793760Z     triggerUncaughtException(
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1794490Z     ^
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1794628Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1795103Z AssertionError [ERR_ASSERTION]: An employee cannot create, edit or apply configuration through the public doors
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1795594Z + actual - expected
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1795718Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1795823Z   [
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1795996Z     403,
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1796163Z     403,
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1796324Z +   500
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1796484Z -   403
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1796646Z   ]
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1796737Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1796987Z     at sandboxJourney (file://[REDACTED]/tests/ui/sandbox-journey.mjs:236:9)
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1797421Z     at runNextTicks (node:internal/process/task_queues:65:5)
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1797801Z     at process.processImmediate (node:internal/timers:453:9)
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1798199Z     at process.callbackTrampoline (node:internal/async_hooks:130:17)
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1798581Z     at async file://[REDACTED]/tests/ui/browser.mjs:559:49 {
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1799139Z   generatedMessage: false,
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1799362Z   code: 'ERR_ASSERTION',
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1799587Z   actual: [ 403, 403, 500 ],
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1799817Z   expected: [ 403, 403, 403 ],
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1800060Z   operator: 'deepStrictEqual',
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1800276Z   diff: 'simple'
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1800465Z }
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1800559Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.1800639Z Node.js v22.20.0
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2462239Z file://[REDACTED]/tests/ui/run.mjs:108
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2462677Z       code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2463024Z                               ^
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2463171Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2463273Z Error: Browser acceptance exited 1
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2463560Z     at ChildProcess.<anonymous> (file://[REDACTED]/tests/ui/run.mjs:108:31)
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2463827Z     at ChildProcess.emit (node:events:519:28)
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2464076Z     at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2464256Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2464310Z Node.js v22.20.0
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.2675239Z  ELIFECYCLE  Command failed with exit code 1.
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3311005Z Verifying application: exit 1, signal none.
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3311438Z Command: pnpm
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3311829Z Last output (up to 40 lines):
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3312409Z PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3312934Z node:internal/modules/run_main:123
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3313191Z     triggerUncaughtException(
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3313422Z     ^
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3313518Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3313928Z AssertionError [ERR_ASSERTION]: An employee cannot create, edit or apply configuration through the public doors
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3314374Z + actual - expected
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3314492Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3314571Z   [
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3314736Z     403,
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3314939Z     403,
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3315098Z +   500
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3315261Z -   403
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3315426Z   ]
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3315533Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3315630Z   generatedMessage: false,
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3315889Z   code: 'ERR_ASSERTION',
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3316128Z   actual: [ 403, 403, 500 ],
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3316370Z   expected: [ 403, 403, 403 ],
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3316628Z   operator: 'deepStrictEqual',
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3316856Z   diff: 'simple'
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3317048Z }
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3317140Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3317219Z Node.js v22.20.0
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3317491Z file://[REDACTED]/tests/ui/run.mjs:108
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3317866Z       code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3318213Z                               ^
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3318372Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3318483Z Browser acceptance exited 1
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3318619Z 
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3318712Z Node.js v22.20.0
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3319359Z  ELIFECYCLE  Command failed with exit code 1.
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3319741Z Log: [REDACTED]/.seed/installer/install.log
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3320102Z verify: failed (exit 1)
+journeys (1)	Run pnpm exec rer verify	2026-11-09T06:08:50.3501126Z ##[error]Process completed with exit code 1.

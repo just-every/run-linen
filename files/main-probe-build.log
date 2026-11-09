@@ -1,0 +1,59 @@
+Checking pinned pnpm
+10.12.4
+Building your application
+
+> @linen-foundation/linen@0.1.1 build:app [REDACTED]
+> vite build
+
+▲ [WARNING] Proxy environment variables detected. We'll use your proxy for fetch requests.
+
+
+(node:12075) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+vite v8.2.2 building client environment for production...
+transforming...
+✓ 284 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/client/.assetsignore                0.02 kB
+dist/client/assets/app-CzxyWv0w.css      0.34 kB │ gzip:   0.19 kB
+dist/client/assets/index-DTFic_Qr.css   41.15 kB │ gzip:   8.60 kB
+dist/client/assets/index-BnpfXVsy.js   312.39 kB │ gzip: 101.28 kB
+dist/client/assets/app-COAdNQjd.js     512.84 kB │ gzip: 134.05 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 729ms
+vite v8.2.2 building ssr environment for production...
+transforming...
+✓ 1160 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/server/wrangler.json                                      1.64 kB │ gzip:   0.82 kB
+dist/server/.vite/manifest.json                                4.74 kB │ gzip:   0.88 kB
+dist/server/assets/app-CzxyWv0w.css                            0.34 kB │ gzip:   0.19 kB
+dist/server/assets/router-DTFic_Qr.css                        41.15 kB │ gzip:   8.60 kB
+dist/server/assets/empty-plugin-adapters-BmbPgK2Q.js           0.29 kB │ gzip:   0.18 kB
+dist/server/assets/start-4H4I1XN7.js                           0.29 kB │ gzip:   0.21 kB
+dist/server/assets/_tanstack-start-manifest_v-C-VcO_7G.js      0.65 kB │ gzip:   0.35 kB
+dist/server/assets/http-GQFFH2Q2.js                            2.12 kB │ gzip:   0.97 kB
+dist/server/assets/crypto-DV1_Uc64.js                          2.42 kB │ gzip:   1.00 kB
+dist/server/assets/department-role-authority-Di8MZiM4.js       3.01 kB │ gzip:   1.02 kB
+dist/server/assets/classification-policy-DoSRjV-L.js           7.51 kB │ gzip:   2.55 kB
+dist/server/assets/authority-7Jz5lzIm.js                      15.26 kB │ gzip:   4.73 kB
+dist/server/assets/jsx-runtime-_Hhi87Ix.js                    18.54 kB │ gzip:   4.99 kB
+dist/server/assets/router-D2IKRlkF.js                         40.41 kB │ gzip:  10.60 kB
+dist/server/assets/changes-D0ZGAgL4.js                       130.90 kB │ gzip:  32.29 kB
+dist/server/assets/Match-gIME_I2A.js                         145.25 kB │ gzip:  36.42 kB
+dist/server/assets/person-binding-BthfxLFz.js                419.94 kB │ gzip:  95.03 kB
+dist/server/assets/app-DP5kkLNk.js                           907.15 kB │ gzip: 182.08 kB
+dist/server/index.js                                       3,473.12 kB │ gzip: 814.48 kB
+
+[INEFFECTIVE_DYNAMIC_IMPORT] src/features/work/fulfilment-decisions.ts is dynamically imported by src/features/execution/notification-render.ts but also statically imported by src/features/work/conversation-routes.ts, src/features/work/index.ts, dynamic import will not move module into another chunk.
+
+✓ built in 1.60s
+Your application is built
+build: complete (exit 0)

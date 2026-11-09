@@ -1,0 +1,19 @@
+{
+  "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "run": 42570916118,
+  "job": 129008036273,
+  "command": "CI=true LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 pnpm exec rer verify",
+  "cloudBrowserOverride": "LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium",
+  "node": "22.20.0",
+  "exit": 0,
+  "reproduced": false,
+  "test": "tests/ui/sandbox-journey.mjs#sandboxJourney",
+  "failure": "An employee cannot create, edit or apply configuration through the public doors: actual [403,403,500], expected [403,403,403]",
+  "observedLocalPromotionRefusals": [
+    403,
+    403
+  ],
+  "repairsAttempted": 0,
+  "log": "reproduce.log",
+  "result": "reproduce-results.json"
+}

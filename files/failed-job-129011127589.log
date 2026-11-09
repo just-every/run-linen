@@ -1,0 +1,7 @@
+verify	Require every verification tier	﻿2026-11-09T06:15:51.2094622Z ##[group]Run test "$RESULTS" = success,success,success
+verify	Require every verification tier	2026-11-09T06:15:51.2095996Z [36;1mtest "$RESULTS" = success,success,success[0m
+verify	Require every verification tier	2026-11-09T06:15:51.2388142Z shell: /usr/bin/bash -e {0}
+verify	Require every verification tier	2026-11-09T06:15:51.2389938Z env:
+verify	Require every verification tier	2026-11-09T06:15:51.2390653Z   RESULTS: success,success,failure
+verify	Require every verification tier	2026-11-09T06:15:51.2391486Z ##[endgroup]
+verify	Require every verification tier	2026-11-09T06:15:51.3049906Z ##[error]Process completed with exit code 1.

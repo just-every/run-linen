@@ -59,6 +59,23 @@
       "log": "browser.log",
       "result": "browser-results.json",
       "candidateBinding": "unchanged browser and application bytes; source-equality.json; rebase changed unrelated runtime tests and contract judgments"
+    },
+    {
+      "name": "Exact failed shard replay with CI Node",
+      "command": "CI=true LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 pnpm exec rer verify",
+      "exit": 0,
+      "log": "reproduce.log",
+      "receipt": "VERIFY-REPLAY.json",
+      "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d"
+    },
+    {
+      "name": "Same candidate browser probe against recorded main application",
+      "command": "CI=true LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 node tests/ui/run.mjs ../repo/tests/ui/browser.mjs",
+      "exit": 0,
+      "log": "main-probe.log",
+      "receipt": "MAIN-CONTROL.json",
+      "implementationHead": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+      "testHead": "cc284ac3936b34087b78dd6233df2f20d0cabd4d"
     }
   ],
   "initialFailures": [

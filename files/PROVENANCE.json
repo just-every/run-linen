@@ -1,0 +1,182 @@
+{
+  "tag": "sx-linen-c-f42",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f42",
+  "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "baseAtCandidate": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "observedRemoteRefs": {
+    "refs/heads/cloud/sx-linen-c-f42": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+    "refs/heads/main": "e9aa94360d01ae5c8ae48557a61aca3c565f3236"
+  },
+  "observedAt": "2026-11-09T06:48:41.744570+00:00",
+  "pr": "https://github.com/just-every/run-linen/pull/176",
+  "verify": {
+    "conclusion": "failure",
+    "head_sha": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42570916118",
+    "observedAt": "2026-11-09T06:16:48Z",
+    "status": "completed"
+  },
+  "publicationScan": {
+    "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "state": "not run in cloud; required lander duty"
+  },
+  "localChecks": {
+    "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+    "checks": [
+      {
+        "name": "Configuration runtime",
+        "command": "node tests/platform/config-runtime.mjs",
+        "exit": 0,
+        "log": "config-runtime.log",
+        "candidateBinding": "unchanged runtime and test bytes; source-equality.json"
+      },
+      {
+        "name": "Native configuration proof",
+        "command": "LINEN_TEST_BUILT=1 LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium LINEN_CAPTURE=1 node tests/ui/run.mjs .wrangler/sandbox-probe.mjs",
+        "exit": 0,
+        "log": "sandbox-proof.log",
+        "result": "sandbox-results.json",
+        "candidateBinding": "same journey and application bytes; source-equality.json"
+      },
+      {
+        "name": "Typecheck after rebase",
+        "command": "pnpm typecheck",
+        "exit": 0,
+        "log": "typecheck.log",
+        "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d"
+      },
+      {
+        "name": "First-party check after rebase",
+        "command": "pnpm exec rer check --profile first-party",
+        "exit": 0,
+        "log": "first-party.log",
+        "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d"
+      },
+      {
+        "name": "Build",
+        "command": "npx -y @runeditrun/rer build",
+        "exit": 0,
+        "log": "build.log",
+        "candidateBinding": "no application source changed in the rebase"
+      },
+      {
+        "name": "Contract views",
+        "command": "node src/base/contract-docs.mjs write && node src/base/contract-docs.mjs check",
+        "exit": 0,
+        "log": "views.log",
+        "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+        "generatedFilesRestored": true
+      },
+      {
+        "name": "Source lock",
+        "command": "node scripts/edition-authoring/cli.mjs lock && node scripts/edition-authoring/cli.mjs check",
+        "exit": 0,
+        "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+        "lockSha256": "af0a322296bdb7c96de3f38b9c3a7ba05147b7a5bb60e47c4c5e93e96369f4f3"
+      },
+      {
+        "name": "Existing browser entrypoint",
+        "command": "LINEN_TEST_BUILT=1 LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium node tests/ui/run.mjs",
+        "exit": 0,
+        "log": "browser.log",
+        "result": "browser-results.json",
+        "candidateBinding": "unchanged browser and application bytes; source-equality.json; rebase changed unrelated runtime tests and contract judgments"
+      },
+      {
+        "name": "Exact failed shard replay with CI Node",
+        "command": "CI=true LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 pnpm exec rer verify",
+        "exit": 0,
+        "log": "reproduce.log",
+        "receipt": "VERIFY-REPLAY.json",
+        "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d"
+      },
+      {
+        "name": "Same candidate browser probe against recorded main application",
+        "command": "CI=true LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 node tests/ui/run.mjs ../repo/tests/ui/browser.mjs",
+        "exit": 0,
+        "log": "main-probe.log",
+        "receipt": "MAIN-CONTROL.json",
+        "implementationHead": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+        "testHead": "cc284ac3936b34087b78dd6233df2f20d0cabd4d"
+      }
+    ],
+    "initialFailures": [
+      {
+        "command": "node tests/ui/run.mjs",
+        "exit": 1,
+        "log": "browser-initial-failure.log",
+        "cause": "New readback assertion expected the draft scheduler deadline rather than the recalculated production deadline; fixed with explicit promoted and rollback deadline assertions."
+      },
+      {
+        "command": "node tests/ui/run.mjs .wrangler/sandbox-probe.mjs",
+        "exit": 1,
+        "log": "sandbox-proof-initial-failure.log",
+        "cause": "Already-running process had imported the same pre-fix helper. The next process passed both widths."
+      }
+    ]
+  },
+  "productCheckoutClean": true,
+  "outcome": "BLOCKED",
+  "claim": "SANDBOX-001 PARTIAL",
+  "claimedPoints": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "localNativeWidths": [
+    1440,
+    390
+  ],
+  "blockedReason": "Exact-head Verify returned HTTP 500 instead of 403 for an employee promotion refusal; exact failed shard and same browser probe against main both returned exit 0. Brief requires stopping on non-reproduction; fv Ubuntu CI triage required.",
+  "repairsAttempted": 0,
+  "workflowReruns": 0,
+  "repositoryApiOrLogCalls": 8,
+  "mainControl": {
+    "mainImplementation": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+    "candidateTestSource": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+    "applicationDiff": "",
+    "control": "Main application built in detached worktree; same candidate browser driver supplied as the supported run.mjs script argument, so all new assertions run against main. No main source or history changed.",
+    "environment": {
+      "CI": "true",
+      "LINEN_VERIFY_SHARD": "1/6",
+      "LINEN_TEST_BUILT": "1",
+      "LINEN_CHROMIUM_EXECUTABLE": "/usr/bin/chromium",
+      "node": "22.20.0"
+    },
+    "exit": 0,
+    "reproduced": false,
+    "log": "main-probe.log",
+    "result": "main-probe-results.json",
+    "observedPromotionRefusals": [
+      403,
+      403
+    ]
+  },
+  "replay": {
+    "head": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+    "run": 42570916118,
+    "job": 129008036273,
+    "command": "CI=true LINEN_VERIFY_SHARD=1/6 LINEN_TEST_BUILT=1 pnpm exec rer verify",
+    "cloudBrowserOverride": "LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium",
+    "node": "22.20.0",
+    "exit": 0,
+    "reproduced": false,
+    "test": "tests/ui/sandbox-journey.mjs#sandboxJourney",
+    "failure": "An employee cannot create, edit or apply configuration through the public doors: actual [403,403,500], expected [403,403,403]",
+    "observedLocalPromotionRefusals": [
+      403,
+      403
+    ],
+    "repairsAttempted": 0,
+    "log": "reproduce.log",
+    "result": "reproduce-results.json"
+  }
+}

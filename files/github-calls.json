@@ -22,6 +22,27 @@
       "purpose": "single Verify watcher poll",
       "observedAt": "2026-11-09T06:11:09Z",
       "command": "gh api repos/just-every/run-linen/actions/runs/42570916118"
+    },
+    {
+      "number": 5,
+      "purpose": "completed exact-head Verify observation",
+      "observedAt": "2026-11-09T06:16:48Z",
+      "command": "gh api repos/just-every/run-linen/actions/runs/42570916118"
+    },
+    {
+      "number": 6,
+      "purpose": "completed failure job discovery",
+      "command": "gh api repos/just-every/run-linen/actions/runs/42570916118/jobs?per_page=100"
+    },
+    {
+      "number": 7,
+      "purpose": "failed shard log once",
+      "command": "gh run view 42570916118 --repo just-every/run-linen --job 129008036273 --log-failed"
+    },
+    {
+      "number": 8,
+      "purpose": "failed aggregate job log once",
+      "command": "gh run view 42570916118 --repo just-every/run-linen --job 129011127589 --log-failed"
     }
   ]
 }
