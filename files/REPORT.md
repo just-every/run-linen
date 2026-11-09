@@ -31,7 +31,7 @@ No new permanent test registration; the existing integration runner still invoke
 
 1. PARTIAL: selected point 8 public-route outcomes are reached and checked; all unselected acceptance is retained and not certified by this lease.
 2. PASS for selected proof: nonempty native records, independently stated score and factor expectations, successful explicit ECAB decisions, normal catalog-decision refusal with unchanged record, and no new provider writes.
-3. Pending exact-head Verify; existing push or PR Verify entry invokes the services integration journey. Actual observed workflow state is in RECEIPT.json.
+3. PASS: pull-request Verify 42654092413 completed successfully on exact head 2f5618486317fb5b9db680903e3e3a9c05256bb0; its existing integration entry invokes changeRiskChecks.
 4. Candidate proof bound to the final source; commands and source identity are retained in the packet. Local verification before commit remains byte-identical to the committed test and production source apart from source-lock regeneration.
 5. INSPECTED: no inherited duty or clause text was changed or claimed complete.
 6. PASS mechanically: generator write and check pass; generated views restored whole from main. Contract cells and counts preserved. Stale held gaps remain with the lander, not rewritten by this builder.
@@ -71,7 +71,7 @@ R1 MET locally when the completed integration log reports PASS: a low-risk emerg
 R2 MET locally when the completed integration log reports PASS: changing that emergency's answers recomputes score and factors, clears the old decision, retains its attributed history and uses ECAB for a fresh decision.
 R3 MET locally when the completed integration log reports PASS: a high-risk standard uses the exact owner-approved template version, approval ID and snapshot, stays catalog-preapproved, and refuses ordinary CAB authorization without changing its stored record.
 R4 MET locally when the completed integration log reports PASS: the selected flow leaves both invocation lists empty and increases the provider-write counter by zero.
-R5 PENDING until exact-head Verify succeeds: the existing integration entry point loads this journey in CI. The final receipt records the actual workflow state.
+R5 MET: pull-request Verify 42654092413 completed successfully on the exact candidate SHA; the existing integration entry point loads this journey in CI.
 R6 RETAINED: no unselected acceptance, inherited obligation or provider boundary is silently promoted.
 
 Proof locations: R1 lines 34 to 49; R2 lines 50 to 69; R3 lines 71 to 102; R4 lines 103 to 112 in tests/services/risk-cases.mjs. The caller is tests/services/integration.mjs line 198. No source path in these rows is a claim of live provider acceptance.
@@ -92,3 +92,9 @@ GAP CHANGE-002: All unselected acceptance and retained holds remain owed. No cla
 ## Final handoff verification
 
 The existing pushed candidate was retained without history rewrite. Current committed source hashes match the completed runtime receipt. Source-lock and contract-view checks passed again; the product worktree remains clean. REST discovery records pull-request Verify 42654092413 running on exact head 2f5618486317fb5b9db680903e3e3a9c05256bb0. It is not yet claimed green. The completed dynamic PR workflow is separate from Verify.
+
+## Exact-head CI and final evidence return
+
+Pull-request Verify 42654092413 completed successfully on 2f5618486317fb5b9db680903e3e3a9c05256bb0. verify-status.json is the actual REST receipt. No workflow was dispatched or rerun; five GitHub API calls are recorded for this task. The initial evidence publication was independently fetched and its manifest and file hashes verified; the actual return receipt is evidence-initial-return.json. This final packet adds the completed Verify result. Publication scan and main Run site remain unestablished cloud-side and stay with the guarded fleet lander. No product blocker is identified.
+
+Selected point 8 is complete, CHANGE-002 remains PARTIAL, and before and after counts remain 31 DONE, 131 PARTIAL, 37 MISSING. No plan row or contract status cell was edited. The cloud clone is removed only after successful final evidence publication; the packet and pushed product remain available.

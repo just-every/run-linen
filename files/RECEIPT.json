@@ -66,12 +66,13 @@
     }
   ],
   "ci": {
-    "conclusion": null,
+    "conclusion": "success",
     "event": "pull_request",
     "head_sha": "2f5618486317fb5b9db680903e3e3a9c05256bb0",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42654092413",
     "id": 42654092413,
     "name": "Verify",
-    "status": "in_progress"
+    "status": "completed"
   },
   "ci_discovery": {
     "workflow_runs": []
@@ -117,7 +118,8 @@
     "scope": "risk-path precedence only"
   },
   "clean_product_worktree": true,
-  "github_api_calls": 4,
+  "evidence_initial_return_check": "evidence-initial-return.json",
+  "github_api_calls": 5,
   "handoff_checks_file": "handoff-checks.json",
   "main_at_remote_read": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
   "main_equals_candidate": false,
