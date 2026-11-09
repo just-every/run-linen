@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 24 | 125 | 29 | 178 |
+| Core | 25 | 124 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 24 | 138 | 37 | 199 |
+| Full target | 25 | 137 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -814,7 +814,7 @@ Core · target · **partial**
 
 #### DESK-018 — Keyboard triage
 
-Core · target · **partial** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
+Core · target · **done** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
 
 **Requirement.** An agent triages a queue from the keyboard alone. Keyboard triage works outside text fields.
 
@@ -828,8 +828,8 @@ Core · target · **partial** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
 7. `?` shows the shortcut reference.
 8. `x` runs a DESK-015 scenario on the open ticket.
 
-**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/work/runtime.mjs`; native saved/shared view, five-ticket bulk assignment, scoped lead view and pointer-free keyboard next/assign/reply/status: `tests/ui/desk-console-journeys.mjs` deskQueueJourney through `tests/ui/browser.mjs`
-**Gap.** Not asserted: k (previous ticket), n (private note), c (close) and Escape leaving a field. Keyboard-only triage with j, a, r, s, Ctrl/⌘+Enter, ? and x is asserted.
+**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/work/runtime.mjs`; native saved/shared view, five-ticket bulk assignment, scoped lead view and pointer-free keyboard next/assign/reply/status: `tests/ui/desk-console-journeys.mjs` deskQueueJourney through `tests/ui/browser.mjs`; `tests/ui/desk-console-journeys.mjs` (deskQueueJourney); `tests/ui/desk-console-journeys.mjs` (deskScenarioJourney)
+**Gap.** None.
 
 #### DESK-002 — Classification and priority
 
