@@ -1,0 +1,27 @@
+{
+  "selected": [
+    "REPORT.md",
+    "receipt.json",
+    "baseline.json",
+    "pr.json",
+    "main-runs.jsonl",
+    "candidate-runs.jsonl",
+    "ci-final.json",
+    "ci-watch.log",
+    "work-runtime.log",
+    "typecheck.log",
+    "first-party.log",
+    "contract-write.log",
+    "contract-check.log",
+    "lock.log",
+    "lock-check.log",
+    "proof-files.sha256",
+    "commit-identities.txt",
+    "product-push.log",
+    "remote-refs.txt"
+  ],
+  "regular_files": true,
+  "no_injected_secret_values": true,
+  "no_github_token_patterns": true,
+  "final_reviewed_at": "2026-11-09T15:53:28.524414+00:00"
+}

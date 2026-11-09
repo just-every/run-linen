@@ -1,0 +1,157 @@
+{
+  "base": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+  "branch": "cloud/sx-linen-c-f71",
+  "candidate_verify": {
+    "conclusion": "success",
+    "event": "pull_request",
+    "head_sha": "08d207276d0cb00ffb5204f02221d46bb55e1931",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42646522054",
+    "id": 42646522054,
+    "poll": 3,
+    "read_at": "2026-11-09T15:52:37.113413+00:00",
+    "run_id": 42646522054,
+    "status": "completed",
+    "url": "https://github.com/just-every/run-linen/actions/runs/42646522054"
+  },
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "log": "setup log retained outside public packet"
+    },
+    {
+      "command": "timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "contract-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "contract-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    }
+  ],
+  "claim": {
+    "clause": "DESK-006",
+    "points": [
+      6
+    ],
+    "scope": "Distinct beneficiary preservation only; unselected obligations remain owed.",
+    "status": "PARTIAL"
+  },
+  "committed_diff": [
+    {
+      "added": 1,
+      "path": "sources.lock.json",
+      "removed": 1
+    },
+    {
+      "added": 29,
+      "path": "tests/work/relationship-cases.mjs",
+      "removed": 7
+    }
+  ],
+  "contract_diff": "none",
+  "counts_after": {
+    "done": 31,
+    "missing": 37,
+    "partial": 131
+  },
+  "counts_before": {
+    "done": 31,
+    "missing": 37,
+    "partial": 131
+  },
+  "created_at": "2026-11-09T15:38:01.726974+00:00",
+  "finalized_at": "2026-11-09T15:53:28.524414+00:00",
+  "full_history": true,
+  "generated_views_committed": false,
+  "github_api_calls_used": 7,
+  "head": "08d207276d0cb00ffb5204f02221d46bb55e1931",
+  "known_product_blockers": [],
+  "landing": {
+    "candidate_run_site": null,
+    "main_equals_candidate": false,
+    "status": "branch only"
+  },
+  "migration_ledger": "not applicable; no migration changed",
+  "pr": {
+    "base": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+    "draft": true,
+    "head": "08d207276d0cb00ffb5204f02221d46bb55e1931",
+    "html_url": "https://github.com/just-every/run-linen/pull/203",
+    "number": 203,
+    "state": "open"
+  },
+  "product_push": {
+    "attempts": 1,
+    "log": "product-push.log",
+    "status": "success"
+  },
+  "product_remote_verified": true,
+  "proof_binding": "Runtime ran before commit with identical relevant source and journey bytes to candidate; clean product checkout afterward. Rebase was already up to date.",
+  "proof_sha256": {
+    "src/features/work/relationships.ts": "31c31771addf1a50e3d0b8d9781f873b3c41f240c203f0b4ed53bd5dd4d923d4",
+    "tests/work/relationship-cases.mjs": "d191a2707364a83a014c9063b27feb954143ae5d238c9a5624cc71c72838ce3c",
+    "tests/work/runtime.mjs": "2e669ea118062aabdd3b1ebe99037002131ac0899ed2484af1f5817d3cedd8be"
+  },
+  "publication_scan": {
+    "commit": "08d207276d0cb00ffb5204f02221d46bb55e1931",
+    "complete": null,
+    "findings": null,
+    "historyScanned": null,
+    "status": "Not run in cloud; guarded fleet lander required"
+  },
+  "remote_refs": [
+    {
+      "head": "08d207276d0cb00ffb5204f02221d46bb55e1931",
+      "ref": "refs/heads/cloud/sx-linen-c-f71"
+    },
+    {
+      "head": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+      "ref": "refs/heads/main"
+    }
+  ],
+  "repository": "just-every/run-linen",
+  "rider_results": {
+    "1": "PARTIAL: unselected clause obligations remain",
+    "10": "NOT APPLICABLE: no policy default",
+    "11": "PENDING guarded fleet landing and publication scan",
+    "2": "PASS for selected proof",
+    "3": "PASS: exact-head pull_request Verify 42646522054 completed/success",
+    "4": "PASS: proof files identical and exact-head Verify success",
+    "5": "INSPECTED: no inherited duty added",
+    "6": "PASS mechanical checks; main-owned status untouched",
+    "7": "PASS: no acceptance edits",
+    "8": "PASS for selected boundary",
+    "9": "PASS: no external result claimed"
+  },
+  "tag": "sx-linen-c-f71",
+  "terminal_product_status": "READY",
+  "test_registration_delta": 0,
+  "ui": "not applicable; no UI changed"
+}
