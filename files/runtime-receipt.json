@@ -1,0 +1,9 @@
+{
+  "head": "ee0d7bc3920544d0e73ddbbf110209db64d7115e",
+  "command": "timeout 1200 node tests/work/amend-manager-runtime.mjs",
+  "exit": 0,
+  "started_at": "2026-11-09T12:25:49.522132+00:00",
+  "elapsed_seconds": 39.048,
+  "test_file": "tests/work/bundle-cases.mjs",
+  "test_sha256": "06e7a35ffeff8ce6f5be723dc6bc585e65af47e2a8519d9648def8b5f89232ec"
+}

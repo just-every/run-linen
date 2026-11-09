@@ -1,0 +1,49 @@
+{
+  "head": "ee0d7bc3920544d0e73ddbbf110209db64d7115e",
+  "base": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+  "checks": [
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "head": "ee0d7bc3920544d0e73ddbbf110209db64d7115e"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "head": "ee0d7bc3920544d0e73ddbbf110209db64d7115e"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "head": "ee0d7bc3920544d0e73ddbbf110209db64d7115e"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "when": "before commit; all relevant source and test bytes unchanged"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "when": "before commit; all relevant source and test bytes unchanged"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "when": "after final source edit and up-to-date rebase; resulting source lock committed"
+    }
+  ],
+  "migration_ledger": {
+    "applicable": false,
+    "reason": "No migrations changed"
+  },
+  "changed_files": [
+    "sources.lock.json",
+    "tests/work/bundle-cases.mjs"
+  ],
+  "source_lock_sha256": "c6a835bf0eef71a0b6bc361831462b10ff73b0328be66517937a623f6c8d3793",
+  "test_file_sha256": "06e7a35ffeff8ce6f5be723dc6bc585e65af47e2a8519d9648def8b5f89232ec",
+  "status_table_unchanged": true,
+  "new_test_registrations": 0,
+  "removed_assertions": 0
+}

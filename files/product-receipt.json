@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-11-09T12:31:34.241092+00:00",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f63",
+  "head": "ee0d7bc3920544d0e73ddbbf110209db64d7115e",
+  "remote_ref": "refs/heads/cloud/sx-linen-c-f63",
+  "remote_head": "ee0d7bc3920544d0e73ddbbf110209db64d7115e",
+  "identity_and_trailers": "ee0d7bc3920544d0e73ddbbf110209db64d7115e\nRun Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>\n\n",
+  "worktree_clean": true
+}
