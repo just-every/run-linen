@@ -1,0 +1,72 @@
+diff --git a/tests/work/department-space-cases.mjs b/tests/work/department-space-cases.mjs
+index 929597c..e629925 100644
+--- a/tests/work/department-space-cases.mjs
++++ b/tests/work/department-space-cases.mjs
+@@ -57,6 +57,28 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
+   // Facilities hands the same request to IT; the former agent loses staff access and IT gets the full retained record.
+   const request=await make(spaces.facilities.id,'synthetic-linen-11221');
+   const path='/work/'+request.id;
++  const form={costCents:12500,deliveryHours:24,fields:[
++    {id:'location',label:'Repair location',type:'text',required:true},
++    {id:'count',label:'Sockets to inspect',type:'number',required:true},
++    {id:'occupied',label:'Room occupied',type:'checkbox',required:true},
++    {id:'access',label:'Access arrangement',type:'select',required:true,options:['Reception','Escort']},
++    {id:'needed',label:'Requested date',type:'date',required:true},
++    {id:'notes',label:'Repair notes',type:'textarea',required:true},
++  ]};
++  const catalog=await call('/catalog',{name:'synthetic-linen-11248',kind:'service',target:'synthetic-linen-11249',ownerId:'owner',departmentId:spaces.facilities.id,form},owner,201);
++  const item=(await call('/catalog',undefined,employee)).items.find(c=>c.id===catalog.id);
++  const answers={location:'synthetic-linen-11250',count:2,occupied:false,access:'Reception',needed:'2028-02-29',notes:'synthetic-linen-11251'};
++  await call(path+'/fulfilment',{catalogId:item.id,catalogRevision:item.revision,beneficiaryId:'employee',purpose:'synthetic-linen-11252',answers},employee,201);
++  const submitted=await call(path+'/catalog-requests',undefined,employee);
++  assert.equal(submitted.items.length,1,'Handoff proof starts with a submitted form');
++  const snapshot=submitted.items[0].catalogSnapshot;
++  assert.equal(snapshot.catalogId,item.id);
++  assert.equal(snapshot.revision,item.revision);
++  assert.deepEqual(snapshot.form,item.form,'Submitted questions and estimates use the selected item revision');
++  assert.deepEqual(snapshot.answers,answers,'Submitted form has nonempty typed answers, including a false checkbox');
++  assert.equal(snapshot.departmentId,spaces.facilities.id);
++  // A later catalog edit must not replace the submitted form during the move.
++  await call('/catalog/'+item.id+'/form',{revision:item.revision,name:'synthetic-linen-11253',form:{...form,costCents:25000,deliveryHours:48,fields:[{id:'replacement',label:'Replacement question',type:'text',required:true}]}},owner,200);
+   await call(path+'/messages',{body:'synthetic-linen-11222 private repair history',visibility:'private',sourceMessageId:'synthetic-linen-11223'},fac,201);
+   assert.equal(typeof uploadBytes,'function','Department proof requires the native attachment transport');
+   let attachment;
+@@ -77,6 +99,8 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
+   assert.deepEqual([moved.id,moved.department_id,moved.sensitivity],[request.id,spaces.it.id,'normal']);
+   await call(path,undefined,fac,404);
+   const retained=await call(path,undefined,it);
++  assert.deepEqual(await call(path+'/catalog-requests',undefined,it),submitted,'Receiving staff see identical frozen item revision, questions, answers and estimates');
++  assert.deepEqual(await call(path+'/catalog-requests',undefined,employee),submitted,'Requester retains the original submitted form after handoff');
+   assert.ok(retained.messages.some(m=>m.body.includes('synthetic-linen-11222')));
+   assert.ok(retained.messages.some(m=>m.source_key.startsWith('transition:department:')));
+   const clockAfter=await call(path+'/sla');
+@@ -84,6 +108,16 @@ export async function departmentSpaceChecks(api,db,uploadBytes) {
+   assert.deepEqual(clockAfter.resolution.dueAt,clockBefore.resolution.dueAt);
+   if(attachment){assert.ok(retained.attachments.some(a=>a.id===attachment.id));await call('/attachments/'+attachment.id,undefined,it);await call('/attachments/'+attachment.id,undefined,fac,404);}
+   assert.ok((await call(path+'/activity',undefined,it)).items.some(e=>e.action==='department handed off'));
++  const afterMove=await call(path);
++  const handoffs=(await call(path+'/activity')).items.filter(e=>e.action==='department handed off');
++  assert.equal(handoffs.length,1,'The current-revision move records one successful handoff');
++  const stale=await call(path+'/department',{revision,departmentId:spaces.facilities.id,reason:'synthetic-linen-11254'},owner,409);
++  assert.equal(stale.code,'revision_conflict','A pre-move revision cannot hand the ticket back');
++  assert.deepEqual(await call(path),afterMove,'Stale handoff leaves the ticket, messages and attachments unchanged');
++  assert.deepEqual(await call(path+'/catalog-requests'),submitted,'Stale handoff leaves the frozen submitted form unchanged');
++  assert.deepEqual((await call(path+'/activity')).items.filter(e=>e.action==='department handed off'),handoffs,'Stale handoff adds no successful history');
++  console.log('PROBE DESK-024 1: current owner handoff succeeds once; pre-move revision returns 409 revision_conflict with unchanged ticket, messages and successful handoff history');
++  console.log('PROBE DESK-024 2: Facilities typed form submitted, catalog edited, handoff to IT preserves the complete original snapshot and stale retry changes nothing');
+   await member('it',itUser,false);
+   const managerOnly=await call(path,undefined,it);
+   assert.equal(managerOnly.work.access,'team','The existing reporting-line entitlement retains its public-only manager view');
+diff --git a/tests/work/worker.ts b/tests/work/worker.ts
+index 394fc5e..8ccdd80 100644
+--- a/tests/work/worker.ts
++++ b/tests/work/worker.ts
+@@ -179,7 +179,7 @@ app.post('/test/bi-google-key',async c=>{biGooglePublicKey=await c.req.json();re
+ app.post('/test/reporting-tick',async c=>{await processDueReporting(c.env);await processDueBiExports(c.env);return c.json({processed:true});});
+ 
+ app.onError((e, c) =>
+-  c.json({ error: e.message }, e instanceof ApiError ? (e.status as 400) : 500),
++  c.json({ error: e.message, ...(e instanceof ApiError ? { code: e.code } : {}) }, e instanceof ApiError ? (e.status as 400) : 500),
+ );
+ registerWorkRoutes(app);
+ registerServiceRoutes(app);

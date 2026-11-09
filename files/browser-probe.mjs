@@ -1,0 +1,83 @@
+import assert from 'node:assert/strict';
+import {writeFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {pathToFileURL} from 'node:url';
+const root=process.cwd();
+const {chromium}=await import(pathToFileURL(root+'/node_modules/playwright/index.mjs'));
+const {apiFor,finishFirstRun,signIn}=await import(pathToFileURL(root+'/tests/ui/connected-helpers.mjs'));
+const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--use-mock-keychain','--password-store=basic']});
+const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+const password='synthetic-linen-13000-password',email=n=>'synthetic-linen-'+n+String.fromCharCode(64)+'example.test';
+const evidence=[];
+async function capture(page,name) {
+  for(const width of [1440,390]) {
+    await page.setViewportSize({width,height:1000});
+    await page.waitForFunction(()=>!document.querySelector('.loading'));
+    await page.evaluate(()=>document.fonts.ready);
+    const file=name+'-'+width+'.png';
+    await page.screenshot({path:out+'/'+file,fullPage:true});
+    evidence.push(file);
+  }
+  await page.setViewportSize({width:1440,height:1000});
+}
+try {
+  const ownerContext=await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'UTC'}),page=await ownerContext.newPage();
+  await page.goto(base+'/app');
+  await page.getByLabel('Your name').fill('Synthetic owner');
+  await page.getByLabel('Workspace name').fill('Synthetic Linen handoff');
+  await page.getByLabel('Work email').fill(email(13000));
+  await page.getByLabel('Password',{exact:true}).fill(password);
+  await page.getByRole('button',{name:'Create workspace',exact:true}).click();
+  await page.getByRole('heading',{name:'Requests',exact:true}).waitFor();
+  await finishFirstRun(page,base);
+  const api=apiFor(page),session=await api('/session');
+  const employee=await api('/members',{name:'Synthetic requester',email:email(13001),password,roles:['employee']});
+  const facilities=await api('/departments',{name:'Facilities',kind:'facilities'}),it=await api('/departments',{name:'IT',kind:'it'});
+  const form={costCents:12500,deliveryHours:24,fields:[{id:'location',label:'Repair location',type:'text',required:true},{id:'count',label:'Sockets to inspect',type:'number',required:true},{id:'occupied',label:'Room occupied',type:'checkbox',required:true}]};
+  const created=await api('/catalog',{name:'Facilities socket repair',kind:'service',target:'synthetic-linen-13002',ownerId:session.user.id,departmentId:facilities.id,form});
+  const item=(await api('/catalog')).items.find(i=>i.id===created.id);
+  const employeeContext=await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'UTC'}),ep=await employeeContext.newPage();
+  await signIn(ep,base,email(13001),password);
+  const employeeApi=apiFor(ep);
+  const request=await employeeApi('/work',{departmentId:facilities.id,title:'Facilities socket repair',body:'Inspect the reception sockets',deduplicationKey:'synthetic-linen-13003'});
+  const path='/work/'+request.id,answers={location:'Reception',count:2,occupied:false};
+  await employeeApi(path+'/fulfilment',{catalogId:item.id,catalogRevision:item.revision,beneficiaryId:employee.id,purpose:'Restore the reception sockets',answers});
+  const submitted=await employeeApi(path+'/catalog-requests');
+  assert.equal(submitted.items.length,1);assert.deepEqual(submitted.items[0].catalogSnapshot.answers,answers);
+  await api('/catalog/'+item.id+'/form',{revision:item.revision,name:'Revised repair service',form:{...form,costCents:25000,deliveryHours:48,fields:[]}});
+  await page.goto(base+'/app#'+path);
+  const saved=page.getByRole('region',{name:'Submitted catalog forms',exact:true});
+  await saved.getByText('Reception',{exact:true}).waitFor();
+  await page.getByText('Hand off to another workspace',{exact:true}).click();
+  const handoff=page.getByRole('form',{name:'Workspace handoff'});
+  await handoff.getByLabel('Receiving workspace',{exact:true}).selectOption(it.id);
+  await handoff.getByLabel('Reason for handoff',{exact:true}).fill('Facilities inspection complete; IT will inspect the adapter.');
+  await capture(page,'owner-handoff-form');
+  const revision=(await api(path)).work.revision;
+  const transferring=page.waitForResponse(r=>r.url().endsWith(path+'/department')&&r.request().method()==='POST');
+  await handoff.getByRole('button',{name:'Hand off this ticket',exact:true}).click();
+  assert.equal((await transferring).status(),200);
+  await saved.getByText('Reception',{exact:true}).waitFor();
+  assert.deepEqual(await api(path+'/catalog-requests'),submitted);
+  await capture(page,'owner-submitted-form-after-handoff');
+  await ep.goto(base+'/app#'+path);
+  const publicForm=ep.getByRole('region',{name:'Submitted catalog forms',exact:true});
+  await publicForm.getByText('Reception',{exact:true}).waitFor();
+  assert.deepEqual(await employeeApi(path+'/catalog-requests'),submitted);
+  await capture(ep,'requester-submitted-form-after-handoff');
+  const before=await api(path),handoffs=(await api(path+'/activity')).items.filter(e=>e.action==='department handed off');
+  assert.equal(handoffs.length,1);
+  const refused=await page.evaluate(async({path,revision,departmentId})=>{
+    const s=await(await fetch('/api/v1/session')).json();
+    const r=await fetch('/api/v1'+path+'/department',{method:'POST',headers:{'content-type':'application/json','X-Linen-CSRF':s.csrfToken},body:JSON.stringify({revision,departmentId,reason:'synthetic-linen-13004'})});
+    return {status:r.status,body:await r.json()};
+  },{path,revision,departmentId:facilities.id});
+  assert.equal(refused.status,409);assert.equal(refused.body.error.code,'revision_conflict');
+  assert.deepEqual(await api(path),before);assert.deepEqual(await api(path+'/catalog-requests'),submitted);
+  assert.deepEqual((await api(path+'/activity')).items.filter(e=>e.action==='department handed off'),handoffs);
+  const receipt={head,command:'node tests/ui/run.mjs ../packet/browser-probe.mjs',exit:0,assertionWidth:1440,captureWidths:[1440,390],evidence,staleResponse:refused,successfulHandoffs:handoffs.length,snapshot:submitted.items[0].catalogSnapshot};
+  await writeFile(out+'/browser-receipt.json',JSON.stringify(receipt,null,2)+'\n');
+  console.log('PROBE DESK-024 1: native authenticated handoff returns 200; pre-move revision returns 409 revision_conflict; ticket, messages, snapshot and successful history unchanged');
+  console.log('PROBE DESK-024 2: native typed Facilities submission survives catalog edit and IT handoff; owner and requester screens captured at 1440 and 390');
+} finally {await browser.close();}

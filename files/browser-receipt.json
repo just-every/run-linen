@@ -1,0 +1,73 @@
+{
+  "head": "db0229b015806e49a9dedd3695184335e1dbd7a1",
+  "command": "node tests/ui/run.mjs ../packet/browser-probe.mjs",
+  "exit": 0,
+  "assertionWidth": 1440,
+  "captureWidths": [
+    1440,
+    390
+  ],
+  "evidence": [
+    "owner-handoff-form-1440.png",
+    "owner-handoff-form-390.png",
+    "owner-submitted-form-after-handoff-1440.png",
+    "owner-submitted-form-after-handoff-390.png",
+    "requester-submitted-form-after-handoff-1440.png",
+    "requester-submitted-form-after-handoff-390.png"
+  ],
+  "staleResponse": {
+    "status": 409,
+    "body": {
+      "error": {
+        "code": "revision_conflict",
+        "message": "Work changed; reload before handing it off"
+      }
+    }
+  },
+  "successfulHandoffs": 1,
+  "snapshot": {
+    "catalogId": "244bdabe-5f78-4616-ab6a-8f29f077cf66",
+    "requiresManager": false,
+    "departmentId": "5a603b6d-af12-4caa-af35-b51be6c0639c",
+    "revision": 1,
+    "name": "Facilities socket repair",
+    "submittedBy": "dc01fc62-ff62-4b84-8c4b-c3258a5ce514",
+    "form": {
+      "fields": [
+        {
+          "id": "location",
+          "label": "Repair location",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "count",
+          "label": "Sockets to inspect",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "occupied",
+          "label": "Room occupied",
+          "type": "checkbox",
+          "required": true
+        }
+      ],
+      "costCents": 12500,
+      "deliveryHours": 24,
+      "quoteRequired": false
+    },
+    "answers": {
+      "location": "Reception",
+      "count": 2,
+      "occupied": false
+    },
+    "audience": {
+      "department": [],
+      "location": [],
+      "employmentType": []
+    },
+    "audiencePeople": [],
+    "approvalAmounts": {}
+  }
+}

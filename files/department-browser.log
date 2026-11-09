@@ -1,0 +1,3 @@
+PASS ROLE-001 native: Facilities-only custom read access, named employee assignment and immediate withdrawal, private-note exclusion, role editing, account and refresh tooltips, desktop and mobile evidence.
+PASS DESK-011 native 1440: five service workspaces, explicit staff, scoped catalogs/knowledge/SLA, HR→IT retains original HR restrictions with live dual-membership grant/withdrawal, HR-service staff denied HR records, combined employee catalog, Facilities→IT audited handoff retaining history/restrictions/SLA and withdrawing old staff access.
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-c-f30/browser-proof

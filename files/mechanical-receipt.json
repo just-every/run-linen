@@ -1,0 +1,32 @@
+{
+  "head": "db0229b015806e49a9dedd3695184335e1dbd7a1",
+  "commands": [
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    }
+  ],
+  "ledger": "not applicable: no migration changed",
+  "contractDiff": "",
+  "generatedViewDiff": ""
+}

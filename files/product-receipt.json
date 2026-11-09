@@ -1,0 +1,25 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f30",
+  "head": "db0229b015806e49a9dedd3695184335e1dbd7a1",
+  "base": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+  "productFiles": [
+    "sources.lock.json",
+    "tests/work/department-space-cases.mjs",
+    "tests/work/worker.ts"
+  ],
+  "status": "pushed",
+  "pr": "https://github.com/just-every/run-linen/pull/165",
+  "checks": {
+    "views": 0,
+    "lock": 0,
+    "typecheck": 0,
+    "firstParty": 0
+  },
+  "contractStatusCellsChanged": false,
+  "generatedViewsCommitted": false,
+  "permanentRegistrationsAdded": 0,
+  "existingAssertionsRemovedOrNarrowed": false,
+  "buildSourceUnchangedSince": "ce86a9413f41103d066aa66c3db8d43fb40da248",
+  "lockSha256": "3c771ab44b0a8e8ef11ce18de106b3c42babaebaaadff8fc4b81d84bc1a5b96b"
+}

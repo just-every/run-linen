@@ -1,0 +1,3 @@
+PROBE DESK-024 1: native authenticated handoff returns 200; pre-move revision returns 409 revision_conflict; ticket, messages, snapshot and successful history unchanged
+PROBE DESK-024 2: native typed Facilities submission survives catalog edit and IT handoff; owner and requester screens captured at 1440 and 390
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-c-f30/packet
