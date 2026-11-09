@@ -1780,7 +1780,7 @@
       "executable": false
     },
     "scripts/verify.mjs": {
-      "sha256": "8d3851ae58c3a2633a8aafbb8817e16ca876ece66bf10493c1690b54f8b2c4b1",
+      "sha256": "bfe2d0bb2b24b2b85c6529e36db95c4f83e7bd10ba0bbd934b809520208f18e3",
       "executable": false
     },
     "seed.json": {
@@ -6968,7 +6968,7 @@
       "executable": false
     },
     "tests/ui/browser.mjs": {
-      "sha256": "e9e516d326530a87cabe5689ecf3ff236c6dba4440a3781b97fe935203b7cc6d",
+      "sha256": "ce399e9ae47829333a4de2b231965f6c4bc57dad689dfbe04cea2b7d59e84797",
       "executable": false
     },
     "tests/ui/calendar-journey.mjs": {
