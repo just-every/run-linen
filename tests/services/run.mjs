@@ -5,7 +5,7 @@ import { calendarChecks } from './calendar-cases.mjs';
 import { dependencyChecks } from './dependency-cases.mjs';
 import { applyMigrations } from '../sql-migrations.mjs';
 import assert from 'node:assert/strict'
-import {createHmac} from 'node:crypto'
+import {createHash,createHmac,randomUUID} from 'node:crypto'
 import {readFile,mkdtemp,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import path from 'node:path'
@@ -170,7 +170,22 @@ try{
  assert.ok(!Object.hasOwn(employeeCause.data,'suspectedChanges')&&!Object.hasOwn(employeeCause.data,'changeCause')&&!Object.hasOwn(employeeCause.data,'monitorEvents')&&!Object.hasOwn(employeeCause.data,'monitorId')&&!Object.hasOwn(employeeCause.data,'monitorAlertKey'),'Employee projection excludes internal monitoring and causal evidence');
  await employeeNoticeChecks(request, db);
  await dependencyChecks(request);
- await calendarChecks(request,db);
+ // Seed native session custody; calendar requests still cross production authentication and CSRF.
+ const calendarSessions=new Map();
+ for(const [workspace,user] of [['w1','owner'],['w1','operator'],['w1','employee'],['w2','owner']]) {
+  const raw=randomUUID(),sessionId=randomUUID(),csrf=randomUUID();
+  const {version}=await db.prepare('SELECT version FROM platform_auth_versions WHERE user_id=?').bind(user).first();
+  await db.prepare('INSERT INTO sessions VALUES(?,?,?,?,?,?,?)').bind(sessionId,user,workspace,createHash('sha256').update(raw).digest('hex'),csrf,new Date(Date.now()+3600000).toISOString(),new Date().toISOString()).run();
+  await db.prepare("INSERT INTO platform_auth_session_proofs(session_id,kind,version) VALUES(?,'password',?)").bind(sessionId,version).run();
+  calendarSessions.set(workspace+':'+user,{Cookie:'linen_session='+raw,'X-Linen-CSRF':csrf});
+ }
+ const calendarRequest=(method,url,body,headers={})=>{
+  if(!/^\/(?:change-calendar(?:\.ics)?|change-windows(?:\/[^?]+)?)(?:\?|$)/.test(url))return request(method,url,body,headers);
+  const session=calendarSessions.get((headers['x-workspace']||'w1')+':'+(headers['x-user']||'owner'));
+  return request(method,'/api/v1'+url,body,{...session,Origin:'https://linen.example.test',...headers,
+   'x-user':'approver','x-workspace':'synthetic-linen-14006','x-roles':'["owner"]'});
+ };
+ await calendarChecks(calendarRequest,db);
  await templateChecks(request,db);
  await softwareLicenseChecks(request,db);
  console.log('SERVICES: real D1 privacy/tenant isolation, graph stale conflicts, private audience denial, independent partial cohort recovery, wrong-link correction, amended approval invalidation, conflicting windows, canary dispatch, incomplete compensation, supplier breaches, scoped business decisions and signed monitoring/replay rejection/staleness/automatic incident and on-call routing and actual notification adapter submission/readback and honest report denominators passed')
