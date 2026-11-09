@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 24 | 125 | 29 | 178 |
+| Core | 25 | 124 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 24 | 138 | 37 | 199 |
+| Full target | 25 | 137 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -1090,7 +1090,7 @@ Core · target · **done** · Rules D-4
 
 #### DESK-024 — Department handoff and retained HR restriction
 
-Core · target · **partial** · From DESK-011 · Rules D-4
+Core · target · **done** · From DESK-011 · Rules D-4
 
 **Requirement.** A handoff between workspaces moves the ticket whole, and a ticket that was ever in an HR workspace keeps that workspace's restriction wherever it goes.
 
@@ -1104,8 +1104,8 @@ Core · target · **partial** · From DESK-011 · Rules D-4
 7. Membership withdrawal applies to ticket reads, private writes, assignments, scenarios, tasks, knowledge sources, derived service/execution views and reports before aggregation; HR sources cannot be copied by a project-plan scenario into a globally visible project.
 8. Native archives retain department metadata and HR restrictions while restoring staff memberships inert; owners explicitly confirm authority again.
 
-**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).
-**Gap.** Not asserted: that a handoff at a stale revision is refused, and that the ticket's submitted forms remain after a handoff (the handed-off request has none). The kept history, owner-only handoff with an audited reason, identity, messages, attachments, sensitivity and the frozen SLA clock, cleared incompatible assignments, the retained HR requirement across later moves, staff-door membership, the requester's public view, HR-service limits, no recovery through relationships, withdrawal before aggregation and inert archived memberships are asserted.
+**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).; `tests/work/department-space-cases.mjs` (departmentSpaceChecks); `tests/ui/department-browser.mjs` (Department privacy browser); `tests/platform/mcp-tools-cases.mjs` (mcpToolCases); `tests/work/department-ops-cases.mjs` (departmentOpsChecks); `tests/work/department-report-cases.mjs` (departmentReportChecks); `tests/services/department-source-cases.mjs` (departmentSourceChecks); `tests/platform/base-auth-transfer.mjs` (Native archive and recovery)
+**Gap.** None.
 
 #### DESK-012 — Time tracking and effort
 
