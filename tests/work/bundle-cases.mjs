@@ -2,6 +2,83 @@ import assert from 'node:assert/strict';
 /** CATALOG-004: one bundle request, one manager decision, five child fulfilments, complete only when every child verifies. */
 export async function bundleChecks({ ok, api, db, actor, future }) {
   const holder = (await db.prepare("SELECT manager_id FROM work_people WHERE id='employee'").first()).manager_id;
+  // Native admission and business decisions must preserve each child's facts and capacity, without issuing execution authority.
+  const executionSnapshot = async () => {
+    const snapshot = {};
+    for (const table of ['execution_grants', 'execution_plans', 'execution_operations', 'work_fulfilment_execution'])
+      snapshot[table] = (await db.prepare(`SELECT * FROM ${table} ORDER BY 1,2,3`).all()).results;
+    snapshot.provider = (await db.prepare('SELECT * FROM test_provider ORDER BY target').all()).results;
+    return snapshot;
+  };
+  const existingExecution = await executionSnapshot();
+  assert.ok(existingExecution.execution_grants.length > 0, 'the no-created-grant probe starts with existing grant identities');
+  const capacities = [2, 0, 1, 0], capacityItems = [];
+  for (const [index, kind] of ['device', 'device', 'software', 'software'].entries()) {
+    capacityItems.push(await ok('/catalog', { name: `Bundle capacity ${index}`, kind, target: `synthetic-linen-bundle-${index}`,
+      ownerId: 'owner', requiresManager: true, capacity: capacities[index] }));
+  }
+  const capacityBundle = await ok('/catalog-bundles', { name: 'Independent child capacity', catalogIds: capacityItems.map(i => i.id) });
+  const reservations = async () => (await db.prepare(`SELECT catalog_id,work_id,beneficiary_id,released_at
+    FROM work_catalog_reservations WHERE workspace_id='w' AND catalog_id IN (SELECT value FROM json_each(?))
+    ORDER BY catalog_id,work_id`).bind(JSON.stringify(capacityItems.map(i => i.id))).all()).results;
+  const expectedReservations = [];
+  for (let round = 0; round < 3; round++) {
+    const submitted = { beneficiaryId: 'employee', purpose: `Time-limited engineering kit ${round}`, expiresAt: future(86400000 + round * 3600000) };
+    const input = { ...submitted, expectedRevision: capacityBundle.revision, deduplicationKey: `synthetic-linen-bundle-capacity-${round}` };
+    // The owner files for a different person, so a fallback to the filer cannot satisfy the assertion.
+    const requested = await ok(`/catalog-bundles/${capacityBundle.id}/request`, input);
+    assert.equal(requested.children.length, capacityItems.length);
+    const readChildren = async () => {
+      const children = [];
+      for (const item of capacityItems) {
+        const child = await ok(`/work/${requested.workId}/fulfilments/${item.id}`, undefined, 'employee');
+        assert.equal(child.workId, requested.workId);
+        assert.equal(child.catalogId, item.id);
+        assert.deepEqual({ beneficiaryId: child.beneficiaryId, purpose: child.purpose, expiresAt: child.expiresAt }, submitted,
+          'CATALOG-004 every child retains the submitted person, purpose and expiry');
+        const stored = await db.prepare('SELECT beneficiary_id,purpose,expires_at FROM work_fulfilments WHERE workspace_id=? AND id=?')
+          .bind('w', child.id).first();
+        assert.deepEqual(stored, { beneficiary_id: 'employee', purpose: submitted.purpose, expires_at: submitted.expiresAt });
+        children.push(child);
+      }
+      return children;
+    };
+    const childrenBefore = await readChildren();
+    // The first request reserves a device and a licence; the second has stock but no licence; the third has neither.
+    const reserved = round === 0 ? [0, 2] : round === 1 ? [0] : [];
+    for (const index of reserved) expectedReservations.push({ catalog_id: capacityItems[index].id, work_id: requested.workId, beneficiary_id: 'employee', released_at: null });
+    const sortedReservations = () => [...expectedReservations].sort((a, b) => a.catalog_id.localeCompare(b.catalog_id) || a.work_id.localeCompare(b.work_id));
+    assert.deepEqual(await reservations(), sortedReservations(), 'CATALOG-004 each child reserves only its own remaining stock or licence capacity');
+    assert.deepEqual(await executionSnapshot(), existingExecution, 'CATALOG-004 requesting a bundle preserves existing execution grants and dispatch state');
+    const queue = (await ok('/fulfilment-decisions', undefined, holder)).items.filter(i => i.workId === requested.workId);
+    assert.equal(queue.length, capacityItems.length);
+    const decision = { idempotencyKey: `synthetic-linen-bundle-approval-${round}`, approvals: queue.map(q => ({ ...q, expectedHolderId: q.holderId })) };
+    assert.ok(queue.every(q => q.holderId === holder && q.beneficiaryId === 'employee'));
+    assert.equal((await api(`/work/${requested.workId}/bundle/approve`, decision, 'owner')).status, 403,
+      'only the current manager can approve the shared child facts');
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_fulfilment_approvals WHERE work_id=?').bind(requested.workId).first()).n, 0);
+    assert.deepEqual(await readChildren(), childrenBefore, 'a refused bundle decision changes no child facts');
+    assert.deepEqual(await reservations(), sortedReservations(), 'a refused bundle decision changes no child reservation');
+    assert.deepEqual(await executionSnapshot(), existingExecution, 'a refused bundle decision supplies no execution authority');
+    const approved = await ok(`/work/${requested.workId}/bundle/approve`, decision, holder);
+    assert.equal(approved.decisions, 1);
+    assert.ok(approved.children.every(c => c.approval === 'recorded' && c.delivery !== 'verified'));
+    assert.equal(approved.state, 'in_progress');
+    assert.deepEqual(await readChildren(), childrenBefore, 'CATALOG-004 manager approval preserves every submitted child fact');
+    const approvals = (await db.prepare(`SELECT beneficiary_id,purpose,expires_at,holder_id,grant_id,grant_version
+      FROM work_fulfilment_approvals WHERE workspace_id='w' AND work_id=?`).bind(requested.workId).all()).results;
+    assert.equal(approvals.length, capacityItems.length);
+    for (const approval of approvals) assert.deepEqual(approval, { beneficiary_id: 'employee', purpose: submitted.purpose,
+      expires_at: submitted.expiresAt, holder_id: holder, grant_id: null, grant_version: null }, 'business approval binds the child facts without a provider grant');
+    for (const [index, item] of capacityItems.entries()) {
+      const child = await ok(`/work/${requested.workId}/fulfilment`, { ...submitted, catalogId: item.id });
+      assert.equal(child.state, reserved.includes(index) ? 'pending' : 'blocked', 'CATALOG-004 approval cannot borrow another child capacity');
+      assert.equal(child.reason, reserved.includes(index) ? null : index < 2 ? 'No stock; acquisition owner required' : 'No license capacity; license owner required');
+    }
+    assert.deepEqual(await reservations(), sortedReservations(), 'CATALOG-004 approval neither borrows capacity nor reserves a child twice');
+    assert.deepEqual(await executionSnapshot(), existingExecution, 'CATALOG-004 manager approval leaves all existing execution-grant identities and effects unchanged');
+  }
+  console.log('PASS CATALOG-004 native child facts and capacity: shared submitted person, purpose and expiry; independent stock and licence exhaustion; current-manager approval creates no grant or dispatch');
   const asset = await ok('/assets', { serial: 'BUNDLE-LAPTOP', source: 'purchase' });
   await ok(`/assets/${asset.id}/commands`, { revision: 1, command: 'assign', personId: 'employee', evidence: 'Bundle laptop allocated' });
   const received = await ok(`/assets/${asset.id}/commands`, { revision: 2, command: 'receive', personId: 'employee', evidence: 'Engineer signed the receipt' });
