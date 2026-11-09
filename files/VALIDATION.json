@@ -1,0 +1,145 @@
+{
+  "tag": "sx-linen-c-f65",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f65",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "log": "setup.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    },
+    {
+      "command": "node --check tests/work/sla-policy-cases.mjs",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log"
+    }
+  ],
+  "scope": "DESK-023 point 6 automatic-close guard only",
+  "migrationsChanged": false,
+  "screensChanged": false,
+  "registrationsAdded": 0,
+  "registrationsRemoved": 0,
+  "statusRowsChanged": 0,
+  "mechanicalAfterFinalRebase": [
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    }
+  ],
+  "head": "b0ea2e804d15d14e8a732e6a2fb702fcea002a81",
+  "mainBase": "e2d67da5861defba777d5c82248b3664b38c1481",
+  "sourceHashes": {
+    "tests/work/sla-policy-cases.mjs": "132e2247bea0200aa96f981a1d0647257159e15a50c5687b927ff88f690c66e9",
+    "src/features/work/desk-fields.ts": "03c6a0b90f3518699aa6f7ff0c1e56f43e07c8c61a4f4d900b39d11b670c1dd3",
+    "src/features/work/escalations.ts": "6485548caece1c6c7a8001970d63d57511e1ebede1b41f8bbe470b909f739697",
+    "src/features/work/core.ts": "c1297ba17383f750859c0c4539ac1a80c940ac7db9f81306506f920814720268",
+    "sources.lock.json": "13500cf214e1b6e6566aecb999868bb53d6264a9f95a778c683abe98557f11bf"
+  },
+  "relevantBytesUnchangedAfterRuntime": true,
+  "productPush": {
+    "exit": 0,
+    "attempts": 1,
+    "branch": "cloud/sx-linen-c-f65",
+    "head": "b0ea2e804d15d14e8a732e6a2fb702fcea002a81",
+    "log": "product-push.log"
+  },
+  "noContractOrGeneratedViewChanges": true,
+  "cleanProductTree": true,
+  "logHashes": {
+    "lock-write.log": "c3e348ee7bda3ce811422ff716c5f8de6f2216ba81d6e8b43d20ca2a784f44e0",
+    "views-check.log": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422",
+    "lock-check.log": "25a9350865b3b58def1894d5c9a1b86393afdb28825e2c2fb6deb15984447066",
+    "setup.log": "0fdf000c171c3a5d2c29500869b39fd7f2da141835be4354b10fdee6d65de3dd",
+    "work-runtime.log": "73cc38d107d2735a5c853f7a56452c4d3de4bf0a75cfdfc4bfa3a11768f37d6a",
+    "typecheck.log": "ad8147faad7fa2f5df103c51755bd93bf417a87c9a9540ce1977c851dee25a75",
+    "first-party.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "product-push.log": "d19c9b7dad10bdb60f55bd6b485db926dbef19acd796bcbed66a2f0d97916ab2",
+    "views-write.log": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+  },
+  "pr": {
+    "base": "e2d67da5861defba777d5c82248b3664b38c1481",
+    "draft": true,
+    "head": "b0ea2e804d15d14e8a732e6a2fb702fcea002a81",
+    "html_url": "https://github.com/just-every/run-linen/pull/196",
+    "number": 196
+  },
+  "candidateCi": [
+    {
+      "conclusion": null,
+      "event": "pull_request",
+      "head_sha": "b0ea2e804d15d14e8a732e6a2fb702fcea002a81",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42621266564",
+      "id": 42621266564,
+      "name": "Verify",
+      "status": "queued"
+    },
+    {
+      "conclusion": null,
+      "event": "dynamic",
+      "head_sha": "b0ea2e804d15d14e8a732e6a2fb702fcea002a81",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42621262267",
+      "id": 42621262267,
+      "name": "PR #196",
+      "status": "in_progress"
+    }
+  ],
+  "githubRestCalls": 3,
+  "candidateVerifyGreen": false,
+  "publicationScan": {
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "custodian": "fleet lander"
+  },
+  "cleanup": "Product clone and dependencies will be deleted after evidence publication succeeds."
+}
