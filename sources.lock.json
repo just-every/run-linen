@@ -604,7 +604,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "ed8fcb1b9379989b7e96c3313d8d9b80a942155cb8f31e74162aa03b67b9742b",
+      "sha256": "e160d5de2daa095079807b09986c911849268cc1016150d171fa4ccc7a0d3415",
       "executable": false
     },
     "ADOPTION.md": {
@@ -640,7 +640,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4d655519e4959f624b695b3934168cee3516e7fe18bb76028cece323d8c47a17",
+      "sha256": "ef40c3b7f5ec021e79a9d5ea5cf4ca1dad9d0ef47e7ec51279f0b2972a4be65b",
       "executable": false
     },
     "DEMO.md": {
@@ -7004,7 +7004,7 @@
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {
-      "sha256": "5c2a7f141e8675291e4ae642b1bee8ca35e469e48f64e08a815b60ced8a36062",
+      "sha256": "6a8acba66ba41de2651bae35a952802e90a3963aaee065fed04cf43f2c92a75d",
       "executable": false
     },
     "tests/ui/connected-cancellation.mjs": {
@@ -7060,7 +7060,7 @@
       "executable": false
     },
     "tests/ui/desk-console-journeys.mjs": {
-      "sha256": "af68c1bd91cefe2150b498921e5cadaefb45f345cbb3e2d5de239ab745b465f4",
+      "sha256": "ec82827fc6047cbbb4ef6ab9791ecbae1078362633e57b5804d9ce28807a9bb8",
       "executable": false
     },
     "tests/ui/desk-field-journey.mjs": {
@@ -7144,7 +7144,7 @@
       "executable": false
     },
     "tests/ui/response-journey.mjs": {
-      "sha256": "520ba9c24c1d30abf6c628b3f375204911f4a18e8cfb127d8dfdb7d44268c897",
+      "sha256": "823c0db270dc176f5bc0789142a2a2b49d43cf289871c415f0d69df9d1afb15e",
       "executable": false
     },
     "tests/ui/run.mjs": {
@@ -7324,7 +7324,7 @@
       "executable": false
     },
     "tests/work/department-space-cases.mjs": {
-      "sha256": "97b01bb9bb0cc43a04de27734d8f80250fe8f92cef9f71d5a62aa5f1627dddb0",
+      "sha256": "7dafdf3ce8d2a8e147b2d5a1858b5c983f7a2986871b69156fef6d393b883796",
       "executable": false
     },
     "tests/work/desk-field-cases.mjs": {
@@ -7336,7 +7336,7 @@
       "executable": false
     },
     "tests/work/desk-routing-cases.mjs": {
-      "sha256": "82184e5929786206da0f713166d8cf0e0d543a990fb43b441d7d161d9cc16a87",
+      "sha256": "431b381a28b1e24da7b2c9d536f811a6b0382f2000e3fc7f082abc76897f0668",
       "executable": false
     },
     "tests/work/desk-scenario-cases.mjs": {
@@ -7428,7 +7428,7 @@
       "executable": false
     },
     "tests/work/recurrence-cases.mjs": {
-      "sha256": "01fb6b1393efbb045dd35141ca7e0a04e46d9e26acb99dbb5540b50c4b5cbe92",
+      "sha256": "0f28279ba2c00d696ac23dd651dfcbd63968981aaaa80e05901d5a035b9612a3",
       "executable": false
     },
     "tests/work/relationship-cases.mjs": {
@@ -7448,7 +7448,7 @@
       "executable": false
     },
     "tests/work/runtime.mjs": {
-      "sha256": "181ef2276a92950caeb23433a36e79b458a204771d1209f21d06798e35a4e833",
+      "sha256": "93f45afe1817e4b3afe89d55c7fccac052537b68216e730ff8e3276fccf81688",
       "executable": false
     },
     "tests/work/search-cases.mjs": {
