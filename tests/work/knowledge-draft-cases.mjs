@@ -103,10 +103,65 @@ export async function knowledgeDraftChecks(api,db) {
     assert.equal(found.sources.length,3,'KB-004 separate cohorts and context kinds never mix sources');
   }
   const incident=check(await api('/incidents',{title:'KB004 sign-in failure',serviceId:service.id,impact:'Sign-in unavailable',cohorts:['Denver'],visibility:'workspace'}),201);
-  let problem=check(await api('/problems',{title:'KB004 reviewed known error',serviceId:service.id,incidentIds:[incident.id],symptoms:'A stale session causes a sign-in loop',visibility:'operators'}),201);
+  const owner={'x-user':'owner','x-roles':'["owner"]'};
+  const problemInput={title:'KB004 reviewed known error',serviceId:service.id,incidentIds:[incident.id],symptoms:'A stale session causes a sign-in loop'};
+  let problem=check(await api('/problems',{...problemInput,visibility:'operators'},owner),201);
+  let restricted=check(await api('/problems',{...problemInput,visibility:'restricted'},owner),201);
   assert.ok(!(await detect()).some(d=>d.group.value===problem.id));
-  problem=check(await api(`/problems/${problem.id}/known-error`,{revision:problem.revision,cause:'A stale session claim repeats redirects',evidenceIds:['session-probe']}));
-  let known=(await detect()).find(d=>d.group.type==='known-error'&&d.group.value===problem.id);assert.ok(known);
+  const review={cause:'A stale session claim repeats redirects',evidenceIds:['session-probe']};
+  restricted=check(await api(`/problems/${restricted.id}/known-error`,{revision:restricted.revision,...review},owner));
+  const restrictedOnlyCalls=check(await api('/test/knowledge-provider')).calls;
+  const restrictedOnly=check(await api('/knowledge-drafts/detect',{},owner)).items;
+  const beforeNormalReview=check(await api('/knowledge-drafts',undefined,owner)).items;
+  for(const drafts of [restrictedOnly,beforeNormalReview]) {
+    assert.ok(!drafts.some(d=>d.group.type==='known-error'&&[problem.id,restricted.id].includes(d.group.value)),
+      'Reviewing only the restricted problem admits neither it nor the unreviewed normal control');
+    assert.ok(!JSON.stringify(drafts).includes(restricted.id),
+      'Restricted-only discovery leaves no source reference in candidate or draft collections');
+  }
+  for(const item of beforeNormalReview) {
+    const detail=check(await api(`/knowledge-drafts/${item.id}`,undefined,owner));
+    assert.ok(!JSON.stringify(detail).includes(restricted.id),
+      'The detecting owner cannot read a restricted known-error reference through another draft');
+  }
+  assert.equal(check(await api('/test/knowledge-provider')).calls,restrictedOnlyCalls,
+    'Discovery with only a reviewed restricted known error never dispatches a model');
+  problem=check(await api(`/problems/${problem.id}/known-error`,{revision:problem.revision,...review},owner));
+  for(const record of [problem,restricted]) {
+    const current=check(await api(`/problems/${record.id}`,undefined,owner));
+    assert.equal(current.ownerId,'owner');assert.equal(current.visibility,record.visibility);
+    assert.equal(current.data.causeState,'known-error');assert.equal(current.data.reviewedBy,'owner');
+    assert.ok(Number.isFinite(Date.parse(current.data.reviewedAt)));
+    assert.equal(current.data.cause,review.cause,'Both readable problems have the same reviewed cause');
+  }
+  const discoveryCalls=check(await api('/test/knowledge-provider')).calls;
+  let known;
+  for(let scan=0;scan<2;scan++) {
+    const discovered=check(await api('/knowledge-drafts/detect',{},owner)).items;
+    const eligible=discovered.find(d=>d.group.type==='known-error'&&d.group.value===problem.id);
+    assert.ok(eligible,'A reviewed nonrestricted known error remains eligible');
+    if(known)assert.equal(eligible.id,known.id,'Repeated discovery keeps the eligible candidate');
+    known=eligible;
+    const listed=check(await api('/knowledge-drafts',undefined,owner)).items;
+    assert.ok(listed.some(d=>d.id===known.id),'The eligible candidate is available in draft reads');
+    const details=[];
+    for(const item of listed)details.push(check(await api(`/knowledge-drafts/${item.id}`,undefined,owner)));
+    for(const drafts of [discovered,listed,details]) {
+      assert.ok(!drafts.some(d=>d.group.type==='known-error'&&d.group.value===restricted.id),
+        'A reviewed restricted known error never supplies a candidate, even for its detecting owner');
+      assert.ok(!JSON.stringify(drafts).includes(restricted.id),
+        'Discovery and draft reads expose no reference to the restricted known error');
+    }
+    const readable=details.find(d=>d.id===known.id);
+    assert.equal(readable.state,'candidate');
+    assert.deepEqual(readable.sources.map(s=>({type:s.type,id:s.id})),[{type:'known-error',id:problem.id}]);
+    assert.equal(readable.sources[0].citation,'known-error:'+problem.id);
+    assert.equal(readable.sources[0].href,'#/problems/'+problem.id);
+    assert.equal(JSON.parse(readable.sources[0].content).cause,review.cause);
+  }
+  assert.equal(check(await api('/test/knowledge-provider')).calls,discoveryCalls,
+    'Known-error discovery and draft reads never dispatch a model');
+  console.log('PASS KB-004 restricted known-error admission: reviewed restricted owner-readable problem excluded from candidates and source references; comparable normal problem eligible; discovery model calls unchanged');
   known=check(await api(`/knowledge-drafts/${known.id}/generate`,{revision:known.revision,connectionId:'knowledge-model',generate:true}));
   assert.deepEqual(known.citations,['known-error:'+problem.id]);
   problem=check(await api(`/problems/${problem.id}/known-error`,{revision:problem.revision,cause:'Corrected root cause',evidenceIds:['corrected-probe']}));
