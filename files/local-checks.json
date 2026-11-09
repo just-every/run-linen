@@ -45,5 +45,34 @@
   "test_file_sha256": "06e7a35ffeff8ce6f5be723dc6bc585e65af47e2a8519d9648def8b5f89232ec",
   "status_table_unchanged": true,
   "new_test_registrations": 0,
-  "removed_assertions": 0
+  "removed_assertions": 0,
+  "verify": {
+    "conclusion": "success",
+    "event": "pull_request",
+    "head_sha": "ee0d7bc3920544d0e73ddbbf110209db64d7115e",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42616943517",
+    "id": 42616943517,
+    "name": "Verify",
+    "status": "completed",
+    "checked_at": "2026-11-09T12:40:57.049375+00:00"
+  },
+  "counts_before": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37
+  },
+  "counts_after": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37
+  },
+  "clause_claim": {
+    "id": "CATALOG-004",
+    "status": "PARTIAL",
+    "selected_points": [
+      3,
+      5
+    ],
+    "scope": "shared child facts and native child capacity with no grant creation only"
+  }
 }

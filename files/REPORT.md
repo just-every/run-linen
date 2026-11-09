@@ -72,7 +72,7 @@ CATALOG-004 is claimed PARTIAL, with only the selected native parts of points 3 
 | --- | --- | --- |
 | 1 | PASS for selected native outcomes; full clause not claimed DONE | R1–R6 reach the actual public doors and inspect nonempty results; held remainder stays named |
 | 2 | PASS for selected native outcomes | Positive capacity and exhausted controls; non-manager denial with unchanged state, bundleChecks lines 47–79 |
-| 3 | CI status recorded below | Existing Verify invokes this journey; exact-head run must be green before landing |
+| 3 | PASS | Pull-request Verify 42616943517 completed with success on the exact candidate, invoking the existing manager and bundle journey |
 | 4 | PASS | Actual runtime receipt binds the committed candidate and test digest |
 | 5 | UNCHANGED | No receiving-clause text, inheritance claim or Base adoption changed; no additional inherited duty certified |
 | 6 | PASS mechanical; status writer deferred | Contract generator check passes; source status, Gap, Evidence, summary and generated views are untouched |
@@ -82,7 +82,7 @@ CATALOG-004 is claimed PARTIAL, with only the selected native parts of points 3 
 | 10 | NOT APPLICABLE | No new custody, consent, spending or authority default |
 | 11 | PENDING FLEET | Branch-only candidate; fleet owns exact-main equality, COMPLETE full-history scan with zero findings and exact resulting Run site |
 
-Pre-READY: selected behavior has public-door assertions and the exact-candidate local run passed. No existing assertion was removed or narrowed. The diff changes only proof and its lock digest, so erasure, replay, credential revocation and production authority behavior are unchanged; the new journey additionally refuses the wrong decision holder without state change. No screen is touched. Lock freshness passes. Exact-head CI is recorded below; publication scan and resulting Run site remain fleet work. No overall DONE count is claimed.
+Pre-READY: selected behavior has public-door assertions and the exact-candidate local run passed. No existing assertion was removed or narrowed. The diff changes only proof and its lock digest, so erasure, replay, credential revocation and production authority behavior are unchanged; the new journey additionally refuses the wrong decision holder without state change. No screen is touched. Lock freshness passes. Exact-head pull-request Verify 42616943517 is green; publication scan and resulting Run site remain fleet work. No overall DONE count is claimed.
 
 Publication scan record: {"commit":"ee0d7bc3920544d0e73ddbbf110209db64d7115e","status":"NOT RUN in cloud; fleet lander required","complete":null,"historyScanned":null,"findings":null}.
 
@@ -90,4 +90,6 @@ The last fetched main was 8cbb5da69a36002c032436b861772e8fb3f6247e; it is the ca
 
 ## Candidate CI and handoff
 
-Exact-head pull-request Verify run 42616943517 was in progress at the latest REST discovery, 2026-11-09T12:30:49Z. See candidate-runs.json; verify-run.json will carry the subsequent exact-head response. The product-receipt.json separately verifies the advertised product ref equals the full candidate SHA. No green result from the base is credited to this candidate. No full-suite local verification, extra provider journey, workflow edit, main push or direct landing was performed. No blocker was found in the selected native scope. CATALOG-004 remains PARTIAL for the held remainder stated above.
+Exact-head pull-request Verify run 42616943517 completed with success, confirmed by REST at 2026-11-09T12:40:57.049375+00:00. See candidate-runs.json for the original discovery and verify-run.json for the final exact-head response. The product-receipt.json separately verifies the advertised product ref equals the full candidate SHA. No green result from the base is credited to this candidate. No full-suite local verification, extra provider journey, workflow edit, main push or direct landing was performed. No blocker was found in the selected native scope. CATALOG-004 remains PARTIAL for the held remainder stated above.
+
+Final CI: https://github.com/just-every/run-linen/actions/runs/42616943517 — pull_request, completed, success, head ee0d7bc3920544d0e73ddbbf110209db64d7115e. Six explicit GitHub API calls were used, including PR creation and base health discovery; candidate reads were separated by at least 300 seconds. No dispatch, rerun, repair, or failed-job log read was needed. No known failing candidate check remains. The packet is report-only; it does not certify publication acceptance or landing.
