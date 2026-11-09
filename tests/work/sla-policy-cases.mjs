@@ -134,8 +134,50 @@ export async function slaPolicyChecks(workspaceApi, db) {
   }
   check(await api(`/work/${a.id}/sla`, undefined, auditor), 404);
   check(await api(period, undefined, requester), 403);
+  await holidayCalendarChecks(workspaceApi, db);
   console.log('PROBE DESK-020 4: distinct active operator and auditor GET permitted business and calendar ticket targets and explicit period report -> 200, bound targets and exact breach times, five normal rows and breaches, one met next response; restricted, HR and end-boundary rows excluded; requester reads 403; unrelated auditor ticket read 404');
   console.log('PASS DESK-004 public routes: ordered policies by priority/category/requester group, business or calendar hours, US federal holiday catalog per location calendar, first/next/resolution targets, waiting-on pauses, breaches on ticket and report');
+}
+
+/** DESK-004 point 5: the federal catalog's observed dates and Inauguration Day, beside an owner's listed dates, change real due times. */
+async function holidayCalendarChecks(workspaceApi, db) {
+  await db.exec(`INSERT INTO workspaces VALUES('desk004cal','Desk 004 calendars','2026-01-01'); INSERT INTO memberships VALUES('desk004cal','owner','["owner"]',1); INSERT INTO memberships VALUES('desk004cal','employee','["employee"]',1);`);
+  const api = (path, body, headers = {}) => workspaceApi(path, body, { 'x-workspace': 'desk004cal', 'x-test-now': '2026-01-30T12:00:00.000Z', ...headers });
+  const employee = { 'x-user': 'employee', 'x-roles': '["employee"]' };
+  const check = (r, status = 200) => { assert.equal(r.status, status, 'DESK-004 calendar ' + JSON.stringify(r)); return r.value; };
+  const office = { location: 'New York', timezone: 'America/New_York', weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17 };
+  // Three calendars on the same hours: the catalog alone, the catalog beside an owner-listed Monday 6 July 2026, and the listed Monday alone.
+  const catalog = check(await api('/calendars', { ...office, name: 'Catalog only', holidays: [], holidayCatalog: 'us-federal' }), 201);
+  const combined = check(await api('/calendars', { ...office, name: 'Catalog and listed', holidays: ['2026-07-06'], holidayCatalog: 'us-federal' }), 201);
+  const listed = check(await api('/calendars', { ...office, name: 'Listed only', holidays: ['2026-07-06'], holidayCatalog: null }), 201);
+  const bind = (name, position, priority, calendarId) => api('/sla-policies', { name, position, priority, calendarId, firstResponseMinutes: 45, nextResponseMinutes: 30, resolutionMinutes: 60 });
+  check(await bind('Catalog only P1', 1, 'P1', catalog.id), 201);
+  check(await bind('Catalog and listed P3', 2, 'P3', combined.id), 201);
+  check(await bind('Listed only P4', 3, 'P4', listed.id), 201);
+  async function due(key, priority, openedAt) {
+    const work = check(await api('/work', { title: `Calendar ${key}`, body: 'The floor printer is offline.', deduplicationKey: `sla-cal-${key}` }, employee), 201);
+    // Test time fixture: the ticket was opened at the given instant.
+    await db.prepare('UPDATE work_records SET created_at=? WHERE id=?').bind(openedAt, work.id).run();
+    const current = check(await api(`/work/${work.id}`)).work;
+    check(await api(`/work/${work.id}/classification/override`, { type: 'incident', category: 'hardware', subcategory: 'printer', impact: 'medium', urgency: 'high', priority, revision: 0, workRevision: current.revision, reason: 'Floor printer is down for a team.' }));
+    const clock = check(await api(`/work/${work.id}/sla`));
+    assert.equal(clock.workId, work.id);
+    return [clock.policy.name, clock.firstResponse.dueAt, clock.resolution.dueAt];
+  }
+  // Thursday 2 July 2026, 4:30 pm EDT: 30 working minutes remain. Saturday 4 July is observed Friday 3 July, so the rest waits for Monday 6 July.
+  assert.deepEqual(await due('sat', 'P1', '2026-07-02T20:30:00.000Z'), ['Catalog only P1', '2026-07-06T13:15:00.000Z', '2026-07-06T13:30:00.000Z'],
+    'DESK-004 a Saturday holiday is observed the Friday before: Friday 3 July is skipped, the target lands Monday 9:30 am');
+  // Friday 2 July 2027, 4:30 pm EDT: Sunday 4 July is observed Monday 5 July, so the rest waits for Tuesday 6 July.
+  assert.deepEqual(await due('sun', 'P1', '2027-07-02T20:30:00.000Z'), ['Catalog only P1', '2027-07-06T13:15:00.000Z', '2027-07-06T13:30:00.000Z'],
+    'DESK-004 a Sunday holiday is observed the Monday after: Monday 5 July is skipped, the target lands Tuesday 9:30 am');
+  // Wednesday 19 January 2033, 4:30 pm EST: Thursday 20 January is Inauguration Day, an ordinary working day in the catalog.
+  assert.deepEqual(await due('inauguration', 'P1', '2033-01-19T21:30:00.000Z'), ['Catalog only P1', '2033-01-20T14:15:00.000Z', '2033-01-20T14:30:00.000Z'],
+    'DESK-004 Inauguration Day is excluded from the catalog: Thursday 20 January 2033 counts as working time');
+  // The owner's listed Monday 6 July and the catalog's observed Friday 3 July both apply together; either alone moves the target less.
+  assert.deepEqual(await due('combined', 'P3', '2026-07-02T20:30:00.000Z'), ['Catalog and listed P3', '2026-07-07T13:15:00.000Z', '2026-07-07T13:30:00.000Z'],
+    'DESK-004 owner-listed dates add to the federal catalog: Friday (catalog) and Monday (listed) are both skipped, the target lands Tuesday 9:30 am');
+  assert.deepEqual(await due('listed', 'P4', '2026-07-02T20:30:00.000Z'), ['Listed only P4', '2026-07-03T13:15:00.000Z', '2026-07-03T13:30:00.000Z'],
+    'DESK-004 without the catalog only the listed date applies: the observed Friday 3 July is a working day');
 }
 
 /** DESK-005: escalation levels before and after an SLA breach and the awaiting-requester reminder rule, through public routes and the scheduler duty. */
