@@ -1,0 +1,21 @@
+Original main CSS, normal-motion hover, after tooltip settles; same duration equality as response-journey.mjs:53
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+'0.08s' !== '0s'
+
+    at file:///tmp/linen-tooltip-before-assertion.mjs:14:9
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processImmediate (node:internal/timers:502:9) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '0.08s',
+  expected: '0s',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

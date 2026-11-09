@@ -1,0 +1,171 @@
+{
+  "tag": "sx-linen-f19fix1-merge-fix",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-f19fix1-merge-fix",
+  "head": "3a902ef8a1189ca94d1cc9a0c4f455c5381c213f",
+  "parents": [
+    "fc7a01bf5e248f098736700955713f752a93a7b3",
+    "f9dcb5212d7beca66a3c926de9bcf4c2b4f56812"
+  ],
+  "merged_main": "f9dcb5212d7beca66a3c926de9bcf4c2b4f56812",
+  "candidate": "fc7a01bf5e248f098736700955713f752a93a7b3",
+  "checks": [
+    {
+      "name": "Public RER setup",
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit_code": 0,
+      "private_setup_log_excluded": true
+    },
+    {
+      "name": "Baseline public RER build",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit_code": 0,
+      "evidence": "build-before.log"
+    },
+    {
+      "name": "Updated public RER build",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit_code": 0,
+      "evidence": "build-after.log"
+    },
+    {
+      "name": "Baseline focused responseJourney",
+      "command": "LINEN_PROBE_ONLY=1 node tests/ui/connected-run.mjs /tmp/linen-targeted-browser.mjs",
+      "exit_code": 0,
+      "evidence": "before.log"
+    },
+    {
+      "name": "Baseline complete connected browser and restart",
+      "command": "node tests/ui/connected-run.mjs",
+      "exit_code": 0,
+      "evidence": "full-before.log"
+    },
+    {
+      "name": "Original CSS hover duration equality",
+      "command": "node /tmp/linen-tooltip-before-assertion.mjs",
+      "exit_code": 1,
+      "expected_failure": true,
+      "actual": "0.08s",
+      "expected": "0s",
+      "evidence": "tooltip-before-assertion.log"
+    },
+    {
+      "name": "Native applicationJourney, lifecycleTemplateJourney, unsentReplyJourney, responseJourney and reduced motion",
+      "command": "node tests/ui/connected-run.mjs /tmp/linen-targeted-browser.mjs",
+      "exit_code": 0,
+      "assertion_width": 1440,
+      "proof_widths": [
+        1440,
+        390
+      ],
+      "evidence": "after.log"
+    },
+    {
+      "name": "ACCESS-008 point 3, LIFE-002 and numeric search public-route checks",
+      "command": "node /tmp/linen-targeted-runtime.mjs",
+      "exit_code": 0,
+      "evidence": "runtime.log"
+    },
+    {
+      "name": "Typecheck",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "evidence": "typecheck.log"
+    },
+    {
+      "name": "Contract generated views",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit_code": 0,
+      "evidence": "contract-check.log"
+    },
+    {
+      "name": "Source lock",
+      "command": "node scripts/edition-authoring/cli.mjs lock && node scripts/edition-authoring/cli.mjs check",
+      "exit_code": 0,
+      "lock_sha256": "b78286c4560f8f71b5c88e88e05222c40aa9991a0b938eb42d06eb16f3eaf24c"
+    },
+    {
+      "name": "Whitespace and merge integrity",
+      "command": "git diff --check; main contracts, ID map, generated views and response journey compared byte-for-byte",
+      "exit_code": 0
+    },
+    {
+      "name": "Committed source lock",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit_code": 0,
+      "ok": true
+    }
+  ],
+  "push": {
+    "exit_code": 0,
+    "attempts": 1,
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-f19fix1-merge-fix",
+    "verified_remote_ref": "3a902ef8a1189ca94d1cc9a0c4f455c5381c213f\trefs/heads/cloud/sx-linen-f19fix1-merge-fix"
+  },
+  "pr": {
+    "number": 171,
+    "url": "https://github.com/just-every/run-linen/pull/171",
+    "draft": true
+  },
+  "ci": {
+    "run_id": 42556940934,
+    "head_sha": "3a902ef8a1189ca94d1cc9a0c4f455c5381c213f",
+    "status": "completed",
+    "api_calls_used": 5,
+    "last_observation": {
+      "conclusion": "success",
+      "head_sha": "3a902ef8a1189ca94d1cc9a0c4f455c5381c213f",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42556940934",
+      "status": "completed",
+      "observed_at": "2026-11-09T03:47:32.185018+00:00",
+      "poll": 3
+    },
+    "conclusion": "success"
+  },
+  "product_clause_status_changes": 0,
+  "test_registrations_added": 0,
+  "verification_check_registrations_before": 31,
+  "verification_check_registrations_after": 31,
+  "contract_counts_candidate": {
+    "done": 21,
+    "partial": 141,
+    "missing": 37,
+    "total": 199
+  },
+  "contract_counts_main_and_final": {
+    "done": 24,
+    "partial": 138,
+    "missing": 37,
+    "total": 199
+  },
+  "created_at": "2026-11-09T03:34:02.486507+00:00",
+  "contract_status_changes_inherited_from_main": {
+    "DESK-008": [
+      "partial",
+      "done"
+    ],
+    "DESK-011": [
+      "partial",
+      "done"
+    ],
+    "KB-001": [
+      "partial",
+      "done"
+    ]
+  },
+  "baseline_reproduction_limitation": "The unchanged native response journey passed before the fix in this VM; only the isolated normal-hover CSS strict equality reproduced the 0.08s versus 0s failure. Reduced motion already measured 0s before the fix.",
+  "toolchain": {
+    "node": "v24.19.0",
+    "pnpm": "10.12.4",
+    "rer_managed_node": "22.20.0",
+    "chromium": "/usr/bin/chromium",
+    "chromium_arguments": [
+      "--no-sandbox",
+      "--use-mock-keychain",
+      "--password-store=basic"
+    ]
+  },
+  "terminal_product_status": "READY",
+  "blockers": [],
+  "finished_at": "2026-11-09T03:48:03.617729+00:00"
+}
