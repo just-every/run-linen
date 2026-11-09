@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 export async function relationshipChecks(api,db) {
   // Other journeys deliberately erase the shared employee. These are fresh
   // authenticated fixture subjects; no erased identity is revived for this flow.
-  const employeeId='synthetic-linen-14011',requesterId='synthetic-linen-14012';
-  for(const [id,name] of [[employeeId,'Jordan Lee'],[requesterId,'Taylor Reed']])await db.batch([
+  const employeeId='synthetic-linen-14011',requesterId='synthetic-linen-14012',staffId='synthetic-linen-14013';
+  for(const [id,name,roles] of [[employeeId,'Jordan Lee',['employee']],[requesterId,'Taylor Reed',['employee']],[staffId,'Morgan Chen',['operator']]])await db.batch([
     db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind(id,id+'@example.test',name,'unused','2026-01-01'),
-    db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('a',id,'["employee"]'),
+    db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('a',id,JSON.stringify(roles)),
   ]);
   const employee = { 'x-user': employeeId, 'x-roles': '["employee"]' }, requester = { 'x-user': requesterId, 'x-roles': '["employee"]' };
+  const staff = { 'x-user': staffId, 'x-roles': '["operator"]' };
   const make = async (path, body, headers, status = 201) => { const r = await api(path, body, headers); assert.equal(r.status, status, 'DESK-006 ' + JSON.stringify(r)); return r.value; };
   const classify = async (work, priority) => make(`/work/${work.id}/classification/override`, { type: 'incident', category: 'hardware', subcategory: 'printer', impact: 'low', urgency: 'low', priority, revision: 0, workRevision: (await make(`/work/${work.id}`, undefined, undefined, 200)).work.revision, reason: 'Desk triage' }, undefined, 200);
 
@@ -33,14 +34,35 @@ export async function relationshipChecks(api,db) {
   await make(`/work/${survivor.id}/commands`, { revision: 1, command: 'cancel', reason: 'Not mine' }, requester, 404);
 
   // Split a ticket carrying two unrelated asks; the new ticket keeps its own SLA and history, linked to the original messages.
-  const mixed = await make('/work', { title: 'Laptop slow and need a monitor', body: 'My laptop is slow.', deduplicationKey: 'desk006-split' }, employee);
+  const mixed = await make('/work', { title: 'Laptop slow and need a monitor', body: 'My laptop is slow.', beneficiaryId: employeeId, deduplicationKey: 'desk006-split' }, staff);
   const ask = await make(`/work/${mixed.id}/messages`, { body: 'Also, can I get a second monitor?', visibility: 'public', sourceMessageId: 'desk006-monitor' }, employee);
+  const detail = await make(`/work/${mixed.id}/messages`, { body: 'The monitor should connect to the laptop dock.', visibility: 'public', sourceMessageId: 'synthetic-linen-14014' }, staff);
+  const privateNote = await make(`/work/${mixed.id}/messages`, { body: 'Check the internal equipment budget.', visibility: 'private', sourceMessageId: 'synthetic-linen-14015' }, staff);
   await classify(mixed, 'P4');
+  const original = await make(`/work/${mixed.id}`, undefined, undefined, 200);
+  assert.deepEqual([original.work.requester_id, original.work.beneficiary_id, original.work.sensitivity], [staffId, employeeId, 'normal'], 'DESK-006 staff file a normal request for a different active beneficiary');
   await make(`/work/${mixed.id}/split`, { title: 'Second monitor', messageIds: ['not-a-message'], reason: 'Separate ask' }, undefined, 422);
-  const split = await make(`/work/${mixed.id}/split`, { title: 'Second monitor', messageIds: [ask.id], reason: 'Separate ask' });
+  await make(`/work/${mixed.id}/split`, { title: 'Second monitor', messageIds: [privateNote.id], reason: 'Separate ask' }, undefined, 422);
+  const split = await make(`/work/${mixed.id}/split`, { title: 'Second monitor', messageIds: [ask.id, detail.id], reason: 'Separate ask' });
   const child = await make(`/work/${split.workId}`, undefined, employee, 200);
-  assert.equal(child.work.requester_id, employeeId); assert.equal(child.work.split_from, mixed.id);
+  assert.equal(child.work.requester_id, staffId); assert.equal(child.work.split_from, mixed.id);
   assert.ok(child.messages.some(m => m.source_key === `split:${ask.id}` && m.body === ask.body), 'DESK-006 the split ticket links back to the original message');
+  for (const who of [staff, employee]) {
+    const sourceView = await make(`/work/${mixed.id}`, undefined, who, 200);
+    const childView = await make(`/work/${split.workId}`, undefined, who, 200);
+    for (const view of [sourceView, childView]) assert.deepEqual([view.work.requester_id, view.work.beneficiary_id], [staffId, employeeId], 'DESK-006 both readers see the same distinct requester and beneficiary on both tickets');
+    const expectedCopies = [ask, detail].map(m => ({ source: `split:${m.id}`, body: m.body, author: m.author_id, at: m.created_at })).sort((a, b) => a.source.localeCompare(b.source));
+    const copies = childView.messages.filter(m => m.source_key.startsWith('split:'));
+    assert.deepEqual(copies.map(m => ({ source: m.source_key, body: m.body, author: m.author_id, at: m.created_at })).sort((a, b) => a.source.localeCompare(b.source)), expectedCopies, 'DESK-006 each chosen public message cites its original and preserves its content and attribution for both readers');
+    assert.ok(copies.every(m => m.work_id === split.workId && ![ask.id, detail.id].includes(m.id)), 'DESK-006 copies are new messages owned by the child ticket');
+    const sourceMessages = sourceView.messages.filter(m => [ask.id, detail.id].includes(m.id));
+    assert.deepEqual(sourceMessages, original.messages.filter(m => [ask.id, detail.id].includes(m.id)), 'DESK-006 splitting preserves the original messages');
+    assert.ok(!childView.messages.some(m => m.body === privateNote.body || m.body === 'My laptop is slow.'), 'DESK-006 the child contains no private or unselected original message');
+    assert.ok(sourceView.messages.some(m => m.source_key === `split-to:${split.workId}`), 'DESK-006 both original readers see the new ticket reference');
+    assert.ok(childView.messages.some(m => m.source_key === `split-from:${mixed.id}`), 'DESK-006 both child readers see the original ticket reference');
+  }
+  assert.deepEqual((await make(`/work/${mixed.id}`, undefined, undefined, 200)).messages.filter(m => original.messages.some(old => old.id === m.id)), original.messages, 'DESK-006 the split leaves all original public and private messages unchanged');
+  await make(`/work/${split.workId}`, undefined, requester, 404);
   assert.ok((await make(`/work/${mixed.id}`, undefined, employee, 200)).messages.some(m => m.source_key === `split-to:${split.workId}`));
   assert.ok((await make(`/work/${split.workId}/sla`, undefined, undefined, 200)).policy, 'DESK-006 the split ticket binds its own SLA');
   assert.deepEqual((await make(`/work/${mixed.id}/relationships`, undefined, undefined, 200)).splitInto.map(w => w.id), [split.workId]);
@@ -99,7 +121,7 @@ export async function relationshipChecks(api,db) {
   }
   await make(`/work/${survivor.id}/activity`, undefined, { 'x-workspace': 'other' }, 404);
   console.log('PASS DESK-017 relationship history: merge state and both pointers, split on both tickets, parent set/clear, asset/problem/issue links, actor/time/before/after, append-only edits, replay/refusal and public-only requester/participant views');
-  console.log('PASS DESK-006 public routes: merged duplicate closes with pointer, both requesters informed, public-only participant, HR merge refused; split with cited messages, own SLA and parent/child (cycle refused); asset/problem/engineering-issue links shown on each record');
+  console.log('PASS DESK-006 public routes: merged duplicate closes with pointer, both requesters informed, public-only participant, HR merge refused; split preserves distinct staff requester and beneficiary for both readers, selected public message copies and originals, own SLA and history; existing record links and parent cycle refusal');
 }
 
 /** CHANNEL-009: share a request with a colleague (public thread, reply, never private notes; audited and revocable),
