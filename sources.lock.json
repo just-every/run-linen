@@ -7368,7 +7368,7 @@
       "executable": false
     },
     "tests/work/knowledge-draft-cases.mjs": {
-      "sha256": "40ecc92b5ba5d7f5bb6dbeaf6261b0f120b9b7fcb30c5c436084e19320edda81",
+      "sha256": "e75863d663aecfe84d126ba3aa907e213217788243f253f6be132ccd78ebcd88",
       "executable": false
     },
     "tests/work/knowledge-draft-runtime.mjs": {
