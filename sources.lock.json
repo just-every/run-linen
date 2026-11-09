@@ -7060,7 +7060,7 @@
       "executable": false
     },
     "tests/ui/desk-console-journeys.mjs": {
-      "sha256": "516f522809820ebe0c7f887b39c9093d63b10bb030cb672228c23b0540b154e7",
+      "sha256": "1d53bde1a56e6893ce9b13123982e76f093713eed83387f5b45377888907bfe7",
       "executable": false
     },
     "tests/ui/desk-field-journey.mjs": {
@@ -7340,7 +7340,7 @@
       "executable": false
     },
     "tests/work/desk-scenario-cases.mjs": {
-      "sha256": "b396addf93675f608e6a8a454e3a152242b3691e022c55d816289d10378d1a4b",
+      "sha256": "0a9c8bbce5ca98b24b7b294fedd5cb36148664f3331d67383eb550b3591cea91",
       "executable": false
     },
     "tests/work/fulfilment-link-runtime.mjs": {

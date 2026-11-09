@@ -93,6 +93,7 @@ export async function deskScenarioChecks(workspaceApi, db) {
   assert.equal(check(await api(`/work/${hrTicket.id}`, undefined, hr)).work.id, hrTicket.id);
   check(await api(`/work/${hrTicket.id}/fields`, { fieldId: office.id, value: 'Denver' }, hr));
   const hrChanges = [];
+  const hrAudits = [];
   for (const [command, beforeState, afterState, beforeValue, value] of [
     ['pause', 'open', 'paused', 'Denver', 'Austin'],
     ['resume', 'paused', 'open', 'Austin', 'Denver'],
@@ -108,6 +109,27 @@ export async function deskScenarioChecks(workspaceApi, db) {
     assert.equal(current.state, beforeState);
     const applied = check(await api(`/work/${hrTicket.id}/scenario-runs`, { scenarioId: allowed.id, revision: current.revision }, hr));
     assert.equal(applied.work.state, afterState);
+    const conversation = check(await api(`/work/${hrTicket.id}`, undefined, hr));
+    assert.deepEqual([conversation.work.state, conversation.work.revision], [afterState, current.revision + 1],
+      'DESK-015 the permitted HR scenario persists its state and advances the ticket revision');
+    assert.equal(applied.work.revision, conversation.work.revision);
+    assert.equal(conversation.work.paused_at !== null, command === 'pause');
+    const deskState = check(await api(`/work/${hrTicket.id}/desk`, undefined, hr));
+    if (command === 'close') {
+      assert.deepEqual([deskState.resolution.code, deskState.resolution.closeNotes, deskState.resolution.resolvedBy],
+        [allowed.steps.status.resolutionCode, allowed.steps.status.reason, 'Hollis HR']);
+      assert.equal(deskState.resolution.resolvedAt, conversation.work.closed_at);
+      assert.ok(Number.isFinite(Date.parse(conversation.work.closed_at)));
+      assert.ok(conversation.messages.some(m => m.visibility === 'public' && m.author_id === 'd15-hr' && m.body.includes(deskState.resolution.closeNotes)),
+        'DESK-015 the HR close persists its public closing reason');
+    } else {
+      assert.equal(deskState.resolution, null);
+      assert.equal(conversation.work.closed_at, null);
+      const transition = check(await api(`/work/${hrTicket.id}/activity`)).items.filter(e => e.action === 'transitioned').at(-1);
+      assert.deepEqual(transition.changes.find(c => c.field === 'waitingOn'),
+        { field: 'waitingOn', before: command === 'pause' ? 'none' : 'requester', after: command === 'pause' ? 'requester' : 'none' },
+        'DESK-015 the HR pause names its requester wait and resume clears it');
+    }
     assert.equal(check(await api(`/work/${hrTicket.id}/desk`, undefined, hr)).fields.find(f => f.id === office.id).value, value);
     const expected = [
       { step: 'fields', field: 'Office', before: beforeValue, after: value },
@@ -117,10 +139,13 @@ export async function deskScenarioChecks(workspaceApi, db) {
     const persisted = check(await api(`/work/${hrTicket.id}/scenario-runs`, undefined, hr)).items;
     assert.equal(persisted.length, hrChanges.length, 'DESK-015 one persisted audit per permitted HR run');
     assert.deepEqual(persisted.map(r => r.changes), hrChanges, 'DESK-015 HR audit retains every original before and after');
+    assert.deepEqual(persisted.slice(0, -1), hrAudits,
+      'DESK-015 later HR runs preserve earlier audit attribution, timestamps and changes verbatim');
     const latest = persisted.at(-1);
     assert.deepEqual([latest.scenarioId, latest.name, latest.actorId, latest.errorCode], [allowed.id, allowed.name, 'd15-hr', undefined]);
     assert.ok(Number.isFinite(Date.parse(latest.at)), 'DESK-015 permitted HR run has an attributed timestamp');
     assert.deepEqual(applied.changes, expected);
+    hrAudits.push(latest);
   }
   const hrBeforeRefusal = check(await api(`/work/${hrTicket.id}`, undefined, hr));
   const hrDeskBeforeRefusal = check(await api(`/work/${hrTicket.id}/desk`, undefined, hr));

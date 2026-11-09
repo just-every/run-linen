@@ -321,6 +321,26 @@ export async function deskScenarioJourney({browser,page,api,base,out,errors}) {
   await ap.reload();
   await panel.getByRole('list', { name: 'Scenario changes' }).getByText('state: open → paused').waitFor();
   assert.deepEqual((await api(`/work/${vpn.id}/scenario-runs`)).items, [ticketRun], 'DESK-015 the phone run and audit survive reload');
+  const inspectRun = async (work, run, label) => {
+    await ap.goto(`${base}/app#/work/${work.id}`);
+    await ap.getByRole('heading', { level: 2, name: work.title, exact: true }).waitFor();
+    for (const width of [1440, 390]) {
+      await ap.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
+      const saved = panel.getByRole('list', { name: 'Scenario changes' });
+      await saved.getByText('category: none → network', { exact: true }).waitFor();
+      await saved.getByText('priority: none → P2', { exact: true }).waitFor();
+      await saved.getByText('state: open → paused', { exact: true }).waitFor();
+      await saved.getByText('private note: none → added', { exact: true }).waitFor();
+      await saved.getByRole('link', { name: 'Network recovery duties', exact: true }).waitFor();
+      const event = ap.getByRole('list', { name: 'Ticket activity', exact: true })
+        .locator(':scope > li').filter({ hasText: 'Scenario · Escalate to Network L2 · Scenario run' });
+      await event.getByText('Category: none → network', { exact: true }).waitFor();
+      await event.getByText(`Initiated by ${dana.id}`, { exact: true }).waitFor();
+      assert.deepEqual((await api(`/work/${work.id}/scenario-runs`)).items, [run]);
+      await captureJourney(ap, { path: `${out}/DESK-015-${label}-saved-${width}.png`, fullPage: true });
+    }
+  };
+  await inspectRun(vpn, ticketRun, 'ticket');
   // Keep the existing desktop shortcut-reference assertion after the phone execution proof.
   await ap.setViewportSize({ width: 1440, height: 1000 });
   await ap.locator('#main-content').focus();
@@ -428,6 +448,7 @@ export async function deskScenarioJourney({browser,page,api,base,out,errors}) {
   await captureJourney(ap, { path: `${out}/DESK-015-bulk-scenario.png`, fullPage: true });
   await ap.reload();
   for (const [i, w] of [a, b].entries()) assert.deepEqual((await api(`/work/${w.id}/scenario-runs`)).items, [bulkRuns[i]], 'DESK-015 bulk audits survive reload');
+  for (const [i, w] of [a, b].entries()) await inspectRun(w, bulkRuns[i], `bulk-${i + 1}`);
   console.log('PROBE DESK-015 8: keyboard ticket run and fresh two-ticket bulk run at innerWidth 390 -> persisted category, priority, group, state, private note, linked plan and attributed audits; end states captured at 1440 and 390');
   await agent.close();
 
