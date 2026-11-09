@@ -1,0 +1,115 @@
+{
+  "tag": "sx-linen-c-f60",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f60",
+  "head": "c11a8f51cb5d1fe94368e5cd8ed7ecf7a32c5bd8",
+  "base_main": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+  "product_pushed": true,
+  "changed_files": [
+    "sources.lock.json",
+    "tests/work/sla-policy-cases.mjs"
+  ],
+  "counts_before": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37
+  },
+  "counts_after": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37
+  },
+  "clause": "DESK-023",
+  "status": "PARTIAL",
+  "selected_point": "6 automatic-close guard only",
+  "contract_diff_empty": true,
+  "generated_view_diff_empty": true,
+  "test_registrations_added": 0,
+  "existing_assertions_removed": 0,
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email <fleet identity> --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log",
+      "tested_file_sha256": "3e2d20fdc62269b81c6dda5efcd365e9c5ee33cd998c6c5a78ffd38840be04a6"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write then check; restore views from origin/main",
+      "exit": 0,
+      "log": "contract-views.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock then check",
+      "exit": 0,
+      "tested_file_lock_matches": true
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "git fetch origin main then git rebase origin/main",
+      "exit": 0,
+      "result": "up to date"
+    },
+    {
+      "command": "python3 /tmp/fleet-audit.py",
+      "exit": 0,
+      "log": "identity-audit.txt"
+    }
+  ],
+  "mechanical": {
+    "lock_exit": 0,
+    "views_exit": 0,
+    "ledger": "none; no migration change"
+  },
+  "publication_scan": {
+    "status": "not run in cloud; fleet duty",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "main_equals_candidate": false,
+  "run_site_candidate": null,
+  "pr": {
+    "draft": true,
+    "head_sha": "c11a8f51cb5d1fe94368e5cd8ed7ecf7a32c5bd8",
+    "html_url": "https://github.com/just-every/run-linen/pull/193",
+    "number": 193
+  },
+  "github_api_calls_used": 3,
+  "ci": [
+    {
+      "conclusion": null,
+      "event": "pull_request",
+      "head_sha": "c11a8f51cb5d1fe94368e5cd8ed7ecf7a32c5bd8",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42616925936",
+      "id": 42616925936,
+      "name": "Verify",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": null,
+      "event": "dynamic",
+      "head_sha": "c11a8f51cb5d1fe94368e5cd8ed7ecf7a32c5bd8",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42616921436",
+      "id": 42616921436,
+      "name": "PR #193",
+      "status": "in_progress"
+    }
+  ]
+}
