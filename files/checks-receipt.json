@@ -97,5 +97,15 @@
     "sources.lock.json"
   ],
   "new_email_shaped_strings": [],
-  "subreaper_children_remaining": false
+  "subreaper_children_remaining": false,
+  "candidate_ci": {
+    "conclusion": null,
+    "head_sha": "4c8dfa45d348a79c60df4135c91e24a3e2dc380c",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42588077189",
+    "status": "in_progress",
+    "run_id": 42588077189,
+    "observed_at": "2026-11-09T08:54:22Z"
+  },
+  "github_api_calls": 5,
+  "custody": "PUSHED; exact-SHA Verify in progress, guarded landing pending"
 }

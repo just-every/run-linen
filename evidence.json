@@ -7,10 +7,10 @@
       "sha256": "07d71ec7d7197171cbe8ab8dddb493fa48bf569eae28a387d17c31114fca6cd9"
     },
     {
-      "blob": "e03c184c4dac6259fc85b3d85de236a83d25cdd6",
-      "bytes": 12712,
+      "blob": "72564d3d3a61d1b529325c77130a4ecb53d568c2",
+      "bytes": 13813,
       "path": "REPORT.md",
-      "sha256": "add7b5300560ff76d6c1db5fab827b50b30ef6ad372ac8380fd5ecf7f931a49f"
+      "sha256": "bde74c6762b86f40da676586725c2844e4d3b7abb540346f5f77f4eee035ba25"
     },
     {
       "blob": "fe51488c7066f6687ef680d6bfaa4f7768ef205c",
@@ -25,10 +25,16 @@
       "sha256": "71131de3b4814343f011bcc94904f00a4466f7995686dc12f49d90fb02093b9a"
     },
     {
-      "blob": "965f79853ee5fb0e2b3427d38f09fe991860e408",
-      "bytes": 3025,
+      "blob": "9d956a6b3632b52102a18f60c11e5c2153a692ca",
+      "bytes": 175,
+      "path": "candidate-verify.json",
+      "sha256": "e9de2e311a977f6cea74d185ea42e45ee76e990cd1ea358399d9f7cdbd67d7ca"
+    },
+    {
+      "blob": "f998751de1577b264e1b284d1ff0f17cf43d7895",
+      "bytes": 3419,
       "path": "checks-receipt.json",
-      "sha256": "8ce3016b973357f81b374a1337deb2dfc0a8edc9e9b76534be16f42f0ea186ca"
+      "sha256": "02daf2d61771769671beaf81e19b7c4f82e844d94b6b2b408f92ed5b126e4802"
     },
     {
       "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",

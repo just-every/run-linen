@@ -93,3 +93,9 @@ Main equality: NOT EQUAL, expected for branch handoff. Remote main was e9aa94360
 No product blocker was found in the selected point. Remaining clause proof and external holds are gaps, not silently waived. All report and receipt files are selected explicitly for report-only evidence publication; no credentials, local setup environment, sign-in material, held-out gates or symlinks are selected.
 
 Candidate CI observation (2026-11-09T08:49:13Z): pull_request Verify 42588077189, head 4c8dfa45d348a79c60df4135c91e24a3e2dc380c, status in_progress, conclusion null. No run was dispatched or rerun. GitHub API calls used so far: four (main discovery, PR creation, two candidate discoveries), with at least 300 seconds between candidate observations. The exact-head dynamic PR workflow 42588072747 succeeded; it is not a substitute for Verify.
+
+Final candidate CI observation (2026-11-09T08:54:22Z): Verify 42588077189 remains in_progress with conclusion null on exact head 4c8dfa45d348a79c60df4135c91e24a3e2dc380c. candidate-verify.json is the actual REST receipt. Five GitHub API calls were used. No workflow dispatch, rerun or failed-job log request was made. No real check failure is known. Product custody is PUSHED while Verify is pending; no completed/success result or landing is claimed. The cloud brief delegates waiting and landing to the maintained guarded lander.
+
+Final clause status changes: none. Selected point 7 proof is complete locally; CHANGE-007 remains PARTIAL. Before and after counts remain 28 DONE, 134 PARTIAL, 37 MISSING. The named branch and PR carry both the preserved f51 proof and this round's failed-result extension. All product commits are pushed; no unpushed work remains. The product clone and dependency installation are removed only after the final evidence publication and transport verification, as required by the brief.
+
+PUSHED branch=cloud/sx-linen-c-f53 head=4c8dfa45d348a79c60df4135c91e24a3e2dc380c
