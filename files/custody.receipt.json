@@ -1,0 +1,49 @@
+{
+  "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+  "branch": "cloud/sx-linen-c-f28",
+  "push_exit": 0,
+  "push_attempts": 1,
+  "observed_http_status": "not supplied by successful Git transport",
+  "origin": "https://github.com/just-every/run-linen.git",
+  "remote_advertisement": {
+    "ref": "refs/heads/cloud/sx-linen-c-f28",
+    "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b"
+  },
+  "local_checks": {
+    "work-runtime": {
+      "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+      "exit": 0,
+      "elapsed_seconds": 116.864
+    },
+    "typecheck": {
+      "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+      "exit": 0,
+      "elapsed_seconds": 22.97
+    },
+    "first-party": {
+      "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+      "exit": 0,
+      "elapsed_seconds": 1.319
+    }
+  },
+  "pr": {
+    "base": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+    "draft": true,
+    "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+    "html_url": "https://github.com/just-every/run-linen/pull/166",
+    "number": 166
+  },
+  "verify": {
+    "conclusion": "cancelled",
+    "head_sha": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42545387660",
+    "status": "completed",
+    "run_id": 42545387660,
+    "observed_at": "2026-11-09T01:39:21.995710+00:00",
+    "event": "pull_request"
+  },
+  "github_api_calls": 6,
+  "publication_scan": "fleet landing responsibility; not run in cloud",
+  "landed": false,
+  "handoff": "READY under explicit cloud cancelled-CI handoff rule; not a green Verify claim"
+}

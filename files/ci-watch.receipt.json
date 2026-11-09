@@ -1,0 +1,34 @@
+{
+  "run_id": 42545387660,
+  "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+  "calls": 3,
+  "observations": [
+    {
+      "conclusion": null,
+      "head_sha": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42545387660",
+      "status": "in_progress",
+      "run_id": 42545387660,
+      "observed_at": "2026-11-09T01:29:19.453785+00:00",
+      "event": "pull_request"
+    },
+    {
+      "conclusion": null,
+      "head_sha": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42545387660",
+      "status": "in_progress",
+      "run_id": 42545387660,
+      "observed_at": "2026-11-09T01:34:20.784612+00:00",
+      "event": "pull_request"
+    },
+    {
+      "conclusion": "cancelled",
+      "head_sha": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42545387660",
+      "status": "completed",
+      "run_id": 42545387660,
+      "observed_at": "2026-11-09T01:39:21.995710+00:00",
+      "event": "pull_request"
+    }
+  ]
+}

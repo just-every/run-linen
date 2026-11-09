@@ -1,0 +1,15 @@
+{
+  "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+  "base": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+  "full_history": true,
+  "clean_tracked_tree": true,
+  "changed_files": [
+    "sources.lock.json",
+    "tests/work/recurrence-cases.mjs"
+  ],
+  "contract_cells_changed": false,
+  "generated_views_committed": false,
+  "existing_assertions_removed": false,
+  "test_registrations_added": 0,
+  "source_hashes_and_logs_verified": true
+}

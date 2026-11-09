@@ -1,0 +1,25 @@
+{
+  "name": "first-party check",
+  "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+  "tracked_status": "",
+  "command": [
+    "pnpm",
+    "exec",
+    "rer",
+    "check",
+    "--profile",
+    "first-party"
+  ],
+  "started": "2026-11-09T01:22:07.346923+00:00",
+  "finished": "2026-11-09T01:22:08.675582+00:00",
+  "exit": 0,
+  "elapsed_seconds": 1.319,
+  "source_sha256": {
+    "tests/work/recurrence-cases.mjs": "0f28279ba2c00d696ac23dd651dfcbd63968981aaaa80e05901d5a035b9612a3",
+    "tests/work/runtime.mjs": "93f45afe1817e4b3afe89d55c7fccac052537b68216e730ff8e3276fccf81688",
+    "src/features/work/recurrence.ts": "74d10b42b5438a45b62f494d7cb9c4bc60bc1c594ba1745e89e8293a5b7506e4",
+    "src/features/work/recurrence-calendar.ts": "5e180bf0bcd84f4bf4645e5174f47ff081721f46d05b260a8e57431629ac2123",
+    "sources.lock.json": "04a68be52a30a1bc2b6f9fcff129b6d946ce69d34e25e4a37ab13e1bd1ec37c0"
+  },
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

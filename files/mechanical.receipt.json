@@ -1,0 +1,36 @@
+{
+  "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+  "base": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+  "views": [
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "output": "Wrote 0 contract documents.\n"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "output": "Contract prose: 0 errors, 0 warnings.\nContract documents are current.\n"
+    }
+  ],
+  "generated_views_restored_from": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+  "lock": {
+    "write_command": "node scripts/edition-authoring/cli.mjs lock",
+    "write_exit": 0,
+    "check_command": "node scripts/edition-authoring/cli.mjs check",
+    "check_exit": 0,
+    "ok": true,
+    "manifest": "1fe29b9b108cbe98d16ab500d10173c81bfb069d7a23758d34dad8351ec7e099",
+    "toolchain": {
+      "id": "runeditrun/edition-authoring",
+      "version": "1.1.0",
+      "sha256": "3ce2f4bc6357b80a2a744ab7572160ca73eea08c5c627402957bce492f22b6a5"
+    }
+  },
+  "ledger": {
+    "command": null,
+    "reason": "No migration changes"
+  },
+  "contract_diff": "",
+  "generated_views_diff": ""
+}

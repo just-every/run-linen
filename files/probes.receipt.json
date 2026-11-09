@@ -1,0 +1,19 @@
+{
+  "head": "15d216b5e0593c6a6678460f4c5aaa20ac98ca4b",
+  "point": "DESK-013 acceptance 6",
+  "door_sequence": [
+    "POST /recurring-work",
+    "GET /recurring-work",
+    "POST /work/process-due",
+    "GET /recurring-work",
+    "GET generated ticket",
+    "POST plan pause",
+    "GET /recurring-work"
+  ],
+  "observations": [
+    "PASS DESK-013 fold: 2020-11-01 1:00 America/New_York -> 2020-11-01T05:00:00.000Z; ticket context persisted; plan paused",
+    "PASS DESK-013 gap: 2020-03-08 2:00 America/New_York -> 2020-03-08T07:00:00.000Z; ticket context persisted; plan paused"
+  ],
+  "exit": 0,
+  "application_clock_changed": false
+}
