@@ -230,10 +230,12 @@ export async function deflectionChecks(api,db) {
     body:'Beacon copper recovery steps. Use a fresh session after review.',
     scope:'employees',expiresAt:rankExpiry,review:true,
   },{'x-test-now':'2030-01-01T08:30:00.000Z'}),201);
-  const oldest=await reviewed('Aurora cedar guide','Lattice beacon recovery steps.', '09');
-  const older=await reviewed('Aurora amber guide','Lattice beacon recovery steps.', '10');
+  // Deliberately author tied matches out of timestamp order: insertion order
+  // cannot stand in for the article's latest reviewed revision.
   const recent=await reviewed('Aurora denim guide','Lattice beacon recovery steps.', '11');
+  const oldest=await reviewed('Aurora cedar guide','Lattice beacon recovery steps.', '09');
   const newest=await reviewed('Aurora bronze guide','Lattice beacon recovery steps.', '12');
+  const older=await reviewed('Aurora amber guide','Lattice beacon recovery steps.', '10');
   const rankHeaders={...first,'x-test-now':'2030-01-02T00:00:00.000Z'};
   assert.deepEqual(check(await api('/knowledge?q=Aurora',undefined,rankHeaders)).items.map(article=>article.id),
     [newest.id,recent.id,older.id,oldest.id,strongest.id],
@@ -274,8 +276,23 @@ export async function deflectionChecks(api,db) {
     {id:recent.id,revision:recent.revision},
   ],'KB-003 the receipt retains exactly the offered article revisions');
   assert.equal(receipt.outcome,'suggested');
-  const persisted=JSON.stringify(after);
-  for(const absent of [question,'zephyrcode quasartrace','zephyrcode','quasartrace',Buffer.from(question).toString('base64')])
-    assert.ok(!persisted.includes(absent),'KB-003 neither the question nor its unique unmatched phrase is retained');
+  const noQuestion=rows=>{
+    const persisted=JSON.stringify(rows);
+    for(const absent of [question,'zephyrcode quasartrace','zephyrcode','quasartrace',Buffer.from(question).toString('base64')])
+      assert.ok(!persisted.includes(absent),'KB-003 neither the question nor its unique unmatched phrase is retained');
+  };
+  noQuestion(after);
+  const confirmPath=`/knowledge/suggestions/${ranked.id}/confirm`;
+  check(await api(confirmPath,{articleId:newest.id},{...second,'x-test-now':rankHeaders['x-test-now']}),404);
+  assert.deepEqual(await storedRows(),after,'Another employee cannot change the retained suggestion outcome');
+  const confirmedAt='2030-01-02T01:00:00.000Z';
+  assert.equal(check(await api(confirmPath,{articleId:newest.id},{...first,'x-test-now':confirmedAt})).outcome,'confirmed');
+  const confirmed=await storedRows();
+  const confirmedReceipt={...receipt,outcome:'confirmed',article_id:newest.id,article_revision:newest.revision,resolved_at:confirmedAt};
+  const expected={...after,work_knowledge_suggestions:after.work_knowledge_suggestions
+    .filter(row=>JSON.parse(row).id!==ranked.id).concat(JSON.stringify(confirmedReceipt)).sort()};
+  assert.deepEqual(confirmed,expected,
+    'Confirmation persists only the chosen revision and resolved outcome, preserving asker and every offered revision');
+  noQuestion(confirmed);
   console.log('PASS KB-003 public routes: VPN question answered before filing, confirmed deflection counted, filing anyway never counted, scoped articles, asker-only confirmation, capped word-match and recency ranking, question non-retention with attributed revision and outcome receipt');
 }

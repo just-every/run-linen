@@ -7400,7 +7400,7 @@
       "executable": false
     },
     "tests/work/knowledge-draft-cases.mjs": {
-      "sha256": "e75863d663aecfe84d126ba3aa907e213217788243f253f6be132ccd78ebcd88",
+      "sha256": "089bed3b4635133e70ce85d8216471c469e29adafa30d3fbf20f8adc16db385e",
       "executable": false
     },
     "tests/work/knowledge-draft-runtime.mjs": {
