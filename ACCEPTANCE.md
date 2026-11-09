@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 28 | 121 | 29 | 178 |
+| Core | 29 | 120 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 28 | 134 | 37 | 199 |
+| Full target | 29 | 133 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -901,7 +901,7 @@ Core · target · **partial**
 
 #### DESK-020 — SLA pauses and breaches
 
-Core · target · **partial** · From DESK-004
+Core · target · **done** · From DESK-004
 
 **Requirement.** A pause stops only the clocks its policy pauses on, and a breach, once reached, stays a breach.
 
@@ -911,8 +911,8 @@ Core · target · **partial** · From DESK-004
 3. A target is breached when met after, or still unmet past, its due time, and its breach time is that due time.
 4. Owners, agents and auditors read each ticket's targets and the period report.
 
-**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`
-**Gap.** Not asserted: that service agents and auditors read each ticket's targets and the period report. The owner's reads and the requester's refusal, pauses stopping only the policy's parties, a later pause keeping the breach, and the breach time are asserted.
+**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (slaPolicyChecks); `tests/work/sla-policy-cases.mjs` (escalationChecks)
+**Gap.** None.
 
 #### DESK-005 — Escalation and supervisor rules
 
