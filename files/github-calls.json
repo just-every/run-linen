@@ -1,0 +1,50 @@
+[
+  {
+    "at": 1794214616.363318,
+    "command": [
+      "gh",
+      "api",
+      "--method",
+      "POST",
+      "repos/just-every/run-linen/pulls",
+      "--input",
+      "/tmp/linen-pr.json",
+      "--jq",
+      "{number,html_url,head:.head.sha,draft}"
+    ],
+    "exit": 0
+  },
+  {
+    "at": 1794214617.246983,
+    "command": [
+      "gh",
+      "api",
+      "repos/just-every/run-linen/actions/runs?head_sha=11aacc05e647c853663078d0ffc0caac80afe037&per_page=100",
+      "--jq",
+      "[.workflow_runs[] | {id,name,event,status,conclusion,head_sha,html_url}]"
+    ],
+    "exit": 0
+  },
+  {
+    "at": 1794214920.2794983,
+    "command": [
+      "gh",
+      "api",
+      "repos/just-every/run-linen/actions/runs?head_sha=11aacc05e647c853663078d0ffc0caac80afe037&per_page=100",
+      "--jq",
+      "[.workflow_runs[] | {id,name,event,status,conclusion,head_sha,html_url}]"
+    ],
+    "exit": 0
+  },
+  {
+    "at": 1794215222.7622173,
+    "command": [
+      "gh",
+      "api",
+      "repos/just-every/run-linen/actions/runs/42589644294",
+      "--jq",
+      "{id,status,conclusion,head_sha,html_url,event}"
+    ],
+    "exit": 0
+  }
+]

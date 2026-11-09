@@ -1,0 +1,62 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f54",
+  "head": "11aacc05e647c853663078d0ffc0caac80afe037",
+  "base": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "main_equals_head": false,
+  "shallow": false,
+  "files": [
+    "sources.lock.json",
+    "tests/services/calendar-cases.mjs",
+    "tests/services/run.mjs",
+    "tests/services/worker.ts"
+  ],
+  "contract_diff_empty": true,
+  "counts_before": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37,
+    "total": 199
+  },
+  "counts_after": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37,
+    "total": 199
+  },
+  "test_registrations_added": 0,
+  "existing_assertions_removed_or_weakened": false,
+  "new_email_shaped_lines": [],
+  "publication_scan": {
+    "commit": "11aacc05e647c853663078d0ffc0caac80afe037",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "status": "not run in cloud; guarded fleet lander owns exact-head publication scan"
+  },
+  "run_site": {
+    "status": "not run; main-only workflow belongs to fleet landing"
+  },
+  "product_push": {
+    "status": "success",
+    "attempt": 1,
+    "log": "product-push.log"
+  },
+  "pr": {
+    "draft": true,
+    "head": "11aacc05e647c853663078d0ffc0caac80afe037",
+    "html_url": "https://github.com/just-every/run-linen/pull/189",
+    "number": 189
+  },
+  "remote_head_verified": true,
+  "verify": {
+    "conclusion": null,
+    "event": "pull_request",
+    "head_sha": "11aacc05e647c853663078d0ffc0caac80afe037",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42589644294",
+    "id": 42589644294,
+    "status": "in_progress"
+  },
+  "handoff": "READY for fleet exact-head CI and scan guards; no CI green claimed",
+  "github_calls": 4
+}

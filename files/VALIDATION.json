@@ -1,0 +1,40 @@
+{
+  "head": "11aacc05e647c853663078d0ffc0caac80afe037",
+  "checks": [
+    {
+      "head": "11aacc05e647c853663078d0ffc0caac80afe037",
+      "command": "cloud_run node tests/services/run.mjs",
+      "exit": 0,
+      "seconds": 130.13,
+      "log": "services-exact.log"
+    },
+    {
+      "head": "11aacc05e647c853663078d0ffc0caac80afe037",
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "seconds": 33.56,
+      "log": "typecheck-exact.log"
+    },
+    {
+      "head": "11aacc05e647c853663078d0ffc0caac80afe037",
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "seconds": 3.44,
+      "log": "first-party-exact.log"
+    },
+    {
+      "head": "11aacc05e647c853663078d0ffc0caac80afe037",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "seconds": 2.01,
+      "log": "lock-exact.log"
+    },
+    {
+      "head": "11aacc05e647c853663078d0ffc0caac80afe037",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "seconds": 1.96,
+      "log": "views-exact.log"
+    }
+  ]
+}
