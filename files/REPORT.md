@@ -78,3 +78,11 @@ Pre-ready checks: selected behaviors have public-door assertions that fail on mi
 The first real product commit was pushed immediately through cloud-push.py and succeeded on attempt 1. Current main at initial inspection had successful Verify runs 42614672051 (push) and 42612972689 (dispatch), plus Run site 42614672049 at base 8cbb5da69a36002c032436b861772e8fb3f6247e. Candidate Verify 42616876267 was discovered on exact SHA 15057928c4110f322805414c414db1a8def2fa47 and is recorded separately in candidate-ci.jsonl. No workflow dispatch or rerun was requested.
 
 Publication scan receipt: commit=15057928c4110f322805414c414db1a8def2fa47; complete=not established in cloud; historyScanned=not established; findings=not established. Full-history scan and exact-main Run site remain guarded lander duties. Main does not yet equal the candidate. Evidence publication is report custody only and signals neither landing nor whole-clause acceptance.
+
+## Final cloud handoff
+
+PUSHED branch=cloud/sx-linen-c-f64 head=15057928c4110f322805414c414db1a8def2fa47
+
+At the final permitted status observation on 9 November 2026 at approximately 12:36 UTC, exact-head pull_request Verify 42616876267 remains in_progress with no conclusion. Two status polls were separated by at least 300 seconds after initial discovery; one watcher made five GitHub API calls in total, including initial main inspection and draft PR creation. No failed job is reported or guessed, and no workflow was dispatched or rerun. This cloud handoff is PUSHED, with no CI-green claim. Required exact-SHA Verify, the full-history publication scan and eventual main Run site remain with the maintained fleet.
+
+The complete report, plan, actual receipts, logs and four screenshots were published to the separate evidence ref. An exact-head round-trip fetch of the initial evidence packet restored all manifest-verified files and bound them to product SHA 15057928c4110f322805414c414db1a8def2fa47. The final evidence publication updates only reporting custody with the last observed pending CI state. Evidence never supplies a product READY or landing signal. The product checkout remains unchanged and will be removed after final evidence publication, as required.

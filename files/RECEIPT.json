@@ -134,5 +134,170 @@
     "head_sha": "15057928c4110f322805414c414db1a8def2fa47",
     "html_url": "https://github.com/just-every/run-linen/actions/runs/42616876267",
     "status": "in_progress"
-  }
+  },
+  "ciObservations": [
+    {
+      "runId": 42616876267,
+      "event": "pull_request",
+      "conclusion": null,
+      "head_sha": "15057928c4110f322805414c414db1a8def2fa47",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42616876267",
+      "status": "in_progress"
+    },
+    {
+      "runId": 42616876267,
+      "event": "pull_request",
+      "conclusion": null,
+      "head_sha": "15057928c4110f322805414c414db1a8def2fa47",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42616876267",
+      "status": "in_progress"
+    }
+  ],
+  "handoff": "PUSHED: exact-head Verify still in progress; local checks passed. No green or failed CI conclusion claimed. CI waits are bounded in this cloud adaptation; no dispatch or rerun requested.",
+  "githubApiCalls": 5,
+  "evidenceRoundTrip": {
+    "destination": "/tmp/linen-evidence-check/work/sx-linen-c-f64/reports/just-every/run-linen",
+    "files": [
+      {
+        "blob": "84b8d5d858b2c1b891f1e9bb3fe6a2951bce1035",
+        "bytes": 374520,
+        "path": "DESK-015-bulk-scenario-390px.png",
+        "sha256": "21b83667256c4aa6df64db3fe2e0baa8e8c271a6de4973ee5aa13a657ff854ff"
+      },
+      {
+        "blob": "d929ea153fd27d46d8d6eaf3782685abb8bb057b",
+        "bytes": 992099,
+        "path": "DESK-015-bulk-scenario.png",
+        "sha256": "a715625aa93a32462a4a2687488d845a84abe8def417516838100b5d86aa500d"
+      },
+      {
+        "blob": "83ea961f2cac57909708276ba3721abfcd58c935",
+        "bytes": 365708,
+        "path": "DESK-015-ticket-scenario-1440-390px.png",
+        "sha256": "2c007d716a3390fae777a58088f477b22381558a368fd0a6bc6fc5ae0969aa0a"
+      },
+      {
+        "blob": "c860528d27ab951bee8df2b80b34850e879d1ae9",
+        "bytes": 995501,
+        "path": "DESK-015-ticket-scenario-1440.png",
+        "sha256": "51be186ab06cc7588dac02d6d165ea2852b2d473e7fa1c5161137c93830b6f36"
+      },
+      {
+        "blob": "a26b594bc7b2413c74b92630a6ddb9ecb83e1ae3",
+        "bytes": 2603,
+        "path": "PLAN.md",
+        "sha256": "79754c4094ccb9d0ec3313737ce42f7ba5480a1f337b4723746f937599c0c5a3"
+      },
+      {
+        "blob": "7967756adcf4cf535257a0c20e14bfcf11d3216d",
+        "bytes": 5134,
+        "path": "RECEIPT.json",
+        "sha256": "dd136115e8b18107f586e91f24ba1eaa1881cfd7216e0da6543116546577d18d"
+      },
+      {
+        "blob": "f7591a1adcba1271973ee2cfcb5f288bdc2fa9ac",
+        "bytes": 10491,
+        "path": "REPORT.md",
+        "sha256": "f7e3a14ea1fc90a8e4af0cc4c9a8e0f72bf3f25b7cfa12bf85edc717bb6b1a17"
+      },
+      {
+        "blob": "088656851f39cd14502d7651691b4cd439d3f3b4",
+        "bytes": 80,
+        "path": "browser-results.json",
+        "sha256": "91135baac11ff5faeac8fbc9b1e5a065241df1a8c0cd89e56c2b42b6704d2521"
+      },
+      {
+        "blob": "915f5b0bb485ec5d7da787511412a53357d161b4",
+        "bytes": 458,
+        "path": "candidate-ci.jsonl",
+        "sha256": "a3e710d383dcc0bb4c48272514a4d3a6f8768cd1e95fc888c5a43f658285237b"
+      },
+      {
+        "blob": "a50b01c9436060ac93bed98a38b6af5344f37af1",
+        "bytes": 175,
+        "path": "candidate-status.json",
+        "sha256": "a094241ab0115d7f7788564f798668836c79201dd97cbce68d3dfbed7b16fd2a"
+      },
+      {
+        "blob": "f3d09af10a08e08cc1484636500f65f56f4c35a3",
+        "bytes": 10867,
+        "path": "check-1.log",
+        "sha256": "9085ecd8580600d9d7e1480f7056307809f6f35200e46d03fec08f62fb25c514"
+      },
+      {
+        "blob": "2ae6ceb7198f18f424bad426b8ada3d02c53d151",
+        "bytes": 191,
+        "path": "check-2.log",
+        "sha256": "0b0adb5e632ac97cbb75b4f6e5914a39cf4935d0027cdedb2c5fd950cee46124"
+      },
+      {
+        "blob": "c3ce74842066e8de29fb04e37444bc00a55f9ac1",
+        "bytes": 3529,
+        "path": "check-3.log",
+        "sha256": "0b625d7b6c5b8a6ac6c52264048492fbb66edab9f6aecd848fd81079873e8083"
+      },
+      {
+        "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+        "bytes": 0,
+        "path": "check-4.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "blob": "0de2f909159dcee9e911c074f5dfa56911caad51",
+        "bytes": 565,
+        "path": "check-5.log",
+        "sha256": "45c36227f4dcf745e5235096c8b927532953bdbb95fc44caff752b8c504aa468"
+      },
+      {
+        "blob": "58dd21c218846e90dd798f1845377f7422e45cac",
+        "bytes": 28,
+        "path": "check-6.log",
+        "sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+      },
+      {
+        "blob": "b59d39532e8a030ff74f6339019ab7870ef51548",
+        "bytes": 70,
+        "path": "check-7.log",
+        "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+      },
+      {
+        "blob": "dd9c26fcd4c1b26882371b4e294d32ab7479b169",
+        "bytes": 309427,
+        "path": "check-8.log",
+        "sha256": "35da51a43b9fd58e56f2c6ccd339e257a8a94d0a13e6f09f230f896fe7144037"
+      },
+      {
+        "blob": "8eec36b55b6480e25e6f10afcb740b9f3d2d9f15",
+        "bytes": 309441,
+        "path": "check-9.log",
+        "sha256": "95c7bce0498712358af833e26308758327ee830dded59f07777b0eb420d7e19e"
+      },
+      {
+        "blob": "3d9f9bde2055986fe11eaab57dacc9d370f432b1",
+        "bytes": 1156,
+        "path": "main-ci.jsonl",
+        "sha256": "74cded0b81ce950bdda14811c6e9d57efa34d4c9db4cd50628788380ded8b28a"
+      },
+      {
+        "blob": "7b02fd746bd0384fc11b8484600798f97a31fe8f",
+        "bytes": 1077,
+        "path": "product-provenance.json",
+        "sha256": "f2607be57f7f314bdb812ab850d6dd30d8edc061d4ab89c61d73d12adb4c5202"
+      },
+      {
+        "blob": "eec05ab08eb6751ec54d27496d3b1c125bdf0b65",
+        "bytes": 127,
+        "path": "pull-request.json",
+        "sha256": "70f9171b06ef8dacadfe35754ed3bdd7ce6689d725b360a90aa37608e164af97"
+      }
+    ],
+    "head": "e841659abeec3f25a3ddb04730c89133ba131427",
+    "manifest_sha256": "3a3e75899a7bc3bfe03167ff1473f4a33390c38b97203b54bb71dde43b758a16",
+    "product_branch": "cloud/sx-linen-c-f64",
+    "product_head": "15057928c4110f322805414c414db1a8def2fa47",
+    "ref": "refs/heads/evidence/sx-linen-c-f64",
+    "repository": "just-every/run-linen",
+    "status": "restored"
+  },
+  "finalRecordedAt": "2026-11-09T12:36:56.424906+00:00"
 }
