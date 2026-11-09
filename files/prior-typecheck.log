@@ -1,0 +1,4 @@
+
+> @linen-foundation/linen@0.1.1 typecheck /home/agent/rer-consolidation/work/sx-linen-c-f27/run-linen
+> tsc --noEmit
+

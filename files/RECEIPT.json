@@ -1,0 +1,89 @@
+{
+  "tag": "sx-linen-c-f27",
+  "repository": "just-every/run-linen",
+  "recordedAt": "2026-11-09T00:55:07.227843+00:00",
+  "disposition": "BLOCKED_NONREPRODUCTION",
+  "productCandidate": null,
+  "intendedBranch": "cloud/sx-linen-c-f27",
+  "productPushes": [],
+  "testedHead": "e8dd72e6b634e11559de32489a60388912fa53e7",
+  "initializedMain": "ce86a9413f41103d066aa66c3db8d43fb40da248",
+  "trackedChanges": "",
+  "priorPullRequest": "https://github.com/just-every/run-linen/pull/157",
+  "priorVerify": {
+    "id": 42524581296,
+    "job": 128865352710,
+    "head": "e8dd72e6b634e11559de32489a60388912fa53e7",
+    "event": "pull_request",
+    "conclusion": "failure"
+  },
+  "finding": {
+    "test": "LIFE-002 ordinary operator ticket search cannot recover the subject through reminder text",
+    "source": "tests/work/lifecycle-template-cases.mjs:155",
+    "reportedError": "3 !== 0",
+    "reproduced": false,
+    "observedTotal": 0
+  },
+  "checks": [
+    {
+      "command": "CI=true LINEN_TEST_BUILT=1 LINEN_VERIFY_SHARD=6/6 node tests/work/runtime.mjs",
+      "node": "22.20.0",
+      "exit": 0,
+      "log": "prior-runtime.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "node": "22.20.0",
+      "exit": 0,
+      "log": "prior-typecheck.log"
+    },
+    {
+      "command": "CI=true LINEN_TEST_BUILT=1 LINEN_VERIFY_SHARD=6/6 pnpm exec rer verify",
+      "orchestratedChildNode": "24.19.0",
+      "projectNodeAnnounced": "22.20.0",
+      "exit": 0,
+      "passedJourneys": 7,
+      "log": "prior-shard6.log",
+      "results": "prior-shard6-results.json"
+    }
+  ],
+  "initialAttempt": {
+    "command": "CI=true LINEN_TEST_BUILT=1 LINEN_VERIFY_SHARD=6/6 pnpm exec rer verify",
+    "exit": 4,
+    "reason": "setup operation still held the checkout lock; no assertion ran"
+  },
+  "failedJobArchive": {
+    "command": "gh run view 42524581296 --repo just-every/run-linen --job 128865352710 --log-failed",
+    "exit": 0,
+    "stdoutBytes": 0,
+    "attempts": 1
+  },
+  "githubCalls": 3,
+  "newWorkflowRuns": [],
+  "refusedHeadCountsBefore": {
+    "done": 20,
+    "partial": 142,
+    "missing": 37
+  },
+  "refusedHeadCountsAfter": {
+    "done": 20,
+    "partial": 142,
+    "missing": 37
+  },
+  "initializedMainCounts": {
+    "done": 21,
+    "partial": 141,
+    "missing": 37
+  },
+  "clauseChanges": [],
+  "reason": "Explicit fix-round instruction requires stopping BLOCKED when the failing assertion does not reproduce; no speculative repair was made.",
+  "publicationScan": {
+    "status": "not_run",
+    "reason": "no product candidate created"
+  },
+  "mechanical": {
+    "lock": "not_run_no_repaired_candidate",
+    "views": "not_run_no_contract_edit",
+    "ledger": "not_applicable_no_migration"
+  }
+}

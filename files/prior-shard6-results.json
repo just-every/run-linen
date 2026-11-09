@@ -1,0 +1,83 @@
+{
+  "completedAt": "2026-11-09T00:53:39.757Z",
+  "label": "Local checks; test provider responses are fixtures, not live provider acceptance.",
+  "shard": {
+    "number": 6,
+    "count": 6
+  },
+  "complete": true,
+  "results": [
+    {
+      "name": "Service desk and lifecycle",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "tests/work/runtime.mjs"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedMs": 66095
+    },
+    {
+      "name": "Knowledge publication",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "tests/work/knowledge-draft-runtime.mjs"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedMs": 4568
+    },
+    {
+      "name": "Manager approval and bundles",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "tests/work/amend-manager-runtime.mjs"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedMs": 15958
+    },
+    {
+      "name": "Department privacy browser",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "tests/ui/run.mjs",
+        "tests/ui/department-browser.mjs"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedMs": 83145
+    },
+    {
+      "name": "Connection and authority browser",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "tests/ui/setup-run.mjs"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedMs": 54259
+    },
+    {
+      "name": "software provider browser",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "tests/ui/software-license-run.mjs"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedMs": 56208
+    },
+    {
+      "name": "notification rules browser",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "tests/ui/run.mjs",
+        "tests/ui/notification-browser.mjs"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedMs": 49312
+    }
+  ]
+}
