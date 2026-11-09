@@ -2,6 +2,8 @@ import {Hono} from 'hono'
 import type {AppEnv} from '../../src/platform/types'
 import {encryptSecret} from '../../src/platform/crypto'
 import {ApiError} from '../../src/platform/http'
+import {platformApp} from '../../src/platform/routes'
+import {registerCalendarRoutes} from '../../src/features/services/calendar-routes'
 import {registerServiceWebhooks,registerServiceRoutes,setServiceWorkPort} from '../../src/features/services'
 import {setChangeExecutionPort} from '../../src/features/services/changes'
 import {installSoftwareLicenseFixture} from './software-license-fixture'
@@ -10,6 +12,9 @@ let noticeMailCalls:any[]=[];let noticeMailStatus=202;
 const nativeFetch=globalThis.fetch;globalThis.fetch=async(input:any,init:any={})=>{const u=new URL(String(input));if(u.origin==='https://api.sendgrid.com'){noticeMailCalls.push(JSON.parse(init.body));return new Response(null,{status:noticeMailStatus,headers:{'x-message-id':'notice-fixture-receipt'}})}if(u.hostname==='notification.fixture.test'){if(init.method==='POST'){const b=JSON.parse(init.body);return Response.json({id:b.id,deliveryId:'provider-'+b.id})}return Response.json({id:u.searchParams.get('id'),nonce:u.searchParams.get('nonce'),state:'delivered',observedAt:new Date().toISOString()})}return nativeFetch(input,init)}
 const app=new Hono<AppEnv>()
 installSoftwareLicenseFixture(app)
+const calendarApp=platformApp()
+registerCalendarRoutes(calendarApp)
+app.route('/api/v1',calendarApp)
 app.use('*',async(c,next)=>{c.set('principal',{userId:c.req.header('x-user')||'owner',workspaceId:c.req.header('x-workspace')||'w1',roles:JSON.parse(c.req.header('x-roles')||'["owner"]')});await next()})
 app.onError((e,c)=>c.json({error:{code:e instanceof ApiError?e.code:'internal',message:e.message}},(e instanceof ApiError?e.status:500) as any))
 app.post('/fixture/secret',async c=>c.json({secret:await encryptSecret(c.env.ENCRYPTION_KEY,JSON.stringify(await c.req.json()))}))
