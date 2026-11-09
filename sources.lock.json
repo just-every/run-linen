@@ -7420,7 +7420,7 @@
       "executable": false
     },
     "tests/work/problem-detection-cases.mjs": {
-      "sha256": "69a6d6bbf0be0be15e158b5a691495f1cd7edfa828457d30b0bfc1156b6c521c",
+      "sha256": "cb1a35f8923fad0fb4efa88cff653a3fb4bb918d2ae32dd865e245dcdd517f0e",
       "executable": false
     },
     "tests/work/project-cases.mjs": {
