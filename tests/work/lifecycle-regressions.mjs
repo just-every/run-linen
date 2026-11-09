@@ -100,5 +100,103 @@ export async function contractorSponsorChecks(api, db, input) {
   assert.equal((await api(`/lifecycle/${orphan.value.lifecycleId}/reattest`, { expiresAt: iso(20 * 86400000) })).status, 200, 'LIFE-006 the owner re-attests once the sponsor has left');
   assert.equal((await api(`/lifecycle/${orphan.value.lifecycleId}/sponsor`, { sponsorId: 'employee' })).status, 200);
   assert.equal((await api(`/lifecycle/${orphan.value.lifecycleId}/reattest`, { expiresAt: iso(30 * 86400000) })).status, 404, 'LIFE-006 with an active sponsor again, only that sponsor re-attests');
+  await sponsorRefusalAndReassignChecks(api, db, contractor, iso);
+  await reminderWindowAndRearmChecks(api, db, contractor, iso, sponsor);
   console.log('PASS LIFE-006 public routes: sponsor required, 72-hour reminder in the sponsor\'s requests, sponsor-only re-attestation moving expiry duties, removal starting at the end instant');
+}
+
+/** LIFE-006 points 2 and 5: refused sponsors create no duties; a reassigned sponsor is reminded afresh, once. */
+async function sponsorRefusalAndReassignChecks(api, db, contractor, iso) {
+  const count = async sql => (await db.prepare(sql).first()).n;
+  const totals = async () => [await count('SELECT COUNT(*) n FROM work_lifecycle'), await count('SELECT COUNT(*) n FROM work_obligations'), await count('SELECT COUNT(*) n FROM work_records')];
+  const member = async (name, extra = {}) => {
+    const made = await api('/members', { name, email: `${name.toLowerCase().replace(/\W+/g, '-')}@example.test`, password: 'Linen-proof-2026-sponsor', roles: ['employee'], ...extra });
+    assert.equal(made.status, 201, JSON.stringify(made));
+    return made.value;
+  };
+  const asMember = id => ({ 'x-user': id, 'x-roles': '["employee"]' });
+  const before = await totals();
+  // An inactive member is not an admissible sponsor.
+  const lapsed = await member('Lapsed sponsor');
+  assert.equal((await api(`/members/${lapsed.id}`, { roles: ['employee'], active: false }, {}, 'PATCH')).status, 200);
+  assert.equal((await api('/members')).value.find(m => m.id === lapsed.id).active, 0);
+  const inactive = await api('/lifecycle', { ...contractor, source: 'contractor-hr-inactive', expiresAt: iso(70 * 3600000), sponsorId: lapsed.id });
+  assert.equal(inactive.status, 422, 'LIFE-006 an inactive member cannot sponsor an end date');
+  assert.equal(inactive.value.error?.code ?? inactive.value.code, 'sponsor_invalid');
+  // The contractor's own reviewed account binding is not an admissible sponsor.
+  const temp = await api('/people', { source: 'hr', sourceId: 'temp-1', name: 'Temp worker', effectiveAt: '2026-09-01T00:00:00Z', observedAt: '2026-09-01T00:00:00Z' });
+  assert.equal(temp.status, 201, JSON.stringify(temp));
+  const tempAccount = await member('Temp worker account');
+  const bound = await api(`/people/${temp.value.id}/binding`, { expectedRevision: temp.value.revision ?? 1, memberId: tempAccount.id });
+  assert.equal(bound.status, 200, JSON.stringify(bound));
+  const own = await api('/lifecycle', { ...contractor, personId: temp.value.id, source: 'contractor-hr-self', identityTarget: 'temp-worker', expiresAt: iso(70 * 3600000), sponsorId: tempAccount.id });
+  assert.equal(own.status, 422, 'LIFE-006 the contractor cannot sponsor their own end date');
+  assert.equal(own.value.error?.code ?? own.value.code, 'sponsor_invalid');
+  assert.deepEqual(await totals(), before, 'LIFE-006 a refused sponsor creates no lifecycle, expiry duty or reminder');
+  assert.equal(await count("SELECT COUNT(*) n FROM work_lifecycle WHERE source IN ('contractor-hr-inactive','contractor-hr-self')"), 0);
+  // A departed sponsor hands the reminder to the owner; a reassigned active sponsor is then reminded afresh, once.
+  const leaving = await member('Leaving sponsor'), replacement = await member('Replacement sponsor');
+  const life = await api('/lifecycle', { ...contractor, source: 'contractor-hr-reassign', expiresAt: iso(60 * 3600000), sponsorId: leaving.id });
+  assert.equal(life.status, 201, JSON.stringify(life));
+  const id = life.value.lifecycleId, due = async () => (await api('/work/process-due', {})).value.items.find(r => r.id === id);
+  const first = await due();
+  assert.equal(first?.state, 'sponsor_reminded');
+  assert.equal((await api(`/work/${first.workId}`, undefined, asMember(leaving.id))).status, 200);
+  assert.equal((await api(`/members/${leaving.id}`, { roles: ['employee'], active: false }, {}, 'PATCH')).status, 200);
+  const handed = await due();
+  assert.equal(handed?.state, 'owner_reminded');
+  assert.equal((await due()), undefined, 'LIFE-006 the owner is reminded once');
+  assert.equal((await api(`/lifecycle/${id}/sponsor`, { sponsorId: leaving.id })).status, 422, 'LIFE-006 the departed sponsor cannot be named again');
+  assert.equal((await api(`/lifecycle/${id}/sponsor`, { sponsorId: replacement.id })).status, 200);
+  const reminders = async () => (await db.prepare("SELECT id,dedup_key FROM work_records WHERE beneficiary_id=?").bind(replacement.id).all()).results.filter(r => r.dedup_key?.startsWith(`sponsor:${id}:`));
+  assert.equal((await reminders()).length, 0, 'LIFE-006 reassignment alone sends nothing');
+  const fresh = await due();
+  assert.equal(fresh?.state, 'sponsor_reminded', 'LIFE-006 a newly named sponsor is reminded afresh');
+  assert.notEqual(fresh.workId, first.workId); assert.notEqual(fresh.workId, handed.workId);
+  const portal = await api(`/work/${fresh.workId}`, undefined, asMember(replacement.id));
+  assert.equal(portal.status, 200, 'LIFE-006 the new sponsor reads the reminder in their own requests');
+  assert.equal(portal.value.work.beneficiary_id, replacement.id);
+  assert.match(portal.value.work.title, /^Re-attest /);
+  assert.equal(JSON.parse(portal.value.work.context_json).sponsorReminder.sponsorLeft, false);
+  assert.equal((await api(`/work/${fresh.workId}`, undefined, asMember(leaving.id))).status, 404, 'LIFE-006 the departed sponsor cannot read the new reminder');
+  assert.equal((await due()), undefined, 'LIFE-006 no duplicate reminder on another due pass');
+  assert.equal((await due()), undefined);
+  assert.equal((await reminders()).length, 1, 'LIFE-006 exactly one reminder addressed to the new sponsor');
+  assert.equal((await api(`/lifecycle/sponsored`, undefined, asMember(replacement.id))).value.items.some(i => i.lifecycleId === id), true);
+}
+
+/** LIFE-006 points 3 and 4: no reminder while the end is beyond 72 hours; re-attestation clears the reminder so a new one precedes the new end. */
+async function reminderWindowAndRearmChecks(api, db, contractor, iso, sponsor) {
+  const reminders = async id => (await db.prepare("SELECT id,title,beneficiary_id,dedup_key FROM work_records WHERE dedup_key LIKE ? ORDER BY created_at").bind(`sponsor:${id}:%`).all()).results;
+  const pass = async id => (await api('/work/process-due', {})).value.items.find(r => r.id === id);
+  // Beyond 72 hours: nothing is raised, on any number of due passes.
+  const far = await api('/lifecycle', { ...contractor, source: 'contractor-hr-far', expiresAt: iso(100 * 3600000), sponsorId: 'employee' });
+  assert.equal(far.status, 201, JSON.stringify(far));
+  assert.equal(await pass(far.value.lifecycleId), undefined, 'LIFE-006 no reminder while the end is more than 72 hours away');
+  assert.equal(await pass(far.value.lifecycleId), undefined);
+  assert.equal((await reminders(far.value.lifecycleId)).length, 0);
+  assert.equal((await db.prepare('SELECT sponsor_work_id w FROM work_lifecycle WHERE id=?').bind(far.value.lifecycleId).first()).w, null);
+  // Re-attesting a reminded end date clears the reminder; the new end is reminded afresh, once.
+  const near = await api('/lifecycle', { ...contractor, source: 'contractor-hr-rearm', expiresAt: iso(24 * 3600000), sponsorId: 'employee' });
+  assert.equal(near.status, 201, JSON.stringify(near));
+  const id = near.value.lifecycleId;
+  const first = await pass(id);
+  assert.equal(first?.state, 'sponsor_reminded');
+  assert.equal(await pass(id), undefined, 'LIFE-006 one reminder per end date');
+  const later = iso(60 * 3600000);
+  assert.equal((await api(`/lifecycle/${id}/reattest`, { expiresAt: later }, sponsor)).status, 200);
+  const cleared = await db.prepare('SELECT sponsor_work_id w, sponsor_reminded_at r FROM work_lifecycle WHERE id=?').bind(id).first();
+  assert.deepEqual([cleared.w, cleared.r], [null, null], 'LIFE-006 re-attestation clears the reminder');
+  const fresh = await pass(id);
+  assert.equal(fresh?.state, 'sponsor_reminded', 'LIFE-006 a new reminder precedes the new end');
+  assert.notEqual(fresh.workId, first.workId);
+  const portal = await api(`/work/${fresh.workId}`, undefined, sponsor);
+  assert.equal(portal.status, 200);
+  assert.match(portal.value.work.title, new RegExp(`before ${later.replace(/[.]/g, '\\.')}`), 'LIFE-006 the new reminder names the new end');
+  assert.equal(await pass(id), undefined, 'LIFE-006 no duplicate of the new reminder');
+  assert.equal((await reminders(id)).length, 2);
+  // Re-attesting beyond the window clears it again and sends nothing until the window opens.
+  assert.equal((await api(`/lifecycle/${id}/reattest`, { expiresAt: iso(10 * 86400000) }, sponsor)).status, 200);
+  assert.equal(await pass(id), undefined, 'LIFE-006 re-attested beyond 72 hours raises no reminder');
+  assert.equal((await reminders(id)).length, 2);
 }

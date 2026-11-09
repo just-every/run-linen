@@ -85,6 +85,82 @@ export async function deskScenarioChecks(workspaceApi, db) {
   assert.deepEqual([created.kind, created.title, JSON.parse(created.context_json).deviceModel], ['service_request', 'Set up a new laptop', 'MacBook Pro 14']);
   // DESK-015 fields, classification, assignment, canned public replies and all status commands.
   const office = check(await api('/desk-fields', { name: 'Office', type: 'dropdown', options: ['Denver', 'Austin'], kinds: ['incident'] }), 201);
+  // Built-in HR staff can apply fields and status on a ticket in their own HR workspace.
+  const hrDepartment = check(await api('/departments', { name: 'synthetic-linen-15601', kind: 'hr' }), 201);
+  check(await api(`/departments/${hrDepartment.id}/members`, { revision: hrDepartment.revision, userId: 'd15-hr', active: true }));
+  const hrTicket = check(await api('/work', { title: 'synthetic-linen-15602', body: 'Payroll review', kind: 'incident',
+    sensitivity: 'hr', departmentId: hrDepartment.id, deduplicationKey: 'synthetic-linen-15602' }), 201);
+  assert.equal(check(await api(`/work/${hrTicket.id}`, undefined, hr)).work.id, hrTicket.id);
+  check(await api(`/work/${hrTicket.id}/fields`, { fieldId: office.id, value: 'Denver' }, hr));
+  const hrChanges = [];
+  const hrAudits = [];
+  for (const [command, beforeState, afterState, beforeValue, value] of [
+    ['pause', 'open', 'paused', 'Denver', 'Austin'],
+    ['resume', 'paused', 'open', 'Austin', 'Denver'],
+    ['close', 'open', 'closed', 'Denver', 'Austin'],
+  ]) {
+    const allowed = check(await api('/work-scenarios', { name: `synthetic-linen-15603 ${command}`, scope: 'workspace', steps: {
+      fields: [{ fieldId: office.id, value }], status: { command, reason: `Payroll review ${command}`,
+        ...(command === 'pause' ? { waitingOn: 'requester' } : {}),
+        ...(command === 'close' ? { resolutionCode: 'Solved (permanent fix)' } : {}) }
+    } }), 201);
+    assert.ok(check(await api('/work-scenarios', undefined, hr)).items.some(s => s.id === allowed.id));
+    const current = check(await api(`/work/${hrTicket.id}`, undefined, hr)).work;
+    assert.equal(current.state, beforeState);
+    const applied = check(await api(`/work/${hrTicket.id}/scenario-runs`, { scenarioId: allowed.id, revision: current.revision }, hr));
+    assert.equal(applied.work.state, afterState);
+    const conversation = check(await api(`/work/${hrTicket.id}`, undefined, hr));
+    assert.deepEqual([conversation.work.state, conversation.work.revision], [afterState, current.revision + 1],
+      'DESK-015 the permitted HR scenario persists its state and advances the ticket revision');
+    assert.equal(applied.work.revision, conversation.work.revision);
+    assert.equal(conversation.work.paused_at !== null, command === 'pause');
+    const deskState = check(await api(`/work/${hrTicket.id}/desk`, undefined, hr));
+    if (command === 'close') {
+      assert.deepEqual([deskState.resolution.code, deskState.resolution.closeNotes, deskState.resolution.resolvedBy],
+        [allowed.steps.status.resolutionCode, allowed.steps.status.reason, 'Hollis HR']);
+      assert.equal(deskState.resolution.resolvedAt, conversation.work.closed_at);
+      assert.ok(Number.isFinite(Date.parse(conversation.work.closed_at)));
+      assert.ok(conversation.messages.some(m => m.visibility === 'public' && m.author_id === 'd15-hr' && m.body.includes(deskState.resolution.closeNotes)),
+        'DESK-015 the HR close persists its public closing reason');
+    } else {
+      assert.equal(deskState.resolution, null);
+      assert.equal(conversation.work.closed_at, null);
+      const transition = check(await api(`/work/${hrTicket.id}/activity`)).items.filter(e => e.action === 'transitioned').at(-1);
+      assert.deepEqual(transition.changes.find(c => c.field === 'waitingOn'),
+        { field: 'waitingOn', before: command === 'pause' ? 'none' : 'requester', after: command === 'pause' ? 'requester' : 'none' },
+        'DESK-015 the HR pause names its requester wait and resume clears it');
+    }
+    assert.equal(check(await api(`/work/${hrTicket.id}/desk`, undefined, hr)).fields.find(f => f.id === office.id).value, value);
+    const expected = [
+      { step: 'fields', field: 'Office', before: beforeValue, after: value },
+      { step: 'status', field: 'state', before: beforeState, after: afterState },
+    ];
+    hrChanges.push(expected);
+    const persisted = check(await api(`/work/${hrTicket.id}/scenario-runs`, undefined, hr)).items;
+    assert.equal(persisted.length, hrChanges.length, 'DESK-015 one persisted audit per permitted HR run');
+    assert.deepEqual(persisted.map(r => r.changes), hrChanges, 'DESK-015 HR audit retains every original before and after');
+    assert.deepEqual(persisted.slice(0, -1), hrAudits,
+      'DESK-015 later HR runs preserve earlier audit attribution, timestamps and changes verbatim');
+    const latest = persisted.at(-1);
+    assert.deepEqual([latest.scenarioId, latest.name, latest.actorId, latest.errorCode], [allowed.id, allowed.name, 'd15-hr', undefined]);
+    assert.ok(Number.isFinite(Date.parse(latest.at)), 'DESK-015 permitted HR run has an attributed timestamp');
+    assert.deepEqual(applied.changes, expected);
+    hrAudits.push(latest);
+  }
+  const hrBeforeRefusal = check(await api(`/work/${hrTicket.id}`, undefined, hr));
+  const hrDeskBeforeRefusal = check(await api(`/work/${hrTicket.id}/desk`, undefined, hr));
+  const hrAuditBeforeRefusal = check(await api(`/work/${hrTicket.id}/scenario-runs`, undefined, hr));
+  const deniedHr = check(await api('/work-scenarios', { name: 'synthetic-linen-15604', scope: 'workspace', steps: {
+    fields: [{ fieldId: office.id, value: 'Denver' }],
+    classification: { category: 'must-not-apply' }, status: { command: 'resume', reason: 'Must not resume' }
+  } }), 201);
+  const hrDenied = check(await api(`/work/${hrTicket.id}/scenario-runs`, { scenarioId: deniedHr.id, revision: hrBeforeRefusal.work.revision }, hr), 403);
+  assert.match(hrDenied.error, /nothing was applied/);
+  assert.deepEqual(check(await api(`/work/${hrTicket.id}`, undefined, hr)), hrBeforeRefusal);
+  assert.deepEqual(check(await api(`/work/${hrTicket.id}/desk`, undefined, hr)), hrDeskBeforeRefusal);
+  assert.deepEqual(check(await api(`/work/${hrTicket.id}/scenario-runs`, undefined, hr)), hrAuditBeforeRefusal);
+  assert.equal(check(await api(`/work/${hrTicket.id}/classification`)).current, null);
+  console.log('PROBE DESK-015 6: HR staff run offered workspace scenarios on their HR ticket -> field updates and pause, resume and close persist with one attributed before and after audit each; forbidden classification applies nothing');
   const response = check(await api('/canned-responses', { title: 'Scenario reply', body: 'Hello {{requester.name}}, we are checking {{ticket.title}}.' }, desk), 201);
   const full = check(await api('/work-scenarios', { name: 'Assign and reply', scope: 'author', steps: {
     classification: { type: 'incident', category: 'hardware', subcategory: 'laptop', impact: 'medium', urgency: 'high', priority: 'P2' },
@@ -125,10 +201,54 @@ export async function deskScenarioChecks(workspaceApi, db) {
     taskPlan: { name: 'Laptop preparation', tasks: [{ title: 'Install approved tools', ownerId: 'd15-net', dueDate: '2026-11-01' }] }
   } }, desk), 201);
   assert.ok(!check(await api('/work-scenarios', undefined, outsider)).items.some(s => s.id === plan.id), 'DESK-015 author scope');
-  const started = check(await api(`/work/${planTicket.id}/scenario-runs`, { scenarioId: plan.id }, desk));
+  // Existing provider authority and dispatch history must survive a local plan unchanged.
+  await db.exec(`
+    INSERT INTO execution_grants(id,workspace_id,version,issuer_id,principal_id,action,action_version,target,beneficiary_id,connection_id,valid_from,valid_until,max_uses,conditions_json,created_at)
+      VALUES('synthetic-linen-2501','desk015',1,'owner','d15-desk','group.add',1,'synthetic-linen-2502','d15-employee','synthetic-linen-2503','2026-01-01','2026-01-02',1,'{}','2026-01-01');
+    INSERT INTO execution_plans(id,workspace_id,work_id,work_revision,actor_id,steps_json,state,idempotency_key,created_at)
+      VALUES('synthetic-linen-2504','desk015','${planTicket.id}',1,'d15-desk','[]','completed','synthetic-linen-2504','2026-01-01');
+    INSERT INTO execution_decisions(id,workspace_id,plan_id,actor_id,grant_id,grant_version,allowed,reason,created_at)
+      VALUES('synthetic-linen-2505','desk015','synthetic-linen-2504','owner','synthetic-linen-2501',1,1,'Previously approved','2026-01-01');
+    INSERT INTO execution_operations(id,workspace_id,plan_id,step_json,state,resource,actor_id,created_at)
+      VALUES('synthetic-linen-2506','desk015','synthetic-linen-2504','{}','verified','synthetic-linen-2502','d15-desk','2026-01-01');
+    INSERT INTO execution_attempts(id,workspace_id,operation_id,fence,kind,state,started_at,finished_at)
+      VALUES('synthetic-linen-2507','desk015','synthetic-linen-2506',1,'dispatch','succeeded','2026-01-01','2026-01-01');
+    INSERT INTO execution_provider_attempts(id,workspace_id,connection_id,kind,state,started_at,finished_at)
+      VALUES('synthetic-linen-2508','desk015','synthetic-linen-2503','dispatch','succeeded','2026-01-01','2026-01-01');
+    INSERT INTO execution_outbox(id,workspace_id,work_id,message_id,recipient_id,connection_id,actor_id,state,dedup_key,next_attempt_at,created_at)
+      VALUES('synthetic-linen-2509','desk015','${planTicket.id}','synthetic-linen-2510','d15-employee','synthetic-linen-2503','d15-desk','sent','synthetic-linen-2509','2026-01-01','2026-01-01');
+    INSERT INTO work_approval_decisions(id,workspace_id,work_id,fulfilment_id,stage_key,approver_id,decision,channel,work_revision,fulfilment_revision,catalog_revision,event_key,created_at)
+      VALUES('synthetic-linen-2511','desk015','${planTicket.id}','synthetic-linen-2512','review','owner','approved','portal',1,1,1,'synthetic-linen-2511','2026-01-01');
+  `.replace(/\n/g, ' '));
+  const authorityTables = ['memberships', 'execution_grants', 'execution_grant_revocations', 'execution_plans',
+    'execution_decisions', 'execution_operations', 'execution_outbox', 'execution_attempts',
+    'execution_provider_attempts', 'execution_receipts', 'execution_verifications', 'execution_fences',
+    'work_fulfilment_approvals', 'work_approval_stages', 'work_approval_decisions', 'work_approval_tokens'];
+  const authorityState = async () => Object.fromEntries(await Promise.all(authorityTables.map(async table =>
+    [table, (await db.prepare(`SELECT * FROM ${table} WHERE workspace_id='desk015' ORDER BY rowid`).all()).results])));
+  const authorityBefore = await authorityState();
+  for (const table of ['execution_grants', 'execution_plans', 'execution_decisions', 'execution_operations',
+    'execution_outbox', 'execution_attempts', 'execution_provider_attempts', 'work_approval_decisions'])
+    assert.ok(authorityBefore[table].length, `DESK-025 compares populated ${table}`);
+  const planWork = check(await api(`/work/${planTicket.id}`, undefined, desk)).work;
+  const started = check(await api(`/work/${planTicket.id}/scenario-runs`, { scenarioId: plan.id, revision: planWork.revision }, desk));
   const projectId = started.changes.find(c => c.field === 'task plan').after;
+  const planRuns = check(await api(`/work/${planTicket.id}/scenario-runs`, undefined, desk)).items;
+  assert.equal(planRuns.length, 1, 'DESK-025 the persisted run audit records the local plan once');
+  assert.deepEqual([planRuns[0].scenarioId, planRuns[0].name, planRuns[0].actorId], [plan.id, 'Prepare laptop duties', 'd15-desk']);
+  assert.ok(planRuns[0].at);
+  assert.equal(planRuns[0].errorCode, undefined);
+  assert.deepEqual(planRuns[0].changes, [{ step: 'taskPlan', field: 'task plan', before: null, after: projectId }],
+    'DESK-025 the persisted audit links to the exact project returned by the run');
   const project = check(await api(`/projects/${projectId}`, undefined, desk));
+  assert.equal(project.project.id, projectId);
   assert.equal(project.project.name, 'Laptop preparation');
+  assert.ok(project.tasks.every(t => t.project_id === projectId));
+  assert.deepEqual(project.links.map(l => [l.project_id, l.kind, l.target_id]), [[projectId, 'ticket', planTicket.id]],
+    'DESK-025 persisted project, duties and ticket link belong to the same plan');
+  assert.deepEqual(await authorityState(), authorityBefore,
+    'DESK-025 starting and reading a local task plan creates no provider authority, approvals, execution work or dispatch');
+  console.log('PROBE DESK-025 5: POST /work/:id/scenario-runs and GET run history and project -> one persisted audit links to the same project, local duties and ticket; existing grants, approvals, execution plans, operations and dispatch records unchanged');
   const taskHistory = check(await api(`/projects/${projectId}/tasks/${project.tasks[0].id}/activity`, undefined, desk)).items;
   assert.equal(taskHistory.length, 1, 'DESK-017 scenario task creation is recorded once');
   assert.equal(taskHistory[0].actorKind, 'scenario');
@@ -154,6 +274,10 @@ export async function deskScenarioChecks(workspaceApi, db) {
   const invalidTicket = await ticket('invalid-plan');
   check(await api(`/work/${invalidTicket.id}/scenario-runs`, { scenarioId: invalidPlan.id }), 422);
   assert.equal(check(await api(`/work/${invalidTicket.id}/classification`)).current, null, 'DESK-015 task-plan validation precedes classification');
+  assert.deepEqual(await authorityState(), authorityBefore,
+    'DESK-025 linking a local plan and refusing unsafe plans also preserve provider authority and dispatch history');
+  // Later runtime cases count operations globally; retire only this journey's completed operation fixture.
+  await db.prepare("DELETE FROM execution_operations WHERE workspace_id='desk015' AND id='synthetic-linen-2506'").run();
   // DESK-015 task templates pre-fill editable drafts submitted through the ordinary project task door.
   const taskTemplate = check(await api('/work-templates', { name: 'Install laptop tools', kind: 'task', title: 'Install approved tools', body: 'Local duty', context: { ownerId: 'd15-net', dueDate: '2026-11-01' } }, desk), 201);
   assert.ok(!check(await api('/work-templates', undefined, employee)).items.some(t => t.id === taskTemplate.id));

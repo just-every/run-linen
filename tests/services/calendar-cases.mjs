@@ -2,6 +2,22 @@ import assert from 'node:assert/strict';
 export async function calendarChecks(request,db) {
   const owner={},agent={'x-user':'operator','x-roles':'["operator"]'},employee={'x-user':'employee','x-roles':'["employee"]'};
   const ok=async(method,path,body,headers=owner)=>{const r=await request(method,path,body,headers);assert.ok(r.status<300,JSON.stringify(r));return r.json;};
+  const auditRows=async()=> (await db.prepare('SELECT id,workspace_id,actor_id,action,target FROM audit_events').all()).results;
+  const auditedRead=async(path,headers,workspaceId,actorId)=>{
+    const before=new Set((await auditRows()).map(row=>row.id));
+    const response=await request('GET',path,undefined,headers);
+    assert.equal(response.status,200,JSON.stringify(response));
+    const added=(await auditRows()).filter(row=>!before.has(row.id)).map(({id,...row})=>row);
+    assert.deepEqual(added,[{workspace_id:workspaceId,actor_id:actorId,
+      action:path.startsWith('/change-calendar.ics')?'change-calendar.export':'change-calendar.read',target:'global-calendar'}],
+    'CHANGE-009 each calendar read or export records its current workspace, actor, action and target');
+    return response;
+  };
+  const unauthenticatedAudit=await auditRows();
+  for(const path of ['/change-calendar','/change-calendar.ics'])assert.equal(
+    (await request('GET',path+'?from=2031-02-01T00:00:00Z&to=2031-02-02T00:00:00Z',undefined,{Cookie:''})).status,401,
+    'CHANGE-009 calendar reads and exports require a native session despite claimed principal headers');
+  assert.deepEqual(await auditRows(),unauthenticatedAudit,'CHANGE-009 refused unauthenticated reads add no successful audit');
   const service=await ok('POST','/services',{name:'Calendar payroll CI',description:'Payroll workflow',businessImpact:'Payroll blocked',source:'Reviewed CI register',observedAt:new Date().toISOString(),visibility:'workspace'});
   const otherCI=await ok('POST','/services',{name:'Calendar test CI',description:'Test workflow',businessImpact:'Test cohort only',source:'Reviewed CI register',observedAt:new Date().toISOString(),visibility:'workspace'});
   const body={title:'Year-end payroll upgrade',risk:'Reviewed upgrade',impact:'Payroll downtime',services:[service.id],window:{start:'2030-12-27T01:00:00.000Z',end:'2030-12-27T02:00:00.000Z'},cohorts:['Denver'],canaryCohorts:['Denver'],implementation:{release:'2031'},compensation:{release:'2030'}};
@@ -18,7 +34,7 @@ export async function calendarChecks(request,db) {
   assert.equal((await request('PATCH','/changes/'+outside.id,{revision:outside.revision,window:body.window},agent)).status,409,'CHANGE-004 edit cannot enter freeze');
   assert.equal((await ok('GET','/changes/'+outside.id)).revision,outside.revision,'CHANGE-004 refused edit applies nothing');
   const unrelated=await ok('POST','/changes',{...body,title:'Unrelated CI upgrade',services:[otherCI.id]});
-  const calendar=await ok('GET','/change-calendar?from=2030-12-01T00:00:00Z&to=2031-02-01T00:00:00Z&timezone=America%2FDenver');
+  const calendar=(await auditedRead('/change-calendar?from=2030-12-01T00:00:00Z&to=2031-02-01T00:00:00Z&timezone=America%2FDenver',owner,'w1','owner')).json;
   assert.equal(calendar.timezone,'America/Denver');assert.ok(calendar.windows.some(r=>r.id===freeze.id));
   assert.ok(calendar.conflicts.some(c=>c.changeId===emergency.id&&c.otherId===freeze.id&&c.kind==='freeze'),'CHANGE-004 calendar shows an emergency overlap with the freeze');
   assert.ok(!calendar.conflicts.some(c=>c.changeId===unrelated.id&&c.otherId===freeze.id),'CHANGE-004 CI-specific freezes do not block unrelated CIs');
@@ -34,7 +50,8 @@ export async function calendarChecks(request,db) {
   assert.equal(scoped.warnings.filter(w=>w.changeId===conflictA.id).length,1,'CHANGE-004 one generic warning per affected visible change');
   const injection=await ok('POST','/changes',{...body,title:'Payroll; review, driver\nBEGIN:VEVENT '+ '界'.repeat(80),window:conflictA.data.window});
   const feedPath='/change-calendar.ics?from=2031-02-01T00:00:00Z&to=2031-02-02T00:00:00Z&timezone=America%2FDenver';
-  const feed=await request('GET',feedPath,undefined,agent);assert.equal(feed.status,200);
+  const foreignWindow=await ok('POST','/change-windows',{title:'synthetic-linen-14007',kind:'maintenance',window:conflictA.data.window,services:[],active:true},{'x-workspace':'w2'});
+  const feed=await auditedRead(feedPath,agent,'w1','operator');assert.equal(feed.status,200);
   assert.ok(feed.headers['content-type'].startsWith('text/calendar'),'CHANGE-004 real ICS response');
   const unfolded=feed.json.replace(/\r\n /g,'');
   assert.ok(unfolded.includes('SUMMARY:Payroll\\; review\\, driver\\nBEGIN:VEVENT '),'CHANGE-004 feed text escapes properties and newlines');
@@ -45,6 +62,52 @@ export async function calendarChecks(request,db) {
   assert.ok(!feed.json.includes(hidden.data.title),'CHANGE-004 ICS shares current source privacy');
   assert.equal(feed.headers['cache-control'],'private, no-store');
   assert.equal((await request('GET',feedPath,undefined,employee)).json.includes('BEGIN:VEVENT'),false,'CHANGE-004 employee feed omits operator changes');
+  for(const [headers,workspaceId,actorId] of [[owner,'w1','owner'],[agent,'w1','operator'],[{'x-workspace':'w2'},'w2','owner']]){
+    const view=await auditedRead(feedPath.replace('.ics',''),headers,workspaceId,actorId);
+    const exported=await auditedRead(feedPath,headers,workspaceId,actorId);
+    assert.ok(Array.isArray(view.json.windows));
+    assert.ok(exported.json.startsWith('BEGIN:VCALENDAR'));
+    assert.equal(view.json.windows.some(row=>row.id===foreignWindow.id),workspaceId==='w2',
+      'CHANGE-009 populated calendar reads use the session workspace');
+    assert.equal(exported.json.includes('SUMMARY:'+foreignWindow.data.title+'\r\n'),workspaceId==='w2',
+      'CHANGE-009 exports use the session workspace');
+    if(workspaceId==='w2')assert.deepEqual(view.json.windows.map(row=>row.id),[foreignWindow.id],
+      'CHANGE-009 a foreign workspace cannot read the original maintenance window');
+  }
+  const events=ics=>new Map(ics.replace(/\r\n /g,'').split('BEGIN:VEVENT\r\n').slice(1).map(block=>{
+    const event=block.split('END:VEVENT')[0];
+    return [event.match(/^UID:(.+)$/m)[1].trim(),event];
+  }));
+  const activeEvents=events((await auditedRead(feedPath,agent,'w1','operator')).json);
+  const maintenanceEntry=[...activeEvents].find(([,event])=>event.includes('SUMMARY:'+maintenance.data.title+'\r\n'));
+  assert.ok(maintenanceEntry,'CHANGE-009 the real active maintenance window appears in the feed');
+  const [maintenanceUid]=maintenanceEntry;
+  const unrelatedEvents=new Map([...activeEvents].filter(([uid])=>uid!==maintenanceUid));
+  assert.ok(unrelatedEvents.size>=2,'CHANGE-009 lifecycle proof retains real unrelated calendar entries');
+  const windowEvents=async()=> (await db.prepare('SELECT * FROM svc_events WHERE record_id=?').bind(maintenance.id).all()).results;
+  const historyBeforeRefusal=await windowEvents();
+  assert.equal((await request('POST','/change-windows/'+maintenance.id,{...maintenance.data,revision:maintenance.revision,active:false},agent)).status,403,
+    'CHANGE-009 an operator cannot deactivate an owner-managed window');
+  assert.deepEqual(await windowEvents(),historyBeforeRefusal,'CHANGE-009 refused window update adds no successful event');
+  assert.deepEqual(events((await auditedRead(feedPath,agent,'w1','operator')).json),activeEvents,
+    'CHANGE-009 refused window update preserves the complete feed');
+  const inactive=await ok('POST','/change-windows/'+maintenance.id,{...maintenance.data,revision:maintenance.revision,active:false});
+  assert.equal(inactive.data.active,false);
+  const inactiveView=(await auditedRead(feedPath.replace('.ics',''),owner,'w1','owner')).json;
+  assert.equal(inactiveView.windows.find(row=>row.id===maintenance.id).data.active,false,
+    'CHANGE-009 deactivation retains the window as inactive policy');
+  const inactiveEvents=events((await auditedRead(feedPath,agent,'w1','operator')).json);
+  assert.equal(inactiveEvents.has(maintenanceUid),false,'CHANGE-009 inactive windows do not enter the feed');
+  assert.deepEqual(inactiveEvents,unrelatedEvents,'CHANGE-009 deactivation preserves every unrelated event');
+  const reactivated=await ok('POST','/change-windows/'+maintenance.id,{...inactive.data,revision:inactive.revision,active:true});
+  assert.equal(reactivated.data.active,true);
+  const reactivatedEvents=events((await auditedRead(feedPath,agent,'w1','operator')).json);
+  assert.ok(reactivatedEvents.get(maintenanceUid)?.includes('SUMMARY:'+maintenance.data.title+'\r\n'),
+    'CHANGE-009 explicit current-owner reactivation restores the same window UID');
+  assert.ok(reactivatedEvents.get(maintenanceUid).includes('SEQUENCE:'+reactivated.revision+'\r\n'));
+  assert.deepEqual(new Map([...reactivatedEvents].filter(([uid])=>uid!==maintenanceUid)),unrelatedEvents,
+    'CHANGE-009 reactivation preserves every unrelated event');
+  console.log('PASS CHANGE-009 calendarChecks: attributed privileged reads and exports; active, inactive and explicitly reactivated stable window UID with unrelated entries preserved');
   const before=await ok('GET',feedPath,undefined,agent),after=await ok('GET',feedPath,undefined,agent);
   assert.deepEqual(before.match(/UID:[^\r\n]+/g),after.match(/UID:[^\r\n]+/g),'CHANGE-004 event identities survive feed refresh');
   const employeeView=await ok('GET','/change-calendar?from=2030-12-01T00:00:00Z&to=2031-02-02T00:00:00Z&timezone=UTC',undefined,employee);
@@ -58,6 +121,11 @@ export async function calendarChecks(request,db) {
   await db.prepare("UPDATE memberships SET roles_json='[\"operator\"]' WHERE workspace_id='w1' AND user_id='owner'").run();
   assert.equal((await request('POST','/changes',{...body,emergency:true,emergencyReason:'Stale owner'},owner)).status,409,'CHANGE-004 current membership, not claimed owner role, controls override');
   await db.prepare("UPDATE memberships SET roles_json='[\"owner\"]' WHERE workspace_id='w1' AND user_id='owner'").run();
+  const auditsBeforeRevocation=await auditRows();
+  await db.prepare("DELETE FROM sessions WHERE workspace_id='w1' AND user_id='operator'").run();
+  for(const path of [feedPath.replace('.ics',''),feedPath])assert.equal(
+    (await request('GET',path,undefined,agent)).status,401,'CHANGE-009 a revoked session cannot read or export retained calendar data');
+  assert.deepEqual(await auditRows(),auditsBeforeRevocation,'CHANGE-009 revoked reads add no successful audit');
   console.log('PASS CHANGE-004 public calendar: year-end freeze/emergency scheduling, edits, CI scope, half-open bounds, maintenance, draft overlaps, scoped/generic conflicts, CAS and current roles');
   return {freezeId:freeze.id,emergencyId:emergency.id};
 }
