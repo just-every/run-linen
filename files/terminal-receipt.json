@@ -1,0 +1,35 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f56",
+  "head": "e9ddab5e7a9145d9cc8aba67c142a4927f07df26",
+  "pr": "https://github.com/just-every/run-linen/pull/188",
+  "verify_run_id": 42589549904,
+  "verify_event": "pull_request",
+  "verify": {
+    "conclusion": null,
+    "head_sha": "e9ddab5e7a9145d9cc8aba67c142a4927f07df26",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42589549904",
+    "status": "in_progress"
+  },
+  "observed_at": "2026-11-09T09:07:06Z",
+  "handoff": "PUSHED",
+  "points_proven_locally": [
+    4,
+    5
+  ],
+  "clause_status": "PARTIAL",
+  "counts_before": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37
+  },
+  "counts_after": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37
+  },
+  "product_push": "succeeded",
+  "publication_scan": "fleet duty; not run in cloud",
+  "run_site": "fleet duty after landing",
+  "github_rest_calls": 5
+}

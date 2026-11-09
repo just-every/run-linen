@@ -1,0 +1,7 @@
+{
+  "views_write": 0,
+  "views_check": 0,
+  "lock_write": 0,
+  "lock_check": 0,
+  "ledger": "not applicable; no migration changes"
+}
