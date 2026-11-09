@@ -7244,7 +7244,7 @@
       "executable": false
     },
     "tests/work/access-policy-cases.mjs": {
-      "sha256": "898359c893f1552f917c99c790074667d605ac1fe821260dc5d5f225b75b9b12",
+      "sha256": "5160a1e04c7c4a23dca1b8e9185deb983ab9e796760480a78e6a92435224cc03",
       "executable": false
     },
     "tests/work/amend-harness.mjs": {
