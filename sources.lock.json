@@ -7328,7 +7328,7 @@
       "executable": false
     },
     "tests/work/desk-field-cases.mjs": {
-      "sha256": "db9c175a168c4cbd6f3a2f65ce2a9d944662ffb47f09d16ad9ddaf8df0f2dcd5",
+      "sha256": "f22b461a4c8c1e6302889c12934aecc236f4c5d97152e8e02b093fda075b23b8",
       "executable": false
     },
     "tests/work/desk-group-cases.mjs": {
