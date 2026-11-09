@@ -2836,7 +2836,7 @@
       "executable": false
     },
     "src/features/services/problem-proposals.ts": {
-      "sha256": "b8fe75cdc21277a3ea53d44139161727de5caad19c7f76c237712df76e293c2c",
+      "sha256": "db9f861fd48eabaea2320a8466061b1f274334f5b29e0059c3f1febaf2f3b9f7",
       "executable": false
     },
     "src/features/services/problem-source-access.ts": {
@@ -7420,7 +7420,7 @@
       "executable": false
     },
     "tests/work/problem-detection-cases.mjs": {
-      "sha256": "10c80ad85b3064763ea3a5308538ce0269cf037fae8143419fe37ba9b770f907",
+      "sha256": "69a6d6bbf0be0be15e158b5a691495f1cd7edfa828457d30b0bfc1156b6c521c",
       "executable": false
     },
     "tests/work/project-cases.mjs": {
