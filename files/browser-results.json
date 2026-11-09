@@ -1,0 +1,10 @@
+{
+  "journey": "dependencyJourney",
+  "assertionWidth": 1440,
+  "captureWidths": [
+    1440,
+    390
+  ],
+  "pageErrors": [],
+  "source": "tests/ui/dependency-journey.mjs; also called unconditionally by tests/ui/browser.mjs"
+}

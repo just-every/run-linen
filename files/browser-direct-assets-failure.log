@@ -1,0 +1,14 @@
+<anonymous_script>:1
+Error: Fetch for user worker without having a user worker binding
+^
+
+SyntaxError: Unexpected token 'E', "Error: Fet"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+    at successSteps (node:internal/deps/undici/undici:5719:27)
+    at fullyReadBody (node:internal/deps/undici/undici:4609:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async consumeBody (node:internal/deps/undici/undici:5728:7)
+    at async file:///home/agent/rer-consolidation/work/sx-linen-c-f55/browser-direct.mjs:29:14
+
+Node.js v22.20.0

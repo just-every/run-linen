@@ -1,0 +1,10 @@
+file:///home/agent/rer-consolidation/work/sx-linen-c-f55/repo/tests/ui/run.mjs:27
+            Error(
+            ^
+
+Error: /opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/wrangler/bin/wrangler.js d1 migrations apply DB --local --persist-to /tmp/linen-ui-RE9l1v/state --config wrangler.jsonc exited 1; inspect /home/agent/rer-consolidation/work/sx-linen-c-f55/browser/worker.log
+    at ChildProcess.<anonymous> (file:///home/agent/rer-consolidation/work/sx-linen-c-f55/repo/tests/ui/run.mjs:27:13)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+Node.js v24.19.0

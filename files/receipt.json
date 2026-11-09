@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f55",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f55",
+  "head": "08c1a00e215a1558482b48819cc86d06487a92b3",
+  "checks": [
+    {
+      "command": "node tests/services/run.mjs",
+      "exit": 0,
+      "head": "69bd23c5fc4d84eb5343ddb85f244d3447355dbd",
+      "node": "22.20.0",
+      "log": "services.log",
+      "equivalence": "This unpublished execution commit has the same tree as published save da74439eb8b2c85b9bd2a4aa59ab06a593691e98. No route test or product source byte changed between that save and final candidate."
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "head": "08c1a00e215a1558482b48819cc86d06487a92b3",
+      "node": "22.20.0",
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "head": "08c1a00e215a1558482b48819cc86d06487a92b3",
+      "node": "22.20.0",
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "head": "08c1a00e215a1558482b48819cc86d06487a92b3",
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "head": "08c1a00e215a1558482b48819cc86d06487a92b3",
+      "log": "views-check.log"
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0,
+      "head": "08c1a00e215a1558482b48819cc86d06487a92b3"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "head": "08c1a00e215a1558482b48819cc86d06487a92b3"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "head": "08c1a00e215a1558482b48819cc86d06487a92b3"
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "head": "b04dd96470595e24c2172399745f8425b681f22b",
+      "log": "build.log",
+      "equivalence": "No product source or build input changed between this save and candidate; only tests and source lock, plus main test changes."
+    }
+  ],
+  "counts": {
+    "before": {
+      "done": 28,
+      "partial": 134,
+      "missing": 37
+    },
+    "after": {
+      "done": 28,
+      "partial": 134,
+      "missing": 37
+    }
+  },
+  "browser": {
+    "status": "passed focused committed journey",
+    "head": "08c1a00e215a1558482b48819cc86d06487a92b3",
+    "exit": 0,
+    "node": "22.20.0",
+    "command": "perl -e 'alarm 1200; exec @ARGV' -- node ../browser-direct.mjs /home/agent/rer-consolidation/work/sx-linen-c-f55/dependency-probe.mjs",
+    "assertion_width": 1440,
+    "capture_widths": [
+      1440,
+      390
+    ],
+    "page_errors": [],
+    "module": "tests/ui/dependency-journey.mjs#dependencyJourney",
+    "normal_driver": "tests/ui/browser.mjs invokes the same module unconditionally; full local driver attempts had infrastructure failures, not a claimed full-driver pass",
+    "log": "browser.log",
+    "results": "browser-results.json"
+  },
+  "ci": {
+    "status": "in_progress",
+    "head": "08c1a00e215a1558482b48819cc86d06487a92b3",
+    "pr": "https://github.com/just-every/run-linen/pull/190",
+    "initial_discovery_utc": "2026-11-09T09:36:45Z",
+    "initial_runs": [],
+    "gh_calls_used": 5,
+    "gh_call_budget": 10,
+    "run_id": 42594763474,
+    "event": "pull_request",
+    "observed_utc": "2026-11-09T09:41:48Z",
+    "url": "https://github.com/just-every/run-linen/actions/runs/42594763474",
+    "conclusion": null
+  },
+  "publication_scan": {
+    "status": "not run in cloud",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "migrations_changed": false,
+  "contract_changed": false,
+  "source_equivalence": {
+    "from_save": "b04dd96470595e24c2172399745f8425b681f22b",
+    "to_candidate": "08c1a00e215a1558482b48819cc86d06487a92b3",
+    "changed_product_inputs": [],
+    "route_execution_tree": "c61c8c9fcbdd03c3fce531b45f38e73e4430c55b",
+    "published_save_tree": "c61c8c9fcbdd03c3fce531b45f38e73e4430c55b"
+  },
+  "screen_files": [
+    {
+      "path": "ASSET-009-change-impact-390px.png",
+      "sha256": "f0e2d0726f976f140e279090c786d5e55eeb8c645cec87e4a03e2225296e83bd"
+    },
+    {
+      "path": "ASSET-009-change-impact.png",
+      "sha256": "4ba3adfcb98a91167e34fc6032e43126280b10236c182db3ae68c27fe9235782"
+    },
+    {
+      "path": "ASSET-009-create-item-390px.png",
+      "sha256": "214cc0cd8aa47182641e653d4c06d96296d5b48c5308487e315c0650215f62ee"
+    },
+    {
+      "path": "ASSET-009-create-item.png",
+      "sha256": "0ad92e4e4a5b662ded3f6b4cfb47446c67af2daccf953b2df3bdc64f57fbe094"
+    },
+    {
+      "path": "ASSET-009-dependencies-390px.png",
+      "sha256": "4f0bbe5f3a8b79ed75460c4458fbdb2c3e1cc3e939e5163d5bf58a5cbb5cb0a4"
+    },
+    {
+      "path": "ASSET-009-dependencies.png",
+      "sha256": "7452ee3cafd1f08f5e66709e085d7a03fbfe90c68dba54eb7f5306fa36b12762"
+    },
+    {
+      "path": "ASSET-009-incident-impact-390px.png",
+      "sha256": "a70ab90d34edad850a660fe15a6fe653cf150d958a29ccac28239b97484bda08"
+    },
+    {
+      "path": "ASSET-009-incident-impact.png",
+      "sha256": "8088f8567361204f0fd86100e75179926ac9087534fa1c818a3c253194565cb4"
+    },
+    {
+      "path": "ASSET-009-stale-relationship-390px.png",
+      "sha256": "f51d9f39521ffc9aec0c5d8f04c2fcddde804808502cf6d932c4e832e1246577"
+    },
+    {
+      "path": "ASSET-009-stale-relationship.png",
+      "sha256": "f799b2e8786c537558a52ba45442d93ede64ba8f123c407ebf3d06ba487f1223"
+    },
+    {
+      "path": "ASSET-009-unknown-item-390px.png",
+      "sha256": "9b90421a541193f59de8cbd5bc5d675edb27e3af35ac491ab6da47148ed587ed"
+    },
+    {
+      "path": "ASSET-009-unknown-item.png",
+      "sha256": "80284c50f4cdb844815cc670dd224f4cc444d8d52e5d1a1953049719f2622481"
+    }
+  ]
+}

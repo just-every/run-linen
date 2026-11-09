@@ -1,0 +1,3 @@
+PASS direct built Worker: native assets and auth, isolated real D1 and all actual migrations
+PASS ASSET-009 browser: linked Payroll and unlinked hardware, inferred impact disclosure, change and incident impact and marked stale relationship; assertions at 1440, evidence at 1440 and 390
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-c-f55/browser-direct

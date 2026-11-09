@@ -1,0 +1,44 @@
+PASS fixture: all actual migrations applied through one real D1 runtime
+PASS LIFE-007: lifecycle evidence download with outstanding duties at 1440
+PASS ASSET-004: physical lifecycle, loan, assigned/certificate refusals and attributed disposal at 1440
+PASS ASSET-007: attach AppleCare and all contract kinds, manufacturer lookup and repair coverage/expiry alerts at 1440
+PASS DESK-002 real Worker browser 1440: unavailable provider visible, type/category/subcategory/impact/urgency matrix, P1 -> P2 override and persisted audited before/after.
+CATALOG-002 native item, cost, explicit finance stage/calendar, OOO delegation, manager and finance decisions with keyboard and responsive evidence.
+PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440
+PASS sandbox native settings: isolated catalog, form, tasks, roles, full existing SLA configuration, rehearsals, field diffs, separate owner approval, promotion, reviewed rollback and employee refusal at 1440
+PASS LIFE-002 native template editor, dated team tasks on the record, owner completion and the manager reminder at 1440
+PASS MIGRATE-004 native CSV/Zendesk historical tickets, imported unbound person, stock and custody at 1440
+PASS CATALOG-001 native form editor, conditional request, known and unknown estimates and immutable submitted revision at 1440
+PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440
+PASS CATALOG-001 native item creation, quote requirement, audience editor, quote refusal and upload, approver reading and colleague 404 at 1440
+<anonymous_script>:1
+Error: Network connection lost.
+^
+
+SyntaxError: Unexpected token 'E', "Error: Net"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at _Response.json (/home/agent/rer-consolidation/work/sx-linen-c-f55/repo/node_modules/.pnpm/playwright-core@1.63.0-alpha-2026-08-31/node_modules/playwright-core/lib/coreBundle.js:60006:21)
+    at async action (file:///home/agent/rer-consolidation/work/sx-linen-c-f55/repo/tests/ui/connected-helpers.mjs:26:39)
+    at async dependencyJourney (file:///home/agent/rer-consolidation/work/sx-linen-c-f55/repo/tests/ui/dependency-journey.mjs:17:3)
+    at async file:///home/agent/rer-consolidation/work/sx-linen-c-f55/repo/tests/ui/browser.mjs:565:3
+
+Node.js v22.20.0
+file:///home/agent/rer-consolidation/work/sx-linen-c-f55/repo/tests/ui/run.mjs:108
+      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+                              ^
+
+Error: Browser acceptance exited 1
+    at ChildProcess.<anonymous> (file:///home/agent/rer-consolidation/work/sx-linen-c-f55/repo/tests/ui/run.mjs:108:31)
+    at ChildProcess.emit (node:events:519:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+
+Node.js v22.20.0
+file:///home/agent/rer-consolidation/work/sx-linen-c-f55/browser-runner.mjs:37
+  if(exit)throw Error('Public browser driver exited '+exit);
+                ^
+
+Error: Public browser driver exited 1
+    at file:///home/agent/rer-consolidation/work/sx-linen-c-f55/browser-runner.mjs:37:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v22.20.0
