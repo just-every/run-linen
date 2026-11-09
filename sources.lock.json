@@ -7008,7 +7008,7 @@
       "executable": false
     },
     "tests/ui/connected-browser.mjs": {
-      "sha256": "6a8acba66ba41de2651bae35a952802e90a3963aaee065fed04cf43f2c92a75d",
+      "sha256": "699c37076e4ea979fc1041a02a72fbcf4f445a212e7c92386c865b435a0075cd",
       "executable": false
     },
     "tests/ui/connected-cancellation.mjs": {
@@ -7032,7 +7032,7 @@
       "executable": false
     },
     "tests/ui/connected-request.mjs": {
-      "sha256": "f49131a433e5f0ff401089b437d73e5a4babe3c45721d9f23a730c86dd98f6d6",
+      "sha256": "dd0f3913cdaa4a608a8b42c7ef57dfca408f3313af723287fdaa0724a3e2d58a",
       "executable": false
     },
     "tests/ui/connected-restart.mjs": {
@@ -7128,7 +7128,7 @@
       "executable": false
     },
     "tests/ui/provider-boundary.mjs": {
-      "sha256": "a944e16a056aa5f210e54bb2f3765f3f818c75b5b91fb068d7cb02ce3995470e",
+      "sha256": "3a550da4aaf239d0f4e8ee43f7eb31e0a552097ff80000e2c9102332ff57c4a3",
       "executable": false
     },
     "tests/ui/README.md": {
