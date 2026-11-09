@@ -42,6 +42,58 @@ export async function applicationChecks(api, db) {
   assert.deepEqual(Object.keys((await ok(`/work/${work.id}/application-services`,undefined,employee)).items[0]).sort(),Object.keys(projection).sort(),'ACCESS-008 request snapshot has the same safe employee projection');
   assert.equal((await api('/catalog',{name:'Forged target',kind:'access',applicationId:registered.id,entitlementId:admin.id,target:'wrong'})).status,422,'ACCESS-008 linked catalog target cannot be forged');
   assert.equal((await api('/catalog',{name:'Foreign app',kind:'access',applicationId:'foreign-app',entitlementId:admin.id})).status,404,'ACCESS-008 application links stay in the current workspace');
+  const metadataMember='synthetic-linen-920';
+  const metadataEmployee={'x-user':metadataMember,'x-roles':'["employee"]'};
+  await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind(metadataMember,'synthetic-linen-921','Metadata approver','unused','2026-01-01').run();
+  await db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('a',metadataMember,'["employee"]').run();
+  const authoritySnapshot=async()=>{
+    const snapshot={};
+    for(const table of ['memberships','work_department_members','work_department_roles','work_department_role_members','work_group_members','work_delegations','execution_grants'])
+      snapshot[table]=(await db.prepare(`SELECT * FROM ${table} WHERE workspace_id=? ORDER BY rowid`).bind('a').all()).results;
+    return snapshot;
+  };
+  const authorityBefore=await authoritySnapshot();
+  const metadataApp=await ok('/applications',{
+    name:'Metadata-only approver application',ownerId:'owner',approverIds:[metadataMember],
+    connector:'Not connected',sensitivity:'confidential',
+    entitlements:[{name:'Administration',target:'synthetic-linen-922',costCents:0,billingPeriod:'month'}],
+  });
+  assert.deepEqual(metadataApp.data.approverIds,[metadataMember],'ACCESS-008 active employee is recorded only as application approver metadata');
+  const metadataCatalog=await ok('/catalog',{name:'Metadata authority boundary',kind:'access',applicationId:metadataApp.id,entitlementId:metadataApp.data.entitlements[0].id});
+  const metadataItem=(await ok('/catalog')).items.find(item=>item.id===metadataCatalog.id);
+  const approvalCalendar=await ok('/calendars',{name:'Metadata authority calendar',timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]});
+  const metadataApprovals=await ok(`/catalog/${metadataCatalog.id}/approvals`,{
+    revision:metadataItem.revision,calendarId:approvalCalendar.id,
+    approvals:[{key:'authorized_holder',name:'Authorized holder',mode:'any',approvers:[{type:'member',userId:'owner'}]}],
+  },undefined,200);
+  const metadataWork=await ok('/work',{title:'Metadata approver exclusion',body:'Request the registered entitlement',deduplicationKey:'synthetic-linen-923'},employee);
+  await ok(`/work/${metadataWork.id}/fulfilment`,{catalogId:metadataCatalog.id,catalogRevision:metadataApprovals.revision,beneficiaryId:'employee',purpose:'Administration'},employee);
+  const metadataChain=()=>ok(`/work/${metadataWork.id}/approvals/${metadataCatalog.id}`);
+  const openChain=await metadataChain();
+  assert.equal(openChain.satisfied,false,'ACCESS-008 the linked entitlement has an unsatisfied approval chain');
+  assert.equal(openChain.stages[0].state,'pending','ACCESS-008 metadata refusal is attempted against an open stage');
+  assert.ok(openChain.stages[0].activeAt,'ACCESS-008 the stage is active');
+  assert.deepEqual(openChain.stages[0].approvers.map(a=>a.id),['owner'],'ACCESS-008 stage authority belongs to another member');
+  assert.deepEqual(openChain.stages[0].decisions,[]);
+  const currentDecision=(await ok('/approval-stages')).items.find(item=>item.workId===metadataWork.id&&item.stageKey==='authorized_holder');
+  assert.ok(currentDecision,'ACCESS-008 the authorized holder receives exact current decision revisions');
+  assert.equal((await ok('/approval-stages',undefined,metadataEmployee)).items.some(item=>item.workId===metadataWork.id),false,'ACCESS-008 metadata alone creates no approval queue entry');
+  const decisionsBefore=(await db.prepare('SELECT * FROM work_approval_decisions WHERE workspace_id=? ORDER BY rowid').bind('a').all()).results;
+  assert.deepEqual(await authoritySnapshot(),authorityBefore,'ACCESS-008 registration and linked requests change neither membership, roles nor execution grants');
+  const refused=await api(`/work/${metadataWork.id}/approval-stage`,{...currentDecision,decision:'approved',idempotencyKey:'synthetic-linen-924'},metadataEmployee);
+  assert.equal(refused.status,403,'ACCESS-008 approver metadata cannot authorize an exact-current-revision decision');
+  assert.ok(refused.value.error.includes('current approver of this stage'),'ACCESS-008 refusal explains the missing stage authority');
+  assert.deepEqual(await metadataChain(),openChain,'ACCESS-008 refused approval leaves the active stage unsatisfied with no decisions');
+  assert.deepEqual((await db.prepare('SELECT * FROM work_approval_decisions WHERE workspace_id=? ORDER BY rowid').bind('a').all()).results,decisionsBefore,'ACCESS-008 refused metadata decision changes no stored decision');
+  assert.deepEqual(await authoritySnapshot(),authorityBefore,'ACCESS-008 refused metadata decision changes no execution grant, membership or role');
+  await ok(`/work/${metadataWork.id}/approval-stage`,{...currentDecision,decision:'approved',idempotencyKey:'synthetic-linen-925'},undefined,200);
+  const authorizedChain=await metadataChain();
+  assert.equal(authorizedChain.satisfied,true,'ACCESS-008 the same exact-current-revision decision succeeds for the authorized holder');
+  assert.equal(authorizedChain.stages[0].state,'approved');
+  assert.equal(authorizedChain.stages[0].decisions.length,1);
+  assert.equal(authorizedChain.stages[0].decisions[0].decision,'approved');
+  assert.deepEqual(await authoritySnapshot(),authorityBefore,'ACCESS-008 an authorized stage decision still issues no execution grant or membership authority');
+  console.log(`PROBE ACCESS-008 3: exact-current-revision POST /work/:id/approval-stage as metadata-only employee -> ${refused.status}; open chain unchanged, no decisions or grants added, membership and roles unchanged; authorized holder satisfied=${authorizedChain.satisfied}`);
   const changedInput={...registered.data,ownerId:'app-steward',revision:registered.revision,entitlements:registered.data.entitlements.map(e=>({...e,costCents:19900}))};
   const changed=await ok(`/applications/${registered.id}`,changedInput,undefined,200);
   assert.equal((await api(`/applications/${registered.id}`,changedInput)).status,409,'ACCESS-008 stale registry edits are refused');
@@ -270,9 +322,50 @@ export async function catalogAudienceChecks(api,db) {
   assert.ok(!(await ok('/catalog',undefined,as('aud-sales'))).items.some(i=>i.id===item.id),'CATALOG-001 current review changes discovery immediately');
   const next=await request('aud-sales');assert.equal((await submit(next,'aud-sales')).status,403,'CATALOG-001 submission rechecks reviewed facts');
   assert.deepEqual((await submit(work,'aud-sales')).value.catalogSnapshot,first.value.catalogSnapshot,'CATALOG-001 audience gates new submission, not in-flight retries');
-  await ok(`/catalog-values/${support.id}`,{label:'Support',revision:1,active:false});
+  const supportWork=await request('aud-support'),supportSubmission=await submit(supportWork,'aud-support');
+  assert.equal(supportSubmission.status,201,'CATALOG-007 submit a request referencing the value before renaming it');
+  const references=async()=>({
+    person:(await ok('/people')).items.find(p=>p.id===bob.id),
+    item:(await ok('/catalog')).items.find(c=>c.id===item.id),
+    submitted:(await ok(`/work/${supportWork.id}/catalog-requests`,undefined,as('aud-support'))).items,
+  });
+  const retained=await references();
+  assert.equal(JSON.parse(retained.person.attributes_json).department,support.id,'CATALOG-007 the reviewed person references the stable value');
+  assert.ok(retained.item.audience.department.includes(support.id),'CATALOG-007 the item references the stable value');
+  assert.equal(retained.submitted.length,1,'CATALOG-007 read the nonempty submitted request through its public door');
+  assert.deepEqual(retained.submitted[0].catalogSnapshot,supportSubmission.value.catalogSnapshot,'CATALOG-007 read back the frozen submitted references');
+  assert.deepEqual(retained.submitted[0].catalogSnapshot.audiencePeople,[{id:bob.id,revision:bob.revision}],'CATALOG-007 the submitted request references the reviewed person');
+  assert.ok(retained.submitted[0].catalogSnapshot.audience.department.includes(support.id),'CATALOG-007 the submitted audience references the stable value');
+  const currentValue=async()=>{
+    const row=(await ok('/catalog-values')).items.find(v=>v.id===support.id);
+    assert.ok(row,'CATALOG-007 the referenced value remains in its owner-maintained list');
+    return row;
+  };
+  const originalValue=await currentValue(),renamedLabel='Customer support';
+  const rename={label:renamedLabel,revision:originalValue.revision,active:true};
+  assert.equal((await api(`/catalog-values/${support.id}`,rename,as('aud-support'))).status,403,'CATALOG-007 employees cannot rename values');
+  assert.deepEqual(await currentValue(),originalValue,'CATALOG-007 refused edits preserve the value');
+  const renamed=await ok(`/catalog-values/${support.id}`,rename);
+  assert.deepEqual(renamed,{id:support.id,revision:originalValue.revision+1},'CATALOG-007 rename advances the current revision of the same value');
+  const renamedValue=await currentValue();
+  assert.deepEqual(renamedValue,{...originalValue,label:renamedLabel,revision:renamed.revision},'CATALOG-007 read back the new label with stable id, dimension and active state');
+  assert.deepEqual(await references(),retained,'CATALOG-007 renaming preserves person, item and submitted references');
+  assert.ok((await ok('/catalog',undefined,as('aud-support'))).items.some(i=>i.id===item.id),'CATALOG-007 renaming preserves existing audience matches');
+  const deletion=await api(`/catalog-values/${support.id}`,undefined,{},'DELETE');
+  assert.equal(deletion.status,404,'CATALOG-007 DELETE has no supported value-deletion door');
+  assert.deepEqual(await currentValue(),renamedValue,'CATALOG-007 refused DELETE leaves the referenced value unchanged');
+  assert.deepEqual(await references(),retained,'CATALOG-007 refused DELETE leaves person, item and submitted references unchanged');
+  const retired=await ok(`/catalog-values/${support.id}`,{label:renamedLabel,revision:renamedValue.revision,active:false});
+  assert.deepEqual(await currentValue(),{...renamedValue,active:0,revision:retired.revision},'CATALOG-007 retirement retains the same id and renamed label');
+  assert.equal(retired.revision,renamedValue.revision+1,'CATALOG-007 retirement uses the renamed value current revision');
+  assert.deepEqual(await references(),retained,'CATALOG-007 retiring preserves person, item and submitted references');
   assert.ok((await ok('/catalog',undefined,as('aud-support'))).items.some(i=>i.id===item.id),'CATALOG-001 retiring a referenced value preserves existing matches');
   assert.equal((await api('/people',{source,sourceId:'retired',name:'Retired',effectiveAt:'2026-01-01',observedAt:'2026-01-01',attributes:{department:support.id}})).status,422,'CATALOG-001 new reviews cannot select retired values');
+  assert.equal((await api(`/catalog/${config.id}/audience`,{revision:versioned.revision,audience})).status,422,'CATALOG-007 item audience edits cannot newly select a retired value');
+  assert.deepEqual(await references(),retained,'CATALOG-007 refused new selections leave existing references unchanged');
+  assert.ok(!(await ok('/people')).items.some(p=>p.source===source&&p.source_id==='retired'),'CATALOG-007 a refused retired-value review creates no person');
+  assert.equal((await ok('/catalog')).items.find(c=>c.id===config.id).revision,versioned.revision,'CATALOG-007 a refused retired-value audience edit does not advance the item revision');
+  assert.deepEqual((await submit(supportWork,'aud-support')).value.catalogSnapshot,supportSubmission.value.catalogSnapshot,'CATALOG-007 retirement preserves an in-flight request retry');
   const snapshot=JSON.parse((await db.prepare('SELECT catalog_snapshot_json FROM work_fulfilments WHERE work_id=?').bind(work.id).first()).catalog_snapshot_json);
   assert.deepEqual(snapshot,first.value.catalogSnapshot,'CATALOG-001 item and person changes never rewrite submitted facts');
   assert.equal((await db.prepare('SELECT count(*) n FROM work_fulfilments WHERE work_id=?').bind(denied.id).first()).n,0,'CATALOG-001 refusal leaves no fulfilment');

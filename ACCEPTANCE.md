@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 25 | 124 | 29 | 178 |
+| Core | 28 | 121 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 25 | 137 | 37 | 199 |
+| Full target | 28 | 134 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -847,7 +847,7 @@ Core · target · **done**
 
 #### DESK-003 — Routing and assignment
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Rules route by category, requester, department, location, VIP status and the impacted configuration item's or business service's support group (ASSET-009); assignment can be round-robin, by current load, by skill, or by business-hours availability, and reassignment keeps history. Assignment within a group is DESK-019.
 
@@ -861,8 +861,8 @@ Core · target · **partial**
 7. Precedence: the support group of the item the ticket names comes first; otherwise the lowest-position rule whose every set condition matches (category, requester, requester group) decides; otherwise nothing changes.
 8. Within the group, the candidates are its active agents who are on shift at that minute in their calendar's time zone, hold the rule's skill if it names one, and own fewer open tickets than the group's cap.
 
-**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`
-**Gap.** Not asserted: a group whose assignment method is none placing the ticket without an agent; a rule with several set conditions deciding only when all of them match; and an inactive agent left out of the candidates. Round-robin and load-based assignment past the off-shift and capped agents, the VIP, Payroll-service and laptop-CI routes, owner-only rules, support groups, shifts and skills, routing on creation, on classification and on request at the revision read, precedence and no change without a match, and skill-based candidates are asserted.
+**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`; `tests/work/desk-routing-cases.mjs` (deskRoutingChecks)
+**Gap.** None.
 
 #### DESK-019 — Automatic assignment and routing history
 
@@ -1090,7 +1090,7 @@ Core · target · **done** · Rules D-4
 
 #### DESK-024 — Department handoff and retained HR restriction
 
-Core · target · **partial** · From DESK-011 · Rules D-4
+Core · target · **done** · From DESK-011 · Rules D-4
 
 **Requirement.** A handoff between workspaces moves the ticket whole, and a ticket that was ever in an HR workspace keeps that workspace's restriction wherever it goes.
 
@@ -1104,8 +1104,8 @@ Core · target · **partial** · From DESK-011 · Rules D-4
 7. Membership withdrawal applies to ticket reads, private writes, assignments, scenarios, tasks, knowledge sources, derived service/execution views and reports before aggregation; HR sources cannot be copied by a project-plan scenario into a globally visible project.
 8. Native archives retain department metadata and HR restrictions while restoring staff memberships inert; owners explicitly confirm authority again.
 
-**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).
-**Gap.** Not asserted: that a handoff at a stale revision is refused, and that the ticket's submitted forms remain after a handoff (the handed-off request has none). The kept history, owner-only handoff with an audited reason, identity, messages, attachments, sensitivity and the frozen SLA clock, cleared incompatible assignments, the retained HR requirement across later moves, staff-door membership, the requester's public view, HR-service limits, no recovery through relationships, withdrawal before aggregation and inert archived memberships are asserted.
+**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).; `tests/work/department-space-cases.mjs` (departmentSpaceChecks); `tests/work/department-ops-cases.mjs` (departmentOpsChecks); `tests/work/department-report-cases.mjs` (departmentReportChecks); `tests/ui/department-browser.mjs` (native department handoff journey); `tests/services/department-source-cases.mjs` (departmentSourceChecks); `tests/platform/mcp-tools-cases.mjs` (mcpToolCases); `tests/platform/base-auth-transfer.mjs` (native archive and recovery)
+**Gap.** None.
 
 #### DESK-012 — Time tracking and effort
 
@@ -1427,7 +1427,7 @@ Core · target · **missing** · Cites BASE-SECRET-001 · Rules D-2
 
 #### ACCESS-008 — Application catalog and owners
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** A registry of SaaS applications with owner, approvers, roles/entitlements, cost per seat in USD, connector and data sensitivity; catalog items reference these entitlements (RL-11). ACCESS-005 carries SaaS provisioning.
 
@@ -1441,8 +1441,8 @@ Core · target · **partial**
 7. Seat costs are nonnegative integer USD cents per month, year or one-time period, without conversion or a charge claim; connector descriptions are recorded metadata, not provider verification.
 8. Native restore remaps references without activating historical membership or releasing the execution hold; erasure anonymizes retained registry/request actors.
 
-**Evidence.** `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs`
-**Gap.** Not asserted: that approver metadata confers no approval right. Registration, routing, visibility, snapshots, seat costs, restore and erasure are asserted.
+**Evidence.** `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs`; `tests/work/application-cases.mjs` (applicationChecks); `tests/adoption/application-cases.mjs` (checkArchiveApplications); `tests/ui/application-journey.mjs` (applicationJourney)
+**Gap.** None.
 
 #### ACCESS-009 — User access reviews
 
