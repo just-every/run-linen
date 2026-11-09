@@ -140,7 +140,26 @@ export async function problemDetectionChecks(api, db) {
   const cancellationProposal = await readEvidence(cluster(await detect(), 'service', 'cancellation pilot'), remaining);
   assert.ok(!evidenceIds(cancellationProposal).includes(canceled.id));
   assert.ok(!sourceIds(cancellationProposal).includes(canceled.id), 'Canceled content is absent from proposal reads');
-  console.log('PROBE PROB-002 6: native cancel then detection -> no proposal from two active sources plus canceled source; three active sources yield evidence excluding the canceled ID');
+  const capturedSource = remaining.pop();
+  const capturedWork = check(await api(`/work/${capturedSource.id}`, undefined, employee)).work;
+  check(await api(`/work/${capturedSource.id}/commands`, { command: 'cancel', revision: capturedWork.revision, reason: 'Withdraw a source already captured by detection' }, employee));
+  assert.equal(check(await api(`/work/${capturedSource.id}`, undefined, employee)).work.state, 'cancelled');
+  const beforeDecision = check(await api(`/service-history/${cancellationProposal.id}`));
+  const problemsBefore = check(await api('/problems'));
+  assert.equal(check(await api(`/problem-proposals/${cancellationProposal.id}`), 409).code, 'problem_evidence_changed');
+  assert.equal(check(await api(`/problem-proposals/${cancellationProposal.id}/accept`, { revision: cancellationProposal.revision, reason: 'Cannot use a canceled source' }), 409).code, 'problem_evidence_changed');
+  assert.deepEqual(check(await api('/problems')), problemsBefore, 'A canceled source cannot authorize creation of a problem');
+  assert.deepEqual(check(await api(`/service-history/${cancellationProposal.id}`)), beforeDecision, 'Refused acceptance records no decision');
+  assert.ok(!check(await api('/problem-proposals')).items.some(p => p.id === cancellationProposal.id), 'Current proposal reads exclude a cluster supported by a canceled ticket');
+  assert.equal(cluster(await detect(), 'service', 'cancellation pilot'), undefined, 'Re-detection cannot keep an under-threshold proposal alive with its canceled evidence');
+  remaining.push(await ticket(cancellationContext));
+  const refreshed = await readEvidence(cluster(await detect(), 'service', 'cancellation pilot'), remaining);
+  assert.equal(refreshed.id, cancellationProposal.id, 'Replacement live evidence refreshes the same semantic proposal');
+  assert.ok(refreshed.revision > cancellationProposal.revision);
+  assert.ok(!sourceIds(refreshed).includes(capturedSource.id));
+  const acceptedReplacement = check(await api(`/problem-proposals/${refreshed.id}/accept`, { revision: refreshed.revision, reason: 'Investigate the three remaining live sources' }));
+  assert.deepEqual(check(await api(`/problems/${acceptedReplacement.data.problemId}`)).data.ticketIds.sort(), remaining.map(t => t.id).sort());
+  console.log('PROBE PROB-002 6: native cancellation before and after detection -> canceled IDs excluded, insufficient cluster hidden, acceptance refused without changes; three replacement live sources refresh the same proposal and create a problem with exact evidence IDs');
 
   // The adapter's monitoring-derived incident is the single counted alert source.
   const alertTickets = [await ticket({ serviceId: service.id, cohort: 'Alert floor',deviceModel:'Wireless Laptop',app:'Corporate Wi-Fi' }), await ticket({ serviceId: service.id, cohort: 'Alert floor',deviceModel:'Wireless Laptop',app:'Corporate Wi-Fi' })];
