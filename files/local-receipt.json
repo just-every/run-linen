@@ -109,12 +109,13 @@
     "catalog-values-390.png"
   ],
   "ci": {
-    "conclusion": null,
+    "conclusion": "success",
     "event": "pull_request",
     "head_sha": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
     "html_url": "https://github.com/just-every/run-linen/actions/runs/42573021928",
     "id": 42573021928,
-    "status": "in_progress"
+    "status": "completed"
   },
-  "github_api_calls_so_far": 5
+  "github_api_calls_so_far": 6,
+  "terminal_product_custody": "READY; exact-candidate pull_request Verify completed successfully; guarded landing remains with fleet"
 }

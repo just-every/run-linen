@@ -30,7 +30,7 @@ CATALOG-007 stays PARTIAL. The selected remainder of point 1 is proved through c
 
 1. PARTIAL: selected point 1 outcomes exercised; the point 8 native restore gap is retained.
 2. PASS locally: nonempty seeded references, successful rename and retirement, rejected unauthorized and stale rename, rejected DELETE and rejected new selections, and a successful new submission after retirement. The refused paths leave references unchanged.
-3. PENDING exact-SHA Verify: existing Verify invokes the touched runtime via scripts/verify.mjs. No separate permanent test was added.
+3. PASS exact-SHA Verify: run 42573021928, event pull_request, completed success on e07c51adfa42f470489142a01f2b8ff90749d2b7. Existing Verify invokes the touched runtime via scripts/verify.mjs. No separate permanent test was added.
 4. Candidate proof records the final source tree and exact SHA below; no relevant source or test changes follow those checks.
 5. INSPECTED: no inherited duty or clause text changed; current D-1 catalog obligations remain.
 6. PASS mechanical: contract generator write and check, generated views restored from main, source lock regenerated last and checked. Status, Gap and Evidence cells remain main's text.
@@ -156,3 +156,22 @@ Packet review: regular files explicitly selected; no injected credential values 
 No duplicate workflow was dispatched or rerun. Four API calls so far: draft PR creation, initial exact-SHA discovery, base-SHA discovery and exact-SHA rediscovery at least 300 seconds later.
 
 Second candidate CI observation, after another 300 seconds: {"conclusion": null, "event": "pull_request", "head_sha": "e07c51adfa42f470489142a01f2b8ff90749d2b7", "html_url": "https://github.com/just-every/run-linen/actions/runs/42573021928", "id": 42573021928, "status": "in_progress"}. Verify remains in progress; no green claim is made. Five API calls used.
+
+Evidence custody: the initial report-only ref was published with fleet identity, fetched by its exact evidence head into isolated Git storage, and every file size, blob id and SHA-256 in its manifest verified. It records the same product SHA as the named branch. evidence-roundtrip.json is the actual receipt; this transport proof is separate from product acceptance or landing.
+
+## Terminal results
+
+{
+  "conclusion": "success",
+  "event": "pull_request",
+  "head_sha": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+  "html_url": "https://github.com/just-every/run-linen/actions/runs/42573021928",
+  "id": 42573021928,
+  "status": "completed"
+}
+
+Exact candidate Verify is green. Six GitHub API calls were used; one watcher respected at least 300 seconds between discoveries and status reads. No workflow was dispatched or rerun. Local Worker runtime, typecheck, first-party check, build, generated contract proof and source lock checks passed. Native catalog browser proof passed and the 1440 and 390 screens were inspected. Product remains branch-only, with draft PR 177 for the fleet. Publication scan, main equality and candidate Run site remain the guarded lander's duties. There is no product blocker for this selected lease; the clause remains PARTIAL for the named native-restore gap.
+
+CLAIM CATALOG-007 PARTIAL points=1 tests=tests/work/application-cases.mjs#catalogAudienceChecks
+GAP CATALOG-007: Native-restore facts-without-live-binding proof remains unproved; unselected acceptance and every retained hold remain unchanged.
+READY branch=cloud/sx-linen-c-f43 head=e07c51adfa42f470489142a01f2b8ff90749d2b7
