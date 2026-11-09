@@ -139,5 +139,25 @@
     "pnpm": "10.12.4",
     "node_pin": "22.20.0"
   },
-  "github_api_calls_used": 4
+  "github_api_calls_used": 6,
+  "ci_current": {
+    "conclusion": "success",
+    "head_sha": "5764273d6f3df670a571b7f924474f4fa9d7a992",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42646894293",
+    "status": "completed",
+    "id": 42646894293,
+    "event": "pull_request"
+  },
+  "ci_last_checked_epoch": 1794239681.9886413,
+  "ci_poll_count": 2,
+  "final_recorded_at": "2026-11-09T15:56:10.691960+00:00",
+  "candidate_verify_green": true,
+  "terminal_custody": "READY; fleet publication scan and guarded landing remain required",
+  "product_checkout_clean": true,
+  "pending_lander_duties": [
+    "COMPLETE full-history publication scan with zero findings",
+    "guarded landing",
+    "main equality",
+    "exact resulting main Run site success"
+  ]
 }

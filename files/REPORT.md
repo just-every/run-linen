@@ -22,12 +22,12 @@ The product diff extends one existing journey; no registrations are added or rem
 | Acceptance sentence | Evidence on this tree | Scope result |
 | --- | --- | --- |
 | 1. One native linked problem; cause unknown; source tickets unresolved | problemDetectionChecks, tests/work/problem-detection-cases.mjs:34-52 | Existing behavior retained; not newly claimed |
-| 2. Both decisions persist over later sources, rolling windows, restart and native restore | Existing retained rejection at tests/work/problem-detection-cases.mjs:27-32; restart assertions at tests/work/runtime.mjs:793-796; native restore is in tests/adoption/problem-cases.mjs | Full point remains owed; not claimed |
-| 3. Existing operator visibility for normal-source proposals | problemDetectionChecks, tests/work/problem-detection-cases.mjs:201-236; invoked by tests/work/runtime.mjs:128 | Selected positive proof passes locally |
+| 2. Both decisions persist over later sources, rolling windows, restart and native restore | Existing retained rejection at tests/work/problem-detection-cases.mjs:27-32; restart assertions at tests/work/runtime.mjs:793-795; native restore is in tests/adoption/problem-cases.mjs | Full point remains owed; not claimed |
+| 3. Existing operator visibility for normal-source proposals | problemDetectionChecks, tests/work/problem-detection-cases.mjs:201-236; invoked by tests/work/runtime.mjs:128 | Selected positive proof passes locally and in exact-SHA Verify 42646894293 |
 | 4. Separate restricted audience; detecting owner only; no inferred participants | Existing owner and operator refusals at tests/work/problem-detection-cases.mjs:238-254 | Existing behavior retained; not newly claimed |
-| 5. Recheck every source and hide inaccessible cluster and count | Existing changed-source exclusions at tests/work/problem-detection-cases.mjs:255-265 | Existing behavior retained; not newly claimed |
+| 5. Recheck every source and hide inaccessible cluster and count | Existing changed-source exclusions at tests/work/problem-detection-cases.mjs:245-265 | Existing behavior retained; not newly claimed |
 | 6. Accepted problem inherits owner and visibility | Existing restricted accepted-problem refusal at tests/work/problem-detection-cases.mjs:248-250 | Not re-certified by this lease |
-| 7. Reference evidence without copied conversations | Existing tests/work/problem-detection-cases.mjs:25; new complete reference comparison at 228-232 | Existing behavior retained; not newly claimed |
+| 7. Reference evidence without copied conversations | Existing tests/work/problem-detection-cases.mjs:24; new complete reference comparison at 228-232 | Existing behavior retained; not newly claimed |
 | From PROB-002 and RL-14 source authority | PROB-003 explicitly names PROB-002 and RL-14. Existing restricted-source and changed-source exclusions run alongside the new allowed read. No new inherited duty or reader authority is introduced. | Retained |
 
 ### DONE-RIDERS review
@@ -38,8 +38,8 @@ This is a PARTIAL claim for point 3, not a promotion of the entire clause.
 | --- | --- | --- |
 | 1 | PASS for selected point; full clause PARTIAL | Native public list and detail reads of nonempty owner-created proposal at lines 201-236; unselected persistence outcomes remain owed |
 | 2 | PASS for selected point | Three actual native source IDs, full object equality and unchanged readership assertions; unsafe source cases remain at lines 238-272 |
-| 3 | PENDING exact-SHA Verify | scripts/verify.mjs invokes tests/work/runtime.mjs, which invokes problemDetectionChecks; run receipt will be recorded below |
-| 4 | PASS for selected point | Runtime executed the final test bytes; only generated source lock changed thereafter; exact-SHA Verify remains the final integrated proof |
+| 3 | PASS | Verify 42646894293, event pull_request, completed success on 5764273d6f3df670a571b7f924474f4fa9d7a992; scripts/verify.mjs invokes tests/work/runtime.mjs and problemDetectionChecks |
+| 4 | PASS for selected point | Local runtime executed the final test bytes; Verify 42646894293 completed success on the exact committed candidate |
 | 5 | PASS, INSPECTED | PROB-003 meta line names PROB-002; RL-14 is named in the requirement. No new inherited duty was claimed |
 | 6 | PASS mechanical; judgment retained | Contract generator write and check pass, generated views restored whole from origin/main; status, gap, evidence and counts untouched |
 | 7 | PASS, INSPECTED | No acceptance, ruling or contract rewrite; no test assertions removed or narrowed |
@@ -81,3 +81,18 @@ Exact-SHA Verify discovery: run 42646894293, event pull_request, status in_progr
 CLAIM PROB-003 PARTIAL points=3 tests=tests/work/problem-detection-cases.mjs#problemDetectionChecks
 
 GAP PROB-003: Unselected acceptance and persistence proof remain owed, including rolling-window, accepted later-source and restart obligations; all retained provider, role, account, ct, Base and device holds remain unchanged.
+
+First terminal-status poll: Verify 42646894293, event pull_request, status in_progress, conclusion None, exact head 5764273d6f3df670a571b7f924474f4fa9d7a992. Five GitHub API calls used including main discovery and PR creation. No new candidate or rerun created.
+
+
+## Final result
+
+Verify 42646894293 completed successfully, event pull_request, on exact full head 5764273d6f3df670a571b7f924474f4fa9d7a992. Its recorded status is completed and conclusion is success. Six GitHub API calls were used in total; no workflow dispatch, rerun, repair or extra candidate was needed. The exact-SHA receipt is ci-run-2.json. Rider 3 is now PASS for the selected point; rider 11 remains pending with the guarded lander. No full-clause DONE claim is made.
+
+All touched local checks and exact-candidate Verify pass. No assertions were removed, narrowed or skipped. The new normal-source read and the existing restricted-source, changed-source, tenant, inactive and revoked-role exclusions all run through the existing public-route work runtime. No screen changed. Contract status cells, generated views, source pins and counts are unchanged, with the source lock fresh.
+
+Before and after: 31 DONE, 131 PARTIAL, 37 MISSING, 199 total. PROB-003 remains PARTIAL; point 3's positive operator-read proof is closed. The only plan row to annotate is that selected PROB-003 point. No new policy default or selected-scope blocker exists. Unselected acceptance and the retained persistence, provider, role, account, ct, Base and device obligations remain owed.
+
+The product is pushed to cloud/sx-linen-c-f72 and draft PR https://github.com/just-every/run-linen/pull/205 is left for the fleet. Evidence is published only to refs/heads/evidence/sx-linen-c-f72. Publication scanning, guarded landing, main equality and the resulting main Run site remain fleet duties. Their results are unestablished here, not green claims. The clone will be deleted only after the final packet is published and verified.
+
+READY branch=cloud/sx-linen-c-f72 head=5764273d6f3df670a571b7f924474f4fa9d7a992
