@@ -1,0 +1,101 @@
+{
+  "tag": "sx-linen-c-f53",
+  "repository": "just-every/run-linen",
+  "head": "4c8dfa45d348a79c60df4135c91e24a3e2dc380c",
+  "branch": "cloud/sx-linen-c-f53",
+  "base": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "counts_before": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37
+  },
+  "counts_after": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37
+  },
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "log": "not selected: local installation details are not product evidence"
+    },
+    {
+      "command": "cloud_run node tests/services/integration.mjs",
+      "exit": 0,
+      "log": "services-integration.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "mechanical.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "mechanical.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "mechanical.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "mechanical.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "python3 /tmp/fleet-check-candidates.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f53",
+      "exit": 0,
+      "log": "product-push.log"
+    }
+  ],
+  "migration_ledger": "not applicable: no migration edits",
+  "screen_proof": "not applicable: no UI edits",
+  "inherited_commit": "86ebd2487d731ddacc3170cd9b8bd787bbb4801a",
+  "test_registration_delta": 0,
+  "test_source": {
+    "path": "tests/services/release-cases.mjs",
+    "sha256": "7cb6198df5aa67cb6e4068c86d7f0a3ef63e521df55cb6cdd162d2cb2b6d37ce"
+  },
+  "local_test_binding": "Relevant source and test bytes are unchanged between the local passing run and committed candidate; final rebase was already up to date.",
+  "publication_scan": {
+    "commit": "4c8dfa45d348a79c60df4135c91e24a3e2dc380c",
+    "status": "not run in cloud; guarded lander required",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "scope_line": "CHANGE-007 acceptance point 7 only; remains PARTIAL",
+  "remote_product_head": "4c8dfa45d348a79c60df4135c91e24a3e2dc380c",
+  "remote_main_head": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "main_equals_candidate": false,
+  "product_worktree_clean": true,
+  "contract_diff_empty": true,
+  "generated_view_diff_empty": true,
+  "changed_product_files": [
+    "tests/services/release-cases.mjs",
+    "sources.lock.json"
+  ],
+  "new_email_shaped_strings": [],
+  "subreaper_children_remaining": false
+}
