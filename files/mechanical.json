@@ -1,0 +1,31 @@
+{
+  "utc": "2026-11-09T13:06:58.326081+00:00",
+  "checks": [
+    {
+      "label": "views-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "label": "views-check",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    {
+      "label": "views-restore",
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "label": "lock-write",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "label": "lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    }
+  ],
+  "ledger": "not applicable; no migration change"
+}

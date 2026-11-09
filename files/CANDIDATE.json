@@ -1,0 +1,14 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f66",
+  "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff",
+  "main_integrated": "a871001caa424ab4493314cb59d8077c1c27d7a9",
+  "original_prescribed_head": "085941e54221d87f97f2f1150abe735507067ee3",
+  "full_history": true,
+  "counts_before": "| All | 31 | 131 | 37 | 199 |",
+  "counts_after": "| All | 31 | 131 | 37 | 199 |",
+  "contract_diff": "",
+  "generated_views_committed": false,
+  "test_registration_delta": 0,
+  "candidate_identities_and_trailers": "pass"
+}

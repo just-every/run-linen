@@ -1,0 +1,85 @@
+{
+  "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff",
+  "checks": [
+    {
+      "head": "085941e54221d87f97f2f1150abe735507067ee3",
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "note": "Setup ran before final candidate creation; initialized ignored private local state only."
+    },
+    {
+      "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff",
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "started": "2026-11-09T13:08:21.693894+00:00",
+      "finished": "2026-11-09T13:09:07.887609+00:00"
+    },
+    {
+      "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff",
+      "command": "npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "started": "2026-11-09T13:09:07.888122+00:00",
+      "finished": "2026-11-09T13:09:10.192520+00:00"
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff",
+      "finished": "2026-11-09T13:11:04.340828+00:00"
+    },
+    {
+      "label": "views-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff"
+    },
+    {
+      "label": "views-check",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff"
+    },
+    {
+      "label": "views-restore",
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0,
+      "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff"
+    },
+    {
+      "label": "lock-write",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff"
+    },
+    {
+      "label": "lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff"
+    }
+  ],
+  "exact_head_work_runtime": {
+    "head": "a0e8b094e12a6a477beb42a91676ccec34d747ff",
+    "command": "cloud_run node tests/work/runtime.mjs",
+    "exit": 0,
+    "log": "exact-head-work-runtime.log",
+    "finished": "2026-11-09T13:15:24.749402+00:00"
+  },
+  "migration_ledger": "not applicable; no migration changes",
+  "publication_scan": {
+    "complete": "unestablished in cloud",
+    "historyScanned": "unestablished in cloud",
+    "findings": "unestablished in cloud"
+  },
+  "resulting_main_and_run_site": "fleet lander responsibility",
+  "initial_work_runtime": {
+    "command": "cloud_run node tests/work/runtime.mjs",
+    "exit": 0,
+    "log": "work-runtime.log",
+    "note": "Initial run preceded the final supplementary unfiltered case and probe output; exact-head run supersedes it."
+  },
+  "probes": [
+    "PROBE DESK-016 5: owner, operator and HR searches with real article matches and unmatched queries create attributed audit rows without raw, encoded or base64 query content",
+    "PROBE DESK-016 6: employee knowledge search returns reviewed employee guidance, omits HR and draft identities and content, and both global search variants return 403"
+  ]
+}
