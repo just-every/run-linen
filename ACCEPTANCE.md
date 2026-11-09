@@ -901,7 +901,7 @@ Core · target · **partial**
 
 #### DESK-020 — SLA pauses and breaches
 
-Core · target · **partial** · From DESK-004
+Core · target · **done** · From DESK-004
 
 **Requirement.** A pause stops only the clocks its policy pauses on, and a breach, once reached, stays a breach.
 
@@ -911,8 +911,8 @@ Core · target · **partial** · From DESK-004
 3. A target is breached when met after, or still unmet past, its due time, and its breach time is that due time.
 4. Owners, agents and auditors read each ticket's targets and the period report.
 
-**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`
-**Gap.** Not asserted: that service agents and auditors read each ticket's targets and the period report. The owner's reads and the requester's refusal, pauses stopping only the policy's parties, a later pause keeping the breach, and the breach time are asserted.
+**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (slaPolicyChecks); `tests/work/sla-policy-cases.mjs` (escalationChecks)
+**Gap.** None.
 
 #### DESK-005 — Escalation and supervisor rules
 
