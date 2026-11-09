@@ -4,6 +4,7 @@ import { tmpdir, userInfo } from "node:os";
 import { join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import { createServer } from "node:net";
+import { startWorker } from "./worker-server.mjs";
 const root = resolve(import.meta.dirname, "../.."),
   scratch = await mkdtemp(join(tmpdir(), "linen-ui-")),
   out = resolve(
@@ -62,27 +63,16 @@ try {
       "--config",
       "wrangler.jsonc",
     ]);
-    worker = spawn(
-      process.execPath,
-      [
-        "node_modules/wrangler/bin/wrangler.js",
-        "dev",
-        "--config",
-        join(scratch, "dist/server/wrangler.json"),
-        "--local",
-        "--port",
-        String(value),
-        "--inspector-port",
-        "0",
-        "--persist-to",
-        join(scratch, "state"),
-      ],
-      { cwd: root, stdio: ["ignore", log.fd, log.fd], detached: true },
-    );
+    // Use the existing native Worker server: ProxyWorker can fail a POST on
+    // a closing keep-alive connection before the application's role check.
+    worker = await startWorker({
+      config: join(scratch, "dist/server/wrangler.json"),
+      port: value,
+      persistTo: join(scratch, "state"),
+      logFd: log.fd,
+    });
     let ready = false;
     for (let i = 0; i < 120; i++) {
-      if (worker.exitCode !== null)
-        throw Error("Isolated worker exited before becoming ready");
       try {
         const r = await fetch(url + "/api/v1/setup");
         if (r.ok) {
@@ -110,13 +100,7 @@ try {
   });
   console.log(`UI evidence: ${out}`);
 } finally {
-  if (worker && worker.exitCode === null) {
-    process.kill(-worker.pid, "SIGTERM");
-    await new Promise((r) => {
-      worker.once("exit", r);
-      setTimeout(r, 3000);
-    });
-  }
+  if (worker) await worker.dispose();
   await log.close();
   await rm(join(scratch, "state"), { recursive: true, force: true });
   await rm(join(scratch, "dist"), { recursive: true, force: true });
