@@ -99,3 +99,5 @@ Final candidate CI observation (2026-11-09T08:54:22Z): Verify 42588077189 remain
 Final clause status changes: none. Selected point 7 proof is complete locally; CHANGE-007 remains PARTIAL. Before and after counts remain 28 DONE, 134 PARTIAL, 37 MISSING. The named branch and PR carry both the preserved f51 proof and this round's failed-result extension. All product commits are pushed; no unpushed work remains. The product clone and dependency installation are removed only after the final evidence publication and transport verification, as required by the brief.
 
 PUSHED branch=cloud/sx-linen-c-f53 head=4c8dfa45d348a79c60df4135c91e24a3e2dc380c
+
+Evidence transport validation: evidence-transfer-receipt.json records a successful fresh fetch of the 14-file packet at evidence commit 233fbd90b3d9d507c3772ae74680fd06ce1ff4cd, with file lengths, hashes, blob identities, regular-file tree and product head verified by cloud_evidence.py. That receipt is included in the subsequent evidence snapshot; a snapshot cannot include its own fetch receipt recursively. The terminal EVIDENCE line names the final snapshot.

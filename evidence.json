@@ -7,10 +7,10 @@
       "sha256": "07d71ec7d7197171cbe8ab8dddb493fa48bf569eae28a387d17c31114fca6cd9"
     },
     {
-      "blob": "72564d3d3a61d1b529325c77130a4ecb53d568c2",
-      "bytes": 13813,
+      "blob": "bc336e9279c941e0191dab624e26246585902dfc",
+      "bytes": 14278,
       "path": "REPORT.md",
-      "sha256": "bde74c6762b86f40da676586725c2844e4d3b7abb540346f5f77f4eee035ba25"
+      "sha256": "31f60a75fb1da7087dfd46f250733ae0989e7ea47bf627b261c14e0017071005"
     },
     {
       "blob": "fe51488c7066f6687ef680d6bfaa4f7768ef205c",
@@ -35,6 +35,12 @@
       "bytes": 3419,
       "path": "checks-receipt.json",
       "sha256": "02daf2d61771769671beaf81e19b7c4f82e844d94b6b2b408f92ed5b126e4802"
+    },
+    {
+      "blob": "1c02eececa1404642524bd868e404b68a93fd718",
+      "bytes": 3400,
+      "path": "evidence-transfer-receipt.json",
+      "sha256": "02f43947bd6472ba24d4f4ec300aa1af1da5dc355c730b4432bc114a5f206777"
     },
     {
       "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
