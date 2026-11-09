@@ -341,5 +341,68 @@ export async function escalationChecks(workspaceApi, db) {
   check(await tick());
   reminders = (await followups(business.id)).filter(r => r.kind === 'requester_reminder');
   assert.deepEqual(reminders.map(r => r.next_due_at), ['2027-01-21T21:30:00.000Z', '2027-01-25T21:30:00.000Z'], 'DESK-005 three and five business days skip the weekend and the holiday on the New York calendar');
+
+  // A due automatic close waits for the same required fields as a staff close, then retries the same waiting episode.
+  testAt = '2026-02-02T09:00:00.000Z';
+  const requiredField = check(await api('/desk-fields', { name: 'Root cause', type: 'text', kinds: ['incident'], requiredOn: ['closed'] }), 201);
+  let guarded = await ticket('required-close-field', 'P3', 'medium');
+  guarded = await pauseFor(guarded, 'required-close-field');
+  const guardedConversation = async () => check(await api(`/work/${guarded.id}`, undefined, employee));
+  const guardedDesk = async () => check(await api(`/work/${guarded.id}/desk`, undefined, employee));
+  const closeFollowup = async () => (await followups(guarded.id)).find(r => r.kind === 'requester_reminder' && r.level === 2);
+  testAt = '2026-02-05T09:00:00.000Z';
+  check(await tick());
+  const beforeClose = await guardedConversation();
+  assert.deepEqual([beforeClose.work.state, beforeClose.work.closed_at], ['paused', null]);
+  assert.equal(beforeClose.messages.filter(m => m.body.startsWith('Reminder:')).length, 1, 'DESK-023 the requester was genuinely reminded before the close becomes due');
+  assert.equal((await guardedDesk()).fields.find(f => f.id === requiredField.id).value, null);
+  const waitingClose = await closeFollowup();
+  assert.deepEqual([waitingClose.state, waitingClose.next_due_at, waitingClose.fired_at], ['scheduled', '2026-02-07T09:00:00.000Z', null]);
+  for (const at of [waitingClose.next_due_at, '2026-02-07T09:01:00.000Z']) {
+    testAt = at;
+    check(await tick());
+    assert.deepEqual(await guardedConversation(), beforeClose, 'DESK-023 a due close with an empty required field preserves the paused ticket, revision and public conversation');
+    assert.equal((await guardedConversation()).messages.filter(m => m.body.startsWith('Closed:')).length, 0, 'DESK-023 no public closing line is posted while the required field is empty');
+    assert.equal((await guardedDesk()).resolution, null, 'DESK-023 no resolution is recorded while the required field is empty');
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_resolutions WHERE workspace_id=? AND work_id=?').bind('desk005', guarded.id).first()).n, 0, 'DESK-023 the guarded close leaves no hidden persisted resolution');
+    assert.deepEqual(await closeFollowup(), waitingClose, 'DESK-023 repeated due passes leave the same close scheduled and never fired');
+  }
+  testAt = '2026-02-07T09:02:00.000Z';
+  check(await api(`/work/${guarded.id}/fields`, { fieldId: requiredField.id, value: 'Pending diagnostic export' }));
+  const cleared = check(await api(`/work/${guarded.id}/fields`, { fieldId: requiredField.id, value: '   ' }));
+  assert.equal(cleared.fields.find(f => f.id === requiredField.id).value, null, 'DESK-023 clearing a previously filled required field leaves it empty');
+  const afterClear = await guardedConversation();
+  testAt = '2026-02-07T09:02:30.000Z';
+  check(await tick());
+  assert.deepEqual(await guardedConversation(), afterClear, 'DESK-023 a due pass cannot use the old field value after it was cleared');
+  assert.deepEqual(afterClear.messages, beforeClose.messages, 'DESK-023 filling and clearing a field does not post a public closing line');
+  assert.equal((await guardedDesk()).resolution, null);
+  assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_resolutions WHERE workspace_id=? AND work_id=?').bind('desk005', guarded.id).first()).n, 0);
+  assert.deepEqual(await closeFollowup(), waitingClose, 'DESK-023 the automatic close remains scheduled after a cleared-field due pass');
+  testAt = '2026-02-07T09:03:00.000Z';
+  const filled = check(await api(`/work/${guarded.id}/fields`, { fieldId: requiredField.id, value: 'Requester did not supply the diagnostic export' }));
+  assert.equal(filled.fields.find(f => f.id === requiredField.id).value, 'Requester did not supply the diagnostic export');
+  assert.equal(filled.resolution, null);
+  assert.equal((await guardedConversation()).work.state, 'paused', 'DESK-023 filling the required field alone does not close the ticket');
+  testAt = '2026-02-07T09:04:00.000Z';
+  check(await tick());
+  const guardedClosed = await guardedConversation(), guardedResolution = (await guardedDesk()).resolution, firedClose = await closeFollowup();
+  assert.deepEqual([guardedClosed.work.state, guardedClosed.work.closed_at, guardedClosed.work.revision], ['closed', testAt, guarded.revision + 1], 'DESK-023 a later due pass closes the ticket exactly once after the field is filled');
+  assert.equal(guardedResolution.code, 'No response');
+  assert.equal(guardedResolution.resolvedAt, testAt);
+  assert.match(guardedResolution.closeNotes, /^Resolved without a reply: no reply arrived within 5 business days/);
+  const closingLines = guardedClosed.messages.filter(m => m.body.startsWith('Closed:'));
+  assert.equal(closingLines.length, 1);
+  assert.deepEqual([closingLines[0].visibility, closingLines[0].body], ['public', `Closed: ${guardedResolution.closeNotes}`]);
+  assert.deepEqual([firedClose.id, firedClose.episode, firedClose.state, firedClose.fired_at], [waitingClose.id, waitingClose.episode, 'fired', testAt], 'DESK-023 the original waiting episode fires its close after the guard clears');
+  for (const at of [testAt, '2026-02-10T09:00:00.000Z']) {
+    testAt = at;
+    check(await tick());
+    assert.deepEqual(await guardedConversation(), guardedClosed, 'DESK-023 repeated and later passes preserve the single close and public line');
+    assert.deepEqual((await guardedDesk()).resolution, guardedResolution, 'DESK-023 later passes preserve the original resolution');
+    assert.deepEqual(await closeFollowup(), firedClose, 'DESK-023 later passes do not fire the close again');
+  }
+  console.log('PROBE DESK-023 6: desk-fields, pause, fields and process-due routes -> empty or cleared required field preserves paused ticket, null resolution, no public close and unfired scheduled row on repeated due passes; filling the field lets a later pass close once with No response and one public closing line; repeated and later passes unchanged');
+  testAt = undefined;
   console.log('PASS DESK-005 public routes: P1 level-1 then level-2 escalation before the response target, private to agents, level 3 stopped by the response; awaiting-requester reminder then disclosed resolution; a reply before the due time stops both; business days on the SLA calendar');
 }
