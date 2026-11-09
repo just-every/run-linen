@@ -1,0 +1,47 @@
+{
+  "head": "6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e",
+  "branch": "cloud/sx-linen-c-f35",
+  "browser_command": "LINEN_TEST_BUILT=1 LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium LINEN_CAPTURE=1 node tests/ui/run.mjs ../packet/department-browser-capture.mjs",
+  "browser_exit": 0,
+  "assertion_width": 1440,
+  "capture_widths": [
+    1440,
+    390
+  ],
+  "capture_adaptation": "Original department browser journey copied outside the product. Imports point to the committed sources. Only screenshot capture adds 390 pixels for the selected clause screens; all behavioral assertions retain their original desktop width.",
+  "typecheck_exit": 0,
+  "first_party_exit": 0,
+  "work_runtime_initial_exit": 0,
+  "sources": [
+    {
+      "path": "tests/work/department-space-cases.mjs",
+      "sha256": "84ff8055907ff7bddda3f087b7c5a19beec6a7c7dbad9633365653c1eb3538d7",
+      "matches_committed": true
+    },
+    {
+      "path": "tests/work/worker.ts",
+      "sha256": "bc68b170c589eba094fd51cf0e16bc40d6313cedccf702ac4850e8004dd4a6be",
+      "matches_committed": true
+    },
+    {
+      "path": "src/features/work/department-handoff.ts",
+      "sha256": "a447a01659c131f028440f0949b4b39a90cd0e4e18740754cb442486e514c3ec",
+      "matches_committed": true
+    },
+    {
+      "path": "tests/ui/department-browser.mjs",
+      "sha256": "59295fe950a13a06a2a88a05c34d4939fd861ffea2272b531021413d95fae170",
+      "matches_committed": true
+    },
+    {
+      "path": "scripts/verify.mjs",
+      "sha256": "8d3851ae58c3a2633a8aafbb8817e16ca876ece66bf10493c1690b54f8b2c4b1",
+      "matches_committed": true
+    }
+  ],
+  "product_files": [
+    "sources.lock.json",
+    "tests/work/department-space-cases.mjs",
+    "tests/work/worker.ts"
+  ]
+}

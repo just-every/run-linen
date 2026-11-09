@@ -1,0 +1,19 @@
+{
+  "head": "6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e",
+  "remote_ref": "refs/heads/cloud/sx-linen-c-f35",
+  "remote_head": "6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e",
+  "remote_matches": true,
+  "full_history": true,
+  "changed_paths": [
+    "sources.lock.json",
+    "tests/work/department-space-cases.mjs",
+    "tests/work/worker.ts"
+  ],
+  "assertion_registrations_added": 0,
+  "contract_status_cells_changed": false,
+  "generated_views_committed": false,
+  "source_lock_fresh": true,
+  "identity_check": "All candidate commits, including side parents, checked before guard push; fleet author and committer, no trailers.",
+  "publication_scan": "pending fleet lander",
+  "run_site": "pending guarded main landing"
+}

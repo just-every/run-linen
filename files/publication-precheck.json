@@ -1,0 +1,52 @@
+{
+  "head": "6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e",
+  "diff_email_values": 0,
+  "diff_provider_shaped_keys": 0,
+  "contract_and_generated_views_unchanged": true,
+  "source_tree_clean": true,
+  "registration_delta": 0,
+  "assertions_removed": 0,
+  "screens": [
+    {
+      "path": "browser/DESK-011-matching-workspace-service-form-1440.png",
+      "sha256": "8b9dca2e153e804d2c54ea0c6827451e3d3fd626ce0b0ff801bbc41ca1765192"
+    },
+    {
+      "path": "browser/DESK-011-matching-workspace-service-form-390.png",
+      "sha256": "cd3778de88fbc80a402b336986001405c2508cb3b0fadd200c116b4d179fae5d"
+    },
+    {
+      "path": "browser/DESK-011-owner-workspace-handoff-editing-1440.png",
+      "sha256": "632ef2150926a0f0a4ee43a2b0cef41b63e9e13004745660011d18c890e4bae1"
+    },
+    {
+      "path": "browser/DESK-011-owner-workspace-handoff-editing-390.png",
+      "sha256": "126aa3e699bb033f085a477e1df2623b63b00c020ad38ed97ce5f44b80b5e38e"
+    },
+    {
+      "path": "browser/DESK-011-owner-handoff-history-1440.png",
+      "sha256": "370fd35acaa62bc8aca0335981278a2081691195974999fe2717c7d2cec3ce77"
+    },
+    {
+      "path": "browser/DESK-011-owner-handoff-history-390.png",
+      "sha256": "cd5a3ac4fe3f8f9c33f2f661e2b27c4705f5ab465a5349298e6143be0ba1421f"
+    },
+    {
+      "path": "browser/DESK-011-employee-handoff-history-1440.png",
+      "sha256": "4f8521e610035395ae3355421f8ae36cc9912830438cb333698a451a2efc77ab"
+    },
+    {
+      "path": "browser/DESK-011-employee-handoff-history-390.png",
+      "sha256": "8e38298f5143f7fbdb7546226e01a889a2ca2f70991f0d29b6573fe63ff4f88f"
+    },
+    {
+      "path": "browser/DESK-011-it-denied-retained-hr-history-1440.png",
+      "sha256": "a7bce2fd3ffc90f0e262b2f4e3b722c9a947a359aaf528d6b4f0de33b0ee9534"
+    },
+    {
+      "path": "browser/DESK-011-it-denied-retained-hr-history-390.png",
+      "sha256": "c1365a84a79d94a360c042224a2a39066a4a2311d65bbae634f8e9a414e26be2"
+    }
+  ],
+  "notes": "This local changed-text check is not the fleet publication scanner."
+}

@@ -1,0 +1,10 @@
+{
+  "head": "6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e",
+  "views_write": 0,
+  "views_check": 0,
+  "lock_write": 0,
+  "lock_check": 0,
+  "ledger": "not applicable; no migration changed",
+  "contract_diff": "",
+  "tree_dirty": ""
+}

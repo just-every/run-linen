@@ -1,0 +1,5 @@
+{
+  "head": "6e0f4ce6652fd99a8a3ece6c182e1ebe3aa6002e",
+  "command": "node tests/work/runtime.mjs",
+  "exit": 0
+}
