@@ -7324,7 +7324,7 @@
       "executable": false
     },
     "tests/work/department-space-cases.mjs": {
-      "sha256": "7dafdf3ce8d2a8e147b2d5a1858b5c983f7a2986871b69156fef6d393b883796",
+      "sha256": "84ff8055907ff7bddda3f087b7c5a19beec6a7c7dbad9633365653c1eb3538d7",
       "executable": false
     },
     "tests/work/desk-field-cases.mjs": {
@@ -7476,7 +7476,7 @@
       "executable": false
     },
     "tests/work/worker.ts": {
-      "sha256": "52b90860087957d278e03bac4a92a99f6708c7043b9e529a377471b54b25bf6a",
+      "sha256": "bc68b170c589eba094fd51cf0e16bc40d6313cedccf702ac4850e8004dd4a6be",
       "executable": false
     },
     "tsconfig.json": {
