@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f33",
+  "head": "c3623f2650e2bbed6bc96957dd8c4dc792147483",
+  "pr": {
+    "draft": true,
+    "head": "c3623f2650e2bbed6bc96957dd8c4dc792147483",
+    "html_url": "https://github.com/just-every/run-linen/pull/169",
+    "number": 169,
+    "state": "open"
+  },
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "receipt": "terminal setup completion, prior to candidate commit"
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "receipt": "build.txt"
+    },
+    {
+      "command": "timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "receipt": "work-runtime.txt",
+      "head": "c3623f2650e2bbed6bc96957dd8c4dc792147483"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "receipt": "typecheck.txt",
+      "relevant_source_unchanged_since_run": true
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "receipt": "first-party-check.txt",
+      "relevant_source_unchanged_since_run": true
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "receipt": "views-write.txt"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "receipt": "views-check.txt"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "receipt": "lock-write.json"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "receipt": "lock-check.json",
+      "head": "c3623f2650e2bbed6bc96957dd8c4dc792147483"
+    },
+    {
+      "command": "LINEN_CAPTURE=1 LINEN_TEST_BUILT=1 timeout 1200 node tests/ui/run.mjs .wrangler/sx-desk-proof.mjs",
+      "exit": 0,
+      "receipt": "browser-proof.txt",
+      "head": "c3623f2650e2bbed6bc96957dd8c4dc792147483",
+      "screens": [
+        1440,
+        390
+      ]
+    }
+  ],
+  "counts_before": {
+    "done": 23,
+    "partial": 139,
+    "missing": 37
+  },
+  "counts_after": {
+    "done": 23,
+    "partial": 139,
+    "missing": 37
+  },
+  "claims": [
+    {
+      "clause": "DESK-013",
+      "status": "PARTIAL",
+      "points": [
+        6
+      ],
+      "test": "tests/work/recurrence-cases.mjs#recurrenceChecks"
+    }
+  ],
+  "publication_scan": {
+    "commit": "c3623f2650e2bbed6bc96957dd8c4dc792147483",
+    "status": "NOT_RUN_CLOUD",
+    "complete": false,
+    "historyScanned": null,
+    "findings": null,
+    "custody": "guarded fleet lander"
+  },
+  "run_site": {
+    "status": "NOT_RUN_BRANCH_ONLY"
+  },
+  "product_push": {
+    "exit": 0,
+    "receipt": "product-push.txt"
+  },
+  "blockers": [],
+  "full_history": true,
+  "main_equality": false,
+  "candidate_descends_from_final_fetched_main": true,
+  "generated_views_committed": false,
+  "test_registration_delta": 0,
+  "assertions_removed": 0,
+  "authority_changes": false,
+  "policy_defaults": [],
+  "product_head_unchanged_after_push": true,
+  "ci": {
+    "id": 42548515225,
+    "event": "pull_request",
+    "conclusion": "success",
+    "head_sha": "c3623f2650e2bbed6bc96957dd8c4dc792147483",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42548515225",
+    "status": "completed"
+  },
+  "github_calls": 4,
+  "browser_driver": "browser-driver.mjs",
+  "browser_captures": [
+    "browser/DESK-013-calendar.png",
+    "browser/DESK-013-calendar-390px.png",
+    "browser/DESK-013-ticket-tasks.png",
+    "browser/DESK-013-ticket-tasks-390px.png"
+  ],
+  "local_runtime_versions": {
+    "direct_node": "24.19.0",
+    "rer_project_node": "22.20.0",
+    "pnpm": "10.12.4",
+    "chromium": "/usr/bin/chromium"
+  },
+  "terminal_custody": "READY",
+  "clause_promotion_claimed": false
+}

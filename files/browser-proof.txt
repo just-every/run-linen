@@ -1,0 +1,2 @@
+PASS DESK-013 browser: owned monthly recurring work skips holiday, creates ticket and completes task plan at desktop/mobile widths
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-c-f33/packet/browser
