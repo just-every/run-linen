@@ -6852,7 +6852,7 @@
       "executable": false
     },
     "tests/services/calendar-cases.mjs": {
-      "sha256": "2bcb69425ad26f49742a5188464437162da944f3ab2817ee448b365adfd41c54",
+      "sha256": "ef4e31882b6693302cc2fa75ddb36173ea676056a0a48e9f38a5826cd3c2adde",
       "executable": false
     },
     "tests/services/department-source-cases.mjs": {
@@ -6888,7 +6888,7 @@
       "executable": false
     },
     "tests/services/run.mjs": {
-      "sha256": "9efa9f1f213ba60b86a0e9e46702cd44d8ee7d7c210cc53a5fff6723f08461f5",
+      "sha256": "4dad59b54d8833448dab0d3283b9af342189bbcad4933e74ee27d999f6139068",
       "executable": false
     },
     "tests/services/software-license-cases.mjs": {
@@ -6908,7 +6908,7 @@
       "executable": false
     },
     "tests/services/worker.ts": {
-      "sha256": "94e61fd652299da1ee8baebd4339c404dff89a8bc23dff486b3c50c0618e5366",
+      "sha256": "2b46ba49a00d803043e0fe901e86b48b2c2017d632871041999ff4261786de79",
       "executable": false
     },
     "tests/site/site.test.mjs": {
