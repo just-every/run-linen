@@ -7340,7 +7340,7 @@
       "executable": false
     },
     "tests/work/desk-scenario-cases.mjs": {
-      "sha256": "5c199a37611280bc741f3f26f5c45a6a2df270c7de99577fe0e86cd91ac31420",
+      "sha256": "fbb1d09f04c9c67d024c4e08aed09676d0f498ace76b10618566f9125dc8939c",
       "executable": false
     },
     "tests/work/fulfilment-link-runtime.mjs": {
