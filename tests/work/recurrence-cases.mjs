@@ -39,6 +39,49 @@ export async function recurrenceChecks(api,db) {
   assert.ok(events.some(e=>e.action==='recurring task completed'&&e.changes.some(c=>c.field==='state'&&c.before==='pending'&&c.after==='completed')));
   assert.equal(check(await api(`/work/${first.work_id}/activity`,undefined,employee),404).items,undefined);
 
+  // Historical local hours exercise both DST transitions without moving the application clock.
+  for(const [transition,startDate,startHour,dueAt] of [
+    ['fold','2020-11-01',1,'2020-11-01T05:00:00.000Z'],
+    ['gap','2020-03-08',2,'2020-03-08T07:00:00.000Z'],
+  ]) {
+    const title=`synthetic-linen-${transition}`;
+    const dst=check(await api('/recurring-work',{
+      ...input,title,tasks:[],
+      calendar:{...calendar,weekdays:[0,1,2,3,4,5,6],holidays:[],startHour},
+      rule:{startDate,frequency:'annual',interval:1,firstBusinessDay:false},
+    }),201);
+    assert.equal(dst.business_date,startDate);
+    assert.equal(dst.next_due_at,dueAt,`DESK-013 ${transition} chooses the required UTC instant`);
+    const saved=check(await api('/recurring-work')).items.find(p=>p.id===dst.id);
+    assert.equal(saved.next_due_at,dueAt,'The plan persists the resolved local hour');
+    assert.deepEqual(saved.calendar,{...calendar,weekdays:[0,1,2,3,4,5,6],holidays:[],startHour});
+    check(await api('/work/process-due',{}));
+    const processed=check(await api('/recurring-work'));
+    const generated=processed.occurrences.filter(o=>o.plan_id===dst.id);
+    assert.equal(generated.length,1,'One scheduler tick creates one historical occurrence');
+    const [occurrence]=generated;
+    assert.equal(occurrence.occurrence_index,0);
+    assert.equal(occurrence.nominal_date,startDate);
+    assert.equal(occurrence.business_date,startDate);
+    assert.equal(occurrence.due_at,dueAt,'The occurrence persists the resolved local hour');
+    const ticket=check(await api(`/work/${occurrence.work_id}`));
+    assert.equal(ticket.work.title,title);
+    assert.equal(ticket.work.assignee_id,'owner');
+    assert.deepEqual(JSON.parse(ticket.work.context_json),{
+      recurringPlanId:dst.id,recurringOccurrenceId:occurrence.id,dueAt,businessDate:startDate,
+    });
+    assert.ok(ticket.messages.some(m=>m.body===`${input.body}\n\nScheduled for ${startDate} (America/New_York).`));
+    const current=processed.items.find(p=>p.id===dst.id);
+    check(await api(`/recurring-work/${dst.id}`,{revision:current.revision,enabled:false}));
+    assert.equal(check(await api('/recurring-work')).items.find(p=>p.id===dst.id).enabled,0);
+    check(await api('/work/process-due',{}));
+    assert.deepEqual(check(await api('/recurring-work')).occurrences.filter(o=>o.plan_id===dst.id),generated,
+      'Pausing the historical plan retains its occurrence and prevents further catch-up');
+    assert.deepEqual(check(await api(`/work/${occurrence.work_id}`)),ticket,
+      'Pausing preserves the generated ticket and its resolved due-time context');
+    console.log(`PASS DESK-013 ${transition}: ${startDate} ${startHour}:00 America/New_York -> ${occurrence.due_at}; ticket context persisted; plan paused`);
+  }
+
   check(await api('/recurring-work',undefined,{'x-workspace':'b'}),404);
   // Monthly period arithmetic retains the anchor, handles short months, and observes DST.
   const leap=check(await api('/recurring-work',{...input,title:'Month-end audit',calendar:{...calendar,weekdays:[0,1,2,3,4,5,6],holidays:[]},rule:{startDate:'2020-01-31',frequency:'monthly',interval:1,firstBusinessDay:false},tasks:[]}),201);
