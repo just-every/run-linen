@@ -162,5 +162,65 @@ export async function deflectionChecks(api,db) {
   assert.deepEqual({...report.deflection,definition:undefined},{offered:3,deflected:1,filedAfterSuggestion:2,unanswered:0,definition:undefined},'KB-003 the second employee who filed anyway, and a confirmation followed by filing, are not deflections');
   assert.ok(report.deflection.definition);
   check(await api(`/reports/work?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&timezone=UTC`,undefined,first),403);
-  console.log('PASS KB-003 public routes: VPN question answered before filing, confirmed deflection counted, filing anyway never counted, scoped articles and asker-only confirmation');
+  // Competing articles are authored and reviewed through the current owner's public door.
+  // An older four-word match must beat newer three-word matches; only the two
+  // most recent of those tied matches fit alongside it in the offer.
+  const rankExpiry='2031-01-01T00:00:00.000Z';
+  const reviewed=async(title,body,hour)=>check(await api('/knowledge',{
+    title,body,scope:'employees',expiresAt:rankExpiry,review:true,
+  },{'x-test-now':`2030-01-01T${hour}:00:00.000Z`}),201);
+  let strongest=await reviewed('Aurora lattice guide','Beacon copper recovery steps.', '08');
+  strongest=check(await api('/knowledge',{
+    id:strongest.id,revision:strongest.revision,title:'Aurora lattice guide',
+    body:'Beacon copper recovery steps. Use a fresh session after review.',
+    scope:'employees',expiresAt:rankExpiry,review:true,
+  },{'x-test-now':'2030-01-01T08:30:00.000Z'}),201);
+  const oldest=await reviewed('Aurora cedar guide','Lattice beacon recovery steps.', '09');
+  const older=await reviewed('Aurora amber guide','Lattice beacon recovery steps.', '10');
+  const recent=await reviewed('Aurora denim guide','Lattice beacon recovery steps.', '11');
+  const newest=await reviewed('Aurora bronze guide','Lattice beacon recovery steps.', '12');
+  const rankHeaders={...first,'x-test-now':'2030-01-02T00:00:00.000Z'};
+  assert.deepEqual(check(await api('/knowledge?q=Aurora',undefined,rankHeaders)).items.map(article=>article.id),
+    [newest.id,recent.id,older.id,oldest.id,strongest.id],
+    'All five competing reviewed articles are current and readable by the asking employee');
+  const question='Aurora lattice beacon copper zephyrcode quasartrace';
+  // Inspect application tables only for the question's non-retention proof.
+  const storedRows=async()=>{
+    const tables=(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB '_cf_*' AND name NOT GLOB 'sqlite_*' ORDER BY name").all()).results;
+    const rows={};
+    for(const {name} of tables) {
+      const quoted='"'+name.replaceAll('"','""')+'"';
+      rows[name]=(await db.prepare(`SELECT * FROM ${quoted}`).all()).results.map(row=>JSON.stringify(row)).sort();
+    }
+    return rows;
+  };
+  const before=await storedRows();
+  assert.ok(!JSON.stringify(before).includes('zephyrcode'),'The question marker is unique to this request');
+  const ranked=check(await api('/knowledge/suggestions',{question},rankHeaders),201);
+  assert.ok(ranked.id);
+  assert.deepEqual(ranked.items.map(article=>article.id),[strongest.id,newest.id,recent.id],
+    'KB-003 matched-word count precedes recency, recency breaks ties and the offer stops at three');
+  assert.ok(!ranked.items.some(article=>[older.id,oldest.id].includes(article.id)),
+    'KB-003 excess reviewed readable matches are excluded, even though each meets the matching threshold');
+  const after=await storedRows();
+  assert.deepEqual(Object.keys(after),Object.keys(before),'The question creates no additional persistent table');
+  const writes=[];
+  for(const [table,rows] of Object.entries(after)) {
+    for(const row of before[table])assert.ok(rows.includes(row),'A suggestion preserves existing persistent records');
+    for(const row of rows)if(!before[table].includes(row))writes.push({table,row:JSON.parse(row)});
+  }
+  assert.equal(writes.length,1,'A question creates only its outcome receipt, with no question copy in another table');
+  assert.equal(writes[0].table,'work_knowledge_suggestions');
+  const receipt=writes[0].row;
+  assert.equal(receipt.id,ranked.id);assert.equal(receipt.workspace_id,'a');assert.equal(receipt.asker_id,'employee');
+  assert.deepEqual(JSON.parse(receipt.articles_json),[
+    {id:strongest.id,revision:strongest.revision},
+    {id:newest.id,revision:newest.revision},
+    {id:recent.id,revision:recent.revision},
+  ],'KB-003 the receipt retains exactly the offered article revisions');
+  assert.equal(receipt.outcome,'suggested');
+  const persisted=JSON.stringify(after);
+  for(const absent of [question,'zephyrcode quasartrace','zephyrcode','quasartrace',Buffer.from(question).toString('base64')])
+    assert.ok(!persisted.includes(absent),'KB-003 neither the question nor its unique unmatched phrase is retained');
+  console.log('PASS KB-003 public routes: VPN question answered before filing, confirmed deflection counted, filing anyway never counted, scoped articles, asker-only confirmation, capped word-match and recency ranking, question non-retention with attributed revision and outcome receipt');
 }
