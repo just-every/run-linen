@@ -1,0 +1,88 @@
+{
+  "files": [
+    {
+      "blob": "e11c70ff4a229d5a9ab8710d5e8712fd48609864",
+      "bytes": 2068,
+      "path": "PLAN.md",
+      "sha256": "c3d76aff587384a0c234339580a922b19c1cebf2c8e028e7bea45f508613ec3b"
+    },
+    {
+      "blob": "20bf0eb9cc048524096f1c3f966e2b6226a465ca",
+      "bytes": 4428,
+      "path": "RECEIPT.json",
+      "sha256": "6c1891390a473f096b8cbae0c9b3e63830ef7f85a8392ae69678678ead3a9dc1"
+    },
+    {
+      "blob": "6041442048a8ce2b79cb17dff90b0fdcb5821349",
+      "bytes": 9464,
+      "path": "REPORT.md",
+      "sha256": "c3590c95c1f1cb5f29eafd298599658a2e74900fbc2f112795e1085ed3055d9a"
+    },
+    {
+      "blob": "f8ba43f3a5a2f62bae928a698fa0663b02835bec",
+      "bytes": 270,
+      "path": "candidate-ci.json",
+      "sha256": "17b7bd6e48654d6034b9a56b5af25a19b5bdea96b8e15dcdca62fe6d7b9d72b6"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "55bfeff023c4ae17dc59e12f86f446b1960e6b53",
+      "bytes": 85,
+      "path": "identity-audit.txt",
+      "sha256": "148bad84b5b174568017df50d58e073566703d43c6c9fe7fa6f1af04420adf55"
+    },
+    {
+      "blob": "b7affbee9501845169764cc16e6271e6373d7411",
+      "bytes": 618966,
+      "path": "mechanical-final.log",
+      "sha256": "b9228e2ebefdc04950590cb17af5c344dabfeb635c05eff26ef5241b58f96c0b"
+    },
+    {
+      "blob": "642229f8ebe4b0c12df6e2cd9eee3a370989b6b2",
+      "bytes": 617,
+      "path": "mechanical-receipt.json",
+      "sha256": "b1d7ad2f2cb3718ec95ae0432c5b6d10ec73c40a7a478dc1ea260ea8a185695b"
+    },
+    {
+      "blob": "d3701187442d5830fb265fc2d32577b5b5a42d08",
+      "bytes": 893,
+      "path": "product-push.log",
+      "sha256": "97484b8d6529fccaa462755e4c516c7517286dec0039a135a12afaf713a32758"
+    },
+    {
+      "blob": "1be1a6e857ef7b487e1016ed152fcc2739ef20f2",
+      "bytes": 73,
+      "path": "product-ref.txt",
+      "sha256": "cf4a04ac347ee6f7fe8d770f96a371e2003efde4ce8945c2ecb657006739eb10"
+    },
+    {
+      "blob": "9d65a35aba62fd0bb2498df1883f04b8d130a46d",
+      "bytes": 191,
+      "path": "pull-request.json",
+      "sha256": "ae0feb952d76785f9fe7f06ad1137aa24724861870212acb93f3945e156e87ba"
+    },
+    {
+      "blob": "f9f4da3637038965f1903aec6657ee5792fa18db",
+      "bytes": 225,
+      "path": "typecheck.log",
+      "sha256": "cff6acc9ca7a0c7d2e2d08c3e21502f0bd0af934f2b8b023f5044711827c5d21"
+    },
+    {
+      "blob": "fd93d300e272698dbc0118be7b6b6cce3462c89f",
+      "bytes": 11618,
+      "path": "work-runtime.log",
+      "sha256": "f08226a58c32146631900e748edd09a60350833fec7ee6540c72eb2b1ef67539"
+    }
+  ],
+  "product_branch": "cloud/sx-linen-c-f79",
+  "product_head": "5764273d6f3df670a571b7f924474f4fa9d7a992",
+  "ref": "refs/heads/evidence/sx-linen-c-f79",
+  "repository": "just-every/run-linen",
+  "schema": 1,
+  "tag": "sx-linen-c-f79"
+}
