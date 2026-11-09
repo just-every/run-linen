@@ -1,0 +1,65 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-f19fix1-push-1",
+  "head": "fc7a01bf5e248f098736700955713f752a93a7b3",
+  "source_branch": "cloud/sx-linen-f19fix1",
+  "source_head": "fc7a01bf5e248f098736700955713f752a93a7b3",
+  "tree": "a218e5d7b65d0fdb740f361a46b27d4563046223",
+  "remote_advertisement": "fc7a01bf5e248f098736700955713f752a93a7b3\trefs/heads/cloud/sx-linen-f19fix1-push-1",
+  "unchanged": true,
+  "working_tree_clean": true,
+  "new_product_commits": 0,
+  "clause_changes": [],
+  "done_claim": false,
+  "verify": {
+    "conclusion": "success",
+    "databaseId": 42542451567,
+    "headSha": "fc7a01bf5e248f098736700955713f752a93a7b3",
+    "name": "Verify",
+    "status": "completed",
+    "url": "https://github.com/just-every/run-linen/actions/runs/42542451567"
+  },
+  "pr_url": null,
+  "blockers": [],
+  "candidate_commits_checked": 3,
+  "counts_before": {
+    "Core": {
+      "done": 21,
+      "partial": 128,
+      "missing": 29,
+      "total": 178
+    },
+    "Agent_surface": {
+      "done": 0,
+      "partial": 13,
+      "missing": 8,
+      "total": 21
+    },
+    "Full_target": {
+      "done": 21,
+      "partial": 141,
+      "missing": 37,
+      "total": 199
+    }
+  },
+  "counts_after": {
+    "Core": {
+      "done": 21,
+      "partial": 128,
+      "missing": 29,
+      "total": 178
+    },
+    "Agent_surface": {
+      "done": 0,
+      "partial": 13,
+      "missing": 8,
+      "total": 21
+    },
+    "Full_target": {
+      "done": 21,
+      "partial": 141,
+      "missing": 37,
+      "total": 199
+    }
+  }
+}

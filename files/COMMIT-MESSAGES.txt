@@ -1,0 +1,11 @@
+fc7a01bf5e248f098736700955713f752a93a7b3
+Keep numeric search identifiers together across conversation fields
+
+Reproduce LIFE-002’s three false hits at the failing CI clock: unrelated handoff tickets combine their synthetic identifier tokens with 20 in a 3:20 PM reply deadline. Require a punctuated numeric identifier to match a contiguous field span, retaining normalization and per-token typo matching. Preserve the existing LIFE-002 assertion and ACCESS-008 approval-authority proof; add one public-route regression to the existing search case.
+
+1a7719a4be4fe1ed14c9a8c707f9e6aafaaa22a2
+Merge current main before the LIFE-002 search fix [skip ci]
+
+e8dd72e6b634e11559de32489a60388912fa53e7
+Prove application approver metadata grants no decision authority
+
