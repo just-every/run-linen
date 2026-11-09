@@ -7456,7 +7456,7 @@
       "executable": false
     },
     "tests/work/project-cases.mjs": {
-      "sha256": "d15ecefa745da8ee5d5f1682bf451f41fa8a7e66f29457da81df11e416aff2e6",
+      "sha256": "f751641a1d42250b8dc8c9a936c3d67e7590f7844f67ee54cec79479ccce79dc",
       "executable": false
     },
     "tests/work/recurrence-cases.mjs": {
