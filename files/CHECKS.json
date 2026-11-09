@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f47",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f47",
+  "head": "2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d",
+  "base": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "generated_at": "2026-11-09T08:10:08.474591+00:00",
+  "counts_before": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37
+  },
+  "counts_after": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37
+  },
+  "claim": {
+    "id": "CHANGE-009",
+    "status": "PARTIAL",
+    "points": [
+      2,
+      6
+    ],
+    "test": "tests/services/calendar-cases.mjs#calendarChecks",
+    "remaining": "Restored changes retain no emergency scheduling authority: point 3 proof remains owed. Unselected calendar obligations and held dependencies remain unchanged."
+  },
+  "changes": [
+    "tests/services/calendar-cases.mjs",
+    "sources.lock.json"
+  ],
+  "new_test_registrations": 0,
+  "removed_assertions": 0,
+  "local_checks": [
+    {
+      "command": "node tests/services/run.mjs",
+      "exit": 0,
+      "output": "SERVICES.log",
+      "head_binding": "Source and test bytes identical to committed candidate; no subsequent edits"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "output": "TYPECHECK.log",
+      "head_binding": "Source and test bytes identical to committed candidate; no subsequent edits"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "output": "FIRST-PARTY.log",
+      "head_binding": "Source and test bytes identical to committed candidate; no subsequent edits"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "output": "VIEWS-WRITE.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "output": "VIEWS-CHECK.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "output": "SOURCE-LOCK-CHECK.json",
+      "head_binding": "2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "generated_views_restored": true,
+  "contract_status_diff": "none",
+  "working_tree_clean": true,
+  "product_push": {
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f47",
+    "remote_ref": "refs/heads/cloud/sx-linen-c-f47",
+    "observed_remote_head": "2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d",
+    "verified_by": "git ls-remote --refs origin refs/heads/cloud/sx-linen-c-f47"
+  },
+  "identity_and_trailers": {
+    "all_candidate_commits_checked": true,
+    "invalid": 0,
+    "trailers": "absent"
+  },
+  "pr": {
+    "number": 181,
+    "url": "https://github.com/just-every/run-linen/pull/181",
+    "draft": true
+  },
+  "ci": {
+    "id": 42583652209,
+    "event": "pull_request",
+    "head_sha": "2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d",
+    "status": "in_progress",
+    "conclusion": null,
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42583652209",
+    "observed_at": "2026-11-09T08:18:12.907797+00:00",
+    "calls_used": 5
+  },
+  "publication_scan": {
+    "commit": "2f8b89f09def3e73bbd5ebfa24994fc8818b0f0d",
+    "complete": false,
+    "historyScanned": "not run in cloud",
+    "findings": null,
+    "responsibility": "guarded Mac lander"
+  },
+  "main_equality": false,
+  "run_site_candidate": "not run; main-only lander responsibility",
+  "baseline_main_ci": {
+    "head": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+    "verify": 42570589451,
+    "verify_conclusion": "success",
+    "run_site": 42570589486,
+    "run_site_conclusion": "success"
+  },
+  "browser_proof": "not applicable: no UI changes",
+  "migration_ledger": "not applicable: no migration changes",
+  "probes": [
+    {
+      "id": "CHANGE-009",
+      "point": 2,
+      "door": "GET /change-calendar and GET /change-calendar.ics",
+      "input": "Current owner and operator in w1, current owner in w2",
+      "output": "200 and one new audit row per request with exact workspace, actor, action and global-calendar target"
+    },
+    {
+      "id": "CHANGE-009",
+      "point": 6,
+      "door": "POST /change-windows/:id and GET /change-calendar.ics",
+      "input": "Real active maintenance window, refused operator edit, owner deactivation and explicit owner reactivation",
+      "output": "403 operator edit with unchanged feed and history; owner updates succeed; stable UID present then absent then present; unrelated events identical"
+    }
+  ]
+}
