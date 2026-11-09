@@ -1,0 +1,124 @@
+{
+  "tag": "sx-linen-c-f29",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f29",
+  "head": "a20e859324c1d3104d4c4fcb4d59e53499cdaae9",
+  "base": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+  "pr": "https://github.com/just-every/run-linen/pull/164",
+  "changed_files": [
+    "tests/work/desk-routing-cases.mjs",
+    "sources.lock.json"
+  ],
+  "commands": [
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log",
+      "binding": "Initial run before rebase; see exact-head rerun."
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write-final.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check-final.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write-final.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check-final.log"
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "cloud_run node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime-exact.log",
+      "head": "a20e859324c1d3104d4c4fcb4d59e53499cdaae9"
+    }
+  ],
+  "test_registrations_added": 0,
+  "existing_assertions_removed": 0,
+  "contract_cells_changed": false,
+  "generated_views_committed": false,
+  "counts": {
+    "before": {
+      "done": 22,
+      "partial": 140,
+      "missing": 37
+    },
+    "committed_after": {
+      "done": 22,
+      "partial": 140,
+      "missing": 37
+    },
+    "proposed_after_gate": {
+      "done": 23,
+      "partial": 139,
+      "missing": 37
+    }
+  },
+  "ci": {
+    "conclusion": null,
+    "event": "pull_request",
+    "head_sha": "a20e859324c1d3104d4c4fcb4d59e53499cdaae9",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42545051614",
+    "id": 42545051614,
+    "name": "Verify",
+    "status": "in_progress"
+  },
+  "publication_scan": {
+    "commit": "a20e859324c1d3104d4c4fcb4d59e53499cdaae9",
+    "complete": false,
+    "historyScanned": false,
+    "findings": null,
+    "status": "guarded Mac lander responsibility; not run in cloud"
+  },
+  "main_equality": false,
+  "run_site": "pending guarded landing",
+  "browser": "not applicable: test-only change; no product screen changed",
+  "mechanical": {
+    "lock_exit": 0,
+    "views_exit": 0,
+    "migration_ledger": "none; no migration changed"
+  },
+  "probes": [
+    {
+      "point": 4,
+      "door": "Owner group assignment, work creation, work read and explicit route",
+      "observed": "round-robin positive control assigned d3-hw; mode none placed and retained group with null assignee, including clearing the previous owner; operator configuration refused 403 with unchanged settings"
+    },
+    {
+      "point": 7,
+      "door": "Owner routing and requester-group configuration, work creation, classification override and explicit route",
+      "observed": "all-match chose hardware; category-only, requester-only and requester-group-only mismatches each chose the lower-priority network fallback; persisted group verified"
+    },
+    {
+      "point": 8,
+      "door": "Owner retained-group configuration, work creation, work read and explicit route",
+      "observed": "active control assigned d3-hw; inactive retained member excluded for round-robin and load at creation and rerouting; stored group membership retained"
+    }
+  ],
+  "github_api_calls": 4
+}

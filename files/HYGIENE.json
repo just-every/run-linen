@@ -1,0 +1,9 @@
+{
+  "head": "a20e859324c1d3104d4c4fcb4d59e53499cdaae9",
+  "base": "9b7d3512c1bddf163a3e6d81bbce7b57fae76a21",
+  "added_email_shaped_strings": 0,
+  "status_cell_diff": false,
+  "worktree_clean": true,
+  "product_diff": " sources.lock.json                 |  2 +-\n tests/work/desk-routing-cases.mjs | 81 ++++++++++++++++++++++++++++++++++++++-\n 2 files changed, 81 insertions(+), 2 deletions(-)\n",
+  "publication_scan": "not run; Mac lander duty"
+}
