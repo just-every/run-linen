@@ -1,15 +1,14 @@
 {
   "repository": "just-every/run-linen",
   "candidate": {
-    "conclusion": null,
+    "conclusion": "success",
     "event": "pull_request",
     "head_sha": "e0f4162602973732aa6dfca8da3192f04cbcf7d1",
     "html_url": "https://github.com/just-every/run-linen/actions/runs/42616691124",
     "id": 42616691124,
-    "name": "Verify",
-    "status": "in_progress"
+    "status": "completed"
   },
-  "githubApiCallsUsed": 4,
+  "githubApiCallsUsed": 6,
   "maximumCalls": 10,
   "minimumPollingIntervalSeconds": 300,
   "mainVerifyRun": 42614672051,

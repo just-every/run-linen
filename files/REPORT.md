@@ -59,9 +59,9 @@ No full-clause DONE claim is made. Results apply to this partial capacity proof 
 
 | Rider | Result | Evidence |
 | --- | --- | --- |
-| 1 | PARTIAL overall; selected outcome passes locally | Point 5 capacity flow lines 57–105 reaches both public outcomes. Point 7 remains unproved. Exact-head Verify pending in the CI receipt until completed. |
+| 1 | PARTIAL overall; selected outcome passes locally | Point 5 capacity flow lines 57–105 reaches both public outcomes. Point 7 remains unproved. Exact-head pull_request Verify 42616691124 completed successfully. |
 | 2 | PASS for selected point | Seeded matching zero and positive controls, real requests and current approvals, explicit refusal and unchanged-state comparison at 79–100. |
-| 3 | PENDING until exact-head Verify completes | Existing scripts/verify.mjs loads the containing runner; no new flags or nightly-only path. CI event and conclusion recorded in the accompanying receipt. |
+| 3 | PASS for selected point | Existing scripts/verify.mjs loads the containing runner; no new flags or nightly-only path. Exact-head pull_request Verify 42616691124 is completed with conclusion success; see ci-receipt.json. |
 | 4 | PASS locally | runtime-receipt.json binds the rerun to full candidate SHA; no source edits after the commit. |
 | 5 | INSPECTED, unchanged | CATALOG-003's own requirement names the CATALOG-005 MDM obligation and its inherited ordering, ownership, waiver and close duties. No new inherited claim. |
 | 6 | PASS mechanically | Generator write and check exited zero; generated views restored from main. Source contract cells unchanged. Counts remain unchanged; Gap update belongs to lander. |
@@ -91,4 +91,10 @@ Publication scan receipt: commit=e0f4162602973732aa6dfca8da3192f04cbcf7d1 comple
 
 Plan row result: CATALOG-003 selected capacity-before-team-work proof is closed; clause stays PARTIAL; no plan reconstruction, other target or held campaign was attempted. No local product blocker found. The full clause still owes point 7's applied or uncertain-effect reconciliation proof and every unselected obligation retained by the brief.
 
-Candidate Verify: pull_request run 42616691124, exact head e0f4162602973732aa6dfca8da3192f04cbcf7d1, observed in_progress on discovery. One watcher is scheduled for the next allowed REST poll. PR event run 42616686537 completed successfully; it is not a substitute for Verify.
+## Final candidate result
+
+Exact-head pull_request Verify 42616691124 completed successfully on e0f4162602973732aa6dfca8da3192f04cbcf7d1. See candidate-ci.json and ci-receipt.json for the actual REST response. Six GitHub API calls were used, with one watcher and at least 300 seconds between discovery or polling calls for this run. No CI dispatch, rerun or repair was needed.
+
+The initial report-only evidence head 7bfeae333518cae098ab8298e9dd536dffb43bad was independently fetched and all 16 manifest files passed byte count, blob and SHA-256 verification; see evidence-verification.json. The final publication adds the completed Verify response and this final report, still using only the evidence ref and retaining the same product head.
+
+Selected point 5 is proven; CATALOG-003 remains PARTIAL. Rider 3 is satisfied for the selected proof by the successful exact-head Verify. Rider 11, full-history publication scan, main equality and exact-main Run site remain pending the maintained fleet lander. No acceptance count is promoted by this branch or evidence publication.
