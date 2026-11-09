@@ -1,0 +1,7 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+Using secrets defined in ../../tmp/linen-ui-hFnvk7/dist/server/.dev.vars
+PROBE DESK-015 8: keyboard ticket run and fresh two-ticket bulk run at innerWidth 390 -> persisted category, priority, group, state, private note, linked plan and attributed audits; end states captured at 1440 and 390
+PASS DESK-015 native keyboard scenario, change list, task and ticket templates and bulk scenario
+UI evidence: /tmp/linen-scenario-proof-2

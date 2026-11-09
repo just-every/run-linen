@@ -1,0 +1,138 @@
+{
+  "tag": "sx-linen-c-f64",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f64",
+  "head": "15057928c4110f322805414c414db1a8def2fa47",
+  "base": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+  "recordedAt": "2026-11-09T12:25:57.152683+00:00",
+  "checks": [
+    {
+      "name": "work runtime",
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "check-1.log",
+      "sha256": "9085ecd8580600d9d7e1480f7056307809f6f35200e46d03fec08f62fb25c514"
+    },
+    {
+      "name": "typecheck",
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "check-2.log",
+      "sha256": "0b0adb5e632ac97cbb75b4f6e5914a39cf4935d0027cdedb2c5fd950cee46124"
+    },
+    {
+      "name": "application build",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "check-3.log",
+      "sha256": "0b625d7b6c5b8a6ac6c52264048492fbb66edab9f6aecd848fd81079873e8083"
+    },
+    {
+      "name": "first-party",
+      "command": "cloud_run npx -y @runeditrun/rer check --profile first-party",
+      "exit": 0,
+      "log": "check-4.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "focused browser",
+      "command": "LINEN_TEST_BUILT=1 LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium LINEN_CAPTURE=1 LINEN_TEST_OUTPUT=/tmp/linen-scenario-proof-2 cloud_run perl -e 'alarm 1800; exec @ARGV' -- node tests/ui/run.mjs /tmp/linen-scenario-browser.mjs",
+      "exit": 0,
+      "log": "check-5.log",
+      "sha256": "45c36227f4dcf745e5235096c8b927532953bdbb95fc44caff752b8c504aa468"
+    },
+    {
+      "name": "contract views write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "check-6.log",
+      "sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+    },
+    {
+      "name": "contract views check",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "check-7.log",
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    {
+      "name": "source lock",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "check-8.log",
+      "sha256": "35da51a43b9fd58e56f2c6ccd339e257a8a94d0a13e6f09f230f896fe7144037"
+    },
+    {
+      "name": "source integrity",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "check-9.log",
+      "sha256": "95c7bce0498712358af833e26308758327ee830dded59f07777b0eb420d7e19e"
+    }
+  ],
+  "relevantFileSha256": {
+    "tests/work/desk-scenario-cases.mjs": "b396addf93675f608e6a8a454e3a152242b3691e022c55d816289d10378d1a4b",
+    "tests/ui/desk-console-journeys.mjs": "516f522809820ebe0c7f887b39c9093d63b10bb030cb672228c23b0540b154e7",
+    "src/features/work/desk-scenarios.ts": "23b9fb6ba0bac815ed78787b161dcadd73468089e0f66fe536d0e0649ec1a673",
+    "tests/ui/browser.mjs": "e9e516d326530a87cabe5689ecf3ff236c6dba4440a3781b97fe935203b7cc6d"
+  },
+  "proofProvenance": "Local runtime and focused browser passed with byte-identical relevant source and test files; commit added no subsequent source edits. Browser setup and API adapter copied from tests/ui/browser.mjs into a temporary driver that calls the committed deskScenarioJourney. Verify invokes the canonical complete browser.mjs.",
+  "browser": {
+    "journey": "deskScenarioJourney",
+    "pageErrors": [],
+    "status": "passed"
+  },
+  "screenshots": [
+    "DESK-015-ticket-scenario-1440.png",
+    "DESK-015-ticket-scenario-1440-390px.png",
+    "DESK-015-bulk-scenario.png",
+    "DESK-015-bulk-scenario-390px.png"
+  ],
+  "migrationsChanged": false,
+  "contractChanged": false,
+  "generatedViewsCommitted": false,
+  "registrationsAdded": 0,
+  "registrationsRemoved": 0,
+  "countsBefore": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37
+  },
+  "countsAfter": {
+    "done": 31,
+    "partial": 131,
+    "missing": 37
+  },
+  "productPush": {
+    "exit": 0,
+    "attempts": 1,
+    "head": "15057928c4110f322805414c414db1a8def2fa47"
+  },
+  "publicationScan": {
+    "status": "lander-owned, not run in cloud",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "observedLocalFailure": {
+    "command": "focused deskScenarioJourney first attempt",
+    "failure": "Timeout waiting for desktop keyboard-reference definition at phone width",
+    "resolution": "Kept the existing desktop reference assertion at width 1440 after the phone execution and persistence proof. Rerun passed; no assertion removed or weakened."
+  },
+  "mechanical": {
+    "lock": "node scripts/edition-authoring/cli.mjs lock and check",
+    "lockExit": 0,
+    "views": "node src/base/contract-docs.mjs write and check; restore generated views from origin/main",
+    "viewsExit": 0,
+    "ledger": "none; no migrations",
+    "ledgerExit": 0
+  },
+  "ci": {
+    "runId": 42616876267,
+    "event": "pull_request",
+    "conclusion": null,
+    "head_sha": "15057928c4110f322805414c414db1a8def2fa47",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42616876267",
+    "status": "in_progress"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f64",
+  "head": "15057928c4110f322805414c414db1a8def2fa47",
+  "base": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+  "commit": "commit 15057928c4110f322805414c414db1a8def2fa47\nAuthor:     Run Edit Run fleet <fleet@runeditrun.com>\nAuthorDate: Mon Nov 9 12:25:04 2026 +0000\nCommit:     Run Edit Run fleet <fleet@runeditrun.com>\nCommitDate: Mon Nov 9 12:25:04 2026 +0000\n\n    Prove permitted HR scenarios and phone console execution\n",
+  "changes": " sources.lock.json                  |  4 +--\n tests/ui/desk-console-journeys.mjs | 56 ++++++++++++++++++++++++++++++++++----\n tests/work/desk-scenario-cases.mjs | 51 ++++++++++++++++++++++++++++++++++\n 3 files changed, 103 insertions(+), 8 deletions(-)\n",
+  "contractDiff": "",
+  "generatedViewsDiff": "",
+  "historyShallow": "false",
+  "pushStatus": "PUSH_OK branch=cloud/sx-linen-c-f64",
+  "identityAndTrailerAudit": "All candidate authors and committers are fleet; trailers absent; all side parents included by origin/main..HEAD enumeration."
+}
