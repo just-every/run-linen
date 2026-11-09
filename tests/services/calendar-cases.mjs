@@ -2,6 +2,17 @@ import assert from 'node:assert/strict';
 export async function calendarChecks(request,db) {
   const owner={},agent={'x-user':'operator','x-roles':'["operator"]'},employee={'x-user':'employee','x-roles':'["employee"]'};
   const ok=async(method,path,body,headers=owner)=>{const r=await request(method,path,body,headers);assert.ok(r.status<300,JSON.stringify(r));return r.json;};
+  const auditRows=async()=> (await db.prepare('SELECT id,workspace_id,actor_id,action,target FROM audit_events').all()).results;
+  const auditedRead=async(path,headers,workspaceId,actorId)=>{
+    const before=new Set((await auditRows()).map(row=>row.id));
+    const response=await request('GET',path,undefined,headers);
+    assert.equal(response.status,200,JSON.stringify(response));
+    const added=(await auditRows()).filter(row=>!before.has(row.id)).map(({id,...row})=>row);
+    assert.deepEqual(added,[{workspace_id:workspaceId,actor_id:actorId,
+      action:path.startsWith('/change-calendar.ics')?'change-calendar.export':'change-calendar.read',target:'global-calendar'}],
+    'CHANGE-009 each calendar read or export records its current workspace, actor, action and target');
+    return response;
+  };
   const service=await ok('POST','/services',{name:'Calendar payroll CI',description:'Payroll workflow',businessImpact:'Payroll blocked',source:'Reviewed CI register',observedAt:new Date().toISOString(),visibility:'workspace'});
   const otherCI=await ok('POST','/services',{name:'Calendar test CI',description:'Test workflow',businessImpact:'Test cohort only',source:'Reviewed CI register',observedAt:new Date().toISOString(),visibility:'workspace'});
   const body={title:'Year-end payroll upgrade',risk:'Reviewed upgrade',impact:'Payroll downtime',services:[service.id],window:{start:'2030-12-27T01:00:00.000Z',end:'2030-12-27T02:00:00.000Z'},cohorts:['Denver'],canaryCohorts:['Denver'],implementation:{release:'2031'},compensation:{release:'2030'}};
@@ -18,7 +29,7 @@ export async function calendarChecks(request,db) {
   assert.equal((await request('PATCH','/changes/'+outside.id,{revision:outside.revision,window:body.window},agent)).status,409,'CHANGE-004 edit cannot enter freeze');
   assert.equal((await ok('GET','/changes/'+outside.id)).revision,outside.revision,'CHANGE-004 refused edit applies nothing');
   const unrelated=await ok('POST','/changes',{...body,title:'Unrelated CI upgrade',services:[otherCI.id]});
-  const calendar=await ok('GET','/change-calendar?from=2030-12-01T00:00:00Z&to=2031-02-01T00:00:00Z&timezone=America%2FDenver');
+  const calendar=(await auditedRead('/change-calendar?from=2030-12-01T00:00:00Z&to=2031-02-01T00:00:00Z&timezone=America%2FDenver',owner,'w1','owner')).json;
   assert.equal(calendar.timezone,'America/Denver');assert.ok(calendar.windows.some(r=>r.id===freeze.id));
   assert.ok(calendar.conflicts.some(c=>c.changeId===emergency.id&&c.otherId===freeze.id&&c.kind==='freeze'),'CHANGE-004 calendar shows an emergency overlap with the freeze');
   assert.ok(!calendar.conflicts.some(c=>c.changeId===unrelated.id&&c.otherId===freeze.id),'CHANGE-004 CI-specific freezes do not block unrelated CIs');
@@ -34,7 +45,7 @@ export async function calendarChecks(request,db) {
   assert.equal(scoped.warnings.filter(w=>w.changeId===conflictA.id).length,1,'CHANGE-004 one generic warning per affected visible change');
   const injection=await ok('POST','/changes',{...body,title:'Payroll; review, driver\nBEGIN:VEVENT '+ '界'.repeat(80),window:conflictA.data.window});
   const feedPath='/change-calendar.ics?from=2031-02-01T00:00:00Z&to=2031-02-02T00:00:00Z&timezone=America%2FDenver';
-  const feed=await request('GET',feedPath,undefined,agent);assert.equal(feed.status,200);
+  const feed=await auditedRead(feedPath,agent,'w1','operator');assert.equal(feed.status,200);
   assert.ok(feed.headers['content-type'].startsWith('text/calendar'),'CHANGE-004 real ICS response');
   const unfolded=feed.json.replace(/\r\n /g,'');
   assert.ok(unfolded.includes('SUMMARY:Payroll\\; review\\, driver\\nBEGIN:VEVENT '),'CHANGE-004 feed text escapes properties and newlines');
@@ -45,6 +56,46 @@ export async function calendarChecks(request,db) {
   assert.ok(!feed.json.includes(hidden.data.title),'CHANGE-004 ICS shares current source privacy');
   assert.equal(feed.headers['cache-control'],'private, no-store');
   assert.equal((await request('GET',feedPath,undefined,employee)).json.includes('BEGIN:VEVENT'),false,'CHANGE-004 employee feed omits operator changes');
+  for(const [headers,workspaceId,actorId] of [[owner,'w1','owner'],[agent,'w1','operator'],[{'x-workspace':'w2'},'w2','owner']]){
+    const view=await auditedRead(feedPath.replace('.ics',''),headers,workspaceId,actorId);
+    const exported=await auditedRead(feedPath,headers,workspaceId,actorId);
+    assert.ok(Array.isArray(view.json.windows));
+    assert.ok(exported.json.startsWith('BEGIN:VCALENDAR'));
+  }
+  const events=ics=>new Map(ics.replace(/\r\n /g,'').split('BEGIN:VEVENT\r\n').slice(1).map(block=>{
+    const event=block.split('END:VEVENT')[0];
+    return [event.match(/^UID:(.+)$/m)[1].trim(),event];
+  }));
+  const activeEvents=events((await auditedRead(feedPath,agent,'w1','operator')).json);
+  const maintenanceEntry=[...activeEvents].find(([,event])=>event.includes('SUMMARY:'+maintenance.data.title+'\r\n'));
+  assert.ok(maintenanceEntry,'CHANGE-009 the real active maintenance window appears in the feed');
+  const [maintenanceUid]=maintenanceEntry;
+  const unrelatedEvents=new Map([...activeEvents].filter(([uid])=>uid!==maintenanceUid));
+  assert.ok(unrelatedEvents.size>=2,'CHANGE-009 lifecycle proof retains real unrelated calendar entries');
+  const windowEvents=async()=> (await db.prepare('SELECT * FROM svc_events WHERE record_id=?').bind(maintenance.id).all()).results;
+  const historyBeforeRefusal=await windowEvents();
+  assert.equal((await request('POST','/change-windows/'+maintenance.id,{...maintenance.data,revision:maintenance.revision,active:false},agent)).status,403,
+    'CHANGE-009 an operator cannot deactivate an owner-managed window');
+  assert.deepEqual(await windowEvents(),historyBeforeRefusal,'CHANGE-009 refused window update adds no successful event');
+  assert.deepEqual(events((await auditedRead(feedPath,agent,'w1','operator')).json),activeEvents,
+    'CHANGE-009 refused window update preserves the complete feed');
+  const inactive=await ok('POST','/change-windows/'+maintenance.id,{...maintenance.data,revision:maintenance.revision,active:false});
+  assert.equal(inactive.data.active,false);
+  const inactiveView=(await auditedRead(feedPath.replace('.ics',''),owner,'w1','owner')).json;
+  assert.equal(inactiveView.windows.find(row=>row.id===maintenance.id).data.active,false,
+    'CHANGE-009 deactivation retains the window as inactive policy');
+  const inactiveEvents=events((await auditedRead(feedPath,agent,'w1','operator')).json);
+  assert.equal(inactiveEvents.has(maintenanceUid),false,'CHANGE-009 inactive windows do not enter the feed');
+  assert.deepEqual(inactiveEvents,unrelatedEvents,'CHANGE-009 deactivation preserves every unrelated event');
+  const reactivated=await ok('POST','/change-windows/'+maintenance.id,{...inactive.data,revision:inactive.revision,active:true});
+  assert.equal(reactivated.data.active,true);
+  const reactivatedEvents=events((await auditedRead(feedPath,agent,'w1','operator')).json);
+  assert.ok(reactivatedEvents.get(maintenanceUid)?.includes('SUMMARY:'+maintenance.data.title+'\r\n'),
+    'CHANGE-009 explicit current-owner reactivation restores the same window UID');
+  assert.ok(reactivatedEvents.get(maintenanceUid).includes('SEQUENCE:'+reactivated.revision+'\r\n'));
+  assert.deepEqual(new Map([...reactivatedEvents].filter(([uid])=>uid!==maintenanceUid)),unrelatedEvents,
+    'CHANGE-009 reactivation preserves every unrelated event');
+  console.log('PASS CHANGE-009 calendarChecks: attributed privileged reads and exports; active, inactive and explicitly reactivated stable window UID with unrelated entries preserved');
   const before=await ok('GET',feedPath,undefined,agent),after=await ok('GET',feedPath,undefined,agent);
   assert.deepEqual(before.match(/UID:[^\r\n]+/g),after.match(/UID:[^\r\n]+/g),'CHANGE-004 event identities survive feed refresh');
   const employeeView=await ok('GET','/change-calendar?from=2030-12-01T00:00:00Z&to=2031-02-02T00:00:00Z&timezone=UTC',undefined,employee);
