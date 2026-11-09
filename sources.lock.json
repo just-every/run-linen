@@ -604,7 +604,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "3b5a6cd6f690f37ae8cb70dc35e04e27319a857977445d7c790f6cffb07faab8",
+      "sha256": "fb88db7645a9ffbb153c9dc00f0252e539a33b1da9aeafd9978899dd9f0aa7d1",
       "executable": false
     },
     "ADOPTION.md": {
@@ -640,7 +640,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a7fdcd192aaf71bc5bc773ede6542f0b53e1b8d923feade80b30dc26f3a17151",
+      "sha256": "c1de292aed87326bfa1b9072f19f3412d9deaa4313490b7797eb62606f202337",
       "executable": false
     },
     "DEMO.md": {
@@ -3604,7 +3604,7 @@
       "executable": false
     },
     "src/features/work/search-match.ts": {
-      "sha256": "58b9d3122ba9e3a403852addf7dc3db9748df85835e2e543760357185ba21ddd",
+      "sha256": "b4ff46992a725f01bdb169d65223051df3ad8d9983f15a47d92efeed3f44b96b",
       "executable": false
     },
     "src/features/work/search-sources.ts": {
@@ -7256,7 +7256,7 @@
       "executable": false
     },
     "tests/work/application-cases.mjs": {
-      "sha256": "8768a86c8bfd3bfe67f6a79e5b4c81ecf4590aacb4247e0de09a7cbf38725775",
+      "sha256": "2c8b6343aa5010fc3b303e3c3d4964a68c140046323a88643d580f827bfcb811",
       "executable": false
     },
     "tests/work/approval-chain-cases.mjs": {
@@ -7324,7 +7324,7 @@
       "executable": false
     },
     "tests/work/department-space-cases.mjs": {
-      "sha256": "7dafdf3ce8d2a8e147b2d5a1858b5c983f7a2986871b69156fef6d393b883796",
+      "sha256": "84ff8055907ff7bddda3f087b7c5a19beec6a7c7dbad9633365653c1eb3538d7",
       "executable": false
     },
     "tests/work/desk-field-cases.mjs": {
@@ -7336,7 +7336,7 @@
       "executable": false
     },
     "tests/work/desk-routing-cases.mjs": {
-      "sha256": "82184e5929786206da0f713166d8cf0e0d543a990fb43b441d7d161d9cc16a87",
+      "sha256": "431b381a28b1e24da7b2c9d536f811a6b0382f2000e3fc7f082abc76897f0668",
       "executable": false
     },
     "tests/work/desk-scenario-cases.mjs": {
@@ -7452,7 +7452,7 @@
       "executable": false
     },
     "tests/work/search-cases.mjs": {
-      "sha256": "2271cdbcaf08439fcf645289facbd7de71cc3933c0de461d311119887922a3b8",
+      "sha256": "4ff17c09dca8a5248662bb45ed298943b0f1558f4f3ce169cb1b0666910c43b2",
       "executable": false
     },
     "tests/work/sla-policy-cases.mjs": {
@@ -7476,7 +7476,7 @@
       "executable": false
     },
     "tests/work/worker.ts": {
-      "sha256": "52b90860087957d278e03bac4a92a99f6708c7043b9e529a377471b54b25bf6a",
+      "sha256": "bc68b170c589eba094fd51cf0e16bc40d6313cedccf702ac4850e8004dd4a6be",
       "executable": false
     },
     "tsconfig.json": {

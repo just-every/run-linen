@@ -40,6 +40,10 @@ export async function searchChecks(api, db) {
   }
   assert.ok((await search('netwrok','ticket')).items.some(r=>r.id===ticket.id),'DESK-016 adjacent typo tolerance');
   assert.ok((await search('netwok','ci')).items.some(r=>r.id===service.id),'DESK-016 omitted-character typo tolerance');
+  await make('/work',{title:'synthetic-linen-9707 laptop slow',body:'Linen: We will reply by 3:20 PM.',deduplicationKey:crypto.randomUUID()});
+  const numbered=await make('/work',{title:'synthetic-linen-20',body:'The requested numbered record',deduplicationKey:crypto.randomUUID()});
+  assert.deepEqual((await search('synthetic-linen-20','ticket')).items.map(r=>r.id),[numbered.id],
+    'A numeric identifier finds its record without combining another identifier with a conversation deadline');
   assert.equal((await search('ConfidentialSearchNeedle')).total,0,'DESK-016 IT agent sees no HR hit or count');
   assert.equal(JSON.stringify(await search('ConfidentialSearchNeedle')).includes(confidential.id),false);
   assert.ok((await search('ConfidentialSearchNeedle','ticket',hr)).items.some(r=>r.id===confidential.id),'DESK-016 HR reader keeps current HR access');
