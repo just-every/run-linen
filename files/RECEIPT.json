@@ -91,7 +91,7 @@
     "html_url": "https://github.com/just-every/run-linen/pull/193",
     "number": 193
   },
-  "github_api_calls_used": 3,
+  "github_api_calls_used": 4,
   "ci": [
     {
       "conclusion": null,
@@ -111,5 +111,16 @@
       "name": "PR #193",
       "status": "in_progress"
     }
-  ]
+  ],
+  "verify_latest": {
+    "id": 42616925936,
+    "conclusion": null,
+    "head_sha": "c11a8f51cb5d1fe94368e5cd8ed7ecf7a32c5bd8",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42616925936",
+    "status": "in_progress",
+    "observed_at": "2026-11-09T12:30:56Z"
+  },
+  "terminal_product_custody": "PUSHED; exact-head Verify still in progress after the bounded cloud wait",
+  "blockers": [],
+  "clone_cleanup": "delete only after product and evidence are published and verified"
 }
