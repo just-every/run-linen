@@ -1,0 +1,27 @@
+{
+  "budget": 10,
+  "calls": [
+    {
+      "number": 1,
+      "purpose": "checkout main exact-head workflows",
+      "command": "gh api repos/just-every/run-linen/actions/runs?head_sha=fcc2e53de937ab2ae17938147920b871b5fe70f5&per_page=100"
+    },
+    {
+      "number": 2,
+      "purpose": "create repository draft PR",
+      "command": "gh api repos/just-every/run-linen/pulls --method POST --input /tmp/sx-linen-c-f42-pr.json"
+    },
+    {
+      "number": 3,
+      "purpose": "candidate exact-head run discovery",
+      "observedAt": "2026-11-09T06:05:52Z",
+      "command": "gh api repos/just-every/run-linen/actions/runs?head_sha=cc284ac3936b34087b78dd6233df2f20d0cabd4d&per_page=100"
+    },
+    {
+      "number": 4,
+      "purpose": "single Verify watcher poll",
+      "observedAt": "2026-11-09T06:11:09Z",
+      "command": "gh api repos/just-every/run-linen/actions/runs/42570916118"
+    }
+  ]
+}

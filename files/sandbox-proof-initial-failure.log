@@ -1,0 +1,363 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Production readback matches every included configuration field
++ actual - expected
+... Skipped lines
+
+  {
+    families: {
+      agent: [
+        {
+          calendar_id: null,
+...
+          id: '9d1b4619-19dc-442a-91e2-b6c686f2a0ee',
++         next_due_at: '2027-01-01T10:00:00.000Z',
+-         next_due_at: '2027-01-01T09:00:00.000Z',
+          next_index: 0,
+          owner_id: '849e1627-a1b3-4c6a-a7fb-f08dfaa0464c',
+          rule_json: '{"startDate":"2027-01-01","frequency":"annual","interval":1,"firstBusinessDay":false}',
+          tasks_json: '[{"title":"Reviewed recurring task","ownerId":"849e1627-a1b3-4c6a-a7fb-f08dfaa0464c"}]',
+          title: 'Reviewed recurring 5e6bea'
+
+    at assertSandboxProduction (file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/tests/ui/sandbox-journey.mjs:372:9)
+    at async sandboxJourney (file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/tests/ui/sandbox-journey.mjs:194:2)
+    at async file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/.wrangler/sandbox-probe.mjs:86:42 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: {
+    items: [
+      {
+        id: 'fbe08fc5-8430-4fe9-afb9-5fd355ef62aa',
+        name: 'Reviewed equipment 5e6bea',
+        form: {
+          fields: [ [Object], [Object], [Object] ],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [
+          {
+            key: 't0840202be5ed',
+            title: 'Prepare sandbox equipment',
+            groupId: 'e86ef4eb-87f5-480d-b223-604b244a1702',
+            after: [],
+            dueHours: 24
+          }
+        ],
+        requiresManager: 1,
+        approvals: [
+          {
+            key: 'sb26ca28010e5',
+            name: 'Reviewed sandbox approval',
+            withPrevious: false,
+            mode: 'all',
+            approvers: [Array],
+            aboveCents: null,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: '0a840e2d-b3e4-4f1b-a441-03f86eb6509c',
+            calendarRevision: 1
+          }
+        ],
+        managerApproval: null
+      }
+    ],
+    slas: [
+      {
+        id: '89597056-af13-4f1c-9d0f-70933e82d0c8',
+        name: 'Reviewed response 5e6bea',
+        position: 1,
+        priority: 'P3',
+        category: 'hardware',
+        requester_group_id: null,
+        calendar_id: '0a840e2d-b3e4-4f1b-a441-03f86eb6509c',
+        department_id: null,
+        first_response_minutes: 30,
+        next_response_minutes: 120,
+        resolution_minutes: 480,
+        pause_on_json: '[]'
+      }
+    ],
+    families: {
+      routing: [
+        {
+          id: '76c96133-222a-41de-8517-7d993323fe5d',
+          name: 'Reviewed routing 5e6bea',
+          position: 2,
+          category: 'hardware',
+          requester_id: '849e1627-a1b3-4c6a-a7fb-f08dfaa0464c',
+          requester_group_id: '130ca357-d7de-444e-8dda-f474c546970b',
+          skill: 'synthetic-linen-514',
+          group_id: '9f6c2a10-f9c2-49e6-8a8b-a53d1f3f0958',
+          department_id: '15a5ba0a-d0fa-41fb-9ff7-eb6c8e4dccca'
+        }
+      ],
+      support: [
+        {
+          id: '8adbc7cc-b6ce-465f-b125-8b5030648998',
+          group_id: '9f6c2a10-f9c2-49e6-8a8b-a53d1f3f0958'
+        }
+      ],
+      agent: [
+        {
+          id: '849e1627-a1b3-4c6a-a7fb-f08dfaa0464c',
+          calendar_id: null,
+          skills_json: '["synthetic-linen-514"]'
+        }
+      ],
+      assignment: [
+        {
+          id: '9f6c2a10-f9c2-49e6-8a8b-a53d1f3f0958',
+          assignment: 'load',
+          max_open: 5
+        },
+        {
+          id: 'e86ef4eb-87f5-480d-b223-604b244a1702',
+          assignment: 'none',
+          max_open: null
+        }
+      ],
+      recurring: [
+        {
+          id: '9d1b4619-19dc-442a-91e2-b6c686f2a0ee',
+          owner_id: '849e1627-a1b3-4c6a-a7fb-f08dfaa0464c',
+          title: 'Reviewed recurring 5e6bea',
+          body: 'Reviewed recurring instructions',
+          calendar_json: '{"timezone":"UTC","startHour":10,"endHour":17,"weekdays":[1,2,3,4,5],"holidays":[]}',
+          rule_json: '{"startDate":"2027-01-01","frequency":"annual","interval":1,"firstBusinessDay":false}',
+          tasks_json: '[{"title":"Reviewed recurring task","ownerId":"849e1627-a1b3-4c6a-a7fb-f08dfaa0464c"}]',
+          enabled: 0,
+          next_index: 0,
+          next_due_at: '2027-01-01T10:00:00.000Z'
+        }
+      ],
+      lifecycle: [
+        {
+          id: '0ee056b2-2ff5-4555-8f46-e6c95dcdf9c0',
+          name: 'Reviewed lifecycle 5e6bea',
+          kind: 'join',
+          match_json: '{}',
+          tasks_json: '[{"key":"prepare","title":"Reviewed lifecycle preparation","assignee":{"type":"group","groupId":"e86ef4eb-87f5-480d-b223-604b244a1702"},"anchor":"start","offsetDays":2,"remindDays":null}]',
+          active: 1
+        }
+      ],
+      role: [
+        {
+          id: '2f79bc81-2b13-43dd-8e61-4717321e1861',
+          name: 'Reviewed reader 5e6bea',
+          permissions_json: '["ticket.read"]',
+          active: 1,
+          department_id: '15a5ba0a-d0fa-41fb-9ff7-eb6c8e4dccca'
+        }
+      ],
+      calendar: [
+        {
+          id: '0a840e2d-b3e4-4f1b-a441-03f86eb6509c',
+          name: 'Reviewed hours 5e6bea',
+          timezone: 'UTC',
+          weekdays_json: '[1,2,3,4,5]',
+          start_hour: 9,
+          end_hour: 17,
+          holidays_json: '[]',
+          location: null,
+          holiday_catalog: null
+        }
+      ],
+      escalation: [
+        {
+          id: '002ac00d-65a7-4ec1-869c-92cd53078b1f',
+          target: 'resolution',
+          level: 1,
+          offset_minutes: 0,
+          notify: 'assignee',
+          label: 'Reviewed escalation 5e6bea'
+        }
+      ],
+      waiting: [
+        {
+          id: 'waiting',
+          remind_business_days: 3,
+          resolve_business_days: 5
+        }
+      ]
+    }
+  },
+  expected: {
+    items: [
+      {
+        id: 'fbe08fc5-8430-4fe9-afb9-5fd355ef62aa',
+        name: 'Reviewed equipment 5e6bea',
+        form: {
+          fields: [ [Object], [Object], [Object] ],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [
+          {
+            key: 't0840202be5ed',
+            title: 'Prepare sandbox equipment',
+            groupId: 'e86ef4eb-87f5-480d-b223-604b244a1702',
+            after: [],
+            dueHours: 24
+          }
+        ],
+        requiresManager: 1,
+        approvals: [
+          {
+            key: 'sb26ca28010e5',
+            name: 'Reviewed sandbox approval',
+            withPrevious: false,
+            mode: 'all',
+            approvers: [Array],
+            aboveCents: null,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: '0a840e2d-b3e4-4f1b-a441-03f86eb6509c',
+            calendarRevision: 1
+          }
+        ],
+        managerApproval: null
+      }
+    ],
+    slas: [
+      {
+        id: '89597056-af13-4f1c-9d0f-70933e82d0c8',
+        name: 'Reviewed response 5e6bea',
+        position: 1,
+        priority: 'P3',
+        category: 'hardware',
+        requester_group_id: null,
+        calendar_id: '0a840e2d-b3e4-4f1b-a441-03f86eb6509c',
+        department_id: null,
+        first_response_minutes: 30,
+        next_response_minutes: 120,
+        resolution_minutes: 480,
+        pause_on_json: '[]'
+      }
+    ],
+    families: {
+      routing: [
+        {
+          id: '76c96133-222a-41de-8517-7d993323fe5d',
+          name: 'Reviewed routing 5e6bea',
+          position: 2,
+          category: 'hardware',
+          requester_id: '849e1627-a1b3-4c6a-a7fb-f08dfaa0464c',
+          requester_group_id: '130ca357-d7de-444e-8dda-f474c546970b',
+          skill: 'synthetic-linen-514',
+          group_id: '9f6c2a10-f9c2-49e6-8a8b-a53d1f3f0958',
+          department_id: '15a5ba0a-d0fa-41fb-9ff7-eb6c8e4dccca'
+        }
+      ],
+      support: [
+        {
+          id: '8adbc7cc-b6ce-465f-b125-8b5030648998',
+          group_id: '9f6c2a10-f9c2-49e6-8a8b-a53d1f3f0958'
+        }
+      ],
+      agent: [
+        {
+          id: '849e1627-a1b3-4c6a-a7fb-f08dfaa0464c',
+          calendar_id: null,
+          skills_json: '["synthetic-linen-514"]'
+        }
+      ],
+      assignment: [
+        {
+          id: '9f6c2a10-f9c2-49e6-8a8b-a53d1f3f0958',
+          assignment: 'load',
+          max_open: 5
+        },
+        {
+          id: 'e86ef4eb-87f5-480d-b223-604b244a1702',
+          assignment: 'none',
+          max_open: null
+        }
+      ],
+      recurring: [
+        {
+          id: '9d1b4619-19dc-442a-91e2-b6c686f2a0ee',
+          owner_id: '849e1627-a1b3-4c6a-a7fb-f08dfaa0464c',
+          title: 'Reviewed recurring 5e6bea',
+          body: 'Reviewed recurring instructions',
+          calendar_json: '{"timezone":"UTC","startHour":10,"endHour":17,"weekdays":[1,2,3,4,5],"holidays":[]}',
+          rule_json: '{"startDate":"2027-01-01","frequency":"annual","interval":1,"firstBusinessDay":false}',
+          tasks_json: '[{"title":"Reviewed recurring task","ownerId":"849e1627-a1b3-4c6a-a7fb-f08dfaa0464c"}]',
+          enabled: 0,
+          next_index: 0,
+          next_due_at: '2027-01-01T09:00:00.000Z'
+        }
+      ],
+      lifecycle: [
+        {
+          id: '0ee056b2-2ff5-4555-8f46-e6c95dcdf9c0',
+          name: 'Reviewed lifecycle 5e6bea',
+          kind: 'join',
+          match_json: '{}',
+          tasks_json: '[{"key":"prepare","title":"Reviewed lifecycle preparation","assignee":{"type":"group","groupId":"e86ef4eb-87f5-480d-b223-604b244a1702"},"anchor":"start","offsetDays":2,"remindDays":null}]',
+          active: 1
+        }
+      ],
+      role: [
+        {
+          id: '2f79bc81-2b13-43dd-8e61-4717321e1861',
+          name: 'Reviewed reader 5e6bea',
+          permissions_json: '["ticket.read"]',
+          active: 1,
+          department_id: '15a5ba0a-d0fa-41fb-9ff7-eb6c8e4dccca'
+        }
+      ],
+      calendar: [
+        {
+          id: '0a840e2d-b3e4-4f1b-a441-03f86eb6509c',
+          name: 'Reviewed hours 5e6bea',
+          timezone: 'UTC',
+          weekdays_json: '[1,2,3,4,5]',
+          start_hour: 9,
+          end_hour: 17,
+          holidays_json: '[]',
+          location: null,
+          holiday_catalog: null
+        }
+      ],
+      escalation: [
+        {
+          id: '002ac00d-65a7-4ec1-869c-92cd53078b1f',
+          target: 'resolution',
+          level: 1,
+          offset_minutes: 0,
+          notify: 'assignee',
+          label: 'Reviewed escalation 5e6bea'
+        }
+      ],
+      waiting: [
+        {
+          id: 'waiting',
+          remind_business_days: 3,
+          resolve_business_days: 5
+        }
+      ]
+    }
+  },
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
+file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/tests/ui/run.mjs:108
+      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+                              ^
+
+Error: Browser acceptance exited 1
+    at ChildProcess.<anonymous> (file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/tests/ui/run.mjs:108:31)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+Node.js v24.19.0

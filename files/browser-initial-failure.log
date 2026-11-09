@@ -1,0 +1,796 @@
+rer toolchain: node v24.19.0 pnpm 10.12.4 (pins 22.20.0 / 10.12.4)
+PASS LIFE-007: lifecycle evidence download with outstanding duties at 1440
+PASS ASSET-004: physical lifecycle, loan, assigned/certificate refusals and attributed disposal at 1440
+PASS ASSET-007: attach AppleCare and all contract kinds, manufacturer lookup and repair coverage/expiry alerts at 1440
+PASS DESK-002 real Worker browser 1440: unavailable provider visible, type/category/subcategory/impact/urgency matrix, P1 -> P2 override and persisted audited before/after.
+CATALOG-002 native item, cost, explicit finance stage/calendar, OOO delegation, manager and finance decisions with keyboard and responsive evidence.
+PASS CATALOG-003 native task plan editor, waiting and ready tasks, owner waiver, team completion and close gate at 1440
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Production readback matches every included configuration field
++ actual - expected
+... Skipped lines
+
+  {
+    families: {
+      agent: [
+        {
+          calendar_id: null,
+...
+          id: '51df4077-3036-40a3-8f13-8afa514c3da8',
++         next_due_at: '2027-01-01T10:00:00.000Z',
+-         next_due_at: '2027-01-01T09:00:00.000Z',
+          next_index: 0,
+          owner_id: '35192d62-fdb0-441e-98bf-57776e5f307f',
+          rule_json: '{"startDate":"2027-01-01","frequency":"annual","interval":1,"firstBusinessDay":false}',
+          tasks_json: '[{"title":"Reviewed recurring task","ownerId":"35192d62-fdb0-441e-98bf-57776e5f307f"}]',
+          title: 'Reviewed recurring be9a2f'
+
+    at assertSandboxProduction (file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/tests/ui/sandbox-journey.mjs:358:9)
+    at async sandboxJourney (file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/tests/ui/sandbox-journey.mjs:191:2)
+    at async file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/tests/ui/browser.mjs:559:49 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: {
+    items: [
+      {
+        id: '05ae4f78-bd97-4493-9649-76e3dd4c0d39',
+        name: 'Work laptop',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 0,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: '30eff3e4-a4f1-48e0-81a2-f8ce26bb2284',
+        name: 'Sales laptop c75304',
+        form: {
+          fields: [],
+          costCents: 180000,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 1,
+        approvals: [
+          {
+            key: 'sd9edd7c20033',
+            name: 'Finance approval c75304',
+            withPrevious: false,
+            mode: 'any',
+            approvers: [Array],
+            aboveCents: 100000,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+            calendarRevision: 1
+          }
+        ],
+        managerApproval: {
+          key: 'manager',
+          name: 'Manager approval',
+          withPrevious: false,
+          mode: 'any',
+          approvers: [ [Object] ],
+          aboveCents: null,
+          costField: null,
+          remindHours: 24,
+          slaHours: 48,
+          calendar: {
+            timezone: 'America/New_York',
+            weekdays: [Array],
+            startHour: 9,
+            endHour: 17,
+            holidays: [],
+            location: null,
+            holidayCatalog: 'us-federal'
+          },
+          calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+          calendarRevision: 1
+        }
+      },
+      {
+        id: '3473fa81-642a-4531-b487-57f20ec3b4eb',
+        name: 'Synthetic managed service',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 1,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: '5b1f0a4e-ebd1-4035-bec2-984728cf4ec9',
+        name: 'Design tool 55f5',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [
+          {
+            key: 't260f36afe261',
+            title: 'Configure the design tool',
+            groupId: 'cf56ee4c-a534-455d-8a29-31d248c419a3',
+            after: [Array],
+            dueHours: 48
+          },
+          {
+            key: 'ta657ec57044a',
+            title: 'Welcome the employee',
+            groupId: 'cf56ee4c-a534-455d-8a29-31d248c419a3',
+            after: [Array],
+            dueHours: 72
+          }
+        ],
+        requiresManager: 0,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: '5f7b5cea-d2be-4d0b-9d5c-3d0cb1d33296',
+        name: 'Figma seat',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 0,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: '8c2c66c7-093e-4216-9bb6-8988aba66235',
+        name: 'Reviewed equipment be9a2f',
+        form: {
+          fields: [ [Object], [Object], [Object] ],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [
+          {
+            key: 't2630958b7071',
+            title: 'Prepare sandbox equipment',
+            groupId: '3e8c03e4-918f-49e2-8164-3a523ad2344c',
+            after: [],
+            dueHours: 24
+          }
+        ],
+        requiresManager: 1,
+        approvals: [
+          {
+            key: 's565b6d68562d',
+            name: 'Reviewed sandbox approval',
+            withPrevious: false,
+            mode: 'all',
+            approvers: [Array],
+            aboveCents: null,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: '7ee89dcd-6135-4917-b022-d1f38b41e6bb',
+            calendarRevision: 1
+          }
+        ],
+        managerApproval: null
+      },
+      {
+        id: '8f06365c-2d1a-461f-b47b-96bbb00f7bb4',
+        name: 'Design workspace access',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 0,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: 'a11ca8a5-d571-40b4-9e6c-e633ea09e12c',
+        name: 'Software purchase c75304',
+        form: {
+          fields: [],
+          costCents: 180000,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 0,
+        approvals: [
+          {
+            key: 'sf4b45bb5ebae',
+            name: 'Application owner approval c75304',
+            withPrevious: false,
+            mode: 'any',
+            approvers: [Array],
+            aboveCents: 150000,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+            calendarRevision: 1
+          },
+          {
+            key: 'sd5e4671e9c5c',
+            name: 'Manager review c75304',
+            withPrevious: true,
+            mode: 'any',
+            approvers: [Array],
+            aboveCents: null,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+            calendarRevision: 1
+          },
+          {
+            key: 'sa51793ed879f',
+            name: 'Finance review c75304',
+            withPrevious: true,
+            mode: 'any',
+            approvers: [Array],
+            aboveCents: 100000,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+            calendarRevision: 1
+          }
+        ],
+        managerApproval: null
+      }
+    ],
+    slas: [
+      {
+        id: '913ff116-1d4a-4b0a-b16c-4b7818bf89e2',
+        name: 'Reviewed response be9a2f',
+        position: 1,
+        priority: 'P3',
+        category: 'hardware',
+        requester_group_id: null,
+        calendar_id: '7ee89dcd-6135-4917-b022-d1f38b41e6bb',
+        department_id: null,
+        first_response_minutes: 30,
+        next_response_minutes: 120,
+        resolution_minutes: 480,
+        pause_on_json: '[]'
+      }
+    ],
+    families: {
+      routing: [
+        {
+          id: '6d33ef7d-cb02-4a5c-a841-a11c149e22b6',
+          name: 'Reviewed routing be9a2f',
+          position: 2,
+          category: 'hardware',
+          requester_id: '35192d62-fdb0-441e-98bf-57776e5f307f',
+          requester_group_id: '656f7ac9-1d80-454c-95b5-8c840e0a5430',
+          skill: 'synthetic-linen-514',
+          group_id: '901f2869-9c8e-4453-a68e-c912da36f937',
+          department_id: '976f688b-6245-43e5-a64b-4586bab225f2'
+        }
+      ],
+      support: [
+        {
+          id: '4b3b0cb2-9166-4026-9025-5f868319a30d',
+          group_id: '901f2869-9c8e-4453-a68e-c912da36f937'
+        }
+      ],
+      agent: [
+        {
+          id: '35192d62-fdb0-441e-98bf-57776e5f307f',
+          calendar_id: null,
+          skills_json: '["synthetic-linen-514"]'
+        }
+      ],
+      assignment: [
+        {
+          id: '06a323f1-3787-42e8-b9c3-eed78d4a1128',
+          assignment: 'none',
+          max_open: null
+        },
+        {
+          id: '3e8c03e4-918f-49e2-8164-3a523ad2344c',
+          assignment: 'none',
+          max_open: null
+        },
+        {
+          id: '901f2869-9c8e-4453-a68e-c912da36f937',
+          assignment: 'load',
+          max_open: 5
+        },
+        {
+          id: 'cf56ee4c-a534-455d-8a29-31d248c419a3',
+          assignment: 'none',
+          max_open: null
+        }
+      ],
+      recurring: [
+        {
+          id: '51df4077-3036-40a3-8f13-8afa514c3da8',
+          owner_id: '35192d62-fdb0-441e-98bf-57776e5f307f',
+          title: 'Reviewed recurring be9a2f',
+          body: 'Reviewed recurring instructions',
+          calendar_json: '{"timezone":"UTC","startHour":10,"endHour":17,"weekdays":[1,2,3,4,5],"holidays":[]}',
+          rule_json: '{"startDate":"2027-01-01","frequency":"annual","interval":1,"firstBusinessDay":false}',
+          tasks_json: '[{"title":"Reviewed recurring task","ownerId":"35192d62-fdb0-441e-98bf-57776e5f307f"}]',
+          enabled: 0,
+          next_index: 0,
+          next_due_at: '2027-01-01T10:00:00.000Z'
+        }
+      ],
+      lifecycle: [
+        {
+          id: '4a2c5975-56a3-4dbf-a37c-7b6a3e446e09',
+          name: 'Reviewed lifecycle be9a2f',
+          kind: 'join',
+          match_json: '{}',
+          tasks_json: '[{"key":"prepare","title":"Reviewed lifecycle preparation","assignee":{"type":"group","groupId":"3e8c03e4-918f-49e2-8164-3a523ad2344c"},"anchor":"start","offsetDays":2,"remindDays":null}]',
+          active: 1
+        }
+      ],
+      role: [
+        {
+          id: '8dbdac26-6263-4e27-91ea-6db479732080',
+          name: 'Reviewed reader be9a2f',
+          permissions_json: '["ticket.read"]',
+          active: 1,
+          department_id: '976f688b-6245-43e5-a64b-4586bab225f2'
+        }
+      ],
+      calendar: [
+        {
+          id: '7ee89dcd-6135-4917-b022-d1f38b41e6bb',
+          name: 'Reviewed hours be9a2f',
+          timezone: 'UTC',
+          weekdays_json: '[1,2,3,4,5]',
+          start_hour: 9,
+          end_hour: 17,
+          holidays_json: '[]',
+          location: null,
+          holiday_catalog: null
+        },
+        {
+          id: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+          name: 'New York business hours c75304',
+          timezone: 'America/New_York',
+          weekdays_json: '[1,2,3,4,5]',
+          start_hour: 9,
+          end_hour: 17,
+          holidays_json: '[]',
+          location: null,
+          holiday_catalog: 'us-federal'
+        }
+      ],
+      escalation: [
+        {
+          id: 'dab6dba0-f419-49be-8147-b936f7fa90f2',
+          target: 'resolution',
+          level: 1,
+          offset_minutes: 0,
+          notify: 'assignee',
+          label: 'Reviewed escalation be9a2f'
+        }
+      ],
+      waiting: [
+        {
+          id: 'waiting',
+          remind_business_days: 3,
+          resolve_business_days: 5
+        }
+      ]
+    }
+  },
+  expected: {
+    items: [
+      {
+        id: '05ae4f78-bd97-4493-9649-76e3dd4c0d39',
+        name: 'Work laptop',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 0,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: '30eff3e4-a4f1-48e0-81a2-f8ce26bb2284',
+        name: 'Sales laptop c75304',
+        form: {
+          fields: [],
+          costCents: 180000,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 1,
+        approvals: [
+          {
+            key: 'sd9edd7c20033',
+            name: 'Finance approval c75304',
+            withPrevious: false,
+            mode: 'any',
+            approvers: [Array],
+            aboveCents: 100000,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+            calendarRevision: 1
+          }
+        ],
+        managerApproval: {
+          key: 'manager',
+          name: 'Manager approval',
+          withPrevious: false,
+          mode: 'any',
+          approvers: [ [Object] ],
+          aboveCents: null,
+          costField: null,
+          remindHours: 24,
+          slaHours: 48,
+          calendar: {
+            timezone: 'America/New_York',
+            weekdays: [Array],
+            startHour: 9,
+            endHour: 17,
+            holidays: [],
+            location: null,
+            holidayCatalog: 'us-federal'
+          },
+          calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+          calendarRevision: 1
+        }
+      },
+      {
+        id: '3473fa81-642a-4531-b487-57f20ec3b4eb',
+        name: 'Synthetic managed service',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 1,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: '5b1f0a4e-ebd1-4035-bec2-984728cf4ec9',
+        name: 'Design tool 55f5',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [
+          {
+            key: 't260f36afe261',
+            title: 'Configure the design tool',
+            groupId: 'cf56ee4c-a534-455d-8a29-31d248c419a3',
+            after: [Array],
+            dueHours: 48
+          },
+          {
+            key: 'ta657ec57044a',
+            title: 'Welcome the employee',
+            groupId: 'cf56ee4c-a534-455d-8a29-31d248c419a3',
+            after: [Array],
+            dueHours: 72
+          }
+        ],
+        requiresManager: 0,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: '5f7b5cea-d2be-4d0b-9d5c-3d0cb1d33296',
+        name: 'Figma seat',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 0,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: '8c2c66c7-093e-4216-9bb6-8988aba66235',
+        name: 'Reviewed equipment be9a2f',
+        form: {
+          fields: [ [Object], [Object], [Object] ],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [
+          {
+            key: 't2630958b7071',
+            title: 'Prepare sandbox equipment',
+            groupId: '3e8c03e4-918f-49e2-8164-3a523ad2344c',
+            after: [],
+            dueHours: 24
+          }
+        ],
+        requiresManager: 1,
+        approvals: [
+          {
+            key: 's565b6d68562d',
+            name: 'Reviewed sandbox approval',
+            withPrevious: false,
+            mode: 'all',
+            approvers: [Array],
+            aboveCents: null,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: '7ee89dcd-6135-4917-b022-d1f38b41e6bb',
+            calendarRevision: 1
+          }
+        ],
+        managerApproval: null
+      },
+      {
+        id: '8f06365c-2d1a-461f-b47b-96bbb00f7bb4',
+        name: 'Design workspace access',
+        form: {
+          fields: [],
+          costCents: null,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 0,
+        approvals: [],
+        managerApproval: null
+      },
+      {
+        id: 'a11ca8a5-d571-40b4-9e6c-e633ea09e12c',
+        name: 'Software purchase c75304',
+        form: {
+          fields: [],
+          costCents: 180000,
+          deliveryHours: null,
+          quoteRequired: false
+        },
+        tasks: [],
+        requiresManager: 0,
+        approvals: [
+          {
+            key: 'sf4b45bb5ebae',
+            name: 'Application owner approval c75304',
+            withPrevious: false,
+            mode: 'any',
+            approvers: [Array],
+            aboveCents: 150000,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+            calendarRevision: 1
+          },
+          {
+            key: 'sd5e4671e9c5c',
+            name: 'Manager review c75304',
+            withPrevious: true,
+            mode: 'any',
+            approvers: [Array],
+            aboveCents: null,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+            calendarRevision: 1
+          },
+          {
+            key: 'sa51793ed879f',
+            name: 'Finance review c75304',
+            withPrevious: true,
+            mode: 'any',
+            approvers: [Array],
+            aboveCents: 100000,
+            costField: null,
+            remindHours: 24,
+            slaHours: 48,
+            calendar: [Object],
+            calendarId: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+            calendarRevision: 1
+          }
+        ],
+        managerApproval: null
+      }
+    ],
+    slas: [
+      {
+        id: '913ff116-1d4a-4b0a-b16c-4b7818bf89e2',
+        name: 'Reviewed response be9a2f',
+        position: 1,
+        priority: 'P3',
+        category: 'hardware',
+        requester_group_id: null,
+        calendar_id: '7ee89dcd-6135-4917-b022-d1f38b41e6bb',
+        department_id: null,
+        first_response_minutes: 30,
+        next_response_minutes: 120,
+        resolution_minutes: 480,
+        pause_on_json: '[]'
+      }
+    ],
+    families: {
+      routing: [
+        {
+          id: '6d33ef7d-cb02-4a5c-a841-a11c149e22b6',
+          name: 'Reviewed routing be9a2f',
+          position: 2,
+          category: 'hardware',
+          requester_id: '35192d62-fdb0-441e-98bf-57776e5f307f',
+          requester_group_id: '656f7ac9-1d80-454c-95b5-8c840e0a5430',
+          skill: 'synthetic-linen-514',
+          group_id: '901f2869-9c8e-4453-a68e-c912da36f937',
+          department_id: '976f688b-6245-43e5-a64b-4586bab225f2'
+        }
+      ],
+      support: [
+        {
+          id: '4b3b0cb2-9166-4026-9025-5f868319a30d',
+          group_id: '901f2869-9c8e-4453-a68e-c912da36f937'
+        }
+      ],
+      agent: [
+        {
+          id: '35192d62-fdb0-441e-98bf-57776e5f307f',
+          calendar_id: null,
+          skills_json: '["synthetic-linen-514"]'
+        }
+      ],
+      assignment: [
+        {
+          id: '06a323f1-3787-42e8-b9c3-eed78d4a1128',
+          assignment: 'none',
+          max_open: null
+        },
+        {
+          id: '3e8c03e4-918f-49e2-8164-3a523ad2344c',
+          assignment: 'none',
+          max_open: null
+        },
+        {
+          id: '901f2869-9c8e-4453-a68e-c912da36f937',
+          assignment: 'load',
+          max_open: 5
+        },
+        {
+          id: 'cf56ee4c-a534-455d-8a29-31d248c419a3',
+          assignment: 'none',
+          max_open: null
+        }
+      ],
+      recurring: [
+        {
+          id: '51df4077-3036-40a3-8f13-8afa514c3da8',
+          owner_id: '35192d62-fdb0-441e-98bf-57776e5f307f',
+          title: 'Reviewed recurring be9a2f',
+          body: 'Reviewed recurring instructions',
+          calendar_json: '{"timezone":"UTC","startHour":10,"endHour":17,"weekdays":[1,2,3,4,5],"holidays":[]}',
+          rule_json: '{"startDate":"2027-01-01","frequency":"annual","interval":1,"firstBusinessDay":false}',
+          tasks_json: '[{"title":"Reviewed recurring task","ownerId":"35192d62-fdb0-441e-98bf-57776e5f307f"}]',
+          enabled: 0,
+          next_index: 0,
+          next_due_at: '2027-01-01T09:00:00.000Z'
+        }
+      ],
+      lifecycle: [
+        {
+          id: '4a2c5975-56a3-4dbf-a37c-7b6a3e446e09',
+          name: 'Reviewed lifecycle be9a2f',
+          kind: 'join',
+          match_json: '{}',
+          tasks_json: '[{"key":"prepare","title":"Reviewed lifecycle preparation","assignee":{"type":"group","groupId":"3e8c03e4-918f-49e2-8164-3a523ad2344c"},"anchor":"start","offsetDays":2,"remindDays":null}]',
+          active: 1
+        }
+      ],
+      role: [
+        {
+          id: '8dbdac26-6263-4e27-91ea-6db479732080',
+          name: 'Reviewed reader be9a2f',
+          permissions_json: '["ticket.read"]',
+          active: 1,
+          department_id: '976f688b-6245-43e5-a64b-4586bab225f2'
+        }
+      ],
+      calendar: [
+        {
+          id: '7ee89dcd-6135-4917-b022-d1f38b41e6bb',
+          name: 'Reviewed hours be9a2f',
+          timezone: 'UTC',
+          weekdays_json: '[1,2,3,4,5]',
+          start_hour: 9,
+          end_hour: 17,
+          holidays_json: '[]',
+          location: null,
+          holiday_catalog: null
+        },
+        {
+          id: 'd45a58b9-1bdc-4de5-97b8-935de0d8d845',
+          name: 'New York business hours c75304',
+          timezone: 'America/New_York',
+          weekdays_json: '[1,2,3,4,5]',
+          start_hour: 9,
+          end_hour: 17,
+          holidays_json: '[]',
+          location: null,
+          holiday_catalog: 'us-federal'
+        }
+      ],
+      escalation: [
+        {
+          id: 'dab6dba0-f419-49be-8147-b936f7fa90f2',
+          target: 'resolution',
+          level: 1,
+          offset_minutes: 0,
+          notify: 'assignee',
+          label: 'Reviewed escalation be9a2f'
+        }
+      ],
+      waiting: [
+        {
+          id: 'waiting',
+          remind_business_days: 3,
+          resolve_business_days: 5
+        }
+      ]
+    }
+  },
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
+file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/tests/ui/run.mjs:108
+      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+                              ^
+
+Error: Browser acceptance exited 1
+    at ChildProcess.<anonymous> (file:///home/agent/rer-consolidation/work/sx-linen-c-f42/repo/tests/ui/run.mjs:108:31)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+Node.js v24.19.0

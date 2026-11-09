@@ -1,0 +1,12 @@
+# sx-linen-c-f42 plan
+
+Scope: the live SANDBOX-001 gap is a native journey that executes the entire supported configuration flow at a real 390-pixel viewport, alongside its desktop flow. No contract cells, policy, provider configuration, masked-family expansion, administrator authority or held obligations change.
+
+1. Read the source clause, current Gap, acceptance points, existing browser and routing helpers, runtime safeguards, inline campaign extract and DONE riders. Map existing proof to all eight acceptance points.
+2. Refactor the existing configuration leg to accept an actual viewport from the browser entrypoint and execute create, every included family edit and rehearsal, complete field diff review, separate current non-editor owner approval, promotion, reviewed rollback, keyboard and employee scope checks at 1440 and 390. Keep existing masked-copy and administrator assertions as a separate unconditional journey.
+3. Check all configuration fields against fresh production copies through the public create door after rehearsal, promotion and rollback, retaining direct production route assertions. Preserve the runtime no-grant, no-secret, no-record, in-flight and restore safeguards unchanged.
+4. Run touched browser and configuration runtime checks, typecheck and first-party check. Capture only the configuration screens at the actual width used. Generate and check contract views, restore generated files, regenerate the source lock last and check it.
+5. Commit using fleet identity and hooks. Inspect all candidate identities and trailers, push only the named cloud branch through its guard, merge updated main if a save was published, and open the repository's one draft PR for Verify. Record exact-SHA CI observations within the ten-call budget and 300-second polling limit.
+6. Save the complete non-secret report and real receipts outside the product tree. Publish explicitly selected packet files only to the evidence branch. Report the exact pushed product head, claim and remaining gate conditions; relay inbox lines in the final message. Delete the successfully pushed product clone after evidence publication.
+
+Acceptance map before editing: points 1 through 7 already have public-door runtime assertions in sandboxChecks, sandboxRoutingChecks, sandboxApprovalVersionChecks and native archive restore checks. Point 8 lacks actual 390 execution; captureJourney only resizes screenshots. The selected missing outcome is the complete configuration leg at 390. No new permanent test registration is planned.

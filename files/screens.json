@@ -1,0 +1,387 @@
+{
+  "candidate": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "executionWidths": [
+    1440,
+    390
+  ],
+  "capturedStates": [
+    {
+      "path": "screens/1440/SANDBOX-001-agent-editor.png",
+      "width": 1440,
+      "height": 3587,
+      "bytes": 1062374,
+      "sha256": "483f317f4ef89e5de26a9c0d5ad2d45d8a73987b8387e1ce40d86298c7061a43"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-approval-editor.png",
+      "width": 1440,
+      "height": 5403,
+      "bytes": 2780984,
+      "sha256": "ab3cfa516e0aa02f541de3c3c24fced020cd9e8ceca622c01666e1220e8813e7"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-approval-rehearsal.png",
+      "width": 1440,
+      "height": 4354,
+      "bytes": 1140303,
+      "sha256": "10c87d30dd266a31051bd1187aacce3de557f736d732525d0c0b73c72c6fdeef"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-assignment-editor.png",
+      "width": 1440,
+      "height": 3697,
+      "bytes": 1084473,
+      "sha256": "bbf16d151a08f63047a62051e8283941fe0c9061be55e9b7c2eae0c1505a691f"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-calendar-editor.png",
+      "width": 1440,
+      "height": 3729,
+      "bytes": 2063867,
+      "sha256": "401d9199c36cdedfcd44cbeb916c865d76df44102edcf787e1bb623e1b3b3369"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-create.png",
+      "width": 1440,
+      "height": 1000,
+      "bytes": 279607,
+      "sha256": "95aab059fd18b69a4e54954030587223ac59831005f1821069ba59d2d365b834"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-diff.png",
+      "width": 1440,
+      "height": 9365,
+      "bytes": 5397658,
+      "sha256": "97940be7f117f7273cad0d26155888ee3af45beaf285f38118afe83bdc74620f"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-escalation-editor.png",
+      "width": 1440,
+      "height": 3670,
+      "bytes": 1961898,
+      "sha256": "5a6941c5dcf50546f355b1b50c2413de866922267bfe803007330e2fe93e259c"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-form-editor.png",
+      "width": 1440,
+      "height": 3517,
+      "bytes": 940334,
+      "sha256": "a360619acd0611513a587de37801bbbd89cb037680c4bce2711288974f940000"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-lifecycle-editor.png",
+      "width": 1440,
+      "height": 5579,
+      "bytes": 1453947,
+      "sha256": "589cc2cc169f6ae70b4f04583b5680cafb410f3e309facd4afd978832548fb40"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-lifecycle-rehearsal.png",
+      "width": 1440,
+      "height": 3813,
+      "bytes": 1050727,
+      "sha256": "f7b2c83f1654f35ac2198019f6a6dbbb6cddd2834319ffb256d560594dcce47b"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-promoted.png",
+      "width": 1440,
+      "height": 2726,
+      "bytes": 841770,
+      "sha256": "73cd02e2f0239a7a1c1888bbfc799914d8355876257111c3fca0e0865ff0f1b6"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-promotion.png",
+      "width": 1440,
+      "height": 2796,
+      "bytes": 1653437,
+      "sha256": "b4c6a2c366eb4e3727e728ea9cfc203855099b9e9f023129f2855f1c668a311a"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-recurring-editor.png",
+      "width": 1440,
+      "height": 4416,
+      "bytes": 1119989,
+      "sha256": "d6d3401f2f9e0e6de4840d9eabfc3cce9927e872aba48a048003298e075841b6"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-recurring-rehearsal.png",
+      "width": 1440,
+      "height": 4493,
+      "bytes": 2401987,
+      "sha256": "dfae2d2c41d8c357e1423e4e796a0f1bc9f6255684b4a183dcfee7e3cb1969c4"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-rehearsal.png",
+      "width": 1440,
+      "height": 4434,
+      "bytes": 1159120,
+      "sha256": "55d1950b9863252452047099d3e9bf633962b89e0584715c6f9d7651f1bca9dc"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-role-editor.png",
+      "width": 1440,
+      "height": 2890,
+      "bytes": 1637453,
+      "sha256": "74cd1ae84c43536dd076346bafc717df6327270aa4620991a72cc3f736cf8eef"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-rollback-review.png",
+      "width": 1440,
+      "height": 9198,
+      "bytes": 5397153,
+      "sha256": "882f6590ca5866102d9f0f038dff2e6b6a0edf0d7bd00a6e1b5d0ffd9228e6fb"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-rolled-back.png",
+      "width": 1440,
+      "height": 2559,
+      "bytes": 1579470,
+      "sha256": "68b67f3d77b8e75bf79328a0633771ab60f42e5d9fa4ae4a1f147c84109a3f4b"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-routing-editor.png",
+      "width": 1440,
+      "height": 4537,
+      "bytes": 1194668,
+      "sha256": "1c9de15f3a67345b8c04d0f202d2532684cf569db9217cd401bd79d9b9baa643"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-routing-rehearsal.png",
+      "width": 1440,
+      "height": 5518,
+      "bytes": 1441123,
+      "sha256": "8b4604e29a506477b1c74538681c018d59967ab26e5589c13d278e46d89a585c"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-scope-refusal.png",
+      "width": 1440,
+      "height": 1000,
+      "bytes": 284404,
+      "sha256": "765c8f89128f99775e96cd08e0fd63f6302b013e834a685212b266c937c4208c"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-separate-approval.png",
+      "width": 1440,
+      "height": 9365,
+      "bytes": 5398189,
+      "sha256": "8b196d868a81e9f31aa38f280d37531107e35eae0cd92c46f0aeb227f02ce116"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-sla-editor.png",
+      "width": 1440,
+      "height": 2849,
+      "bytes": 756341,
+      "sha256": "24a98ea590e0f5afbdd4e050816ae34bbe211643e34f93514b1bc7928d9b810e"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-support-editor.png",
+      "width": 1440,
+      "height": 3454,
+      "bytes": 1036848,
+      "sha256": "3b8064159c44355ecfe515780486387cef34dc209b7a7fee88c4e9ca38324b05"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-task-editor.png",
+      "width": 1440,
+      "height": 4096,
+      "bytes": 2187446,
+      "sha256": "66338c52568082ebec4ecd8d30016e6c539b5b74d86be3aab144a9301b30fb5c"
+    },
+    {
+      "path": "screens/1440/SANDBOX-001-waiting-editor.png",
+      "width": 1440,
+      "height": 3257,
+      "bytes": 1850333,
+      "sha256": "a0b4b2b2d5192825371d503627d554f1fac1901097470e9b773450b270cdc790"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-agent-editor.png",
+      "width": 390,
+      "height": 4760,
+      "bytes": 679972,
+      "sha256": "c789540e2aae411b3461713bbe6b567d165fd37255759dbca3448d77e27c23ff"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-approval-editor.png",
+      "width": 390,
+      "height": 7030,
+      "bytes": 881947,
+      "sha256": "0b57ba84f6798372da4a73c9067d754c6978244302120a8283b2864158e871cb"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-approval-rehearsal.png",
+      "width": 390,
+      "height": 5690,
+      "bytes": 716848,
+      "sha256": "5ec8033b9c3d09142bf654643a9c82897025cdb501bbda1c4ab5e98f805133ca"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-assignment-editor.png",
+      "width": 390,
+      "height": 4870,
+      "bytes": 690427,
+      "sha256": "e8e0f6cf821c156bb2ac26a7239588c76a6436a7d4f7f130d86c86c0250bde7f"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-calendar-editor.png",
+      "width": 390,
+      "height": 4961,
+      "bytes": 643175,
+      "sha256": "af06e930190f19252cf7e6fa4bd31fbd840e080a123af589e30943e8515e4acd"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-create.png",
+      "width": 390,
+      "height": 1619,
+      "bytes": 185016,
+      "sha256": "5c7ea883fbdaedaa2ebcec7bd746132e77097f070a2224f035f7fcb45b744a97"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-diff.png",
+      "width": 390,
+      "height": 10462,
+      "bytes": 1295178,
+      "sha256": "c3f59a3bc545bf9c5028a2072cbb6eaa0dc35691051fec3d1bc888ebda7038e5"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-escalation-editor.png",
+      "width": 390,
+      "height": 4881,
+      "bytes": 970100,
+      "sha256": "5fe9fed8902b42b8cb412e0ba0c15f5edb13a0e0896442c9c9389f4b5e40f292"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-form-editor.png",
+      "width": 390,
+      "height": 4832,
+      "bytes": 955198,
+      "sha256": "5411899bb5259001d6e69867d968be908163d63e138f9b8696fcf7803369e23f"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-lifecycle-editor.png",
+      "width": 390,
+      "height": 7310,
+      "bytes": 893636,
+      "sha256": "8b9bc670e64fd93e8f85a49b69451dd64e94a9385a589a9572c435569b643587"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-lifecycle-rehearsal.png",
+      "width": 390,
+      "height": 5107,
+      "bytes": 1063287,
+      "sha256": "675ad87c4973c8460544a6037825d6b330ecc8d4e7c476ff026ff48d2d97b754"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-promoted.png",
+      "width": 390,
+      "height": 3349,
+      "bytes": 499014,
+      "sha256": "5c3f44ca54b92f420b293c929936e2879bd4a08cf000b99aacdc523b3a1f8ea2"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-promotion.png",
+      "width": 390,
+      "height": 3297,
+      "bytes": 503606,
+      "sha256": "5a0dfe74f18059f1881afff97654e9f6c41fe023c81cb17449c562fb70d89aa3"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-recurring-editor.png",
+      "width": 390,
+      "height": 5609,
+      "bytes": 685243,
+      "sha256": "366a4f316b2e39bf8943f542f611e4b875ca5c6df7d14d0adfd06125d8b3e430"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-recurring-rehearsal.png",
+      "width": 390,
+      "height": 5727,
+      "bytes": 723684,
+      "sha256": "f816e9969ba423b9be1b3949b4f421e970d71e9c54f0e96e2ee5f45fddb68f07"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-rehearsal.png",
+      "width": 390,
+      "height": 5786,
+      "bytes": 726527,
+      "sha256": "d4b9c9677f2d2705aaaf7e53dd5fd86996fafabeec5605e00ed03a8c0e1d5197"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-role-editor.png",
+      "width": 390,
+      "height": 4083,
+      "bytes": 870623,
+      "sha256": "e99c4ce6b76b88a8470bd6a0ccf2e51da2001b02db6c06557a87cff90d5f69f3"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-rollback-review.png",
+      "width": 390,
+      "height": 10279,
+      "bytes": 1284853,
+      "sha256": "c35790e6b769e4ed9425bfb3d8757d7ae7b7e3c8ee8c425e93603c8c443ffe73"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-rolled-back.png",
+      "width": 390,
+      "height": 3166,
+      "bytes": 487604,
+      "sha256": "6f465100c98bf89d65a0d4aa6b901cbd9e891eb68f505c66045cef0164ae8cb0"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-routing-editor.png",
+      "width": 390,
+      "height": 5831,
+      "bytes": 1166077,
+      "sha256": "698349a71699ab9f034866c2b03f70a829c2e06160a43f71eb30d3914cbd9ab0"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-routing-rehearsal.png",
+      "width": 390,
+      "height": 6812,
+      "bytes": 1347903,
+      "sha256": "bb460ae4776ddb0181b786ba9d93eb5f40544bb8adacb3f970ba5564dc82d54f"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-scope-refusal.png",
+      "width": 390,
+      "height": 903,
+      "bytes": 116494,
+      "sha256": "a115cf95744d83e6076ceb271a9f52b4dbb3d707163ac77206bece1fadf1a04e"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-separate-approval.png",
+      "width": 390,
+      "height": 10462,
+      "bytes": 1295213,
+      "sha256": "03b250c851eabfc7a0292d5a4536317f506ee9c2e0f38fcdaef49a2e19412dcd"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-sla-editor.png",
+      "width": 390,
+      "height": 4001,
+      "bytes": 802902,
+      "sha256": "d9c415b79ac8664867d5b372e799caf9ad3843f2d7437b2c0039a8433f0b0f81"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-support-editor.png",
+      "width": 390,
+      "height": 4627,
+      "bytes": 664929,
+      "sha256": "e906225737eb301a9ac7e4a311cb13d0734355bbe888bb8ef9ebefb3311acd2b"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-task-editor.png",
+      "width": 390,
+      "height": 5412,
+      "bytes": 673145,
+      "sha256": "6291e2c3de8b3dd2c368625428f67e6d0ce4600fdd68fc9f15c7340888b08a49"
+    },
+    {
+      "path": "screens/390/SANDBOX-001-waiting-editor.png",
+      "width": 390,
+      "height": 4450,
+      "bytes": 902707,
+      "sha256": "a3e000a2c8b057bd7f5e4e1d8bd4718a6c1ef9e0bfaa3f03d985668300d2fa67"
+    }
+  ]
+}

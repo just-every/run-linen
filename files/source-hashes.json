@@ -1,0 +1,14 @@
+{
+  "tests/ui/browser.mjs": "e9e516d326530a87cabe5689ecf3ff236c6dba4440a3781b97fe935203b7cc6d",
+  "tests/ui/sandbox-journey.mjs": "96009e01dfed80de781c602249fc37dcdcfc8341208287348c7d571671f482ed",
+  "tests/ui/sandbox-routing-journey.mjs": "bfbda1738be165956999fe53824950cd442a85a17dd18d23f15377dca6d773a9",
+  "src/platform/sandboxes.ts": "69fd0829ffbbbf89187057b699b29fc6f9ba132461e72d57923ee8949b8308e2",
+  "src/platform/sandbox-sla-config.ts": "c240c178ac0bc68da6d6635cef3d4004fda4e522be7b926eb61c022c8973836d",
+  "src/platform/sandbox-slas.ts": "531b47c33a5128cad53d64d281cbff4de8b0968a432385faf9347b1586db9159",
+  "src/platform/sandbox-routing.ts": "c7aa809a651762b3ed503c771070e787eb4615d5ede975b2bfdc95878b15ed4b",
+  "src/platform/sandbox-masked-records.ts": "6319a817b63b014a797ca8e383fc30d04239cc655452d662308ce3501d6f01d8",
+  "tests/platform/sandbox-cases.mjs": "730edb677e4931661917093994349f11b554526fe864653960d96f9eb83c8423",
+  "tests/platform/sandbox-routing-cases.mjs": "d2c15a023c5faecdf63ebe4c9ef9d7f629930542826a1860777281a55d60b2d6",
+  "tests/platform/sandbox-approval-version-cases.mjs": "42d8aba2bc000f16f04446b84337468345d03534ee6d4354dc301242b210a41c",
+  "tests/platform/base-auth-transfer.mjs": "09b2eb43df2d1655b1a1ee2c724df8ad44d7041c2d73cfcebaea712f3f45dc10"
+}

@@ -1,0 +1,17 @@
+{
+  "candidate": "cc284ac3936b34087b78dd6233df2f20d0cabd4d",
+  "proofSourceEquality": {
+    "tests/ui/browser.mjs": true,
+    "tests/ui/sandbox-journey.mjs": true,
+    "tests/ui/sandbox-routing-journey.mjs": true,
+    "src/platform/sandboxes.ts": true,
+    "src/platform/sandbox-sla-config.ts": true,
+    "src/platform/sandbox-slas.ts": true,
+    "src/platform/sandbox-routing.ts": true,
+    "src/platform/sandbox-masked-records.ts": true,
+    "tests/platform/sandbox-cases.mjs": true,
+    "tests/platform/sandbox-routing-cases.mjs": true,
+    "tests/platform/sandbox-approval-version-cases.mjs": true,
+    "tests/platform/base-auth-transfer.mjs": true
+  }
+}
