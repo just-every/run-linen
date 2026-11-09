@@ -6860,7 +6860,7 @@
       "executable": false
     },
     "tests/services/dependency-cases.mjs": {
-      "sha256": "e0cabefbf660de4cae7aeabf5e54d8bdf581a9d941772354c57216c2283ee0f7",
+      "sha256": "9c6c59b38d05055f4b87c522009ba139900494663b020b7597f61dca9e8bd844",
       "executable": false
     },
     "tests/services/employee-notice-cases.mjs": {
@@ -7056,7 +7056,7 @@
       "executable": false
     },
     "tests/ui/dependency-journey.mjs": {
-      "sha256": "1c651d1db12da39750d5455e6dedc18d3344f9077889ca1aafbe255578ddb5e1",
+      "sha256": "eb363ce9ad068810c9a50b2fb9cef3aa5fc604f35c4bec92e42041a530418731",
       "executable": false
     },
     "tests/ui/desk-console-journeys.mjs": {
