@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f44",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f44",
+  "head": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+  "base_main": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "generated_at": "2026-11-09T07:03:44.536104+00:00",
+  "product_changes": "Inherited supplied candidate; no new product edits or commits required.",
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "scope": "local setup and build; no live-provider claim"
+    },
+    {
+      "command": "timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "candidate identities, trailers, full messages, unchanged contract and changed-text credential checks",
+      "exit": 0
+    }
+  ],
+  "probe": "PROBE CATALOG-007 1: current-revision value rename -> stable id and new label; stale rename 409; DELETE 404; person, item and submitted references unchanged; retirement retains existing matches and permits submission 201, new person and item selections refuse 422",
+  "count_before": {
+    "partial": 134,
+    "done": 28,
+    "missing": 37
+  },
+  "count_after": {
+    "partial": 134,
+    "done": 28,
+    "missing": 37
+  },
+  "new_test_registrations": 0,
+  "removed_test_registrations": 0,
+  "status_changes": [],
+  "push": {
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f44",
+    "exit": 0,
+    "attempts": 1,
+    "remote_verified_head": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+    "log": "push.log"
+  },
+  "pr": {
+    "draft": true,
+    "head": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+    "html_url": "https://github.com/just-every/run-linen/pull/178",
+    "number": 178
+  },
+  "ci": {
+    "total_count": 4,
+    "workflow_runs": [
+      {
+        "conclusion": null,
+        "created_at": "2026-11-09T07:02:14Z",
+        "event": "pull_request",
+        "head_sha": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42576740284",
+        "id": 42576740284,
+        "name": "Verify",
+        "status": "in_progress"
+      },
+      {
+        "conclusion": null,
+        "created_at": "2026-11-09T07:02:13Z",
+        "event": "dynamic",
+        "head_sha": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42576737204",
+        "id": 42576737204,
+        "name": "PR #178",
+        "status": "in_progress"
+      },
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-09T06:26:20Z",
+        "event": "pull_request",
+        "head_sha": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42573021928",
+        "id": 42573021928,
+        "name": "Verify",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-09T06:26:19Z",
+        "event": "dynamic",
+        "head_sha": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42573019874",
+        "id": 42573019874,
+        "name": "PR #177",
+        "status": "completed"
+      }
+    ]
+  },
+  "publication_scan": {
+    "commit": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "status": "Deferred to guarded fleet lander; cloud scan not required by cloud adaptation"
+  },
+  "run_site": {
+    "status": "pending guarded landing; no main push performed"
+  },
+  "browser": {
+    "status": "not applicable; candidate changes only runtime test evidence and source lock"
+  },
+  "holds": [
+    "Native restore retaining reviewed facts without a live binding remains unproved.",
+    "All unselected audience acceptance and supplied role, chat, device, mail, account, ct and Base holds remain unchanged."
+  ]
+}
