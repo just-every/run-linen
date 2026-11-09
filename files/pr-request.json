@@ -1,0 +1,7 @@
+{
+  "title": "Fix numeric identifier search false positives blocking ACCESS-008",
+  "head": "cloud/sx-linen-f19fix1",
+  "base": "main",
+  "draft": true,
+  "body": "Searching for synthetic-linen-20 could return unrelated tickets when their numbered titles supplied synthetic/linen and a handoff deadline supplied 20 from 3:20 PM. Keep punctuated numeric identifiers in a contiguous field span while preserving normal prose matching and per-token typo tolerance.\n\nThe unchanged LIFE-002 assertion reproduces 3 rows before and 0 after at the failing CI clock. ACCESS-008 point 3 still refuses metadata-only approval and permits the authorized holder. Adds one assertion to the existing public-route search case; retains all existing assertions and main\u2019s contract judgments.\n\nValidation: touched work runtime at the failure-time clock, public-route regression before/after, typecheck, first-party check, build, contract and source-lock checks. Native operator search proof captured at 1440 and 390. No contract status change or generated view edit. No publication scan run in cloud; fleet owns publication and landing."
+}

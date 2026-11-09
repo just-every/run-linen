@@ -1,0 +1,32 @@
+SEARCH_DIAGNOSTIC {"path":"/search?q=synthetic-linen-20&type=ticket&offset=0","value":{"query":"synthetic-linen-20","type":"ticket","offset":0,"pageSize":50,"total":2,"counts":{"ticket":2,"person":0,"asset":0,"ci":0,"change":0,"problem":0,"catalog":0,"article":0},"items":[{"id":"928e5ca1-e56e-4219-8c57-635b2b4b6332","type":"ticket","title":"synthetic-linen-20","summary":"open · Owner","href":"#/work/928e5ca1-e56e-4219-8c57-635b2b4b6332"},{"id":"63e2ea7f-a1be-4ed9-9dce-326a27a1ad0c","type":"ticket","title":"synthetic-linen-9707 laptop slow","summary":"open · Owner","href":"#/work/63e2ea7f-a1be-4ed9-9dce-326a27a1ad0c"}]}}
+MATCHED_WORK {"id":"928e5ca1-e56e-4219-8c57-635b2b4b6332","workspace_id":"a","requester_id":"owner","beneficiary_id":"owner","kind":"request","title":"synthetic-linen-20","state":"open","sensitivity":"normal","assignee_id":null,"impact":"individual","revision":1,"created_at":"2026-11-09T00:47:42.318Z","updated_at":"2026-11-09T00:47:42.318Z","closed_at":null,"paused_at":null,"paused_ms":0,"response_at":null,"resolution_at":null,"context_json":"{}","dedup_key":"85fe9324-0c95-4676-887f-007a39597b10","request_hash":"534e0c7fee9b07d69b1d37c0016d284ee641cbc913b58b8dd750c084359c06b7","pending_person_id":null,"merged_into":null,"split_from":null,"parent_id":null,"group_id":null,"department_id":null,"protected_departments_json":"[]"}
+MATCHED_MESSAGES [{"body":"The requested numbered record","visibility":"public"}]
+MATCHED_WORK {"id":"63e2ea7f-a1be-4ed9-9dce-326a27a1ad0c","workspace_id":"a","requester_id":"owner","beneficiary_id":"owner","kind":"request","title":"synthetic-linen-9707 laptop slow","state":"open","sensitivity":"normal","assignee_id":null,"impact":"individual","revision":1,"created_at":"2026-11-09T00:47:42.308Z","updated_at":"2026-11-09T00:47:42.308Z","closed_at":null,"paused_at":null,"paused_ms":0,"response_at":null,"resolution_at":null,"context_json":"{}","dedup_key":"c7ae2d61-9766-4025-91bd-684a6dc19486","request_hash":"9c97286868d88631944e62a11dc44e4a2f4d2883e1ad1e661804e63e2931ccfb","pending_person_id":null,"merged_into":null,"split_from":null,"parent_id":null,"group_id":null,"department_id":null,"protected_departments_json":"[]"}
+MATCHED_MESSAGES [{"body":"Linen: We will reply by 3:20 PM.","visibility":"public"}]
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: A numeric identifier finds its record without combining another identifier with a conversation deadline
++ actual - expected
+
+  [
+    '928e5ca1-e56e-4219-8c57-635b2b4b6332',
++   '63e2ea7f-a1be-4ed9-9dce-326a27a1ad0c'
+  ]
+
+    at searchChecks (file:///home/agent/rer-consolidation/work/sx-linen-f19fix1/run-linen/tests/work/search-cases.mjs:45:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///tmp/linen-search-regression.mjs:118:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    '928e5ca1-e56e-4219-8c57-635b2b4b6332',
+    '63e2ea7f-a1be-4ed9-9dce-326a27a1ad0c'
+  ],
+  expected: [ '928e5ca1-e56e-4219-8c57-635b2b4b6332' ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.20.0

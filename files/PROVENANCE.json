@@ -1,0 +1,66 @@
+{
+  "branch": "cloud/sx-linen-f19fix1",
+  "head": "fc7a01bf5e248f098736700955713f752a93a7b3",
+  "initial_candidate": "e8dd72e6b634e11559de32489a60388912fa53e7",
+  "integrated_main": "ce86a9413f41103d066aa66c3db8d43fb40da248",
+  "main_source_preserved": {
+    "ACCEPTANCE.md": true,
+    "CONTRACT.md": true,
+    "docs/CLAIMS.md": true,
+    "docs/contract/ID-MAP.json": true
+  },
+  "migrations_changed": false,
+  "new_regression_assertions": 1,
+  "new_test_registrations": 0,
+  "publication_scan": "not run, as required by FIX brief",
+  "repository": "just-every/run-linen",
+  "schema": 1,
+  "tag": "sx-linen-f19fix1",
+  "tracked_files": {
+    "ACCEPTANCE.md": {
+      "blob": "08fb5f0e82dee8eea32eeae9330fbe6fd44d665f",
+      "sha256": "ed8fcb1b9379989b7e96c3313d8d9b80a942155cb8f31e74162aa03b67b9742b"
+    },
+    "CONTRACT.md": {
+      "blob": "41d5e0bddf6f15433f464b94e90f8059caa7f5cc",
+      "sha256": "4d655519e4959f624b695b3934168cee3516e7fe18bb76028cece323d8c47a17"
+    },
+    "docs/CLAIMS.md": {
+      "blob": "c5c605e7a1c60ea99a09f1ae2d6c5db8570dd9b4",
+      "sha256": "27d0f12e4d833978a91b5e7005b776406307b9d99929589abdaee567a70e3c3a"
+    },
+    "docs/contract/ID-MAP.json": {
+      "blob": "70cd8d2cd0d2c962dd46efb1b7933e5d1ceb5910",
+      "sha256": "a143aa7964c592a359e27ab9ca9d9d32fe7e80022416777bc122ad7f7d5cfec0"
+    },
+    "sources.lock.json": {
+      "blob": "ab75736c052e816f7015e99c6554d18d9f9839ac",
+      "sha256": "9d8702641f9aabd4a318ae6a1296210de147eeb20c09c52b385e9ff8cf662511"
+    },
+    "src/features/work/search-match.ts": {
+      "blob": "552795fe427449c95f118dd629cdbdf3d5dfa480",
+      "sha256": "b4ff46992a725f01bdb169d65223051df3ad8d9983f15a47d92efeed3f44b96b"
+    },
+    "tests/work/application-cases.mjs": {
+      "blob": "1797bf1088dbc3270dbd8268b54022f9756e884f",
+      "sha256": "2c8b6343aa5010fc3b303e3c3d4964a68c140046323a88643d580f827bfcb811"
+    },
+    "tests/work/lifecycle-template-cases.mjs": {
+      "blob": "c73039f580266a2d166c3bc42a4831055a361c81",
+      "sha256": "ca350dfe936e1b4fe8fe9676c88c05ff4c45290d05f3e7cb78e56ff3a5ae05fb"
+    },
+    "tests/work/runtime.mjs": {
+      "blob": "9148fc3fc9441d819a5c1e3a13deee8538f1f681",
+      "sha256": "181ef2276a92950caeb23433a36e79b458a204771d1209f21d06798e35a4e833"
+    },
+    "tests/work/search-cases.mjs": {
+      "blob": "0fa78e21ffd2a4e41eeb4de31998846b6b586d2a",
+      "sha256": "4ff17c09dca8a5248662bb45ed298943b0f1558f4f3ce169cb1b0666910c43b2"
+    }
+  },
+  "unchanged_proofs": {
+    "tests/work/application-cases.mjs": true,
+    "tests/work/lifecycle-template-cases.mjs": true,
+    "tests/work/runtime.mjs": true
+  }
+}

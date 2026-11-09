@@ -1,0 +1,20 @@
+2026-11-08T21:21:52.0003598Z node:internal/modules/run_main:123
+2026-11-08T21:21:52.0004498Z     triggerUncaughtException(
+2026-11-08T21:21:52.0005504Z     ^
+2026-11-08T21:21:52.0005918Z 
+2026-11-08T21:21:52.0007426Z AssertionError [ERR_ASSERTION]: LIFE-002 ordinary operator ticket search cannot recover the subject through reminder text
+2026-11-08T21:21:52.0008422Z 
+2026-11-08T21:21:52.0008590Z 3 !== 0
+2026-11-08T21:21:52.0008846Z 
+2026-11-08T21:21:52.0009410Z     at lifecycleTemplateChecks (file://[REDACTED]/tests/work/lifecycle-template-cases.mjs:155:10)
+2026-11-08T21:21:52.0010204Z     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-11-08T21:21:52.0011314Z     at async file://[REDACTED]/tests/work/runtime.mjs:468:3 {
+2026-11-08T21:21:52.0011840Z   generatedMessage: false,
+2026-11-08T21:21:52.0012233Z   code: 'ERR_ASSERTION',
+2026-11-08T21:21:52.0012818Z   actual: 3,
+2026-11-08T21:21:52.0013322Z   expected: 0,
+2026-11-08T21:21:52.0013725Z   operator: 'strictEqual',
+2026-11-08T21:21:52.0014246Z   diff: 'simple'
+2026-11-08T21:21:52.0014649Z }
+2026-11-08T21:21:52.0014881Z 
+2026-11-08T21:21:52.0015100Z Node.js v22.20.0

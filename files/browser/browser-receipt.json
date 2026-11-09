@@ -1,0 +1,16 @@
+{
+  "base": "isolated loopback runtime",
+  "browser": "/usr/bin/chromium",
+  "assertionWidth": 1440,
+  "screenshotWidths": [
+    1440,
+    390
+  ],
+  "query": "synthetic-linen-20",
+  "total": 1,
+  "matchedIds": [
+    "4b2a055d-084b-4dc0-92b8-32793ac39f14"
+  ],
+  "excludedId": "8596ab5f-7229-4bc0-b791-885f5f50f6e7",
+  "passed": true
+}

@@ -1,0 +1,7 @@
+PROBE ACCESS-008 3: exact-current-revision POST /work/:id/approval-stage as metadata-only employee -> 403; open chain unchanged, no decisions or grants added, membership and roles unchanged; authorized holder satisfied=true
+PASS CATALOG-001 public typed/conditional forms, strict answers, cost/delivery, item edits, immutable submitted snapshots, existing ticket access and erasure
+PASS ACCESS-008 public application registry, two entitlements, linked catalog, owner/cost snapshots, permissions, manager gate and erasure
+SEARCH_DIAGNOSTIC {"path":"/search?q=synthetic-linen-20&type=ticket","value":{"query":"synthetic-linen-20","type":"ticket","offset":0,"pageSize":50,"total":0,"counts":{"ticket":0,"person":0,"asset":0,"ci":0,"change":0,"problem":0,"catalog":0,"article":0},"items":[]}}
+SEARCH_DIAGNOSTIC {"path":"/search?q=synthetic-linen-20","value":{"query":"synthetic-linen-20","type":"","offset":0,"pageSize":50,"total":1,"counts":{"ticket":0,"person":1,"asset":0,"ci":0,"change":0,"problem":0,"catalog":0,"article":0},"items":[{"id":"d6b28f90-a568-468d-811a-eec1eec1665e","type":"person","identityKind":"person","title":"synthetic-linen-20","summary":"Recorded person","href":null}]}}
+PASS LIFE-002 templates by department, location, role and employment type: dated team tasks for IT, HR, manager, Facilities and owner, business-day due and reminder instants, 1099 omits benefits, assignee-only completion, owner waiver, re-dating, cancellation, audit and portal reminders
+PASS focused application authority and lifecycle privacy

@@ -1,0 +1,187 @@
+{
+  "branch": "cloud/sx-linen-f19fix1",
+  "checks": [
+    {
+      "command": "cloud_run node tests/work/runtime.mjs",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "life-before.log",
+      "log_sha256": "581d75d6c7ad9a194fafe22ae77f74880b89a71450900d3264c4a33209125aeb",
+      "name": "Initial candidate, Node 24"
+    },
+    {
+      "command": "CI=true cloud_run ~/.rer/node/node-v22.20.0-linux-x64/bin/node tests/work/runtime.mjs",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "life-before-node22.log",
+      "log_sha256": "581d75d6c7ad9a194fafe22ae77f74880b89a71450900d3264c4a33209125aeb",
+      "name": "Initial candidate, Node 22"
+    },
+    {
+      "command": "cloud_run node /tmp/linen-focused.mjs",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "focused-before.log",
+      "log_sha256": "d3a69e2527400a3729510bb056dfaed56c6dac3f4f4ec6d8be638750727a3741",
+      "name": "Focused application and lifecycle baseline"
+    },
+    {
+      "command": "cloud_run node /tmp/linen-clock-runtime.mjs (pre-fix)",
+      "exit": 1,
+      "expected_failure_before_fix": true,
+      "log": "life-before-ci-clock.log",
+      "log_sha256": "508b98f3038988d788ce22cf0c0499e827876a8da7a9404239fb32985c32230e",
+      "name": "Original LIFE-002 failure at CI clock"
+    },
+    {
+      "command": "cloud_run node /tmp/linen-search-regression.mjs (pre-fix)",
+      "exit": 1,
+      "expected_failure_before_fix": true,
+      "log": "search-regression-before.log",
+      "log_sha256": "c50af8238fe73e5713168dc39285f0a082b299d2f93eeea37f650753a36a9cb9",
+      "name": "New deterministic regression before fix"
+    },
+    {
+      "command": "cloud_run node /tmp/linen-search-regression.mjs",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "search-regression-after.log",
+      "log_sha256": "972dec8d6bb14ea6be729a7b1ef3cddbf9a1e6f5d483831c3eedfa93a2b563b3",
+      "name": "New deterministic regression after fix"
+    },
+    {
+      "command": "cloud_run node /tmp/linen-clock-runtime.mjs",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "life-after-ci-clock.log",
+      "log_sha256": "5ae46440d7681b5e23fc02ec1f270f0a8d3db5d79209626e31261e0e0e7f0014",
+      "name": "LIFE-002 at CI clock after fix"
+    },
+    {
+      "command": "cloud_run ~/.rer/node/node-v22.20.0-linux-x64/bin/node tests/work/runtime.mjs",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "work-runtime.log",
+      "log_sha256": "f89bb37d5de280a51114bebe5318bf0f55c1191019c1b02d9b87a5140b8e97f2",
+      "name": "Committed candidate work runtime, Node 22"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "typecheck.log",
+      "log_sha256": "edb1975d65b003dc8a1b345719eac439e0e844295b588590c5315b171c69c6f7",
+      "name": "Typecheck"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "first-party.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "First-party validation"
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "build.log",
+      "log_sha256": "185e45f0b479051797b301b0abaff133ef0cb35eaa3bab7a87b4e99af9432508",
+      "name": "Build"
+    },
+    {
+      "command": "LINEN_TEST_BUILT=1 cloud_run node tests/ui/run.mjs <packet>/search-browser-proof.mjs",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "browser-proof.log",
+      "log_sha256": "71163f28de469adfad1e4e6967a7084b2fbf9a6820d739a68c6355d35f0b1ab7",
+      "name": "Native operator search browser proof"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "contract-write.log",
+      "log_sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2",
+      "name": "Contract generation"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "contract-check.log",
+      "log_sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422",
+      "name": "Contract generation check"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "source-lock.log",
+      "log_sha256": "f8edc19b30cf6156e5d1ed294ff5448e3693f583bef7c928bf14bcfd14b31ae6",
+      "name": "Source lock generation"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "expected_failure_before_fix": false,
+      "log": "source-check.log",
+      "log_sha256": "ebe92f680f1d2be6b8ec78867971ae62cdcb96b5f5fadec0ef1d26990299b75e",
+      "name": "Source lock check"
+    }
+  ],
+  "ci": {
+    "conclusion": null,
+    "github_calls_used": 8,
+    "head_sha": "fc7a01bf5e248f098736700955713f752a93a7b3",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42542451567",
+    "id": 42542451567,
+    "observation": "budgeted watcher ended",
+    "status": "in_progress"
+  },
+  "contract_counts": {
+    "after_fix": {
+      "done": 21,
+      "missing": 37,
+      "partial": 141,
+      "total": 199
+    },
+    "initial_candidate": {
+      "done": 20,
+      "missing": 37,
+      "partial": 142,
+      "total": 199
+    },
+    "integrated_main_before_fix": {
+      "done": 21,
+      "missing": 37,
+      "partial": 141,
+      "total": 199
+    }
+  },
+  "generated_at": "2026-11-09T01:05:01.291804+00:00",
+  "head": "fc7a01bf5e248f098736700955713f752a93a7b3",
+  "migrations": "none added or changed",
+  "pr": {
+    "draft": true,
+    "head_sha": "fc7a01bf5e248f098736700955713f752a93a7b3",
+    "html_url": "https://github.com/just-every/run-linen/pull/163",
+    "number": 163
+  },
+  "product_push_log": "product-push.log",
+  "product_pushed": true,
+  "proof": {
+    "authorized_holder_satisfied": true,
+    "life_ticket_count_after": 0,
+    "life_ticket_count_before": 3,
+    "metadata_only_decision_status": 403,
+    "new_regression_assertions": 1,
+    "new_test_registrations": 0,
+    "regression_count_after": 1,
+    "regression_count_before": 2
+  },
+  "publication_scan": "not run as expressly required by FIX brief",
+  "repository": "just-every/run-linen",
+  "schema": 1,
+  "tag": "sx-linen-f19fix1"
+}

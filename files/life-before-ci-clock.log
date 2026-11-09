@@ -1,0 +1,55 @@
+PASS DESK-011 department operations: catalog admission and atomic bundles, versioned moves, staff knowledge, routing/groups/views, scoped SLA and frozen handoff clock, live membership withdrawal
+PASS CATALOG-001 stable lists, owner/HR dated reviews, OR/AND/unknown audience, no owner bypass, staff filing, revisions, snapshots, fail-closed multi-item doors and erasure
+PASS CATALOG-001 vendor quote PDFs: type/size, required quote, frozen hash, immutability, exact readers with 404s, audited privileged reads, no search/history/notification/AI exposure, approver custody, accounts/services, audience at upload, erasure
+PROBE ACCESS-008 3: exact-current-revision POST /work/:id/approval-stage as metadata-only employee -> 403; open chain unchanged, no decisions or grants added, membership and roles unchanged; authorized holder satisfied=true
+PASS CATALOG-001 public typed/conditional forms, strict answers, cost/delivery, item edits, immutable submitted snapshots, existing ticket access and erasure
+PASS ACCESS-008 public application registry, two entitlements, linked catalog, owner/cost snapshots, permissions, manager gate and erasure
+PASS PROB-002 public routes: floor-specific recurrence, evidence, retained rejection and ninth-ticket suppression; acceptance concurrency, source links, alert dedupe, app/model facets, window, tenant/restricted/current-role fences
+PASS DESK-013 public routes: owned recurring tickets/task plans, holiday first business day, daily/weekly/quarterly/annual calendars, pause/resume, concurrent deduplication, DST/month-end and inactive restore
+PASS DESK-004 public routes: ordered policies by priority/category/requester group, business or calendar hours, US federal holiday catalog per location calendar, first/next/resolution targets, waiting-on pauses, breaches on ticket and report
+PROBE DESK-005 6: public SLA, pause, resume, process-due and followup reads: 2026-02-02T16:45:00.000Z -> 2026-02-02T17:45:00.000Z; open pause deadline null; former deadline silent; fired=2026-02-02T17:45:00.000Z; private notes=1; requester notes=0; repeated and later ticks unchanged
+PASS DESK-005 public routes: P1 level-1 then level-2 escalation before the response target, private to agents, level 3 stopped by the response; awaiting-requester reminder then disclosed resolution; a reply before the due time stops both; business days on the SLA calendar
+PASS DESK-010 public routes: Office dropdown per ticket type, Awaiting parts as a vendor wait under the bound policy, resolution code and close notes required on API, bulk and merge closes, owner-edited codes, REPORT-001 counts by code
+PASS DESK-001 views: saved and shared views with state, owner, priority, type and group filters and sorting, within each reader's own scope; five tickets bulk-assigned under the group rule
+PASS DESK-001 groups: owner-created groups with leads, one accountable group with a member owner, a lead's view of the group's non-restricted tickets
+PASS DESK-003 public routes: support group of the Payroll service and a laptop CI ahead of owner-ordered rules by VIP requester group, requester, category and skill; round-robin and load-based assignment skip the off-shift and overloaded agents; restricted tickets never auto-assigned; reassignment history
+PASS DESK-015 public routes: group-scoped "Escalate to Network L2" offered only to its group and refused to an outsider by API, one audited run listing category, priority, group, owner, private note and status before/after with no note for the requester, a role-refused step applying nothing, bulk runs, and a "New laptop setup" ticket template draft
+PASS DESK-017 ticket activity: person/scenario/rule actor, time and before/after, custom fields, chronological append, stale-write fencing, employee public-only and cross-workspace denial
+DESK-002 passed: real D1/public routes; reasoned office VPN P1 proposal, three types, categories/subcategories and matrix, authorized P2 override with actor/time/before/after, privacy/current role/CAS, unavailable/invalid provider and late proposal fencing.
+PASS DESK-008 public routes: canned name/title/id placeholders, CRUD/CAS/scope and native restore; full twenty-message cited model summary and knowledge; unsent reply, private-context isolation, provider/citation failures and late message/article/role/expiry fencing.
+PASS ASSET-004 procurement, physical receipts, assignment/repair/return, loan, retirement, required ITAD certificate and serial history
+PASS ASSET-010 Denver stock room audit: 18 of 20 expected devices scanned, stray and unknown scans reported, two missing devices open linked follow-up tasks
+PASS ASSET-005 Denver stock room: allocating the last two spare monitors raises one CDW purchase request for 10 at $2,499.90, not sent; ordered with a reference, received into stock; inclusive threshold, one open request per line, cancel and re-raise
+PASS ASSET-007: asset/vendor purchase, lease, warranty and support records, manufacturer check door, repair coverage, current expiry alerts and scoped access
+PASS ASSET-008: persisted USD cost/center, straight-line and declining book values, cents and month-end arithmetic, fiscal reporting/CSV, scoped and stale-edit denials
+PASS HR material replay before/after cancellation, selected-source integration and atomic race
+PASS LIFE-006 public routes: sponsor required, 72-hour reminder in the sponsor's requests, sponsor-only re-attestation moving expiry duties, removal starting at the end instant
+PASS LIFE-007 join/move/leave export, exact authority, timestamps, fixture verification history, outstanding duties and tenant/privacy
+PASS LIFE-003 access policies: owner-only versioned baselines, join, move and leave differences, replay and deactivation
+SEARCH_DIAGNOSTIC {"path":"/search?q=synthetic-linen-20&type=ticket","value":{"query":"synthetic-linen-20","type":"ticket","offset":0,"pageSize":50,"total":3,"counts":{"ticket":3,"person":0,"asset":0,"ci":0,"change":0,"problem":0,"catalog":0,"article":0},"items":[{"id":"c1efe05a-108e-4f24-b471-d0b28d0b7feb","type":"ticket","title":"synthetic-linen-9707 laptop slow","summary":"open · Ana Ruiz","href":"#/work/c1efe05a-108e-4f24-b471-d0b28d0b7feb"},{"id":"6b546c84-79d5-4eed-8b35-267cd078ce36","type":"ticket","title":"synthetic-linen-9711 vpn","summary":"open · Ana Ruiz","href":"#/work/6b546c84-79d5-4eed-8b35-267cd078ce36"},{"id":"ad0b6373-85f8-4f64-9494-5d60ef2cfd6d","type":"ticket","title":"synthetic-linen-9712 printer","summary":"open · Ana Ruiz","href":"#/work/ad0b6373-85f8-4f64-9494-5d60ef2cfd6d"}]},"at":"2026-11-08T21:21:00.359Z"}
+MATCHED_WORK {"id":"c1efe05a-108e-4f24-b471-d0b28d0b7feb","workspace_id":"a","requester_id":"synthetic-linen-9701","beneficiary_id":"synthetic-linen-9701","kind":"request","title":"synthetic-linen-9707 laptop slow","state":"open","sensitivity":"normal","assignee_id":null,"impact":"individual","revision":1,"created_at":"2026-11-08T21:20:17.044Z","updated_at":"2026-11-08T21:20:17.044Z","closed_at":null,"paused_at":null,"paused_ms":0,"response_at":null,"resolution_at":null,"context_json":"{}","dedup_key":"8b48b824-ff74-4a94-9b85-412f56db3951","request_hash":"2c6a95029b1468e47dc0fc4940c41d2027906d6abba48ddf039585c0a070dc5b","pending_person_id":null,"merged_into":null,"split_from":null,"parent_id":null,"group_id":null,"department_id":null,"protected_departments_json":"[]"}
+MATCHED_MESSAGES [{"body":"synthetic-linen-9707 laptop slow body","visibility":"public"},{"body":"I would like to talk to a person.","visibility":"public"},{"body":"Linen: No agent is available right now. This conversation stays open as your request, with everything above. We will reply by Monday, November 9, 2026 at 3:20 PM (Pacific/Kiritimati).","visibility":"public"}]
+MATCHED_WORK {"id":"6b546c84-79d5-4eed-8b35-267cd078ce36","workspace_id":"a","requester_id":"synthetic-linen-9701","beneficiary_id":"synthetic-linen-9701","kind":"request","title":"synthetic-linen-9711 vpn","state":"open","sensitivity":"normal","assignee_id":null,"impact":"individual","revision":1,"created_at":"2026-11-08T21:20:17.272Z","updated_at":"2026-11-08T21:20:17.272Z","closed_at":null,"paused_at":null,"paused_ms":0,"response_at":null,"resolution_at":null,"context_json":"{}","dedup_key":"9d7553c3-1961-4151-bb9f-dc9eb9da2801","request_hash":"3cde28395e3fe638605411c895df0eed426e1a4ceea5148da1a4f1fdca520042","pending_person_id":null,"merged_into":null,"split_from":null,"parent_id":null,"group_id":null,"department_id":null,"protected_departments_json":"[]"}
+MATCHED_MESSAGES [{"body":"synthetic-linen-9711 vpn body","visibility":"public"},{"body":"I would like to talk to a person.","visibility":"public"},{"body":"Linen: No agent accepted in time. This conversation stays open as your request, with everything above. We will reply by Monday, November 9, 2026 at 3:20 PM (Pacific/Kiritimati).","visibility":"public"}]
+MATCHED_WORK {"id":"ad0b6373-85f8-4f64-9494-5d60ef2cfd6d","workspace_id":"a","requester_id":"synthetic-linen-9701","beneficiary_id":"synthetic-linen-9701","kind":"request","title":"synthetic-linen-9712 printer","state":"open","sensitivity":"normal","assignee_id":null,"impact":"individual","revision":1,"created_at":"2026-11-08T21:20:17.395Z","updated_at":"2026-11-08T21:20:17.395Z","closed_at":null,"paused_at":null,"paused_ms":0,"response_at":null,"resolution_at":null,"context_json":"{}","dedup_key":"e0b4cdba-4775-4dd7-99ec-3d1ee16dbc43","request_hash":"c1956300e9c799bf2d3d7fc42dd008ae03d123cc79a1df52e727f379662d03d0","pending_person_id":null,"merged_into":null,"split_from":null,"parent_id":null,"group_id":null,"department_id":null,"protected_departments_json":"[]"}
+MATCHED_MESSAGES [{"body":"synthetic-linen-9712 printer body","visibility":"public"},{"body":"I would like to talk to a person.","visibility":"public"},{"body":"Linen: No agent is available right now. This conversation stays open as your request, with everything above. We will reply by Monday, November 9, 2026 at 3:20 PM (Pacific/Kiritimati).","visibility":"public"}]
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: LIFE-002 ordinary operator ticket search cannot recover the subject through reminder text
+
+3 !== 0
+
+    at lifecycleTemplateChecks (file:///home/agent/rer-consolidation/work/sx-linen-f19fix1/run-linen/tests/work/lifecycle-template-cases.mjs:155:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///tmp/linen-clock-runtime.mjs:478:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 3,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.20.0
