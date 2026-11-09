@@ -92,24 +92,25 @@
     "results": "browser-results.json"
   },
   "ci": {
-    "status": "in_progress",
+    "status": "completed",
     "head": "08c1a00e215a1558482b48819cc86d06487a92b3",
     "pr": "https://github.com/just-every/run-linen/pull/190",
     "initial_discovery_utc": "2026-11-09T09:36:45Z",
     "initial_runs": [],
-    "gh_calls_used": 5,
+    "gh_calls_used": 7,
     "gh_call_budget": 10,
     "run_id": 42594763474,
     "event": "pull_request",
-    "observed_utc": "2026-11-09T09:41:48Z",
+    "observed_utc": "2026-11-09T09:52:26Z",
     "url": "https://github.com/just-every/run-linen/actions/runs/42594763474",
-    "conclusion": null
+    "conclusion": "success"
   },
   "publication_scan": {
     "status": "not run in cloud",
     "complete": null,
     "historyScanned": null,
-    "findings": null
+    "findings": null,
+    "commit": "08c1a00e215a1558482b48819cc86d06487a92b3"
   },
   "migrations_changed": false,
   "contract_changed": false,
@@ -169,5 +170,9 @@
       "path": "ASSET-009-unknown-item.png",
       "sha256": "80284c50f4cdb844815cc670dd224f4cc444d8d52e5d1a1953049719f2622481"
     }
+  ],
+  "remote_provenance": [
+    "08c1a00e215a1558482b48819cc86d06487a92b3\trefs/heads/cloud/sx-linen-c-f55",
+    "8cef1d18a8a603abb7a7f059a6637f0eb78b7c64\trefs/heads/main"
   ]
 }

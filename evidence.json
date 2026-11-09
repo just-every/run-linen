@@ -73,10 +73,10 @@
       "sha256": "80284c50f4cdb844815cc670dd224f4cc444d8d52e5d1a1953049719f2622481"
     },
     {
-      "blob": "082beba0f385f41ab8dc6eff975d68a6e4f130fe",
-      "bytes": 13369,
+      "blob": "e4205bdbd3ea04a3599ed9d2e1f830df888ada00",
+      "bytes": 14853,
       "path": "REPORT.md",
-      "sha256": "281bebde830f203c283ed0d296efedfebe2e97cc70a3ba8ae7d3185e31358099"
+      "sha256": "fb346f961a3f6470cd9b0a7e7d34847d5562875184e63164bc54aaa961061dcf"
     },
     {
       "blob": "b9f6ce78dd31884a77ef599a8de9aa3e3515f724",
@@ -169,6 +169,18 @@
       "sha256": "a9112702ba66070f7b50be02e73f03275ae64e2acd3a4eb753332d14a8f7a5a9"
     },
     {
+      "blob": "8c8fa0c95f9ec7fb6e64f7eb8d150fc48d58967e",
+      "bytes": 178,
+      "path": "ci-status-final.json",
+      "sha256": "a6c86be466e5338652cdb7948ad3e76ffd44457afcaa302e17d21470256c8cf9"
+    },
+    {
+      "blob": "596aa1ea612c4d05e038e347ae82a290c9095a12",
+      "bytes": 175,
+      "path": "ci-status.json",
+      "sha256": "207d7d065bf3b802e3654a03a620aca135d39d7e4527d8e5e91351520545c075"
+    },
+    {
       "blob": "d46e46c95ffe890c4ca4352b59e9c3a6e12d57a2",
       "bytes": 950,
       "path": "dependency-capture.mjs",
@@ -185,6 +197,12 @@
       "bytes": 311,
       "path": "diff-review.json",
       "sha256": "3302e25186d51b1367fff166455678d4adfcd47dd3c00e56832b5db0166356b0"
+    },
+    {
+      "blob": "14c6489d7f8433a8d1abe8e7d557e8cb41b6f90a",
+      "bytes": 7530,
+      "path": "evidence-initial-publication.log",
+      "sha256": "e691b49212c5b544ae43529acff644ba5ca5e2131f1190d665965cacd773fd53"
     },
     {
       "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -211,10 +229,16 @@
       "sha256": "98be665dbab455fc508d3a5fc22880302bfedc67625dcf56cf6cd5eddc777fb3"
     },
     {
-      "blob": "0ad011e63fe3184da332df3b864d554735c4fb16",
-      "bytes": 5801,
+      "blob": "6c908df3a5705ebdb22447d15fc4569326c2339b",
+      "bytes": 6037,
       "path": "receipt.json",
-      "sha256": "7f56d0ec45188b7997185dcdc943c9fa60e8f1b0ad56fb971aad523460acc0db"
+      "sha256": "1397d865c0494158126cc0c5f66f6909900e7ae06949dda75f4a2c7a5f328391"
+    },
+    {
+      "blob": "0ad8f8a5499a59ee2f6e5f8bf78d535ef4d4efbe",
+      "bytes": 130,
+      "path": "remote-provenance.log",
+      "sha256": "5ec09bc714b916e778746ba9b8cf0f70ca5f0e157f5804798f1d3d163931f59f"
     },
     {
       "blob": "767df5b1dcff496e6eb78cb1145e06c9d54882f5",

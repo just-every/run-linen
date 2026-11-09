@@ -51,7 +51,7 @@ DONE riders assessed for an honest PARTIAL claim:
 | --- | --- |
 | 1 | PASS selected outcomes, route assertions listed above; full-clause certification remains PARTIAL. |
 | 2 | PASS populated CIs and two real dependency chains, connection-only and unlinked controls, unchanged nonempty business snapshots; no empty-list-only success. |
-| 3 | PENDING exact-candidate Verify. Both existing journeys are loaded by ./scripts/verify.mjs; dependencyJourney is called unconditionally by ./tests/ui/browser.mjs. |
+| 3 | PASS Verify 42594763474, event pull_request, completed success on 08c1a00e215a1558482b48819cc86d06487a92b3. Both existing journeys are loaded by ./scripts/verify.mjs; dependencyJourney is called unconditionally by ./tests/ui/browser.mjs. |
 | 4 | PASS selected browser proof on candidate 08c1a00e215a1558482b48819cc86d06487a92b3. The route suite predates the last browser-only assertion; its route test and every product source file are byte-identical on the candidate. The build likewise has identical product inputs. receipt.json records actual execution heads and equivalence. |
 | 5 | INSPECTED no inheritance text change or new Base duty claimed. |
 | 6 | PASS generator write and check; generated views restored from main; contract judgments and counts unchanged. |
@@ -79,6 +79,12 @@ GAP ASSET-009: Only the leased connects_to part of point 4 and point 8 are certi
 
 CLAIM ASSET-009 PARTIAL points=4,8 tests=tests/services/dependency-cases.mjs#dependencyChecks; tests/ui/dependency-journey.mjs#dependencyJourney
 
-CI: exact-head discovery on 2026-11-09T09:36:45Z returned no runs immediately after opening PR 190; no green conclusion is assumed. A subsequent allowed observation will be appended before handoff.
+CI: exact-head discovery on 2026-11-09T09:36:45Z returned no runs immediately after opening PR 190; no green conclusion is assumed. The final conclusion is recorded below.
 
 Exact-head Verify discovered: run 42594763474, event pull_request, head 08c1a00e215a1558482b48819cc86d06487a92b3, observed in_progress at 2026-11-09T09:41:48Z. The separate dynamic PR check is not used as Verify proof. GitHub API calls used: 5 of 10.
+
+Final exact-head CI: Verify run 42594763474, event pull_request, status completed, conclusion success, head 08c1a00e215a1558482b48819cc86d06487a92b3, observed 2026-11-09T09:52:26Z. This conclusion applies to every selected rubric row R1–R5 and rider 3; the workflow invokes both the services suite and the ordinary complete browser driver. No workflow was dispatched or rerun. Seven GitHub API calls were used, within the ten-call budget; observations of this run were at least 300 seconds apart.
+
+Product custody: branch cloud/sx-linen-c-f55 is pushed at 08c1a00e215a1558482b48819cc86d06487a92b3; draft PR 190 is left for the lane. Main equality remains a landing duty, not a builder assertion. Actual advertised refs are in remote-provenance.log. Scan commit=08c1a00e215a1558482b48819cc86d06487a92b3 complete=UNESTABLISHED historyScanned=UNESTABLISHED findings=UNESTABLISHED; the maintained Mac lander must perform the complete full-history scan and exact-main Run site. Neither publication nor this evidence ref signals a landed or counted clause.
+
+The initial report transport succeeded at evidence head d2c48f4342e4a3b7c5a62fded05a3bcdb1692b88 while CI was in progress. Its actual publication receipt is included as evidence-initial-publication.log. The final packet adds the completed exact-head CI receipt and is republished without rewriting evidence history. The final terminal EVIDENCE line identifies that final packet.
