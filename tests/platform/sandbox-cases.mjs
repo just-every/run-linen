@@ -264,6 +264,11 @@ export async function sandboxChecks({request,owner,other,fixture}) {
  let rollback=await invoke(path+'/rollback-package','POST',{revision:sandbox.revision},owner,201);
  rollback=await invoke('/sandboxes/'+rollback.id+'/approve','POST',{revision:rollback.revision},reviewer);
  rollback=await invoke('/sandboxes/'+rollback.id+'/promote','POST',{revision:rollback.revision});
+ // After reviewed rollback, deny an employee before interpreting the old package revision.
+ const beforeEmployeePromotion=await fixture({});
+ const deniedPromotion=await invoke(path+'/promote','POST',{revision:1},requester,403);
+ assert.equal(deniedPromotion.error.code,'forbidden');
+ assert.deepEqual(await fixture({}),beforeEmployeePromotion,'Denied promotion after rollback changes no configuration or audit');
  const restored=(await invoke('/catalog','GET')).items.find(i=>i.id===catalogId);
  assert.deepEqual((await fixture({})).protectedTables,protectedWithNewWork.protectedTables,'Rollback preserves production authority and existing requests');
  assert.deepEqual((await invoke('/work/'+newWork.id+'/approvals/'+catalogId,'GET')).stages,submittedApprovalStages,'Rollback preserves submitted approval definitions and calendars');

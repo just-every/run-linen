@@ -30,12 +30,14 @@ export async function problemActor(env: Env, principal: Principal): Promise<Work
 }
 
 /** Source content is projected only after checking the current caller at every read. */
-export async function problemEvidence(ctx: WorkContext, evidence: ProblemEvidence[]) {
+export async function problemEvidence(ctx: WorkContext, evidence: ProblemEvidence[], excludeCancelled = false) {
   const sources = [];
   for (const ref of evidence) {
     if (ref.type === 'ticket') {
       const work = await getWork(ctx, ref.id);
       if (work.kind !== 'incident') throw new ApiError(409, 'problem_evidence_changed', 'Evidence is no longer an incident ticket');
+      if (excludeCancelled && work.state === 'cancelled')
+        throw new ApiError(409, 'problem_evidence_changed', 'Canceled tickets cannot support a current proposal; refresh detection');
       sources.push({ ...ref, currentRevision: work.revision, title: work.title });
     } else {
       const incident = await getService(ctx.env.DB, ctx.principal, ref.id, 'incident');
@@ -51,7 +53,8 @@ export async function problemEvidence(ctx: WorkContext, evidence: ProblemEvidenc
 export async function getProblemProposal(env: Env, principal: Principal, key: string) {
   const ctx = await problemActor(env, principal);
   const record = await getService(env.DB, ctx.principal, key, proposalKind);
-  const sources = await problemEvidence(ctx, record.data.evidence || []);
+  // Undecided proposals need eligible evidence now; human decisions retain their historical references.
+  const sources = await problemEvidence(ctx, record.data.evidence || [], record.data.state === 'proposed');
   return { ...record, sources };
 }
 
