@@ -21,8 +21,10 @@ export async function projectChecks(api, db) {
   // Retained roles do not make an inactive member eligible to own new or existing tasks.
   const ownershipBefore = await make(`/projects/${projectId}`, undefined, undefined, 200);
   const reassignedTask = ownershipBefore.tasks.find(t => t.id === tasks[1]);
-  const ownershipHistoryPath = `/projects/${projectId}/tasks/${reassignedTask.id}/activity`;
-  const ownershipHistory = (await make(ownershipHistoryPath, undefined, undefined, 200)).items;
+  const taskHistories = async () => Promise.all(ownershipBefore.tasks.map(async task => ({
+    id: task.id, items: (await make(`/projects/${projectId}/tasks/${task.id}/activity`, undefined, undefined, 200)).items,
+  })));
+  const ownershipHistory = await taskHistories();
   for (const [i, role] of ['owner', 'operator'].entries()) {
     const candidate = `synthetic-linen-project-${i}`;
     await db.prepare('INSERT INTO users VALUES(?,?,?,?,?)')
@@ -35,7 +37,7 @@ export async function projectChecks(api, db) {
     assert.equal(refusedCreate.code, 'project_owner', `PROJECT-001 inactive ${role} cannot own a new task`);
     assert.deepEqual(await make(`/projects/${projectId}`, undefined, undefined, 200), ownershipBefore,
       'PROJECT-001 refused task creation preserves the project and every task');
-    assert.deepEqual((await make(ownershipHistoryPath, undefined, undefined, 200)).items, ownershipHistory,
+    assert.deepEqual(await taskHistories(), ownershipHistory,
       'PROJECT-001 refused creation appends no existing task history');
     const refusedUpdate = await make(`/projects/${projectId}/tasks/${reassignedTask.id}`, {
       revision: reassignedTask.revision, ownerId: candidate, status: 'in_progress', dueDate: '2030-03-21',
@@ -43,7 +45,7 @@ export async function projectChecks(api, db) {
     assert.equal(refusedUpdate.code, 'project_owner', `PROJECT-001 inactive ${role} cannot receive a task`);
     assert.deepEqual(await make(`/projects/${projectId}`, undefined, undefined, 200), ownershipBefore,
       'PROJECT-001 refused reassignment preserves all task fields and revisions');
-    assert.deepEqual((await make(ownershipHistoryPath, undefined, undefined, 200)).items, ownershipHistory,
+    assert.deepEqual(await taskHistories(), ownershipHistory,
       'PROJECT-001 refused reassignment appends no task history');
   }
   console.log('PROBE PROJECT-001 4: inactive owner and operator candidates each refused with 422 project_owner on create and current-revision reassignment; project, task fields, revisions and task history unchanged');
@@ -74,7 +76,10 @@ export async function projectChecks(api, db) {
   const change = title => make('/changes', { title, services: [service.id], risk: 'low', impact: 'Denver office', cohorts: ['Denver'], canaryCohorts: ['Denver'], window: { start: '2030-03-14T01:00:00Z', end: '2030-03-14T02:00:00Z' }, implementation: { action: title }, compensation: { action: 'restore' } });
   const changes = [await change('Cut over Denver switches'), await change('Move Denver Wi-Fi SSID')];
   const ticket = await make('/work', { title: 'Need a desk on the 5th floor', body: 'Where do I sit after the move?', deduplicationKey: 'project-ticket' }, employee);
-  await make(`/work/${ticket.id}/commands`, { revision: ticket.revision, command: 'assign', reason: 'Seating plan owner', assigneeId: 'search-agent' }, undefined, 200);
+  const unassigned = (await make(`/work/${ticket.id}`, undefined, undefined, 200)).work;
+  assert.equal(unassigned.assignee_id, null);
+  const unassignedLoad = (await make('/workload', undefined, agent, 200)).items.find(r => r.userId === 'search-agent');
+  await make(`/work/${ticket.id}/commands`, { revision: unassigned.revision, command: 'assign', reason: 'Seating plan owner', assigneeId: 'search-agent' }, undefined, 200);
   const hrTicket = await make('/work', { title: 'Relocation accommodation', body: 'Private', sensitivity: 'hr', deduplicationKey: 'project-hr' });
   await make(`/projects/${projectId}/links`, { items: [{ kind: 'ticket', targetId: hrTicket.id }] }, undefined, 422);
   await make(`/projects/${projectId}/links`, { items: [{ kind: 'asset', targetId: 'missing' }] }, undefined, 422);
@@ -103,7 +108,9 @@ export async function projectChecks(api, db) {
   const after = await make(`/projects/${projectId}`, undefined, undefined, 200);
   assert.deepEqual([after.project.status, after.milestones.length, after.tasks.length, after.links.length], [before.project.status, before.milestones.length, before.tasks.length, before.links.length], 'PROJECT-001 refused employee calls change nothing');
 
-  const load = (await make('/workload', undefined, undefined, 200)).items.find(r => r.userId === 'search-agent');
+  const load = (await make('/workload', undefined, agent, 200)).items.find(r => r.userId === 'search-agent');
+  assert.equal(load.openTickets, unassignedLoad.openTickets + 1, 'PROJECT-001 assigning this open ticket adds exactly one ticket to the agent workload');
+  assert.equal(load.total, unassignedLoad.total + 1, 'PROJECT-001 assignment contributes one item beside unchanged open project tasks');
   assert.ok(load.openTickets >= 1 && load.openProjectTasks === 6 && load.total === load.openTickets + 6, 'PROJECT-001 workload combines project tasks and tickets');
   const assigned = (await make(`/work/${ticket.id}`, undefined, undefined, 200)).work;
   assert.equal(assigned.state, 'open');
@@ -115,7 +122,7 @@ export async function projectChecks(api, db) {
   const pausedRead = (await make(`/work/${ticket.id}`, undefined, undefined, 200)).work;
   assert.equal(pausedRead.state, 'paused');
   assert.equal(pausedRead.assignee_id, assigned.assignee_id, 'PROJECT-001 pausing retains the assigned agent');
-  const pausedLoad = (await make('/workload', undefined, undefined, 200)).items.find(r => r.userId === assigned.assignee_id);
+  const pausedLoad = (await make('/workload', undefined, agent, 200)).items.find(r => r.userId === assigned.assignee_id);
   assert.deepEqual(pausedLoad, load, 'PROJECT-001 the paused assigned ticket still counts beside six open project tasks');
   console.log('PROBE PROJECT-001 7:', JSON.stringify({ state: pausedRead.state, before: load, after: pausedLoad }));
   // DESK-017: every current project-task write emits original field values, never a live reconstruction.
