@@ -6884,7 +6884,7 @@
       "executable": false
     },
     "tests/services/risk-cases.mjs": {
-      "sha256": "3665be41abb8e9826ed65b647516d5a5ebcbcbdf44365422a3913211e78f68dc",
+      "sha256": "e42f2f8166dbab963958b58cf68cd672d9fcd1dbf2aa29c6d7c05c4294738015",
       "executable": false
     },
     "tests/services/run.mjs": {
