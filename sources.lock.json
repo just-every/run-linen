@@ -6608,7 +6608,7 @@
       "executable": false
     },
     "tests/adoption/platform-privacy-cases.mjs": {
-      "sha256": "5b21d942f9ad0b8afb8e44448c600fa79525e4b2d4f8fc8416a0d74d027b1bef",
+      "sha256": "85d4f01119513f571b408a69e3fd0d6bee2d1e50cf16804abdf9b388a29046d5",
       "executable": false
     },
     "tests/adoption/prior-data-harness.mjs": {
@@ -6652,7 +6652,7 @@
       "executable": false
     },
     "tests/adoption/template-cases.mjs": {
-      "sha256": "e62df7f64ccfbb9f12157cdd7cbfe692fc0c99b63e9c6aeff30c73a42bb421ad",
+      "sha256": "cc4a8d809580c2c1b0c9c3a916dbdc038ecb4b1a7f07dba8f048ca9d2ec8281f",
       "executable": false
     },
     "tests/adoption/tsconfig.json": {
