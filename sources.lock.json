@@ -7056,7 +7056,7 @@
       "executable": false
     },
     "tests/ui/dependency-journey.mjs": {
-      "sha256": "0dfe33357ed50677acb10793a0918c2692489da125a4577a951574925091c07a",
+      "sha256": "f57a1874bb204e32e5b4c1f018cfac66454c4578a1898cf7592e8a17f4ed2cb3",
       "executable": false
     },
     "tests/ui/desk-console-journeys.mjs": {

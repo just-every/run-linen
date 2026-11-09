@@ -30,6 +30,8 @@ export async function dependencyJourney({page,api,base,out}) {
   await details.locator(':scope > p').first().waitFor({state:'visible'});
   assert.ok((await details.locator(':scope > p').first().innerText()).trim().length>0,
     'The empty impact view keeps its coverage and inference explanation visible for inspection');
+  assert.ok((await details.locator(':scope > p').first().innerText()).includes(unknown.coverage),
+    'The unlinked screen presents the current route coverage limitation without fixing its wording');
   assert.equal(await details.locator('.record-row').count(),0,'Unlinked CI has no invented dependency or impact rows');
   const beforeUnknownReads=await Promise.all([`/services/${unlinked.id}`,`/service-history/${unlinked.id}`,'/incidents'].map(path=>api(path)));
   await page.reload();
