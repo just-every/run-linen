@@ -6880,7 +6880,7 @@
       "executable": false
     },
     "tests/services/release-cases.mjs": {
-      "sha256": "f47e6c18268b6d6b5eb57ac678d6c2793ce3ee03ddfc8197b742e836db30471b",
+      "sha256": "420523c039be3385b854d249c62fdd600c257764d83b86f7f9fc97724c3754d5",
       "executable": false
     },
     "tests/services/risk-cases.mjs": {
