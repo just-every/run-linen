@@ -1,0 +1,243 @@
+{
+  "assertions_removed_or_weakened": false,
+  "base": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+  "blockers": [],
+  "branch": "cloud/sx-linen-c-f73",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "scope": "local disposable setup; hook reinstalled afterward"
+    },
+    {
+      "binding": "All final project assertions ran; final candidate subsequently adds only probe stdout and summary wording. The focused exact-head run below exercises the committed test bytes.",
+      "command": "cloud_run timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log"
+    },
+    {
+      "binding": "Exact committed head and project test file; public Worker, D1 migrations, search operator fixture and existing projectChecks",
+      "command": "cloud_run timeout 300 node .wrangler/project-probe.mjs",
+      "exit": 0,
+      "head": "80968f079012c867367f68a4c550ecad7f50dd13",
+      "launcher": "project-probe.mjs",
+      "log": "project-probe.log"
+    },
+    {
+      "binding": "No TypeScript implementation changed",
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views.log"
+    },
+    {
+      "binding": "No generated view committed",
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "binding": "After final edits and final rebase",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "source-lock.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "source-lock.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "migration ledger check",
+      "exit": null,
+      "reason": "No migration added or edited"
+    }
+  ],
+  "ci": [
+    {
+      "conclusion": null,
+      "event": "pull_request",
+      "head_sha": "80968f079012c867367f68a4c550ecad7f50dd13",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42646800875",
+      "id": 42646800875,
+      "name": "Verify",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": null,
+      "event": "dynamic",
+      "head_sha": "80968f079012c867367f68a4c550ecad7f50dd13",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42646794261",
+      "id": 42646794261,
+      "name": "PR #204",
+      "status": "in_progress"
+    }
+  ],
+  "ci_latest": {
+    "conclusion": null,
+    "head_sha": "80968f079012c867367f68a4c550ecad7f50dd13",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42646800875",
+    "status": "in_progress"
+  },
+  "ci_wait": "Discovery plus two observations at least 300 seconds apart; no dispatch, rerun or duplicate watcher",
+  "clause": {
+    "claim": "PARTIAL",
+    "gap": "Lifecycle-plan links, blocked and overdue dependency flags and all unselected acceptance remain owed; existing held scope unchanged.",
+    "id": "PROJECT-001",
+    "points": [
+      4,
+      7
+    ]
+  },
+  "cleanup": "Product clone to be removed only after successful evidence publication and verification",
+  "complete_history": true,
+  "contract_diff": "empty",
+  "counts_after": {
+    "done": 31,
+    "missing": 37,
+    "partial": 131,
+    "total": 199
+  },
+  "counts_before": {
+    "done": 31,
+    "missing": 37,
+    "partial": 131,
+    "total": 199
+  },
+  "final_local_results": "all required touched checks passed",
+  "generated_view_diff": "empty",
+  "github_calls_used": 6,
+  "head": "80968f079012c867367f68a4c550ecad7f50dd13",
+  "identity": "all candidate author and committer names fleet, all addresses fleet, no trailers; complete messages inspected",
+  "landing": {
+    "candidate_run_site": "not applicable before landing; fleet duty",
+    "main_equals_candidate": false,
+    "status": "branch only"
+  },
+  "last_ci_query_epoch": 1794239381,
+  "migration_diff": "empty",
+  "packet_selection": [
+    "REPORT.md",
+    "PLAN.md",
+    "RECEIPT.json",
+    "project-probe.mjs",
+    "project-probe.log",
+    "work-runtime.log",
+    "typecheck.log",
+    "first-party.log",
+    "views.log",
+    "source-lock.log",
+    "identity.log",
+    "product-push.log",
+    "main-ci.json",
+    "pull-request.json",
+    "ci-discovery.json",
+    "pull-request-update.json",
+    "terminal-provenance.json",
+    "ci-status.json",
+    "ci-status-2.json"
+  ],
+  "permanent_test_registration_delta": 0,
+  "pre_ready": {
+    "assertions_weakened": false,
+    "candidate_verify": "in progress at discovery",
+    "credential_erasure_replay_implementation": "unchanged; full runtime passes",
+    "publication_scan": "fleet duty",
+    "screens": "unchanged",
+    "selected_behaviors": "public routes pass",
+    "source_lock": "fresh"
+  },
+  "probes": {
+    "4": {
+      "create_status": 422,
+      "error": "project_owner",
+      "history": "unchanged",
+      "inactive_roles": [
+        "owner",
+        "operator"
+      ],
+      "project_and_tasks": "unchanged",
+      "update_status": 422
+    },
+    "7": {
+      "after": {
+        "openProjectTasks": 6,
+        "openTickets": 1,
+        "total": 7
+      },
+      "assignment": "search-agent",
+      "before": {
+        "openProjectTasks": 6,
+        "openTickets": 1,
+        "total": 7
+      },
+      "state_after": "paused",
+      "state_before": "open"
+    }
+  },
+  "product_files": {
+    "sources.lock.json": "8e5bf061f3d160ec71d4fbfa73717b48382736cd2ff44809bafe2967f1e83913",
+    "tests/work/project-cases.mjs": "d15ecefa745da8ee5d5f1682bf451f41fa8a7e66f29457da81df11e416aff2e6"
+  },
+  "product_push": {
+    "exit": 0,
+    "guard": "cloud-push.py",
+    "log": "product-push.log"
+  },
+  "pull_request": {
+    "base": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+    "draft": true,
+    "head": "80968f079012c867367f68a4c550ecad7f50dd13",
+    "html_url": "https://github.com/just-every/run-linen/pull/204",
+    "number": 204
+  },
+  "remote_head_verified": "80968f079012c867367f68a4c550ecad7f50dd13",
+  "repository": "just-every/run-linen",
+  "riders": {
+    "1": "selected pass; whole clause partial",
+    "10": "not applicable; no new policy",
+    "11": "fleet landing pending",
+    "2": "selected pass",
+    "3": "pending exact-head Verify",
+    "4": "exact-head focused probe passed",
+    "5": "inspected; D-4 unchanged",
+    "6": "mechanical pass; no status promotion",
+    "7": "pass; no acceptance edit",
+    "8": "selected ownership refusal pass",
+    "9": "scope retained"
+  },
+  "scan": {
+    "commit": "80968f079012c867367f68a4c550ecad7f50dd13",
+    "complete": "unestablished",
+    "findings": "unestablished",
+    "historyScanned": "unestablished",
+    "reason": "Not run in cloud; guarded fleet lander performs publication scan."
+  },
+  "schema": 1,
+  "tag": "sx-linen-c-f73",
+  "terminal_custody": "PUSHED; local proof passed, exact-head Verify remains in progress",
+  "toolchain": {
+    "declared_node": "22.20.0",
+    "node": "24.19.0",
+    "note": "Provided toolchain selects a newer installed Node; package engine warning recorded; no package pins changed.",
+    "pnpm": "10.12.4"
+  },
+  "ui_diff": "empty"
+}

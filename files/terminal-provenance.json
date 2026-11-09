@@ -1,0 +1,14 @@
+{
+  "branch": "cloud/sx-linen-c-f73",
+  "candidate_identity_and_trailers": "Run Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>",
+  "contract_and_views_diff": "",
+  "head": "80968f079012c867367f68a4c550ecad7f50dd13",
+  "main_at_last_fetch": "c6c7d7d79438ce0a9bfb67327f488d7226438a7b",
+  "parents": [
+    "c6c7d7d79438ce0a9bfb67327f488d7226438a7b"
+  ],
+  "product_diff": "sources.lock.json\ntests/work/project-cases.mjs",
+  "remote_product_head": "80968f079012c867367f68a4c550ecad7f50dd13",
+  "shallow": "false",
+  "worktree_status": ""
+}
