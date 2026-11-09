@@ -1,9 +1,9 @@
 {
-  "conclusion": null,
+  "conclusion": "success",
   "event": "pull_request",
   "head_sha": "fab12d8d54a56ed3512268e2632888aeddd21ade",
   "html_url": "https://github.com/just-every/run-linen/actions/runs/42570037392",
   "id": 42570037392,
-  "status": "in_progress",
-  "updated_at": "2026-11-09T05:56:56Z"
+  "status": "completed",
+  "updated_at": "2026-11-09T06:07:09Z"
 }

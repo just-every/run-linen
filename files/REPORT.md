@@ -5,7 +5,7 @@ Branch: `cloud/sx-linen-c-f40`
 Candidate: `fab12d8d54a56ed3512268e2632888aeddd21ade`
 Base read and integrated: `fcc2e53de937ab2ae17938147920b871b5fe70f5`
 Draft PR: https://github.com/just-every/run-linen/pull/173
-Verify: `42570037392`, event `pull_request`, exact candidate SHA, in progress at discovery.
+Verify: `42570037392`, event `pull_request`, exact candidate SHA, completed with success (final REST read at 2026-11-09 06:10 UTC).
 
 DESK-010 is claimed DONE for independent acceptance on landing. The only live gap was the shared-colleague exclusion in point 4; this round closes it by extending the existing `deskFieldChecks` journey. Existing fields, status mapping, roles and resolution checks are retained. No contract text, Status cell, Gap cell, Evidence cell or generated view changed. No new reader or writer authority was introduced.
 
@@ -27,7 +27,7 @@ Two in-memory regression probes failed as intended, with exit 1: returning popul
 
 ## Acceptance evidence and frozen rubric
 
-Each row is scoped to the current clause and its retained duties. Runtime evidence is `tests/work/desk-field-cases.mjs#deskFieldChecks` via `tests/work/runtime.mjs`; browser evidence is `tests/ui/desk-field-journey.mjs#deskFieldJourney` via `tests/ui/browser.mjs` and `tests/ui/run.mjs`. Exact-SHA Verify event and conclusion are recorded below and in `RECEIPTS.json`.
+Each row is scoped to the current clause and its retained duties. Runtime evidence is `tests/work/desk-field-cases.mjs#deskFieldChecks` via `tests/work/runtime.mjs`; browser evidence is `tests/ui/desk-field-journey.mjs#deskFieldJourney` via `tests/ui/browser.mjs` and `tests/ui/run.mjs`. Exact-SHA Verify 42570037392, event pull_request, completed with success on fab12d8d54a56ed3512268e2632888aeddd21ade; it loads these runtime and browser journeys. Actual REST output is in `ci-status.json` and `RECEIPTS.json`.
 
 | Row | Acceptance sentence or duty | Public-door evidence | Local result |
 | --- | --- | --- | --- |
@@ -46,9 +46,9 @@ No policy default was adopted. The supplied-plan ROLE-001 queue hold remains ret
 
 | Rider | Result on candidate | Evidence and limit |
 | --- | --- | --- |
-| 1 | PASS local; exact-SHA Verify pending | R1–R7 public-door journeys; runtime registration at tests/work/runtime.mjs line 132; browser registration at tests/ui/browser.mjs line 574 |
+| 1 | PASS, exact-SHA Verify success | R1–R7 public-door journeys; runtime registration at tests/work/runtime.mjs line 132; browser registration at tests/ui/browser.mjs line 574 |
 | 2 | PASS | Real stored custom fields, live named pause and completed resolution; full-reader positive paths, shared desk refusal, public-only reads and revoked reads; both disclosure regressions fail |
-| 3 | PENDING Verify | Verify 42570037392, pull_request, candidate fab12d8d54a56ed3512268e2632888aeddd21ade; existing scripts/verify.mjs invokes the runtime and browser journeys |
+| 3 | PASS | Verify 42570037392, pull_request, completed success, candidate fab12d8d54a56ed3512268e2632888aeddd21ade; existing scripts/verify.mjs invokes the runtime and browser journeys |
 | 4 | PASS | Final work runtime after final edit; committed desk probe and candidate-source-binding.json; no relevant browser or product source changed after browser capture |
 | 5 | PASS INSPECTED | Point 4 itself names the ticket-reader and shared-thread duty; no new Base duty, scope or inheritance added; retained API-007 boundary unchanged |
 | 6 | PASS mechanical; status bookkeeping retained for lander | contract-docs write and check exit 0, both generated views restored from origin/main; CONTRACT.md identical to main; lander updates Gap and Evidence after acceptance |
@@ -62,7 +62,7 @@ No policy default was adopted. The supplied-plan ROLE-001 queue hold remains ret
 
 MECHANICAL lock=node scripts/edition-authoring/cli.mjs lock and check exit=0; views=node src/base/contract-docs.mjs write and check exit=0; ledger=none exit=0
 
-Public-door behavior and security refusal paths pass locally. No assertion weakened. Revocation is tested on the populated ticket; existing erased-person and replay safeguards passed in the work runtime. No UI code changed, so tooltip, text-size, border and Settings requirements are unchanged, with existing clause screens captured at both required widths. No new email-shaped string was introduced in changed text. Source lock is fresh. Candidate identity and trailers were checked across every commit in origin/main..HEAD, including side parents: only fleet author and committer, no trailers. Current main was fetched before the candidate rebase; it was unchanged. No published history was rewritten.
+Public-door behavior and security refusal paths pass locally and exact-SHA Verify 42570037392 is completed with success. No assertion weakened. Revocation is tested on the populated ticket; existing erased-person and replay safeguards passed in the work runtime. No UI code changed, so tooltip, text-size, border and Settings requirements are unchanged, with existing clause screens captured at both required widths. No new email-shaped string was introduced in changed text. Source lock is fresh. Candidate identity and trailers were checked across every commit in origin/main..HEAD, including side parents: only fleet author and committer, no trailers. Current main was fetched before the candidate rebase; it was unchanged. No published history was rewritten.
 
 Publication scan: commit=fab12d8d54a56ed3512268e2632888aeddd21ade complete=NOT_RUN historyScanned=NOT_RUN findings=NOT_RUN. Cloud cannot establish a fleet publication scan. Full history is present and the fleet runs its exact-tree scan before landing. Main equality=false before landing. Run site=not run for this cloud branch. No green claim is made for either condition.
 
@@ -71,3 +71,5 @@ PROBE DESK-010 4: requester shares populated paused incident, then closes with c
 CLAIM DESK-010 DONE points=1,2,3,4 tests=tests/work/desk-field-cases.mjs#deskFieldChecks; tests/ui/desk-field-journey.mjs#deskFieldJourney
 
 This is a request for independent acceptance on landing, not a claim that main was promoted. No real implementation blocker was observed. Exact-SHA Verify and landing custody are reported separately in the terminal report and actual receipts.
+
+Terminal custody: product push succeeded, exact-SHA Verify completed success, all local commands finished. READY is supported for the named candidate only. Rider 11 remains the fleet guarded-landing receipt, not a cloud claim.

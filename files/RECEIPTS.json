@@ -171,16 +171,16 @@
       "sha256": "8216ffdf8ec17627eb9e7f74ad8e9e5028c6cbd02c51058e50ad248a421a501c"
     },
     "ci-status.json": {
-      "bytes": 280,
-      "sha256": "2cadc8eaa63ecbddfc474a545f022ca6e66e4425669bf66b7b86ec2d83088e9c"
+      "bytes": 283,
+      "sha256": "8e22d6ed3b1bdf5d48a90b7d087925c4fa75697590768e394321e428757343cf"
     },
     "work-runtime.log": {
       "bytes": 9750,
       "sha256": "24e3d0d059c4f2c20baf71c46911829775ace80432442eea9137ccf48aeecf0f"
     },
     "REPORT.md": {
-      "bytes": 11276,
-      "sha256": "4d69300162b1e1bdaa7ba9e48f0db00bfb46f25738ae04d60e680e271e6434f6"
+      "bytes": 11751,
+      "sha256": "4d2c6ef13dd313569c759d9121dc04c98b86898929f17a3a727ed6dab90d9f65"
     },
     "remote-custody.txt": {
       "bytes": 130,
@@ -276,13 +276,25 @@
     }
   },
   "ciLatest": {
-    "conclusion": null,
+    "conclusion": "success",
     "event": "pull_request",
     "head_sha": "fab12d8d54a56ed3512268e2632888aeddd21ade",
     "html_url": "https://github.com/just-every/run-linen/actions/runs/42570037392",
     "id": 42570037392,
-    "status": "in_progress",
-    "updated_at": "2026-11-09T05:56:56Z"
+    "status": "completed",
+    "updated_at": "2026-11-09T06:07:09Z"
   },
-  "githubApiCalls": 3
+  "githubApiCalls": 5,
+  "toolchain": {
+    "node": "v24.19.0",
+    "pnpm": "10.12.4",
+    "repositoryNodePin": "22.20.0",
+    "rerPin": "0.2.94"
+  },
+  "history": {
+    "shallow": false,
+    "commits": 578
+  },
+  "terminal": "READY",
+  "finalizedAt": "2026-11-09T06:11:40.661572+00:00"
 }
