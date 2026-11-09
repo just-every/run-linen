@@ -1,0 +1,266 @@
+{
+  "base": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "branch": "cloud/sx-linen-c-f49",
+  "browser": {
+    "reason": "test and source-lock changes only; no screen changed",
+    "status": "not applicable"
+  },
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "head_scope": "before commit",
+      "runner": "cloud_run"
+    },
+    {
+      "command": "timeout 1200 node tests/work/knowledge-draft-runtime.mjs",
+      "exit": 0,
+      "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+      "log": "knowledge-runtime.log",
+      "runner": "cloud_run"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "head_scope": "same source bytes as candidate",
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "head_scope": "same product and contract bytes as candidate",
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "generated_files_restored": true,
+      "log": "views.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+      "log": "lock-check.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "git diff origin/main...HEAD -- CONTRACT.md ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0,
+      "output_bytes": 0
+    },
+    {
+      "command": "fleet candidate author, committer and full-message inspection",
+      "exit": 0,
+      "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+      "log": "identity-check.log"
+    },
+    {
+      "command": "Compare original assertion lines with candidate as an ordered subsequence",
+      "exit": 0,
+      "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+      "log": "assertion-preservation.log"
+    }
+  ],
+  "ci": {
+    "total_count": 2,
+    "workflow_runs": [
+      {
+        "conclusion": null,
+        "event": "pull_request",
+        "head_sha": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42584124852",
+        "id": 42584124852,
+        "name": "Verify",
+        "status": "in_progress"
+      },
+      {
+        "conclusion": "success",
+        "event": "dynamic",
+        "head_sha": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+        "html_url": "https://github.com/just-every/run-linen/actions/runs/42584121783",
+        "id": 42584121783,
+        "name": "PR #184",
+        "status": "completed"
+      }
+    ]
+  },
+  "claim": {
+    "clause": "KB-003",
+    "points": [
+      4,
+      5
+    ],
+    "status": "PARTIAL"
+  },
+  "counts_after": {
+    "done": 28,
+    "missing": 37,
+    "partial": 134,
+    "total": 199
+  },
+  "counts_before": {
+    "done": 28,
+    "missing": 37,
+    "partial": 134,
+    "total": 199
+  },
+  "existing_assertions_narrowed": 0,
+  "existing_assertions_removed": 0,
+  "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+  "landing": {
+    "candidate_run_site": "main-only; pending guarded landing",
+    "candidate_verify": {
+      "conclusion": null,
+      "event": "pull_request",
+      "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+      "id": 42584124852,
+      "status": "in_progress"
+    },
+    "main_equal_to_candidate": false,
+    "publication_scan": {
+      "commit": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+      "complete": false,
+      "findings": null,
+      "historyScanned": false,
+      "reason": "cloud adaptation delegates required exact-SHA publication scan to guarded Mac lander"
+    }
+  },
+  "logs": [
+    {
+      "bytes": 11259,
+      "file": "REPORT.md",
+      "sha256": "33e2e272ae07c692c7cfef0daf8573917dec21682aa83f9c0aaf0a853a89be40"
+    },
+    {
+      "bytes": 37,
+      "file": "candidate-ci.json",
+      "sha256": "fc5753fa7f5380199fb73c07a084e2125b722a06993132cdf348bc7e41367728"
+    },
+    {
+      "bytes": 0,
+      "file": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 85,
+      "file": "identity-check.log",
+      "sha256": "148bad84b5b174568017df50d58e073566703d43c6c9fe7fa6f1af04420adf55"
+    },
+    {
+      "bytes": 471,
+      "file": "knowledge-runtime.log",
+      "sha256": "556735b19c72c70b99b6fb77b505f04337ca78b64525a14fe80e1df4678c8b47"
+    },
+    {
+      "bytes": 309441,
+      "file": "lock-check.log",
+      "sha256": "ea14b08736abc80e362bfab190bc76fd41215fefb07048fccb3827df9552153c"
+    },
+    {
+      "bytes": 309427,
+      "file": "lock-write.log",
+      "sha256": "acb1805e3e723145ace1d092f66692a7fdd4504025e62a98c9d787142395ed9a"
+    },
+    {
+      "bytes": 618868,
+      "file": "lock.log",
+      "sha256": "5a08b4a7a0720ab5b5989a25343b3cb1c37805503e686ca23de8328d8c7fe1a1"
+    },
+    {
+      "bytes": 1143,
+      "file": "main-ci.jsonl",
+      "sha256": "b7bbf4acdaf5b8872ca6a104062c638e187a790f006dddb63ae6601aa9d411a4"
+    },
+    {
+      "bytes": 190,
+      "file": "pr.json",
+      "sha256": "1e02e1c98baa1641a3c80e31ae3cb36c74d0aea34e528f81681d3bcf52043b59"
+    },
+    {
+      "bytes": 893,
+      "file": "product-push.log",
+      "sha256": "c8c1f3d0388cf537d2f5cf7e8f54a7cab045fbb868b0d7d53cd665d7471dc833"
+    },
+    {
+      "bytes": 225,
+      "file": "typecheck.log",
+      "sha256": "724ebab35b8205e97ab8a4c098a07df46cc82c765cf4068d1b9d9024658f6d8e"
+    },
+    {
+      "bytes": 98,
+      "file": "views.log",
+      "sha256": "6a3edad7783bf6c13e63dbe5a49f4f1d6a932a81c60be61934495e59874a258a"
+    }
+  ],
+  "migration_ledger": {
+    "command": null,
+    "reason": "no migration change"
+  },
+  "pr": {
+    "base": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+    "draft": true,
+    "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+    "html_url": "https://github.com/just-every/run-linen/pull/184",
+    "number": 184
+  },
+  "preservation": {
+    "all_product_commits_pushed": true,
+    "evidence_publication": "pending"
+  },
+  "probes": [
+    {
+      "door": "employee POST /knowledge/suggestions after current-owner POST /knowledge",
+      "eligible_articles": 5,
+      "excess_eligible_excluded": 2,
+      "observed_order": [
+        "oldest strongest four-word match revision 2",
+        "newest three-word match revision 1",
+        "next-newest three-word match revision 1"
+      ],
+      "offered_articles": 3,
+      "point": 4,
+      "response_status": 201
+    },
+    {
+      "door": "employee POST /knowledge/suggestions",
+      "existing_application_rows_changed": 0,
+      "new_tables": 0,
+      "persistent_application_rows_added": 1,
+      "point": 5,
+      "question_and_unique_unmatched_phrase_absent": true,
+      "receipt_retains": [
+        "workspace",
+        "asker",
+        "offered article IDs and revisions",
+        "suggested outcome"
+      ],
+      "response_status": 201,
+      "storage_scope": "all application D1 tables; SQLite and protected Cloudflare internals excluded"
+    }
+  ],
+  "product_push": {
+    "attempt": 1,
+    "exit": 0,
+    "head": "d2949a4903c2fa30543304d5bb82ec60d85ee585",
+    "ref": "refs/heads/cloud/sx-linen-c-f49"
+  },
+  "recorded_at": "2026-11-09T08:12:32.233148+00:00",
+  "repository": "just-every/run-linen",
+  "schema": 1,
+  "tag": "sx-linen-c-f49",
+  "test_count_change": 0
+}
