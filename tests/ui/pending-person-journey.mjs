@@ -52,6 +52,23 @@ export async function pendingPersonJourney({ browser, page, api, base, out, widt
   assert.ok(held.heldServices.every(s => s.state === 'held' && s.reason));
   assert.equal((await api(`/work/${workId}/obligations`)).items.length, 0);
   await capture('services-held');
+  // Reopen the request: each service's own returned reason is rendered beside that service.
+  await page.goto(base + '/app#/work');
+  await page.reload();
+  await page.goto(base + `/app#/work/${workId}`);
+  await page.getByRole('heading', { name: 'Services waiting for an account', exact: true }).waitFor();
+  const reopened = await api(`/work/${workId}`);
+  assert.equal(reopened.heldServices.length, catalogIds.length);
+  for (const service of reopened.heldServices) {
+    assert.ok(typeof service.reason === 'string' && service.reason.trim(), `${service.name} returns a hold reason`);
+    const record = page.locator('.pending-services .connection-record').filter({ has: page.getByRole('heading', { name: service.name, exact: true }) });
+    assert.equal(await record.count(), 1, `${service.name} is shown once`);
+    const reason = record.getByText(service.reason, { exact: true });
+    await reason.waitFor();
+    const box = await reason.boundingBox();
+    assert.ok(box && box.width > 0 && box.x >= 0 && box.x + box.width <= width + 1, `${service.name} reason is visible inside ${width}px`);
+  }
+  await capture('services-held-reopened');
 
   // Create the account through the normal owner form. Services remain held until the person signs in.
   await page.goto(base + '/app#/members');
