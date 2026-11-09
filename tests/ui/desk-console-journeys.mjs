@@ -11,6 +11,12 @@ export async function deskQueueJourney({browser,page,api,base,out,errors}) {
     return { ...await api('/members', { name, email, password, roles }), name, email };
   };
   const lena = await member('Lena Ortiz', ['operator']), omar = await member('Omar Haddad', ['operator']);
+  const requester = await member('Riley Chen', ['employee']);
+  const requesterContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, timezoneId: 'UTC' });
+  const requesterPage = await requesterContext.newPage();
+  requesterPage.on('pageerror', error => errors.push(String(error)));
+  await signIn(requesterPage, base, requester.email, password);
+  const requesterApi = apiFor(requesterPage);
 
   // The owner, acting for admin, creates two groups and names Lena the Network lead.
   const network = await api('/work-groups', { name: 'Audit Network' }), hardware = await api('/work-groups', { name: 'Audit Hardware' });
@@ -18,7 +24,8 @@ export async function deskQueueJourney({browser,page,api,base,out,errors}) {
   await api(`/work-groups/${network.id}/members`, { userId: omar.id });
   await api(`/work-groups/${hardware.id}/members`, { userId: owner, lead: true });
   const ticket = async (title, groupId, priority, sensitivity = 'normal') => {
-    const work = await api('/work', { title, body: `${title}.`, kind: 'incident', sensitivity, deduplicationKey: crypto.randomUUID() });
+    const create = sensitivity === 'normal' ? requesterApi : api;
+    const work = await create('/work', { title, body: `${title}.`, kind: 'incident', sensitivity, deduplicationKey: crypto.randomUUID() });
     const read = await api(`/work/${work.id}/classification`);
     await api(`/work/${work.id}/classification/override`, { type: 'incident', category: 'network', subcategory: 'vpn', impact: 'high', urgency: 'high', priority, revision: read.revision, workRevision: read.workRevision, reason: 'Triage' });
     const current = (await api(`/work/${work.id}`)).work;
@@ -77,14 +84,37 @@ export async function deskQueueJourney({browser,page,api,base,out,errors}) {
   await captureJourney(lp, { path: `${out}/DESK-001-lead-view.png`, fullPage: true });
 
   await queue.getByText('Bulk update', { exact: true }).click();
-  // Keyboard-only triage of the lead view: no pointer input from here on.
-  await lp.evaluate(() => { window.pointerInputs = 0; for (const type of ['pointerdown', 'mousedown']) document.addEventListener(type, () => { window.pointerInputs += 1; }, true); });
+  // Fresh requester tickets keep the saved Unassigned P1 view populated after the bulk proof.
+  await ticket('VPN outage awaiting keyboard triage', network.id, 'P1');
+  await ticket('VPN reconnect awaiting keyboard triage', network.id, 'P1');
+  const unassigned = (await api('/work-views')).items.find(view => view.name === 'Unassigned P1');
+  await queue.getByLabel('Queue view').selectOption(`view:${unassigned.id}`);
+  await lp.waitForFunction(() => document.querySelectorAll('.queue-table a.queue-row').length === 2);
+  // Keyboard-only triage of the saved view: no pointer input from here on.
+  const countPointers = () => {
+    window.pointerInputs = Number(sessionStorage.getItem('desk-triage-pointer-inputs') ?? 0);
+    for (const type of ['pointerdown', 'mousedown']) document.addEventListener(type, () => {
+      window.pointerInputs += 1;
+      sessionStorage.setItem('desk-triage-pointer-inputs', String(window.pointerInputs));
+    }, true);
+  };
+  await lp.addInitScript(countPointers);
+  await lp.evaluate(countPointers);
   await lp.keyboard.press('Escape');
   await lp.locator('#main-content').focus();
   const firstTitle = await rows.first().locator('.q-subject strong').textContent();
   await lp.keyboard.press('j');
   await lp.getByRole('heading', { level: 2, name: firstTitle, exact: true }).waitFor();
   const opened = lp.url().split('/').at(-1);
+  const visibleIds = await rows.evaluateAll(items => items.map(row => row.getAttribute('href').split('/').at(-1)));
+  assert.equal(opened, visibleIds[0]);
+  await lp.keyboard.press('j');
+  await lp.waitForURL(url => url.hash === `#/work/${visibleIds[1]}`);
+  await lp.getByRole('heading', { level: 2, name: await rows.nth(1).locator('.q-subject strong').textContent(), exact: true }).waitFor();
+  await lp.keyboard.press('k');
+  await lp.waitForURL(url => url.hash === `#/work/${opened}`);
+  await lp.getByRole('heading', { level: 2, name: firstTitle, exact: true }).waitFor();
+  assert.equal(lp.url().split('/').at(-1), visibleIds[0], 'DESK-018 k returns to the previous ticket in the visible saved view');
   await lp.keyboard.press('?');
   await queue.getByRole('definition').filter({ hasText: 'Assign the open ticket to yourself' }).waitFor();
   await lp.keyboard.press('a');
@@ -98,6 +128,47 @@ export async function deskQueueJourney({browser,page,api,base,out,errors}) {
   assert.equal((await replied).status(), 201, 'DESK-001 the reply is sent from the keyboard');
   await lp.locator('li[data-message-id]').filter({ hasText: 'We are restoring the VPN concentrator now.' }).waitFor();
   await lp.keyboard.press('Escape');
+  assert.notEqual(await lp.evaluate(() => document.activeElement?.id), 'conversation-message', 'DESK-018 Escape leaves the reply field');
+
+  const mutations = [];
+  lp.on('request', request => { if (request.method() === 'POST') mutations.push(request.url()); });
+  const beforeNote = await api(`/work/${opened}`);
+  await lp.keyboard.press('n');
+  const draft = lp.getByLabel('A private note for the service team', { exact: true });
+  await draft.waitFor();
+  assert.equal(await lp.evaluate(() => document.activeElement?.id), 'conversation-message', 'DESK-018 n focuses the private note');
+  assert.equal(await lp.getByLabel('Message visibility').inputValue(), 'private');
+  const note = 'Private diagnostic jkanrscx? remains a draft until explicitly sent.';
+  await lp.keyboard.type(note);
+  await lp.keyboard.press('Enter');
+  assert.equal(await draft.inputValue(), note + '\n', 'DESK-018 ordinary Enter edits the draft');
+  await lp.keyboard.press('Escape');
+  assert.notEqual(await lp.evaluate(() => document.activeElement?.id), 'conversation-message', 'DESK-018 Escape actually leaves the private field');
+  assert.equal(await draft.inputValue(), note + '\n', 'DESK-018 Escape preserves the unsent note');
+  assert.equal(lp.url().split('/').at(-1), opened, 'DESK-018 typed navigation letters do not select a ticket');
+  assert.equal(await lp.locator('section.work-controls textarea[name="reason"]').count(), 0, 'DESK-018 typed status and close letters do not open forms');
+  assert.deepEqual(await api(`/work/${opened}`), beforeNote, 'DESK-018 typing shortcuts and Escape change no stored work or messages');
+  assert.deepEqual(mutations, [], 'DESK-018 shortcut letters, Enter and Escape post nothing inside a field');
+  await captureJourney(lp, { path: `${out}/DESK-018-private-draft.png`, fullPage: true });
+  // The reference capture moves focus with Tab; n re-enters the same private draft.
+  await lp.locator('#main-content').focus();
+  await lp.keyboard.press('n');
+  const noted = lp.waitForResponse(r => r.url().endsWith(`/work/${opened}/messages`) && r.request().method() === 'POST');
+  await lp.keyboard.press('Meta+Enter');
+  assert.equal((await noted).status(), 201, 'DESK-018 Command+Enter explicitly sends the private note');
+  await lp.locator('li[data-message-id]').filter({ hasText: note }).waitFor();
+  const savedNote = (await api(`/work/${opened}`)).messages.filter(m => m.body.trim() === note);
+  assert.equal(savedNote.length, 1, 'DESK-018 one explicit send creates exactly one note');
+  assert.equal(savedNote[0].visibility, 'private');
+  const requesterRead = await requesterApi(`/work/${opened}`);
+  assert.ok(requesterRead.messages.some(m => m.body === 'We are restoring the VPN concentrator now.'), 'DESK-018 the requester read contains the public reply');
+  assert.ok(!requesterRead.messages.some(m => m.id === savedNote[0].id || m.body.includes(note)), 'DESK-018 requester reads exclude the private note');
+  await requesterPage.goto(`${base}/app#/work/${opened}`);
+  await requesterPage.getByRole('heading', { level: 2, name: firstTitle, exact: true }).waitFor();
+  await requesterPage.getByText('We are restoring the VPN concentrator now.', { exact: true }).waitFor();
+  assert.equal(await requesterPage.getByText(note, { exact: true }).count(), 0, 'DESK-018 the requester screen hides the private note');
+  await captureJourney(requesterPage, { path: `${out}/DESK-018-requester-public-only.png`, fullPage: true });
+  await lp.keyboard.press('Escape');
   await lp.keyboard.press('s');
   await lp.locator('section.work-controls').getByLabel('Reason', { exact: true }).waitFor();
   assert.equal(await lp.evaluate(() => document.activeElement?.getAttribute('name')), 'reason');
@@ -109,12 +180,72 @@ export async function deskQueueJourney({browser,page,api,base,out,errors}) {
   const after = await api(`/work/${opened}`);
   assert.equal(after.work.assignee_id, lena.id);
   assert.ok(after.messages.some(m => m.visibility === 'public' && m.body === 'We are restoring the VPN concentrator now.'));
+  // Wait for the normal persisted status refresh to remount the ticket's controls.
+  await lp.getByText('Work is paused. Your request and its remaining obligations are preserved.', { exact: true }).waitFor();
+  await lp.getByRole('button', { name: 'Still not working?', exact: true }).waitFor();
+  await lp.keyboard.press('Escape');
+  await lp.locator('#main-content').focus();
+  await lp.keyboard.press('c');
+  const closeNotes = lp.getByLabel('Close notes', { exact: true });
+  await closeNotes.waitFor();
+  assert.equal(await lp.evaluate(() => document.activeElement?.getAttribute('name')), 'reason', 'DESK-018 c opens and focuses the ordinary close form');
+  const closeReason = 'VPN restored after replacing the concentrator. jkanrscx?';
+  await lp.keyboard.type(closeReason);
+  assert.equal(await closeNotes.inputValue(), closeReason, 'DESK-018 shortcut letters in close notes remain text');
+  assert.equal(lp.url().split('/').at(-1), opened);
+  const beforeClose = await api(`/work/${opened}`);
+  const missingCode = lp.waitForResponse(r => r.url().endsWith(`/work/${opened}/commands`) && r.request().method() === 'POST');
+  await lp.keyboard.press('Control+Enter');
+  assert.equal((await missingCode).status(), 422, 'DESK-018 keyboard close requires the incident resolution code');
+  assert.deepEqual(await api(`/work/${opened}`), beforeClose, 'DESK-018 refused close changes nothing');
+  await lp.keyboard.press('Tab');
+  const resolution = lp.getByRole('combobox', { name: /^Resolution code/ });
+  assert.equal(await resolution.evaluate(element => element === document.activeElement), true, 'DESK-018 Tab reaches the resolution selector');
+  await lp.keyboard.press('Home');
+  await lp.keyboard.press('ArrowDown');
+  const code = await resolution.inputValue();
+  assert.ok(code, 'DESK-018 a resolution is selected from the ordinary configured choices');
+  // Another ordinary command makes this displayed form stale; its shortcut must not bypass the revision check.
+  await api(`/work/${opened}/commands`, { command: 'assign', assigneeId: lena.id, reason: 'Confirm current owner', revision: beforeClose.work.revision });
+  const staleState = await api(`/work/${opened}`);
+  const stale = lp.waitForResponse(r => r.url().endsWith(`/work/${opened}/commands`) && r.request().method() === 'POST');
+  await lp.keyboard.press('Control+Enter');
+  const staleResponse = await stale;
+  assert.equal(staleResponse.status(), 409, 'DESK-018 keyboard close refuses a stale revision');
+  assert.equal((await staleResponse.json()).error.code, 'revision_conflict');
+  assert.deepEqual(await api(`/work/${opened}`), staleState, 'DESK-018 stale close changes no ticket or messages');
+  assert.equal((await api(`/work/${opened}/desk`)).resolution, null);
+  await lp.reload();
+  await lp.getByRole('heading', { level: 2, name: firstTitle, exact: true }).waitFor();
+  await lp.locator('#main-content').focus();
+  await lp.keyboard.press('c');
+  await closeNotes.waitFor();
+  await lp.waitForFunction(expected => [...document.querySelectorAll('select[name="resolutionCode"] option')].some(option => option.value === expected), code);
+  await lp.keyboard.type(closeReason);
+  await lp.keyboard.press('Tab');
+  await lp.keyboard.press('Home');
+  await lp.keyboard.press('ArrowDown');
+  assert.equal(await resolution.inputValue(), code);
+  await captureJourney(lp, { path: `${out}/DESK-018-close-form.png`, fullPage: true });
+  await resolution.focus();
+  const closed = lp.waitForResponse(r => r.url().endsWith(`/work/${opened}/commands`) && r.request().method() === 'POST');
+  await lp.keyboard.press('Control+Enter');
+  const closeResponse = await closed;
+  assert.equal(closeResponse.status(), 200, 'DESK-018 c completes the ordinary close from the keyboard');
+  assert.deepEqual(closeResponse.request().postDataJSON(), { reason: closeReason, resolutionCode: code, command: 'close', revision: staleState.work.revision });
+  await lp.waitForFunction(async id => (await (await fetch(`/api/v1/work/${id}`)).json()).work.state === 'closed', opened);
+  const resolved = (await api(`/work/${opened}/desk`)).resolution;
+  assert.equal(resolved.code, code);
+  assert.equal(resolved.closeNotes, closeReason);
+  await lp.getByRole('region', { name: 'Ticket fields' }).getByText(closeReason, { exact: true }).waitFor();
   await lp.keyboard.press('Escape');
   await lp.keyboard.press('j');
   await lp.waitForFunction(id => !location.hash.endsWith(id), opened);
   assert.equal(await lp.evaluate(() => window.pointerInputs), 0, 'DESK-001 triage used no pointer input');
   await captureJourney(lp, { path: `${out}/DESK-001-keyboard-triage.png`, fullPage: true });
+  await requesterContext.close();
   await lead.close();
+  console.log('PASS DESK-018 previous ticket, private draft and explicit send, Escape and revision-checked resolution with zero pointer input');
   console.log('PASS DESK-001 native saved view, five bulk assignments, lead isolation and pointer-free keyboard triage');
 }
 
