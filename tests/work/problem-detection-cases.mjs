@@ -61,6 +61,87 @@ export async function problemDetectionChecks(api, db) {
   await db.prepare("UPDATE work_records SET created_at='2020-01-01T00:00:00.000Z' WHERE id=?").bind(old.id).run();
   assert.equal(cluster(await detect(), 'service', 'only two'), undefined, 'Old incidents are excluded from the observation window');
 
+  const evidenceIds = proposal => proposal.data.evidence.map(e => e.id).sort();
+  const sourceIds = proposal => proposal.sources.map(s => s.id).sort();
+  const readEvidence = async (proposal, tickets) => {
+    assert.ok(proposal, 'Expected a proposal from the recorded sources');
+    const read = check(await api(`/problem-proposals/${proposal.id}`));
+    const expected = tickets.map(t => t.id).sort();
+    assert.deepEqual(evidenceIds(read), expected);
+    assert.deepEqual(sourceIds(read), expected, 'Projected sources match the stored evidence references');
+    return read;
+  };
+
+  const bucketService = check(await api('/services', { name: 'PROB-002 bucket separation', description: 'Native bucket proof', businessImpact: 'Office support', source: 'Network register', observedAt, visibility: 'workspace' }), 201);
+  const buckets = [
+    { scopeType: 'all', scopeValue: '', context: { serviceId: bucketService.id }, tickets: [] },
+    { scopeType: 'cohort', scopeValue: 'bucket pilot', context: { serviceId: bucketService.id, cohort: 'Bucket pilot' }, tickets: [] },
+    { scopeType: 'location', scopeValue: 'bucket pilot', context: { serviceId: bucketService.id, location: 'Bucket pilot' }, tickets: [] },
+  ];
+  for (const bucket of buckets) for (let i = 0; i < 2; i++) bucket.tickets.push(await ticket(bucket.context));
+  assert.ok(!(await detect()).some(p => p.data.cluster.facet === 'service' && p.data.cluster.value === bucketService.id),
+    'Two sources in each bucket cannot combine to meet the proposal threshold');
+  for (const bucket of buckets) bucket.tickets.push(await ticket(bucket.context));
+  const bucketProposals = (await detect()).filter(p => p.data.cluster.facet === 'service' && p.data.cluster.value === bucketService.id);
+  assert.equal(bucketProposals.length, 3, 'Untagged, cohort and location sources create three separate buckets');
+  for (const bucket of buckets) {
+    await readEvidence(bucketProposals.find(p => p.data.cluster.scopeType === bucket.scopeType && p.data.cluster.scopeValue === bucket.scopeValue), bucket.tickets);
+  }
+  console.log('PROBE PROB-002 4: native tickets and detection -> separate untagged, cohort and location proposals with exact evidence IDs');
+
+  const normalizedTickets = [];
+  for (const context of [
+    { app: 'Ｄｅｓｉｇｎ　Ｓｔｕｄｉｏ', deviceModel: 'Ｌａｐｔｏｐ　Ｐｒｏ　１４', cohort: 'Ｎｏｒｍａｌｉｚａｔｉｏｎ　Ｐｉｌｏｔ', location: 'Ｃｅｎｔｒａｌ　Ｌａｂ' },
+    { app: '  DESIGN   STUDIO  ', deviceModel: '  LAPTOP   PRO   14 ', cohort: ' NORMALIZATION   PILOT ', location: ' CENTRAL   LAB ' },
+    { app: 'design\tstudio', deviceModel: 'laptop\tpro 14', cohort: 'normalization\tpilot', location: 'central\tlab' },
+  ]) normalizedTickets.push(await ticket({ serviceId: service.id, ...context }));
+  const normalizedProposals = await detect();
+  for (const [facet, facetValue] of [['app', 'design studio'], ['deviceModel', 'laptop pro 14']]) {
+    for (const [scopeType, scopeValue] of [['cohort', 'normalization pilot'], ['location', 'central lab']]) {
+      const matches = normalizedProposals.filter(p => p.data.cluster.facet === facet && p.data.cluster.value === facetValue
+        && p.data.cluster.scopeType === scopeType && p.data.cluster.scopeValue === scopeValue);
+      assert.equal(matches.length, 1, 'Equivalent label and scope variants coalesce into one proposal');
+      await readEvidence(matches[0], normalizedTickets);
+    }
+  }
+
+  const distinctServices = [];
+  for (let i = 0; i < 2; i++) {
+    const distinct = check(await api('/services', { name: 'PROB-002 same service label', description: 'Separate native service', businessImpact: 'Office support', source: 'Network register', observedAt, visibility: 'workspace' }), 201);
+    const tickets = [];
+    for (let j = 0; j < 2; j++) tickets.push(await ticket({ serviceId: distinct.id, cohort: 'Opaque service pilot', app: 'Shared client' }));
+    distinctServices.push({ service: distinct, tickets });
+  }
+  assert.notEqual(distinctServices[0].service.id, distinctServices[1].service.id);
+  const belowThreshold = await detect();
+  assert.ok(!belowThreshold.some(p => p.data.cluster.facet === 'service' && distinctServices.some(s => s.service.id === p.data.cluster.value)),
+    'Identically named services cannot pool two tickets each to meet the threshold');
+  await readEvidence(cluster(belowThreshold, 'app', 'opaque service pilot', 'shared client'), distinctServices.flatMap(s => s.tickets));
+  for (const entry of distinctServices) entry.tickets.push(await ticket({ serviceId: entry.service.id, cohort: 'Opaque service pilot', app: 'Shared client' }));
+  const separateServices = await detect();
+  for (const entry of distinctServices) {
+    const proposal = await readEvidence(cluster(separateServices, 'service', 'opaque service pilot', entry.service.id), entry.tickets);
+    assert.ok(proposal.data.evidence.every(e => e.serviceId === entry.service.id));
+  }
+  console.log('PROBE PROB-002 5: normalized native labels and scopes -> one app and model proposal per scope; identical service labels retain distinct service IDs');
+
+  const cancellationContext = { serviceId: service.id, cohort: 'Cancellation pilot' };
+  const remaining = [await ticket(cancellationContext), await ticket(cancellationContext)];
+  const canceled = await ticket(cancellationContext);
+  const beforeCancel = check(await api(`/work/${canceled.id}`, undefined, employee)).work;
+  assert.equal(beforeCancel.state, 'open');
+  check(await api(`/work/${canceled.id}/commands`, { command: 'cancel', revision: beforeCancel.revision, reason: 'No longer needs investigation' }, employee));
+  const afterCancel = check(await api(`/work/${canceled.id}`, undefined, employee)).work;
+  assert.equal(afterCancel.state, 'cancelled', 'The native command genuinely canceled the matching incident');
+  assert.ok(afterCancel.revision > beforeCancel.revision);
+  assert.equal(cluster(await detect(), 'service', 'cancellation pilot'), undefined,
+    'A canceled matching source cannot supply the third incident needed to propose');
+  remaining.push(await ticket(cancellationContext));
+  const cancellationProposal = await readEvidence(cluster(await detect(), 'service', 'cancellation pilot'), remaining);
+  assert.ok(!evidenceIds(cancellationProposal).includes(canceled.id));
+  assert.ok(!sourceIds(cancellationProposal).includes(canceled.id), 'Canceled content is absent from proposal reads');
+  console.log('PROBE PROB-002 6: native cancel then detection -> no proposal from two active sources plus canceled source; three active sources yield evidence excluding the canceled ID');
+
   // The adapter's monitoring-derived incident is the single counted alert source.
   const alertTickets = [await ticket({ serviceId: service.id, cohort: 'Alert floor',deviceModel:'Wireless Laptop',app:'Corporate Wi-Fi' }), await ticket({ serviceId: service.id, cohort: 'Alert floor',deviceModel:'Wireless Laptop',app:'Corporate Wi-Fi' })];
   const signingSecret = crypto.randomUUID();
