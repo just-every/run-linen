@@ -319,7 +319,7 @@ try {
     ).status,
     422,
   );
-  await assetCustodyChecks(api, person.value.id);
+  await assetCustodyChecks(api, person.value.id, await mf.getR2Bucket('ATTACHMENTS'));
   await assetAuditChecks(api, person.value.id);
   await assetStockChecks(api, person.value.id);
   await assetContractChecks(api,db);
