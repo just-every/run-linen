@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { apiFor, signIn } from './connected-helpers.mjs';
+import { hoverTooltip, waitForTooltipOpacity } from './transition-helpers.mjs';
 
 /** DESK-008: editing and restoring a reply never sends it. */
 export async function unsentReplyJourney({ page, api, base, out, width }) {
@@ -44,6 +45,14 @@ export async function responseJourney({ browser, page, api, base, out, width, em
   await api(`/work/${work.id}/messages`, { body: 'PRIVATE service investigation detail', visibility: 'private', sourceMessageId: `desk-008-private-${width}` });
   const article = await api('/knowledge', { title: `VPN client restart ${width}`, body: 'Restart the VPN client. If it fails, keep the ticket open.', scope: 'employees', expiresAt: '2030-01-01T00:00:00Z', review: true });
   await page.goto(`${base}/app#/work/${work.id}`);
+  // Response controls are text-labelled; the shell account control is icon-only.
+  const profile = page.getByRole('button', { name: 'Your workspace and account', exact: true });
+  await page.keyboard.press('Tab');
+  await profile.focus();
+  await waitForTooltipOpacity(profile, '1');
+  assert.equal(await profile.evaluate(element => getComputedStyle(element, '::after').transitionDuration), '0s');
+  await hoverTooltip(profile);
+  assert.equal(await profile.evaluate(element => getComputedStyle(element, '::after').transitionDelay), '0.3s');
   const tools = page.getByLabel('Responses and summaries', { exact: true });
   await tools.locator(':scope > summary').click();
   await tools.locator('summary').filter({ hasText: 'Manage canned responses' }).click();
@@ -99,7 +108,11 @@ export async function responseJourney({ browser, page, api, base, out, width, em
   const requesterContext = await browser.newContext({ timezoneId: 'UTC', viewport: { width, height: 1000 } });
   try {
     const requesterPage = await requesterContext.newPage();
-    await signIn(requesterPage, base, employee.email);
+    const requesterErrors = [];
+    requesterPage.on('pageerror', error => requesterErrors.push(String(error)));
+    const requester = (await api('/members')).find(member => member.id === employee.id);
+    assert.ok(requester);
+    await signIn(requesterPage, base, requester.email);
     const requesterApi = apiFor(requesterPage);
     for (const insertion of ['canned', 'model']) {
       for (const visibility of ['public', 'private']) {
@@ -125,7 +138,7 @@ export async function responseJourney({ browser, page, api, base, out, width, em
           const insertionResponse = page.waitForResponse(r => r.url().endsWith(`${path}/canned-response`));
           await tools.getByRole('button', { name: 'Insert canned response', exact: true }).click();
           assert.equal((await insertionResponse).status(), 200);
-          insertedText = `Hello ${employee.name}, I am following up on VPN follow-up ${label}.`;
+          insertedText = `Hello ${requester.name}, I am following up on VPN follow-up ${label}.`;
         } else {
           await tools.getByLabel('Knowledge to cite').selectOption(article.id);
           const generationResponse = page.waitForResponse(r => r.url().endsWith(`${path}/response-assistance`));
@@ -179,6 +192,7 @@ export async function responseJourney({ browser, page, api, base, out, width, em
         console.log(`PASS DESK-008 ${width} ${insertion} ${visibility}: selection and text survive insertion and reload; no message until Send; exactly one correctly scoped message; requester boundary holds.`);
       }
     }
+    assert.deepEqual(requesterErrors, []);
   } finally { await requesterContext.close(); }
   console.log(`PASS DESK-008 native ${width}: canned requester name, twenty-message cited summary with knowledge, private-source isolation and unsent generated reply until agent Send.`);
 }
