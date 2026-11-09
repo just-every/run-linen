@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "head": "e0f4162602973732aa6dfca8da3192f04cbcf7d1",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f62",
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "scope": "local setup; no setup settings selected for publication"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log",
+      "scope": "candidate sources; no TypeScript file modified"
+    },
+    {
+      "command": "cloud_run pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0,
+      "scope": "generated views restored; neither committed"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "migrationsChanged": false,
+  "ledger": "not applicable",
+  "testRegistrationDelta": 0,
+  "assertionsRemoved": 0,
+  "contractChanges": 0,
+  "generatedViewsCommitted": false
+}

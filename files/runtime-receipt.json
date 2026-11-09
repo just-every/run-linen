@@ -1,0 +1,5 @@
+{
+  "head": "e0f4162602973732aa6dfca8da3192f04cbcf7d1",
+  "command": "cloud_run timeout 180 node tests/work/amend-manager-runtime.mjs",
+  "exit": 0
+}

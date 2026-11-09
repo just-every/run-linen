@@ -1,0 +1,15 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f62",
+  "head": "e0f4162602973732aa6dfca8da3192f04cbcf7d1",
+  "remoteHead": "e0f4162602973732aa6dfca8da3192f04cbcf7d1",
+  "cleanWorktree": true,
+  "pushGuard": "cloud-push.py",
+  "pushAttempts": 1,
+  "allCandidateIdentitiesAndMessagesChecked": true,
+  "generatedViewsCommitted": false,
+  "contractDiffEmpty": true,
+  "newEmailFixtureValues": 0,
+  "newCredentialShapedStrings": 0,
+  "fullHistory": true
+}
