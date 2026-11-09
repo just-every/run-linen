@@ -1,0 +1,10 @@
+# sx-linen-c-f68 execution plan
+
+Scope: just-every/run-linen, CATALOG-004 selected native portions of points 3 and 5. Keep the clause PARTIAL; actual provider grants, delivery verification, completion and every unselected obligation remain owed. No policy decision or provider execution is authorized by a bundle decision.
+
+1. Establish fleet identity, refresh the launcher, install the credential helper, push guard and commit hooks. Clone full history, start at the specified predecessor, and preserve newer main judgments by rebasing before publication.
+2. Read the contract and supplied rulings. Map bundleChecks and its manager runtime entrypoint to shared person, purpose and expiry; separate child stock and licence reservations; preserved existing execution grants.
+3. Retain the predecessor assertions and strengthen the same sanity journey with native expiry-duty reads and replay checks. Request replay must keep child identities and consume no extra capacity; changed expiry must be refused without mutation; approval replay must keep one decision and existing approval identities. No new test registration, UI change or provider dispatch in this selected leg.
+4. Run the touched manager runtime and typecheck, plus first-party check. Run the documented contract generator write and check, restore generated views from main, regenerate source lock last and check freshness. Review staged contract diff and publication-sensitive additions.
+5. Commit with fleet identity and hooks active; push only cloud/sx-linen-c-f68 through cloud-push.py after all-candidate identity/trailer inspection. Preserve the first real commit and every substantial commit. Merge main, rather than rebase, after publication if needed.
+6. Discover exact-head Verify with REST; use the repository PR entrypoint if required. Poll at most once per 300 seconds per run within the ten-call budget. Keep receipt and report separate from the product branch; publish explicitly selected non-secret packet files only to evidence/sx-linen-c-f68. Report actual CI status, counts, held scope, rider outcomes and lane relay lines.

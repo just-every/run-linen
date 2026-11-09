@@ -1,0 +1,70 @@
+{
+  "head": "238b36923c630c642cc17031305c58389261719f",
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "/tmp/rer-reap.py",
+        "timeout",
+        "180",
+        "node",
+        "tests/work/amend-manager-runtime.mjs"
+      ],
+      "head": "238b36923c630c642cc17031305c58389261719f",
+      "started": "2026-11-09T13:03:43.255303+00:00",
+      "exit": 0,
+      "log": "runtime-final.log",
+      "sha256": "e95a4efc09dc5507b8c1506369ef0bc8c47915c31c35cede0dbe0e570f281edb"
+    },
+    {
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "head": "238b36923c630c642cc17031305c58389261719f",
+      "started": "2026-11-09T13:04:50.875033+00:00",
+      "exit": 0,
+      "log": "typecheck-final.log",
+      "sha256": "f18c3982272bd3f4fc8b2f6d1a1adc0c2eb2e5a5af257f3d839e65c44167db12"
+    },
+    {
+      "command": [
+        "pnpm",
+        "exec",
+        "rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "head": "238b36923c630c642cc17031305c58389261719f",
+      "started": "2026-11-09T13:05:39.566861+00:00",
+      "exit": 0,
+      "log": "first-party-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "head": "238b36923c630c642cc17031305c58389261719f",
+      "started": "2026-11-09T13:05:41.862253+00:00",
+      "exit": 0,
+      "log": "lock-check-candidate.log",
+      "sha256": "2e93284773923e78859020881d8b3a0d08b2aa5eb13e03a79453eb4be92fb7e7"
+    },
+    {
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "check"
+      ],
+      "head": "238b36923c630c642cc17031305c58389261719f",
+      "started": "2026-11-09T13:05:42.321888+00:00",
+      "exit": 0,
+      "log": "views-check-candidate.log",
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    }
+  ]
+}
