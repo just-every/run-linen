@@ -1,0 +1,29 @@
+PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('details.action-disclosure').filter({ has: locator(':scope > summary').getByText('Manage audience values', { exact: true }) }).locator(':scope > summary')[22m
+
+    at /home/agent/rer-consolidation/work/sx-linen-c-f43/browser-probe.mjs:57:44 {
+  log: [
+    "  - waiting for locator('details.action-disclosure').filter({ has: locator(':scope > summary').getByText('Manage audience values', { exact: true }) }).locator(':scope > summary')"
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.19.0
+file:///home/agent/rer-consolidation/work/sx-linen-c-f43/run-linen/tests/ui/run.mjs:108
+      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+                              ^
+
+Error: Browser acceptance exited 1
+    at ChildProcess.<anonymous> (file:///home/agent/rer-consolidation/work/sx-linen-c-f43/run-linen/tests/ui/run.mjs:108:31)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+Node.js v24.19.0
+
+COMMAND_EXIT=1

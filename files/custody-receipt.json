@@ -1,0 +1,68 @@
+{
+  "head": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+  "checks": {
+    "contract_source_diff": {
+      "command": [
+        "git",
+        "diff",
+        "origin/main...HEAD",
+        "--",
+        "CONTRACT.md"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    "generated_view_diff": {
+      "command": [
+        "git",
+        "diff",
+        "origin/main...HEAD",
+        "--",
+        "ACCEPTANCE.md",
+        "docs/CLAIMS.md"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    "product_status": {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    "candidate_commit_identities": {
+      "command": [
+        "git",
+        "log",
+        "origin/main..HEAD",
+        "--format=%H%n%an <%ae>%n%cn <%ce>%n%(trailers:only,unfold)"
+      ],
+      "exit": 0,
+      "output": "e07c51adfa42f470489142a01f2b8ff90749d2b7\nRun Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>\n\n"
+    },
+    "changed_paths": {
+      "command": [
+        "git",
+        "diff",
+        "--name-only",
+        "origin/main...HEAD"
+      ],
+      "exit": 0,
+      "output": "sources.lock.json\ntests/work/application-cases.mjs\ntests/work/runtime.mjs\n"
+    },
+    "candidate_remote": {
+      "command": [
+        "git",
+        "ls-remote",
+        "--heads",
+        "origin",
+        "refs/heads/cloud/sx-linen-c-f43"
+      ],
+      "exit": 0,
+      "output": "e07c51adfa42f470489142a01f2b8ff90749d2b7\trefs/heads/cloud/sx-linen-c-f43\n"
+    }
+  }
+}

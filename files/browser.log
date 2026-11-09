@@ -1,0 +1,7 @@
+PASS CATALOG-001 native two-department conditional $250 selection/submission, outsider omission/direct refusal and changed-item refusal at 1440
+CAPTURE catalog audience values at 1440 after native retirement of renamed value
+CAPTURE catalog audience values at 390 after native retirement of renamed value
+PASS native audience journey at 1440 and renamed value retirement screen proof at 1440 and 390
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-c-f43/browser-proof
+
+COMMAND_EXIT=0

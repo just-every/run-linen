@@ -1,0 +1,27 @@
+PROBE DESK-024 1: current owner handoff succeeds once; pre-move revision returns 409 revision_conflict with unchanged ticket, messages and successful handoff history
+PROBE DESK-024 2: Facilities typed form submitted, catalog edited, handoff to IT preserves the complete original snapshot and stale retry changes nothing
+PASS DESK-011 department operations: catalog admission and atomic bundles, versioned moves, staff knowledge, routing/groups/views, scoped SLA and frozen handoff clock, live membership withdrawal
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ undefined
+- 'revision_conflict'
+
+    at catalogAudienceChecks (file:///home/agent/rer-consolidation/work/sx-linen-c-f43/run-linen/tests/work/application-cases.mjs:355:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///home/agent/rer-consolidation/work/sx-linen-c-f43/run-linen/tests/work/runtime.mjs:119:3 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: undefined,
+  expected: 'revision_conflict',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
+
+COMMAND_EXIT=1

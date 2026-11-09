@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f43",
+  "repository": "just-every/run-linen",
+  "head": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+  "branch": "cloud/sx-linen-c-f43",
+  "base": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "timestamp": "2026-11-09T06:27:34.149011+00:00",
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "receipt": "Private setup log excluded; command completed successfully."
+    },
+    {
+      "command": "node tests/work/runtime.mjs",
+      "exit": 0,
+      "receipt": "work-runtime.log",
+      "binding": "Ran final relevant source and test bytes before commit; unchanged blob identities verified against candidate."
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "receipt": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "receipt": "first-party.log"
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "receipt": "build.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write && node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "receipt": "mechanical-final.log",
+      "generated_views": "restored whole from origin/main; none committed"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "receipt": "source-lock.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "receipt": "source-check-final.log"
+    },
+    {
+      "command": "migration ledger check",
+      "status": "not applicable; no migration edits"
+    },
+    {
+      "command": "perl -e alarm-1200 -- node tests/ui/run.mjs ../browser-probe.mjs",
+      "exit": 0,
+      "receipt": "browser.log",
+      "head": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+      "browser": "/usr/bin/chromium, headless, no-sandbox",
+      "assertion_width": 1440,
+      "screen_widths": [
+        1440,
+        390
+      ]
+    }
+  ],
+  "relevant_blob_identities": {
+    "tests/work/application-cases.mjs": {
+      "blob": "d3e8c882eab4eb5f1c5cf20205d1fc32f834e6ee",
+      "working_blob": "d3e8c882eab4eb5f1c5cf20205d1fc32f834e6ee"
+    },
+    "tests/work/runtime.mjs": {
+      "blob": "7824f4f0a6ccbf29aa1c7f3f133c72c31afd41ee",
+      "working_blob": "7824f4f0a6ccbf29aa1c7f3f133c72c31afd41ee"
+    },
+    "src/features/work/catalog-audience-routes.ts": {
+      "blob": "69cfa18e8e20fc3767423159a59c741baf6c049a",
+      "working_blob": "69cfa18e8e20fc3767423159a59c741baf6c049a"
+    },
+    "src/features/work/catalog-audience.ts": {
+      "blob": "0b9b4573fa05c04560ee7d8edb280e25ae683eb1",
+      "working_blob": "0b9b4573fa05c04560ee7d8edb280e25ae683eb1"
+    }
+  },
+  "contract_changed": false,
+  "test_registration_delta": 0,
+  "count_before": {
+    "DONE": 28,
+    "PARTIAL": 134,
+    "MISSING": 37
+  },
+  "count_after": {
+    "DONE": 28,
+    "PARTIAL": 134,
+    "MISSING": 37
+  },
+  "product_pushed": true,
+  "publication_scan": {
+    "commit": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+    "complete": false,
+    "historyScanned": "not run in cloud",
+    "findings": "unestablished; fleet scan required"
+  },
+  "landing": "not attempted; fleet custody",
+  "browser_screens": [
+    "catalog-values-1440.png",
+    "catalog-values-390.png"
+  ],
+  "ci": {
+    "conclusion": null,
+    "event": "pull_request",
+    "head_sha": "e07c51adfa42f470489142a01f2b8ff90749d2b7",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42573021928",
+    "id": 42573021928,
+    "status": "in_progress"
+  },
+  "github_api_calls_so_far": 5
+}
