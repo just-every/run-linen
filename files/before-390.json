@@ -1,0 +1,3138 @@
+{
+  "responses": 447,
+  "counts": {
+    "403": 446,
+    "500": 1
+  },
+  "rows": [
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 0,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 1,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 2,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 3,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 4,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 5,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 6,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 7,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 8,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 9,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 10,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 11,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 12,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 13,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 14,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 15,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 16,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 17,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 18,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 19,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 20,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 21,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 22,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 23,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 24,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 25,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 26,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 27,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 28,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 29,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 30,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 31,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 32,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 33,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 34,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 35,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 36,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 37,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 38,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 39,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 40,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 41,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 42,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/masked-records",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/asset-audits",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 43,
+      "door": "/asset-audits/1a5c5c33-4a47-40b8-8a29-5728cd80f89d/scans",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Current role does not permit this action\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 44,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 44,
+      "door": "/sandboxes",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 44,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/catalog/31b9dd7f-484a-4024-a7e4-8b54d1b1dba2",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 44,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/promote",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current workspace owner is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 44,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 44,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/approve",
+      "status": 403,
+      "text": "{\"error\":{\"code\":\"forbidden\",\"message\":\"A current owner or designated sandbox administrator is required\"}}"
+    },
+    {
+      "width": 390,
+      "iteration": 44,
+      "door": "/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package",
+      "status": 500,
+      "text": "Error: Network connection lost.\n    at async Object.fetch (file:///workspace/run-linen/node_modules/.pnpm/miniflare@5.20260907.0-alpha/node_modules/miniflare/dist/src/workers/core/entry.worker.js:5204:22)"
+    }
+  ]
+}

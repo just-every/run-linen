@@ -1,0 +1,47 @@
+{
+  "baseline": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "save": "3348469da6ebf76e2dcf3df24f7291563e57e6fb",
+  "typecheck": {
+    "command": "pnpm typecheck",
+    "exit": 0
+  },
+  "source_lock_check": {
+    "command": "node scripts/edition-authoring/cli.mjs check",
+    "ok": true
+  },
+  "syntax_checks": [
+    "tests/ui/run.mjs",
+    "tests/ui/sandbox-journey.mjs"
+  ],
+  "clause_status_changes": [],
+  "publication_scan": "not run, task exclusion",
+  "test_registration_delta": 0,
+  "touched_journeys": {
+    "exit": 0,
+    "sandbox": "passed: full reviewed configuration flow and employee refusal across 22 door cases",
+    "ASSET-010": "passed: 390 and 1440, 18/20 scans per audit and two persisted follow-ups",
+    "assertion_width": 1440,
+    "browser_proof_widths": [
+      1440,
+      390
+    ]
+  },
+  "candidate": "5076449f4c0a30b83f5a910a466f6d08ac98cb8d",
+  "merged_main": "833e41a",
+  "final_source_lock_check": {
+    "command": "node scripts/edition-authoring/cli.mjs check",
+    "ok": true
+  },
+  "denial_loop": {
+    "exit": 0,
+    "widths": [
+      390,
+      1440
+    ],
+    "iterations_per_width": 200,
+    "denial_responses": 4000,
+    "owner_asset_scans": 400,
+    "http_500": 0,
+    "idle_timing": "First 50 iterations at each width pause 5000ms; remaining 150 run sequentially without a pause. No request is retried."
+  }
+}

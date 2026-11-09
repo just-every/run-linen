@@ -1,0 +1,25 @@
+▲ [WARNING] Proxy environment variables detected. We'll use your proxy for fetch requests.
+
+
+DENIAL LOOP 390 0 responses 10
+DENIAL LOOP 390 20 responses 210
+DENIAL LOOP 390 40 responses 410
+DENIAL LOOP 390 60 responses 610
+DENIAL LOOP 390 80 responses 810
+DENIAL LOOP 390 100 responses 1010
+DENIAL LOOP 390 120 responses 1210
+DENIAL LOOP 390 140 responses 1410
+DENIAL LOOP 390 160 responses 1610
+DENIAL LOOP 390 180 responses 1810
+DENIAL LOOP 1440 0 responses 2210
+DENIAL LOOP 1440 20 responses 2410
+DENIAL LOOP 1440 40 responses 2610
+DENIAL LOOP 1440 60 responses 2810
+DENIAL LOOP 1440 80 responses 3010
+DENIAL LOOP 1440 100 responses 3210
+DENIAL LOOP 1440 120 responses 3410
+DENIAL LOOP 1440 140 responses 3610
+DENIAL LOOP 1440 160 responses 3810
+DENIAL LOOP 1440 180 responses 4010
+LOOP PASS 4400
+UI evidence: /home/agent/rer-consolidation/work/sx-linen-denial-500-1/after

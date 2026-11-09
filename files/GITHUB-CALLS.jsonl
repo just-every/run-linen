@@ -1,0 +1,4 @@
+{"time": 1794214841.2054234, "args": ["api", "repos/just-every/run-linen/actions/runs?head_sha=5076449f4c0a30b83f5a910a466f6d08ac98cb8d&per_page=100", "--jq", ".workflow_runs | map({id,name,status,conclusion,head_sha,html_url})"]}
+{"time": 1794214850.037247, "args": ["api", "repos/just-every/run-linen/actions/workflows/verify.yml/dispatches", "--method", "POST", "-f", "ref=cloud/sx-linen-denial-500-1"]}
+{"time": 1794215141.354269, "args": ["api", "repos/just-every/run-linen/actions/runs?head_sha=5076449f4c0a30b83f5a910a466f6d08ac98cb8d&per_page=100", "--jq", ".workflow_runs | map(select(.name == \"Verify\") | {id,name,status,conclusion,head_sha,html_url})"]}
+{"time": 1794215441.4302633, "args": ["api", "repos/just-every/run-linen/actions/runs/42590113043", "--jq", "{id,name,status,conclusion,head_sha,html_url}"]}

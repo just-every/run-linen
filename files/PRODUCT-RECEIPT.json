@@ -1,0 +1,16 @@
+{
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-denial-500-1",
+  "head": "5076449f4c0a30b83f5a910a466f6d08ac98cb8d",
+  "merged_main": "833e41a8e993c9d41e80332cf061bf4b210b9a33",
+  "changed_files": [
+    "sources.lock.json",
+    "tests/ui/run.mjs",
+    "tests/ui/sandbox-journey.mjs"
+  ],
+  "candidate_identity_audit": "Run Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>\n\nRun Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>\n\nRun Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>\n\n",
+  "worktree": "",
+  "full_history": true,
+  "remote_product_head": "5076449f4c0a30b83f5a910a466f6d08ac98cb8d",
+  "remote_product_ref": "refs/heads/cloud/sx-linen-denial-500-1"
+}

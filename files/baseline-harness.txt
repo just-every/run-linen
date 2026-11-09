@@ -1,0 +1,22 @@
+DENIAL LOOP 390 0 responses 10
+DENIAL LOOP 390 20 responses 210
+DENIAL LOOP 390 40 responses 410
+FAILED DENIAL {"width":390,"iteration":44,"door":"/sandboxes/5d865e7e-f80a-463a-8662-852c3aa2e9db/rollback-package","status":500,"text":"Error: Network connection lost.\n    at async Object.fetch (file:///workspace/run-linen/node_modules/.pnpm/miniflare@5.20260907.0-alpha/node_modules/miniflare/dist/src/workers/core/entry.worker.js:5204:22)"}
+file:///tmp/linen-denial-loop.mjs:36
+  for(const [door,method,body] of doors){const r=await call(door,body,method);rows.push({width,iteration:i,door,...r});if(r.status!==403){console.error('FAILED DENIAL',JSON.stringify(rows.at(-1)));throw Error('Expected 403, got '+r.status);}}
+                                                                                                                                                                                                           ^
+
+Error: Expected 403, got 500
+    at file:///tmp/linen-denial-loop.mjs:36:204
+
+Node.js v24.19.0
+file:///workspace/run-linen/tests/ui/run.mjs:108
+      code === 0 ? yes() : no(Error(`Browser acceptance exited ${code}`)),
+                              ^
+
+Error: Browser acceptance exited 1
+    at ChildProcess.<anonymous> (file:///workspace/run-linen/tests/ui/run.mjs:108:31)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+Node.js v24.19.0
