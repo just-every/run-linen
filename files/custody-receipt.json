@@ -1,0 +1,47 @@
+{
+  "tag": "sx-linen-c-f52",
+  "head": "96bc3a24b3b8a302494522179edffc855cfe2976",
+  "checkedAt": "2026-11-09T09:01:28.710288+00:00",
+  "cleanProduct": true,
+  "contractDiff": "",
+  "generatedViewDiff": "",
+  "registeredTestsAdded": 0,
+  "assertionsRemoved": 0,
+  "screens": [
+    {
+      "path": "browser/PROB-002-proposed.png",
+      "bytes": 362564,
+      "sha256": "4e9d254b2f25bf7ea2c38c0148c90443a7a6153e6a04daeb0fc0f90cd5338a6b"
+    },
+    {
+      "path": "browser/PROB-002-proposed-390px.png",
+      "bytes": 365096,
+      "sha256": "77408eca2aca07fac40c7c777c85c21e602b82cf2262f2747297033adb6bae73"
+    },
+    {
+      "path": "browser/PROB-002-rejected.png",
+      "bytes": 300530,
+      "sha256": "91b122f9bb369fc1037de4e2182bd416c5ed9b6d248f49cb8a965627644e784f"
+    },
+    {
+      "path": "browser/PROB-002-rejected-390px.png",
+      "bytes": 232029,
+      "sha256": "1492eb1c60db8a4939178f444b350a8a75bade496d2f615e69d27503ac3a6f4c"
+    },
+    {
+      "path": "browser/PROB-002-accepted-problem.png",
+      "bytes": 623465,
+      "sha256": "126f65a05527bad1f3b4d86ef3746daf0d3d538bae21ea07dac7e52036e3d45e"
+    },
+    {
+      "path": "browser/PROB-002-accepted-problem-390px.png",
+      "bytes": 252597,
+      "sha256": "88fc77456a11e2d4396f43c13dd6450c277179922ece90709d60202373404ed1"
+    }
+  ],
+  "notes": [
+    "Full history clone; no force push or main push.",
+    "Only named product branch pushed; evidence ref is separate.",
+    "No credentials, environment file, browser state, worker log or scratch database selected."
+  ]
+}

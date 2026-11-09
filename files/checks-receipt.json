@@ -1,0 +1,152 @@
+{
+  "tag": "sx-linen-c-f52",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f52",
+  "head": "96bc3a24b3b8a302494522179edffc855cfe2976",
+  "base": "e9aa94360d01ae5c8ae48557a61aca3c565f3236",
+  "mainEqualsCandidate": false,
+  "countsBefore": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37
+  },
+  "countsAfter": {
+    "done": 28,
+    "partial": 134,
+    "missing": 37
+  },
+  "checks": [
+    {
+      "name": "baseline runtime",
+      "command": "cloud_run timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "baseline-runtime.log",
+      "note": "Prior f50 proof; module loaded before new assertions. Not candidate proof."
+    },
+    {
+      "name": "reproduction",
+      "command": "cloud_run timeout 1200 node tests/work/.f52-probe.mjs",
+      "exit": 1,
+      "log": "cancellation-before-fix.log",
+      "note": "Added probe fails with proposal GET returning 200 instead of 409."
+    },
+    {
+      "name": "focused proof",
+      "command": "cloud_run timeout 1200 node tests/work/.f52-probe.mjs",
+      "exit": 0,
+      "log": "cancellation-after-fix.log",
+      "note": "Current cancellation validation; later assertion-code and log additions covered by full runtime."
+    },
+    {
+      "name": "candidate runtime",
+      "command": "cloud_run timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "candidate-runtime.log",
+      "note": "Final tested product and test bytes match the committed candidate hashes."
+    },
+    {
+      "name": "typecheck",
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log",
+      "note": ""
+    },
+    {
+      "name": "first-party",
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log",
+      "note": ""
+    },
+    {
+      "name": "build",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log",
+      "note": ""
+    },
+    {
+      "name": "browser",
+      "command": "LINEN_TEST_BUILT=1 LINEN_CAPTURE=1 LINEN_CHROMIUM_EXECUTABLE=/usr/bin/chromium cloud_run timeout 1200 node tests/ui/run.mjs tests/ui/.f52-problem-browser.mjs",
+      "exit": 0,
+      "log": "browser.log",
+      "note": "Existing problemDetectionJourney at 1440; same states captured at 390. Scratch focused adapter removed."
+    },
+    {
+      "name": "contract views",
+      "command": "node src/base/contract-docs.mjs write && node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "final-views.log",
+      "note": "Wrote 0 views, 0 errors, 0 warnings; restored origin main views."
+    },
+    {
+      "name": "source lock",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "final-lock.log",
+      "note": "Regenerated after last edit, rebase and scratch cleanup."
+    },
+    {
+      "name": "source lock check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "final-lock-check.log",
+      "note": ""
+    },
+    {
+      "name": "push",
+      "command": "python3 /home/agent/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f52",
+      "exit": 0,
+      "log": "push.log",
+      "note": "Succeeded on first attempt."
+    }
+  ],
+  "migrationLedger": {
+    "command": null,
+    "note": "No migration touched"
+  },
+  "testedCommittedHashes": {
+    "src/features/services/problem-proposals.ts": "db9f861fd48eabaea2320a8466061b1f274334f5b29e0059c3f1febaf2f3b9f7",
+    "src/features/services/problem-detection.ts": "40feda1d25098a87f16dba1a4ef17a91526bca81bd6156aca50326005f1672dd",
+    "tests/work/problem-detection-cases.mjs": "69a6d6bbf0be0be15e158b5a691495f1cd7edfa828457d30b0bfc1156b6c521c",
+    "tests/work/runtime.mjs": "93f45afe1817e4b3afe89d55c7fccac052537b68216e730ff8e3276fccf81688",
+    "scripts/verify.mjs": "8d3851ae58c3a2633a8aafbb8817e16ca876ece66bf10493c1690b54f8b2c4b1"
+  },
+  "publicationScan": {
+    "commit": "96bc3a24b3b8a302494522179edffc855cfe2976",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "note": "Not run in cloud; guarded fleet lander owns this gate. No COMPLETE or zero-findings claim."
+  },
+  "runSite": {
+    "id": null,
+    "note": "Main-only landing duty; candidate has not landed"
+  },
+  "observedBaseWorkflows": {
+    "Verify": {
+      "id": 42570589451,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e9aa94360d01ae5c8ae48557a61aca3c565f3236"
+    },
+    "Run site": {
+      "id": 42570589486,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e9aa94360d01ae5c8ae48557a61aca3c565f3236"
+    }
+  },
+  "candidateVerify": {
+    "id": 42589296946,
+    "event": "pull_request",
+    "conclusion": null,
+    "head_sha": "96bc3a24b3b8a302494522179edffc855cfe2976",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42589296946",
+    "status": "in_progress"
+  },
+  "githubApiCalls": 5,
+  "handoff": "Cloud branch is pushed; local proof passed. Verify was still in progress at the second permitted status poll. No green, landing or DONE claim."
+}

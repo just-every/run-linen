@@ -1,0 +1,7 @@
+{
+  "src/features/services/problem-proposals.ts": "db9f861fd48eabaea2320a8466061b1f274334f5b29e0059c3f1febaf2f3b9f7",
+  "src/features/services/problem-detection.ts": "40feda1d25098a87f16dba1a4ef17a91526bca81bd6156aca50326005f1672dd",
+  "tests/work/problem-detection-cases.mjs": "69a6d6bbf0be0be15e158b5a691495f1cd7edfa828457d30b0bfc1156b6c521c",
+  "tests/work/runtime.mjs": "93f45afe1817e4b3afe89d55c7fccac052537b68216e730ff8e3276fccf81688",
+  "scripts/verify.mjs": "8d3851ae58c3a2633a8aafbb8817e16ca876ece66bf10493c1690b54f8b2c4b1"
+}

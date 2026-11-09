@@ -1,0 +1,23 @@
+PROBE PROB-002 4: native tickets and detection -> separate untagged, cohort and location proposals with exact evidence IDs
+PROBE PROB-002 5: normalized native labels and scopes -> one app and model proposal per scope; identical service labels retain distinct service IDs
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: {"status":200,"value":{"id":"498fc3f69cbf4100eaad598254a49646387f5d6081f38920efab5bd95c58ee18","kind":"problem-proposal","ownerId":"owner","visibility":"operators","participants":[],"data":{"title":"Recurring service incidents — cancellation pilot","state":"proposed","cluster":{"facet":"service","value":"772f619d-40b8-4ef1-8f88-46499d9d0e77","scopeType":"cohort","scopeValue":"cancellation pilot"},"fingerprint":"498fc3f69cbf4100eaad598254a49646387f5d6081f38920efab5bd95c58ee18","audience":"operators","evidence":[{"type":"ticket","id":"16c99fa0-c52e-42d2-9509-94215916ae6e","revision":1,"observedAt":"2026-11-09T08:44:47.169Z","serviceId":"772f619d-40b8-4ef1-8f88-46499d9d0e77"},{"type":"ticket","id":"89f8051d-8a1d-4d18-84d1-4984a24fcd07","revision":1,"observedAt":"2026-11-09T08:44:38.597Z","serviceId":"772f619d-40b8-4ef1-8f88-46499d9d0e77"},{"type":"ticket","id":"af8ef1e5-c062-4b59-9f3c-e74da80e1220","revision":1,"observedAt":"2026-11-09T08:44:38.427Z","serviceId":"772f619d-40b8-4ef1-8f88-46499d9d0e77"}],"threshold":3,"windowDays":30,"windowStart":"2026-10-10T08:44:47.327Z","windowEnd":"2026-11-09T08:44:47.327Z","decision":null,"problemId":null},"revision":1,"createdAt":"2026-11-09T08:44:48.475Z","updatedAt":"2026-11-09T08:44:48.475Z","sources":[{"type":"ticket","id":"16c99fa0-c52e-42d2-9509-94215916ae6e","revision":1,"observedAt":"2026-11-09T08:44:47.169Z","serviceId":"772f619d-40b8-4ef1-8f88-46499d9d0e77","currentRevision":2,"title":"Wi-Fi disconnects"},{"type":"ticket","id":"89f8051d-8a1d-4d18-84d1-4984a24fcd07","revision":1,"observedAt":"2026-11-09T08:44:38.597Z","serviceId":"772f619d-40b8-4ef1-8f88-46499d9d0e77","currentRevision":1,"title":"Wi-Fi disconnects"},{"type":"ticket","id":"af8ef1e5-c062-4b59-9f3c-e74da80e1220","revision":1,"observedAt":"2026-11-09T08:44:38.427Z","serviceId":"772f619d-40b8-4ef1-8f88-46499d9d0e77","currentRevision":1,"title":"Wi-Fi disconnects"}]},"headers":{}}
+
+200 !== 409
+
+    at check (file:///home/agent/rer-consolidation/work/sx-linen-c-f52/run-linen/tests/work/problem-detection-cases.mjs:4:47)
+    at problemDetectionChecks (file:///home/agent/rer-consolidation/work/sx-linen-c-f52/run-linen/tests/work/problem-detection-cases.mjs:149:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///home/agent/rer-consolidation/work/sx-linen-c-f52/run-linen/tests/work/.f52-probe.mjs:111:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 200,
+  expected: 409,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
