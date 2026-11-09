@@ -6944,7 +6944,7 @@
       "executable": false
     },
     "tests/ui/asset-audit-journey.mjs": {
-      "sha256": "172bcb90b279e294610a3c76aeb56a1edc1b3ca54c00ece95904936511448dc5",
+      "sha256": "82b8d0008a4c36a727ba732ab59d73a6fb63a2cdb28c8a39b0c222f986ec1eae",
       "executable": false
     },
     "tests/ui/asset-contract-journey.mjs": {
@@ -7280,7 +7280,7 @@
       "executable": false
     },
     "tests/work/asset-custody-cases.mjs": {
-      "sha256": "29e672446cc5197974ff9055d2249d24616d3468c646dde1678ae9177391376c",
+      "sha256": "ea03fb2cfc1357bc34e8c337e43d7e006c03079eb855fbfd1e2f46176735990e",
       "executable": false
     },
     "tests/work/asset-financial-cases.mjs": {
