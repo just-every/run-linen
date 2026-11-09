@@ -1,0 +1,2 @@
+CLAIM PROB-002 PARTIAL points=4,5,6 tests=tests/work/problem-detection-cases.mjs#problemDetectionChecks
+GAP PROB-002: Only the selected untagged-bucket, label-normalization and canceled-ticket exclusion proof is closed; unselected acceptance and all supplied holds remain unchanged.

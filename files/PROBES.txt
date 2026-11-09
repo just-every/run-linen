@@ -1,0 +1,3 @@
+PROBE PROB-002 4: native tickets and detection -> separate untagged, cohort and location proposals with exact evidence IDs
+PROBE PROB-002 5: normalized native labels and scopes -> one app and model proposal per scope; identical service labels retain distinct service IDs
+PROBE PROB-002 6: native cancel then detection -> no proposal from two active sources plus canceled source; three active sources yield evidence excluding the canceled ID

@@ -1,0 +1,31 @@
+{
+  "head": "98af7777ddedfdc44103b859b0eca9847508ff0e",
+  "command": "LINEN_TEST_BUILT=1 LINEN_CAPTURE=1 LINEN_TEST_OUTPUT=<packet>/browser cloud_run timeout 1200 node tests/ui/run.mjs /tmp/linen-problem-browser.mjs",
+  "exit": 0,
+  "journey": "tests/ui/problem-detection-journey.mjs#problemDetectionJourney",
+  "widthForAssertions": 1440,
+  "captureWidths": [
+    1440,
+    390
+  ],
+  "states": [
+    "proposed",
+    "rejected",
+    "accepted-problem"
+  ],
+  "productionSourceChangedSinceBuild": false,
+  "runtime": "/usr/bin/chromium --no-sandbox",
+  "driver": "FOCUSED-BROWSER.mjs",
+  "log": "browser.log",
+  "captures": [
+    "browser/PROB-002-accepted-problem-390px.png",
+    "browser/PROB-002-accepted-problem.png",
+    "browser/PROB-002-proposed-390px.png",
+    "browser/PROB-002-proposed.png",
+    "browser/PROB-002-rejected-390px.png",
+    "browser/PROB-002-rejected.png"
+  ],
+  "browserClosed": true,
+  "ownWorkerStopped": true,
+  "scope": "Supplemental existing-screen proof; selected points are proved through the work runtime."
+}
