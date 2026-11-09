@@ -7292,7 +7292,7 @@
       "executable": false
     },
     "tests/work/bundle-cases.mjs": {
-      "sha256": "d8be37bfaecc3957ee228ff00e7c39164201de0723f9024935e092662c8afa0c",
+      "sha256": "06e7a35ffeff8ce6f5be723dc6bc585e65af47e2a8519d9648def8b5f89232ec",
       "executable": false
     },
     "tests/work/catalog-quote-cases.mjs": {
