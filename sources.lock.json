@@ -6968,7 +6968,7 @@
       "executable": false
     },
     "tests/ui/browser.mjs": {
-      "sha256": "702d601b51bd438fbd073464a1577098e67003187d79b755189ead33d75d4763",
+      "sha256": "e9e516d326530a87cabe5689ecf3ff236c6dba4440a3781b97fe935203b7cc6d",
       "executable": false
     },
     "tests/ui/calendar-journey.mjs": {
@@ -7152,11 +7152,11 @@
       "executable": false
     },
     "tests/ui/sandbox-journey.mjs": {
-      "sha256": "d3f71aa113369ae931f81b73d76003cbc0555b29ac4d29c208018a7446be54b6",
+      "sha256": "96009e01dfed80de781c602249fc37dcdcfc8341208287348c7d571671f482ed",
       "executable": false
     },
     "tests/ui/sandbox-routing-journey.mjs": {
-      "sha256": "029c11cd0c32685c5f21b1c8ff188a02422bb04d4c7f0e67d909ba404bfe6866",
+      "sha256": "bfbda1738be165956999fe53824950cd442a85a17dd18d23f15377dca6d773a9",
       "executable": false
     },
     "tests/ui/screen-proof.mjs": {
