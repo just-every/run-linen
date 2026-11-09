@@ -6808,7 +6808,7 @@
       "executable": false
     },
     "tests/platform/mcp-tools-cases.mjs": {
-      "sha256": "19b70923119636ddefb14caecd1ffe35af756fe0abaa9a981b66e0a4f4c070a3",
+      "sha256": "83809a21911724fec96e1b79a0d41a02191c3ed20b2757013ff4992cae6a8c21",
       "executable": false
     },
     "tests/platform/reporting-transfer-cases.mjs": {
@@ -7332,7 +7332,7 @@
       "executable": false
     },
     "tests/work/desk-group-cases.mjs": {
-      "sha256": "c38d80bd3588e32dbe15e3c7764769893e62be06e9bb3e3d52133d6796f89076",
+      "sha256": "715e7a27cd5944e3e6bb488a330616a65671661ce5a8ba8b5ce5d727d278c277",
       "executable": false
     },
     "tests/work/desk-routing-cases.mjs": {
