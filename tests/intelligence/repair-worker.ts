@@ -11,7 +11,7 @@ import {ApiError} from '../../src/platform/http';
 import type {AppEnv,Env} from '../../src/platform/types';
 // All synthetic provider/model state is confined to this test entry and test D1 tables.
 let env:Env;
-let intakeResponse:{workId:string}|undefined;
+let intakeResponse:{workId:string;observed?:{catalogId:string;revision:number};release?:()=>void}|undefined;
 const setting=async()=>JSON.parse((await env.DB.prepare('SELECT data FROM repair_fixture WHERE id=1').first<any>())?.data || '{}');
 const presence=async(target:string)=>!!await env.DB.prepare('SELECT target FROM repair_presence WHERE target=?').bind(target).first();
 globalThis.fetch=async(input:any,init:any={})=>{
@@ -57,7 +57,12 @@ globalThis.fetch=async(input:any,init:any={})=>{
    else if(prompt.work.title.includes('unknown'))value={kind:'investigation',catalogId:'',serviceId:'',purpose:'',expiresAt:null,summary:'Uncertain',question:'',requestedFor:'',evidenceIds:[]};
    else value={kind:'investigation',catalogId:'',serviceId:config.injectService || config.serviceId,purpose:'',expiresAt:null,summary:'I have fixed everything (untrusted)',question:'',requestedFor:'',evidenceIds:[]};
    // Hold only the paid-model network response; native intake retains its own observed catalog.
-   while(held && intakeResponse===held)await new Promise(resolve=>setTimeout(resolve,25));
+   if(held){
+    const item=prompt.catalog.find((item:any)=>item.id===value.catalogId);
+    if(!item)throw new Error('Held intake must select an eligible catalog item');
+    held.observed={catalogId:item.id,revision:item.revision};
+    await new Promise<void>(resolve=>{held.release=resolve});
+   }
   }else if(schema.properties.hypotheses){
    const prior=packet.priorResearch || [];
    await env.DB.prepare('INSERT INTO repair_model_inputs VALUES(?,?)').bind(packet.purpose,JSON.stringify(packet)).run();
@@ -79,10 +84,13 @@ app.post('/fixture/intake-hold',async c=>{
  const {workId}=await c.req.json();
  intakeResponse={workId};return c.json({workId});
 });
+app.post('/fixture/intake-status',c=>c.json(intakeResponse?{
+ workId:intakeResponse.workId,state:intakeResponse.release?'paused':'armed',observed:intakeResponse.observed,
+}:{state:'idle'}));
 app.post('/fixture/intake-release',async c=>{
  const {workId}=await c.req.json();
  if(!intakeResponse || intakeResponse.workId!==workId)throw new Error('No matching held intake response');
- intakeResponse=undefined;return c.json({workId});
+ const held=intakeResponse;intakeResponse=undefined;held.release?.();return c.json({workId});
 });
 app.post('/fixture/config',async c=>{
  const b=await c.req.json();await c.env.DB.prepare('INSERT INTO repair_fixture VALUES(1,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data').bind(JSON.stringify({...await setting(),...b})).run();return c.json({ok:true});
