@@ -1,0 +1,65 @@
+diff --git a/sources.lock.json b/sources.lock.json
+index 623ee5e..3d30faf 100644
+--- a/sources.lock.json
++++ b/sources.lock.json
+@@ -7452,7 +7452,7 @@
+       "executable": false
+     },
+     "tests/work/search-cases.mjs": {
+-      "sha256": "4ff17c09dca8a5248662bb45ed298943b0f1558f4f3ce169cb1b0666910c43b2",
++      "sha256": "04f11be8b4f2229dcd7e6102b81067c8ac811fba2c2cf94a5a8403589a306eb9",
+       "executable": false
+     },
+     "tests/work/sla-policy-cases.mjs": {
+diff --git a/tests/work/search-cases.mjs b/tests/work/search-cases.mjs
+index 0fa78e2..e2b130b 100644
+--- a/tests/work/search-cases.mjs
++++ b/tests/work/search-cases.mjs
+@@ -68,6 +68,21 @@ export async function searchChecks(api, db) {
+   await make('/knowledge',{title:'DraftArticleSearchNeedle',body:'Unreviewed guidance',scope:'employees',expiresAt:'2030-01-01T00:00:00Z',review:false});
+   assert.equal((await search('HiddenArticleSearchNeedle')).total,0,'DESK-016 article audience applies before matching and counts');
+   assert.equal((await search('DraftArticleSearchNeedle')).total,0,'DESK-016 unreviewed guidance is absent');
++  const employee={'x-user':'employee','x-roles':'["employee"]'};
++  const knowledgeQuery='synthetic-linen-61 knowledge';
++  const guidance=await make('/knowledge',{title:knowledgeQuery+' employee guidance',body:'Reconnect the adapter using the reviewed employee instructions.',scope:'employees',expiresAt:'2030-01-01T00:00:00Z',review:true});
++  const hrGuidance=await make('/knowledge',{title:knowledgeQuery+' HR guidance',body:'Confidential HR instructions.',scope:'hr',expiresAt:'2030-01-01T00:00:00Z',review:true});
++  const draftGuidance=await make('/knowledge',{title:knowledgeQuery+' draft guidance',body:'Employee instructions awaiting review.',scope:'employees',expiresAt:'2030-01-01T00:00:00Z',review:false});
++  const knowledgePath='/knowledge?q='+encodeURIComponent(knowledgeQuery);
++  const employeeKnowledge=await make(knowledgePath,undefined,employee);
++  assert.deepEqual(employeeKnowledge.items.map(r=>r.id),[guidance.id],'DESK-016 employees find reviewed guidance but no matching HR or unreviewed article');
++  assert.equal(employeeKnowledge.items[0].body,'Reconnect the adapter using the reviewed employee instructions.','DESK-016 the employee receives the actual reviewed guidance');
++  const hrKnowledge=await make(knowledgePath,undefined,hr);
++  assert.deepEqual(hrKnowledge.items.map(r=>r.id).sort(),[guidance.id,hrGuidance.id].sort(),'DESK-016 matching HR guidance exists and remains available to its authorized reader');
++  assert.equal(JSON.stringify(employeeKnowledge).includes(hrGuidance.id),false);
++  assert.equal(JSON.stringify(employeeKnowledge).includes(draftGuidance.id),false);
++  assert.equal((await api('/search?q='+encodeURIComponent(knowledgeQuery),undefined,employee)).status,403,'DESK-016 employee knowledge access never unlocks global agent search');
++  assert.equal((await api('/search?q='+encodeURIComponent(knowledgeQuery)+'&type=article',undefined,employee)).status,403,'DESK-016 an article filter never bypasses the global agent restriction');
+   for (let i=0;i<51;i++) await make('/knowledge',{title:'PaginationSearchCorpus '+String(i).padStart(2,'0'),body:'Reviewed paged guidance',scope:'employees',expiresAt:'2030-01-01T00:00:00Z',review:true});
+   const firstPage=await search('PaginationSearchCorpus','article'),secondPage=await search('PaginationSearchCorpus','article',operator,50);
+   assert.equal(firstPage.total,51,'DESK-016 search never inherits the old article list truncation');
+@@ -76,6 +91,24 @@ export async function searchChecks(api, db) {
+   const all=await search('Denver');assert.ok(types.every(t=>Number.isInteger(all.counts[t])));
+   assert.ok(await db.prepare("SELECT 1 FROM audit_events WHERE workspace_id='a' AND actor_id='search-agent' AND action='search.privileged_read'").first(),'DESK-016 privileged search reads retain the A1 audit obligation');
+   assert.equal(all.total,Object.values(all.counts).reduce((a,b)=>a+b,0),'DESK-016 visible-only counts sum to total');
+-  console.log('PASS DESK-016 public routes: eight record types, native ID/title/content/requester/serial/tag, linked device-ticket-person, type filters, typos, visible counts/pages, HR/private/restricted/article scopes and revoked roles');
++  for (const [actor,headers] of [['owner',{}],['search-agent',operator],['search-hr',hr]]) {
++    const before=new Set((await db.prepare('SELECT id FROM audit_events').all()).results.map(r=>r.id));
++    const marker='synthetic-linen-61-unretained-'+actor;
++    const query=marker+' private query + & details';
++    const result=await search(query,undefined,headers);
++    assert.equal(result.query,query,'DESK-016 each privileged role completes the submitted search');
++    const written=(await db.prepare('SELECT * FROM audit_events').all()).results.filter(r=>!before.has(r.id));
++    const reads=written.filter(r=>r.action==='search.privileged_read');
++    assert.equal(reads.length,1,'DESK-016 the specific privileged search creates an audit record');
++    assert.equal(reads[0].workspace_id,'a');
++    assert.equal(reads[0].actor_id,actor,'DESK-016 search audit identifies the authenticated current actor');
++    assert.equal(reads[0].target,'global-search');
++    assert.ok(Number.isFinite(Date.parse(reads[0].created_at)));
++    assert.ok(JSON.parse(reads[0].detail_json) instanceof Object,'DESK-016 inspect the persisted audit payload');
++    const retained=JSON.stringify(written).toLowerCase();
++    for (const value of [marker,query,encodeURIComponent(query),Buffer.from(query).toString('base64')])
++      assert.equal(retained.includes(value.toLowerCase()),false,'DESK-016 attributed search auditing retains no submitted query content');
++  }
++  console.log('PASS DESK-016 public routes: existing scoped search, attributed query-free audits for owner, operator and HR, employee reviewed knowledge with HR and draft exclusions, and forbidden employee global search');
+   return {ticketId:ticket.id,deviceId:device.id,personId:person.id};
+ }

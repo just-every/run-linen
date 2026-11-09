@@ -1,0 +1,69 @@
+[
+  {
+    "shard": 1,
+    "seconds": 455,
+    "journeys": [
+      "Employee service desk browser"
+    ]
+  },
+  {
+    "shard": 2,
+    "seconds": 434,
+    "journeys": [
+      "Native archive and recovery",
+      "Fulfilment integration",
+      "Controlled changes and reporting",
+      "Connection discovery",
+      "Intelligence protocols and budgets"
+    ]
+  },
+  {
+    "shard": 3,
+    "seconds": 443,
+    "journeys": [
+      "Emitted HTTP",
+      "Reviewed identity continuity",
+      "Execution and reconciliation",
+      "Current effect authority",
+      "Conversational intake and evidence",
+      "Communications browser"
+    ]
+  },
+  {
+    "shard": 4,
+    "seconds": 434,
+    "journeys": [
+      "Native sign-in and scoped API",
+      "Configuration and sandbox",
+      "Fulfilment and measured effort",
+      "Pending people",
+      "Connected service recovery browser",
+      "software license browser"
+    ]
+  },
+  {
+    "shard": 5,
+    "seconds": 433,
+    "journeys": [
+      "Service operations",
+      "Native transport",
+      "Incumbent import",
+      "Archive restore and erasure",
+      "Billing browser",
+      "report builder and exports browser"
+    ]
+  },
+  {
+    "shard": 6,
+    "seconds": 433,
+    "journeys": [
+      "Service desk and lifecycle",
+      "Knowledge publication",
+      "Manager approval and bundles",
+      "Department privacy browser",
+      "Connection and authority browser",
+      "software provider browser",
+      "notification rules browser"
+    ]
+  }
+]

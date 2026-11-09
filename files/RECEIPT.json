@@ -1,0 +1,242 @@
+{
+  "schema": 1,
+  "tag": "sx-linen-c-f61",
+  "repository": "just-every/run-linen",
+  "branch": "cloud/sx-linen-c-f61",
+  "head": "085941e54221d87f97f2f1150abe735507067ee3",
+  "base": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+  "recorded_at": "2026-11-09T12:37:49.282921+00:00",
+  "status": "local checks passed; product branch pushed; exact-SHA Verify completed successfully",
+  "command_results": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "log": null
+    },
+    {
+      "command": "cloud_run timeout 1200 node tests/work/runtime.mjs",
+      "exit": 0,
+      "log": "work-runtime.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0,
+      "log": null
+    },
+    {
+      "command": "python3 /home/agent/rer-consolidation/.tools/cloud-push.py origin cloud/sx-linen-c-f61",
+      "exit": 0,
+      "log": "product-push.log"
+    }
+  ],
+  "logs": {
+    "work-runtime.log": {
+      "bytes": 10629,
+      "sha256": "fda513a7ddf8c2e174c7e241df8356458e260d482404dad8953e59b7390fd74b"
+    },
+    "typecheck.log": {
+      "bytes": 186,
+      "sha256": "f18c3982272bd3f4fc8b2f6d1a1adc0c2eb2e5a5af257f3d839e65c44167db12"
+    },
+    "first-party.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "views-write.log": {
+      "bytes": 28,
+      "sha256": "14cee29b7bd19487e15f4013d4fb85016e022ef21d230676971a6490c88436d2"
+    },
+    "views-check.log": {
+      "bytes": 70,
+      "sha256": "b04031901cfff3e9bc42a429b52cbc14c2442ffb68817fd62a245ac52847b422"
+    },
+    "lock-write.log": {
+      "bytes": 309427,
+      "sha256": "e219b0d60b14487a96cdb4bfdf6bacad36c2f1d4ecc26a3a1a934efc3ad37f49"
+    },
+    "lock-check.log": {
+      "bytes": 309441,
+      "sha256": "11ae500eeb090850eaea6314a45454b35c5e2b12356f810ca558defc2e008d71"
+    },
+    "product-push.log": {
+      "bytes": 893,
+      "sha256": "2eee9ee5a3fa5784b531ef095692250e42e497fc721d527e7d9d0eac20994869"
+    }
+  },
+  "setup_result_source": "Observed completed process exit 0; setup private settings excluded",
+  "tested_test_sha256": "04f11be8b4f2229dcd7e6102b81067c8ac811fba2c2cf94a5a8403589a306eb9",
+  "relevant_bytes_match_candidate": true,
+  "source_lock_regenerated_after_rebase": true,
+  "generated_views_restored": true,
+  "contract_diff": "",
+  "registrations_added": 0,
+  "assertions_removed_or_weakened": 0,
+  "publication_scan": {
+    "commit": "085941e54221d87f97f2f1150abe735507067ee3",
+    "status": "NOT RUN in cloud; required from fleet lander",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "ci_status": "completed/success",
+  "blockers": [],
+  "pull_request": {
+    "base": "main",
+    "draft": true,
+    "head_sha": "085941e54221d87f97f2f1150abe735507067ee3",
+    "html_url": "https://github.com/just-every/run-linen/pull/194",
+    "number": 194
+  },
+  "main_workflow_runs": [
+    {
+      "conclusion": "success",
+      "event": "push",
+      "head_sha": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42614672049",
+      "id": 42614672049,
+      "name": "Run site",
+      "status": "completed"
+    },
+    {
+      "conclusion": "skipped",
+      "event": "push",
+      "head_sha": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42614672086",
+      "id": 42614672086,
+      "name": "Run demo",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "event": "dynamic",
+      "head_sha": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42614670927",
+      "id": 42614670927,
+      "name": "Push on main",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "event": "push",
+      "head_sha": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42614672051",
+      "id": 42614672051,
+      "name": "Verify",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "event": "workflow_dispatch",
+      "head_sha": "8cbb5da69a36002c032436b861772e8fb3f6247e",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42612972689",
+      "id": 42612972689,
+      "name": "Verify",
+      "status": "completed"
+    }
+  ],
+  "ci_discovery": [
+    {
+      "conclusion": null,
+      "event": "pull_request",
+      "head_sha": "085941e54221d87f97f2f1150abe735507067ee3",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42616935454",
+      "id": 42616935454,
+      "name": "Verify",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": null,
+      "event": "dynamic",
+      "head_sha": "085941e54221d87f97f2f1150abe735507067ee3",
+      "html_url": "https://github.com/just-every/run-linen/actions/runs/42616931999",
+      "id": 42616931999,
+      "name": "PR #194",
+      "status": "in_progress"
+    }
+  ],
+  "github_api_calls_used": 5,
+  "verify_runtime_shard": 6,
+  "product_remote_head": "085941e54221d87f97f2f1150abe735507067ee3",
+  "probes": [
+    {
+      "clause": "DESK-016",
+      "point": 5,
+      "door": "GET /search",
+      "result": "All three privileged roles succeeded; each request created an attributed audit without raw or encoded query content",
+      "test": "tests/work/search-cases.mjs#searchChecks",
+      "lines": [
+        94,
+        110
+      ]
+    },
+    {
+      "clause": "DESK-016",
+      "point": 6,
+      "door": "POST /knowledge; GET /knowledge?q=; GET /search",
+      "result": "Employee received actual reviewed guidance only; matching HR and draft articles excluded; HR positive control succeeded; employee global search and article-filtered global search both returned 403",
+      "test": "tests/work/search-cases.mjs#searchChecks",
+      "lines": [
+        71,
+        85
+      ]
+    }
+  ],
+  "contract_counts": {
+    "before": {
+      "done": 31,
+      "partial": 131,
+      "missing": 37
+    },
+    "after": {
+      "done": 31,
+      "partial": 131,
+      "missing": 37
+    }
+  },
+  "done_claimed": false,
+  "clause_status_changes": [],
+  "held_remainder": "Point 4 complete no-index, model and external-flow proof; all other unselected acceptance and existing holds unchanged",
+  "candidate_verify": {
+    "id": 42616935454,
+    "event": "pull_request",
+    "conclusion": "success",
+    "head_sha": "085941e54221d87f97f2f1150abe735507067ee3",
+    "html_url": "https://github.com/just-every/run-linen/actions/runs/42616935454",
+    "status": "completed"
+  },
+  "landing": {
+    "main_equality": false,
+    "run_site": "pending fleet landing; main-only workflow",
+    "publication_scan": "pending fleet lander"
+  }
+}
