@@ -2,6 +2,7 @@ import { registerWorkRoutes } from '../../src/features/work';
 import { registerConnectionRoutes } from '../../src/features/connections';
 import { providerFetch } from "../../src/features/execution/transport";
 import { Hono } from "hono";
+import { graphLicenseEdge, graphLicenseControl } from "./graph-license-fixture";
 import {
   registerExecutionRoutes,
   handleNotificationWebhook,
@@ -78,6 +79,8 @@ globalThis.fetch = async (input: any, init: any = {}) => {
       headers: { "x-message-id": "fixture-mail-" + mailWrites },
     });
   }
+  const licenseEdge = await graphLicenseEdge(u, init);
+  if (licenseEdge) return licenseEdge;
   if (u.hostname === "graph.microsoft.com") {
     if (u.pathname.includes("/users") && !u.pathname.includes("/license")) {
       if (u.pathname === "/v1.0/users/provider-employee")
@@ -168,6 +171,7 @@ app.use("*", async (c, next) => {
 app.post("/fixture", async (c) => {
   const b: any = await c.req.json();
   if (b.oktaWrongLog !== undefined) oktaWrongLog = b.oktaWrongLog;
+  if (b.graphLicense) return c.json(graphLicenseControl(b.graphLicense));
   if (b.reset) {
     present = false;
     writes = 0;
