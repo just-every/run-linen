@@ -2312,7 +2312,7 @@
       "executable": false
     },
     "src/features/execution/grants.ts": {
-      "sha256": "3420d6e6875e6cd62946b8bf14a096cec114bb84b8837f771ad640e039a90973",
+      "sha256": "2b6653c7418c3585e65b80d05f363da0044988e4ba68aa6703ac9dcfc302e700",
       "executable": false
     },
     "src/features/execution/identity.ts": {
@@ -5700,7 +5700,7 @@
       "executable": false
     },
     "src/platform/routes.ts": {
-      "sha256": "eaf46a8655daf7d5a9a5bbd609e3236ab7bd7b1dc99471ca2fec414310274a55",
+      "sha256": "857f897371b0d21b43c5d05bc69a210edf0d709564e2c919c9b5956ddc234f72",
       "executable": false
     },
     "src/platform/sandbox-approvals.ts": {
@@ -6640,7 +6640,7 @@
       "executable": false
     },
     "tests/adoption/runtime.mjs": {
-      "sha256": "74e70fc52e3b5f3470bee268ad41c36397f71e5d99ca209793d23fc1171d0fc5",
+      "sha256": "5423b86ad96e1f5a4a78e4689b08e2c53fd48dc7939c9750e046097555446582",
       "executable": false
     },
     "tests/adoption/servicenow-import-cases.mjs": {
@@ -6660,7 +6660,7 @@
       "executable": false
     },
     "tests/adoption/worker.ts": {
-      "sha256": "3b05e86a5bb89116c0d621a87d9d403eebcbdfb6aea9bcbf9d8480469b565f06",
+      "sha256": "f704d3afe0f1da6c8d4a9c5e5c3c1908bc863b388d5118c842b5957faff9ef16",
       "executable": false
     },
     "tests/agent-door/fixtures.mjs": {
