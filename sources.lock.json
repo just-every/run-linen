@@ -604,7 +604,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "775abd19ef07858fae47de50001f72c4e31c6b2feb622604f6896c092a9f62e8",
+      "sha256": "32bcfa9f10b9fadb0fc3fcf63423a6ef192a049bb34afffeb576b0d30ab9743f",
       "executable": false
     },
     "ADOPTION.md": {
@@ -676,7 +676,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "6fd79911f79b7f62af789eb2e54fd172d6d25cbc9313c136ead4ca4b32397916",
+      "sha256": "27d0f12e4d833978a91b5e7005b776406307b9d99929589abdaee567a70e3c3a",
       "executable": false
     },
     "docs/connections.md": {
