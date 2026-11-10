@@ -1,12 +1,18 @@
 import assert from 'node:assert/strict';
 /** DESK-004: ordered SLA policies, the US federal holiday catalog, waiting-on pauses and visible breaches through public routes. */
-export async function slaPolicyChecks(api, db) {
+export async function slaPolicyChecks(workspaceApi, db) {
+  const api = (path, body, headers = {}) => workspaceApi(path, body, { 'x-test-now': '2026-01-30T12:00:00.000Z', ...headers });
   const employee = { 'x-user': 'employee', 'x-roles': '["employee"]' }, requester = { 'x-user': 'stranger', 'x-roles': '["employee"]' };
+  const agent = { 'x-user': 'sla-agent', 'x-roles': '["operator"]' }, auditor = { 'x-user': 'sla-auditor', 'x-roles': '["auditor"]' };
+  await db.batch(['sla-agent', 'sla-auditor'].flatMap((user, index) => [
+    db.prepare('INSERT INTO users VALUES(?,?,?,?,?)').bind(user, `synthetic-linen-${13001 + index}`, user, 'synthetic-linen-13003', '2026-01-01'),
+    db.prepare('INSERT INTO memberships VALUES(?,?,?,1)').bind('a', user, JSON.stringify([index ? 'auditor' : 'operator'])),
+  ]));
   const check = (r, status = 200) => { assert.equal(r.status, status, 'DESK-004 ' + JSON.stringify(r)); return r.value; };
   const ny = { name: 'New York office', location: 'New York', timezone: 'America/New_York', weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [], holidayCatalog: 'us-federal' };
   check(await api('/calendars', { ...ny, holidayCatalog: 'uk-bank' }), 422);
   const calendar = check(await api('/calendars', ny), 201);
-  const executives = check(await api('/requester-groups', { name: 'Executives', memberIds: ['employee'] }), 201);
+  const executives = check(await api('/requester-groups', { name: 'Executives', memberIds: ['employee', 'sla-agent'] }), 201);
   check(await api('/requester-groups', { name: 'Executives', memberIds: ['employee'] }), 409);
   const p2 = { name: 'P2 business hours', position: 2, priority: 'P2', calendarId: calendar.id, firstResponseMinutes: 60, nextResponseMinutes: 120, resolutionMinutes: 240, pauseOn: ['requester', 'vendor'] };
   check(await api('/sla-policies', p2, employee), 403);
@@ -20,10 +26,10 @@ export async function slaPolicyChecks(api, db) {
 
   // Friday 16 January 2026, 4:30 pm in New York; Monday 19 January is Martin Luther King Jr. Day.
   const fridayAfternoon = '2026-01-16T21:30:00.000Z';
-  async function ticket(key, headers) {
-    const work = check(await api('/work', { title: `Printer down ${key}`, body: 'The floor printer is offline.', deduplicationKey: `sla-${key}` }, headers), 201);
+  async function ticket(key, headers, extra = {}, openedAt = fridayAfternoon) {
+    const work = check(await api('/work', { title: `Printer down ${key}`, body: 'The floor printer is offline.', deduplicationKey: `sla-${key}`, ...extra }, headers), 201);
     // Test time fixture: the ticket was opened on the Friday afternoon.
-    await db.prepare('UPDATE work_records SET created_at=? WHERE id=?').bind(fridayAfternoon, work.id).run();
+    await db.prepare('UPDATE work_records SET created_at=? WHERE id=?').bind(openedAt, work.id).run();
     const current = check(await api(`/work/${work.id}`)).work;
     check(await api(`/work/${work.id}/classification/override`, { type: 'incident', category: 'hardware', subcategory: 'printer', impact: 'medium', urgency: 'high', priority: 'P2', revision: 0, workRevision: current.revision, reason: 'Floor printer is down for a team.' }));
     return check(await api(`/work/${work.id}`)).work;
@@ -86,6 +92,49 @@ export async function slaPolicyChecks(api, db) {
   assert.ok(rows.every(r => r.resolution.state === 'breached' && r.resolution.breachedAt));
   assert.ok(report.sla.counts.resolution.breached >= 3 && report.sla.denominator >= 3);
   check(await api('/reports/work?from=2026-01-16T00:00:00.000Z&to=2026-01-17T00:00:00.000Z&timezone=America/New_York', undefined, requester), 403);
+
+  // The auditor is an explicit beneficiary, preserving the existing ticket reader boundary.
+  // A report role alone grants no new ticket, department or restricted readership.
+  const business = await ticket('reader-business', undefined, { beneficiaryId: 'sla-auditor' });
+  const calendarHours = await ticket('reader-calendar', agent, { beneficiaryId: 'sla-auditor' });
+  const restricted = await ticket('reader-restricted', undefined, { sensitivity: 'restricted' });
+  const hr = await ticket('reader-hr', undefined, { sensitivity: 'hr' });
+  const outside = await ticket('reader-outside', undefined, {}, '2026-01-17T00:00:00.000Z');
+  const period = '/reports/work?from=2026-01-16T00:00:00.000Z&to=2026-01-17T00:00:00.000Z&timezone=America/New_York';
+  const expectedIds = [a.id, b.id, executive.id, business.id, calendarHours.id].sort();
+  for (const reader of [{}, agent, auditor]) {
+    for (const [work, name, hours, firstMinutes, nextMinutes, resolutionMinutes, firstDue, resolutionDue] of [
+      [business, 'P2 business hours', 'business', 60, 120, 240, '2026-01-20T14:30:00.000Z', '2026-01-20T17:30:00.000Z'],
+      [calendarHours, 'Executive P2', 'calendar', 30, 60, 120, '2026-01-16T22:00:00.000Z', '2026-01-16T23:30:00.000Z'],
+    ]) {
+      const target = check(await api(`/work/${work.id}/sla`, undefined, reader));
+      assert.equal(target.workId, work.id);
+      assert.deepEqual([target.policy.name, target.policy.hours, target.policy.firstResponseMinutes, target.policy.nextResponseMinutes, target.policy.resolutionMinutes],
+        [name, hours, firstMinutes, nextMinutes, resolutionMinutes]);
+      assert.deepEqual([target.firstResponse.dueAt, target.firstResponse.breachedAt, target.firstResponse.state], [firstDue, firstDue, 'breached']);
+      assert.deepEqual([target.resolution.dueAt, target.resolution.breachedAt, target.resolution.state], [resolutionDue, resolutionDue, 'breached']);
+      const scoped = check(await api(period, undefined, reader));
+      assert.deepEqual(scoped.sla.rows.find(row => row.workId === work.id), { workId: work.id, title: work.title,
+        policy: target.policy, firstResponse: target.firstResponse, nextResponses: target.nextResponses, resolution: target.resolution, pauses: target.pauses });
+      assert.deepEqual([scoped.from, scoped.to, scoped.timezone], ['2026-01-16T00:00:00.000Z', '2026-01-17T00:00:00.000Z', 'America/New_York']);
+      assert.deepEqual(scoped.rows.map(row => row.id).sort(), expectedIds);
+      assert.deepEqual(scoped.sla.rows.map(row => row.workId).sort(), expectedIds);
+      assert.deepEqual([scoped.denominator, scoped.sla.denominator], [5, 5]);
+      assert.deepEqual(scoped.sla.counts, {
+        firstResponse: { met: 0, breached: 5, running: 0, paused: 0 },
+        nextResponse: { met: 1, breached: 0, running: 0, paused: 0 },
+        resolution: { met: 0, breached: 5, running: 0, paused: 0 },
+      });
+      assert.ok([restricted.id, hr.id, outside.id].every(id => !scoped.sla.rows.some(row => row.workId === id)));
+    }
+  }
+  for (const work of [business, calendarHours]) check(await api(`/work/${work.id}/sla`, undefined, requester), 403);
+  for (const reader of [agent, auditor]) {
+    for (const work of [restricted, hr]) check(await api(`/work/${work.id}/sla`, undefined, reader), 404);
+  }
+  check(await api(`/work/${a.id}/sla`, undefined, auditor), 404);
+  check(await api(period, undefined, requester), 403);
+  console.log('PROBE DESK-020 4: distinct active operator and auditor GET permitted business and calendar ticket targets and explicit period report -> 200, bound targets and exact breach times, five normal rows and breaches, one met next response; restricted, HR and end-boundary rows excluded; requester reads 403; unrelated auditor ticket read 404');
   console.log('PASS DESK-004 public routes: ordered policies by priority/category/requester group, business or calendar hours, US federal holiday catalog per location calendar, first/next/resolution targets, waiting-on pauses, breaches on ticket and report');
 }
 
@@ -292,5 +341,68 @@ export async function escalationChecks(workspaceApi, db) {
   check(await tick());
   reminders = (await followups(business.id)).filter(r => r.kind === 'requester_reminder');
   assert.deepEqual(reminders.map(r => r.next_due_at), ['2027-01-21T21:30:00.000Z', '2027-01-25T21:30:00.000Z'], 'DESK-005 three and five business days skip the weekend and the holiday on the New York calendar');
+
+  // A due automatic close waits for the same required fields as a staff close, then retries the same waiting episode.
+  testAt = '2026-02-02T09:00:00.000Z';
+  const requiredField = check(await api('/desk-fields', { name: 'Root cause', type: 'text', kinds: ['incident'], requiredOn: ['closed'] }), 201);
+  let guarded = await ticket('required-close-field', 'P3', 'medium');
+  guarded = await pauseFor(guarded, 'required-close-field');
+  const guardedConversation = async () => check(await api(`/work/${guarded.id}`, undefined, employee));
+  const guardedDesk = async () => check(await api(`/work/${guarded.id}/desk`, undefined, employee));
+  const closeFollowup = async () => (await followups(guarded.id)).find(r => r.kind === 'requester_reminder' && r.level === 2);
+  testAt = '2026-02-05T09:00:00.000Z';
+  check(await tick());
+  const beforeClose = await guardedConversation();
+  assert.deepEqual([beforeClose.work.state, beforeClose.work.closed_at], ['paused', null]);
+  assert.equal(beforeClose.messages.filter(m => m.body.startsWith('Reminder:')).length, 1, 'DESK-023 the requester was genuinely reminded before the close becomes due');
+  assert.equal((await guardedDesk()).fields.find(f => f.id === requiredField.id).value, null);
+  const waitingClose = await closeFollowup();
+  assert.deepEqual([waitingClose.state, waitingClose.next_due_at, waitingClose.fired_at], ['scheduled', '2026-02-07T09:00:00.000Z', null]);
+  for (const at of [waitingClose.next_due_at, '2026-02-07T09:01:00.000Z']) {
+    testAt = at;
+    check(await tick());
+    assert.deepEqual(await guardedConversation(), beforeClose, 'DESK-023 a due close with an empty required field preserves the paused ticket, revision and public conversation');
+    assert.equal((await guardedConversation()).messages.filter(m => m.body.startsWith('Closed:')).length, 0, 'DESK-023 no public closing line is posted while the required field is empty');
+    assert.equal((await guardedDesk()).resolution, null, 'DESK-023 no resolution is recorded while the required field is empty');
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_resolutions WHERE workspace_id=? AND work_id=?').bind('desk005', guarded.id).first()).n, 0, 'DESK-023 the guarded close leaves no hidden persisted resolution');
+    assert.deepEqual(await closeFollowup(), waitingClose, 'DESK-023 repeated due passes leave the same close scheduled and never fired');
+  }
+  testAt = '2026-02-07T09:02:00.000Z';
+  check(await api(`/work/${guarded.id}/fields`, { fieldId: requiredField.id, value: 'Pending diagnostic export' }));
+  const cleared = check(await api(`/work/${guarded.id}/fields`, { fieldId: requiredField.id, value: '   ' }));
+  assert.equal(cleared.fields.find(f => f.id === requiredField.id).value, null, 'DESK-023 clearing a previously filled required field leaves it empty');
+  const afterClear = await guardedConversation();
+  testAt = '2026-02-07T09:02:30.000Z';
+  check(await tick());
+  assert.deepEqual(await guardedConversation(), afterClear, 'DESK-023 a due pass cannot use the old field value after it was cleared');
+  assert.deepEqual(afterClear.messages, beforeClose.messages, 'DESK-023 filling and clearing a field does not post a public closing line');
+  assert.equal((await guardedDesk()).resolution, null);
+  assert.equal((await db.prepare('SELECT COUNT(*) n FROM work_resolutions WHERE workspace_id=? AND work_id=?').bind('desk005', guarded.id).first()).n, 0);
+  assert.deepEqual(await closeFollowup(), waitingClose, 'DESK-023 the automatic close remains scheduled after a cleared-field due pass');
+  testAt = '2026-02-07T09:03:00.000Z';
+  const filled = check(await api(`/work/${guarded.id}/fields`, { fieldId: requiredField.id, value: 'Requester did not supply the diagnostic export' }));
+  assert.equal(filled.fields.find(f => f.id === requiredField.id).value, 'Requester did not supply the diagnostic export');
+  assert.equal(filled.resolution, null);
+  assert.equal((await guardedConversation()).work.state, 'paused', 'DESK-023 filling the required field alone does not close the ticket');
+  testAt = '2026-02-07T09:04:00.000Z';
+  check(await tick());
+  const guardedClosed = await guardedConversation(), guardedResolution = (await guardedDesk()).resolution, firedClose = await closeFollowup();
+  assert.deepEqual([guardedClosed.work.state, guardedClosed.work.closed_at, guardedClosed.work.revision], ['closed', testAt, guarded.revision + 1], 'DESK-023 a later due pass closes the ticket exactly once after the field is filled');
+  assert.equal(guardedResolution.code, 'No response');
+  assert.equal(guardedResolution.resolvedAt, testAt);
+  assert.match(guardedResolution.closeNotes, /^Resolved without a reply: no reply arrived within 5 business days/);
+  const closingLines = guardedClosed.messages.filter(m => m.body.startsWith('Closed:'));
+  assert.equal(closingLines.length, 1);
+  assert.deepEqual([closingLines[0].visibility, closingLines[0].body], ['public', `Closed: ${guardedResolution.closeNotes}`]);
+  assert.deepEqual([firedClose.id, firedClose.episode, firedClose.state, firedClose.fired_at], [waitingClose.id, waitingClose.episode, 'fired', testAt], 'DESK-023 the original waiting episode fires its close after the guard clears');
+  for (const at of [testAt, '2026-02-10T09:00:00.000Z']) {
+    testAt = at;
+    check(await tick());
+    assert.deepEqual(await guardedConversation(), guardedClosed, 'DESK-023 repeated and later passes preserve the single close and public line');
+    assert.deepEqual((await guardedDesk()).resolution, guardedResolution, 'DESK-023 later passes preserve the original resolution');
+    assert.deepEqual(await closeFollowup(), firedClose, 'DESK-023 later passes do not fire the close again');
+  }
+  console.log('PROBE DESK-023 6: desk-fields, pause, fields and process-due routes -> empty or cleared required field preserves paused ticket, null resolution, no public close and unfired scheduled row on repeated due passes; filling the field lets a later pass close once with No response and one public closing line; repeated and later passes unchanged');
+  testAt = undefined;
   console.log('PASS DESK-005 public routes: P1 level-1 then level-2 escalation before the response target, private to agents, level 3 stopped by the response; awaiting-requester reminder then disclosed resolution; a reply before the due time stops both; business days on the SLA calendar');
 }

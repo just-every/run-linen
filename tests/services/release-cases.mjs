@@ -90,8 +90,49 @@ export async function releaseChecks({ok,call,db,implementation}) {
     c=await ok('POST',`/changes/${c.id}/authorize`,{revision:c.revision,reason:'Reviewed exact candidate',grantReferences});regression.push(c);
   }
   let boundary=await ok('POST','/releases',{...body,title:'Release candidate boundary',changeIds:regression.map(c=>c.id)});
+  const phaseWritesBefore=(await ok('POST','/fixture/state',{})).writes;
+  const membersBefore=await Promise.all(regression.map(c=>ok('GET',`/changes/${c.id}`)));
+  for(const buildOutcome of [null,'failed']){
+    if(buildOutcome)boundary=await ok('POST',`/releases/${boundary.id}/phases`,{revision:boundary.revision,phase:'build',outcome:buildOutcome,reference:'synthetic-linen-7001'},'operator');
+    const before=await ok('GET',`/releases/${boundary.id}`);
+    const historyBefore=await ok('GET',`/service-history/${boundary.id}`);
+    const refused=await call('POST',`/releases/${boundary.id}/phases`,{revision:before.revision,phase:'test',outcome:'passed',reference:'synthetic-linen-7002'},'operator');
+    assert.equal(refused.status,409,'A test without a passed build is refused');
+    assert.equal(refused.body.error.code,'release_phase');
+    assert.deepEqual(await ok('GET',`/releases/${boundary.id}`),before,'Refusing a test preserves the entire release and its revision');
+    assert.deepEqual(await ok('GET',`/service-history/${boundary.id}`),historyBefore,'Refusing a test adds no release history');
+  }
   for(const phase of ['build','test'])boundary=await ok('POST',`/releases/${boundary.id}/phases`,{revision:boundary.revision,phase,outcome:'passed',reference:'Reviewed candidate'});
   const approve=async()=>{for(const actor of ['owner','approver'])boundary=await ok('POST',`/releases/${boundary.id}/decisions`,{revision:boundary.revision,decision:'go',reason:'Reviewed all member implementations'},actor);};
+  for(const [phase,actor,reference] of [['test','operator','synthetic-linen-7003'],['build','owner','synthetic-linen-7004']]){
+    await approve();
+    const before=await ok('GET',`/releases/${boundary.id}`);
+    assert.equal(before.data.state,'go');assert.equal(before.data.goNoGo,'go','Replacement starts with genuine current go decisions');
+    assert.deepEqual(before.data.decisions.map(d=>d.actor).sort(),['approver','owner']);
+    for(const decision of before.data.decisions){
+      assert.equal(decision.decision,'go');assert.equal(decision.reason,'Reviewed all member implementations');
+      assert.ok(decision.id && decision.at);
+      assert.deepEqual(decision.revisions,Object.fromEntries(regression.map(c=>[c.id,c.data.implementationRevision])));
+    }
+    const recorded=await ok('POST',`/releases/${boundary.id}/phases`,{revision:before.revision,phase,outcome:'passed',reference},actor);
+    boundary=await ok('GET',`/releases/${boundary.id}`);
+    assert.deepEqual(boundary,recorded,'Release reads retain the recorded replacement result');
+    assert.equal(boundary.revision,before.revision+1);
+    assert.equal(boundary.data.phases[phase].reference,reference);assert.equal(boundary.data.phases[phase].outcome,'passed');
+    assert.equal(boundary.data.phases[phase].recordedBy,actor);assert.ok(Number.isFinite(Date.parse(boundary.data.phases[phase].recordedAt)));
+    assert.deepEqual(boundary.data.decisions,[],`Replacing ${phase} withdraws all current decisions`);
+    assert.deepEqual(boundary.data.priorDecisions,[...before.data.priorDecisions,...before.data.decisions],`Replacing ${phase} retains every attributed earlier decision`);
+    assert.equal(boundary.data.state,'planning');assert.equal(boundary.data.goNoGo,'awaiting-decision');
+    if(phase==='test')assert.deepEqual(boundary.data.phases.build,before.data.phases.build,'A replacement test retains its passed build');
+    else{
+      assert.ok(before.data.phases.test,'A passed test exists before the replacement build');
+      assert.equal(boundary.data.phases.test,null,'A replacement build also clears the old test');
+    }
+  }
+  assert.equal((await ok('POST','/fixture/state',{})).writes,phaseWritesBefore,'Recording results and native decisions dispatches no provider effect');
+  assert.deepEqual(await Promise.all(regression.map(c=>ok('GET',`/changes/${c.id}`))),membersBefore,'Recording release results leaves member changes untouched');
+  boundary=await ok('POST',`/releases/${boundary.id}/phases`,{revision:boundary.revision,phase:'test',outcome:'passed',reference:'synthetic-linen-7005'});
+  console.log('PASS CHANGE-007 recorded phases: tests require a passed build without mutation on refusal; replacement test and build withdraw current go decisions, retain attributed history and return to planning; replacement build clears the old test; no provider effect');
   await approve();
   regression[1]=await ok('PATCH',`/changes/${regression[1].id}`,{revision:regression[1].revision,title:'Materially amended member'});
   assert.equal((await dispatch(regression[0],'canary','old-candidate')).body.error.code,'release_go','Amending one member holds every member');

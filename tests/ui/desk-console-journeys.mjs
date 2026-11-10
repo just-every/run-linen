@@ -270,8 +270,8 @@ export async function deskScenarioJourney({browser,page,api,base,out,errors}) {
   const ticket = async (title) => api('/work', { title, body: `${title}.`, kind: 'incident', deduplicationKey: crypto.randomUUID() });
   const vpn = await ticket('VPN drops every ten minutes'), a = await ticket('Wi-Fi slow on floor 3'), b = await ticket('Wi-Fi slow on floor 4');
 
-  // Dana opens the ticket and runs the group scenario from the keyboard picker (x focuses it).
-  const agent = await browser.newContext({ viewport: { width: 1440, height: 1000 }, timezoneId: 'UTC' }), ap = await agent.newPage();
+  // Dana starts a fresh ticket run at phone width from the keyboard picker (x focuses it).
+  const agent = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'UTC' }), ap = await agent.newPage();
   ap.on('pageerror', error => errors.push(String(error)));
   await signIn(ap, base, dana.email, password);
   await ap.goto(`${base}/app#/work/${vpn.id}`);
@@ -282,7 +282,11 @@ export async function deskScenarioJourney({browser,page,api,base,out,errors}) {
   await ap.keyboard.press('x');
   assert.equal(await ap.evaluate(() => document.activeElement?.closest('section')?.getAttribute('aria-label')), 'Scenarios', 'DESK-015 x focuses the scenario picker');
   await panel.getByLabel(/^Scenario/).selectOption(escalate.id);
-  const priorGroupId=(await api(`/work/${vpn.id}`)).work.group_id;
+  assert.equal(await ap.evaluate(() => innerWidth), 390, 'DESK-015 ticket execution uses a real phone viewport');
+  const ticketBefore = (await api(`/work/${vpn.id}`)).work;
+  assert.equal(ticketBefore.state, 'open');
+  assert.deepEqual((await api(`/work/${vpn.id}/scenario-runs`)).items, [], 'DESK-015 ticket has never run a scenario');
+  const priorGroupId=ticketBefore.group_id;
   const priorGroup=(await api('/work-groups')).items.find(group=>group.id===priorGroupId)?.name??'none';
   const ran = ap.waitForResponse(r => r.url().endsWith(`/work/${vpn.id}/scenario-runs`) && r.request().method() === 'POST');
   await panel.getByRole('button', { name: 'Run scenario', exact: true }).click();
@@ -293,6 +297,52 @@ export async function deskScenarioJourney({browser,page,api,base,out,errors}) {
   await changes.getByText(`group: ${priorGroup} → Audit Network L2`).waitFor();
   const after = await api(`/work/${vpn.id}`);
   assert.deepEqual([after.work.group_id, after.work.state], [l2.id, 'paused'], 'DESK-015 the console run applies the scenario');
+  const persistedRun = async (work, before) => {
+    const current = await api(`/work/${work.id}`);
+    assert.deepEqual([current.work.group_id, current.work.assignee_id, current.work.state], [l2.id, null, 'paused']);
+    assert.ok(current.messages.some(m => m.visibility === 'private' && m.body === escalate.steps.message.body));
+    const runs = (await api(`/work/${work.id}/scenario-runs`)).items;
+    assert.equal(runs.length, 1, 'DESK-015 ticket and bulk each persist exactly one run per chosen ticket');
+    const run = runs[0];
+    assert.deepEqual([run.scenarioId, run.name, run.actorId, run.errorCode], [escalate.id, escalate.name, dana.id, undefined]);
+    assert.ok(Number.isFinite(Date.parse(run.at)));
+    for (const [step, field, previous, value] of [
+      ['classification', 'category', null, 'network'], ['classification', 'priority', null, 'P2'],
+      ['group', 'group', before.group_id ?? null, l2.id], ['group', 'owner', before.assignee_id, null],
+      ['status', 'state', 'open', 'paused'], ['message', 'private note', null, 'added'],
+    ]) assert.deepEqual(run.changes.find(c => c.field === field), {
+      step, field, before: previous, after: value,
+    }, `DESK-015 persisted ${field} before and after`);
+    const projectId = run.changes.find(c => c.field === 'task plan').after;
+    assert.ok((await api(`/projects/${projectId}`)).links.some(link => link.kind === 'ticket' && link.target_id === work.id));
+    return run;
+  };
+  const ticketRun = await persistedRun(vpn, ticketBefore);
+  await ap.reload();
+  await panel.getByRole('list', { name: 'Scenario changes' }).getByText('state: open → paused').waitFor();
+  assert.deepEqual((await api(`/work/${vpn.id}/scenario-runs`)).items, [ticketRun], 'DESK-015 the phone run and audit survive reload');
+  const inspectRun = async (work, run, label) => {
+    await ap.goto(`${base}/app#/work/${work.id}`);
+    await ap.getByRole('heading', { level: 2, name: work.title, exact: true }).waitFor();
+    for (const width of [1440, 390]) {
+      await ap.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
+      const saved = panel.getByRole('list', { name: 'Scenario changes' });
+      await saved.getByText('category: none → network', { exact: true }).waitFor();
+      await saved.getByText('priority: none → P2', { exact: true }).waitFor();
+      await saved.getByText('state: open → paused', { exact: true }).waitFor();
+      await saved.getByText('private note: none → added', { exact: true }).waitFor();
+      await saved.getByRole('link', { name: 'Network recovery duties', exact: true }).waitFor();
+      const event = ap.getByRole('list', { name: 'Ticket activity', exact: true })
+        .locator(':scope > li').filter({ hasText: 'Scenario · Escalate to Network L2 · Scenario run' });
+      await event.getByText('Category: none → network', { exact: true }).waitFor();
+      await event.getByText(`Initiated by ${dana.id}`, { exact: true }).waitFor();
+      assert.deepEqual((await api(`/work/${work.id}/scenario-runs`)).items, [run]);
+      await captureJourney(ap, { path: `${out}/DESK-015-${label}-saved-${width}.png`, fullPage: true });
+    }
+  };
+  await inspectRun(vpn, ticketRun, 'ticket');
+  // Keep the existing desktop shortcut-reference assertion after the phone execution proof.
+  await ap.setViewportSize({ width: 1440, height: 1000 });
   await ap.locator('#main-content').focus();
   await ap.keyboard.press('?');
   await ap.getByRole('definition').filter({ hasText: 'Run a scenario on the open ticket' }).waitFor();
@@ -370,8 +420,15 @@ export async function deskScenarioJourney({browser,page,api,base,out,errors}) {
     await captureJourney(ap, { path: `${out}/DESK-017-scenario-task-history-${width}.png`, fullPage: true });
   }
 
-  // At phone width the bulk-update screen runs the scenario on two chosen tickets.
-  await ap.setViewportSize({ width: 1440, height: 1000 });
+  // Start a separate bulk run on two untouched tickets at actual phone width.
+  await ap.setViewportSize({ width: 390, height: 844 });
+  const bulkBefore = [];
+  for (const w of [a, b]) {
+    const before = (await api(`/work/${w.id}`)).work;
+    assert.equal(before.state, 'open');
+    assert.deepEqual((await api(`/work/${w.id}/scenario-runs`)).items, []);
+    bulkBefore.push(before);
+  }
   await ap.goto(`${base}/app#/work`);
   const queue = ap.getByRole('region', { name: 'Request queue' });
   await queue.getByText('Bulk update', { exact: true }).click();
@@ -381,10 +438,18 @@ export async function deskScenarioJourney({browser,page,api,base,out,errors}) {
   await bulk.getByLabel(/^Bulk change/).selectOption('scenario');
   await bulk.getByLabel(/^Bulk scenario/).selectOption(escalate.id);
   await bulk.getByLabel('Bulk update reason', { exact: true }).fill('Both floors share the Network L2 controller');
+  assert.equal(await ap.evaluate(() => innerWidth), 390, 'DESK-015 bulk execution uses a real phone viewport');
+  const bulkApplied = ap.waitForResponse(r => r.url().endsWith('/work/bulk-commands') && r.request().method() === 'POST');
   await bulk.getByRole('button', { name: 'Apply to 2 tickets', exact: true }).click();
+  assert.equal((await bulkApplied).status(), 200);
   await queue.getByText('2 changed, 0 refused.', { exact: false }).waitFor();
   for (const w of [a, b]) assert.equal((await api(`/work/${w.id}`)).work.group_id, l2.id, 'DESK-015 bulk scenario run');
-  await captureJourney(ap, { path: `${out}/DESK-015-bulk-scenario-390.png`, fullPage: true });
+  const bulkRuns = await Promise.all([a, b].map((w, i) => persistedRun(w, bulkBefore[i])));
+  await captureJourney(ap, { path: `${out}/DESK-015-bulk-scenario.png`, fullPage: true });
+  await ap.reload();
+  for (const [i, w] of [a, b].entries()) assert.deepEqual((await api(`/work/${w.id}/scenario-runs`)).items, [bulkRuns[i]], 'DESK-015 bulk audits survive reload');
+  for (const [i, w] of [a, b].entries()) await inspectRun(w, bulkRuns[i], `bulk-${i + 1}`);
+  console.log('PROBE DESK-015 8: keyboard ticket run and fresh two-ticket bulk run at innerWidth 390 -> persisted category, priority, group, state, private note, linked plan and attributed audits; end states captured at 1440 and 390');
   await agent.close();
 
   // An employee at phone width starts a ticket from the "New laptop setup" template; the draft is pre-filled.
