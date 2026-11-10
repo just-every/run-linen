@@ -15,7 +15,7 @@ A product claim is done when every clause behind it is done, missing when every 
 | 7 | Asked in Slack. Done in Slack. Linen answers in the thread, does the work and checks that it worked. | `CHANNEL-001` missing; `CHANNEL-006` partial; `AGENT-001` partial | partial |
 | 8 | Locked out of Okta: identity confirmed by her manager, reset with no password in chat, signed back in. | `ACCESS-007` missing; `AGENT-003` partial | partial |
 | 9 | A bad change, backed out in 7 minutes. Linen ties the failing check to the change, rolls it back and gets everyone signed in again. | `CHANGE-005` partial; `INC-002` partial | partial |
-| 10 | Every change carries its risk, CAB approval, window and backout plan. | `CHANGE-002` partial; `CHANGE-003` partial; `CHANGE-004` partial | partial |
+| 10 | Every change carries its risk, CAB approval, window and backout plan. | `CHANGE-002` partial; `CHANGE-003` partial; `CHANGE-004` done | partial |
 | 11 | Off everything by 5:03 PM. At the end of a leaver's last day, Linen revokes every app, hands his files to his manager and gets the laptop back. | `LIFE-005` partial; `AGENT-002` partial | partial |
 | 12 | Every laptop accounted for: locked, returned, wiped with readback and custody closed. | `ASSET-004` partial; `ASSET-002` missing | partial |
 | 13 | New team, new apps. Linen adds what the new team uses, removes what the old team used and keeps the rest. | `LIFE-003` partial | partial |
