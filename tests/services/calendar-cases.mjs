@@ -33,6 +33,10 @@ export async function calendarChecks(request,db) {
   const outside=await ok('POST','/changes',{...body,title:'After-freeze payroll upgrade',window:{start:freezeBody.window.end,end:'2031-01-02T01:00:00.000Z'}});
   assert.equal((await request('PATCH','/changes/'+outside.id,{revision:outside.revision,window:body.window},agent)).status,409,'CHANGE-004 edit cannot enter freeze');
   assert.equal((await ok('GET','/changes/'+outside.id)).revision,outside.revision,'CHANGE-004 refused edit applies nothing');
+  const beforeFreeze=await ok('POST','/changes',{...body,title:'Ends exactly at freeze start',window:{start:'2030-12-23T22:00:00.000Z',end:freezeBody.window.start}});
+  assert.equal(beforeFreeze.data.window.end,freezeBody.window.start,'CHANGE-004 a change ending at the freeze start instant is outside the half-open window');
+  const inclusiveStart=await request('POST','/changes',{...body,title:'Starts inside the freeze by one millisecond',window:{start:'2030-12-23T22:00:00.000Z',end:'2030-12-24T00:00:00.001Z'}});
+  assert.equal(inclusiveStart.json.error.code,'calendar_frozen','CHANGE-004 the freeze start instant is inclusive');
   const unrelated=await ok('POST','/changes',{...body,title:'Unrelated CI upgrade',services:[otherCI.id]});
   const calendar=(await auditedRead('/change-calendar?from=2030-12-01T00:00:00Z&to=2031-02-01T00:00:00Z&timezone=America%2FDenver',owner,'w1','owner')).json;
   assert.equal(calendar.timezone,'America/Denver');assert.ok(calendar.windows.some(r=>r.id===freeze.id));
@@ -128,4 +132,82 @@ export async function calendarChecks(request,db) {
   assert.deepEqual(await auditRows(),auditsBeforeRevocation,'CHANGE-009 revoked reads add no successful audit');
   console.log('PASS CHANGE-004 public calendar: year-end freeze/emergency scheduling, edits, CI scope, half-open bounds, maintenance, draft overlaps, scoped/generic conflicts, CAS and current roles');
   return {freezeId:freeze.id,emergencyId:emergency.id};
+}
+
+/** CHANGE-004 point 7 through the real change engine and dispatch door: an owner-recorded emergency schedule inside a
+ * covered freeze authorizes scheduling only. Decision, implementation grant and compensation grant stay separate controls;
+ * only the deployment and probe network edge is a fixture. */
+export async function emergencyBypassChecks({ok,call,db,implementation,createHash}) {
+  const at=new Date().toISOString(),window={start:new Date(Date.now()-60000).toISOString(),end:new Date(Date.now()+3600000).toISOString()};
+  await db.prepare('INSERT OR IGNORE INTO users VALUES(?,?,?,?,?)').bind('approver','approver@fixture.test','approver','fixture',at).run();
+  await db.prepare('INSERT OR IGNORE INTO memberships VALUES(?,?,?,1)').bind('w','approver',JSON.stringify(['approver'])).run();
+  const names=['no-decision','stale-decision','absent-grant','revoked-grant','compensation'],services={};
+  for(const name of names)services[name]=await ok('POST','/services',{name:'synthetic-linen-bypass-'+name,description:'Emergency bypass proof',businessImpact:'Bypass proof',source:'fixture',observedAt:at});
+  const freezeBody={title:'Bypass proof freeze',kind:'freeze',window,services:names.map(n=>services[n].id),active:true};
+  const freeze=await ok('POST','/change-windows',freezeBody);
+  const grantFor=async(phase,revision=1)=>{
+    const payload={...(phase==='compensate'?{release:'r1'}:implementation.payload),phase,cohorts:['a','b'],implementationRevision:revision};
+    const grant=await ok('POST','/grants',{principalId:'operator',beneficiaryId:implementation.beneficiaryId,action:'deployment.'+phase,actionVersion:1,target:implementation.target,connectionId:implementation.connectionId,
+      validFrom:window.start,validUntil:window.end,maxUses:10,conditions:{payloadHash:createHash('sha256').update(JSON.stringify(payload)).digest('hex')}});
+    return {id:grant.id,version:grant.version,phase};
+  };
+  const schedule=async name=>{
+    const body={title:'Emergency repair '+name,risk:'Bounded',impact:'Sales',services:[services[name].id],window,visibility:'workspace',cohorts:['a','b'],canaryCohorts:['a','b'],implementation,compensation:{...implementation,payload:{release:'r1'}}};
+    assert.equal((await call('POST','/changes',body,'owner')).body.error.code,'calendar_frozen','CHANGE-004 the covered freeze refuses an ordinary schedule');
+    assert.equal((await call('POST','/changes',{...body,emergency:true,emergencyReason:'Operator self-assertion'},'operator')).body.error.code,'calendar_frozen','CHANGE-004 an operator emergency flag grants nothing');
+    const change=await ok('POST','/changes',{...body,emergency:true,emergencyReason:'Current owner authorizes the urgent repair'},'owner');
+    assert.equal(change.data.emergencySchedulingActor,'owner');
+    assert.deepEqual([change.data.authorizations,change.data.invocations],[[],[]],'CHANGE-004 scheduling inside the freeze creates no decision and no execution');
+    return change;
+  };
+  const decide=(change,grantReferences)=>ok('POST',`/changes/${change.id}/authorize`,{revision:change.revision,reason:'Independent approval of the exact implementation',grantReferences},'approver');
+  const count=async table=>(await db.prepare('SELECT COUNT(*) n FROM '+table).first()).n;
+  const allowed=async()=> (await db.prepare('SELECT COUNT(*) n FROM execution_decisions WHERE allowed=1').first()).n;
+  const authority=async change=>{
+    const current=await ok('GET','/changes/'+change.id);
+    return {writes:(await ok('POST','/fixture/state',{})).writes,allowedDecisions:await allowed(),revision:current.revision,state:current.data.state,invocations:current.data.invocations.length,
+      tables:await Promise.all(['execution_grants','execution_grant_revocations','execution_plans','execution_operations','execution_attempts','execution_receipts','svc_change_locks'].map(count))};
+  };
+  const refuse=async(change,phase,key,status,code,why)=>{
+    const before=await authority(change);
+    const result=await call('POST',`/changes/${change.id}/dispatch`,{revision:change.revision,phase,idempotencyKey:key},'operator');
+    assert.equal(result.status,status,why+' '+JSON.stringify(result));
+    assert.equal(result.body.error.code,code,why);
+    assert.deepEqual(await authority(change),before,why+': the refusal leaves provider writes, allowed decisions, grants, plans, locks and the change unchanged (a recorded denial is the only addition)');
+  };
+  const baseline=(await ok('POST','/fixture/state',{})).writes;
+  // 1. No current change decision: the freeze bypass does not stand in for approval.
+  const undecided=await schedule('no-decision');
+  await grantFor('canary');
+  await refuse(undecided,'canary','synthetic-linen-bypass-1',409,'authorization','CHANGE-004 bypass cannot supply a missing change decision');
+  // 2. A decision for a superseded implementation revision is not current either.
+  let stale=await schedule('stale-decision');
+  stale=await decide(stale,[await grantFor('canary'),await grantFor('rollout'),await grantFor('compensate')]);
+  const amended=await ok('PATCH','/changes/'+stale.id,{revision:stale.revision,title:'Emergency repair stale-decision revised',emergency:true,emergencyReason:'Owner re-records the emergency for the revised implementation'},'owner');
+  assert.equal(amended.data.implementationRevision,2);assert.equal(amended.data.authorizations.length,0);
+  await refuse(amended,'canary','synthetic-linen-bypass-2',409,'authorization','CHANGE-004 bypass cannot revive a decision for a superseded implementation');
+  // 3. A decision with no implementation grant for the phase, even with a valid compensation grant referenced.
+  let absent=await schedule('absent-grant');
+  absent=await decide(absent,[await grantFor('compensate')]);
+  await refuse(absent,'canary','synthetic-linen-bypass-3',403,'grant_scope_denied','CHANGE-004 a compensation grant cannot stand in for the missing implementation grant');
+  // 4. A revoked implementation grant.
+  let revoked=await schedule('revoked-grant');
+  const references=[await grantFor('canary'),await grantFor('rollout'),await grantFor('compensate')];
+  revoked=await decide(revoked,references);
+  await ok('POST',`/grants/${references[0].id}/revoke`,{version:references[0].version});
+  await refuse(revoked,'canary','synthetic-linen-bypass-4',403,'grant_revoked','CHANGE-004 bypass cannot revive a revoked implementation grant');
+  // 5. Fully decided and granted implementation runs inside the freeze, but compensation keeps its own grant.
+  let comp=await schedule('compensation');
+  const compReferences=[await grantFor('canary'),await grantFor('rollout'),await grantFor('compensate')];
+  comp=await decide(comp,compReferences);
+  await ok('POST',`/grants/${compReferences[2].id}/revoke`,{version:compReferences[2].version});
+  comp=await ok('POST',`/changes/${comp.id}/dispatch`,{revision:comp.revision,phase:'canary',idempotencyKey:'synthetic-linen-bypass-5'},'operator');
+  assert.equal(comp.data.state,'effect_verified','CHANGE-004 an independently decided and granted emergency implementation dispatches inside the freeze');
+  assert.equal((await ok('POST','/fixture/state',{})).writes,baseline+1,'CHANGE-004 only the granted canary wrote to the provider');
+  comp=await ok('POST',`/changes/${comp.id}/verify`,{revision:comp.revision,invocationId:comp.data.invocations[0].id},'operator');
+  assert.equal(comp.data.state,'canary-verified');
+  await refuse(comp,'compensate','synthetic-linen-bypass-6',403,'grant_revoked','CHANGE-004 bypass cannot supply the separate compensation grant');
+  await ok('POST','/change-windows/'+freeze.id,{...freezeBody,revision:freeze.revision,active:false});
+  assert.equal((await ok('POST','/fixture/state',{})).writes,baseline+1,'CHANGE-004 five emergency schedules wrote exactly one granted canary');
+  console.log('PASS CHANGE-004 emergency bypass is scheduling-only: missing or superseded decision, absent or revoked implementation grant and revoked compensation grant refuse at dispatch with writes and authority unchanged');
 }
