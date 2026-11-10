@@ -144,5 +144,16 @@ async function assetBasisChecks({ok,data,report,query,start,end}) {
   assert.ok(!refreshes.records.some(r=>r.id===late.id),'REPORT-006 an anniversary beyond 30 days is not upcoming');
   assert.ok(refreshes.records.filter(r=>r.id!==financed.id).every(r=>!/planning indicator/.test(r.basis)),'REPORT-006 recorded refresh plans are not labelled planning indicators');
   assert.equal(refreshes.value,before('upcoming.refreshes').value+1);
+  // The unobserved-device guard (REPORT-005): a device with no compliance observation at all is unknown, never compliant, and never noncompliant.
+  const unobserved=await ok('POST','/software-assets',{name:'REPORT6 unobserved device',assetType:'device',serviceId:data.service.id,externalId:'report6-unobserved',source:'Purchase register',currency:'USD',acquisitionCost:1,observedAt:new Date().toISOString()});
+  assert.ok(!(unobserved.data.operationsObservations||[]).length,'REPORT-006 the unobserved device has no observation of any kind');
+  const bare=await ok('GET','/operations-kpis'+query),bareMetric=bare.metrics.find(m=>m.key==='device.noncompliant'),bareRow=bareMetric.records.find(r=>r.id===unobserved.id);
+  assert.ok(bareRow,'REPORT-005 unobserved device is listed among devices');
+  assert.equal(bareRow.compliance,'unknown','REPORT-005 unobserved device remains unknown, never compliant');
+  assert.equal(bareRow.complianceProvenance,'No observation');
+  assert.equal(bareMetric.unknown,metric('device.noncompliant').unknown+1,'REPORT-005 unobserved device is counted as unknown');
+  assert.equal(bareMetric.denominator,metric('device.noncompliant').denominator+1);
+  assert.equal(bareMetric.value,metric('device.noncompliant').value,'REPORT-005 an unobserved device is not counted noncompliant');
+  assert.equal(bareMetric.records.filter(r=>r.compliance==='compliant').length,0,'REPORT-005 no device is reported compliant without an observation');
   console.log('PASS REPORT-006: age bases, same-serial native and service records counted separately, latest in-range usage period, upcoming window edges and planning-indicator label');
 }
