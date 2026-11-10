@@ -588,7 +588,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "f840ac2fb7e4e56fc7afa06895125bc97c9d9631c8fccecd48276bc0bbc418c7",
+      "sha256": "ffaf4376f802ab0fd2d943809288135341ddd9944d8539fc3313faf0feca609d",
       "executable": false
     },
     ".gitignore": {
@@ -604,7 +604,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "17f463bec8b0f3f446b12cec77a2cb7326c74a89b5c59ac4b1f18200751d831b",
+      "sha256": "cf300893c3a668b20a3b090bcbcfd7227185edef48025a9ad7832c5f6887a7c9",
       "executable": false
     },
     "ADOPTION.md": {
@@ -640,7 +640,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b7507684eb6ec36e52ac75c653a9a9dee9ceaf9bf3267bc7dd72cec6bf1c3a92",
+      "sha256": "a2ed7753cb371ec4eb8b8f25277421199bca3cecf26e860280b521e2a8fe9a82",
       "executable": false
     },
     "DEMO.md": {
@@ -2312,7 +2312,7 @@
       "executable": false
     },
     "src/features/execution/grants.ts": {
-      "sha256": "3420d6e6875e6cd62946b8bf14a096cec114bb84b8837f771ad640e039a90973",
+      "sha256": "2b6653c7418c3585e65b80d05f363da0044988e4ba68aa6703ac9dcfc302e700",
       "executable": false
     },
     "src/features/execution/identity.ts": {
@@ -5627,6 +5627,10 @@
       "sha256": "ac1ee79f923cf0fd8a5ddcf8c593837359669dc7bf35c945a1ef93db714c218e",
       "executable": false
     },
+    "src/platform/audit.ts": {
+      "sha256": "377c383be9dcaf0e7990daf7acd3bc5f5e7c817987cd4a3ec9c14e3eedf8516b",
+      "executable": false
+    },
     "src/platform/auth.ts": {
       "sha256": "e810120fcfec840fb511cf47c42ff470f4f9838ea414e837a6ba2c77caf23397",
       "executable": false
@@ -5700,7 +5704,7 @@
       "executable": false
     },
     "src/platform/routes.ts": {
-      "sha256": "eaf46a8655daf7d5a9a5bbd609e3236ab7bd7b1dc99471ca2fec414310274a55",
+      "sha256": "857f897371b0d21b43c5d05bc69a210edf0d709564e2c919c9b5956ddc234f72",
       "executable": false
     },
     "src/platform/sandbox-approvals.ts": {
@@ -6535,6 +6539,10 @@
       "sha256": "8ac4a318cfa65e4aa2c98a2d3a0a8a167f84b2a0edc2a292e67b1487a5402444",
       "executable": false
     },
+    "tests/adoption/audit-log-cases.mjs": {
+      "sha256": "dcba00d16b6f9291d7c779046315d9584d4404ada7f6b741986e62694549c250",
+      "executable": false
+    },
     "tests/adoption/calendar-cases.mjs": {
       "sha256": "73350432f1d2895c6b9a09238377bde58f2e167091835438b1ae000500b807ec",
       "executable": false
@@ -6640,7 +6648,7 @@
       "executable": false
     },
     "tests/adoption/runtime.mjs": {
-      "sha256": "74e70fc52e3b5f3470bee268ad41c36397f71e5d99ca209793d23fc1171d0fc5",
+      "sha256": "5423b86ad96e1f5a4a78e4689b08e2c53fd48dc7939c9750e046097555446582",
       "executable": false
     },
     "tests/adoption/servicenow-import-cases.mjs": {
@@ -6660,7 +6668,7 @@
       "executable": false
     },
     "tests/adoption/worker.ts": {
-      "sha256": "3b05e86a5bb89116c0d621a87d9d403eebcbdfb6aea9bcbf9d8480469b565f06",
+      "sha256": "f704d3afe0f1da6c8d4a9c5e5c3c1908bc863b388d5118c842b5957faff9ef16",
       "executable": false
     },
     "tests/agent-door/fixtures.mjs": {
@@ -6820,7 +6828,7 @@
       "executable": false
     },
     "tests/platform/mcp-tools-cases.mjs": {
-      "sha256": "83809a21911724fec96e1b79a0d41a02191c3ed20b2757013ff4992cae6a8c21",
+      "sha256": "79da80688aaf1806f3014c75b8f9d89e12a3cf3a5dac50b1e8c4998f4fa818c9",
       "executable": false
     },
     "tests/platform/reporting-transfer-cases.mjs": {
@@ -6864,7 +6872,7 @@
       "executable": false
     },
     "tests/services/calendar-cases.mjs": {
-      "sha256": "ef4e31882b6693302cc2fa75ddb36173ea676056a0a48e9f38a5826cd3c2adde",
+      "sha256": "702da5f67ecb966c40081c85d7745859a9d353de74d9b38e45e895fdb737e19e",
       "executable": false
     },
     "tests/services/department-source-cases.mjs": {
@@ -6884,7 +6892,7 @@
       "executable": false
     },
     "tests/services/integration.mjs": {
-      "sha256": "b2d7b91ddd488d9251666c41c4b916c3910c9201ecbae0d38f1c5e1466bbd910",
+      "sha256": "6a2191cb6e1b6aaa4da6e2335f13d69567dccdf7dec5ee45ff12d7f61d304057",
       "executable": false
     },
     "tests/services/kpi-cases.mjs": {
@@ -7472,7 +7480,7 @@
       "executable": false
     },
     "tests/work/sla-policy-cases.mjs": {
-      "sha256": "132e2247bea0200aa96f981a1d0647257159e15a50c5687b927ff88f690c66e9",
+      "sha256": "ab0d10e246f87ddef006bca18cfd7dd00c5057bc12f52390de0628f829d7cf66",
       "executable": false
     },
     "tests/work/time-cases.mjs": {
