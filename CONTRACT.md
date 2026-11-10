@@ -2949,8 +2949,8 @@ Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0c
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 21 | 0 | 25 |
-| Target and push further | 28 | 109 | 37 | 174 |
-| All | 32 | 130 | 37 | 199 |
+| Target and push further | 29 | 108 | 37 | 174 |
+| All | 33 | 129 | 37 | 199 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -3006,7 +3006,7 @@ Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0c
 | `DESK-002` | Classification and priority | target | done | `src/features/work/classification.ts`, `tests/work/classification-cases.mjs`, `tests/ui/classification-journey.mjs`, `tests/adoption/classification-cases.mjs` |  |
 | `DESK-003` | Routing and assignment | target | done | `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`; `tests/work/desk-routing-cases.mjs` (deskRoutingChecks) | |
 | `DESK-019` | Automatic assignment and routing history | target | done | `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`; `tests/work/desk-routing-cases.mjs` (deskRoutingChecks); `tests/work/desk-group-cases.mjs` (deskGroupChecks) | |
-| `DESK-004` | SLA policies | target | partial | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs` | Not asserted: a Saturday holiday observed the Friday before, a Sunday holiday observed the Monday after, the Inauguration Day exclusion, a calendar's own listed dates beside the catalog, resolution met by closing, a policy matched on its category, and a priority change rebinding from the ticket's opening. Policy order and first-match binding on priority and requester group, business and calendar hours, the location's federal catalog skipping a Monday holiday, the requester pause, breaches on the ticket and the report, first response met by the first public agent reply and the next-response target are asserted. |
+| `DESK-004` | SLA policies | target | done | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (slaPolicyChecks (points 1,2,4,7 via the existing assertions and the `P2 business hours` and `Executive P2` cases)); `tests/work/sla-policy-cases.mjs` (holidayCalendarChecks (point 5: Saturday and Sunday holidays observed, Inauguration Day, listed dates beside the catalog)); `tests/work/sla-policy-cases.mjs` (policyBindingChecks (point 3: category matching and priority-change rebinding) | |
 | `DESK-020` | SLA pauses and breaches | target | done | `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (slaPolicyChecks); `tests/work/sla-policy-cases.mjs` (escalationChecks) | |
 | `DESK-005` | Escalation and supervisor rules | target | partial | `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs` | Not asserted: that a scheduled escalation's next due time is recomputed when an SLA pause moves its target. Levels, firing, private notes, once-only firing, stopping and persistence are asserted. |
 | `DESK-021` | Awaiting-requester reminders and closure | target | done | `src/features/work/escalations.ts`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (escalationChecks) | |
