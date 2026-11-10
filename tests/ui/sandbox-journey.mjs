@@ -2,8 +2,23 @@ import {hoverTooltip,waitForTooltipOpacity} from './transition-helpers.mjs';
 import {seedSandboxRouting,editSandboxRouting,assertSandboxRoutingPromoted} from './sandbox-routing-journey.mjs';
 import assert from 'node:assert/strict';
 import {captureJourney} from './viewport-evidence.mjs';
+import {mkdir} from 'node:fs/promises';
 
-export async function sandboxJourney({page,api,base,out}) {
+export async function sandboxJourney({page,api,base,out,width}) {
+ assert.ok([1440,390].includes(width));
+ await page.setViewportSize({width,height:width===390?844:1000});
+ out+=`/sandbox-${width}`;
+ await mkdir(out,{recursive:true});
+ const capture=async(page,options)=>{
+  assert.equal(page.viewportSize().width,width,'The configuration journey stays at its actual viewport');
+  await page.waitForFunction(()=>!document.querySelector('.loading'));
+  await page.evaluate(()=>document.fonts.ready);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,options.path);
+  await page.keyboard.press('Tab');
+  assert.notEqual(await page.evaluate(()=>document.activeElement?.tagName),'BODY','Keyboard reaches native controls');
+  if(process.env.LINEN_CAPTURE)await page.screenshot(options);
+ };
+
  const session=await api('/session'),owner=session.user.id,suffix=crypto.randomUUID().slice(0,6);
  const reviewerEmail=`synthetic-linen-${suffix}@example.test`,password='synthetic-linen-455';
  await api('/members',{name:'Sandbox reviewer',email:reviewerEmail,password,roles:['owner']});
@@ -20,51 +35,30 @@ export async function sandboxJourney({page,api,base,out}) {
  const role=await api('/department-roles',{departmentId:department.id,name:'Sandbox reader '+suffix,permissions:['ticket.read']});
  const recurring=await api('/recurring-work',{title:'Sandbox recurring '+suffix,body:'Original recurring instructions',ownerId:owner,tasks:[{title:'Original recurring task',ownerId:owner}],calendar:{timezone:'UTC',weekdays:[1,2,3,4,5],startHour:9,endHour:17,holidays:[]},rule:{startDate:'2027-01-01',frequency:'annual',interval:1,firstBusinessDay:false}});
  const template=await api('/lifecycle-templates',{name:'Sandbox lifecycle '+suffix,kind:'join',match:{},tasks:[{key:'prepare',title:'Prepare lifecycle equipment',assignee:{type:'group',groupId:team.id},anchor:'start',offsetDays:0,remindDays:null}]});
- const writeClick=async(button,ending,method='POST')=>{
-  const invalid=await button.evaluate(button=>[...(button.form?.elements??[])].filter(field=>field.willValidate&&!field.validity.valid).map(field=>({label:field.getAttribute('aria-label')||field.name||field.tagName,reason:field.validationMessage})));
-  assert.deepEqual(invalid,[],'The native sandbox form is ready to submit');
-  const response=page.waitForResponse(r=>r.url().endsWith(ending)&&r.request().method()===method);
-  await button.press('Enter');const r=await response;assert.equal(r.status(),200,await r.text());
-  const saved=await r.json();
-  if(saved.id&&typeof saved.revision==='number'&&saved.state){
-   await page.locator('.sandbox-space .facts').getByText(String(saved.revision),{exact:true}).waitFor();
-   await page.locator('.sandbox-space .facts').getByText(saved.state,{exact:true}).waitFor();
-  }
- };
+ const writeClick=sandboxWrite(page);
+ const personal=await api('/work',{title:'synthetic-linen-608-private-title',body:'synthetic-linen-609-private-body',deduplicationKey:'synthetic-linen-'+suffix+'-excluded'});
  await page.goto(base+'/app#/sandboxes');
  await page.getByLabel('Sandbox name',{exact:true}).fill('Reviewed sandbox '+suffix);
  // The shared account control becomes icon-only at narrow widths and already carries its tooltip.
- for(const width of [1440]) {
-  await page.setViewportSize({width,height:1000});
+ {
   const account=page.getByRole('button',{name:'Your workspace and account',exact:true});
   await page.keyboard.press('Tab');await account.focus();
   await waitForTooltipOpacity(account, '1');
   assert.equal(await account.evaluate(e=>getComputedStyle(e,'::after').transitionDuration),'0s','Keyboard focus shows the tooltip without an animation');
   await page.getByLabel('Sandbox name',{exact:true}).focus();await page.mouse.move(0,0);await hoverTooltip(account);
  }
- await page.setViewportSize({width:1440,height:1000});
 
- await captureJourney(page,{path:out+'/SANDBOX-001-create.png',fullPage:true});
- await page.getByRole('button',{name:'Create configuration sandbox',exact:true}).click();
+ await capture(page,{path:out+'/SANDBOX-001-create.png',fullPage:true});
+ await page.getByRole('button',{name:'Create configuration sandbox',exact:true}).press('Enter');
  await page.waitForURL(/#\/sandboxes\/.+/);
  const id=page.url().split('/').at(-1),path='/sandboxes/'+id;
  await page.getByRole('heading',{name:'Reviewed sandbox '+suffix,exact:true}).waitFor();
- const sourceTicket=await api('/work',{title:'synthetic-linen-606-private-title',body:'synthetic-linen-607-private-body',deduplicationKey:'synthetic-linen-'+suffix+'-mask'});
- await page.reload();await page.getByRole('heading',{name:'Reviewed sandbox '+suffix,exact:true}).waitFor();
- const mask=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Masked ticket copies'})}).first();
- await mask.locator(':scope > summary').press('Enter');
- await mask.getByText('No personal records copied.',{exact:true}).waitFor();
- await mask.getByLabel('Production ticket to mask',{exact:true}).selectOption(sourceTicket.id);
- assert.equal(await mask.getByRole('button',{name:'Copy masked ticket',exact:true}).isEnabled(),false);
- await mask.getByLabel('I choose this ticket for a fully masked copy',{exact:true}).check();
- await captureJourney(page,{path:out+'/SANDBOX-004-masked-selection.png',fullPage:true});
- const copyResponse=page.waitForResponse(r=>r.url().endsWith(path+'/masked-records')&&r.request().method()==='POST');
- await mask.getByRole('button',{name:'Copy masked ticket',exact:true}).focus();await page.keyboard.press('Enter');assert.equal((await copyResponse).status(),200);
- await mask.getByText('Inspect masked ticket 1',{exact:true}).waitFor();
- await mask.getByText('Inspect masked ticket 1',{exact:true}).press('Enter');
- const maskedFields=mask.locator('pre');assert.ok((await maskedFields.innerText()).includes('"title": "[masked]"'));assert.ok(!(await maskedFields.innerText()).includes('synthetic-linen-606-private-title'));
- await captureJourney(page,{path:out+'/SANDBOX-004-masked-read.png',fullPage:true});
- await mask.locator(':scope > summary').press('Enter');
+ const initial=await api(path);
+ assert.deepEqual((await api(path+'/masked-records')).items,[],'Personal data is excluded by default despite a production ticket');
+ assert.ok(!JSON.stringify(initial).includes(personal.id));
+ assert.ok(!JSON.stringify(initial).includes('synthetic-linen-609-private-body'));
+ const productionBefore=await readSandboxProduction(api,suffix);
+ assert.deepEqual(productionBefore,configurationValues(initial),'Native creation copies current production configuration');
  let item=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit '+catalog.name})}).first();
  await item.locator(':scope > summary').press('Enter');
  await item.getByLabel('Catalog item name',{exact:true}).fill('Reviewed equipment '+suffix);
@@ -82,14 +76,14 @@ export async function sandboxJourney({page,api,base,out}) {
  await item.getByLabel('Show question 3 when',{exact:true}).selectOption({label:'Loaner needed'});
  await item.getByLabel('Matching answer 3',{exact:true}).fill('true');
 
- await captureJourney(page,{path:out+'/SANDBOX-001-form-editor.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-form-editor.png',fullPage:true});
  await writeClick(item.getByRole('button',{name:'Save catalog form',exact:true}),path+'/catalog/'+catalog.id,'PUT');
  item=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit Reviewed equipment '+suffix})}).first();
  await item.locator(':scope > summary').press('Enter');
  await item.getByRole('button',{name:'Add task',exact:true}).click();
  await item.getByLabel('Task title 1',{exact:true}).fill('Prepare sandbox equipment');
  await item.getByLabel('Team for task 1',{exact:true}).selectOption(team.id);
- await captureJourney(page,{path:out+'/SANDBOX-001-task-editor.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-task-editor.png',fullPage:true});
  await writeClick(item.getByRole('button',{name:'Save task plan',exact:true}),path+'/catalog/'+catalog.id,'PUT');
  await item.locator(':scope > summary').press('Enter');
  const approvals=item.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit sandbox approval workflow'})}).first();
@@ -100,20 +94,20 @@ export async function sandboxJourney({page,api,base,out}) {
  await approvals.getByLabel('Stage name 1',{exact:true}).fill('Reviewed sandbox approval');
  await approvals.getByLabel('Decision rule 1',{exact:true}).selectOption('all');
  await approvals.getByLabel('Application or item owner · stage 1',{exact:true}).check();
- await captureJourney(page,{path:out+'/SANDBOX-001-approval-editor.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-approval-editor.png',fullPage:true});
  await writeClick(approvals.getByRole('button',{name:'Save approval chain',exact:true}),path+'/catalog/'+catalog.id+'/approvals','PUT');
  await item.locator(':scope > summary').press('Enter');
  await item.getByLabel(/Rehearsal purpose/).fill('synthetic-linen-456');
  await item.getByLabel('Loaner needed',{exact:true}).selectOption('false');assert.equal(await item.getByLabel(/Return date/).count(),0);
  await writeClick(item.getByRole('button',{name:'Test form',exact:true}),path+'/test-form');
  await item.getByText('Reviewed sandbox approval · Required · Every holder',{exact:true}).waitFor();
- await captureJourney(page,{path:out+'/SANDBOX-001-approval-rehearsal.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-approval-rehearsal.png',fullPage:true});
  await item.getByLabel(/Rehearsal purpose/).fill('synthetic-linen-457');
  await item.getByLabel('Loaner needed',{exact:true}).selectOption('true');await item.getByLabel(/Return date/).fill('2027-02-01');
  const runResponse=page.waitForResponse(r=>r.url().endsWith(path+'/runs')&&r.request().method()==='POST');
  await item.getByRole('button',{name:'Rehearse team tasks',exact:true}).click();assert.equal((await runResponse).status(),201);
  await page.getByRole('button',{name:'Complete Prepare sandbox equipment',exact:true}).waitFor();
- await captureJourney(page,{path:out+'/SANDBOX-001-rehearsal.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-rehearsal.png',fullPage:true});
  await page.getByRole('button',{name:'Complete Prepare sandbox equipment',exact:true}).click();
  await page.getByRole('heading',{name:'Team rehearsal · completed',exact:true}).waitFor();
  let sla=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit SLA: '+policy.name})}).first();
@@ -123,13 +117,13 @@ export async function sandboxJourney({page,api,base,out}) {
  await sla.getByLabel('priority',{exact:true}).selectOption('P3');
  await sla.getByLabel('category',{exact:true}).selectOption('hardware');
  await sla.getByLabel('Business calendar',{exact:true}).selectOption({label:'Sandbox hours '+suffix});
- await captureJourney(page,{path:out+'/SANDBOX-001-sla-editor.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-sla-editor.png',fullPage:true});
  await writeClick(sla.getByRole('button',{name:'Save sandbox SLA',exact:true}),path+'/slas/'+policy.id,'PUT');
  for(const [family,label,field,value] of [['role','Sandbox reader '+suffix,'name','Reviewed reader '+suffix],['calendar','Sandbox hours '+suffix,'name','Reviewed hours '+suffix],['escalation','Sandbox resolution','label','Reviewed escalation '+suffix],['waiting','Waiting rule','remind business days','3']]) {
   const config=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:`Edit ${family}: ${label}`})}).first();
   await config.locator(':scope > summary').press('Enter');
   await config.getByLabel(field,{exact:true}).fill(value);
-  await captureJourney(page,{path:out+`/SANDBOX-001-${family}-editor.png`,fullPage:true});
+  await capture(page,{path:out+`/SANDBOX-001-${family}-editor.png`,fullPage:true});
   const response=page.waitForResponse(r=>r.url().includes(path+'/sla-configuration/'+family+'/')&&r.request().method()==='PUT');
   await config.getByRole('button',{name:'Save sandbox '+family,exact:true}).click();const saved=await response;assert.equal(saved.status(),200,await saved.text());
   const updatedLabel=family==='role'||family==='calendar'||family==='escalation'?value:label;
@@ -144,13 +138,13 @@ export async function sandboxJourney({page,api,base,out}) {
  await recurringEditor.getByLabel('Duty title 1',{exact:true}).fill('Reviewed recurring task');
  await recurringEditor.getByLabel('Local creation hour',{exact:false}).fill('10');
  await recurringEditor.getByLabel('Recurring plan active',{exact:true}).uncheck();
- await captureJourney(page,{path:out+'/SANDBOX-001-recurring-editor.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-recurring-editor.png',fullPage:true});
  await writeClick(recurringEditor.getByRole('button',{name:'Save sandbox recurring',exact:true}),path+'/sla-configuration/recurring/'+recurring.id,'PUT');
  const recurringTest=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit recurring: Reviewed recurring '+suffix})}).first();
  await recurringTest.locator(':scope > summary').press('Enter');
  await writeClick(recurringTest.getByRole('button',{name:'Test sandbox recurring',exact:true}),path+'/test-configuration');
  await page.getByText('Next recurring occurrence: 2027-01-01T10:00:00.000Z. No tickets or duties were created.',{exact:true}).waitFor();
- await captureJourney(page,{path:out+'/SANDBOX-001-recurring-rehearsal.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-recurring-rehearsal.png',fullPage:true});
  assert.equal((await api('/recurring-work')).items.find(row=>row.id===recurring.id).title,'Sandbox recurring '+suffix);
  const lifecycle=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit lifecycle: '+template.name})}).first();
  await lifecycle.locator(':scope > summary').press('Enter');
@@ -161,7 +155,7 @@ export async function sandboxJourney({page,api,base,out}) {
  await templateEditor.getByLabel('Template name',{exact:false}).fill('Reviewed lifecycle '+suffix);
  await templateEditor.getByLabel('Task title 1',{exact:true}).fill('Reviewed lifecycle preparation');
  await templateEditor.getByLabel('Business days from date 1',{exact:false}).fill('2');
- await captureJourney(page,{path:out+'/SANDBOX-001-lifecycle-editor.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-lifecycle-editor.png',fullPage:true});
  await writeClick(templateEditor.getByRole('button',{name:'Save',exact:true}),path+'/sla-configuration/lifecycle/'+template.id,'PUT');
  const testedTemplate=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Edit lifecycle: Reviewed lifecycle '+suffix})}).first();
  await testedTemplate.locator(':scope > summary').press('Enter');
@@ -173,47 +167,125 @@ export async function sandboxJourney({page,api,base,out}) {
  await writeClick(lifecycleRehearsal.getByRole('button',{name:'Preview lifecycle tasks',exact:true}),path+'/test-lifecycle');
  await lifecycleRehearsal.getByText('Preview only. No work, reminders or answers were saved. No external calls were made.',{exact:true}).waitFor();
  assert.match(await lifecycleRehearsal.innerText(),/Reviewed lifecycle preparation.*2027-02-03T09:00:00.000Z/);
- await captureJourney(page,{path:out+'/SANDBOX-001-lifecycle-rehearsal.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-lifecycle-rehearsal.png',fullPage:true});
  assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,template.name);
- await editSandboxRouting({page,api,path,out,suffix,writeClick,routing});
+ await editSandboxRouting({page,api,path,out,suffix,writeClick,routing,capture});
  const production=(await api('/catalog')).items.find(x=>x.id===catalog.id);assert.equal(production.name,catalog.name);
+ assert.deepEqual(await readSandboxProduction(api,suffix),productionBefore,'All family edits and rehearsals leave production configuration unchanged');
  const isolated=await api(path);assert.ok(!JSON.stringify(isolated).includes('synthetic-linen-456'));assert.ok(!JSON.stringify(isolated).includes('synthetic-linen-457'));
  await writeClick(page.getByRole('button',{name:'Request separate owner review',exact:true}),path+'/package');
  await page.getByRole('button',{name:'Approve reviewed package',exact:true}).waitFor();
- // Every changed field is reviewable before authority is given.
- const diffDisclosures=page.locator('section[aria-label="Configuration sandboxes"] > details.action-disclosure');
- assert.equal(await diffDisclosures.count(),isolated.differences.length,'Review exposes every package difference');
- for(const disclosure of await diffDisclosures.all()) {
-  await disclosure.locator(':scope > summary').press('Enter');
-  assert.equal(await disclosure.getAttribute('open'),'','Keyboard opens every before and after value');
- }
+ await reviewSandboxDiff(page,isolated.differences);
 
- await captureJourney(page,{path:out+'/SANDBOX-001-diff.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-diff.png',fullPage:true});
  const self=page.waitForResponse(r=>r.url().endsWith(path+'/approve')&&r.request().method()==='POST');await page.getByRole('button',{name:'Approve reviewed package',exact:true}).click();assert.equal((await self).status(),403);
  await api('/login',{email:reviewerEmail,password});await page.reload();
  await page.getByRole('button',{name:'Approve reviewed package',exact:true}).waitFor();
- await captureJourney(page,{path:out+'/SANDBOX-001-separate-approval.png',fullPage:true});
+ assert.notEqual((await api('/session')).user.id,owner,'The reviewer is a distinct signed-in owner');
+ await reviewSandboxDiff(page,isolated.differences);
+ await capture(page,{path:out+'/SANDBOX-001-separate-approval.png',fullPage:true});
+ assert.ok((await api('/session')).principal.roles.includes('owner'));
  await writeClick(page.getByRole('button',{name:'Approve reviewed package',exact:true}),path+'/approve');
- await captureJourney(page,{path:out+'/SANDBOX-001-promotion.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-promotion.png',fullPage:true});
  await writeClick(page.getByRole('button',{name:'Promote reviewed configuration',exact:true}),path+'/promote');
+ const promoted=await api(path);
+ assert.equal(promoted.state,'promoted');
+ assert.equal(promoted.approvedBy,(await api('/session')).user.id);
+ await assertSandboxProduction(api,suffix,isolated);
  await assertSandboxRoutingPromoted(api,routing);
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).name,'Reviewed equipment '+suffix);
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).approvals[0].name,'Reviewed sandbox approval');
- assert.equal((await api('/recurring-work')).items.find(row=>row.id===recurring.id).title,'Reviewed recurring '+suffix);
+ const promotedRecurring=(await api('/recurring-work')).items.find(row=>row.id===recurring.id);
+ assert.equal(promotedRecurring.title,'Reviewed recurring '+suffix);
+ assert.equal(promotedRecurring.next_due_at,'2027-01-01T10:00:00.000Z','Promotion recalculates the next occurrence from the reviewed calendar');
  assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,'Reviewed lifecycle '+suffix);
  assert.equal((await api('/department-roles')).items.find(x=>x.id===role.id).name,'Reviewed reader '+suffix);
- await captureJourney(page,{path:out+'/SANDBOX-001-promoted.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-promoted.png',fullPage:true});
  const rollbackResponse=page.waitForResponse(r=>r.url().endsWith(path+'/rollback-package')&&r.request().method()==='POST');await page.getByRole('button',{name:'Request reviewed rollback',exact:true}).click();const rollback=await rollbackResponse;assert.equal(rollback.status(),201);const rollbackRow=await rollback.json();
  await page.waitForURL(new RegExp(rollbackRow.id));
- await captureJourney(page,{path:out+'/SANDBOX-001-rollback-review.png',fullPage:true});
+ await reviewSandboxDiff(page,rollbackRow.differences);
+ await capture(page,{path:out+'/SANDBOX-001-rollback-review.png',fullPage:true});
  await api('/login',{email:session.user.email,password:'Browser-proof-2026'});await page.reload();
+ await reviewSandboxDiff(page,rollbackRow.differences);
  await writeClick(page.getByRole('button',{name:'Approve reviewed package',exact:true}),'/sandboxes/'+rollbackRow.id+'/approve');
  await writeClick(page.getByRole('button',{name:'Promote reviewed configuration',exact:true}),'/sandboxes/'+rollbackRow.id+'/promote');
+ await assertSandboxProduction(api,suffix,initial);
  assert.equal((await api('/catalog')).items.find(x=>x.id===catalog.id).name,catalog.name);
  assert.equal((await api('/lifecycle-templates')).items.find(row=>row.id===template.id).name,template.name);
- assert.equal((await api('/recurring-work')).items.find(row=>row.id===recurring.id).title,'Sandbox recurring '+suffix);
+ const rolledRecurring=(await api('/recurring-work')).items.find(row=>row.id===recurring.id);
+ assert.equal(rolledRecurring.title,'Sandbox recurring '+suffix);
+ assert.equal(rolledRecurring.next_due_at,'2027-01-01T09:00:00.000Z','Rollback restores the original next occurrence');
  assert.deepEqual(await api('/work-routing'),routing.before,'Native reviewed rollback restores routing configuration');
- await captureJourney(page,{path:out+'/SANDBOX-001-rolled-back.png',fullPage:true});
+ await capture(page,{path:out+'/SANDBOX-001-rolled-back.png',fullPage:true});
+ const employeeEmail=`synthetic-linen-${suffix}-employee@example.test`;
+ await api('/members',{name:'Sandbox employee',email:employeeEmail,password,roles:['employee']});
+ await api('/login',{email:employeeEmail,password});await page.reload();
+ await page.getByText('A current workspace owner is required.',{exact:true}).waitFor();
+ await capture(page,{path:out+'/SANDBOX-001-scope-refusal.png',fullPage:true});
+ for(const name of ['Create configuration sandbox','Request separate owner review','Approve reviewed package','Promote reviewed configuration','Request reviewed rollback'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0);
+ assert.equal(await page.getByLabel('Catalog item name',{exact:true}).count(),0);
+ const refused=await page.evaluate(async({path,catalogId})=>{
+  const session=await(await fetch('/api/v1/session')).json();
+  const statuses=[];
+  for(const [door,method,body] of [['/sandboxes','POST',{name:'Denied sandbox'}],[path+'/catalog/'+catalogId,'PUT',{revision:1,name:'Denied edit'}],[path+'/promote','POST',{revision:1}]]) {
+   const response=await fetch('/api/v1'+door,{method,headers:{'Content-Type':'application/json','X-Linen-CSRF':session.csrfToken},body:JSON.stringify(body)});
+   statuses.push(response.status);
+  }
+  return statuses;
+ },{path,catalogId:catalog.id});
+ assert.deepEqual(refused,[403,403,403],'An employee cannot create, edit or apply configuration through the public doors');
+ // Every sandbox door must refuse the employee before reading configuration or parsing a body.
+ // A malformed body and an absent resource exercise the same refusal, with no retry or status remapping.
+ const denials=await page.evaluate(async({path,catalogId})=>{
+  const session=await(await fetch('/api/v1/session')).json();
+  const doors=[['GET','/sandboxes'],['POST','/sandboxes'],['GET',path],
+   ['GET',path+'/masked-records'],['POST',path+'/masked-records'],['GET',path+'/options'],
+   ['PUT',path+'/catalog/'+catalogId],['PUT',path+'/catalog/'+catalogId+'/approvals'],
+   ['PUT',path+'/slas/synthetic-linen-missing'],['PUT',path+'/sla-configuration/calendar/synthetic-linen-missing'],
+   ...['test-routing','test-lifecycle','test-configuration','test-form','package','approve','rollback-package','promote','runs'].map(door=>['POST',path+'/'+door]),
+   ['GET',path+'/runs'],['POST',path+'/runs/synthetic-linen-missing/complete'],
+   ['POST','/sandboxes/synthetic-linen-missing/promote']];
+  const results=[];
+  for(const [method,door] of doors){
+   const response=await fetch('/api/v1'+door,{method,headers:{'Content-Type':'application/json','X-Linen-CSRF':session.csrfToken},
+    ...(method==='GET'?{}:{body:'{'})});
+   results.push({method,door,status:response.status,body:await response.text()});
+  }
+  return results;
+ },{path,catalogId:catalog.id});
+ assert.deepEqual(denials.map(result=>[result.status,JSON.parse(result.body).error.code]),denials.map(()=>[403,'forbidden']),
+  'An employee cannot create, edit or apply configuration through the public doors: '+JSON.stringify(denials));
+ await api('/login',{email:session.user.email,password:'Browser-proof-2026'});await page.reload();
+ await assertSandboxProduction(api,suffix,initial);
+ console.log(`PASS sandbox native configuration at ${width}: create, all included family edits and rehearsals, complete diff, separate current non-editor owner approval, promotion, reviewed rollback, keyboard and scope refusals, production readback`);
+ return {session,suffix,password,catalog};
+}
+
+// The existing masked-copy and administrator journeys remain separate from the configuration lease.
+export async function sandboxBoundaryJourney({page,api,base,out,session,suffix,password,catalog}) {
+ const writeClick=sandboxWrite(page);
+ await page.setViewportSize({width:1440,height:1000});
+ await page.goto(base+'/app#/sandboxes');
+ await page.getByLabel('Sandbox name',{exact:true}).fill('Masked boundary '+suffix);
+ await page.getByRole('button',{name:'Create configuration sandbox',exact:true}).press('Enter');
+ await page.waitForURL(/#\/sandboxes\/.+/);
+ const path='/sandboxes/'+page.url().split('/').at(-1);
+ const sourceTicket=await api('/work',{title:'synthetic-linen-606-private-title',body:'synthetic-linen-607-private-body',deduplicationKey:'synthetic-linen-'+suffix+'-mask'});
+ await page.reload();await page.getByRole('heading',{name:'Masked boundary '+suffix,exact:true}).waitFor();
+ const mask=page.locator('details').filter({has:page.locator(':scope > summary',{hasText:'Masked ticket copies'})}).first();
+ await mask.locator(':scope > summary').press('Enter');
+ await mask.getByText('No personal records copied.',{exact:true}).waitFor();
+ await mask.getByLabel('Production ticket to mask',{exact:true}).selectOption(sourceTicket.id);
+ assert.equal(await mask.getByRole('button',{name:'Copy masked ticket',exact:true}).isEnabled(),false);
+ await mask.getByLabel('I choose this ticket for a fully masked copy',{exact:true}).check();
+ await captureJourney(page,{path:out+'/SANDBOX-004-masked-selection.png',fullPage:true});
+ const copyResponse=page.waitForResponse(r=>r.url().endsWith(path+'/masked-records')&&r.request().method()==='POST');
+ await mask.getByRole('button',{name:'Copy masked ticket',exact:true}).focus();await page.keyboard.press('Enter');assert.equal((await copyResponse).status(),200);
+ await mask.getByText('Inspect masked ticket 1',{exact:true}).waitFor();
+ await mask.getByText('Inspect masked ticket 1',{exact:true}).press('Enter');
+ const maskedFields=mask.locator('pre');assert.ok((await maskedFields.innerText()).includes('"title": "[masked]"'));assert.ok(!(await maskedFields.innerText()).includes('synthetic-linen-606-private-title'));
+ await captureJourney(page,{path:out+'/SANDBOX-004-masked-read.png',fullPage:true});
+ await mask.locator(':scope > summary').press('Enter');
  // A designated administrator uses the same reviewed diff, without owner data doors.
  const adminEmail=`synthetic-linen-${suffix}-admin@example.test`;
  await page.goto(base+'/app#/members');
@@ -277,33 +349,51 @@ export async function sandboxJourney({page,api,base,out}) {
  await api('/login',{email:session.user.email,password:'Browser-proof-2026'});await page.reload();
  await writeClick(page.getByRole('button',{name:'Promote reviewed configuration',exact:true}),'/sandboxes/'+adminRollback.id+'/promote');
  assert.equal((await api('/catalog')).items.find(item=>item.id===catalog.id).name,catalog.name);
- const employeeEmail=`synthetic-linen-${suffix}-employee@example.test`;
- await api('/members',{name:'Sandbox employee',email:employeeEmail,password,roles:['employee']});
- await api('/login',{email:employeeEmail,password});await page.reload();
- await page.getByText('A current workspace owner is required.',{exact:true}).waitFor();
- await captureJourney(page,{path:out+'/SANDBOX-001-scope-refusal.png',fullPage:true});
- assert.equal(await page.getByRole('button',{name:'Promote reviewed configuration',exact:true}).count(),0);
- // Every sandbox door must refuse the employee before reading configuration or parsing a body.
- // A malformed body and an absent resource exercise the same refusal, with no retry or status remapping.
- const denials=await page.evaluate(async({path,catalogId})=>{
-  const session=await(await fetch('/api/v1/session')).json();
-  const doors=[['GET','/sandboxes'],['POST','/sandboxes'],['GET',path],
-   ['GET',path+'/masked-records'],['POST',path+'/masked-records'],['GET',path+'/options'],
-   ['PUT',path+'/catalog/'+catalogId],['PUT',path+'/catalog/'+catalogId+'/approvals'],
-   ['PUT',path+'/slas/synthetic-linen-missing'],['PUT',path+'/sla-configuration/calendar/synthetic-linen-missing'],
-   ...['test-routing','test-lifecycle','test-configuration','test-form','package','approve','rollback-package','promote','runs'].map(door=>['POST',path+'/'+door]),
-   ['GET',path+'/runs'],['POST',path+'/runs/synthetic-linen-missing/complete'],
-   ['POST','/sandboxes/synthetic-linen-missing/promote']];
-  const results=[];
-  for(const [method,door] of doors){
-   const response=await fetch('/api/v1'+door,{method,headers:{'Content-Type':'application/json','X-Linen-CSRF':session.csrfToken},
-    ...(method==='GET'?{}:{body:'{'})});
-   results.push({method,door,status:response.status,body:await response.text()});
+}
+
+function sandboxWrite(page) {
+ return async(button,ending,method='POST')=>{
+  const invalid=await button.evaluate(button=>[...(button.form?.elements??[])].filter(field=>field.willValidate&&!field.validity.valid).map(field=>({label:field.getAttribute('aria-label')||field.name||field.tagName,reason:field.validationMessage})));
+  assert.deepEqual(invalid,[],'The native sandbox form is ready to submit');
+  const response=page.waitForResponse(r=>r.url().endsWith(ending)&&r.request().method()===method);
+  await button.press('Enter');const r=await response;assert.equal(r.status(),200,await r.text());
+  const saved=await r.json();
+  if(saved.id&&typeof saved.revision==='number'&&saved.state){
+   await page.locator('.sandbox-space .facts').getByText(String(saved.revision),{exact:true}).waitFor();
+   await page.locator('.sandbox-space .facts').getByText(saved.state,{exact:true}).waitFor();
   }
-  return results;
- },{path,catalogId:catalog.id});
- assert.deepEqual(denials.map(result=>[result.status,JSON.parse(result.body).error.code]),denials.map(()=>[403,'forbidden']),
-  'An employee cannot create, edit or apply configuration through the public doors: '+JSON.stringify(denials));
- await api('/login',{email:session.user.email,password:'Browser-proof-2026'});await page.reload();
- console.log('PASS sandbox native settings: isolated catalog, form, tasks, roles, full existing SLA configuration, rehearsals, field diffs, separate owner approval, promotion, reviewed rollback and employee refusal at 1440');
+ };
+}
+
+async function reviewSandboxDiff(page,differences) {
+ const disclosures=page.locator('section[aria-label="Configuration sandboxes"] > details.action-disclosure');
+ await disclosures.first().waitFor();
+ assert.equal(await disclosures.count(),differences.length,'Review exposes every package difference');
+ for(const [index,diff] of differences.entries()) {
+  const disclosure=disclosures.nth(index);
+  if(await disclosure.getAttribute('open')===null)await disclosure.locator(':scope > summary').press('Enter');
+  assert.equal(await disclosure.getAttribute('open'),'','Keyboard opens every before and after value');
+  assert.match(await disclosure.locator(':scope > summary').innerText(),new RegExp(diff.field.replaceAll('_',' ')));
+  const values=await disclosure.locator('pre').allTextContents();
+  assert.deepEqual(values.map(value=>JSON.parse(value)),[diff.before,diff.after],'The complete before and after values are visible to the reviewer');
+ }
+}
+
+// Copying configuration through the native create door reads production anew;
+// the prior sandbox's saved draft is never used as production readback.
+async function readSandboxProduction(api,suffix) {
+ const current=await api('/sandboxes',{name:'Production readback '+suffix});
+ return configurationValues(current);
+}
+function configurationValues(row) {
+ // The scheduler derives next_due_at on application; the journey checks that result separately.
+ const withoutRevision=rows=>rows.map(({revision,next_due_at,...value})=>value);
+ return {
+  items:row.items.map(({id,name,form,tasks,requiresManager,approvals,managerApproval})=>({id,name,form,tasks,requiresManager,approvals,managerApproval})),
+  slas:withoutRevision(row.slas),
+  families:Object.fromEntries(Object.entries(row.slaConfiguration).map(([family,rows])=>[family,withoutRevision(rows)])),
+ };
+}
+async function assertSandboxProduction(api,suffix,expected) {
+ assert.deepEqual(await readSandboxProduction(api,suffix),configurationValues(expected),'Production readback matches every included configuration field');
 }

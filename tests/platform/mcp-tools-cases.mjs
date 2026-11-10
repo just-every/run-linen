@@ -49,7 +49,11 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const issuerSession=await nativeSession('mcp-issuing-owner@example.test',password)
  const groups=await value(ownerApi('/work-groups'))
  check(groups.items.every(g=>g.members.every(m=>m.userId!==bot.id)),'queue grant adds no group member or lead')
- equal((await ownerApi('/work-groups/'+hardware+'/members',{userId:bot.id,lead:true})).status,422,'integration cannot become group member or lead')
+ const membersOf=async()=>(await sql(`SELECT group_id,user_id,lead FROM work_group_members WHERE workspace_id=${quoted(session.principal.workspaceId)} ORDER BY group_id,user_id`))
+ const membersBefore=JSON.stringify(await membersOf())
+ for(const lead of [false,true])
+  equal((await ownerApi('/work-groups/'+hardware+'/members',{userId:bot.id,lead})).status,422,'integration cannot become group member or lead ('+lead+')')
+ equal(JSON.stringify(await membersOf()),membersBefore,'refused integration membership leaves every group roster unchanged')
 
  ;(await sql(`INSERT INTO workspaces VALUES('mcp-tools-foreign','Foreign queue fixture','2026-01-01');
  INSERT INTO work_groups(id,workspace_id,name,created_by,created_at) VALUES('mcp-tools-foreign-group','mcp-tools-foreign','Foreign Hardware',${quoted(session.principal.userId)},'2026-01-01')`))
@@ -71,8 +75,11 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
   file('restricted','Restricted investigation marker',hardware,'restricted'),
   file('hr','HR accommodation marker',hardware,'hr',ownerApi),
  ])
+ const placed=await value(ownerApi('/work/'+normal.id))
  equal((await ownerApi('/work/'+normal.id+'/group',{groupId:hardware,revision:(await value(ownerApi('/work/'+normal.id))).work.revision,assigneeId:bot.id})).status,422,'queue grant never permits assigning the bot')
  equal((await ownerApi('/work/'+normal.id+'/commands',{command:'assign',assigneeId:bot.id,revision:(await value(ownerApi('/work/'+normal.id))).work.revision,reason:'Try assigning integration'})).status,422,'native assign refuses integration principal')
+ const unassigned=await value(ownerApi('/work/'+normal.id))
+ equal([unassigned.work.assignee_id,unassigned.work.revision],[placed.work.assignee_id,placed.work.revision],'refusing the bot as assignee leaves the ticket owner and revision unchanged')
 
  // Mint against populated native authority records, including a decision still open.
  const person=await value(ownerApi('/people',{source:'synthetic-linen-13000',sourceId:employee.id,name:'synthetic-linen-13001',managerId:issuer.id,observedAt:new Date().toISOString(),effectiveAt:new Date().toISOString()}),201)

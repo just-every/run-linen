@@ -69,6 +69,46 @@ export async function deskFieldChecks(workspaceApi, db) {
   let sla = check(await api(`/work/${a.id}/sla`));
   assert.deepEqual([sla.pauses.at(-1).status, sla.pauses.at(-1).waiting_on, sla.pauses.at(-1).stopsClock, sla.resolution.state], ['Awaiting parts', 'vendor', true, 'paused'], 'DESK-010 Awaiting parts pauses the SLA');
   assert.equal(check(await api(`/work/${a.id}/desk`, undefined, employee)).status.name, 'Awaiting parts');
+
+  // As in sharingChecks, a requester shares through the public door with a real current member.
+  const recipient = await db.prepare('SELECT email FROM users WHERE id=?').bind('stranger').first();
+  const shared = check(await api(`/work/${a.id}/shares`, { email: recipient.email }, employee), 201);
+  assert.deepEqual(shared.items.map(s => [s.user_id, s.revoked_at]), [['stranger', null]]);
+  const privateNote = 'synthetic-linen-14200 internal charger diagnosis';
+  check(await api(`/work/${a.id}/messages`, { body: privateNote, visibility: 'private', sourceMessageId: 'synthetic-linen-14201' }, agent), 201);
+  async function publicThreadOnly(state, resolution = null) {
+    const ownerView = check(await api(`/work/${a.id}`));
+    assert.ok(ownerView.messages.some(m => m.body === privateNote && m.visibility === 'private'));
+    const seen = check(await api(`/work/${a.id}`, undefined, colleague));
+    assert.deepEqual([seen.work.access, seen.work.canReply, seen.work.state], ['shared', true, state]);
+    const publicMessages = ownerView.messages.filter(m => m.visibility === 'public');
+    assert.ok(publicMessages.some(m => m.body === 'The laptop will not charge.'));
+    const thread = messages => messages.map(m => [m.id, m.body, m.visibility]);
+    assert.deepEqual(thread(seen.messages), thread(publicMessages), 'DESK-010 the colleague reads the complete public thread only');
+    const activityView = check(await api(`/work/${a.id}/activity`, undefined, colleague));
+    const activity = activityView.items;
+    assert.deepEqual(activity.map(e => [e.id, e.body]).sort(), publicMessages.map(m => [m.id, m.body]).sort(), 'DESK-010 shared activity contains the public messages only');
+    assert.ok(activity.every(e => e.kind === 'message' && e.visibility === 'public' && e.changes.length === 0), 'DESK-010 shared activity has no internal field or transition history');
+    for (const view of [seen, activityView]) {
+      const serialized = JSON.stringify(view);
+      for (const internal of [privateNote, officeField.id, officeField.name, 'Denver', ...typed.flatMap(({f}) => [f.id, f.name]), '2026-10-20', '"one","two"', parts.id, parts.name, parts.waitingOn, ...(resolution ? [resolution.code] : [])]) {
+        assert.ok(!serialized.includes(internal), 'DESK-010 shared reads omit populated fields, custom status details and the structured resolution');
+      }
+      for (const record of [view, view.work ?? {}]) {
+        for (const key of ['fields', 'status', 'resolution', 'resolutionCode', 'closeNotes']) assert.equal(Object.hasOwn(record, key), false, 'DESK-010 no structured desk data in the shared view');
+      }
+    }
+    check(await api(`/work/${a.id}/desk`, undefined, colleague), 404);
+    for (const reader of [undefined, agent, employee]) {
+      const desk = check(await api(`/work/${a.id}/desk`, undefined, reader));
+      assert.equal(desk.fields.find(f => f.id === officeField.id).value, 'Denver');
+      for (const {f, value} of typed) assert.deepEqual(desk.fields.find(field => field.id === f.id).value, f.id === typed[0].f.id ? 43 : value);
+      if (state === 'paused') assert.deepEqual(desk.status, parts, 'DESK-010 full readers retain the named status and its pause mapping');
+      if (resolution) assert.deepEqual(desk.resolution, resolution, 'DESK-010 full readers retain the complete resolution');
+    }
+    return { seen, activity };
+  }
+  await publicThreadOnly('paused');
   const b = await ticket('b', 'incident', 'P3');
   await command(b, { command: 'pause', reason: 'Replacement charger ordered', statusId: parts.id, waitingOn: 'requester' }, agent, 422);
   await command(b, { command: 'pause', reason: 'Replacement charger ordered', statusId: parts.id });
@@ -91,6 +131,16 @@ export async function deskFieldChecks(workspaceApi, db) {
   await command(a, { command: 'close', reason: 'Charger replaced; battery health normal', resolutionCode: 'Solved (permanent fix)' });
   const resolved = check(await api(`/work/${a.id}/desk`, undefined, employee)).resolution;
   assert.deepEqual([resolved.code, resolved.closeNotes, resolved.resolvedBy], ['Solved (permanent fix)', 'Charger replaced; battery health normal', 'Riley Agent']);
+  const closedShare = await publicThreadOnly('closed', resolved);
+  const closingMessage = closedShare.seen.messages.find(m => m.body === `Closed: ${resolved.closeNotes}`);
+  assert.ok(closingMessage, 'DESK-010 the legitimate public closing message remains visible to the colleague');
+  assert.ok(closedShare.activity.some(e => e.id === closingMessage.id && e.body === closingMessage.body), 'DESK-010 shared activity retains the public closing message without a structured resolution');
+  const fullHistory = check(await api(`/work/${a.id}/activity`, undefined, agent)).items;
+  assert.ok(fullHistory.some(e => e.changes.some(c => c.field === 'resolutionCode' && c.after === resolved.code)), 'DESK-010 full staff history retains the resolution code');
+  assert.ok(fullHistory.some(e => e.changes.some(c => c.field === 'status' && c.after === parts.id)), 'DESK-010 full staff history retains the custom status');
+  check(await api(`/work/${a.id}/shares/stranger/revoke`, {}, employee));
+  for (const suffix of ['', '/activity', '/desk']) check(await api(`/work/${a.id}${suffix}`, undefined, colleague), 404);
+  console.log('PROBE DESK-010 4: requester shares a populated paused ticket, then closes it -> colleague reads only public conversation and activity, including the closing message; internal values, named status and structured resolution absent; desk 404; full readers retain desk data; revoke makes all three reads 404');
 
   // A field required on close for incidents holds on every close; bulk closes then succeed with a code.
   check(await api('/desk-fields', { name: 'Root cause', type: 'text', kinds: ['incident'], requiredOn: ['closed'] }), 201);

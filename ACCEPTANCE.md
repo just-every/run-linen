@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 28 | 121 | 29 | 178 |
+| Core | 32 | 117 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 28 | 134 | 37 | 199 |
+| Full target | 32 | 130 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -901,7 +901,7 @@ Core · target · **partial**
 
 #### DESK-020 — SLA pauses and breaches
 
-Core · target · **partial** · From DESK-004
+Core · target · **done** · From DESK-004
 
 **Requirement.** A pause stops only the clocks its policy pauses on, and a breach, once reached, stays a breach.
 
@@ -911,8 +911,8 @@ Core · target · **partial** · From DESK-004
 3. A target is breached when met after, or still unmet past, its due time, and its breach time is that due time.
 4. Owners, agents and auditors read each ticket's targets and the period report.
 
-**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`
-**Gap.** Not asserted: that service agents and auditors read each ticket's targets and the period report. The owner's reads and the requester's refusal, pauses stopping only the policy's parties, a later pause keeping the breach, and the breach time are asserted.
+**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (slaPolicyChecks); `tests/work/sla-policy-cases.mjs` (escalationChecks)
+**Gap.** None.
 
 #### DESK-005 — Escalation and supervisor rules
 
@@ -1038,7 +1038,7 @@ Core · target · **missing** · Rules D-2
 
 #### DESK-010 — Custom fields, forms and statuses
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Admins add custom ticket fields, forms per ticket type and custom statuses mapped to SLA behavior. Fields can be required on a status: by default an incident cannot be resolved without a resolution code (from an admin-edited list such as "Solved (workaround)", "Solved (permanent fix)", "Not reproducible" and "Duplicate") and close notes, and a service request cannot be resolved without close notes. The rule holds on every door: console, bulk update, scenario, API and chat action; it is DESK-023.
 
@@ -1048,8 +1048,8 @@ Core · target · **partial**
 3. A custom status is a named pause that waits on the requester, a vendor or nobody outside the desk; whether it stops the SLA clock is the bound policy's pause rule (DESK-020), never an override, so "Awaiting parts" is a vendor wait.
 4. Field values, the status and the resolution are read by whoever can read the ticket and written by the roles that move its state (owner, operator, HR); people a ticket is shared with see its public thread only.
 
-**Evidence.** `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs`
-**Gap.** Not asserted: that people a ticket is shared with see its public thread only. Fields, forms, statuses, pause rules and read/write roles are asserted.
+**Evidence.** `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs`; `tests/work/desk-field-cases.mjs` (deskFieldChecks); `tests/ui/desk-field-journey.mjs` (deskFieldJourney)
+**Gap.** None.
 
 #### DESK-023 — Required resolution fields on every closing door
 
@@ -1174,7 +1174,7 @@ Core · target · **partial**
 
 #### DESK-025 — Record templates and scenario task plans
 
-Core · target · **partial** · From DESK-015
+Core · target · **done** · From DESK-015
 
 **Requirement.** Record templates pre-fill new tickets, tasks and changes, and a scenario's task plan is a PROJECT-001 IT project.
 
@@ -1187,8 +1187,8 @@ Core · target · **partial** · From DESK-015
 6. Task record templates pre-fill an editable project task title, owner and due date under PROJECT-001's existing read/write roles.
 7. Change record templates use CHANGE-001's exact-version standard change catalog, retaining its standard-change approval and separate grant rules.
 
-**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs`
-**Gap.** Not asserted: that starting a scenario task plan grants no provider authority and that the run audit links to the plan. Ticket, task and change templates and the project link and boundary are asserted.
+**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs`; `tests/work/desk-scenario-cases.mjs` (deskScenarioChecks); `tests/services/template-cases.mjs` (templateChecks)
+**Gap.** None.
 
 #### DESK-016 — Global agent search
 
@@ -1922,7 +1922,7 @@ Core · target · **partial** · From PROB-002
 
 #### CHANGE-001 — Change types and templates
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Standard (approved once as a template, catalog-driven), normal and emergency changes, with templates carrying implementation, test and backout plans (RL-15). No meeting, vote or quorum is claimed: CHANGE-003 carries the complete board, quorum and channel requirements. Freeze bypass remains the separate owner-only authority in CHANGE-004.
 
@@ -1936,8 +1936,8 @@ Core · target · **partial**
 7. Amending a change's implementation clears bypass and authorization and returns it to normal review.
 8. Restore makes templates inactive with no live approval and clears imported change bypass/authority; affected personal-data erasure also withdraws live template approval.
 
-**Evidence.** `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs`
-**Gap.** Not asserted: that affected personal-data erasure withdraws a live template approval. Standard, normal and emergency paths, exact-version approval, snapshots, withdrawal, amendment and inactive restore are asserted.
+**Evidence.** `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs`; `tests/services/template-cases.mjs` (CHANGE-001 public catalog/normal/ECAB paths (points 1-7)); `tests/services/template-integration.mjs` (CHANGE-001 real execution path (points 3,5,6,7)); `tests/adoption/template-cases.mjs` (CHANGE-001 native archive (point 8 restore)); `tests/adoption/platform-privacy-cases.mjs` (AUDIT-001/A1/ERASURE-001 public erasure with CHANGE-001 live template approval withdrawn (point 8 erasure))
+**Gap.** None.
 
 #### CHANGE-002 — Risk scoring
 

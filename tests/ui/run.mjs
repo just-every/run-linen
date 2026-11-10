@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdtemp, rm, mkdir, open, cp, readFile } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, open, cp, writeFile, readFile } from "node:fs/promises";
 import { tmpdir, userInfo } from "node:os";
 import { join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
@@ -46,6 +46,11 @@ try {
     await cp(join(root, "dist"), join(scratch, "dist"), { recursive: true });
     const value = await port();
     url = `http://127.0.0.1:${value}`;
+    await writeFile(
+      join(scratch, "dist/server/.dev.vars"),
+      `AUTH_ORIGIN=${url}\nAPP_ORIGIN=${url}\nAUTH_LOCAL=true\nMAIL_PROVIDER=development\nSESSION_SECRET=${randomBytes(32).toString("hex")}\nENCRYPTION_KEY=${randomBytes(32).toString("base64")}\n`,
+      { mode: 0o600 },
+    );
     await command(process.execPath, [
       "node_modules/wrangler/bin/wrangler.js",
       "d1",
@@ -58,17 +63,28 @@ try {
       "--config",
       "wrangler.jsonc",
     ]);
+    // Use the existing native Worker server: ProxyWorker can fail a POST on
+    // a closing keep-alive connection before the application's role check.
     worker = await startWorker({
       config: join(scratch, "dist/server/wrangler.json"),
       port: value,
       persistTo: join(scratch, "state"),
-      vars: { AUTH_ORIGIN: url, APP_ORIGIN: url, AUTH_LOCAL: "true", MAIL_PROVIDER: "development",
-        SESSION_SECRET: randomBytes(32).toString("hex"), ENCRYPTION_KEY: randomBytes(32).toString("base64") },
       logFd: log.fd,
     });
-    const response = await fetch(url + "/api/v1/setup");
-    if (!response.ok) throw Error("Isolated worker did not become ready");
-    if (!(await response.json()).required) throw Error("Isolated database is not empty");
+    let ready = false;
+    for (let i = 0; i < 120; i++) {
+      try {
+        const r = await fetch(url + "/api/v1/setup");
+        if (r.ok) {
+          const data = await r.json();
+          if (!data.required) throw Error("Isolated database is not empty");
+          ready = true;
+          break;
+        }
+      } catch {}
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    if (!ready) throw Error("Isolated worker did not become ready");
   }
   await new Promise((yes, no) => {
     const child = spawn(process.execPath, [process.argv[2] || "tests/ui/browser.mjs"], {
@@ -90,7 +106,7 @@ try {
   });
   console.log(`UI evidence: ${out}`);
 } finally {
-  await worker?.dispose();
+  if (worker) await worker.dispose();
   await log.close();
   await rm(join(scratch, "state"), { recursive: true, force: true });
   await rm(join(scratch, "dist"), { recursive: true, force: true });

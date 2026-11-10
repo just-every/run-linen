@@ -350,6 +350,11 @@ export async function catalogAudienceChecks(api,db) {
   const renamedValue=await currentValue();
   assert.deepEqual(renamedValue,{...originalValue,label:renamedLabel,revision:renamed.revision},'CATALOG-007 read back the new label with stable id, dimension and active state');
   assert.deepEqual(await references(),retained,'CATALOG-007 renaming preserves person, item and submitted references');
+  const staleRename=await api(`/catalog-values/${support.id}`,{...rename,label:'Stale overwrite'});
+  assert.equal(staleRename.status,409,'CATALOG-007 a stale value revision cannot overwrite the renamed value');
+  assert.equal(staleRename.value.code,'revision_conflict');
+  assert.deepEqual(await currentValue(),renamedValue,'CATALOG-007 stale rename preserves the current value');
+  assert.deepEqual(await references(),retained,'CATALOG-007 stale rename preserves person, item and submitted references');
   assert.ok((await ok('/catalog',undefined,as('aud-support'))).items.some(i=>i.id===item.id),'CATALOG-007 renaming preserves existing audience matches');
   const deletion=await api(`/catalog-values/${support.id}`,undefined,{},'DELETE');
   assert.equal(deletion.status,404,'CATALOG-007 DELETE has no supported value-deletion door');
@@ -366,6 +371,11 @@ export async function catalogAudienceChecks(api,db) {
   assert.ok(!(await ok('/people')).items.some(p=>p.source===source&&p.source_id==='retired'),'CATALOG-007 a refused retired-value review creates no person');
   assert.equal((await ok('/catalog')).items.find(c=>c.id===config.id).revision,versioned.revision,'CATALOG-007 a refused retired-value audience edit does not advance the item revision');
   assert.deepEqual((await submit(supportWork,'aud-support')).value.catalogSnapshot,supportSubmission.value.catalogSnapshot,'CATALOG-007 retirement preserves an in-flight request retry');
+  const afterRetirement=await submit(await request('aud-support'),'aud-support');
+  assert.equal(afterRetirement.status,201,'CATALOG-007 existing reviewed references still match on a new submission after retirement');
+  assert.deepEqual(afterRetirement.value.catalogSnapshot.audiencePeople,[{id:bob.id,revision:bob.revision}],'CATALOG-007 retirement keeps the reviewed person revision usable');
+  assert.deepEqual(afterRetirement.value.catalogSnapshot.audience,audience,'CATALOG-007 new submission retains the existing audience ids after retirement');
+  console.log(`PROBE CATALOG-007 1: current-revision value rename -> stable id and new label; stale rename ${staleRename.status}; DELETE ${deletion.status}; person, item and submitted references unchanged; retirement retains existing matches and permits submission ${afterRetirement.status}, new person and item selections refuse 422`);
   const snapshot=JSON.parse((await db.prepare('SELECT catalog_snapshot_json FROM work_fulfilments WHERE work_id=?').bind(work.id).first()).catalog_snapshot_json);
   assert.deepEqual(snapshot,first.value.catalogSnapshot,'CATALOG-001 item and person changes never rewrite submitted facts');
   assert.equal((await db.prepare('SELECT count(*) n FROM work_fulfilments WHERE work_id=?').bind(denied.id).first()).n,0,'CATALOG-001 refusal leaves no fulfilment');
