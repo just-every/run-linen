@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 32 | 117 | 29 | 178 |
+| Core | 33 | 116 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 32 | 130 | 37 | 199 |
+| Full target | 33 | 129 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -1736,7 +1736,7 @@ Core · target · **partial**
 
 #### ASSET-008 — Asset financials
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Purchase cost, depreciation (straight-line or declining balance), book value, cost center and fiscal-year reporting in USD, exportable to Pantry, QuickBooks Online or NetSuite as CSV or API.
 
@@ -1748,8 +1748,8 @@ Core · target · **partial**
 5. Fiscal years start on a selected month's first day (inclusive) and end at the next year's start (exclusive).
 6. The CSV downloads the schedule for import into the named accounting products; a download does not claim a provider import.
 
-**Evidence.** `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs`, `tests/ui/browser.mjs`
-**Gap.** Not asserted: that the CSV download claims no provider import. Book value, rounding, declining balance, anniversaries, fiscal years and the CSV export are asserted.
+**Evidence.** `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs`, `tests/ui/browser.mjs`; `tests/work/asset-financial-cases.mjs` (assetFinancialChecks (points 1-5: month-12 book value, integer cents and rounding, declining balance, month-end anniversaries, fiscal-year bounds, CSV rows and escaping)); `tests/ui/asset-financial-journey.mjs` (assetFinancialJourney (point 1 export and point 6 at 1440 and 390))
+**Gap.** None.
 
 #### ASSET-009 — CMDB and service dependencies
 
