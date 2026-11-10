@@ -101,6 +101,7 @@ export async function contractorSponsorChecks(api, db, input) {
   assert.equal((await api(`/lifecycle/${orphan.value.lifecycleId}/sponsor`, { sponsorId: 'employee' })).status, 200);
   assert.equal((await api(`/lifecycle/${orphan.value.lifecycleId}/reattest`, { expiresAt: iso(30 * 86400000) })).status, 404, 'LIFE-006 with an active sponsor again, only that sponsor re-attests');
   await sponsorRefusalAndReassignChecks(api, db, contractor, iso);
+  await reminderWindowAndRearmChecks(api, db, contractor, iso, sponsor);
   console.log('PASS LIFE-006 public routes: sponsor required, 72-hour reminder in the sponsor\'s requests, sponsor-only re-attestation moving expiry duties, removal starting at the end instant');
 }
 
@@ -162,4 +163,40 @@ async function sponsorRefusalAndReassignChecks(api, db, contractor, iso) {
   assert.equal((await due()), undefined);
   assert.equal((await reminders()).length, 1, 'LIFE-006 exactly one reminder addressed to the new sponsor');
   assert.equal((await api(`/lifecycle/sponsored`, undefined, asMember(replacement.id))).value.items.some(i => i.lifecycleId === id), true);
+}
+
+/** LIFE-006 points 3 and 4: no reminder while the end is beyond 72 hours; re-attestation clears the reminder so a new one precedes the new end. */
+async function reminderWindowAndRearmChecks(api, db, contractor, iso, sponsor) {
+  const reminders = async id => (await db.prepare("SELECT id,title,beneficiary_id,dedup_key FROM work_records WHERE dedup_key LIKE ? ORDER BY created_at").bind(`sponsor:${id}:%`).all()).results;
+  const pass = async id => (await api('/work/process-due', {})).value.items.find(r => r.id === id);
+  // Beyond 72 hours: nothing is raised, on any number of due passes.
+  const far = await api('/lifecycle', { ...contractor, source: 'contractor-hr-far', expiresAt: iso(100 * 3600000), sponsorId: 'employee' });
+  assert.equal(far.status, 201, JSON.stringify(far));
+  assert.equal(await pass(far.value.lifecycleId), undefined, 'LIFE-006 no reminder while the end is more than 72 hours away');
+  assert.equal(await pass(far.value.lifecycleId), undefined);
+  assert.equal((await reminders(far.value.lifecycleId)).length, 0);
+  assert.equal((await db.prepare('SELECT sponsor_work_id w FROM work_lifecycle WHERE id=?').bind(far.value.lifecycleId).first()).w, null);
+  // Re-attesting a reminded end date clears the reminder; the new end is reminded afresh, once.
+  const near = await api('/lifecycle', { ...contractor, source: 'contractor-hr-rearm', expiresAt: iso(24 * 3600000), sponsorId: 'employee' });
+  assert.equal(near.status, 201, JSON.stringify(near));
+  const id = near.value.lifecycleId;
+  const first = await pass(id);
+  assert.equal(first?.state, 'sponsor_reminded');
+  assert.equal(await pass(id), undefined, 'LIFE-006 one reminder per end date');
+  const later = iso(60 * 3600000);
+  assert.equal((await api(`/lifecycle/${id}/reattest`, { expiresAt: later }, sponsor)).status, 200);
+  const cleared = await db.prepare('SELECT sponsor_work_id w, sponsor_reminded_at r FROM work_lifecycle WHERE id=?').bind(id).first();
+  assert.deepEqual([cleared.w, cleared.r], [null, null], 'LIFE-006 re-attestation clears the reminder');
+  const fresh = await pass(id);
+  assert.equal(fresh?.state, 'sponsor_reminded', 'LIFE-006 a new reminder precedes the new end');
+  assert.notEqual(fresh.workId, first.workId);
+  const portal = await api(`/work/${fresh.workId}`, undefined, sponsor);
+  assert.equal(portal.status, 200);
+  assert.match(portal.value.work.title, new RegExp(`before ${later.replace(/[.]/g, '\\.')}`), 'LIFE-006 the new reminder names the new end');
+  assert.equal(await pass(id), undefined, 'LIFE-006 no duplicate of the new reminder');
+  assert.equal((await reminders(id)).length, 2);
+  // Re-attesting beyond the window clears it again and sends nothing until the window opens.
+  assert.equal((await api(`/lifecycle/${id}/reattest`, { expiresAt: iso(10 * 86400000) }, sponsor)).status, 200);
+  assert.equal(await pass(id), undefined, 'LIFE-006 re-attested beyond 72 hours raises no reminder');
+  assert.equal((await reminders(id)).length, 2);
 }

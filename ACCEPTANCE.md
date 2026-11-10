@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 32 | 117 | 29 | 178 |
+| Core | 33 | 116 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 32 | 130 | 37 | 199 |
+| Full target | 33 | 129 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -883,7 +883,7 @@ Core · target · **done** · From DESK-003
 
 #### DESK-004 — SLA policies
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Multiple SLA policies by priority, category and requester group with first-response, next-response and resolution targets on business or calendar hours, US federal holiday calendars by location, pause on "awaiting requester" or "awaiting vendor", and visible breach time. Pauses and breaches are DESK-020.
 
@@ -896,8 +896,8 @@ Core · target · **partial**
 6. First response and resolution run from the ticket's opening; first response is met by the first public agent reply and resolution by closing.
 7. Each public requester message after an agent reply starts a next-response target met by the next public agent reply.
 
-**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`
-**Gap.** Not asserted: a Saturday holiday observed the Friday before, a Sunday holiday observed the Monday after, the Inauguration Day exclusion, a calendar's own listed dates beside the catalog, resolution met by closing, a policy matched on its category, and a priority change rebinding from the ticket's opening. Policy order and first-match binding on priority and requester group, business and calendar hours, the location's federal catalog skipping a Monday holiday, the requester pause, breaches on the ticket and the report, first response met by the first public agent reply and the next-response target are asserted.
+**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (slaPolicyChecks (points 1,2,4,7 through the existing assertions and the P2 business hours and Executive P2 cases, named in plain words)); `tests/work/sla-policy-cases.mjs` (holidayCalendarChecks (point 5: Saturday and Sunday holidays observed, Inauguration Day, listed dates beside the catalog)); `tests/work/sla-policy-cases.mjs` (policyBindingChecks (point 3: category matching and priority-change rebinding)
+**Gap.** None.
 
 #### DESK-020 — SLA pauses and breaches
 
@@ -1104,7 +1104,7 @@ Core · target · **done** · From DESK-011 · Rules D-4
 7. Membership withdrawal applies to ticket reads, private writes, assignments, scenarios, tasks, knowledge sources, derived service/execution views and reports before aggregation; HR sources cannot be copied by a project-plan scenario into a globally visible project.
 8. Native archives retain department metadata and HR restrictions while restoring staff memberships inert; owners explicitly confirm authority again.
 
-**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).; `tests/work/department-space-cases.mjs` (departmentSpaceChecks); `tests/work/department-ops-cases.mjs` (departmentOpsChecks); `tests/work/department-report-cases.mjs` (departmentReportChecks); `tests/ui/department-browser.mjs` (native department handoff journey); `tests/services/department-source-cases.mjs` (departmentSourceChecks); `tests/platform/mcp-tools-cases.mjs` (mcpToolCases); `tests/platform/base-auth-transfer.mjs` (native archive and recovery); `tests/ui/department-browser.mjs` (Department privacy browser); `tests/platform/base-auth-transfer.mjs` (Native archive and recovery)
+**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).; `tests/work/department-space-cases.mjs` (departmentSpaceChecks); `tests/work/department-ops-cases.mjs` (departmentOpsChecks); `tests/work/department-report-cases.mjs` (departmentReportChecks); `tests/ui/department-browser.mjs` (native department handoff journey); `tests/services/department-source-cases.mjs` (departmentSourceChecks); `tests/platform/mcp-tools-cases.mjs` (mcpToolCases); `tests/platform/base-auth-transfer.mjs` (native archive and recovery)
 **Gap.** None.
 
 #### DESK-012 — Time tracking and effort

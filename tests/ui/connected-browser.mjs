@@ -23,7 +23,7 @@ try{
  await finishFirstRun(page,base);
  const api=apiFor(page),env={browser,context,page,api,base,out,fixture,tick,until};
  Object.assign(env,await connectedSetup(env));checks.push('J1 native connection validation, complete discovery, source review, mapping and unavailable provider recovery');
- Object.assign(env,await connectedRequest(env));checks.push('J2 native missing fact and denied request, reviewed standing authority, actual fixture grant and independently verified due removal');
+ Object.assign(env,await connectedRequest(env));checks.push('J2 native missing fact and denied request, reviewed standing authority, actual fixture grant and independently verified due removal; a member who already held another group keeps it, with no removal or duplicate addition, when a distinct temporary request expires');
  Object.assign(env,await connectedFrontier(env));checks.push('J6 native commitment, rival investigation, bounded source engineering, actual adoption, independent repair, matching reuse and rejected near-match/drift');
  await connectedCancellation(env);checks.push('J2 native cancellation of reversible and unknown effects: separate removal authority, provider reconciliation, no duplicate grant, independently verified denial');
  await connectedChanges(env);checks.push('J4 native controlled changes, conflicting windows, invalidated authority, distinct automatic cohort recovery, unknown effect, failed rollback, takeover, employee correction and actual delivery; J6 measured simplification with explicit total-work limits');

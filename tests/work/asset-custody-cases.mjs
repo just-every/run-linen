@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 
-export async function assetCustodyChecks(api, personId) {
+const bucketSnapshot=async bucket=>{
+  const keys=[];let cursor;
+  do{const page=await bucket.list({cursor,include:['customMetadata','httpMetadata']});for(const o of page.objects)keys.push(`${o.key}:${o.size}:${o.etag}`);cursor=page.truncated?page.cursor:undefined;}while(cursor);
+  return keys.sort();
+};
+
+export async function assetCustodyChecks(api, personId, attachments) {
   const created=await api('/assets',{serial:'NORTHSTAR-MBP-2026-42',source:'Purchase order PO-1042',location:'Denver stockroom',procured:true});
   assert.equal(created.status,201,JSON.stringify(created));
   const path=`/assets/${created.value.id}/commands`, history=`/assets/${created.value.id}/history`;
@@ -27,8 +33,14 @@ export async function assetCustodyChecks(api, personId) {
   assert.equal((await api(path,{revision,command:'dispose',evidence:'No certificate'})).status,422,'ASSET-004 requires the partner certificate');
   assert.equal((await api(path,{revision,command:'dispose',evidence:'Wrong standard',...certificate,certificateStandard:'ISO 9001'})).status,422);
   assert.equal((await api(path,{revision,command:'dispose',evidence:'Unsafe reference',...certificate,certificateReference:'javascript:alert(1)'})).status,422);
+  const before=await bucketSnapshot(attachments);
+  await attachments.put('asset-004-probe',new Uint8Array([1]));
+  assert.notDeepEqual(await bucketSnapshot(attachments),before,'ASSET-004 the bucket inspection sees an added object');
+  await attachments.delete('asset-004-probe');
+  assert.deepEqual(await bucketSnapshot(attachments),before);
   const disposal=await command('dispose',certificate);
   assert.equal(disposal.state,'disposed');
+  assert.deepEqual(await bucketSnapshot(attachments),before,'ASSET-004 a certificate reference alone adds no object to the attachments bucket');
   assert.equal((await api(path,{revision:revision-1,command:'dispose',evidence:'Stale replay',...certificate})).status,422);
   const result=await api(history);
   assert.equal(result.status,200);
@@ -36,6 +48,10 @@ export async function assetCustodyChecks(api, personId) {
   assert.deepEqual(result.value.items.map(e=>e.kind),['procure','receive','assign','receive','repair','return','loan','receive','return','repair','receive','retire','dispose']);
   assert.ok(result.value.items.every(e=>e.actor_id==='owner'&&e.created_at&&e.evidence),'ASSET-004 every receipt remains attributed');
   assert.deepEqual(result.value.items.at(-1).certificate,{partner:certificate.certificatePartner,standard:certificate.certificateStandard,reference:certificate.certificateReference});
+  const disposed=result.value.items.at(-1);
+  assert.deepEqual([disposed.actor_id,disposed.kind,disposed.evidence,Number.isNaN(Date.parse(disposed.created_at))],['owner','dispose','IT physical dispose receipt',false],'ASSET-004 the reopened disposal receipt keeps operator and timestamp beside the reference');
+  assert.deepEqual(Object.keys(disposed.certificate).sort(),['partner','reference','standard'],'ASSET-004 the stored certificate is the reference, partner and standard only: no document bytes, name or hash');
+  assert.deepEqual(await bucketSnapshot(attachments),before,'ASSET-004 reopening the history still leaves the attachments bucket unchanged');
   const assignments=result.value.events.filter(e=>e.changes.some(c=>c.field==='personId'&&c.after===personId));
   assert.equal(assignments.length,2,'DESK-017 physical assignment and loan preserve original person transitions');
   assert.deepEqual(assignments[0].changes.find(c=>c.field==='personId'),{field:'personId',before:null,after:personId});
@@ -87,8 +103,20 @@ export async function assetAuditChecks(api, personId) {
     assert.ok(linked.items.some(i=>i.id===missing.followUpWorkId),'ASSET-010 the follow-up is linked to its device');
   }
   assert.equal(ok(await api(`/work-links?kind=asset&targetId=${done.found[0].assetId}`)).items.length,0,'ASSET-010 found devices open no follow-up');
-  assert.equal((await api(`/asset-audits/${audit.id}/scans`,{code:tags[18]})).status,409,'ASSET-010 a completed audit takes no scans');
+  // A completed audit is immutable: missing, previously found and unknown codes are all refused and the record rereads unchanged.
+  const sealed=ok(await api(`/asset-audits/${audit.id}`));
+  assert.equal(sealed.state,'completed');
+  assert.ok(sealed.completed_by&&sealed.completed_at&&sealed.revision>audit.revision,'ASSET-010 completion records its actor, time and revision');
+  for (const code of [tags[18],tags[19].toLowerCase(),tags[0],tags[17].toLowerCase(),'BLD-AUD-001','NO-SUCH-TAG-AFTER-COMPLETION']) {
+    const refused=await api(`/asset-audits/${audit.id}/scans`,{code});
+    assert.equal(refused.status,409,`ASSET-010 a completed audit takes no scan of ${code}`);
+    assert.equal(refused.value.code,'audit_completed');
+  }
+  assert.deepEqual(ok(await api(`/asset-audits/${audit.id}`)),sealed,'ASSET-010 scans, reconciliation, completion actor, time, revision and follow-up identities are unchanged by refused scans');
+  assert.deepEqual(ok(await api(`/asset-audits/${audit.id}`)).missing.map(m=>[m.assetId,m.followUpWorkId]),done.missing.map(m=>[m.assetId,m.followUpWorkId]));
+  for (const missing of done.missing) assert.equal(ok(await api(`/work-links?kind=asset&targetId=${missing.assetId}`)).items.filter(i=>i.id===missing.followUpWorkId).length,1,'ASSET-010 refused scans open no second follow-up');
   assert.equal((await api(`/asset-audits/${audit.id}/complete`,{revision:done.revision})).status,409,'ASSET-010 completion opens follow-ups once');
+  assert.deepEqual(ok(await api(`/asset-audits/${audit.id}`)),sealed,'ASSET-010 a refused second completion leaves the audit unchanged');
   assert.equal(ok(await api('/asset-audits')).items[0].id,audit.id);
   assert.ok(elsewhere.id);
   console.log('PASS ASSET-010 Denver stock room audit: 18 of 20 expected devices scanned, stray and unknown scans reported, two missing devices open linked follow-up tasks');

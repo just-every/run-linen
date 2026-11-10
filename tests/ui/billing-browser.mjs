@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {mkdir} from 'node:fs/promises';
 import {apiFor,action,finishFirstRun} from './connected-helpers.mjs';
+import {previewOnlyChecks} from './billing-preview-helpers.mjs';
 const base=process.env.LINEN_TEST_URL,out=process.env.LINEN_TEST_OUTPUT;
 if(!base)throw Error('Use tests/ui/run.mjs tests/ui/billing-browser.mjs');
 await mkdir(out,{recursive:true});
@@ -33,6 +34,7 @@ try {
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No horizontal overflow');
   await page.reload();await page.getByRole('heading',{name:'Pricing & budgets',exact:true}).waitFor();assert.equal((await api('/billing/plan')).agent_seat_cents,2500);assert.equal((await api('/intelligence/budget')).limit_usd,50);
  }
+ for(const width of [1440,390])await previewOnlyChecks(page,base,api,width,out);
  const custom=await api('/members',{name:'Riley Facilities',email:'synthetic-linen-12070@example.test',password:'synthetic-linen-12071',roles:['employee']});
  const department=await api('/departments',{name:'Facilities',kind:'facilities'}),grants=[];
  for(const name of ['Facilities agent','Facilities responder']) {
@@ -61,5 +63,5 @@ try {
  }
  assert.equal(preview.freeMembers,3,'The former custom agent returns to free requester membership');
  await captureSeats(2,3,'withdrawn');
- assert.deepEqual(errors,[]);console.log('PASS monthly budget and Texas seat invoice native UI 1440; free requester and approver seats, persistence and icon tooltips');
+ assert.deepEqual(errors,[]);console.log('PASS monthly budget and Texas seat invoice native UI 1440; preview-only disclosure, repeated preview with unchanged plan and budget and no payment control or request at 1440 and 390; free requester and approver seats, persistence and icon tooltips');
 }finally{await browser.close()}
