@@ -71,29 +71,50 @@ jobs:
           name: linen-verified-build
           path: dist/
       - name: Install browser and engineering sandbox
-        timeout-minutes: 6
+        timeout-minutes: 9
         run: |
-          retry() {
-            for attempt in 1 2 3; do
-              "$@" && return 0
-              if [ "$attempt" -lt 3 ]; then
-                echo "attempt $attempt of 3 failed: $*; retrying in 10s" >&2
-                sleep 10
-              fi
-            done
-            echo "failed after 3 attempts: $*" >&2
-            return 1
-          }
-          printf '%s\n' 'http://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt
-          sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/sources.list.d/ubuntu.sources
+          # Base 144aa3ff mirror fallback: one mirror per attempt, first completed attempt fixes the mirror.
+          mirrors=(http://azure.archive.ubuntu.com/ubuntu http://mirrors.edge.kernel.org/ubuntu http://us-east-1.ec2.archive.ubuntu.com/ubuntu)
           sudo sed -i 's/ -m u//g' /etc/apt/apt.conf.d/99needrestart
           sudo install -d /etc/needrestart/conf.d
           printf '%s\n' '$nrconf{restart} = "l";' | sudo tee /etc/needrestart/conf.d/linen-ci.conf
-          apt_opts=(-o Acquire::Retries=5 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
-          retry sudo apt-get "${apt_opts[@]}" update
-          retry sudo apt-get "${apt_opts[@]}" install --yes --no-install-recommends bubblewrap apparmor-profiles
+          printf '%s\n' 'Acquire::Retries "2";' 'Acquire::http::Timeout "30";' 'Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99linen-ci-acquire
+          started=$SECONDS
+          chosen=
+          for attempt in 1 2 3; do
+            mirror=${mirrors[attempt - 1]}
+            sudo sed -i -E "s@^(URIs:[[:space:]]*)https?://(([a-z0-9.-]+\.)?archive\.ubuntu\.com|security\.ubuntu\.com|mirrors\.edge\.kernel\.org)/ubuntu/?@\1${mirror}/@" /etc/apt/sources.list.d/ubuntu.sources
+            printf 'Browser deps apt: attempt %s/3 (90s deadline; mirror %s)\n' "$attempt" "$mirror"
+            if sudo timeout --kill-after=5s 90s bash -ec '
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends bubblewrap apparmor-profiles
+            '; then
+              chosen=$mirror
+              printf 'Browser deps apt: complete (attempt=%s mirror=%s seconds=%s)\n' "$attempt" "$mirror" "$((SECONDS - started))"
+              break
+            else
+              status=$?
+              printf 'Browser deps apt: attempt %s/3 failed (mirror %s, exit %s, seconds=%s)\n' "$attempt" "$mirror" "$status" "$((SECONDS - started))" >&2
+            fi
+            if (( attempt < 3 )); then sleep "$((attempt * 2))"; fi
+          done
+          if [ -z "$chosen" ]; then
+            printf 'Browser deps apt: failed on all 3 mirrors (seconds=%s)\n' "$((SECONDS - started))" >&2
+            exit 1
+          fi
           sudo apparmor_parser --replace /usr/share/apparmor/extra-profiles/bwrap-userns-restrict
-          retry pnpm exec playwright install --with-deps chromium
+          for attempt in 1 2; do
+            printf 'Playwright deps: attempt %s/2 (120s deadline; mirror %s)\n' "$attempt" "$chosen"
+            if timeout --kill-after=5s 120s pnpm exec playwright install --with-deps chromium; then
+              exit 0
+            else
+              status=$?
+              printf 'Playwright deps: attempt %s/2 failed (exit %s, seconds=%s)\n' "$attempt" "$status" "$((SECONDS - started))" >&2
+            fi
+            if (( attempt < 2 )); then sleep 5; fi
+          done
+          printf 'Playwright deps: failed after 2 attempts (seconds=%s)\n' "$((SECONDS - started))" >&2
+          exit 1
       - name: Check Linux engineering sandbox prerequisites
         shell: bash
         run: |
