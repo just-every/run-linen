@@ -71,18 +71,46 @@ export async function releaseChecks({ok,call,db,implementation}) {
   release=await ok('GET',`/releases/${release.id}`);
   const notes=`/releases/${release.id}/notices`;
   assert.equal((await call('POST',notes,{revision:release.revision,groupId:'engineering',message:'Okta MFA now uses number matching.',cadenceMinutes:1440})).body.error.code,'release_cohort','CHANGE-007 release notes go only to the affected cohort');
-  await ok('POST',notes,{revision:release.revision,groupId:'mfa-pilot',message:'Release notes: Okta MFA now uses number matching.',cadenceMinutes:1440});
+  const mailSecret=(await ok('POST','/fixture/secret',{apiKey:'synthetic-linen-11001'})).secret;
+  await db.prepare("INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext,name,created_at,updated_at) VALUES(?,?,?,?,?,?,'synthetic-linen-11002',datetime('now'),datetime('now'))")
+    .bind('release-mail','w','sendgrid','active',JSON.stringify({from:'linen@example.test'}),mailSecret).run();
+  const notice=(await ok('POST',notes,{revision:release.revision,groupId:'mfa-pilot',message:'Release notes: Okta MFA now uses number matching.',cadenceMinutes:1440,emailConnectionId:'release-mail'})).items[0];
+  const outbox=async()=>(await db.prepare("SELECT id,recipient_id,state FROM svc_outbox WHERE workspace_id='w' AND record_id=? AND kind='employee-notice' ORDER BY id").bind(release.id).all()).results;
+  assert.deepEqual((await outbox()).map(r=>r.recipient_id),['release-sales'],'CHANGE-011 the release note queues mail for the affected cohort only');
+  // CHANGE-011: an all-clear needs a completed release; every refusal leaves the release, its notice, history and outbound effects exactly as they were.
+  const allClear=`${notes}/${notice.id}/all-clear`,clearBody={message:'Okta MFA rollout independently verified. All-clear.',verification:'Pilot sign-ins verified after the rollout and backout'};
+  const refuseAllClear=async(label,user='owner',status=422)=>{
+    const current=await ok('GET',`/releases/${release.id}`);
+    const before=[current,await ok('GET',`/service-history/${release.id}`),await ok('GET',notes),await outbox(),(await ok('POST','/fixture/state',{})).writes];
+    const refused=await call('POST',allClear,{...clearBody,revision:current.revision},user);
+    assert.equal(refused.status,status,`CHANGE-011 ${label}`);
+    if(status===422)assert.equal(refused.body.error.code,'notice_recovery',`CHANGE-011 ${label}`);
+    assert.deepEqual([await ok('GET',`/releases/${release.id}`),await ok('GET',`/service-history/${release.id}`),await ok('GET',notes),await outbox(),(await ok('POST','/fixture/state',{})).writes],before,`CHANGE-011 ${label}: release revision, notice, history and outbound effects unchanged`);
+  };
   assert.ok((await ok('GET','/service-notices',undefined,'release-sales')).items.some(n=>n.message.includes('number matching')),'CHANGE-007 the affected cohort reads the release notes');
   assert.equal((await ok('GET','/service-notices',undefined,'release-engineer')).items.some(n=>n.message.includes('number matching')),false,'CHANGE-007 employees outside the cohort do not');
   release=await ok('GET',`/releases/${release.id}`);
+  await refuseAllClear('an all-clear is refused while a failed member holds the release');
+  await refuseAllClear('an employee cannot record an all-clear','release-sales',403);
   assert.equal(release.data.deploy,'held');assert.deepEqual(release.data.holding,[changes[2].id]);
   assert.equal((await call('POST',`/releases/${release.id}/complete`,{revision:release.revision})).body.error.code,'release_open','CHANGE-007 a failed change holds the release open');
   let failed=await ok('POST',`/changes/${changes[2].id}/dispatch`,{revision:changes[2].revision,phase:'compensate',idempotencyKey:'release-2-backout'},'operator');
   failed=await ok('POST',`/changes/${failed.id}/verify`,{revision:failed.revision,invocationId:failed.data.invocations.at(-1).id},'operator');
   assert.equal(failed.data.state,'compensated','CHANGE-007 the failed change is explicitly backed out and read back');
+  await refuseAllClear('an all-clear is refused after backout until the release itself is completed');
   release=await ok('POST',`/releases/${release.id}/complete`,{revision:(await ok('GET',`/releases/${release.id}`)).revision});
   assert.equal(release.data.state,'completed');assert.equal(release.data.goNoGo,'go','Completed release retains its recorded decision');
   assert.deepEqual(release.data.outcomes.map(o=>o.outcome),['successful','successful','backed-out'],'CHANGE-007 completes once every change is successful or backed out');
+  const cleared=await ok('POST',allClear,{...clearBody,revision:release.revision});
+  assert.equal(cleared.items.length,1);assert.equal(cleared.items[0].id,notice.id);assert.equal(cleared.items[0].state,'all-clear');
+  assert.equal(cleared.items[0].verifiedBy,'owner');assert.equal(cleared.items[0].verification,clearBody.verification);assert.equal(cleared.items[0].nextUpdateAt,null);
+  const ownerName=(await db.prepare("SELECT name FROM users WHERE id='owner'").first()).name;
+  const seen=(await ok('GET','/service-notices',undefined,'release-sales')).items.filter(n=>n.id===notice.id);
+  assert.equal(seen.length,1,'CHANGE-011 the affected employee reads the retained release all-clear');
+  assert.equal(seen[0].state,'all-clear');assert.equal(seen[0].verifiedBy,ownerName);assert.equal(seen[0].message,clearBody.message);assert.ok(seen[0].verifiedAt);
+  assert.equal((await ok('GET','/service-notices',undefined,'release-engineer')).items.some(n=>n.id===notice.id),false,'CHANGE-011 an outsider never sees the release all-clear');
+  assert.deepEqual((await outbox()).map(r=>r.recipient_id),['release-sales','release-sales'],'CHANGE-011 the all-clear mails the affected cohort only');
+  console.log('PASS CHANGE-011 release all-clear: refused while a failed member holds the release and after backout until completion with release revision, notice, history and outbound effects unchanged; accepted and named after completion, read by the affected employee and not by an outsider');
   // The whole candidate is invalidated when any member changes, including a different member.
   const regression=[];
   for(let n=0;n<2;n++) {
