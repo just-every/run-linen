@@ -6703,6 +6703,14 @@
       "sha256": "239d6313d38b722ae84525e357c62fc7304cf9bba2159f5f2da420827fdf9ebe",
       "executable": false
     },
+    "tests/execution/graph-license-cases.mjs": {
+      "sha256": "499dbddc08beb6a75c97753b44ee6ad9ddcd5a7c4df07e7a1ab82d074cee99d4",
+      "executable": false
+    },
+    "tests/execution/graph-license-fixture.ts": {
+      "sha256": "3e6e65993d2cf0d348e03d2a05ab7ef06dda1a135e5fbfec911705fb7e2aa391",
+      "executable": false
+    },
     "tests/execution/notification-rule-cases.mjs": {
       "sha256": "0225c37d25adbd0a95d8400e7cce835bad5865419811e0a3cdb31d0e109f2265",
       "executable": false
