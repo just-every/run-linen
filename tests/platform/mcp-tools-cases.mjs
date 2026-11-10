@@ -49,7 +49,11 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  const issuerSession=await nativeSession('mcp-issuing-owner@example.test',password)
  const groups=await value(ownerApi('/work-groups'))
  check(groups.items.every(g=>g.members.every(m=>m.userId!==bot.id)),'queue grant adds no group member or lead')
- equal((await ownerApi('/work-groups/'+hardware+'/members',{userId:bot.id,lead:true})).status,422,'integration cannot become group member or lead')
+ const membersOf=async()=>(await sql(`SELECT group_id,user_id,lead FROM work_group_members WHERE workspace_id=${quoted(session.principal.workspaceId)} ORDER BY group_id,user_id`))
+ const membersBefore=JSON.stringify(await membersOf())
+ for(const lead of [false,true])
+  equal((await ownerApi('/work-groups/'+hardware+'/members',{userId:bot.id,lead})).status,422,'integration cannot become group member or lead ('+lead+')')
+ equal(JSON.stringify(await membersOf()),membersBefore,'refused integration membership leaves every group roster unchanged')
 
  ;(await sql(`INSERT INTO workspaces VALUES('mcp-tools-foreign','Foreign queue fixture','2026-01-01');
  INSERT INTO work_groups(id,workspace_id,name,created_by,created_at) VALUES('mcp-tools-foreign-group','mcp-tools-foreign','Foreign Hardware',${quoted(session.principal.userId)},'2026-01-01')`))
@@ -71,8 +75,11 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
   file('restricted','Restricted investigation marker',hardware,'restricted'),
   file('hr','HR accommodation marker',hardware,'hr',ownerApi),
  ])
+ const placed=await value(ownerApi('/work/'+normal.id))
  equal((await ownerApi('/work/'+normal.id+'/group',{groupId:hardware,revision:(await value(ownerApi('/work/'+normal.id))).work.revision,assigneeId:bot.id})).status,422,'queue grant never permits assigning the bot')
  equal((await ownerApi('/work/'+normal.id+'/commands',{command:'assign',assigneeId:bot.id,revision:(await value(ownerApi('/work/'+normal.id))).work.revision,reason:'Try assigning integration'})).status,422,'native assign refuses integration principal')
+ const unassigned=await value(ownerApi('/work/'+normal.id))
+ equal([unassigned.work.assignee_id,unassigned.work.revision],[placed.work.assignee_id,placed.work.revision],'refusing the bot as assignee leaves the ticket owner and revision unchanged')
 
  // Mint against populated native authority records, including a decision still open.
  const person=await value(ownerApi('/people',{source:'synthetic-linen-13000',sourceId:employee.id,name:'synthetic-linen-13001',managerId:issuer.id,observedAt:new Date().toISOString(),effectiveAt:new Date().toISOString()}),201)
@@ -206,6 +213,38 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  await value(ownerApi('/mcp-fields/'+safeField.id+'/classification',{nonpersonal:false}))
  check(!(await tool(full.secret,'work.get',{workId:normal.id})).custom_fields.some(f=>f.id===safeField.id),'reclassification removes field on next read')
  check(!(await tool(full.secret,'work.history',{workId:normal.id})).items.some(e=>e.changes.some(c=>c.field_id===safeField.id)),'reclassification removes historical field values immediately')
+
+ // API-007 point 1: a read of a freshly classified, routed ticket with a service and bound SLA equals the independently read native records.
+ const readable=await value(ownerApi('/services',{name:'synthetic-linen-14001',description:'synthetic-linen-14002',businessImpact:'synthetic-linen-14003',source:'synthetic-linen-14004',observedAt:new Date().toISOString(),visibility:'workspace'}),201)
+ const slaPolicy=await value(ownerApi('/sla-policies',{name:'synthetic-linen-14005',position:700,priority:'P3',category:'hardware',firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:240}),201)
+ const core=await value(employeeSession.api('/work',{title:'synthetic-linen-14006',body:'The docking station drops the display link.',kind:'incident',deduplicationKey:'API-007-core',
+  context:{serviceId:readable.id,email:'mcp-context-private@example.test',phone:'202-555-0199',manager:'MCP-HIDDEN-MANAGER',hrFact:'MCP-HIDDEN-HR'}}),201)
+ await route(core.id,hardware)
+ const coreClassification=await value(ownerApi('/work/'+core.id+'/classification'))
+ await value(ownerApi('/work/'+core.id+'/classification/override',{revision:coreClassification.revision,workRevision:coreClassification.workRevision,type:'incident',category:'hardware',subcategory:'other',impact:'medium',urgency:'high',priority:'P3',reason:'MCP-HIDDEN-CLASSIFICATION-REASON'}))
+ const nativeWork=(await value(ownerApi('/work/'+core.id))).work,nativeClass=(await value(ownerApi('/work/'+core.id+'/classification'))).current
+ const nativeSla=await value(ownerApi('/work/'+core.id+'/sla')),nativeGroup=(await value(ownerApi('/work-groups'))).items.find(g=>g.id===nativeWork.group_id)
+ check(nativeWork.group_id===hardware&&nativeWork.kind==='incident'&&nativeWork.state==='open','native record holds the routed incident the MCP read must match')
+ equal(nativeSla.policy.id,slaPolicy.id,'native SLA is bound to the policy created through the native door')
+ const coreView=await tool(full.secret,'work.get',{workId:core.id})
+ const target=t=>({target:t.target,startedAt:t.startedAt,dueAt:t.dueAt,metAt:t.metAt,state:t.state,breachedAt:t.breachedAt})
+ equal({id:coreView.id,title:coreView.title,kind:coreView.kind,state:coreView.state,revision:coreView.revision,
+  created_at:coreView.created_at,updated_at:coreView.updated_at,closed_at:coreView.closed_at,paused_at:coreView.paused_at,response_at:coreView.response_at,resolution_at:coreView.resolution_at},
+  {id:nativeWork.id,title:nativeWork.title,kind:nativeWork.kind,state:nativeWork.state,revision:nativeWork.revision,
+   created_at:nativeWork.created_at,updated_at:nativeWork.updated_at,closed_at:nativeWork.closed_at??null,paused_at:nativeWork.paused_at??null,response_at:nativeWork.response_at??null,resolution_at:nativeWork.resolution_at??null},
+  'MCP read matches the native record for title, kind, state, revision and timestamps')
+ equal({priority:coreView.priority,impact:coreView.impact,urgency:coreView.urgency,category:coreView.category,subcategory:coreView.subcategory},
+  {priority:nativeClass.priority,impact:nativeClass.impact,urgency:nativeClass.urgency,category:{id:nativeClass.category,label:nativeClass.category},subcategory:nativeClass.subcategory},
+  'MCP read matches the native classification')
+ equal({priority:coreView.priority,impact:coreView.impact,urgency:coreView.urgency,category:coreView.category.id},{priority:'P3',impact:'medium',urgency:'high',category:'hardware'},'the classification is the one the owner entered, not a default')
+ equal(coreView.service,{id:readable.id,label:'synthetic-linen-14001'},'service id and label are the registered readable service')
+ equal(coreView.group,{id:nativeGroup.id,label:nativeGroup.name},'group id and label match the native queue')
+ equal(coreView.sla.policy,{id:nativeSla.policy.id,revision:nativeSla.policy.revision,hours:nativeSla.policy.hours,firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:240,
+  pauseOn:nativeSla.policy.pauseOn,boundAt:nativeSla.policy.boundAt},'SLA policy snapshot matches the native clock without its name or calendar')
+ equal([coreView.sla.firstResponse,coreView.sla.resolution],[target(nativeSla.firstResponse),target(nativeSla.resolution)],'SLA targets match the native clock')
+ equal([coreView.sla.firstResponse.dueAt,coreView.sla.resolution.dueAt],[new Date(Date.parse(nativeWork.created_at)+3600000).toISOString(),new Date(Date.parse(nativeWork.created_at)+14400000).toISOString()],'SLA due times are the ticket opening plus the policy minutes')
+ for(const key of ['name','calendar','messages'])check(!Object.hasOwn(coreView.sla.policy,key)&&!Object.hasOwn(coreView.sla,key),'SLA projection omits '+key)
+ for(const secret of hiddenValues)check(!JSON.stringify(coreView).includes(secret),'core read keeps private notes, context and classification reason out')
 
  // A retained HR boundary still excludes MCP when its explicit queue grant matches the new placement.
  const hrDepartment=await value(ownerApi('/departments',{name:'synthetic-linen-12100',kind:'hr'}),201)
