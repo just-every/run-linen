@@ -1784,7 +1784,7 @@
       "executable": false
     },
     "scripts/verify.mjs": {
-      "sha256": "bfe2d0bb2b24b2b85c6529e36db95c4f83e7bd10ba0bbd934b809520208f18e3",
+      "sha256": "a61dde07e949ded63c85b3de7c5b6849561487ee1d436f6bb5926e68e3b2b9f0",
       "executable": false
     },
     "seed.json": {
