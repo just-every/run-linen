@@ -84,9 +84,9 @@ let mf = new Miniflare({
   ...convertV4MiniflareOptions({ ...options, port: Number(process.env.LINEN_TEST_WORKER_PORT || 0) }),
   resourcePersistencePath: dir,
 });
-async function api(path, body, headers = {}) {
+async function api(path, body, headers = {}, method = body === undefined ? "GET" : "POST") {
   const response = await mf.dispatchFetch(`http://localhost${path}`, {
-    method: body === undefined ? "GET" : "POST",
+    method,
     headers: { "content-type": "application/json", ...headers },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -319,7 +319,7 @@ try {
     ).status,
     422,
   );
-  await assetCustodyChecks(api, person.value.id);
+  await assetCustodyChecks(api, person.value.id, await mf.getR2Bucket('ATTACHMENTS'));
   await assetAuditChecks(api, person.value.id);
   await assetStockChecks(api, person.value.id);
   await assetContractChecks(api,db);

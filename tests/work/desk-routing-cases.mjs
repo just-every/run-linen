@@ -135,5 +135,84 @@ export async function deskRoutingChecks(workspaceApi, db) {
       'DESK-019 unassigned routing history identifies the rule actor and time');
     check(await api(`/work/${unassigned.id}/assignments`, undefined, employee), 403);
   }
-  console.log('PASS DESK-003 public routes: support group of the Payroll service and a laptop CI ahead of owner-ordered rules by VIP requester group, requester, category and skill; round-robin and load-based assignment skip the off-shift and overloaded agents; restricted tickets never auto-assigned; reassignment history');
+  // Assignment none places ordinary work without an owner even when a member is eligible.
+  for (const rule of check(await api('/work-routing')).rules)
+    check(await api(`/work-routing/rules/${rule.id}/remove`, {}));
+  const manual = await group('Manual assignment', ['d3-hw']);
+  const manualRule = check(await api('/work-routing/rules', { name: 'Manual desk', position: 1, groupId: manual.id }), 201);
+  check(await api(`/work-groups/${manual.id}/assignment`, { mode: 'round_robin' }));
+  const eligible = await ticket('eligible-control');
+  assert.deepEqual([eligible.group_id, eligible.assignee_id], [manual.id, 'd3-hw'],
+    'DESK-003 the same normal-ticket group has an eligible automatic agent');
+  const assignmentBefore = check(await api('/work-routing'));
+  check(await api(`/work-groups/${manual.id}/assignment`, { mode: 'none' }, agentC), 403);
+  assert.deepEqual(check(await api('/work-routing')), assignmentBefore,
+    'DESK-003 an agent cannot change owner-maintained assignment configuration');
+  check(await api(`/work-groups/${manual.id}/assignment`, { mode: 'none' }));
+  const manualTicket = await ticket('assignment-none');
+  for (const work of [manualTicket, eligible]) {
+    const created = await current(work);
+    const result = check(await api(`/work/${work.id}/route`, { revision: created.revision }, agentC));
+    const persisted = await current(work);
+    assert.deepEqual([result.work.group_id, result.work.assignee_id, persisted.group_id, persisted.assignee_id],
+      [manual.id, null, manual.id, null], 'DESK-003 none retains the group with no assignee on creation and rerouting');
+    assert.equal(result.routing.method, 'none');
+    assert.equal(result.routing.unassigned, undefined, 'DESK-003 none does not pretend the eligible cohort is unavailable');
+  }
+  assert.deepEqual([manualTicket.group_id, manualTicket.assignee_id], [manual.id, null]);
+  check(await api(`/work-routing/rules/${manualRule.id}/remove`, {}));
+
+  // One rule sets all three conditions; change only one condition's input for each fallthrough.
+  const matchingRequesters = check(await api('/requester-groups', {
+    name: 'Combined rule requesters', memberIds: ['d3-ceo', 'd3-employee'],
+  }), 201);
+  const otherRequesters = check(await api('/requester-groups', {
+    name: 'Other rule requesters', memberIds: ['d3-employee'],
+  }), 201);
+  const fallback = check(await api('/work-routing/rules', { name: 'Combined fallback', position: 10, groupId: network.id }), 201);
+  for (const [key, requester, category, requesterGroupId, expectedGroup] of [
+    ['all-match', ceo, 'hardware', matchingRequesters.id, hardware.id],
+    ['category-mismatch', ceo, 'network', matchingRequesters.id, network.id],
+    ['requester-mismatch', employee, 'hardware', matchingRequesters.id, network.id],
+    ['requester-group-mismatch', ceo, 'hardware', otherRequesters.id, network.id],
+  ]) {
+    const rule = check(await api('/work-routing/rules', {
+      name: 'All conditions ' + key, position: 1, category: 'hardware', requesterId: 'd3-ceo', requesterGroupId, groupId: hardware.id,
+    }), 201);
+    const work = await ticket(key, requester);
+    assert.equal((await current(work)).group_id, network.id, 'DESK-003 an unclassified ticket falls through the category condition');
+    check(await api(`/work/${work.id}/classification/override`, {
+      type: 'incident', category, subcategory: category === 'hardware' ? 'laptop' : 'vpn',
+      impact: 'low', urgency: 'medium', revision: 0, workRevision: (await current(work)).revision, reason: 'Combined routing conditions',
+    }));
+    const result = check(await api(`/work/${work.id}/route`, { revision: (await current(work)).revision }, agentC));
+    assert.equal(result.routing.ruleId, expectedGroup === hardware.id ? rule.id : fallback.id,
+      'DESK-003 ' + key + ' chooses the first rule only when every condition holds');
+    assert.deepEqual([result.work.group_id, (await current(work)).group_id], [expectedGroup, expectedGroup],
+      'DESK-003 ' + key + ' persists the expected accountable group');
+    check(await api(`/work/${work.id}/assignments`, undefined, requester), 403);
+    check(await api(`/work-routing/rules/${rule.id}/remove`, {}));
+  }
+  check(await api(`/work-routing/rules/${fallback.id}/remove`, {}));
+
+  // Retained group membership alone never makes an inactive agent an automatic candidate.
+  const retained = await group('Retained inactive agent', ['d3-hw']);
+  check(await api('/work-routing/rules', { name: 'Retained membership', position: 1, groupId: retained.id }), 201);
+  check(await api(`/work-groups/${retained.id}/assignment`, { mode: 'round_robin' }));
+  const activeControl = await ticket('active-member-control');
+  assert.deepEqual([activeControl.group_id, activeControl.assignee_id], [retained.id, 'd3-hw']);
+  await db.prepare('UPDATE memberships SET active=0 WHERE workspace_id=? AND user_id=?').bind('desk003', 'd3-hw').run();
+  assert.deepEqual(check(await api('/work-groups')).items.find(g => g.id === retained.id).members.map(m => m.userId), ['d3-hw'],
+    'DESK-003 the inactive agent remains in the configured group');
+  for (const mode of ['round_robin', 'load']) {
+    check(await api(`/work-groups/${retained.id}/assignment`, { mode }));
+    const work = await ticket('inactive-' + mode);
+    assert.deepEqual([work.group_id, work.assignee_id], [retained.id, null],
+      'DESK-003 ' + mode + ' excludes the retained inactive agent on creation');
+    const result = check(await api(`/work/${work.id}/route`, { revision: (await current(work)).revision }, agentC));
+    const persisted = await current(work);
+    assert.deepEqual([result.work.group_id, result.work.assignee_id, persisted.group_id, persisted.assignee_id],
+      [retained.id, null, retained.id, null], 'DESK-003 ' + mode + ' excludes the retained inactive agent on rerouting');
+  }
+  console.log('PASS DESK-003 public routes: support group of the Payroll service and a laptop CI ahead of owner-ordered rules by VIP requester group, requester, category and skill; round-robin and load-based assignment skip the off-shift and overloaded agents; restricted tickets never auto-assigned; reassignment history; assignment none with eligible agents; every combined condition and individual mismatch; retained inactive agents excluded');
 }

@@ -4,6 +4,7 @@ import { eraseServicePerson } from '../../src/features/services/privacy';
 import { registerServiceRoutes } from "../../src/features/services";
 import { registerConnectionRoutes } from "../../src/features/connections";
 import { createGrant } from "../../src/features/execution/grants";
+import { registerSettingsRoutes } from "../../src/platform/settings";
 import { Hono } from "hono";
 import {
   registerWorkRoutes,
@@ -179,11 +180,13 @@ app.post('/test/bi-google-key',async c=>{biGooglePublicKey=await c.req.json();re
 app.post('/test/reporting-tick',async c=>{await processDueReporting(c.env);await processDueBiExports(c.env);return c.json({processed:true});});
 
 app.onError((e, c) =>
-  c.json({ error: e.message }, e instanceof ApiError ? (e.status as 400) : 500),
+  c.json({ error: e.message, ...(e instanceof ApiError ? { code: e.code } : {}) }, e instanceof ApiError ? (e.status as 400) : 500),
 );
 registerWorkRoutes(app);
 registerServiceRoutes(app);
 registerConnectionRoutes(app);
+// Native member administration (LIFE-006 sponsor checks add and deactivate real members through it).
+registerSettingsRoutes(app);
 app.post('/test/erase-service-person',async c=>c.json(await eraseServicePerson({env:c.env,principal:c.get('principal')},await c.req.json())));
 app.post("/test/grant", async (c) =>
   c.json(

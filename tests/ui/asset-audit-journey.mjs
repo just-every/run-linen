@@ -37,6 +37,22 @@ export async function assetAuditJourney({page,api,base,out}) {
     process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-010-follow-up-${width}.png`});
     const audits=await api('/asset-audits'),done=audits.items.find(a=>a.location===location);
     assert.deepEqual([done.expected.length,done.found.length,done.missing.length],[20,18,2],'ASSET-010 persisted reconciliation');
+    // Reopen the completed audit from a fresh load: no scan or completion control, reconciliation and follow-up links still work.
+    await page.goto(base+'/app#/assets');await page.reload();
+    const reopened=page.getByRole('article',{name:`Completed audit of ${location}`});
+    await reopened.getByText('Missing devices and their follow-ups').waitFor();
+    assert.equal(await page.getByRole("article",{name:`Audit of ${location}`,exact:true}).count(),0,`ASSET-010 no open audit surface for a completed audit at ${width}`);
+    assert.equal(await reopened.getByLabel('Scan or type an asset tag').count()+await reopened.getByRole('button',{name:'Record scan'}).count()+await reopened.getByRole('button',{name:'Complete audit'}).count(),0,`ASSET-010 completed audit offers no scan or completion control at ${width}`);
+    assert.equal(await reopened.getByText('Scans not on the expected list').count(),0,'ASSET-010 only the scans that existed at completion are listed');
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`ASSET-010 reopened audit fits ${width}`);
+    const reopenedLinks=reopened.getByRole('link',{name:'Follow-up request'});
+    assert.equal(await reopenedLinks.count(),2,`ASSET-010 reopened audit keeps both follow-up links at ${width}`);
+    await reopened.getByText('Expected',{exact:true}).waitFor();
+    await reopenedLinks.nth(1).click();
+    await page.getByRole('heading',{name:`Find missing device ${tags[19]} (${prefix}-SN-20)`}).waitFor();
+    const refused=await page.evaluate(async({id,code})=>{const s=await (await fetch('/api/v1/session')).json();const r=await fetch(`/api/v1/asset-audits/${id}/scans`,{method:'POST',headers:{'Content-Type':'application/json','X-Linen-CSRF':s.csrfToken},body:JSON.stringify({code})});return {status:r.status,body:await r.json()};},{id:done.id,code:tags[18]});
+    assert.deepEqual([refused.status,refused.body.error.code],[409,'audit_completed'],`ASSET-010 the reopened audit still refuses a scan at ${width}`);
+    assert.deepEqual(await api(`/asset-audits/${done.id}`),done,`ASSET-010 the refused scan leaves the completed audit unchanged at ${width}`);
   }
   console.log('PASS ASSET-010 browser: Denver stock room audit at 390 and 1440, 18 of 20 scanned, two missing devices open follow-up requests');
 }

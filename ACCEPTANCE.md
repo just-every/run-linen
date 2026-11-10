@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 23 | 126 | 29 | 178 |
+| Core | 34 | 115 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 23 | 139 | 37 | 199 |
+| Full target | 34 | 128 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -814,7 +814,7 @@ Core · target · **partial**
 
 #### DESK-018 — Keyboard triage
 
-Core · target · **partial** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
+Core · target · **done** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
 
 **Requirement.** An agent triages a queue from the keyboard alone. Keyboard triage works outside text fields.
 
@@ -828,8 +828,8 @@ Core · target · **partial** · From DESK-001 · Cites BASE-ACCESSIBILITY-001
 7. `?` shows the shortcut reference.
 8. `x` runs a DESK-015 scenario on the open ticket.
 
-**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/work/runtime.mjs`; native saved/shared view, five-ticket bulk assignment, scoped lead view and pointer-free keyboard next/assign/reply/status: `tests/ui/desk-console-journeys.mjs` deskQueueJourney through `tests/ui/browser.mjs`
-**Gap.** Not asserted: k (previous ticket), n (private note), c (close) and Escape leaving a field. Keyboard-only triage with j, a, r, s, Ctrl/⌘+Enter, ? and x is asserted.
+**Evidence.** `src/features/work/desk-groups.ts`, `src/features/work/desk-views.ts`, `tests/work/desk-group-cases.mjs`, `src/ui/work-bulk.tsx`, `src/ui/work-triage.tsx`, `tests/work/runtime.mjs`; native saved/shared view, five-ticket bulk assignment, scoped lead view and pointer-free keyboard next/assign/reply/status: `tests/ui/desk-console-journeys.mjs` deskQueueJourney through `tests/ui/browser.mjs`; `tests/ui/desk-console-journeys.mjs` (deskQueueJourney); `tests/ui/desk-console-journeys.mjs` (deskScenarioJourney)
+**Gap.** None.
 
 #### DESK-002 — Classification and priority
 
@@ -847,7 +847,7 @@ Core · target · **done**
 
 #### DESK-003 — Routing and assignment
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Rules route by category, requester, department, location, VIP status and the impacted configuration item's or business service's support group (ASSET-009); assignment can be round-robin, by current load, by skill, or by business-hours availability, and reassignment keeps history. Assignment within a group is DESK-019.
 
@@ -861,8 +861,8 @@ Core · target · **partial**
 7. Precedence: the support group of the item the ticket names comes first; otherwise the lowest-position rule whose every set condition matches (category, requester, requester group) decides; otherwise nothing changes.
 8. Within the group, the candidates are its active agents who are on shift at that minute in their calendar's time zone, hold the rule's skill if it names one, and own fewer open tickets than the group's cap.
 
-**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`
-**Gap.** Not asserted: a group whose assignment method is none placing the ticket without an agent; a rule with several set conditions deciding only when all of them match; and an inactive agent left out of the candidates. Round-robin and load-based assignment past the off-shift and capped agents, the VIP, Payroll-service and laptop-CI routes, owner-only rules, support groups, shifts and skills, routing on creation, on classification and on request at the revision read, precedence and no change without a match, and skill-based candidates are asserted.
+**Evidence.** `src/features/work/desk-routing.ts`, `src/features/work/desk-routing-config.ts`, `tests/work/desk-routing-cases.mjs`; `tests/work/desk-routing-cases.mjs` (deskRoutingChecks)
+**Gap.** None.
 
 #### DESK-019 — Automatic assignment and routing history
 
@@ -901,7 +901,7 @@ Core · target · **partial**
 
 #### DESK-020 — SLA pauses and breaches
 
-Core · target · **partial** · From DESK-004
+Core · target · **done** · From DESK-004
 
 **Requirement.** A pause stops only the clocks its policy pauses on, and a breach, once reached, stays a breach.
 
@@ -911,8 +911,8 @@ Core · target · **partial** · From DESK-004
 3. A target is breached when met after, or still unmet past, its due time, and its breach time is that due time.
 4. Owners, agents and auditors read each ticket's targets and the period report.
 
-**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`
-**Gap.** Not asserted: that service agents and auditors read each ticket's targets and the period report. The owner's reads and the requester's refusal, pauses stopping only the policy's parties, a later pause keeping the breach, and the breach time are asserted.
+**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (slaPolicyChecks); `tests/work/sla-policy-cases.mjs` (escalationChecks)
+**Gap.** None.
 
 #### DESK-005 — Escalation and supervisor rules
 
@@ -1006,7 +1006,7 @@ Core · target · **partial** · From DESK-007 · Cites BASE-MAIL-001 · Rules D
 
 #### DESK-008 — Responses and summaries
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Canned responses with placeholders, and assistant-drafted replies and ticket summaries that cite knowledge and ticket history. A drafted reply stays a draft in the composer until a person sends it; when an agent sends a reply through a tool, that call carries its class and the company's policy decides it (RL-8).
 
@@ -1020,8 +1020,8 @@ Core · target · **partial**
 7. Inserting a template or using a reply draft preserves the composer's selected visibility and leaves it unsent: a drafted reply is not sent until the service agent sends it.
 8. For articles generated by KB-004, the requester and beneficiary must each currently be able to read every source before and after reply generation, and a pending beneficiary refuses that article context; these are read-only checks, never a new account or grant.
 
-**Evidence.** `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs`
-**Gap.** Not asserted: that inserting a template or using a reply draft preserves the composer's selected visibility. Canned responses, placeholders, summaries, citations, context rechecks, unsent drafts and generated-knowledge rights are asserted.
+**Evidence.** `src/features/work/canned-responses.ts`, `src/features/work/response-assistance.ts`, `tests/work/response-cases.mjs`, `tests/work/knowledge-draft-cases.mjs`, `tests/ui/response-journey.mjs`; `tests/ui/response-journey.mjs` (responseJourney); `tests/work/response-cases.mjs` (responseChecks); `tests/work/knowledge-draft-cases.mjs` (knowledgeDraftChecks)
+**Gap.** None.
 
 #### DESK-009 — Satisfaction surveys
 
@@ -1038,7 +1038,7 @@ Core · target · **missing** · Rules D-2
 
 #### DESK-010 — Custom fields, forms and statuses
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Admins add custom ticket fields, forms per ticket type and custom statuses mapped to SLA behavior. Fields can be required on a status: by default an incident cannot be resolved without a resolution code (from an admin-edited list such as "Solved (workaround)", "Solved (permanent fix)", "Not reproducible" and "Duplicate") and close notes, and a service request cannot be resolved without close notes. The rule holds on every door: console, bulk update, scenario, API and chat action; it is DESK-023.
 
@@ -1048,8 +1048,8 @@ Core · target · **partial**
 3. A custom status is a named pause that waits on the requester, a vendor or nobody outside the desk; whether it stops the SLA clock is the bound policy's pause rule (DESK-020), never an override, so "Awaiting parts" is a vendor wait.
 4. Field values, the status and the resolution are read by whoever can read the ticket and written by the roles that move its state (owner, operator, HR); people a ticket is shared with see its public thread only.
 
-**Evidence.** `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs`
-**Gap.** Not asserted: that people a ticket is shared with see its public thread only. Fields, forms, statuses, pause rules and read/write roles are asserted.
+**Evidence.** `src/features/work/desk-fields.ts`, `src/features/work/desk-field-routes.ts`, `src/ui/work-fields.tsx`, `tests/work/desk-field-cases.mjs`, `tests/ui/desk-field-journey.mjs`; `tests/work/desk-field-cases.mjs` (deskFieldChecks); `tests/ui/desk-field-journey.mjs` (deskFieldJourney)
+**Gap.** None.
 
 #### DESK-023 — Required resolution fields on every closing door
 
@@ -1090,7 +1090,7 @@ Core · target · **done** · Rules D-4
 
 #### DESK-024 — Department handoff and retained HR restriction
 
-Core · target · **partial** · From DESK-011 · Rules D-4
+Core · target · **done** · From DESK-011 · Rules D-4
 
 **Requirement.** A handoff between workspaces moves the ticket whole, and a ticket that was ever in an HR workspace keeps that workspace's restriction wherever it goes.
 
@@ -1104,8 +1104,8 @@ Core · target · **partial** · From DESK-011 · Rules D-4
 7. Membership withdrawal applies to ticket reads, private writes, assignments, scenarios, tasks, knowledge sources, derived service/execution views and reports before aggregation; HR sources cannot be copied by a project-plan scenario into a globally visible project.
 8. Native archives retain department metadata and HR restrictions while restoring staff memberships inert; owners explicitly confirm authority again.
 
-**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).
-**Gap.** Not asserted: that a handoff at a stale revision is refused, and that the ticket's submitted forms remain after a handoff (the handed-off request has none). The kept history, owner-only handoff with an audited reason, identity, messages, attachments, sensitivity and the frozen SLA clock, cleared incompatible assignments, the retained HR requirement across later moves, staff-door membership, the requester's public view, HR-service limits, no recovery through relationships, withdrawal before aggregation and inert archived memberships are asserted.
+**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).; `tests/work/department-space-cases.mjs` (departmentSpaceChecks); `tests/work/department-ops-cases.mjs` (departmentOpsChecks); `tests/work/department-report-cases.mjs` (departmentReportChecks); `tests/ui/department-browser.mjs` (native department handoff journey); `tests/services/department-source-cases.mjs` (departmentSourceChecks); `tests/platform/mcp-tools-cases.mjs` (mcpToolCases); `tests/platform/base-auth-transfer.mjs` (native archive and recovery); `tests/ui/department-browser.mjs` (Department privacy browser); `tests/platform/base-auth-transfer.mjs` (Native archive and recovery)
+**Gap.** None.
 
 #### DESK-012 — Time tracking and effort
 
@@ -1174,7 +1174,7 @@ Core · target · **partial**
 
 #### DESK-025 — Record templates and scenario task plans
 
-Core · target · **partial** · From DESK-015
+Core · target · **done** · From DESK-015
 
 **Requirement.** Record templates pre-fill new tickets, tasks and changes, and a scenario's task plan is a PROJECT-001 IT project.
 
@@ -1187,8 +1187,8 @@ Core · target · **partial** · From DESK-015
 6. Task record templates pre-fill an editable project task title, owner and due date under PROJECT-001's existing read/write roles.
 7. Change record templates use CHANGE-001's exact-version standard change catalog, retaining its standard-change approval and separate grant rules.
 
-**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs`
-**Gap.** Not asserted: that starting a scenario task plan grants no provider authority and that the run audit links to the plan. Ticket, task and change templates and the project link and boundary are asserted.
+**Evidence.** `src/features/work/desk-scenarios.ts`, `src/features/work/desk-scenario-plans.ts`, `src/features/work/desk-templates.ts`, `src/ui/work-scenarios.tsx`, `src/ui/projects.tsx`, `tests/work/desk-scenario-cases.mjs`, `tests/services/template-cases.mjs`, `tests/work/runtime.mjs`; native keyboard scenario and change list, bulk run, project task template and editable new-ticket template: `tests/ui/desk-console-journeys.mjs` deskScenarioJourney through `tests/ui/browser.mjs`; `tests/work/desk-scenario-cases.mjs` (deskScenarioChecks); `tests/services/template-cases.mjs` (templateChecks)
+**Gap.** None.
 
 #### DESK-016 — Global agent search
 
@@ -1427,7 +1427,7 @@ Core · target · **missing** · Cites BASE-SECRET-001 · Rules D-2
 
 #### ACCESS-008 — Application catalog and owners
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** A registry of SaaS applications with owner, approvers, roles/entitlements, cost per seat in USD, connector and data sensitivity; catalog items reference these entitlements (RL-11). ACCESS-005 carries SaaS provisioning.
 
@@ -1441,8 +1441,8 @@ Core · target · **partial**
 7. Seat costs are nonnegative integer USD cents per month, year or one-time period, without conversion or a charge claim; connector descriptions are recorded metadata, not provider verification.
 8. Native restore remaps references without activating historical membership or releasing the execution hold; erasure anonymizes retained registry/request actors.
 
-**Evidence.** `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs`
-**Gap.** Not asserted: that approver metadata confers no approval right. Registration, routing, visibility, snapshots, seat costs, restore and erasure are asserted.
+**Evidence.** `src/features/work/application-registry.ts`, `src/features/work/application-catalog.ts`, `tests/work/application-cases.mjs`, `tests/adoption/application-cases.mjs`, `tests/ui/application-journey.mjs`; `tests/work/application-cases.mjs` (applicationChecks); `tests/adoption/application-cases.mjs` (checkArchiveApplications); `tests/ui/application-journey.mjs` (applicationJourney)
+**Gap.** None.
 
 #### ACCESS-009 — User access reviews
 
@@ -1595,7 +1595,7 @@ Core · target · **partial**
 
 #### LIFE-006 — Contractors and temporary staff
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Contractor and temp accounts carry an end date and sponsor; access expires automatically unless the sponsor re-attests before the end date. Email and chat delivery of the sponsor reminder are inherited by NOTIFY-001.
 
@@ -1607,8 +1607,8 @@ Core · target · **partial**
 5. If the sponsor is no longer an active member, the reminder goes to the owner, labelled "Sponsor left; owner to reassign or re-attest", and the owner (acting for "admin") may re-attest or name a new sponsor, who is then reminded afresh.
 6. Without re-attestation the account disable starts at the end instant and session revocation follows once the disable is independently verified (both act on the same account, through their bound provider grants); once either duty has started, the end date cannot be re-attested.
 
-**Evidence.** `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`
-**Gap.** Not asserted: that re-attestation clears the reminder so a new one precedes the new end; that no reminder fires while the end is more than 72 hours away; that an inactive member or the contractor cannot be the sponsor; and that a newly named sponsor is reminded afresh. The sponsor requirement, one reminder in the sponsor's requests, sponsor-only re-attestation to a later date moving both expiry duties with an audit entry, the owner hand-off when the sponsor leaves, and removal verified at the end instant are asserted.
+**Evidence.** `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`; `tests/work/lifecycle-regressions.mjs` (contractorSponsorChecks (points 1, 3, 4, 6); `tests/work/lifecycle-regressions.mjs` (sponsorRefusalAndReassignChecks (points 2, 5))
+**Gap.** None.
 
 #### LIFE-007 — Lifecycle evidence pack
 
@@ -1736,7 +1736,7 @@ Core · target · **partial**
 
 #### ASSET-008 — Asset financials
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Purchase cost, depreciation (straight-line or declining balance), book value, cost center and fiscal-year reporting in USD, exportable to Pantry, QuickBooks Online or NetSuite as CSV or API.
 
@@ -1748,8 +1748,8 @@ Core · target · **partial**
 5. Fiscal years start on a selected month's first day (inclusive) and end at the next year's start (exclusive).
 6. The CSV downloads the schedule for import into the named accounting products; a download does not claim a provider import.
 
-**Evidence.** `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs`, `tests/ui/browser.mjs`
-**Gap.** Not asserted: that the CSV download claims no provider import. Book value, rounding, declining balance, anniversaries, fiscal years and the CSV export are asserted.
+**Evidence.** `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs`, `tests/ui/browser.mjs`; `tests/work/asset-financial-cases.mjs` (assetFinancialChecks (points 1-5: month-12 book value, integer cents and rounding, declining balance, month-end anniversaries, fiscal-year bounds, CSV rows and escaping)); `tests/ui/asset-financial-journey.mjs` (assetFinancialJourney (point 1 export and point 6 at 1440 and 390))
+**Gap.** None.
 
 #### ASSET-009 — CMDB and service dependencies
 
@@ -1922,7 +1922,7 @@ Core · target · **partial** · From PROB-002
 
 #### CHANGE-001 — Change types and templates
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Standard (approved once as a template, catalog-driven), normal and emergency changes, with templates carrying implementation, test and backout plans (RL-15). No meeting, vote or quorum is claimed: CHANGE-003 carries the complete board, quorum and channel requirements. Freeze bypass remains the separate owner-only authority in CHANGE-004.
 
@@ -1936,8 +1936,8 @@ Core · target · **partial**
 7. Amending a change's implementation clears bypass and authorization and returns it to normal review.
 8. Restore makes templates inactive with no live approval and clears imported change bypass/authority; affected personal-data erasure also withdraws live template approval.
 
-**Evidence.** `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs`
-**Gap.** Not asserted: that affected personal-data erasure withdraws a live template approval. Standard, normal and emergency paths, exact-version approval, snapshots, withdrawal, amendment and inactive restore are asserted.
+**Evidence.** `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs`; `tests/services/template-cases.mjs` (CHANGE-001 public catalog/normal/ECAB paths (points 1-7)); `tests/services/template-integration.mjs` (CHANGE-001 real execution path (points 3,5,6,7)); `tests/adoption/template-cases.mjs` (CHANGE-001 native archive (point 8 restore)); `tests/adoption/platform-privacy-cases.mjs` (AUDIT-001/A1/ERASURE-001 public erasure with CHANGE-001 live template approval withdrawn (point 8 erasure))
+**Gap.** None.
 
 #### CHANGE-002 — Risk scoring
 
