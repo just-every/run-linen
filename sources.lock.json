@@ -6787,6 +6787,10 @@
       "sha256": "7e3cb2c81bb459fc3700328c4dfffb4405fd935b22bd9a650c5ea6fc344b952c",
       "executable": false
     },
+    "tests/platform/account-upgrade-runtime.mjs": {
+      "sha256": "a0a4c21796dc49f9ec9123ded9b1318257e1a899c3b64881125444325e3750d2",
+      "executable": false
+    },
     "tests/platform/agent-door-fixture.mjs": {
       "sha256": "1aa4be52e7d505f6c16bfefda909b0dd5727aa95528aa294df4de07436770b85",
       "executable": false
