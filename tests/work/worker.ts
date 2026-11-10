@@ -4,6 +4,7 @@ import { eraseServicePerson } from '../../src/features/services/privacy';
 import { registerServiceRoutes } from "../../src/features/services";
 import { registerConnectionRoutes } from "../../src/features/connections";
 import { createGrant } from "../../src/features/execution/grants";
+import { registerSettingsRoutes } from "../../src/platform/settings";
 import { Hono } from "hono";
 import {
   registerWorkRoutes,
@@ -184,6 +185,8 @@ app.onError((e, c) =>
 registerWorkRoutes(app);
 registerServiceRoutes(app);
 registerConnectionRoutes(app);
+// Native member administration (LIFE-006 sponsor checks add and deactivate real members through it).
+registerSettingsRoutes(app);
 app.post('/test/erase-service-person',async c=>c.json(await eraseServicePerson({env:c.env,principal:c.get('principal')},await c.req.json())));
 app.post("/test/grant", async (c) =>
   c.json(

@@ -41,15 +41,22 @@ export async function relationshipChecks(api,db) {
   await classify(mixed, 'P4');
   const original = await make(`/work/${mixed.id}`, undefined, undefined, 200);
   assert.deepEqual([original.work.requester_id, original.work.beneficiary_id, original.work.sensitivity], [staffId, employeeId, 'normal'], 'DESK-006 staff file a normal request for a different active beneficiary');
+  const originalViews = await Promise.all([staff, employee].map(who => make(`/work/${mixed.id}`, undefined, who, 200)));
+  const beforeSplit = await make(`/work/${mixed.id}/relationships`, undefined, staff, 200);
+  const splitInput = { title: 'Second monitor', messageIds: [ask.id, detail.id], reason: 'Separate ask' };
+  await make(`/work/${mixed.id}/split`, splitInput, employee, 403);
+  assert.deepEqual(await make(`/work/${mixed.id}/relationships`, undefined, staff, 200), beforeSplit, 'DESK-006 a beneficiary cannot create a child or relationship');
+  for (const [index, who] of [staff, employee].entries()) assert.deepEqual(await make(`/work/${mixed.id}`, undefined, who, 200), originalViews[index], 'DESK-006 a refused beneficiary split changes neither reader view');
   await make(`/work/${mixed.id}/split`, { title: 'Second monitor', messageIds: ['not-a-message'], reason: 'Separate ask' }, undefined, 422);
   await make(`/work/${mixed.id}/split`, { title: 'Second monitor', messageIds: [privateNote.id], reason: 'Separate ask' }, undefined, 422);
-  const split = await make(`/work/${mixed.id}/split`, { title: 'Second monitor', messageIds: [ask.id, detail.id], reason: 'Separate ask' });
+  const split = await make(`/work/${mixed.id}/split`, splitInput, staff);
   const child = await make(`/work/${split.workId}`, undefined, employee, 200);
   assert.equal(child.work.requester_id, staffId); assert.equal(child.work.split_from, mixed.id);
   assert.ok(child.messages.some(m => m.source_key === `split:${ask.id}` && m.body === ask.body), 'DESK-006 the split ticket links back to the original message');
-  for (const who of [staff, employee]) {
+  for (const [index, who] of [staff, employee].entries()) {
     const sourceView = await make(`/work/${mixed.id}`, undefined, who, 200);
     const childView = await make(`/work/${split.workId}`, undefined, who, 200);
+    assert.deepEqual(sourceView.work, originalViews[index].work, 'DESK-006 splitting changes no original ticket fields or people');
     for (const view of [sourceView, childView]) assert.deepEqual([view.work.requester_id, view.work.beneficiary_id], [staffId, employeeId], 'DESK-006 both readers see the same distinct requester and beneficiary on both tickets');
     const expectedCopies = [ask, detail].map(m => ({ source: `split:${m.id}`, body: m.body, author: m.author_id, at: m.created_at })).sort((a, b) => a.source.localeCompare(b.source));
     const copies = childView.messages.filter(m => m.source_key.startsWith('split:'));
@@ -85,10 +92,10 @@ export async function relationshipChecks(api,db) {
   await make(`/work-links?kind=asset&targetId=${laptop.id}`, undefined, employee, 403);
   // DESK-017: relationship operations append typed field history on both sides, with no raw audit reasons.
   const history = async (id, headers) => (await make(`/work/${id}/activity`, undefined, headers, 200)).items;
-  const expectChange = (items, field, before, after) => {
+  const expectChange = (items, field, before, after, actor = 'Owner') => {
     const entry = items.find(e => e.changes.some(c => c.field === field && JSON.stringify(c.before) === JSON.stringify(before) && JSON.stringify(c.after) === JSON.stringify(after)));
     assert.ok(entry, `DESK-017 ${field}: ${JSON.stringify(before)} -> ${JSON.stringify(after)}; original link events ${JSON.stringify(items.filter(e=>e.action==='linked'))}`);
-    assert.equal(entry.actor, 'Owner', 'DESK-017 relationship actor');
+    assert.equal(entry.actor, actor, 'DESK-017 relationship actor');
     assert.equal(entry.actorKind, 'person');
     assert.ok(Number.isFinite(Date.parse(entry.at)), 'DESK-017 relationship time');
     return entry;
@@ -97,9 +104,9 @@ export async function relationshipChecks(api,db) {
   expectChange(duplicateHistory, 'state', 'open', 'closed');
   expectChange(duplicateHistory, 'merged into', null, survivor.id);
   expectChange(survivorHistory, 'merged duplicate', null, duplicate.id);
-  expectChange(await history(mixed.id), 'split into', null, split.workId);
+  expectChange(await history(mixed.id), 'split into', null, split.workId, 'Morgan Chen');
   const childHistory = await history(split.workId);
-  expectChange(childHistory, 'split from', null, mixed.id);
+  expectChange(childHistory, 'split from', null, mixed.id, 'Morgan Chen');
   expectChange(childHistory, 'parent', null, mixed.id);
   expectChange(survivorHistory, 'asset link', null, laptop.id);
   expectChange(survivorHistory, 'problem link', null, problem.id);
@@ -121,6 +128,7 @@ export async function relationshipChecks(api,db) {
   }
   await make(`/work/${survivor.id}/activity`, undefined, { 'x-workspace': 'other' }, 404);
   console.log('PASS DESK-017 relationship history: merge state and both pointers, split on both tickets, parent set/clear, asset/problem/issue links, actor/time/before/after, append-only edits, replay/refusal and public-only requester/participant views');
+  console.log('PROBE DESK-006 6: operator files a normal ticket for a distinct active beneficiary and POSTs selected public messages to the split route -> 201; requester and beneficiary GET both tickets with unchanged original fields, exact people and source-message copies; beneficiary split refused 403 without changing either reader view');
   console.log('PASS DESK-006 public routes: merged duplicate closes with pointer, both requesters informed, public-only participant, HR merge refused; split preserves distinct staff requester and beneficiary for both readers, selected public message copies and originals, own SLA and history; existing record links and parent cycle refusal');
 }
 
