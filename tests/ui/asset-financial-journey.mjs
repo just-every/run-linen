@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { action } from './connected-helpers.mjs';
 export async function assetFinancialJourney({page,api,base,out}) {
-  for(const width of [1440]) {
+  for(const width of [1440,390]) {
     await page.setViewportSize({width,height:1000});
     await page.goto(base+'/app#/assets');
     const serial=`DENVER-LAPTOP-FINANCE-${width}`;
@@ -15,11 +16,33 @@ export async function assetFinancialJourney({page,api,base,out}) {
     await finances.getByText('$1,600.00',{exact:true}).first().waitFor();
     assert.equal((await api(`/assets/${asset.id}/financials?asOf=2026-01-31&fiscalStart=2025-07-01`)).bookCents,160000,'ASSET-008 persisted month-12 book value');
     await finances.getByText('Denver Engineering',{exact:true}).waitFor();
+    // ASSET-008 point 6: the download is a schedule for import, never a provider import.
+    const link=finances.getByRole('link',{name:'Export fiscal-year CSV'});
+    const disclosure=finances.locator('p').filter({has:page.getByRole('link',{name:'Export fiscal-year CSV'})});
+    const disclosed=await disclosure.innerText();
+    assert.match(disclosed,/Pantry, QuickBooks Online or NetSuite/,'ASSET-008 disclosure names the accounting products');
+    assert.match(disclosed,/This downloads a schedule; no accounting provider receives it automatically\./,'ASSET-008 disclosure separates a downloaded schedule from provider delivery');
+    const sent=[];
+    const record=request=>sent.push(`${request.method()} ${request.url()}`);
+    page.on('request',record);
     const download=page.waitForEvent('download');
-    await finances.getByRole('link',{name:'Export fiscal-year CSV'}).click();
+    await link.click();
     const file=await download;
     assert.equal(await file.failure(),null,'ASSET-008 accounting CSV download succeeds');
+    assert.equal(file.suggestedFilename(),'asset-depreciation.csv');
     await file.saveAs(`${out}/ASSET-008-fiscal-${width}.csv`);
+    await page.waitForTimeout(500);
+    page.off('request',record);
+    assert.deepEqual(sent.filter(entry=>!entry.startsWith('GET ')),[],`ASSET-008 download dispatches no write at ${width}`);
+    assert.deepEqual(sent.filter(entry=>!entry.includes(new URL(base).host)),[],`ASSET-008 download contacts no external origin at ${width}`);
+    const csv=await readFile(`${out}/ASSET-008-fiscal-${width}.csv`,'utf8');
+    assert.ok(csv.startsWith('"Asset serial","Cost center","Currency"'),'ASSET-008 downloaded file is the schedule');
+    assert.equal(csv.trim().split('\r\n').length,13,'ASSET-008 downloaded schedule has twelve postings');
+    assert.ok(csv.includes(serial),'ASSET-008 downloaded schedule names the asset');
+    const after=await finances.innerText();
+    assert.doesNotMatch(after,/\b(imported|import succeeded|synced|delivered to|sent to|exported to|posted to)\b/i,`ASSET-008 no import success claim at ${width}`);
+    assert.equal(await disclosure.innerText(),disclosed,'ASSET-008 disclosure unchanged after the download');
+    process.env.LINEN_CAPTURE && await disclosure.screenshot({path:`${out}/ASSET-008-csv-disclosure-${width}.png`});
     await finances.getByRole('table').scrollIntoViewIfNeeded();
     assert.equal(await finances.getByRole('row').count(),13,'ASSET-008 fiscal year table displays twelve postings');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'ASSET-008 fits viewport');
@@ -36,5 +59,5 @@ export async function assetFinancialJourney({page,api,base,out}) {
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'ASSET-008 declining schedule fits viewport');
     process.env.LINEN_CAPTURE && await page.screenshot({path:`${out}/ASSET-008-declining-${width}.png`});
   }
-  console.log('PASS ASSET-008 browser: $2400/36-month asset, month-12 book value, fiscal CSV download, persisted declining policy at 1440');
+  console.log('PASS ASSET-008 browser: $2400/36-month asset, month-12 book value, fiscal CSV download without provider import claim, persisted declining policy at 1440 and 390');
 }

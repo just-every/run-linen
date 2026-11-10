@@ -6956,7 +6956,7 @@
       "executable": false
     },
     "tests/ui/asset-financial-journey.mjs": {
-      "sha256": "a77d9735741bdc84830e722122e40ee196a7b485ed3d02ee74154b2c9e1dd43e",
+      "sha256": "8e975bee7d5ae2ec6b2b2e6036e6b1b9159bfa104dbcb7da0552d16cfc751caa",
       "executable": false
     },
     "tests/ui/bi-destination-journey.mjs": {
