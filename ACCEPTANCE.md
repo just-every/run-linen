@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 34 | 115 | 29 | 178 |
+| Core | 38 | 111 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 34 | 128 | 37 | 199 |
+| Full target | 38 | 124 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -883,7 +883,7 @@ Core · target · **done** · From DESK-003
 
 #### DESK-004 — SLA policies
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Multiple SLA policies by priority, category and requester group with first-response, next-response and resolution targets on business or calendar hours, US federal holiday calendars by location, pause on "awaiting requester" or "awaiting vendor", and visible breach time. Pauses and breaches are DESK-020.
 
@@ -896,8 +896,8 @@ Core · target · **partial**
 6. First response and resolution run from the ticket's opening; first response is met by the first public agent reply and resolution by closing.
 7. Each public requester message after an agent reply starts a next-response target met by the next public agent reply.
 
-**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`
-**Gap.** Not asserted: a Saturday holiday observed the Friday before, a Sunday holiday observed the Monday after, the Inauguration Day exclusion, a calendar's own listed dates beside the catalog, resolution met by closing, a policy matched on its category, and a priority change rebinding from the ticket's opening. Policy order and first-match binding on priority and requester group, business and calendar hours, the location's federal catalog skipping a Monday holiday, the requester pause, breaches on the ticket and the report, first response met by the first public agent reply and the next-response target are asserted.
+**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (slaPolicyChecks (points 1,2,4,7 through the existing assertions and the P2 business hours and Executive P2 cases, named in plain words)); `tests/work/sla-policy-cases.mjs` (holidayCalendarChecks (point 5: Saturday and Sunday holidays observed, Inauguration Day, listed dates beside the catalog)); `tests/work/sla-policy-cases.mjs` (policyBindingChecks (point 3: category matching and priority-change rebinding)
+**Gap.** None.
 
 #### DESK-020 — SLA pauses and breaches
 
@@ -1595,7 +1595,7 @@ Core · target · **partial**
 
 #### LIFE-006 — Contractors and temporary staff
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Contractor and temp accounts carry an end date and sponsor; access expires automatically unless the sponsor re-attests before the end date. Email and chat delivery of the sponsor reminder are inherited by NOTIFY-001.
 
@@ -1607,8 +1607,8 @@ Core · target · **partial**
 5. If the sponsor is no longer an active member, the reminder goes to the owner, labelled "Sponsor left; owner to reassign or re-attest", and the owner (acting for "admin") may re-attest or name a new sponsor, who is then reminded afresh.
 6. Without re-attestation the account disable starts at the end instant and session revocation follows once the disable is independently verified (both act on the same account, through their bound provider grants); once either duty has started, the end date cannot be re-attested.
 
-**Evidence.** `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`
-**Gap.** Not asserted: that re-attestation clears the reminder so a new one precedes the new end; that no reminder fires while the end is more than 72 hours away; that an inactive member or the contractor cannot be the sponsor; and that a newly named sponsor is reminded afresh. The sponsor requirement, one reminder in the sponsor's requests, sponsor-only re-attestation to a later date moving both expiry duties with an audit entry, the owner hand-off when the sponsor leaves, and removal verified at the end instant are asserted.
+**Evidence.** `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`; `tests/work/lifecycle-regressions.mjs` (contractorSponsorChecks (points 1, 3, 4, 6); `tests/work/lifecycle-regressions.mjs` (sponsorRefusalAndReassignChecks (points 2, 5))
+**Gap.** None.
 
 #### LIFE-007 — Lifecycle evidence pack
 
@@ -1736,7 +1736,7 @@ Core · target · **partial**
 
 #### ASSET-008 — Asset financials
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Purchase cost, depreciation (straight-line or declining balance), book value, cost center and fiscal-year reporting in USD, exportable to Pantry, QuickBooks Online or NetSuite as CSV or API.
 
@@ -1748,8 +1748,8 @@ Core · target · **partial**
 5. Fiscal years start on a selected month's first day (inclusive) and end at the next year's start (exclusive).
 6. The CSV downloads the schedule for import into the named accounting products; a download does not claim a provider import.
 
-**Evidence.** `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs`, `tests/ui/browser.mjs`
-**Gap.** Not asserted: that the CSV download claims no provider import. Book value, rounding, declining balance, anniversaries, fiscal years and the CSV export are asserted.
+**Evidence.** `src/features/work/asset-financials.ts`, `src/features/work/depreciation.ts`, `tests/work/asset-financial-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/asset-financial-journey.mjs`, `tests/ui/browser.mjs`; `tests/work/asset-financial-cases.mjs` (assetFinancialChecks (points 1-5: month-12 book value, integer cents and rounding, declining balance, month-end anniversaries, fiscal-year bounds, CSV rows and escaping)); `tests/ui/asset-financial-journey.mjs` (assetFinancialJourney (point 1 export and point 6 at 1440 and 390))
+**Gap.** None.
 
 #### ASSET-009 — CMDB and service dependencies
 
@@ -1974,7 +1974,7 @@ Core · target · **partial** · Rules D-2, D-3
 
 #### CHANGE-004 — Change calendar and freeze windows
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** A calendar of scheduled changes, maintenance windows and blackout/freeze periods, with conflict detection and an ICS feed. Calendar reads and the feed are CHANGE-009.
 
@@ -1988,8 +1988,8 @@ Core · target · **partial**
 7. This authorizes scheduling only: execution keeps its separate versioned grants and change approvals, and compensation keeps its existing separate grant.
 8. Database admission and effect-time checks fence a freeze added after planning.
 
-**Evidence.** `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs`
-**Gap.** Not asserted: that calendar bypass authorizes scheduling only while execution keeps its own grants and approvals. Freeze refusal, conflicts, owner-only windows, CI scope, emergency scheduling and the dispatch fence are asserted.
+**Evidence.** `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs`; `tests/services/calendar-cases.mjs` (calendarChecks (points 1, 2, 3 year-end freeze and emergency, owner-only windows, inclusive start and exclusive end, 4 draft overlaps, 5 CI-scoped freeze and edit refusal, 6 owner-recorded flag with current membership)); `tests/services/integration.mjs` (a later freeze fences dispatch before any provider write, lines 118-124 (points 5 and 8)); `tests/services/calendar-cases.mjs` (emergencyBypassChecks, run from tests/services/integration.mjs (point 7))
+**Gap.** None.
 
 #### CHANGE-009 — Calendar reads, restore, erasure and the ICS feed
 
