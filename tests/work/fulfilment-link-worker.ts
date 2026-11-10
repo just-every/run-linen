@@ -4,6 +4,8 @@ import { ApiError } from "../../src/platform/http";
 import { encryptSecret } from "../../src/platform/crypto";
 import { registerWorkRoutes, recordFulfilmentExecution, executionPort, processDueWork } from "../../src/features/work";
 import { registerExecutionRoutes } from "../../src/features/execution";
+import { processWorkIntake } from "../../src/features/intelligence/intake";
+import { proposeIntake } from "../../src/features/intelligence/models";
 import { runOperation, verifyOutcome } from "../../src/features/execution/engine";
 import { standingIntakeExecution } from "../../src/features/execution/intake";
 
@@ -12,6 +14,9 @@ const presence = new Set<string>();
 let writes = 0;
 const lostResponses = new Set<string>();
 const deniedWrites = new Set<string>();
+// Provider usage by purpose: [input tokens, output tokens]; omitUsage makes the provider return none.
+const modelUsage: Record<string, [number, number]> = { ticket_classification: [120, 70], ticket_reply: [150, 100], ticket_summary: [200, 60], employee_intake: [90, 40], natural_language_intake: [80, 30] };
+let omitUsage = false, modelCalls = 0;
 globalThis.fetch = async (input: RequestInfo | URL, init: RequestInit = {}) => {
   const url = new URL(String(input));
   if (url.hostname === "login.microsoftonline.com") return Response.json({ access_token: "fixture" });
@@ -30,12 +35,24 @@ globalThis.fetch = async (input: RequestInfo | URL, init: RequestInit = {}) => {
     negativeControl: true, usableWorkflow: true, cohort: [url.searchParams.get("beneficiary")],
   });
   if (url.hostname === "api.openai.com") {
-    // Paid model edge for REPORT-004: a priced classification, or one whose usage the provider omits.
+    // Paid model edge for REPORT-004: priced calls, calls whose usage the provider omits, and the purpose of each call
+    // recorded in the request id so the test can match actual request-bound attempts to the report.
     const packet = JSON.parse(JSON.parse(String(init.body)).input);
-    if (packet.purpose !== "ticket_classification") throw new Error("Unexpected model request in fulfilment test");
-    const value = { type: "service_request", category: "hardware", subcategory: "laptop", impact: "low", urgency: "medium", reason: "An individual asks for project tool access." };
-    return Response.json({ status: "completed", ...(packet.request.includes("unpriced") ? {} : { usage: { input_tokens: 120, output_tokens: 70, total_tokens: 190 } }),
-      output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify(value) }] }] });
+    const priced = modelUsage[packet.purpose];
+    if (!priced) throw new Error(`Unexpected model request in fulfilment test: ${packet.purpose}`);
+    let value: unknown;
+    if (packet.purpose === "ticket_classification")
+      value = { type: "service_request", category: "hardware", subcategory: "laptop", impact: "low", urgency: "medium", reason: "An individual asks for project tool access." };
+    else if (packet.purpose === "ticket_reply" || packet.purpose === "ticket_summary") {
+      const sources = JSON.parse(packet.request.slice(packet.request.indexOf("\n") + 1));
+      value = { text: "Access is being arranged; the request stays open until it is verified.", citations: sources.map((s: { id: string }) => s.id) };
+    } else if (packet.purpose === "employee_intake")
+      value = { kind: "necessary_question", summary: "", catalogId: "", serviceId: "", purpose: "", expiresAt: null, question: "Which application is affected?", requestedFor: "", evidenceIds: [] };
+    else value = { kind: "necessary_question", summary: "", steps: [], question: "Which system is affected?", evidenceIds: [] };
+    const omitted = omitUsage || (packet.purpose === "ticket_classification" && packet.request.includes("unpriced"));
+    return Response.json({ status: "completed", ...(omitted ? {} : { usage: { input_tokens: priced[0], output_tokens: priced[1], total_tokens: priced[0] + priced[1] } }),
+      output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify(value) }] }] },
+      { headers: { "x-request-id": `fixture-${packet.purpose}-${++modelCalls}` } });
   }
   throw new Error(`Unexpected external request: ${url.origin}`);
 };
@@ -51,6 +68,9 @@ app.onError((error, c) => c.json({ error: error.message, code: error instanceof 
   error instanceof ApiError ? error.status as 400 : 500));
 registerWorkRoutes(app);
 registerExecutionRoutes(app);
+// Real native intelligence handlers for the two model doors REPORT-004 attributes (employee intake and an unrelated call).
+app.post("/work/:id/interpret", async c => c.json(await processWorkIntake({ env: c.env, principal: c.get("principal") }, c.req.param("id"))));
+app.post("/intelligence/intake", async c => c.json(await proposeIntake({ env: c.env, principal: c.get("principal") }, await c.req.json())));
 app.post("/test/link", async c => c.json(await recordFulfilmentExecution({ env: c.env, principal: c.get("principal") }, await c.req.json())));
 app.post("/test/inspect", async c => c.json(await executionPort.inspect({ env: c.env, principal: c.get("principal") }, (await c.req.json()).operationId)));
 app.post("/test/due", async c => c.json(await processDueWork({ env: c.env, principal: c.get("principal") }, executionPort, (await c.req.json()).at)));
@@ -76,6 +96,7 @@ app.post("/test/model-connection", async c => {
   ]);
   return c.json({ configured: true });
 });
+app.post("/test/model-usage", async c => { omitUsage = !!(await c.req.json()).omit; return c.json({ omit: omitUsage }); });
 app.post("/test/deny-write", async c => { deniedWrites.add((await c.req.json()).target); return c.json({ configured: true }); });
 app.post("/test/lose-response", async c => { lostResponses.add((await c.req.json()).target); return c.json({ configured: true }); });
 app.get("/test/writes", c => c.json({ writes }));
