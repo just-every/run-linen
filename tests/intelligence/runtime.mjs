@@ -1,6 +1,7 @@
 import { protocolBindingChecks } from './protocol-binding-cases.mjs';
 import { commitmentChecks } from './commitment-cases.mjs';
 import { protocolChecks } from './protocol-cases.mjs';
+import { billingPreviewChecks } from './billing-preview-cases.mjs';
 import assert from 'node:assert/strict'
 import {runtimeHarness} from './runtime-harness.mjs'
 import {spawn,spawnSync} from 'node:child_process'
@@ -29,6 +30,7 @@ try{await start();const setup=await api('/setup','POST',{email:'owner@example.te
  ok(await api('/billing/invoice-preview','POST',{...invoiceInput,tax:undefined},owner),422);
  ok(await api('/billing/plan','PUT',{name:'Northstar revised',agentSeatCents:3000,revision:1},owner));
  assert.equal(ok(await api('/billing/invoice-preview','POST',invoiceInput,owner)).totalCents,6396);
+ await billingPreviewChecks({api,ok,owner,employee,harness,origin:()=>origin,workspaceId:session.principal.workspaceId,invoiceInput});
  await commitmentChecks({api,owner,employee,harness,restart:async()=>{await harness.restart();origin=harness.origin},userId:uid,employeeId,mode:async value=>{await fetch(harness.origin+'/fixture/mode/'+value)}}); origin=harness.origin;
  const probe=await fixtureConnection({name:'Fixture workflow',provider:'workflow-probe',secret:JSON.stringify({token:'fixture-probe'}),config:{url:'https://probe.example.test/observe',allowedHosts:['probe.example.test']}});
  const makeSpec=(id,beneficiary)=>({id,description:'Scoped workflow '+id,step:{action:'group.add',actionVersion:1,connectionId:crypto.randomUUID(),verifierConnectionId:probe,target:'target',beneficiaryId:beneficiary,grantId:crypto.randomUUID(),grantVersion:1,cohort:[beneficiary]}});

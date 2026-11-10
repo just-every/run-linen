@@ -19,6 +19,11 @@ export async function fixtureRequest(request, env) {
     await env.DB.prepare('UPDATE native_fixture SET data=? WHERE id=1').bind(JSON.stringify({ ...await read(), ...await request.json() })).run();
     return Response.json(await read());
   }
+  // Network-edge membership that existed at the provider before Linen acted; it is not a Linen write and records no call.
+  if (path === '/__fixture/presence' && request.method === 'POST') {
+    await env.DB.prepare('INSERT OR IGNORE INTO native_presence VALUES(?)').bind((await request.json()).target).run();
+    return Response.json({ presence: (await env.DB.prepare('SELECT * FROM native_presence').all()).results });
+  }
   if (path === '/__fixture/evidence') return Response.json({ state: await read(), presence: (await env.DB.prepare('SELECT * FROM native_presence').all()).results, calls: (await env.DB.prepare('SELECT * FROM native_provider_calls').all()).results.map(r => ({ ...r, data: JSON.parse(r.data) })) });
   return new Response('Unknown fixture endpoint', { status: 404 });
 }

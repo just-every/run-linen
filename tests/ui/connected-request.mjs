@@ -40,6 +40,43 @@ export async function connectedRequest(env) {
     assert.ok(removed.calls.some(c=>c.kind==='workflow-observation'&&c.data.desired==='denied'),'Independent negative workflow after removal');
     await ep.reload();await ep.getByText('Keep the conversation going').waitFor();
     await captureJourney(ep,{path:out+'/J2-expiry-provider-denial.png',fullPage:true});
+    await keptMembership({...env,ep,employeeApi},catalog.id);
     return {workId,catalog};
   }finally{await ctx.close()}
+}
+// ACCESS-006 point 2: a member who already held the group keeps it when a distinct temporary fulfilment expires.
+async function keptMembership(env,primaryCatalogId) {
+  const {ep,employeeApi,api,base,out,fixture,tick,until}=env;
+  const evidence=async()=> (await fetch(base+'/__fixture/evidence')).json();
+  const writes=(e,target,method)=>e.calls.filter(c=>c.kind==='entitlement-write'&&c.data.target===target&&c.data.method===method).length;
+  const ownerId=(await api('/session')).principal.userId;
+  const created=await api('/catalog',{name:'Fixture review workspace',kind:'access',target:'review-group',ownerId});
+  const catalog=(await api('/catalog')).items.find(c=>c.id===created.id);
+  await fixture({catalogId:catalog.id});
+  await fetch(base+'/__fixture/presence',{method:'POST',body:JSON.stringify({target:'review-group'})});
+  const before=await evidence();
+  assert.ok(before.presence.some(p=>p.target==='review-group'),'The provider already lists the member before any Linen action');
+  assert.ok(before.presence.every(p=>p.target!=='design-group'),'The newly added control membership stays removed');
+  // The first pair is fully recorded: start a fresh review in a fresh page state so the new catalogue item is offered.
+  await env.page.evaluate(()=>sessionStorage.clear());await env.page.reload();
+  await nativeGrantPair({...env,catalog});
+  const expiry=later(30000);
+  const workId=await requestWork(ep,base,'Please give me temporary access for a second review until '+expiry);
+  const operation=async()=> (await api('/operations')).filter(o=>JSON.parse(o.step_json).target==='review-group');
+  await until(async()=> (await operation()).some(o=>o.state==='blocked'&&o.last_error==='target_precondition_changed'),'existing membership is refused as a fresh grant');
+  await ep.reload();await ep.getByText('Keep the conversation going').waitFor();
+  await captureJourney(ep,{path:out+'/J2-existing-membership-held.png',fullPage:true});
+  await new Promise(r=>setTimeout(r,Math.max(0,Date.parse(expiry)-Date.now())+500));
+  await until(async()=> (await operation()).some(o=>o.state==='cancelled'),'due removal of an unchanged membership is cancelled');
+  const after=await evidence();
+  assert.ok(after.presence.some(p=>p.target==='review-group'),'Fresh provider readback still shows the pre-existing membership after expiry');
+  assert.equal(writes(after,'review-group','DELETE'),0,'No removal of access the member already had');
+  assert.equal(writes(after,'review-group','POST'),0,'No duplicate addition of access the member already had');
+  const states=(await employeeApi('/work/'+workId+'/obligations')).items.filter(o=>o.target==='review-group');
+  assert.ok(states.every(o=>o.state!=='verified'),'Nothing is reported as granted or removed that Linen did not do');
+  assert.equal(after.presence.some(p=>p.target==='design-group'),false,'The newly added membership control stays removed');
+  await ep.goto(base+'/app#/work/'+workId);await ep.getByText('Keep the conversation going').waitFor();
+  await ep.getByText('0 of 2 verified').waitFor();
+  await captureJourney(ep,{path:out+'/J2-existing-membership-kept.png',fullPage:true});
+  await fixture({catalogId:primaryCatalogId});
 }
