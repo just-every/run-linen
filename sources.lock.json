@@ -5627,6 +5627,10 @@
       "sha256": "ac1ee79f923cf0fd8a5ddcf8c593837359669dc7bf35c945a1ef93db714c218e",
       "executable": false
     },
+    "src/platform/audit.ts": {
+      "sha256": "377c383be9dcaf0e7990daf7acd3bc5f5e7c817987cd4a3ec9c14e3eedf8516b",
+      "executable": false
+    },
     "src/platform/auth.ts": {
       "sha256": "e810120fcfec840fb511cf47c42ff470f4f9838ea414e837a6ba2c77caf23397",
       "executable": false
@@ -6533,6 +6537,10 @@
     },
     "tests/adoption/asset-contract-cases.mjs": {
       "sha256": "8ac4a318cfa65e4aa2c98a2d3a0a8a167f84b2a0edc2a292e67b1487a5402444",
+      "executable": false
+    },
+    "tests/adoption/audit-log-cases.mjs": {
+      "sha256": "dcba00d16b6f9291d7c779046315d9584d4404ada7f6b741986e62694549c250",
       "executable": false
     },
     "tests/adoption/calendar-cases.mjs": {
