@@ -9,6 +9,7 @@ const output = resolve(process.env.LINEN_VERIFY_OUTPUT || '.wrangler/verificatio
 const checks = [
   ["Native sign-in and scoped API", process.execPath, ["tests/platform/base-auth-runtime.mjs"]],
   ["Native archive and recovery", process.execPath, ["tests/platform/base-auth-transfer.mjs"]],
+  ["Account continuity across upgrade", process.execPath, ["tests/platform/account-upgrade-runtime.mjs"]],
   ["Employee service desk browser", process.execPath, ["tests/ui/run.mjs"], { LINEN_BROWSER_GROUP: 'core' }],
   ["Configuration browser", process.execPath, ["tests/ui/run.mjs"], { LINEN_BROWSER_GROUP: 'configuration' }],
   ["Service operations browser", process.execPath, ["tests/ui/run.mjs"], { LINEN_BROWSER_GROUP: 'operations' }],
@@ -70,6 +71,7 @@ const measuredSeconds = {
   "Conversational intake and evidence": 39,
   "Communications browser": 141,
   "Native archive and recovery": 404,
+  "Account continuity across upgrade": 60,
   "Fulfilment integration": 29,
   "Controlled changes and reporting": 64,
   "Connection discovery": 10,

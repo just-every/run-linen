@@ -1,4 +1,5 @@
 import {platformPrivacyChecks} from './platform-privacy-cases.mjs';
+import {auditLogChecks} from './audit-log-cases.mjs';
 import { coexistenceRouteChecks } from './coexistence-route-cases.mjs';
 import { historyArchiveChecks } from './history-cases.mjs';
 import { attachArchiveApplications, checkArchiveApplications, archivedQuote } from './application-cases.mjs';
@@ -66,5 +67,7 @@ try{await start();const setup=await request('/setup','POST',{email:'source@test.
  await historyArchiveChecks(ok,request,auth,historyOwner);
  await historicErasureChecks(source);
  await platformPrivacyChecks({ok,request,auth,owner:source,database:harness.database,restart:async()=>{await stop();await start();}});
+ const auditTenant=await ok('/fixtures/tenant','POST',{},source);
+ await auditLogChecks({ok,request,auth,tenantOwner:await auth(await request('/login','POST',{email:auditTenant.email,password:'destination secure password'})),foreignOwner:source,database:harness.database});
  console.log('PASS adoption local Worker + real D1/R2: snapshot isolation, chunk hashes, second-generation native restore and retained import artifacts, private history/bytes/assets/knowledge/calendars/costs, foreign tenant/CSRF denial, corrupt/missing bytes, native materialization work/services/intelligence/unknown operations, no live imported grants, crash/restart/resume, duplicate apply, held effects, Freshservice fixture polling/approval invalidation/dual executor/source conflict/writeback replay, late cutover rejection, unknown mapping quarantine, duplicate import and tombstone replay, complete domain/platform person erasure and real R2 deletion. No provider tenant used.')
 }}finally{await harness.close()}

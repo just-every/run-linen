@@ -103,6 +103,12 @@ try {
   assert.equal(detail.pendingPerson.id, person.id);
   assert.deepEqual(detail.heldServices.map(s => s.catalog_id).sort(), [...catalogIds].sort());
   assert.ok(detail.heldServices.every(s => s.state === 'held'));
+  // Each initially held service tells the owner why it is held, before any account is bound.
+  assert.equal(detail.heldServices.length, catalogIds.length);
+  for (const service of detail.heldServices) {
+    assert.equal(typeof service.reason, 'string', `Held service ${service.name} returns a reason`);
+    assert.ok(service.reason.trim().length > 0, `Held service ${service.name} returns a nonempty reason`);
+  }
   assert.equal((await ok(`/work/${work.id}/obligations`, undefined, owner)).value.items.length, 0);
   assert.equal(await count('work_catalog_reservations', work.id), 0,
     'Held services consume neither stock nor licenses before authentication');
@@ -133,9 +139,16 @@ try {
     ...edit, expectedRevision: person.revision, team: 'Product Design',
   }, owner)).value;
   assert.equal(person.team, 'Product Design', 'An unbound person remains editable after their account is created');
+  const heldReasons = Object.fromEntries(detail.heldServices.map(s => [s.catalog_id, s.reason]));
   detail = (await ok(`/work/${work.id}`, undefined, owner)).value;
   assert.equal(detail.pendingPerson.state, 'pending', 'Creating an account is not proof of sign-in');
   assert.ok(detail.heldServices.every(s => s.state === 'held'));
+  assert.ok(detail.heldServices.every(s => s.reason && s.reason === heldReasons[s.catalog_id]),
+    'A created but unauthenticated account leaves each hold reason as it was');
+  assert.equal(await count('work_fulfilments', work.id), 0, 'No fulfilment before the account is bound');
+  assert.equal(await count('work_catalog_reservations', work.id), 0, 'No reservation before the account is bound');
+  assert.equal((await ok(`/work/${work.id}/obligations`, undefined, owner)).value.items.length, 0,
+    'No obligation before the account is bound');
   const alex = await verifiedEmailSignIn(person.email);
   detail = (await ok(`/work/${work.id}`, undefined, alex)).value;
   assert.equal(detail.work.beneficiary_id, member.id);

@@ -63,7 +63,22 @@ export async function workSavedChecks({ api, ok, actor, db }) {
   catalogs['pending-tool'] = await ok('/catalog', { name: 'Pending tool access', kind: 'access', target: 'pending-tool', ownerId: 'owner' });
   const pending = await request('synthetic-linen-601', { target: 'pending-tool' });
   await time(pending.work, 'synthetic-linen-602', 120);
+  // REPORT-004 point 5: reply, summary and employee-intake calls that named a request are charged to it. The request below
+  // gets three priced calls, one dispatch whose usage the provider omits, and an unrelated call that names no request.
+  const named = async (kind, omit = false) => {
+    await ok('/test/model-usage', { omit });
+    return ok(`/work/${pending.work.id}/response-assistance`, { kind, articleIds: [] });
+  };
+  const reply = await named('reply'), summary = await named('summary'), unpricedReply = await named('reply', true);
+  await ok('/test/model-usage', { omit: false });
+  for (const draft of [reply, summary, unpricedReply]) assert.equal(draft.sent, false);
+  const interpreted = await ok(`/work/${pending.work.id}/interpret`, {}, 'employee');
+  assert.equal(interpreted.state, 'proposed', JSON.stringify(interpreted));
+  const unrelated = await ok('/intelligence/intake', { connectionId: 'model', text: 'Plan a printer fix' });
+  assert.equal(unrelated.chargeStatus, 'estimated');
   await tick(); const currentTo = at();
+  // A priced call made after the window closes names the same request but belongs to a later window.
+  await named('summary');
 
   // Only the owner declares role rates; they are costing assumptions validated per role.
   assert.equal((await api('/reports/labor-rates', { rates: { agent: 60 } }, 'employee')).status, 403);
@@ -79,7 +94,7 @@ export async function workSavedChecks({ api, ok, actor, db }) {
   for (const table of ['execution_grants', 'execution_plans', 'execution_operations', 'execution_attempts'])
     assert.ok(beforeProposalReads[table].length > 0, `${table}: the inert-read check uses populated execution records`);
   const path = `/reports/work-saved?baselineFrom=${baselineFrom}&baselineTo=${boundary}&currentFrom=${boundary}&currentTo=${currentTo}`;
-  const read = async () => (await ok(path)).requestTypes.find(row => row.requestType === 'Design tool access');
+  const read = async (type = 'Design tool access') => (await ok(path)).requestTypes.find(row => row.requestType === type);
   let row = await read();
   assert.deepEqual(row.baseline.labor.unpricedRoles, ['vendor'], 'an unpriced role is unknown cost, not $0');
   assert.equal(row.baseline.costComplete, false);
@@ -103,6 +118,30 @@ export async function workSavedChecks({ api, ok, actor, db }) {
   assert.ok(current.provider.attempts >= 2); assert.equal(current.provider.unknownCharges, current.provider.attempts);
   assert.ok(Math.abs(current.knownCostPerVerifiedOutcomeUsd - current.model.estimatedUsd) < 1e-12);
   assert.equal(current.costComplete, false);
+  // Point 5: the request's model charge is its actual request-bound attempts at the configured prices; nothing else.
+  const attemptRows = async work => (await db.prepare('SELECT request_id requestId,cost_usd costUsd,charge_status chargeStatus,created_at createdAt FROM intelligence_attempts WHERE workspace_id=? AND work_id=? ORDER BY created_at,rowid').bind('w', work.id).all()).results;
+  const purposes = rows => rows.map(r => r.requestId.replace(/^fixture-|-\d+$/g, ''));
+  const bound = await attemptRows(pending.work), inWindow = bound.filter(a => a.createdAt >= boundary && a.createdAt < currentTo);
+  assert.deepEqual(purposes(bound), ['ticket_reply', 'ticket_summary', 'ticket_reply', 'employee_intake', 'ticket_summary'], 'reply, summary and employee-intake calls each left a request-bound attempt');
+  assert.deepEqual(purposes(inWindow), purposes(bound).slice(0, 4), 'the call after the window is out of window');
+  const price = (input, output) => (input * 1 + output * 2) / 1e6;
+  assert.deepEqual(inWindow.map(a => a.chargeStatus), ['estimated', 'estimated', 'unknown', 'estimated']);
+  assert.ok(Math.abs(inWindow[0].costUsd - price(150, 100)) < 1e-12); assert.ok(Math.abs(inWindow[1].costUsd - price(200, 60)) < 1e-12);
+  assert.equal(inWindow[2].costUsd, null, 'a dispatch without usage records no invented price');
+  assert.ok(Math.abs(inWindow[3].costUsd - price(90, 40)) < 1e-12);
+  const pendingModel = (await read('Pending tool access')).current.model;
+  assert.equal(pendingModel.attempts, 4); assert.equal(pendingModel.unknownCharges, 1);
+  assert.ok(Math.abs(pendingModel.estimatedUsd - (price(150, 100) + price(200, 60) + price(90, 40))) < 1e-12, 'estimates add the configured-price cost of reply, summary and employee-intake');
+  const pendingCost = (await read('Pending tool access')).current;
+  assert.equal(pendingCost.costComplete, false, 'an unknown charge keeps the cost labelled known-only');
+  assert.equal(pendingCost.knownCostPerVerifiedOutcomeUsd, null);
+  assert.equal((await read('Pending tool access')).baseline, null, 'no call of the current window reaches the baseline window');
+  const windowed = (await db.prepare("SELECT charge_status chargeStatus FROM intelligence_attempts WHERE workspace_id='w' AND work_id IS NULL AND created_at>=? AND created_at<?").bind(boundary, currentTo).all()).results;
+  assert.equal(windowed.length, 1, 'the unrelated call named no request');
+  assert.equal(windowed[0].chargeStatus, 'estimated');
+  const reported = (await ok(path)).requestTypes.reduce((n, r) => n + r.current.model.attempts, 0);
+  const requested = (await db.prepare("SELECT COUNT(*) n FROM intelligence_attempts WHERE workspace_id='w' AND work_id IS NOT NULL AND charge_status<>'not_dispatched' AND created_at>=? AND created_at<?").bind(boundary, currentTo).first()).n;
+  assert.equal(reported, requested, 'the report counts every request-bound attempt in the window and not the unrelated call');
   // Audience, ranges and the effort member of /reports/work carry the same cost basis.
   assert.equal((await api(path, undefined, 'employee')).status, 403);
   assert.equal((await api(path, undefined, 'employee', 'other')).status, 403);

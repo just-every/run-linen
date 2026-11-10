@@ -234,6 +234,27 @@ export async function sandboxJourney({page,api,base,out,width}) {
   return statuses;
  },{path,catalogId:catalog.id});
  assert.deepEqual(refused,[403,403,403],'An employee cannot create, edit or apply configuration through the public doors');
+ // Every sandbox door must refuse the employee before reading configuration or parsing a body.
+ // A malformed body and an absent resource exercise the same refusal, with no retry or status remapping.
+ const denials=await page.evaluate(async({path,catalogId})=>{
+  const session=await(await fetch('/api/v1/session')).json();
+  const doors=[['GET','/sandboxes'],['POST','/sandboxes'],['GET',path],
+   ['GET',path+'/masked-records'],['POST',path+'/masked-records'],['GET',path+'/options'],
+   ['PUT',path+'/catalog/'+catalogId],['PUT',path+'/catalog/'+catalogId+'/approvals'],
+   ['PUT',path+'/slas/synthetic-linen-missing'],['PUT',path+'/sla-configuration/calendar/synthetic-linen-missing'],
+   ...['test-routing','test-lifecycle','test-configuration','test-form','package','approve','rollback-package','promote','runs'].map(door=>['POST',path+'/'+door]),
+   ['GET',path+'/runs'],['POST',path+'/runs/synthetic-linen-missing/complete'],
+   ['POST','/sandboxes/synthetic-linen-missing/promote']];
+  const results=[];
+  for(const [method,door] of doors){
+   const response=await fetch('/api/v1'+door,{method,headers:{'Content-Type':'application/json','X-Linen-CSRF':session.csrfToken},
+    ...(method==='GET'?{}:{body:'{'})});
+   results.push({method,door,status:response.status,body:await response.text()});
+  }
+  return results;
+ },{path,catalogId:catalog.id});
+ assert.deepEqual(denials.map(result=>[result.status,JSON.parse(result.body).error.code]),denials.map(()=>[403,'forbidden']),
+  'An employee cannot create, edit or apply configuration through the public doors: '+JSON.stringify(denials));
  await api('/login',{email:session.user.email,password:'Browser-proof-2026'});await page.reload();
  await assertSandboxProduction(api,suffix,initial);
  console.log(`PASS sandbox native configuration at ${width}: create, all included family edits and rehearsals, complete diff, separate current non-editor owner approval, promotion, reviewed rollback, keyboard and scope refusals, production readback`);

@@ -1,5 +1,6 @@
 import { applyMigrations } from '../sql-migrations.mjs';
 import { notificationRuleChecks } from './notification-rule-cases.mjs';
+import { licenseChecks } from './graph-license-cases.mjs';
 import { createServer as createHttpServer } from "node:http";
 import assert from "node:assert/strict";
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
@@ -927,6 +928,7 @@ try {
   const forged = await call("/fixture/webhook/mail", []);
   assert.equal(forged.status, 403, "forged delivery rejected");
   await notificationRuleChecks({call,db,time});
+  await licenseChecks({call,db});
 
   // Reconnection invalidates prior intent and approval even when the connector ID is unchanged.
   const reconnectGrant = (await call("/grants", grant, "issuer")).body;
