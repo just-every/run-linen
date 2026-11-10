@@ -6860,7 +6860,7 @@
       "executable": false
     },
     "tests/services/calendar-cases.mjs": {
-      "sha256": "ef4e31882b6693302cc2fa75ddb36173ea676056a0a48e9f38a5826cd3c2adde",
+      "sha256": "702da5f67ecb966c40081c85d7745859a9d353de74d9b38e45e895fdb737e19e",
       "executable": false
     },
     "tests/services/department-source-cases.mjs": {
@@ -6880,7 +6880,7 @@
       "executable": false
     },
     "tests/services/integration.mjs": {
-      "sha256": "b2d7b91ddd488d9251666c41c4b916c3910c9201ecbae0d38f1c5e1466bbd910",
+      "sha256": "6a2191cb6e1b6aaa4da6e2335f13d69567dccdf7dec5ee45ff12d7f61d304057",
       "executable": false
     },
     "tests/services/kpi-cases.mjs": {
