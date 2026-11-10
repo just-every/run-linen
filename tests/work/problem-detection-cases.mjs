@@ -198,6 +198,43 @@ export async function problemDetectionChecks(api, db) {
   check(await api(`/problem-proposals/${accepted.id}`, undefined, otherTenant), 404);
   await db.prepare("UPDATE memberships SET roles_json='[\"operator\"]' WHERE workspace_id='a' AND user_id='stranger'").run();
   try {
+    const normalTickets = [];
+    for (let i = 0; i < 3; i++) normalTickets.push(await ticket({ serviceId: service.id, cohort: 'Operator read pilot' }, 'Native operator-read incident', {}));
+    const normalProposal = cluster(await detect(), 'service', 'operator read pilot');
+    assert.ok(normalProposal, 'The owner detects a proposal from ordinary native incidents');
+    assert.equal(normalProposal.ownerId, 'owner');
+    assert.equal(normalProposal.visibility, 'operators');
+    assert.deepEqual(normalProposal.participants, []);
+    for (const source of normalTickets) {
+      const work = check(await api(`/work/${source.id}`)).work;
+      assert.equal(work.requester_id, 'owner');
+      assert.equal(work.beneficiary_id, 'owner');
+      assert.equal(work.sensitivity, 'normal');
+    }
+    const readership = async () => ({
+      memberships: (await db.prepare("SELECT * FROM memberships WHERE workspace_id='a' ORDER BY user_id").all()).results,
+      participants: (await db.prepare("SELECT * FROM work_participants WHERE workspace_id='a' ORDER BY work_id,user_id").all()).results,
+      shares: (await db.prepare("SELECT * FROM work_shares WHERE workspace_id='a' ORDER BY id").all()).results,
+    });
+    const readershipBefore = await readership();
+    assert.deepEqual(readershipBefore.memberships.find(m => m.user_id === 'stranger'), {
+      workspace_id: 'a', user_id: 'stranger', roles_json: '["operator"]', active: 1,
+    }, 'The reader is a distinct active built-in operator');
+    assert.ok(!readershipBefore.participants.some(p => normalTickets.some(t => t.id === p.work_id)));
+    assert.ok(!readershipBefore.shares.some(s => normalTickets.some(t => t.id === s.work_id)));
+    const operatorList = check(await api('/problem-proposals', undefined, operator)).items.filter(p => p.id === normalProposal.id);
+    assert.equal(operatorList.length, 1, 'An existing operator lists the same owner-created proposal');
+    const operatorDetail = check(await api(`/problem-proposals/${normalProposal.id}`, undefined, operator));
+    const expectedSourceIds = normalTickets.map(t => t.id).sort();
+    for (const read of [operatorList[0], operatorDetail]) {
+      assert.deepEqual(read, normalProposal, 'Operator list and detail retain the complete owner-visible proposal');
+      assert.deepEqual(evidenceIds(read), expectedSourceIds);
+      assert.deepEqual(sourceIds(read), expectedSourceIds, 'Every native source reference is readable by the operator');
+    }
+    assert.deepEqual(await readership(), readershipBefore, 'Proposal reads change no membership, role, participant or share');
+    assert.deepEqual(check(await api(`/problem-proposals/${normalProposal.id}`)), normalProposal, 'Reads add no proposal participants or other record changes');
+    console.log('PROBE PROB-003 3: owner-created normal incidents and proposal -> distinct active operator lists and reads the same proposal and every source reference without changing readership');
+
     const hiddenService = check(await api('/services', { name: 'Restricted PROB-002', description: 'Confidential service', businessImpact: 'Confidential', source: 'Private register', observedAt, visibility: 'restricted' }), 201);
     for (let i = 0; i < 3; i++) check(await api('/incidents', { title: 'Confidential monitor incident', serviceId: hiddenService.id, impact: 'Private', cohorts: ['Confidential floor'], visibility: 'restricted', monitorEventKey: `private-monitor:${i}` }), 201);
     const privateProposal = cluster(await detect(), 'service', 'confidential floor', hiddenService.id);

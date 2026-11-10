@@ -25,6 +25,25 @@ export async function deskGroupChecks(workspaceApi, db) {
   assert.deepEqual(groups.map(g => [g.name, g.members.map(m => [m.name, m.lead])]), [['Hardware', [['Hana Agent', false], ['Owner', true]]], ['Network', [['Nia Lead', true], ['Noel Agent', false]]]]);
   check(await api('/work-groups', undefined, employee), 403);
 
+  // An integration principal is never a group member or lead: the owner's add is refused with lead false and true alike,
+  // leaving membership, leads and the successful-change audit untouched; an active operator is still added (control).
+  await db.exec(`INSERT INTO users VALUES('d1-feed','feed001@test','Feed Integration','unused','2026-01-01'); INSERT INTO users VALUES('d1-ops-agent','opsagent001@test','Olu Agent','unused','2026-01-01');
+    INSERT INTO memberships VALUES('desk001','d1-feed','["integration"]',1); INSERT INTO memberships VALUES('desk001','d1-ops-agent','["operator"]',1);`);
+  const memberState = async () => ({
+    members: (await db.prepare("SELECT group_id,user_id,lead FROM work_group_members WHERE workspace_id='desk001' ORDER BY group_id,user_id").all()).results,
+    audit: (await db.prepare("SELECT COUNT(*) n FROM audit_events WHERE workspace_id='desk001' AND action='work.group_member_set'").first()).n,
+  });
+  const beforeIntegration = await memberState();
+  for (const lead of [false, true]) {
+    assert.match(JSON.stringify(check(await api(`/work-groups/${network.id}/members`, { userId: 'd1-feed', lead }), 422)), /active service agents/);
+    assert.deepEqual(await memberState(), beforeIntegration, `DESK-001 an integration principal is refused as a group member (lead ${lead}) and nothing changes`);
+  }
+  assert.ok(!check(await api('/work-groups')).items.some(g => g.members.some(m => m.userId === 'd1-feed')), 'DESK-001 the integration principal is in no group listing');
+  check(await api(`/work-groups/${network.id}/members`, { userId: 'd1-ops-agent' }));
+  const afterControl = await memberState();
+  assert.equal(afterControl.audit, beforeIntegration.audit + 1, 'DESK-001 the active operator is added with one audited change');
+  assert.equal(afterControl.members.length, beforeIntegration.members.length + 1);
+
   const ticket = async (key, sensitivity = 'normal') => check(await api('/work', { title: `DESK-001 ${key}`, body: `Ticket ${key}`, kind: 'incident', sensitivity, deduplicationKey: `desk001-${key}` }, employee), 201);
   const place = async (work, groupId, extra = {}, headers = {}, status = 200) => {
     const current = check(await api(`/work/${work.id}`)).work;
@@ -45,6 +64,12 @@ export async function deskGroupChecks(workspaceApi, db) {
   };
   assert.match((await reassign(vpn, 'd1-hw-agent', 422)).error, /agent in its group/);
   await reassign(vpn, 'd1-net-lead', 200);
+  // The integration principal is never an assignee, by command or by placement, and the ticket stays as it was.
+  const owned = async () => { const w = check(await api(`/work/${vpn.id}`)).work; return [w.group_id, w.assignee_id, w.revision]; };
+  const beforeOwner = await owned();
+  assert.match((await reassign(vpn, 'd1-feed', 422)).error, /active service operator/);
+  await place(vpn, network.id, { assigneeId: 'd1-feed' }, netLead, 422);
+  assert.deepEqual(await owned(), beforeOwner, 'DESK-001 refusing the integration principal as assignee leaves the ticket unchanged');
   check(await api(`/work-groups/${network.id}/members/d1-net-lead/remove`, {}), 409);
   await place(wifi, network.id, {}, netAgent);
   await place(netSecret, network.id);
