@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 33 | 116 | 29 | 178 |
+| Core | 34 | 115 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 33 | 129 | 37 | 199 |
+| Full target | 34 | 128 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -1974,7 +1974,7 @@ Core · target · **partial** · Rules D-2, D-3
 
 #### CHANGE-004 — Change calendar and freeze windows
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** A calendar of scheduled changes, maintenance windows and blackout/freeze periods, with conflict detection and an ICS feed. Calendar reads and the feed are CHANGE-009.
 
@@ -1988,8 +1988,8 @@ Core · target · **partial**
 7. This authorizes scheduling only: execution keeps its separate versioned grants and change approvals, and compensation keeps its existing separate grant.
 8. Database admission and effect-time checks fence a freeze added after planning.
 
-**Evidence.** `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs`
-**Gap.** Not asserted: that calendar bypass authorizes scheduling only while execution keeps its own grants and approvals. Freeze refusal, conflicts, owner-only windows, CI scope, emergency scheduling and the dispatch fence are asserted.
+**Evidence.** `src/features/services/calendar.ts`, `tests/services/calendar-cases.mjs`, `tests/services/integration.mjs`, `tests/ui/calendar-journey.mjs`, `tests/adoption/calendar-cases.mjs`; `tests/services/calendar-cases.mjs` (calendarChecks (points 1, 2, 3 year-end freeze and emergency, owner-only windows, inclusive start and exclusive end, 4 draft overlaps, 5 CI-scoped freeze and edit refusal, 6 owner-recorded flag with current membership)); `tests/services/integration.mjs` (a later freeze fences dispatch before any provider write, lines 118-124 (points 5 and 8)); `tests/services/calendar-cases.mjs` (emergencyBypassChecks, run from tests/services/integration.mjs (point 7))
+**Gap.** None.
 
 #### CHANGE-009 — Calendar reads, restore, erasure and the ICS feed
 
