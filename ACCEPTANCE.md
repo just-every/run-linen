@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 33 | 116 | 29 | 178 |
+| Core | 34 | 115 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 33 | 129 | 37 | 199 |
+| Full target | 34 | 128 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -777,7 +777,7 @@ Core · target · **missing** · From CATALOG-005
 
 #### CATALOG-006 — Requests for pending people
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** A request may name a pending person (a reviewed person record without an account, e.g. a new hire) as its beneficiary; requested catalog services are held, with the reason shown, until that person's account is bound, then released into normal fulfillment; an unbound pending person can be edited or withdrawn, canceling the request. A person without review cannot be named as a beneficiary.
 
@@ -788,8 +788,8 @@ Core · target · **partial**
 4. Withdraw one and see its request canceled.
 5. A person without review cannot be named.
 
-**Evidence.** `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/browser.mjs`
-**Gap.** Not asserted in the cited files: the reason shown on a service held for a pending hire (asserted in tests/ui/pending-person-journey.mjs:52, which this clause does not cite; the cited runtime reads only the audience reason of a service still held after binding). The hold, release into fulfilment on binding, editing, withdrawal cancelling the request, and the refusal of an unreviewed person are asserted.
+**Evidence.** `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/browser.mjs`; `tests/work/pending-person-runtime.mjs` (pending person public routes with real D1/workerd (hold reasons before binding); `tests/ui/pending-person-journey.mjs` (pendingPersonJourney (reason rendered beside each held service after reopening at 1440 and 390, run by tests/ui/browser.mjs))
+**Gap.** None.
 
 ### Agent workspace and ticket operations
 
