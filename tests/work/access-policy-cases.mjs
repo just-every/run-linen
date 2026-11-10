@@ -57,10 +57,62 @@ export async function accessPolicyChecks(api, db) {
   assert.deepEqual([reviewed.retained, reviewed.added, reviewed.removed], [['austin-vpn', 'benefits-portal', 'slack'], ['hubspot'], ['quota-dashboard', 'sales-all', 'salesforce']], 'LIFE-003 the reviewer sees retained, added and removed access, with Slack retained');
   assert.deepEqual(reviewed.policies.map(p => p.name).sort(), ['Account executives', 'Austin office', 'Employee benefits', 'Everyone', 'Marketing apps', 'Sales apps'], 'LIFE-003 the record names the policies behind each difference');
 
-  // The admitted record keeps its reviewed baseline when the policies later change; replay stays read-only.
+  // LIFE-003 point 7: the record keeps each policy's name and revision, and editing a policy later never rewrites it or its replay.
+  const moveBody = { sourceRevision: 2, baseline: { from: salesW2, to: { department: marketing.id, location: austin.id, employmentType: w2.id } } };
+  const policyNow = async () => (await ok('/access-policies')).items.map(p => ({ id: p.id, name: p.name, revision: p.revision })).sort((a, b) => a.id < b.id ? -1 : 1);
+  const behind = reviewed.policies.map(p => p.id);
+  const revisionsRecorded = (await policyNow()).filter(p => behind.includes(p.id));
+  assert.deepEqual(reviewed.policies, revisionsRecorded, 'LIFE-003 the record keeps the name and revision of every policy behind it');
+  const admission = async lifecycleId => {
+    const read = await ok(`/lifecycle/${lifecycleId}`), ticket = await ok(`/work/${read.lifecycle.work_id}`), ticketContext = JSON.parse(ticket.work.context_json);
+    const listed = (await ok('/lifecycle')).items.find(l => l.id === lifecycleId);
+    return { read: { baseline: read.baseline, row: read.lifecycle, duties: read.obligations.map(o => `${o.state}:${o.kind}:${o.target}`).sort() },
+      ticket: { baseline: ticketContext.baseline, added: ticketContext.added, removed: ticketContext.removed, retained: ticketContext.retained }, listed };
+  };
+  const original = await admission(move.value.lifecycleId);
+  assert.deepEqual(original.read.baseline, original.ticket.baseline, 'LIFE-003 the lifecycle read and the linked ticket carry the same reviewed baseline');
+  assert.deepEqual(original.read.baseline.policies, revisionsRecorded, 'LIFE-003 the lifecycle read names each policy and its revision');
+  assert.ok(original.listed, 'LIFE-003 the admission is listed to HR and the owner');
+  const operations = async () => Object.fromEntries(await Promise.all(['execution_operations', 'execution_attempts', 'execution_receipts', 'execution_plans', 'work_execution_bindings'].map(async t => [t, (await db.prepare(`SELECT COUNT(*) n FROM ${t}`).first()).n])));
+  const dispatched = await operations();
   await ok(`/access-policies/${marketingPolicy.id}`, { revision: 1, active: true, name: 'Marketing apps', match: marketingPolicy.match, grants: grants(['app', 'hubspot'], ['app', 'canva']) });
-  assert.equal((await record(sam, 'move', 'pol-move', { sourceRevision: 2, baseline: { from: salesW2, to: { department: marketing.id, location: austin.id, employmentType: w2.id } } })).value.lifecycleId, move.value.lifecycleId, 'LIFE-003 replaying an admitted move is read-only after a policy edit');
+  await ok(`/access-policies/${salesPolicy.id}`, { revision: 1, active: true, name: 'Sales apps', match: salesPolicy.match, grants: grants(['app', 'salesforce'], ['group', 'sales-all'], ['app', 'gong']) });
+  const edited = (await policyNow()).filter(p => behind.includes(p.id));
+  assert.ok(edited.some((p, i) => p.revision > revisionsRecorded[i].revision), 'LIFE-003 the edit raised the live policy revisions');
+  assert.deepEqual(await admission(move.value.lifecycleId), original, 'LIFE-003 rereading the admission after a policy edit returns identical retained, added and removed access and policy revisions');
+  const replay = await record(sam, 'move', 'pol-move', moveBody);
+  assert.equal(replay.status, 201, JSON.stringify(replay));
+  assert.equal(replay.value.lifecycleId, move.value.lifecycleId, 'LIFE-003 replaying an admitted move is read-only after a policy edit');
+  assert.deepEqual(await admission(move.value.lifecycleId), original, 'LIFE-003 the replay leaves the admission unchanged');
+  assert.equal((await db.prepare("SELECT COUNT(*) n FROM work_lifecycle WHERE source='pol-move'").first()).n, 1, 'LIFE-003 the replay writes no second record');
+  // A new admission over the same values reads the edited policies, so the old record differs only by being immutable.
+  const mo = await person('Mo Mover');
+  const later = await record(mo, 'move', 'pol-move-later', { sourceRevision: 1, baseline: moveBody.baseline });
+  assert.equal(later.status, 201, JSON.stringify(later));
+  const laterBaseline = (await admission(later.value.lifecycleId)).read.baseline;
+  assert.deepEqual([laterBaseline.added, laterBaseline.removed], [['canva', 'hubspot'], ['gong', 'quota-dashboard', 'sales-all', 'salesforce']], 'LIFE-003 a new admission after the edit reads the edited policies');
+  assert.ok(laterBaseline.policies.every(p => p.revision >= (revisionsRecorded.find(r => r.id === p.id)?.revision ?? 1)) &&
+    laterBaseline.policies.some(p => p.revision > (revisionsRecorded.find(r => r.id === p.id)?.revision ?? 0)), 'LIFE-003 the new record carries the edited policy revisions while the original keeps its own');
+  assert.deepEqual(original.read.baseline.removed, ['quota-dashboard', 'sales-all', 'salesforce'], 'LIFE-003 the original record still lacks the later policy grants');
   assert.equal((await record(sam, 'move', 'pol-move', { sourceRevision: 2, baseline: { from: salesW2, to: { department: sales.id } } })).status, 409, 'LIFE-003 a changed baseline under the same source revision conflicts');
+
+  // LIFE-003 point 8: access the admission lists explicitly joins the policy result without contradicting it, and dispatches nothing.
+  const eli = await person('Eli Explicit');
+  const explicitBody = { baseline: { from: salesW2, to: moveBody.baseline.to }, added: ['figma', 'hubspot'], retained: ['okta-sso'], removed: ['legacy-wiki'] };
+  const explicit = await record(eli, 'move', 'pol-explicit', explicitBody);
+  assert.equal(explicit.status, 201, JSON.stringify(explicit));
+  const union = await admission(explicit.value.lifecycleId);
+  assert.deepEqual(union.read.duties, ['pending:access.grant:canva', 'pending:access.grant:figma', 'pending:access.grant:hubspot', 'pending:access.revoke:gong', 'pending:access.revoke:legacy-wiki',
+    'pending:access.revoke:quota-dashboard', 'pending:access.revoke:sales-all', 'pending:access.revoke:salesforce'], 'LIFE-003 the duties are the union of the policy result and the explicit access, each once');
+  assert.deepEqual([union.ticket.added, union.ticket.removed, union.ticket.retained],
+    [['canva', 'figma', 'hubspot'], ['gong', 'legacy-wiki', 'quota-dashboard', 'sales-all', 'salesforce'], ['austin-vpn', 'benefits-portal', 'okta-sso', 'slack'].sort()],
+    'LIFE-003 the linked ticket lists the union of policy and explicit access');
+  assert.deepEqual([union.read.baseline.added, union.read.baseline.removed], [['canva', 'hubspot'], ['gong', 'quota-dashboard', 'sales-all', 'salesforce']], 'LIFE-003 the policy result itself is not rewritten by the explicit access');
+  assert.deepEqual(await operations(), dispatched, 'LIFE-003 admission records duties only and dispatches nothing to a provider');
+  assert.equal((await record(eli, 'move', 'pol-explicit', { ...explicitBody, added: ['figma'] })).status, 409, 'LIFE-003 the explicit access is part of the immutable admitted facts');
+  assert.deepEqual(await admission(explicit.value.lifecycleId), union, 'LIFE-003 a refused change leaves the union untouched');
+  assert.equal((await record(eli, 'move', 'pol-explicit-clash', { ...explicitBody, sourceRevision: 2, added: ['figma'], removed: ['canva'] })).status, 422, 'LIFE-003 explicit access cannot contradict the policy result');
+  assert.equal((await record(eli, 'move', 'pol-explicit-clash-2', { ...explicitBody, sourceRevision: 2, added: ['figma'], retained: ['salesforce'] })).status, 422, 'LIFE-003 explicit retained access cannot contradict a policy removal');
   const edits = (await db.prepare("SELECT detail_json FROM audit_events WHERE action='access_policy.edited' AND target=?").bind(marketingPolicy.id).all()).results;
   assert.deepEqual(edits.map(e => JSON.parse(e.detail_json)).map(d => [d.before.grants, d.after.grants]), [[['hubspot'], ['hubspot', 'canva']]], 'LIFE-003 policy edits are versioned with before and after');
   // A deactivated policy no longer applies to a new join.

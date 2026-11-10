@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 31 | 118 | 29 | 178 |
+| Core | 33 | 116 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 31 | 131 | 37 | 199 |
+| Full target | 33 | 129 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -1104,7 +1104,7 @@ Core · target · **done** · From DESK-011 · Rules D-4
 7. Membership withdrawal applies to ticket reads, private writes, assignments, scenarios, tasks, knowledge sources, derived service/execution views and reports before aggregation; HR sources cannot be copied by a project-plan scenario into a globally visible project.
 8. Native archives retain department metadata and HR restrictions while restoring staff memberships inert; owners explicitly confirm authority again.
 
-**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).; `tests/work/department-space-cases.mjs` (departmentSpaceChecks); `tests/work/department-ops-cases.mjs` (departmentOpsChecks); `tests/work/department-report-cases.mjs` (departmentReportChecks); `tests/ui/department-browser.mjs` (native department handoff journey); `tests/services/department-source-cases.mjs` (departmentSourceChecks); `tests/platform/mcp-tools-cases.mjs` (mcpToolCases); `tests/platform/base-auth-transfer.mjs` (native archive and recovery)
+**Evidence.** Each acceptance point: (1) an IT agent cannot read an HR-workspace ticket: `tests/work/department-space-cases.mjs` departmentSpaceChecks (IT-only staff get 404 on the HR ticket, work list and search; HR role and IT requester keep the public view) and `tests/ui/department-browser.mjs` (IT-only staff denied after HR→IT handoff, 1440/390); (2) a Facilities request handed to IT keeps its history: departmentSpaceChecks (same ticket id, public and private messages, attachment, frozen SLA policy and due time, audited "department handed off" activity, owner-only with reason and revision) and `tests/ui/department-browser.mjs` native handoff at 1440/390; (3) the employee portal shows both catalogs: `tests/ui/department-browser.mjs` ("Services across departments" lists the IT and Facilities items and hides the audience-restricted item, 1440/390) with `tests/work/department-ops-cases.mjs` departmentOpsChecks (combined catalog, per-department catalogs, queues, routing, SLA, knowledge, tasks). Inherited CATALOG-001 audience and quote rules on the new doors: `tests/ui/department-browser.mjs` (portal-created work still requires its catalog quote, department staff never read quotes, crafted request cannot bypass audience). Also: `tests/work/department-report-cases.mjs` departmentReportChecks, `tests/services/department-source-cases.mjs` departmentSourceChecks, `tests/platform/mcp-tools-cases.mjs` mcpToolCases, `tests/platform/base-auth-transfer.mjs` (archive restores membership inert) and `tests/adoption/runtime.mjs` (scoped membership erasure).; `tests/work/department-space-cases.mjs` (departmentSpaceChecks); `tests/work/department-ops-cases.mjs` (departmentOpsChecks); `tests/work/department-report-cases.mjs` (departmentReportChecks); `tests/ui/department-browser.mjs` (native department handoff journey); `tests/services/department-source-cases.mjs` (departmentSourceChecks); `tests/platform/mcp-tools-cases.mjs` (mcpToolCases); `tests/platform/base-auth-transfer.mjs` (native archive and recovery); `tests/ui/department-browser.mjs` (Department privacy browser); `tests/platform/base-auth-transfer.mjs` (Native archive and recovery)
 **Gap.** None.
 
 #### DESK-012 — Time tracking and effort
@@ -1595,7 +1595,7 @@ Core · target · **partial**
 
 #### LIFE-006 — Contractors and temporary staff
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Contractor and temp accounts carry an end date and sponsor; access expires automatically unless the sponsor re-attests before the end date. Email and chat delivery of the sponsor reminder are inherited by NOTIFY-001.
 
@@ -1607,8 +1607,8 @@ Core · target · **partial**
 5. If the sponsor is no longer an active member, the reminder goes to the owner, labelled "Sponsor left; owner to reassign or re-attest", and the owner (acting for "admin") may re-attest or name a new sponsor, who is then reminded afresh.
 6. Without re-attestation the account disable starts at the end instant and session revocation follows once the disable is independently verified (both act on the same account, through their bound provider grants); once either duty has started, the end date cannot be re-attested.
 
-**Evidence.** `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`
-**Gap.** Not asserted: that re-attestation clears the reminder so a new one precedes the new end; that no reminder fires while the end is more than 72 hours away; that an inactive member or the contractor cannot be the sponsor; and that a newly named sponsor is reminded afresh. The sponsor requirement, one reminder in the sponsor's requests, sponsor-only re-attestation to a later date moving both expiry duties with an audit entry, the owner hand-off when the sponsor leaves, and removal verified at the end instant are asserted.
+**Evidence.** `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`; `tests/work/lifecycle-regressions.mjs` (contractorSponsorChecks (points 1, 3, 4, 6); `tests/work/lifecycle-regressions.mjs` (sponsorRefusalAndReassignChecks (points 2, 5))
+**Gap.** None.
 
 #### LIFE-007 — Lifecycle evidence pack
 
@@ -1922,7 +1922,7 @@ Core · target · **partial** · From PROB-002
 
 #### CHANGE-001 — Change types and templates
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Standard (approved once as a template, catalog-driven), normal and emergency changes, with templates carrying implementation, test and backout plans (RL-15). No meeting, vote or quorum is claimed: CHANGE-003 carries the complete board, quorum and channel requirements. Freeze bypass remains the separate owner-only authority in CHANGE-004.
 
@@ -1936,8 +1936,8 @@ Core · target · **partial**
 7. Amending a change's implementation clears bypass and authorization and returns it to normal review.
 8. Restore makes templates inactive with no live approval and clears imported change bypass/authority; affected personal-data erasure also withdraws live template approval.
 
-**Evidence.** `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs`
-**Gap.** Not asserted: that affected personal-data erasure withdraws a live template approval. Standard, normal and emergency paths, exact-version approval, snapshots, withdrawal, amendment and inactive restore are asserted.
+**Evidence.** `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs`; `tests/services/template-cases.mjs` (CHANGE-001 public catalog/normal/ECAB paths (points 1-7)); `tests/services/template-integration.mjs` (CHANGE-001 real execution path (points 3,5,6,7)); `tests/adoption/template-cases.mjs` (CHANGE-001 native archive (point 8 restore)); `tests/adoption/platform-privacy-cases.mjs` (AUDIT-001/A1/ERASURE-001 public erasure with CHANGE-001 live template approval withdrawn (point 8 erasure))
+**Gap.** None.
 
 #### CHANGE-002 — Risk scoring
 

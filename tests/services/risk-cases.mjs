@@ -35,8 +35,9 @@ export async function changeRiskChecks({ ok, call, db, implementation, reference
     riskAnswers: answers, changeType: 'emergency', emergencyReason: 'Restore synthetic sign-in', participants: ['approver'],
   });
   emergency = await ok('GET', `/changes/${emergency.id}`);
-  assert.equal(emergency.data.riskScore.score, low.data.riskScore.score);
+  assert.equal(emergency.data.riskScore.score, 3);
   assert.equal(emergency.data.riskScore.band, 'low');
+  assert.deepEqual(emergency.data.riskScore.factors.map(f => [f.factor, f.points]), [['touchesSecurity', 2], ['schedule', 1]]);
   assert.equal(emergency.data.approvalPath, 'ecab', 'CHANGE-002 low risk cannot downgrade emergency review to change manager');
   emergency = await ok('POST', `/changes/${emergency.id}/authorize`, {
     revision: emergency.revision, reason: 'Independent emergency decision', grantReferences: references,
@@ -44,8 +45,28 @@ export async function changeRiskChecks({ ok, call, db, implementation, reference
   const emergencyRead = await ok('GET', `/changes/${emergency.id}`);
   assert.equal(emergencyRead.data.approvalPath, 'ecab');
   assert.equal(emergencyRead.data.authorizations.at(-1).approvalPath, 'ecab');
-  assert.equal(emergencyRead.data.authorizations.at(-1).riskScore, low.data.riskScore.score);
+  assert.equal(emergencyRead.data.authorizations.at(-1).riskScore, 3);
   assert.equal(emergencyRead.data.authorizations.at(-1).actor, 'approver');
+  const emergencyAmended = await ok('PATCH', `/changes/${emergency.id}`, {
+    revision: emergencyRead.revision, riskAnswers: { ...answers, touchesSecurity: false },
+  });
+  const emergencyRecomputed = await ok('GET', `/changes/${emergency.id}`);
+  assert.equal(emergencyRecomputed.revision, emergencyAmended.revision);
+  assert.equal(emergencyRecomputed.data.riskScore.score, 1);
+  assert.equal(emergencyRecomputed.data.riskScore.band, 'low');
+  assert.deepEqual(emergencyRecomputed.data.riskScore.factors.map(f => [f.factor, f.points]), [['schedule', 1]]);
+  assert.equal(emergencyRecomputed.data.approvalPath, 'ecab', 'CHANGE-002 recomputation cannot replace ECAB with low-risk normal review');
+  assert.deepEqual(emergencyRecomputed.data.authorizations, [], 'CHANGE-002 emergency edits withdraw the previous decision');
+  assert.deepEqual(emergencyRecomputed.data.priorAuthorizations, emergencyRead.data.authorizations);
+  await ok('POST', `/changes/${emergency.id}/authorize`, {
+    revision: emergencyRecomputed.revision, reason: 'Review recomputed emergency risk', grantReferences: references,
+  }, 'approver');
+  const emergencyReapproved = await ok('GET', `/changes/${emergency.id}`);
+  assert.equal(emergencyReapproved.data.approvalPath, 'ecab');
+  assert.equal(emergencyReapproved.data.authorizations.length, 1);
+  assert.equal(emergencyReapproved.data.authorizations[0].approvalPath, 'ecab');
+  assert.equal(emergencyReapproved.data.authorizations[0].riskScore, 1);
+  assert.equal(emergencyReapproved.data.authorizations[0].implementationRevision, emergencyRecomputed.data.implementationRevision);
 
   let template = await ok('POST', '/change-templates', {
     title: 'Reviewed production certificate rotation', risk: 'Authentication changes', impact: 'Sign-in',
@@ -60,6 +81,11 @@ export async function changeRiskChecks({ ok, call, db, implementation, reference
     changeType: 'standard', templateId: template.id, templateVersion: template.data.version,
   });
   const standardRead = await ok('GET', `/changes/${standard.id}`);
+  assert.equal(standardRead.data.riskScore.score, 15);
+  assert.deepEqual(standardRead.data.riskScore.factors.map(f => [f.factor, f.points]), [
+    ['userFacingOutage', 2], ['untestedBackout', 2], ['firstOfKind', 2], ['touchesSecurity', 2],
+    ['production', 3], ['schedule', 1], ['failedChanges', 3],
+  ]);
   assert.equal(standardRead.data.riskScore.band, 'high');
   assert.equal(standardRead.data.approvalPath, 'catalog', 'CHANGE-002 high risk cannot replace approved catalog review with CAB');
   assert.equal(standardRead.data.state, 'preapproved');
@@ -74,8 +100,15 @@ export async function changeRiskChecks({ ok, call, db, implementation, reference
   assert.equal(normalDecision.status, 409);
   assert.equal(normalDecision.body.error.code, 'catalog_approval');
   assert.deepEqual(await ok('GET', `/changes/${standard.id}`), standardRead, 'CHANGE-002 refusing a normal decision preserves the catalog record');
-  assert.deepEqual(emergencyRead.data.invocations, []);
+  assert.deepEqual(emergencyReapproved.data.invocations, []);
   assert.deepEqual(standardRead.data.invocations, []);
-  assert.equal((await ok('POST', '/fixture/state', {})).writes, writesBefore, 'CHANGE-002 risk-path proof dispatches no provider effect');
-  console.log('PASS CHANGE-002 public routes: scoring and recomputation; low emergency retains ECAB decision; high standard retains exact approved catalog snapshot and refuses normal review; no provider dispatch');
+  const writesAfter = (await ok('POST', '/fixture/state', {})).writes;
+  assert.equal(writesAfter, writesBefore, 'CHANGE-002 risk-path proof dispatches no provider effect');
+  console.log('PROBE CHANGE-002 8: native change and owner-approved template routes -> ' + JSON.stringify({
+    emergency: { score: emergencyRead.data.riskScore.score, band: emergencyRead.data.riskScore.band, path: emergencyRead.data.approvalPath },
+    amendedEmergency: { score: emergencyReapproved.data.riskScore.score, path: emergencyReapproved.data.authorizations[0].approvalPath },
+    standard: { score: standardRead.data.riskScore.score, band: standardRead.data.riskScore.band, path: standardRead.data.approvalPath, version: standardRead.data.cabBypass.version },
+    normalDecision: normalDecision.body.error.code, providerWrites: writesAfter - writesBefore,
+  }));
+  console.log('PASS CHANGE-002 public routes: scoring and recomputation; low emergency retains ECAB through amendment and fresh decision; high standard retains exact approved catalog snapshot and refuses normal review; no provider dispatch');
 }
