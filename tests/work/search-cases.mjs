@@ -68,6 +68,23 @@ export async function searchChecks(api, db) {
   await make('/knowledge',{title:'DraftArticleSearchNeedle',body:'Unreviewed guidance',scope:'employees',expiresAt:'2030-01-01T00:00:00Z',review:false});
   assert.equal((await search('HiddenArticleSearchNeedle')).total,0,'DESK-016 article audience applies before matching and counts');
   assert.equal((await search('DraftArticleSearchNeedle')).total,0,'DESK-016 unreviewed guidance is absent');
+  const employee={'x-user':'employee','x-roles':'["employee"]'};
+  const knowledgeQuery='synthetic-linen-61 knowledge';
+  const guidance=await make('/knowledge',{title:knowledgeQuery+' employee guidance',body:'Reconnect the adapter using the reviewed employee instructions.',scope:'employees',expiresAt:'2030-01-01T00:00:00Z',review:true});
+  const hrGuidance=await make('/knowledge',{title:knowledgeQuery+' HR guidance',body:'Confidential HR instructions.',scope:'hr',expiresAt:'2030-01-01T00:00:00Z',review:true});
+  const draftGuidance=await make('/knowledge',{title:knowledgeQuery+' draft guidance',body:'Employee instructions awaiting review.',scope:'employees',expiresAt:'2030-01-01T00:00:00Z',review:false});
+  const knowledgePath='/knowledge?q='+encodeURIComponent(knowledgeQuery);
+  const employeeKnowledge=await make(knowledgePath,undefined,employee);
+  assert.deepEqual(employeeKnowledge.items.map(r=>r.id),[guidance.id],'DESK-016 employees find reviewed guidance but no matching HR or unreviewed article');
+  assert.equal(employeeKnowledge.items[0].body,'Reconnect the adapter using the reviewed employee instructions.','DESK-016 the employee receives the actual reviewed guidance');
+  const hrKnowledge=await make(knowledgePath,undefined,hr);
+  assert.deepEqual(hrKnowledge.items.map(r=>r.id).sort(),[guidance.id,hrGuidance.id].sort(),'DESK-016 matching HR guidance exists and remains available to its authorized reader');
+  for (const hidden of [hrGuidance.id,draftGuidance.id,'Confidential HR instructions.','Employee instructions awaiting review.'])
+    assert.equal(JSON.stringify(employeeKnowledge).includes(hidden),false,'DESK-016 employee knowledge responses expose neither hidden article identity nor content');
+  assert.equal(hrKnowledge.items.find(r=>r.id===hrGuidance.id).body,'Confidential HR instructions.','DESK-016 the HR exclusion is tested against real readable content');
+  assert.equal(hrKnowledge.items.some(r=>r.id===draftGuidance.id),false,'DESK-016 even HR readership cannot bypass article review');
+  assert.equal((await api('/search?q='+encodeURIComponent(knowledgeQuery),undefined,employee)).status,403,'DESK-016 employee knowledge access never unlocks global agent search');
+  assert.equal((await api('/search?q='+encodeURIComponent(knowledgeQuery)+'&type=article',undefined,employee)).status,403,'DESK-016 an article filter never bypasses the global agent restriction');
   for (let i=0;i<51;i++) await make('/knowledge',{title:'PaginationSearchCorpus '+String(i).padStart(2,'0'),body:'Reviewed paged guidance',scope:'employees',expiresAt:'2030-01-01T00:00:00Z',review:true});
   const firstPage=await search('PaginationSearchCorpus','article'),secondPage=await search('PaginationSearchCorpus','article',operator,50);
   assert.equal(firstPage.total,51,'DESK-016 search never inherits the old article list truncation');
@@ -76,6 +93,32 @@ export async function searchChecks(api, db) {
   const all=await search('Denver');assert.ok(types.every(t=>Number.isInteger(all.counts[t])));
   assert.ok(await db.prepare("SELECT 1 FROM audit_events WHERE workspace_id='a' AND actor_id='search-agent' AND action='search.privileged_read'").first(),'DESK-016 privileged search reads retain the A1 audit obligation');
   assert.equal(all.total,Object.values(all.counts).reduce((a,b)=>a+b,0),'DESK-016 visible-only counts sum to total');
-  console.log('PASS DESK-016 public routes: eight record types, native ID/title/content/requester/serial/tag, linked device-ticket-person, type filters, typos, visible counts/pages, HR/private/restricted/article scopes and revoked roles');
+  for (const [actor,headers] of [['owner',{}],['search-agent',operator],['search-hr',hr]]) {
+    const marker='synthetic-linen-66-unretained-'+actor;
+    for (const [query,matched] of [[knowledgeQuery,true],[marker+' private query + & details',false]]) {
+      const before=new Set((await db.prepare('SELECT id FROM audit_events').all()).results.map(r=>r.id));
+      const result=await search(query,matched?'article':undefined,headers);
+      assert.equal(result.query,query,'DESK-016 each privileged role completes the submitted search');
+      assert.equal(result.items.some(r=>r.id===guidance.id),matched,'DESK-016 audit privacy covers both real results and an unmatched query');
+      assert.equal(result.total>0,matched);
+      assert.equal(result.items.some(r=>r.id===hrGuidance.id),matched&&actor!=='search-agent','DESK-016 successful privileged searches still apply the current article audience');
+      assert.equal(result.items.some(r=>r.id===draftGuidance.id),false,'DESK-016 privileged searches never include unreviewed guidance');
+      const written=(await db.prepare('SELECT * FROM audit_events').all()).results.filter(r=>!before.has(r.id));
+      const reads=written.filter(r=>r.action==='search.privileged_read');
+      assert.equal(reads.length,1,'DESK-016 the specific privileged search creates an audit record');
+      assert.equal(reads[0].workspace_id,'a');
+      assert.equal(reads[0].actor_id,actor,'DESK-016 search audit identifies the authenticated current actor');
+      assert.equal(reads[0].target,'global-search');
+      assert.ok(Number.isFinite(Date.parse(reads[0].created_at)));
+      const detail=JSON.parse(reads[0].detail_json);
+      assert.ok(detail&&typeof detail==='object'&&!Array.isArray(detail),'DESK-016 inspect the persisted audit payload');
+      const retained=JSON.stringify(written).toLowerCase();
+      for (const value of [query,encodeURIComponent(query),Buffer.from(query).toString('base64'),...(matched?[]:[marker])])
+        assert.equal(retained.includes(value.toLowerCase()),false,'DESK-016 attributed search auditing retains no submitted query content');
+    }
+  }
+  console.log('PROBE DESK-016 5: owner, operator and HR searches with real article matches and unmatched queries create attributed audit rows without raw, encoded or base64 query content');
+  console.log('PROBE DESK-016 6: employee knowledge search returns reviewed employee guidance, omits HR and draft identities and content, and both global search variants return 403');
+  console.log('PASS DESK-016 public routes: existing scoped search, attributed query-free audits for owner, operator and HR, employee reviewed knowledge with HR and draft exclusions, and forbidden employee global search');
   return {ticketId:ticket.id,deviceId:device.id,personId:person.id};
 }

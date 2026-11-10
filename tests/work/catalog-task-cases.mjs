@@ -54,6 +54,66 @@ export async function catalogTaskChecks({ ok, api, db, actor, future }) {
   assert.ok(completedHistory[0].changes.some(c=>c.field==='state'&&c.before==='pending'&&c.after==='done'));
   assert.equal((await ok(`/work/${workId}/activity`,undefined,'employee')).items.some(e=>e.kind==='change'),false,'Requester history stays public conversation only');
 
+  // Isolate capacity from approval and ordering with the same independent team task.
+  const providerBefore = (await db.prepare('SELECT * FROM test_provider ORDER BY target').all()).results;
+  const executionState = async () => {
+    const tables = ['execution_grants', 'execution_plans', 'execution_operations', 'execution_outbox',
+      'execution_attempts', 'execution_provider_attempts'];
+    return Object.fromEntries(await Promise.all(tables.map(async table =>
+      [table, (await db.prepare(`SELECT * FROM ${table} ORDER BY id`).all()).results])));
+  };
+  const executionBefore = await executionState();
+  for (const capacity of [0, 1]) {
+    const capacityItem = await ok('/catalog', { name: `Capacity ${capacity}`, kind: 'software',
+      target: `synthetic-linen-62-${capacity}`, ownerId: 'owner', requiresManager: true, capacity, tasks: [plan[1]] });
+    const capacityWork = await ok('/work', { title: `Capacity ${capacity}`, body: 'Prepare my desk',
+      deduplicationKey: `task-capacity-${capacity}` }, 'employee');
+    const id = capacityWork.id;
+    assert.equal((await ok(`/work/${id}/fulfilment`, { catalogId: capacityItem.id,
+      beneficiaryId: 'employee', purpose: 'Design work' }, 'employee')).state, 'blocked');
+    assert.equal(task(await duties(id, 'task-hw'), 'seat').can_complete, false,
+      'CATALOG-003 capacity alone does not replace manager approval');
+    const decisions = (await ok('/fulfilment-decisions', undefined, holder)).items.filter(i => i.workId === id);
+    assert.equal(decisions.length, 1);
+    assert.equal(decisions[0].holderId, holder);
+    assert.equal((await ok(`/work/${id}/fulfilment/approve`, { ...decisions[0],
+      expectedHolderId: holder, idempotencyKey: `task-capacity-approve-${capacity}` }, holder)).state, 'approved');
+    assert.equal((await ok('/fulfilment-decisions', undefined, holder)).items.some(i => i.workId === id), false);
+    const row = task(await duties(id, 'task-hw'), 'seat');
+    assert.equal(row.state, 'pending');
+    assert.deepEqual(row.waiting_for, [], 'CATALOG-003 no earlier step prevents this independent task');
+    assert.equal(row.can_complete, capacity > 0, 'CATALOG-003 an approved team task also needs capacity');
+    const snapshot = async () => ({
+      duties: await duties(id, 'task-hw'), work: (await ok(`/work/${id}`)).work,
+      fulfilment: await ok(`/work/${id}/fulfilments/${capacityItem.id}`, undefined, 'employee'),
+      history: (await ok(`/work/${id}/activity`)).items,
+    });
+    const beforeCapacity = await snapshot();
+    const completion = await complete(id, row, 'task-hw');
+    if (capacity === 0) {
+      assert.deepEqual([completion.status, completion.value.code], [409, 'task_not_ready'],
+        'CATALOG-003 approval cannot let a team complete without capacity');
+      assert.deepEqual(await snapshot(), beforeCapacity,
+        'CATALOG-003 refused completion changes no task, request, fulfilment revision or history');
+    } else {
+      assert.equal(completion.status, 200, JSON.stringify(completion));
+      const afterCapacity = await duties(id, 'task-hw'), done = task(afterCapacity, 'seat');
+      assert.deepEqual([done.state, done.revision, done.completed_by, done.can_complete],
+        ['done', row.revision + 1, 'task-hw', false], 'CATALOG-003 the equivalent task with capacity completes');
+      assert.ok(done.completed_at);
+      assert.deepEqual(afterCapacity.filter(o => o.id !== row.id), beforeCapacity.duties.filter(o => o.id !== row.id),
+        'CATALOG-003 team completion leaves the independent automated responsibility unfinished');
+      const history = (await ok(`/work/${id}/activity`)).items.filter(e => e.action === 'task completed');
+      assert.equal(history.length, 1);
+      assert.equal(history[0].actor, 'task-hw');
+      assert.ok(history[0].changes.some(c => c.field === 'state' && c.before === 'pending' && c.after === 'done'));
+    }
+  }
+  assert.deepEqual((await db.prepare('SELECT * FROM test_provider ORDER BY target').all()).results, providerBefore,
+    'CATALOG-003 capacity and team completion dispatch no provider effect');
+  assert.deepEqual(await executionState(), executionBefore,
+    'CATALOG-003 catalog submission, manager approval and team completion create no execution authority or provider work');
+  console.log('PASS CATALOG-003 capacity: approved independent team task unavailable at zero capacity; completion refused with unchanged duties, ticket, fulfilment and history; positive capacity completes with attributed history and no provider effect');
 
   // The automated step still verifies independently (the CATALOG-004 provider boundary).
   await ok('/grants', { id: 'task-licence-grant', principalId: actor.id, action: 'license.add', actionVersion: 1, target: 'task-licence', beneficiaryId: 'provider-employee-distinct',

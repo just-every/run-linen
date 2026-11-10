@@ -9,7 +9,7 @@ import {readSlaConfiguration, editSlaConfiguration, configurationDifferences, pr
 import type { Context, Hono } from 'hono';
 import {sandboxSlas, editSandboxSla, slaDifferences, slaPromotion, slaFields, type Sla} from './sandbox-slas';
 import type { AppEnv } from './types';
-import { ApiError, audit, auditStatement, id, jsonBody, now, requiredString } from './http';
+import { ApiError, audit, auditStatement, id, jsonBody, now, requiredString, requireRole } from './http';
 import { normalizeCatalogForm, validateCatalogAnswers, type CatalogForm } from '../features/work/catalog-form-schema';
 import { checkTaskPlan, type CatalogTask } from '../features/work/catalog-task-plan';
 
@@ -196,6 +196,7 @@ export function registerSandboxRoutes(app:Hono<AppEnv>) {
   return c.json(view(await read(c,sandboxId)),201);
  });
  app.post('/sandboxes/:id/promote',async c=>{
+  requireRole(c,'owner');
   const row=await read(c,c.req.param('id')),b=await jsonBody(c);revision(row,b,'approved');configurationBody(b,['revision']);
   const p=c.get('principal'),baseline=JSON.parse(row.baseline_json) as Item[],draft=JSON.parse(row.draft_json) as Item[],changed=new Set(differences(row).flatMap(d=>'catalogId' in d?[d.catalogId]:[]));
   if(JSON.stringify(await catalogs(c))!==row.baseline_json||JSON.stringify(await sandboxSlas(c))!==row.sla_baseline_json||JSON.stringify(await readSlaConfiguration(c))!==row.sla_config_baseline_json)throw new ApiError(409,'production_changed','Production configuration changed; create and review a fresh sandbox');
