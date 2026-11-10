@@ -2,6 +2,7 @@ import { departmentSourceChecks } from './department-source-cases.mjs';
 import { operationsKpiChecks } from './kpi-cases.mjs';
 import { templateIntegration, templateErasureCheck } from './template-integration.mjs';
 import { changeRiskChecks } from './risk-cases.mjs';
+import { emergencyBypassChecks } from './calendar-cases.mjs';
 import { releaseChecks } from './release-cases.mjs';
 import { applyMigrations } from '../sql-migrations.mjs';
 import assert from 'node:assert/strict'
@@ -194,6 +195,7 @@ assert.equal((await call('POST',`/changes/${watched.id}/verify`,{revision:review
 assert.equal((await call('POST',`/changes/${watched.id}/grants`,{revision:reviewed.revision,grantReferences:healthGrants},'operator')).body.error.code,'change_review_closed','Closed review cannot acquire another effect binding');
 assert.equal((await ok('POST','/fixture/state',{})).writes,6,'Exactly two additional admitted deployment writes for the watched release');
 console.log('PASS CHANGE-005 watching-check configuration, signed continuous-health gate, unknown, red and short-window refusals transactional monitor race and evidenced PIR closure');
+await emergencyBypassChecks({ok,call,db,implementation,createHash});
 const {personalTemplateId}=await templateIntegration({ok,call,db,implementation});
 await changeRiskChecks({ok,call,db,implementation,references});
 await db.prepare("UPDATE workspace_settings SET settings_json='{\"executionHeld\":true}' WHERE workspace_id='w'").run();
