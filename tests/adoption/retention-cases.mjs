@@ -47,7 +47,29 @@ export async function retentionChecks(ok,request,raw,auth,source){
   const reader=await auth(await request('/login','POST',{email:'retention-auditor@test.invalid',password:'retention auditor password'}));
   assert.ok((await ok('/work/retention/receipts','GET',undefined,reader)).receipts.some(r=>r.record_hash===hash(old.id)),'RETENTION-001 receipts are visible to the auditor');
   assert.equal((await request('/work/retention','PUT',{closedTicketDays:30,revision:1},reader)).status,403,'RETENTION-001 only the owner sets retention');
+  // Point 6: a due ticket with a linked asset repair is held back, readable, intact and reported; an unlinked due control is deleted.
+  const held=await ticket('Retention repair-linked laptop',400),control=await ticket('Retention unlinked control',400);
+  const heldFile=await raw(`/work/${held.id}/attachments`,{method:'POST',headers:{'Content-Type':'text/plain','X-Filename':'repair.txt','X-Linen-CSRF':source.csrf,Cookie:source.cookie},body:'repair photo'});
+  assert.equal(heldFile.status,201);const heldAttachment=await heldFile.json();
+  const device=await ok('/assets','POST',{serial:'synthetic-linen-retention-repair',source:'Retention repair fixture',location:'Denver'},source,201);
+  await ok(`/work/${held.id}/repair-assets`,'POST',{assetId:device.id},source);
+  const heldPreview=await ok('/work/retention/preview','POST',{closedTicketDays:365},source);
+  assert.deepEqual([heldPreview.tickets,heldPreview.skipped.linked_asset_repair],[1,1],'RETENTION-001 preview counts only the unlinked due ticket and names the repair-linked one as held back');
+  const heldRun=await ok('/fixtures/retention-run','POST',{},source);
+  assert.deepEqual([heldRun.tickets,heldRun.skipped],[1,1],'RETENTION-001 the run deletes the unlinked control and skips the repair-linked ticket');
+  await ok('/fixtures/sweep','POST',{},source);
+  const heldNow=await ok(`/work/${held.id}`,'GET',undefined,source);
+  assert.deepEqual([heldNow.work.id,heldNow.work.title,heldNow.work.state],[held.id,'Retention repair-linked laptop','closed'],'RETENTION-001 the repair-linked due ticket stays readable and intact');
+  assert.equal((await request(`/attachments/${heldAttachment.id}`,'GET',undefined,source)).status,200,'RETENTION-001 its attachment record stays');
+  assert.equal((await ok(`/fixtures/object-exists/${held.id}/${heldAttachment.id}`,'GET',undefined,source)).exists,true,'RETENTION-001 its attachment bytes stay');
+  assert.equal((await ok(`/work/${held.id}/repair-assets`,'GET',undefined,source)).items[0].asset.id,device.id,'RETENTION-001 the repair link stays');
+  assert.equal((await request(`/work/${control.id}`,'GET',undefined,source)).status,404,'RETENTION-001 the unlinked due control is deleted');
+  const afterHold=await ok('/work/retention/receipts','GET',undefined,source);
+  assert.ok(afterHold.receipts.some(r=>r.record_hash===hash(control.id)&&r.kind==='ticket'),'RETENTION-001 the control deletion leaves a receipt');
+  assert.ok(!afterHold.receipts.some(r=>r.record_hash===hash(held.id)||r.ticket_hash===hash(held.id)),'RETENTION-001 the held-back ticket has no deletion receipt');
+  assert.equal(afterHold.skipped.find(s=>s.ticket_hash===hash(held.id))?.reason,'linked_asset_repair','RETENTION-001 the owner is told the ticket was held back for its linked repair');
+  assert.equal((await ok('/work/retention/receipts','GET',undefined,reader)).skipped.find(s=>s.ticket_hash===hash(held.id))?.reason,'linked_asset_repair','RETENTION-001 the auditor sees the held-back report');
   const longer=await ok('/work/retention','PUT',{closedTicketDays:500,attachmentDays:null,revision:1},source);
   assert.equal(longer.revision,2,'RETENTION-001 lengthening needs no deletion confirmation');
-  console.log(`PASS RETENTION-001 public routes: no hidden default, previewed+confirmed 365-day policy, ticket closed 400 days ago and its attachment deleted with receipt (auditor ${auditor.id ? 'reads' : 'missing'}), 300-day and open tickets kept`);
+  console.log(`PASS RETENTION-001 public routes: no hidden default, previewed+confirmed 365-day policy, ticket closed 400 days ago and its attachment deleted with receipt, repair-linked due ticket held back and reported without a receipt while an unlinked control is deleted (auditor ${auditor.id ? 'reads' : 'missing'}), 300-day and open tickets kept`);
 }
