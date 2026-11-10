@@ -6880,7 +6880,7 @@
       "executable": false
     },
     "tests/services/kpi-cases.mjs": {
-      "sha256": "55fa0b97b718f89e373282e0ba927702c4d0af0eb3ac3c42f1c34a19c2006d0c",
+      "sha256": "2543741b156ac5af46aa6f786a8034ff04df0dde5ae546d45b021c8ffdb16f78",
       "executable": false
     },
     "tests/services/release-cases.mjs": {
