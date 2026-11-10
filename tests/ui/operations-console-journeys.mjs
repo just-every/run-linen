@@ -128,7 +128,7 @@ export async function operationsKpiJourney({browser,page,api,base,out}) {
     assert.equal(metric('change.emergency').value,12);
     assert.equal(metric('asset.count').value,300);
     assert.equal(new Date(report.range.start).toLocaleString('en-US',{timeZone:'America/Denver'}).includes('12:00:00 AM'),true,'REPORT-005 Denver month starts at Denver midnight');
-    for(const [key,value] of [['incident.count','40'],['change.success','92%'],['change.emergency','12%'],['asset.count','300']])
+    for(const [key,value] of [['incident.count','40'],['change.success','92%'],['change.emergency','12%'],['asset.count','300'],['license.utilization','73.33%'],['license.spend-usd','$120.00']])
       await page.locator(`[data-kpi="${key}"]`).getByText(value,{exact:true}).waitFor();
     for(const metric of report.metrics) {
       const card=page.locator(`[data-kpi="${metric.key}"]`);
