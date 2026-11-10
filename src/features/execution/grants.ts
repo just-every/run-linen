@@ -1,6 +1,7 @@
 import { recordWorkManagerGrantApproval } from "../work/fulfilment-authority";
 import { assertIndependentGrantIssuer } from "./beneficiary-authority";
 import { subjectMapping } from "./mappings";
+import { GRANT_VERSION_EVENT } from "../../platform/audit";
 import { id, now, requiredString } from "../../platform/http";
 import { assert, membership } from "./authority";
 import { actions, type CoreContext } from "./types";
@@ -150,7 +151,8 @@ export async function createGrant(
     !latest?.version || b.expectedVersion === latest.version,
     "grant_changed",
   );
-  await ctx.env.DB.prepare(
+  // One transaction: the audit event exists only if this grant version was stored.
+  await ctx.env.DB.batch([ctx.env.DB.prepare(
     "INSERT INTO execution_grants VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
   )
     .bind(
@@ -175,8 +177,19 @@ export async function createGrant(
       b.localBeneficiaryId || null,
       mapping?.id || null,
       mapping?.revision || null,
-    )
-    .run();
+    ),
+    ctx.env.DB.prepare(
+      "INSERT INTO audit_events SELECT ?,?,?,?,?,?,? WHERE changes()>0",
+    ).bind(
+      id(),
+      w,
+      ctx.principal.userId,
+      GRANT_VERSION_EVENT,
+      gid,
+      JSON.stringify({ kind: "grant_version", grantId: gid, version }),
+      now(),
+    ),
+  ]);
   await recordWorkManagerGrantApproval(ctx, gid, version);
   return { id: gid, version };
 }

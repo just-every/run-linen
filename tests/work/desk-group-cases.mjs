@@ -64,6 +64,12 @@ export async function deskGroupChecks(workspaceApi, db) {
   };
   assert.match((await reassign(vpn, 'd1-hw-agent', 422)).error, /agent in its group/);
   await reassign(vpn, 'd1-net-lead', 200);
+  // The integration principal is never an assignee, by command or by placement, and the ticket stays as it was.
+  const owned = async () => { const w = check(await api(`/work/${vpn.id}`)).work; return [w.group_id, w.assignee_id, w.revision]; };
+  const beforeOwner = await owned();
+  assert.match((await reassign(vpn, 'd1-feed', 422)).error, /active service operator/);
+  await place(vpn, network.id, { assigneeId: 'd1-feed' }, netLead, 422);
+  assert.deepEqual(await owned(), beforeOwner, 'DESK-001 refusing the integration principal as assignee leaves the ticket unchanged');
   check(await api(`/work-groups/${network.id}/members/d1-net-lead/remove`, {}), 409);
   await place(wifi, network.id, {}, netAgent);
   await place(netSecret, network.id);

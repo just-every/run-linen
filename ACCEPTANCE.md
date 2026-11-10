@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 31 | 118 | 29 | 178 |
+| Core | 33 | 116 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 31 | 131 | 37 | 199 |
+| Full target | 33 | 129 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -883,7 +883,7 @@ Core · target · **done** · From DESK-003
 
 #### DESK-004 — SLA policies
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Multiple SLA policies by priority, category and requester group with first-response, next-response and resolution targets on business or calendar hours, US federal holiday calendars by location, pause on "awaiting requester" or "awaiting vendor", and visible breach time. Pauses and breaches are DESK-020.
 
@@ -896,8 +896,8 @@ Core · target · **partial**
 6. First response and resolution run from the ticket's opening; first response is met by the first public agent reply and resolution by closing.
 7. Each public requester message after an agent reply starts a next-response target met by the next public agent reply.
 
-**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`
-**Gap.** Not asserted: a Saturday holiday observed the Friday before, a Sunday holiday observed the Monday after, the Inauguration Day exclusion, a calendar's own listed dates beside the catalog, resolution met by closing, a policy matched on its category, and a priority change rebinding from the ticket's opening. Policy order and first-match binding on priority and requester group, business and calendar hours, the location's federal catalog skipping a Monday holiday, the requester pause, breaches on the ticket and the report, first response met by the first public agent reply and the next-response target are asserted.
+**Evidence.** `src/features/work/sla-policies.ts`, `src/features/work/sla-clock.ts`, `src/features/work/sla-holidays.ts`, `src/ui/work-sla.tsx`, `tests/work/sla-policy-cases.mjs`; `tests/work/sla-policy-cases.mjs` (slaPolicyChecks (points 1,2,4,7 through the existing assertions and the P2 business hours and Executive P2 cases, named in plain words)); `tests/work/sla-policy-cases.mjs` (holidayCalendarChecks (point 5: Saturday and Sunday holidays observed, Inauguration Day, listed dates beside the catalog)); `tests/work/sla-policy-cases.mjs` (policyBindingChecks (point 3: category matching and priority-change rebinding)
+**Gap.** None.
 
 #### DESK-020 — SLA pauses and breaches
 
@@ -1922,7 +1922,7 @@ Core · target · **partial** · From PROB-002
 
 #### CHANGE-001 — Change types and templates
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Standard (approved once as a template, catalog-driven), normal and emergency changes, with templates carrying implementation, test and backout plans (RL-15). No meeting, vote or quorum is claimed: CHANGE-003 carries the complete board, quorum and channel requirements. Freeze bypass remains the separate owner-only authority in CHANGE-004.
 
@@ -1936,8 +1936,8 @@ Core · target · **partial**
 7. Amending a change's implementation clears bypass and authorization and returns it to normal review.
 8. Restore makes templates inactive with no live approval and clears imported change bypass/authority; affected personal-data erasure also withdraws live template approval.
 
-**Evidence.** `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs`
-**Gap.** Not asserted: that affected personal-data erasure withdraws a live template approval. Standard, normal and emergency paths, exact-version approval, snapshots, withdrawal, amendment and inactive restore are asserted.
+**Evidence.** `src/features/services/change-templates.ts`, `src/features/services/changes.ts`, `tests/services/template-cases.mjs`, `tests/services/template-integration.mjs`, `tests/adoption/template-cases.mjs`, `tests/ui/template-journey.mjs`; `tests/services/template-cases.mjs` (CHANGE-001 public catalog/normal/ECAB paths (points 1-7)); `tests/services/template-integration.mjs` (CHANGE-001 real execution path (points 3,5,6,7)); `tests/adoption/template-cases.mjs` (CHANGE-001 native archive (point 8 restore)); `tests/adoption/platform-privacy-cases.mjs` (AUDIT-001/A1/ERASURE-001 public erasure with CHANGE-001 live template approval withdrawn (point 8 erasure))
+**Gap.** None.
 
 #### CHANGE-002 — Risk scoring
 
