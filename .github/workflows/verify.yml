@@ -83,7 +83,7 @@ jobs:
           chosen=
           for attempt in 1 2 3; do
             mirror=${mirrors[attempt - 1]}
-            sudo sed -i -E "s@^(URIs:[[:space:]]*)https?://(([a-z0-9.-]+\.)?archive\.ubuntu\.com|security\.ubuntu\.com|mirrors\.edge\.kernel\.org)/ubuntu/?@\1${mirror}/@" /etc/apt/sources.list.d/ubuntu.sources
+            sudo sed -i -E "s@^(URIs:[[:space:]]*)(mirror\+file:/etc/apt/apt-mirrors\.txt|https?://(([a-z0-9.-]+\.)?archive\.ubuntu\.com|security\.ubuntu\.com|mirrors\.edge\.kernel\.org)/ubuntu/?)@\1${mirror}/@" /etc/apt/sources.list.d/ubuntu.sources
             printf 'Browser deps apt: attempt %s/3 (90s deadline; mirror %s)\n' "$attempt" "$mirror"
             if sudo timeout --kill-after=5s 90s bash -ec '
               apt-get update
@@ -104,6 +104,7 @@ jobs:
           fi
           sudo apparmor_parser --replace /usr/share/apparmor/extra-profiles/bwrap-userns-restrict
           for attempt in 1 2; do
+            sudo dpkg --configure -a
             printf 'Playwright deps: attempt %s/2 (120s deadline; mirror %s)\n' "$attempt" "$chosen"
             if timeout --kill-after=5s 120s pnpm exec playwright install --with-deps chromium; then
               exit 0
