@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 32 | 117 | 29 | 178 |
+| Core | 34 | 115 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 32 | 130 | 37 | 199 |
+| Full target | 34 | 128 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -777,7 +777,7 @@ Core · target · **missing** · From CATALOG-005
 
 #### CATALOG-006 — Requests for pending people
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** A request may name a pending person (a reviewed person record without an account, e.g. a new hire) as its beneficiary; requested catalog services are held, with the reason shown, until that person's account is bound, then released into normal fulfillment; an unbound pending person can be edited or withdrawn, canceling the request. A person without review cannot be named as a beneficiary.
 
@@ -788,8 +788,8 @@ Core · target · **partial**
 4. Withdraw one and see its request canceled.
 5. A person without review cannot be named.
 
-**Evidence.** `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/browser.mjs`
-**Gap.** Not asserted in the cited files: the reason shown on a service held for a pending hire (asserted in tests/ui/pending-person-journey.mjs:52, which this clause does not cite; the cited runtime reads only the audience reason of a service still held after binding). The hold, release into fulfilment on binding, editing, withdrawal cancelling the request, and the refusal of an unreviewed person are asserted.
+**Evidence.** `src/features/work/pending-people.ts`, `src/features/work/pending-services.ts`, `src/features/work/pending-binding.ts`, `tests/work/pending-person-runtime.mjs`, `tests/ui/browser.mjs`; `tests/work/pending-person-runtime.mjs` (pending person public routes with real D1/workerd (hold reasons before binding); `tests/ui/pending-person-journey.mjs` (pendingPersonJourney (reason rendered beside each held service after reopening at 1440 and 390, run by tests/ui/browser.mjs))
+**Gap.** None.
 
 ### Agent workspace and ticket operations
 
@@ -2309,7 +2309,7 @@ Core · target · **partial** · Rules D-5
 
 #### REPORT-006 — Asset, compliance, license and spend measures
 
-Core · target · **partial** · From REPORT-005 · Rules D-5
+Core · target · **done** · From REPORT-005 · Rules D-5
 
 **Requirement.** Asset and license measures count only recorded, attributed observations, keep unknowns visible and never infer identity, conversion or outcome. The report does not itself claim the feeds later clauses add.
 
@@ -2323,8 +2323,8 @@ Core · target · **partial** · From REPORT-005 · Rules D-5
 7. Counts and means retain their source records, definitions, denominators and unknowns; elapsed milliseconds display as minutes to two decimals, USD displays to cents, percentages and other numbers round to two decimals with redundant trailing zeroes omitted, and JSON retains numeric precision.
 8. The report uses existing report and source scopes; an auditor's unavailable native-device scope is disclosed, and a missing feed or outcome is unknown.
 
-**Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`; native exact 40/25/300 cohort, Denver month/DST, 92%/12%, every tile definition/source link, drill-through, acknowledgement and audience: `tests/ui/operations-console-journeys.mjs` operationsKpiJourney through `tests/ui/communication-browser.mjs`
-**Gap.** Not asserted: the first-custody-record age basis and the service-asset record-creation basis; separate counting of source records that could share an identity; the operator-recorded or provider-verified compliance label; an expired observation staying unknown; utilization from each asset's latest usage period and the exclusion of a period not wholly within the range; dates outside the upcoming window and the planning-indicator label; and USD to cents and two-decimal rounding in the display. Current-state counts with the snapshot age, the native in-service age basis, noncompliant and unobserved devices, seat utilization, known USD spend without conversion, upcoming renewals and refreshes, definitions, units and records, minutes display, whole percentages, numeric precision and the report scopes are asserted.
+**Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`; native exact 40/25/300 cohort, Denver month/DST, 92%/12%, every tile definition/source link, drill-through, acknowledgement and audience: `tests/ui/operations-console-journeys.mjs` operationsKpiJourney through `tests/ui/communication-browser.mjs`; `tests/services/kpi-cases.mjs` (operationsKpiChecks (point 3: operator-recorded fresh and expired device observations, source/time/expiry, fresh noncompliance counted, expired retained as unknown against snapshotAt); `tests/services/kpi-cases.mjs` (assetBasisChecks (points 2, 4, 6, 7: age bases, same-serial records counted separately, latest wholly-in-range usage period, upcoming window edges, planning-indicator label, numeric precision)); `tests/ui/operations-console-journeys.mjs` (operationsKpiJourney (points 7 and 8: 73.33%, $120.00 and minutes display, auditor scope disclosure))
+**Gap.** None.
 
 ### Platform, administration and integration
 

@@ -9,20 +9,37 @@ export async function dependencyJourney({page,api,base,out}) {
     const r=await action(page,'Add service',{name,ciType,description:`${name} configuration`,businessImpact:'Payroll unavailable',source:'IT configuration register',observedAt,freshnessMs:86400000},'/services','Save',201);
     await page.getByRole('heading',{name,exact:true}).waitFor();return r;
   }
+  assert.equal(page.viewportSize().width,1440,'Dependency journey assertions use the desktop viewport');
   const payroll=await item('Payroll','business_service'),gusto=await item('Gusto','saas_app'),sso=await item('SSO service','software');
   await page.goto(base+'/app#/services/'+payroll.id);
   const edge={provenance:'asserted',relationship:'depends_on',source:'Reviewed payroll dependency map',sourceRevision:'1',observedAt,effectiveAt:observedAt,freshnessMs:86400000};
   await action(page,'Record a dependency',{...edge,to:gusto.id},'/service-graph/edges','Save',201);
   await action(page,'Record a dependency',{...edge,to:sso.id},'/service-graph/edges','Save',201);
   await page.getByRole('link',{name:'Gusto recorded',exact:true}).waitFor();
+  const beforeReads=await Promise.all(['/services','/incidents'].map(path=>api(path)));
+  await page.reload();
+  await page.getByRole('link',{name:'Gusto recorded',exact:true}).waitFor();
   await captureJourney(page,{path:out+'/ASSET-009-dependencies.png',fullPage:true});
+  assert.deepEqual(await Promise.all(['/services','/incidents'].map(path=>api(path))),beforeReads,
+    'Viewing inferred dependencies does not create an incident or change service state');
   const unlinked=await item('Denver meeting-room display','hardware');
   const unknown=await api(`/services/${unlinked.id}/impact`);
   assert.deepEqual(unknown.upstream,[]);assert.deepEqual(unknown.downstream,[]);
   const details=page.getByRole('region',{name:'Dependencies and impact',exact:true});
   await details.getByRole('heading',{name:'Recorded relationships',exact:true}).waitFor();
+  await details.locator(':scope > p').first().waitFor({state:'visible'});
+  assert.ok((await details.locator(':scope > p').first().innerText()).trim().length>0,
+    'The empty impact view keeps its coverage and inference explanation visible for inspection');
+  assert.ok((await details.locator(':scope > p').first().innerText()).includes(unknown.coverage),
+    'The unlinked screen presents the current route coverage limitation without fixing its wording');
   assert.equal(await details.locator('.record-row').count(),0,'Unlinked CI has no invented dependency or impact rows');
+  const beforeUnknownReads=await Promise.all([`/services/${unlinked.id}`,`/service-history/${unlinked.id}`,'/incidents'].map(path=>api(path)));
+  await page.reload();
+  await details.getByRole('heading',{name:'Recorded relationships',exact:true}).waitFor();
+  assert.equal(await details.locator('.record-row').count(),0,'Reload does not infer a dependency for an unlinked CI');
   await captureJourney(page,{path:out+'/ASSET-009-unknown-item.png',fullPage:true});
+  assert.deepEqual(await Promise.all([`/services/${unlinked.id}`,`/service-history/${unlinked.id}`,'/incidents'].map(path=>api(path))),beforeUnknownReads,
+    'Unknown impact screens preserve the CI, its history and all incidents');
   const change=await api('/changes',{title:'Upgrade SSO service',risk:'Sign-in interruption',impact:'Payroll users',services:[sso.id],window:{start:new Date().toISOString(),end:new Date(Date.now()+3600000).toISOString()},cohorts:['staff'],canaryCohorts:['staff'],implementation:{release:'new'},compensation:{release:'prior'}});
   await page.goto(base+'/app#/changes/'+change.id);
   await page.getByRole('link',{name:'Payroll recorded',exact:true}).waitFor();

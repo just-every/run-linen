@@ -576,7 +576,12 @@ try {
     console.log('verify progress: starting configuration browser group');
     const pendingLaptop = await api('/catalog', {name:'Work laptop',kind:'device',target:'standard-laptop',ownerId:uid,capacity:3});
     const pendingSeat = await api('/catalog', {name:'Figma seat',kind:'software',target:'figma-design',ownerId:uid,capacity:10});
-    await journey('pendingPersonJourney', () => pendingPersonJourney({browser,page,context,api,base,out,width:1440,catalogIds:[pendingLaptop.id,pendingSeat.id]}));
+    for(const width of [1440,390]){
+      await page.setViewportSize({width,height:width===1440?1000:844});
+      await journey(`pendingPersonJourney ${width}`, () => pendingPersonJourney({browser,page,context,api,base,out,width,catalogIds:[pendingLaptop.id,pendingSeat.id]}));
+    }
+    console.log('PASS CATALOG-006 1440 and 390: each held pending-person service shows its own returned reason beside it after reopening.');
+    await page.setViewportSize({width:1440,height:1000});
     await journey('catalogTaskJourney', () => catalogTaskJourney({page,api,base,out}));
     let sandboxBoundary;
     for(const width of [1440,390])sandboxBoundary=await journey(`sandboxJourney ${width}`, () => sandboxJourney({page,api,base,out,width}));
