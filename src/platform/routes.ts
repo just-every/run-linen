@@ -6,6 +6,7 @@ import { authenticated, createSession, logout, session } from './auth'
 import { ApiError, auditStatement, checkOrigin, id, jsonBody, now, requiredString } from './http'
 import { passwordHash, verifyPassword } from './crypto'
 import { registerSettingsRoutes } from './settings'
+import { registerAuditRoutes } from './audit'
 import { accessLogin } from './sso'
 import { limitLogin } from './limits'
 import { sessionStatus } from './session-status'
@@ -47,5 +48,6 @@ export function platformApp(){
  registerSandboxRoutes(app)
  registerSandboxWorkflowRoutes(app)
  registerSettingsRoutes(app)
+ registerAuditRoutes(app)
  return app
 }
