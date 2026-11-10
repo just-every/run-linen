@@ -6880,7 +6880,7 @@
       "executable": false
     },
     "tests/services/kpi-cases.mjs": {
-      "sha256": "2543741b156ac5af46aa6f786a8034ff04df0dde5ae546d45b021c8ffdb16f78",
+      "sha256": "860492d0ebd651929dd057f7475b2b3cbf91a4be8da8fba521370f8e0ccb6a67",
       "executable": false
     },
     "tests/services/release-cases.mjs": {
@@ -7112,7 +7112,7 @@
       "executable": false
     },
     "tests/ui/operations-console-journeys.mjs": {
-      "sha256": "74cfcf98c976925a534d256c8fd80cadf623b81f7212ccf61807411ec91c3928",
+      "sha256": "26c4f3cca1b868222ac4f13d50d16f6c0e66b8523b713d7b19f01d5912fea0a7",
       "executable": false
     },
     "tests/ui/pending-person-journey.mjs": {
