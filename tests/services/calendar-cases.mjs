@@ -33,6 +33,10 @@ export async function calendarChecks(request,db) {
   const outside=await ok('POST','/changes',{...body,title:'After-freeze payroll upgrade',window:{start:freezeBody.window.end,end:'2031-01-02T01:00:00.000Z'}});
   assert.equal((await request('PATCH','/changes/'+outside.id,{revision:outside.revision,window:body.window},agent)).status,409,'CHANGE-004 edit cannot enter freeze');
   assert.equal((await ok('GET','/changes/'+outside.id)).revision,outside.revision,'CHANGE-004 refused edit applies nothing');
+  const beforeFreeze=await ok('POST','/changes',{...body,title:'Ends exactly at freeze start',window:{start:'2030-12-23T22:00:00.000Z',end:freezeBody.window.start}});
+  assert.equal(beforeFreeze.data.window.end,freezeBody.window.start,'CHANGE-004 a change ending at the freeze start instant is outside the half-open window');
+  const inclusiveStart=await request('POST','/changes',{...body,title:'Starts inside the freeze by one millisecond',window:{start:'2030-12-23T22:00:00.000Z',end:'2030-12-24T00:00:00.001Z'}});
+  assert.equal(inclusiveStart.json.error.code,'calendar_frozen','CHANGE-004 the freeze start instant is inclusive');
   const unrelated=await ok('POST','/changes',{...body,title:'Unrelated CI upgrade',services:[otherCI.id]});
   const calendar=(await auditedRead('/change-calendar?from=2030-12-01T00:00:00Z&to=2031-02-01T00:00:00Z&timezone=America%2FDenver',owner,'w1','owner')).json;
   assert.equal(calendar.timezone,'America/Denver');assert.ok(calendar.windows.some(r=>r.id===freeze.id));

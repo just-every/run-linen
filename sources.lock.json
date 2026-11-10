@@ -6860,7 +6860,7 @@
       "executable": false
     },
     "tests/services/calendar-cases.mjs": {
-      "sha256": "702da5f67ecb966c40081c85d7745859a9d353de74d9b38e45e895fdb737e19e",
+      "sha256": "b84d0549f9ab7617ec2f2e502a362a01cc81cc36cc5294ce19f725e52bb69bae",
       "executable": false
     },
     "tests/services/department-source-cases.mjs": {
