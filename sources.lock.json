@@ -7348,11 +7348,11 @@
       "executable": false
     },
     "tests/work/fulfilment-link-runtime.mjs": {
-      "sha256": "9c7b84f98e726bb283a51ac704b1b5b7dc4dfe59c58ebfb7ec6c9cdb9152164a",
+      "sha256": "3da18d12a69b3538a50c0709c06c6d0b6571308cda3608998b2ec9cb9c3868b7",
       "executable": false
     },
     "tests/work/fulfilment-link-worker.ts": {
-      "sha256": "9cb60ce7d96c3ede5e7398fd34eff48348d0ae349100abb6de6afb6036522b60",
+      "sha256": "3a99d4f7b1383e4bfeeb96655b7282ed7dc607d249a5dc83a82f6413f9d634ad",
       "executable": false
     },
     "tests/work/handoff-cases.mjs": {
@@ -7476,7 +7476,7 @@
       "executable": false
     },
     "tests/work/work-saved-cases.mjs": {
-      "sha256": "5613ebeafda8d0c11f6cfca98a4123090fba2e4854ec0bf48f2ef5faf752d969",
+      "sha256": "ab47c4eb929120eb4ed468936df475a27b23401babf575f917b483c0fade2a1e",
       "executable": false
     },
     "tests/work/worker.ts": {
