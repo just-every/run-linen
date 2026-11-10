@@ -70,6 +70,11 @@ jobs:
         with:
           name: linen-verified-build
           path: dist/
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install browser and engineering sandbox
         timeout-minutes: 9
         run: |
@@ -105,8 +110,8 @@ jobs:
           sudo apparmor_parser --replace /usr/share/apparmor/extra-profiles/bwrap-userns-restrict
           for attempt in 1 2; do
             sudo dpkg --configure -a
-            printf 'Playwright deps: attempt %s/2 (120s deadline; mirror %s)\n' "$attempt" "$chosen"
-            if timeout --kill-after=5s 120s pnpm exec playwright install --with-deps chromium; then
+            printf 'Playwright deps: attempt %s/2 (240s deadline; mirror %s)\n' "$attempt" "$chosen"
+            if timeout --kill-after=5s 240s pnpm exec playwright install --with-deps chromium; then
               exit 0
             else
               status=$?
