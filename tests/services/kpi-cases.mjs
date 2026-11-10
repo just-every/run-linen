@@ -83,5 +83,66 @@ export async function operationsKpiChecks({ok,call,implementation}) {
   assert.equal(outside.metrics.find(m=>m.key==='change.success').value,null);
   const ack=data.incidents[0];
   assert.equal((await ok('POST',`/incidents/${ack.id}/acknowledge`,{revision:(await ok('GET',`/incidents/${ack.id}`)).revision})).data.acknowledgedAt,ack.data.acknowledgedAt,'REPORT-005 replay retains first acknowledgement');
+  await assetBasisChecks({ok,data,report,query,start,end});
   console.log('PASS REPORT-005: 40 incidents, 25 actual-engine changes (2 failed, 3 emergency), 300 assets, full KPI definitions/unknowns and public drill-throughs');
+}
+
+// REPORT-006 points 2, 4 and 6 through the public doors: age bases, records that could share an identity, latest wholly-in-range usage period and the upcoming window edges.
+async function assetBasisChecks({ok,data,report,query,start,end}) {
+  const E=Date.parse(end),iso=ms=>new Date(ms).toISOString(),day=86400000,S=Date.parse(start);
+  const before=key=>report.metrics.find(m=>m.key===key);
+  const shared='REPORT6-SHARED-1';
+  const native=await ok('POST','/assets',{serial:shared,source:'Dell purchase order 6001',location:'Denver'});
+  const twin=await ok('POST','/software-assets',{name:shared,assetType:'laptop',serviceId:data.service.id,externalId:shared,source:'Purchase register',currency:'USD',acquisitionCost:900,observedAt:new Date().toISOString()});
+  const inService=iso(E+day).slice(0,10),anniversaryYear=new Date(E+day).getUTCFullYear()-1;
+  const financed=await ok('POST','/assets',{serial:'REPORT6-FINANCED-1',source:'Dell purchase order 6002',location:'Denver'});
+  const soon=`${anniversaryYear}${inService.slice(4)}`;
+  await ok('POST',`/assets/${financed.id}/financials`,{purchaseCents:240000,inServiceDate:soon,usefulMonths:12,method:'straight-line',costCenter:'Denver IT',revision:0});
+  const late=await ok('POST','/assets',{serial:'REPORT6-LATE-1',source:'Dell purchase order 6003',location:'Denver'});
+  await ok('POST',`/assets/${late.id}/financials`,{purchaseCents:240000,inServiceDate:iso(E+60*day).slice(0,10).replace(/^\d{4}/,String(new Date(E+60*day).getUTCFullYear()-1)),usefulMonths:12,method:'straight-line',costCenter:'Denver IT',revision:0});
+  const usageBase={source:'Licence usage statement',observedAt:new Date().toISOString(),cost:10,currency:'USD'};
+  let meter=await ok('POST','/software-assets',{name:'REPORT6 meter',assetType:'subscription',serviceId:data.service.id,externalId:'report6-meter',source:'Purchase register',currency:'USD',acquisitionCost:10,observedAt:new Date().toISOString()});
+  for(const [from,to,active,seats] of [[S,S+1000,1,10],[S+1000,S+2000,6,7],[S+2000,E+day,7,7],[S-30*day,S+500,10,10]])
+    meter=await ok('POST',`/software-assets/${meter.id}/usage`,{...usageBase,revision:meter.revision,periodStart:iso(from),periodEnd:iso(to),activeUsers:active,allocatedSeats:seats});
+  meter=await ok('POST',`/software-assets/${meter.id}/charges`,{revision:meter.revision,source:'Supplier invoice',invoice:'R6-USD-1999',amount:19.99,currency:'USD',periodStart:iso(S+1000),periodEnd:iso(S+2000)});
+  const edges=[['before',E-1000],['start',E],['last',E+30*day-1000],['after',E+30*day]],renewing={};
+  for(const [name,at] of edges) renewing[name]=await ok('POST','/software-assets',{name:`REPORT6 renewal ${name}`,assetType:'software',serviceId:data.service.id,externalId:`report6-renewal-${name}`,source:'Purchase register',currency:'USD',acquisitionCost:1,renewalAt:iso(at),observedAt:new Date().toISOString()});
+  const after=await ok('GET','/operations-kpis'+query),metric=key=>after.metrics.find(m=>m.key===key),snapshot=Date.parse(after.range.snapshotAt);
+  // Points 2 and 6: each source record counts separately, even when both describe the same serial.
+  const counted=metric('asset.count');
+  assert.equal(counted.value,before('asset.count').value+9,'REPORT-006 three native records, the twin, the meter and four renewal-edge records each count once');
+  const pair=counted.records.filter(r=>[native.id,twin.id].includes(r.id));
+  assert.deepEqual(pair.map(r=>r.sourceKind).sort(),['physical','service'],'REPORT-006 same-serial native and service records are both counted, never merged');
+  assert.equal(metric('device.noncompliant').denominator,before('device.noncompliant').denominator+4,'REPORT-006 the native twin pair and the financed and late native devices each count as devices');
+  // Age bases are disclosed per record and measured to the disclosed snapshot.
+  const ages=metric('asset.age').records,row=id=>ages.find(r=>r.id===id);
+  const custody=await ok('GET',`/assets/${native.id}/history`);
+  assert.equal(row(native.id).ageBasis,'first-custody-record','REPORT-006 a native asset without financials starts at its first custody record');
+  assert.equal(row(native.id).ageStartsAt,custody.items[0].created_at,'REPORT-006 age starts at that first custody instant');
+  assert.equal(row(native.id).ageMs,snapshot-Date.parse(row(native.id).ageStartsAt));
+  assert.equal(row(financed.id).ageBasis,'recorded-in-service-date');
+  assert.equal(row(financed.id).ageMs,snapshot-Date.parse(soon),'REPORT-006 the recorded in-service date wins over custody');
+  const created=await ok('GET',`/software-assets/${twin.id}`);
+  assert.equal(row(twin.id).ageBasis,'asset-record-creation');
+  assert.equal(row(twin.id).ageStartsAt,created.createdAt,'REPORT-006 a service asset starts at its own record creation');
+  assert.equal(row(twin.id).ageMs,snapshot-Date.parse(created.createdAt));
+  // Point 4: the latest period wholly within the range; the open-ended and the prior-month periods are excluded.
+  const use=metric('license.utilization'),meterRow=use.records.find(r=>r.id===meter.id);
+  assert.deepEqual([meterRow.activeUsers,meterRow.allocatedSeats,meterRow.periodStart,meterRow.periodEnd,meterRow.source],[6,7,iso(S+1000),iso(S+2000),'Licence usage statement'],'REPORT-006 latest wholly-in-range period selected');
+  assert.equal(use.numerator,before('license.utilization').numerator+6);
+  assert.equal(use.denominator,before('license.utilization').denominator+7);
+  assert.equal(use.value,(before('license.utilization').numerator+6)/(before('license.utilization').denominator+7)*100,'REPORT-006 JSON keeps full numeric precision');
+  assert.ok(Math.abs(metric('license.spend-usd').value-(before('license.spend-usd').value+19.99))<1e-9,'REPORT-006 recorded USD cents add to known spend');
+  // Point 6: [end,end+30d) edges, and the label that separates planning indicators from recorded plans.
+  const upcoming=metric('upcoming.renewals'),ids=new Set(upcoming.records.map(r=>r.id));
+  assert.equal(upcoming.value,before('upcoming.renewals').value+2,'REPORT-006 only the end instant and the last second before 30 days are upcoming');
+  assert.deepEqual([renewing.before.id,renewing.start.id,renewing.last.id,renewing.after.id].map(id=>ids.has(id)),[false,true,true,false],'REPORT-006 window is [end,end+30 elapsed days)');
+  const refreshes=metric('upcoming.refreshes');
+  const indicator=refreshes.records.find(r=>r.id===financed.id);
+  assert.match(indicator.basis,/planning indicator/,'REPORT-006 native useful-life anniversary is a planning indicator');
+  assert.equal(indicator.dueAt,iso(Date.parse(inService+'T00:00:00Z')),'REPORT-006 anniversary is in-service date plus useful months');
+  assert.ok(!refreshes.records.some(r=>r.id===late.id),'REPORT-006 an anniversary beyond 30 days is not upcoming');
+  assert.ok(refreshes.records.filter(r=>r.id!==financed.id).every(r=>!/planning indicator/.test(r.basis)),'REPORT-006 recorded refresh plans are not labelled planning indicators');
+  assert.equal(refreshes.value,before('upcoming.refreshes').value+1);
+  console.log('PASS REPORT-006: age bases, same-serial native and service records counted separately, latest in-range usage period, upcoming window edges and planning-indicator label');
 }

@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 32 | 117 | 29 | 178 |
+| Core | 33 | 116 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 32 | 130 | 37 | 199 |
+| Full target | 33 | 129 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -2309,7 +2309,7 @@ Core · target · **partial** · Rules D-5
 
 #### REPORT-006 — Asset, compliance, license and spend measures
 
-Core · target · **partial** · From REPORT-005 · Rules D-5
+Core · target · **done** · From REPORT-005 · Rules D-5
 
 **Requirement.** Asset and license measures count only recorded, attributed observations, keep unknowns visible and never infer identity, conversion or outcome. The report does not itself claim the feeds later clauses add.
 
@@ -2323,8 +2323,8 @@ Core · target · **partial** · From REPORT-005 · Rules D-5
 7. Counts and means retain their source records, definitions, denominators and unknowns; elapsed milliseconds display as minutes to two decimals, USD displays to cents, percentages and other numbers round to two decimals with redundant trailing zeroes omitted, and JSON retains numeric precision.
 8. The report uses existing report and source scopes; an auditor's unavailable native-device scope is disclosed, and a missing feed or outcome is unknown.
 
-**Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`; native exact 40/25/300 cohort, Denver month/DST, 92%/12%, every tile definition/source link, drill-through, acknowledgement and audience: `tests/ui/operations-console-journeys.mjs` operationsKpiJourney through `tests/ui/communication-browser.mjs`
-**Gap.** Not asserted: the first-custody-record age basis and the service-asset record-creation basis; separate counting of source records that could share an identity; the operator-recorded or provider-verified compliance label; an expired observation staying unknown; utilization from each asset's latest usage period and the exclusion of a period not wholly within the range; dates outside the upcoming window and the planning-indicator label; and USD to cents and two-decimal rounding in the display. Current-state counts with the snapshot age, the native in-service age basis, noncompliant and unobserved devices, seat utilization, known USD spend without conversion, upcoming renewals and refreshes, definitions, units and records, minutes display, whole percentages, numeric precision and the report scopes are asserted.
+**Evidence.** `src/features/services/operations-kpis.ts`, `src/features/services/operations-kpi-metrics.ts`, `src/features/services/operations-kpi-assets.ts`, `tests/services/kpi-cases.mjs`, `tests/services/integration.mjs`; native exact 40/25/300 cohort, Denver month/DST, 92%/12%, every tile definition/source link, drill-through, acknowledgement and audience: `tests/ui/operations-console-journeys.mjs` operationsKpiJourney through `tests/ui/communication-browser.mjs`; `tests/services/kpi-cases.mjs` (operationsKpiChecks (point 3: operator-recorded fresh and expired device observations, source/time/expiry, fresh noncompliance counted, expired retained as unknown against snapshotAt); `tests/services/kpi-cases.mjs` (assetBasisChecks (points 2, 4, 6, 7: age bases, same-serial records counted separately, latest wholly-in-range usage period, upcoming window edges, planning-indicator label, numeric precision)); `tests/ui/operations-console-journeys.mjs` (operationsKpiJourney (points 7 and 8: 73.33%, $120.00 and minutes display, auditor scope disclosure))
+**Gap.** None.
 
 ### Platform, administration and integration
 

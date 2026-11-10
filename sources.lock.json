@@ -588,7 +588,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "f840ac2fb7e4e56fc7afa06895125bc97c9d9631c8fccecd48276bc0bbc418c7",
+      "sha256": "ffaf4376f802ab0fd2d943809288135341ddd9944d8539fc3313faf0feca609d",
       "executable": false
     },
     ".gitignore": {
@@ -604,7 +604,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "17f463bec8b0f3f446b12cec77a2cb7326c74a89b5c59ac4b1f18200751d831b",
+      "sha256": "32bcfa9f10b9fadb0fc3fcf63423a6ef192a049bb34afffeb576b0d30ab9743f",
       "executable": false
     },
     "ADOPTION.md": {
@@ -640,7 +640,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b7507684eb6ec36e52ac75c653a9a9dee9ceaf9bf3267bc7dd72cec6bf1c3a92",
+      "sha256": "984215b327642b372a43869a5cdda0511662b91aa21d84e2dc04e905154cdbc7",
       "executable": false
     },
     "DEMO.md": {
@@ -1784,7 +1784,7 @@
       "executable": false
     },
     "scripts/verify.mjs": {
-      "sha256": "bfe2d0bb2b24b2b85c6529e36db95c4f83e7bd10ba0bbd934b809520208f18e3",
+      "sha256": "a61dde07e949ded63c85b3de7c5b6849561487ee1d436f6bb5926e68e3b2b9f0",
       "executable": false
     },
     "seed.json": {
@@ -2312,7 +2312,7 @@
       "executable": false
     },
     "src/features/execution/grants.ts": {
-      "sha256": "3420d6e6875e6cd62946b8bf14a096cec114bb84b8837f771ad640e039a90973",
+      "sha256": "2b6653c7418c3585e65b80d05f363da0044988e4ba68aa6703ac9dcfc302e700",
       "executable": false
     },
     "src/features/execution/identity.ts": {
@@ -5627,6 +5627,10 @@
       "sha256": "ac1ee79f923cf0fd8a5ddcf8c593837359669dc7bf35c945a1ef93db714c218e",
       "executable": false
     },
+    "src/platform/audit.ts": {
+      "sha256": "377c383be9dcaf0e7990daf7acd3bc5f5e7c817987cd4a3ec9c14e3eedf8516b",
+      "executable": false
+    },
     "src/platform/auth.ts": {
       "sha256": "e810120fcfec840fb511cf47c42ff470f4f9838ea414e837a6ba2c77caf23397",
       "executable": false
@@ -5700,7 +5704,7 @@
       "executable": false
     },
     "src/platform/routes.ts": {
-      "sha256": "eaf46a8655daf7d5a9a5bbd609e3236ab7bd7b1dc99471ca2fec414310274a55",
+      "sha256": "857f897371b0d21b43c5d05bc69a210edf0d709564e2c919c9b5956ddc234f72",
       "executable": false
     },
     "src/platform/sandbox-approvals.ts": {
@@ -6535,6 +6539,10 @@
       "sha256": "8ac4a318cfa65e4aa2c98a2d3a0a8a167f84b2a0edc2a292e67b1487a5402444",
       "executable": false
     },
+    "tests/adoption/audit-log-cases.mjs": {
+      "sha256": "dcba00d16b6f9291d7c779046315d9584d4404ada7f6b741986e62694549c250",
+      "executable": false
+    },
     "tests/adoption/calendar-cases.mjs": {
       "sha256": "73350432f1d2895c6b9a09238377bde58f2e167091835438b1ae000500b807ec",
       "executable": false
@@ -6640,7 +6648,7 @@
       "executable": false
     },
     "tests/adoption/runtime.mjs": {
-      "sha256": "74e70fc52e3b5f3470bee268ad41c36397f71e5d99ca209793d23fc1171d0fc5",
+      "sha256": "5423b86ad96e1f5a4a78e4689b08e2c53fd48dc7939c9750e046097555446582",
       "executable": false
     },
     "tests/adoption/servicenow-import-cases.mjs": {
@@ -6660,7 +6668,7 @@
       "executable": false
     },
     "tests/adoption/worker.ts": {
-      "sha256": "3b05e86a5bb89116c0d621a87d9d403eebcbdfb6aea9bcbf9d8480469b565f06",
+      "sha256": "f704d3afe0f1da6c8d4a9c5e5c3c1908bc863b388d5118c842b5957faff9ef16",
       "executable": false
     },
     "tests/agent-door/fixtures.mjs": {
@@ -6787,6 +6795,10 @@
       "sha256": "7e3cb2c81bb459fc3700328c4dfffb4405fd935b22bd9a650c5ea6fc344b952c",
       "executable": false
     },
+    "tests/platform/account-upgrade-runtime.mjs": {
+      "sha256": "a0a4c21796dc49f9ec9123ded9b1318257e1a899c3b64881125444325e3750d2",
+      "executable": false
+    },
     "tests/platform/agent-door-fixture.mjs": {
       "sha256": "1aa4be52e7d505f6c16bfefda909b0dd5727aa95528aa294df4de07436770b85",
       "executable": false
@@ -6816,7 +6828,7 @@
       "executable": false
     },
     "tests/platform/mcp-tools-cases.mjs": {
-      "sha256": "83809a21911724fec96e1b79a0d41a02191c3ed20b2757013ff4992cae6a8c21",
+      "sha256": "79da80688aaf1806f3014c75b8f9d89e12a3cf3a5dac50b1e8c4998f4fa818c9",
       "executable": false
     },
     "tests/platform/reporting-transfer-cases.mjs": {
@@ -6860,7 +6872,7 @@
       "executable": false
     },
     "tests/services/calendar-cases.mjs": {
-      "sha256": "ef4e31882b6693302cc2fa75ddb36173ea676056a0a48e9f38a5826cd3c2adde",
+      "sha256": "b84d0549f9ab7617ec2f2e502a362a01cc81cc36cc5294ce19f725e52bb69bae",
       "executable": false
     },
     "tests/services/department-source-cases.mjs": {
@@ -6880,15 +6892,15 @@
       "executable": false
     },
     "tests/services/integration.mjs": {
-      "sha256": "b2d7b91ddd488d9251666c41c4b916c3910c9201ecbae0d38f1c5e1466bbd910",
+      "sha256": "6a2191cb6e1b6aaa4da6e2335f13d69567dccdf7dec5ee45ff12d7f61d304057",
       "executable": false
     },
     "tests/services/kpi-cases.mjs": {
-      "sha256": "2543741b156ac5af46aa6f786a8034ff04df0dde5ae546d45b021c8ffdb16f78",
+      "sha256": "860492d0ebd651929dd057f7475b2b3cbf91a4be8da8fba521370f8e0ccb6a67",
       "executable": false
     },
     "tests/services/release-cases.mjs": {
-      "sha256": "420523c039be3385b854d249c62fdd600c257764d83b86f7f9fc97724c3754d5",
+      "sha256": "472900b5aae4f16b32845d41b1cd354db6255bbb18a5766f745b941cd4bd2836",
       "executable": false
     },
     "tests/services/risk-cases.mjs": {
@@ -7120,7 +7132,7 @@
       "executable": false
     },
     "tests/ui/operations-console-journeys.mjs": {
-      "sha256": "74cfcf98c976925a534d256c8fd80cadf623b81f7212ccf61807411ec91c3928",
+      "sha256": "26c4f3cca1b868222ac4f13d50d16f6c0e66b8523b713d7b19f01d5912fea0a7",
       "executable": false
     },
     "tests/ui/pending-person-journey.mjs": {
@@ -7468,7 +7480,7 @@
       "executable": false
     },
     "tests/work/sla-policy-cases.mjs": {
-      "sha256": "132e2247bea0200aa96f981a1d0647257159e15a50c5687b927ff88f690c66e9",
+      "sha256": "ab0d10e246f87ddef006bca18cfd7dd00c5057bc12f52390de0628f829d7cf66",
       "executable": false
     },
     "tests/work/time-cases.mjs": {
