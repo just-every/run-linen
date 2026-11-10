@@ -8,10 +8,10 @@ The primary journey: an employee asks for help in Slack, Teams, email or the por
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 32 | 117 | 29 | 178 |
+| Core | 33 | 116 | 29 | 178 |
 | Agent surface | 0 | 13 | 8 | 21 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 32 | 130 | 37 | 199 |
+| Full target | 33 | 129 | 37 | 199 |
 
 Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0cfc` (21 October 2026). Field proof register: 8 rows; 0 passed, 0 failed, 8 not run.
 
@@ -1595,7 +1595,7 @@ Core · target · **partial**
 
 #### LIFE-006 — Contractors and temporary staff
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Contractor and temp accounts carry an end date and sponsor; access expires automatically unless the sponsor re-attests before the end date. Email and chat delivery of the sponsor reminder are inherited by NOTIFY-001.
 
@@ -1607,8 +1607,8 @@ Core · target · **partial**
 5. If the sponsor is no longer an active member, the reminder goes to the owner, labelled "Sponsor left; owner to reassign or re-attest", and the owner (acting for "admin") may re-attest or name a new sponsor, who is then reminded afresh.
 6. Without re-attestation the account disable starts at the end instant and session revocation follows once the disable is independently verified (both act on the same account, through their bound provider grants); once either duty has started, the end date cannot be re-attested.
 
-**Evidence.** `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`
-**Gap.** Not asserted: that re-attestation clears the reminder so a new one precedes the new end; that no reminder fires while the end is more than 72 hours away; that an inactive member or the contractor cannot be the sponsor; and that a newly named sponsor is reminded afresh. The sponsor requirement, one reminder in the sponsor's requests, sponsor-only re-attestation to a later date moving both expiry duties with an audit entry, the owner hand-off when the sponsor leaves, and removal verified at the end instant are asserted.
+**Evidence.** `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`; `tests/work/lifecycle-regressions.mjs` (contractorSponsorChecks (points 1, 3, 4, 6); `tests/work/lifecycle-regressions.mjs` (sponsorRefusalAndReassignChecks (points 2, 5))
+**Gap.** None.
 
 #### LIFE-007 — Lifecycle evidence pack
 

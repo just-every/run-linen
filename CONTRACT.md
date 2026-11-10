@@ -2949,8 +2949,8 @@ Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0c
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 4 | 21 | 0 | 25 |
-| Target and push further | 28 | 109 | 37 | 174 |
-| All | 32 | 130 | 37 | 199 |
+| Target and push further | 29 | 108 | 37 | 174 |
+| All | 33 | 129 | 37 | 199 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -3048,7 +3048,7 @@ Judged from the code and tests at commit `c05d1857732500fb11fb82dde398dc71ef6d0c
 | `LIFE-009` | Baseline access duties and policy history | target | partial | `tests/work/access-policy-cases.mjs`, `tests/work/runtime.mjs`, `tests/ui/connected-lifecycle.mjs`, `tests/platform/base-auth-transfer.mjs` | Not asserted: that a license entitlement runs as ACCESS-001's license action, and that an app entitlement with no native connector runs as the provider's app-assignment group (the connected journey's policies grant groups only). Versioned and audited policy edits, group entitlements running as access duties under their own grants and verifier, no duty or provider call for retained access, and archived policies kept as inactive history are asserted. |
 | `LIFE-004` | Joiner device readiness | target | partial | `src/features/work/resources.ts`, `tests/ui/custody-journey.mjs` | No zero-touch enrollment or shipping. |
 | `LIFE-005` | Leaver revocation everywhere | target | partial | `src/features/execution/identity.ts`, `src/features/work/lifecycle.ts`, `tests/ui/connected-lifecycle.mjs` | Entra only; no Okta, Google, SaaS or on-premises AD revocation, data transfer or device actions. |
-| `LIFE-006` | Contractors and temporary staff | target | partial | `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs` | Not asserted: that re-attestation clears the reminder so a new one precedes the new end; that no reminder fires while the end is more than 72 hours away; that an inactive member or the contractor cannot be the sponsor; and that a newly named sponsor is reminded afresh. The sponsor requirement, one reminder in the sponsor's requests, sponsor-only re-attestation to a later date moving both expiry duties with an audit entry, the owner hand-off when the sponsor leaves, and removal verified at the end instant are asserted. |
+| `LIFE-006` | Contractors and temporary staff | target | done | `src/features/work/contractor-sponsor.ts`, `tests/work/lifecycle-regressions.mjs`, `tests/ui/connected-lifecycle.mjs`; `tests/work/lifecycle-regressions.mjs` (contractorSponsorChecks (points 1, 3, 4, 6); `tests/work/lifecycle-regressions.mjs` (sponsorRefusalAndReassignChecks (points 2, 5)) | |
 | `LIFE-007` | Lifecycle evidence pack | target | done | `src/features/work/lifecycle-evidence.ts`, `tests/work/lifecycle-evidence-cases.mjs`, `tests/ui/custody-journey.mjs` |  |
 | `ASSET-001` | MDM sync | target | missing |  | No Jamf, Intune or Kandji connector and no installed-application inventory. |
 | `ASSET-002` | Device actions under grant | target | missing |  | No device actions or inventory-verified app push and removal. |
