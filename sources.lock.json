@@ -6636,7 +6636,7 @@
       "executable": false
     },
     "tests/adoption/retention-cases.mjs": {
-      "sha256": "d89c64627fbfffcabbb685e8e3a8b1a02e589ab998abcdb470f01205624ed6a4",
+      "sha256": "73e90f03d5c5859de212e171c77e54b8e4ed55d75911683b3698e3e6eed3db00",
       "executable": false
     },
     "tests/adoption/runtime.mjs": {
