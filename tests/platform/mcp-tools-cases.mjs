@@ -207,6 +207,38 @@ export async function mcpToolCases({ownerApi,rpc,sql,bot,credential,grant,sessio
  check(!(await tool(full.secret,'work.get',{workId:normal.id})).custom_fields.some(f=>f.id===safeField.id),'reclassification removes field on next read')
  check(!(await tool(full.secret,'work.history',{workId:normal.id})).items.some(e=>e.changes.some(c=>c.field_id===safeField.id)),'reclassification removes historical field values immediately')
 
+ // API-007 point 1: a read of a freshly classified, routed ticket with a service and bound SLA equals the independently read native records.
+ const readable=await value(ownerApi('/services',{name:'synthetic-linen-14001',description:'synthetic-linen-14002',businessImpact:'synthetic-linen-14003',source:'synthetic-linen-14004',observedAt:new Date().toISOString(),visibility:'workspace'}),201)
+ const slaPolicy=await value(ownerApi('/sla-policies',{name:'synthetic-linen-14005',position:700,priority:'P3',category:'hardware',firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:240}),201)
+ const core=await value(employeeSession.api('/work',{title:'synthetic-linen-14006',body:'The docking station drops the display link.',kind:'incident',deduplicationKey:'API-007-core',
+  context:{serviceId:readable.id,email:'mcp-context-private@example.test',phone:'202-555-0199',manager:'MCP-HIDDEN-MANAGER',hrFact:'MCP-HIDDEN-HR'}}),201)
+ await route(core.id,hardware)
+ const coreClassification=await value(ownerApi('/work/'+core.id+'/classification'))
+ await value(ownerApi('/work/'+core.id+'/classification/override',{revision:coreClassification.revision,workRevision:coreClassification.workRevision,type:'incident',category:'hardware',subcategory:'other',impact:'medium',urgency:'high',priority:'P3',reason:'MCP-HIDDEN-CLASSIFICATION-REASON'}))
+ const nativeWork=(await value(ownerApi('/work/'+core.id))).work,nativeClass=(await value(ownerApi('/work/'+core.id+'/classification'))).current
+ const nativeSla=await value(ownerApi('/work/'+core.id+'/sla')),nativeGroup=(await value(ownerApi('/work-groups'))).items.find(g=>g.id===nativeWork.group_id)
+ check(nativeWork.group_id===hardware&&nativeWork.kind==='incident'&&nativeWork.state==='open','native record holds the routed incident the MCP read must match')
+ equal(nativeSla.policy.id,slaPolicy.id,'native SLA is bound to the policy created through the native door')
+ const coreView=await tool(full.secret,'work.get',{workId:core.id})
+ const target=t=>({target:t.target,startedAt:t.startedAt,dueAt:t.dueAt,metAt:t.metAt,state:t.state,breachedAt:t.breachedAt})
+ equal({id:coreView.id,title:coreView.title,kind:coreView.kind,state:coreView.state,revision:coreView.revision,
+  created_at:coreView.created_at,updated_at:coreView.updated_at,closed_at:coreView.closed_at,paused_at:coreView.paused_at,response_at:coreView.response_at,resolution_at:coreView.resolution_at},
+  {id:nativeWork.id,title:nativeWork.title,kind:nativeWork.kind,state:nativeWork.state,revision:nativeWork.revision,
+   created_at:nativeWork.created_at,updated_at:nativeWork.updated_at,closed_at:nativeWork.closed_at??null,paused_at:nativeWork.paused_at??null,response_at:nativeWork.response_at??null,resolution_at:nativeWork.resolution_at??null},
+  'MCP read matches the native record for title, kind, state, revision and timestamps')
+ equal({priority:coreView.priority,impact:coreView.impact,urgency:coreView.urgency,category:coreView.category,subcategory:coreView.subcategory},
+  {priority:nativeClass.priority,impact:nativeClass.impact,urgency:nativeClass.urgency,category:{id:nativeClass.category,label:nativeClass.category},subcategory:nativeClass.subcategory},
+  'MCP read matches the native classification')
+ equal({priority:coreView.priority,impact:coreView.impact,urgency:coreView.urgency,category:coreView.category.id},{priority:'P3',impact:'medium',urgency:'high',category:'hardware'},'the classification is the one the owner entered, not a default')
+ equal(coreView.service,{id:readable.id,label:'synthetic-linen-14001'},'service id and label are the registered readable service')
+ equal(coreView.group,{id:nativeGroup.id,label:nativeGroup.name},'group id and label match the native queue')
+ equal(coreView.sla.policy,{id:nativeSla.policy.id,revision:nativeSla.policy.revision,hours:nativeSla.policy.hours,firstResponseMinutes:60,nextResponseMinutes:120,resolutionMinutes:240,
+  pauseOn:nativeSla.policy.pauseOn,boundAt:nativeSla.policy.boundAt},'SLA policy snapshot matches the native clock without its name or calendar')
+ equal([coreView.sla.firstResponse,coreView.sla.resolution],[target(nativeSla.firstResponse),target(nativeSla.resolution)],'SLA targets match the native clock')
+ equal([coreView.sla.firstResponse.dueAt,coreView.sla.resolution.dueAt],[new Date(Date.parse(nativeWork.created_at)+3600000).toISOString(),new Date(Date.parse(nativeWork.created_at)+14400000).toISOString()],'SLA due times are the ticket opening plus the policy minutes')
+ for(const key of ['name','calendar','messages'])check(!Object.hasOwn(coreView.sla.policy,key)&&!Object.hasOwn(coreView.sla,key),'SLA projection omits '+key)
+ for(const secret of hiddenValues)check(!JSON.stringify(coreView).includes(secret),'core read keeps private notes, context and classification reason out')
+
  // A retained HR boundary still excludes MCP when its explicit queue grant matches the new placement.
  const hrDepartment=await value(ownerApi('/departments',{name:'synthetic-linen-12100',kind:'hr'}),201)
  const itDepartment=await value(ownerApi('/departments',{name:'synthetic-linen-12101',kind:'it'}),201)
