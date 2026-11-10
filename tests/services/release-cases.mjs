@@ -73,7 +73,7 @@ export async function releaseChecks({ok,call,db,implementation}) {
   assert.equal((await call('POST',notes,{revision:release.revision,groupId:'engineering',message:'Okta MFA now uses number matching.',cadenceMinutes:1440})).body.error.code,'release_cohort','CHANGE-007 release notes go only to the affected cohort');
   const mailSecret=(await ok('POST','/fixture/secret',{apiKey:'synthetic-linen-11001'})).secret;
   await db.prepare("INSERT INTO connections(id,workspace_id,provider,status,config_json,secret_ciphertext,name,created_at,updated_at) VALUES(?,?,?,?,?,?,'synthetic-linen-11002',datetime('now'),datetime('now'))")
-    .bind('release-mail','w','sendgrid','active',JSON.stringify({from:'linen@example.test'}),mailSecret).run();
+    .bind('release-mail','w','sendgrid','active',JSON.stringify({from:'synthetic-linen-11003'}),mailSecret).run();
   const notice=(await ok('POST',notes,{revision:release.revision,groupId:'mfa-pilot',message:'Release notes: Okta MFA now uses number matching.',cadenceMinutes:1440,emailConnectionId:'release-mail'})).items[0];
   const outbox=async()=>(await db.prepare("SELECT id,recipient_id,state FROM svc_outbox WHERE workspace_id='w' AND record_id=? AND kind='employee-notice' ORDER BY id").bind(release.id).all()).results;
   assert.deepEqual((await outbox()).map(r=>r.recipient_id),['release-sales'],'CHANGE-011 the release note queues mail for the affected cohort only');
