@@ -6712,11 +6712,11 @@
       "executable": false
     },
     "tests/execution/runtime.mjs": {
-      "sha256": "b33d17f8e033549305f426764aeae4a41a263888c7ee0f6b94b8b680f62b8c1e",
+      "sha256": "e8507a3607727efc386f183d40ed5c1ad2167850b2b75495e807f4dcb5077285",
       "executable": false
     },
     "tests/execution/worker.ts": {
-      "sha256": "a984b095856a303b708c2b952dce168205d054c81bdb064db6cfdfbd5bcb0fdb",
+      "sha256": "41366952a975bcb7a8c0733a610497c9d12bb705edd6ee786be043c0368e2ecf",
       "executable": false
     },
     "tests/fixtures/operations-kpis.mjs": {
