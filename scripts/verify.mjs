@@ -9,7 +9,9 @@ const output = resolve(process.env.LINEN_VERIFY_OUTPUT || '.wrangler/verificatio
 const checks = [
   ["Native sign-in and scoped API", process.execPath, ["tests/platform/base-auth-runtime.mjs"]],
   ["Native archive and recovery", process.execPath, ["tests/platform/base-auth-transfer.mjs"]],
-  ["Employee service desk browser", process.execPath, ["tests/ui/run.mjs"]],
+  ["Employee service desk browser", process.execPath, ["tests/ui/run.mjs"], { LINEN_BROWSER_GROUP: 'core' }],
+  ["Configuration browser", process.execPath, ["tests/ui/run.mjs"], { LINEN_BROWSER_GROUP: 'configuration' }],
+  ["Service operations browser", process.execPath, ["tests/ui/run.mjs"], { LINEN_BROWSER_GROUP: 'operations' }],
   ["Emitted HTTP", process.execPath, ["tests/runtime.mjs"]],
   ["Configuration and sandbox", process.execPath, ["tests/platform/config-runtime.mjs"]],
   ["Service desk and lifecycle", process.execPath, ["tests/work/runtime.mjs"]],
@@ -51,36 +53,43 @@ if (shardValue !== undefined) {
   }
   shard = { number, count }
 }
-// Conservative journey durations, refreshed from the exact-head Verify when needed.
+// Upper observed journey durations from hosted Verify 42644529474 (main) and
+// 42647060661 (f61), rounded up. Browser group estimates include a fresh Worker;
+// refresh them from the per-group progress/results on the next exact-head run.
 const measuredSeconds = {
-  "software provider browser": 100, "software license browser": 45, "report builder and exports browser": 45, "notification rules browser": 45,
-  "Native sign-in and scoped API": 30,
-  "Native archive and recovery": 315,
-  "Employee service desk browser": 455,
-  "Emitted HTTP": 50,
-  "Configuration and sandbox": 70,
-  "Service desk and lifecycle": 80,
-  "Knowledge publication": 10,
-  "Fulfilment and measured effort": 10,
-  "Fulfilment integration": 23,
-  "Reviewed identity continuity": 14,
-  "Pending people": 29,
-  "Manager approval and bundles": 28,
-  "Execution and reconciliation": 19,
-  "Current effect authority": 10,
-  "Service operations": 15,
-  "Controlled changes and reporting": 55,
-  "Connection discovery": 11,
-  "Native transport": 58,
-  "Intelligence protocols and budgets": 30,
-  "Conversational intake and evidence": 35,
-  "Incumbent import": 75,
-  "Archive restore and erasure": 210,
-  "Department privacy browser": 100,
-  "Connected service recovery browser": 250,
-  "Connection and authority browser": 70,
-  "Communications browser": 315,
-  "Billing browser": 30
+  "Native sign-in and scoped API": 37,
+  "Configuration and sandbox": 69,
+  "Fulfilment and measured effort": 15,
+  "Pending people": 35,
+  "Connected service recovery browser": 299,
+  "software license browser": 51,
+  "Emitted HTTP": 44,
+  "Reviewed identity continuity": 17,
+  "Execution and reconciliation": 20,
+  "Current effect authority": 8,
+  "Conversational intake and evidence": 39,
+  "Communications browser": 141,
+  "Native archive and recovery": 404,
+  "Fulfilment integration": 29,
+  "Controlled changes and reporting": 64,
+  "Connection discovery": 10,
+  "Intelligence protocols and budgets": 23,
+  "Service desk and lifecycle": 140,
+  "Knowledge publication": 12,
+  "Manager approval and bundles": 26,
+  "Department privacy browser": 93,
+  "Connection and authority browser": 67,
+  "software provider browser": 67,
+  "notification rules browser": 49,
+  "Employee service desk browser": 180,
+  "Service operations": 38,
+  "Native transport": 13,
+  "Incumbent import": 83,
+  "Archive restore and erasure": 130,
+  "Billing browser": 36,
+  "report builder and exports browser": 41,
+  "Configuration browser": 200,
+  "Service operations browser": 160
 }
 function shardChecks(count) {
   const loads = Array(count).fill(0), shards = Array.from({ length: count }, () => [])
@@ -93,6 +102,11 @@ function shardChecks(count) {
   }
   return shards.map(items => items.sort((a, b) => a.index - b.index).map(item => item.check))
 }
+const selectedChecks = shard ? shardChecks(shard.count)[shard.number-1] : checks
+if (process.argv.includes('--plan')) {
+  console.log(JSON.stringify(shardChecks(shard?.count ?? 6).map((items,index)=>({shard:index+1,seconds:items.reduce((sum,item)=>sum+measuredSeconds[item[0]],0),journeys:items.map(item=>item[0])})),null,2));
+  process.exit(0);
+}
 // Installed rer verify builds once. CI downloads the build produced by its build job.
 if (!process.env.LINEN_TEST_BUILT) {
   const code = await new Promise((done, reject) => {
@@ -100,11 +114,6 @@ if (!process.env.LINEN_TEST_BUILT) {
     child.once('error',reject);child.once('exit',code=>done(code??1));
   });
   if (code) process.exit(code);
-}
-const selectedChecks = shard ? shardChecks(shard.count)[shard.number-1] : checks
-if (process.argv.includes('--plan')) {
-  console.log(JSON.stringify(shardChecks(6).map((items,index)=>({shard:index+1,seconds:items.reduce((sum,item)=>sum+measuredSeconds[item[0]],0),journeys:items.map(item=>item[0])})),null,2));
-  process.exit(0);
 }
 const shardLabel = shard ? ` (shard ${shard.number}/${shard.count})` : ''
 await mkdir(output, { recursive: true })
@@ -131,6 +140,7 @@ for (const [name, executable, argv, checkEnvironment = {}] of selectedChecks) {
     complete: results.length === selectedChecks.length && results.every(r => r.exitCode === 0),
     results,
   }, null, 2) + '\n')
+  console.log(`verify progress: ${name} exit=${code} elapsedMs=${results.at(-1).elapsedMs}`)
   if (code !== 0) process.exit(code)
 }
 console.log(`\nPASS ${results.length} local checks${shardLabel}. Evidence: ${output}`)
