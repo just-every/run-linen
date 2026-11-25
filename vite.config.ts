@@ -8,6 +8,6 @@ import { excludeLocalVariables } from './vite/local-variables-output.mjs'
 const local=(name:string)=>process.env[name]?{[name]:process.env[name]}:{}
 export default defineConfig(({command,isPreview})=>({
  preview:{host:'127.0.0.1'},
- server:{fs:{allow:['src','public','node_modules'],deny:['**/.rer/**','**/.seed/**','**/exports/**','**/*.rer']}},
+ server:{fs:{allow:['src','public','node_modules','agent-surface.json'],deny:['**/.rer/**','**/.seed/**','**/exports/**','**/*.rer']}},
  plugins:[demoSockets(),cloudflare({inspectorPort:false,viteEnvironment:{name:'ssr'},persistState:{path:process.env.RER_STATE_DIR ?? '.wrangler/state'},config:command==='serve'&&!isPreview?{main:'./src/server.dev.ts',vars:{...local('RER_DEV_ORIGIN'),...local('RER_DEV_KEY'),...local('RER_DEV_IDENTITY'),...local('RER_DEMO'),...local('RER_DEMO_EXPIRES')}}:{assets:{binding:'ASSETS',run_worker_first:true}}}),tanstackStart(),react(),excludeLocalVariables(),archiveOutputGuard()],
 }))
