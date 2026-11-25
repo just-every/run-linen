@@ -42,7 +42,6 @@ CREATE INDEX intelligence_engineering_jobs_state ON intelligence_engineering_job
 
 -- One counter changes whenever the service accepts a write; the ticket queue's validator is derived from it.
 CREATE TABLE work_list_clock (id INTEGER PRIMARY KEY CHECK(id=1), version INTEGER NOT NULL);
-INSERT INTO work_list_clock VALUES(1,0);
 
 -- Problem detection re-reads every incident of the last 30 days; the scheduler runs it again only after a write or an hour.
 CREATE TABLE svc_detection_state (workspace_id TEXT PRIMARY KEY, clock INTEGER NOT NULL, ran_at TEXT NOT NULL) WITHOUT ROWID;

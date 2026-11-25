@@ -6,7 +6,7 @@ import type { Env, Principal } from './types'
 const BUCKET_MS = 300_000
 
 export async function bumpListClock(env: Pick<Env, 'DB'>) {
-  await env.DB.prepare('UPDATE work_list_clock SET version=version+1 WHERE id=1').run()
+  await env.DB.prepare('INSERT INTO work_list_clock VALUES(1,1) ON CONFLICT(id) DO UPDATE SET version=version+1').run()
 }
 
 async function digest(value: string) {

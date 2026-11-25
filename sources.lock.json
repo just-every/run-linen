@@ -776,7 +776,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "11a3eeb8d4ea9833f62d21be332c5c38ca18a47cb8fe4eeade2f9fd4f28ef7aa",
+      "sha256": "5805c7ef575342abdc9341937ab68e4091167145f5da137f2888570e77badf99",
       "executable": false
     },
     "migrations/0001_platform.sql": {
@@ -1288,7 +1288,7 @@
       "executable": false
     },
     "migrations/0919_read_budget.sql": {
-      "sha256": "0097b1a3ebb32c270fe4d9efcf60dd07e5452bd3aadad0ea091405d42eff76d6",
+      "sha256": "b1a5c06c1b5cbade8b5ebd7522176d180ff942a35a6cbc2374e42944855f4404",
       "executable": false
     },
     "ONBOARDING.md": {
@@ -5700,7 +5700,7 @@
       "executable": false
     },
     "src/platform/list-clock.ts": {
-      "sha256": "3afbddcd4f8795757bf87845a366fd4c0bbcb31b1ec7fcd4d6a988acc80c8371",
+      "sha256": "0291bd9664c67c0bde054bd137aecc2f39de7f3e72bfe8e5cfd1669c2d62754d",
       "executable": false
     },
     "src/platform/okta-origin.ts": {
@@ -5708,7 +5708,7 @@
       "executable": false
     },
     "src/platform/portability-policy.mjs": {
-      "sha256": "319fbf5016ebe6927a2a8787dc5774ff5b3558823850cb04890b0bae39746f7f",
+      "sha256": "36cf159b10b7ed6f5979674f5dfff548a52711be0c1ad3332e27b9948ea771c5",
       "executable": false
     },
     "src/platform/privacy.ts": {
