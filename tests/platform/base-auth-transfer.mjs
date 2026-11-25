@@ -2,7 +2,9 @@ import {sourceCustodyJourney} from './source-custody-journey.mjs'
 import {seedSoftwareLicensing,assertRestoredSoftwareLicensing} from './software-license-transfer-cases.mjs';
 import {seedReportingNotifications,assertRestoredReportingNotifications} from './reporting-transfer-cases.mjs';
 import {captureArchiveAliasStatements,captureKnownArchiveAliasStatements} from '../../src/features/history/archive-identities.mjs'
-import {fileRecords} from '@runeditrun/rer/modules/portability/files'
+import {readArchive} from '@runeditrun/rer/modules/portability'
+import {createReadStream} from 'node:fs'
+import {Readable} from 'node:stream'
 import {mailEdge} from './mail-edge.mjs'
 import {agentRpc} from './agent-door-fixture.mjs'
 // Public rer archive/reset/import flow on disposable actual D1/R2 state.
@@ -16,6 +18,8 @@ import {createServer} from 'node:net'
 import {createRequire} from 'node:module'
 import {pathToFileURL} from 'node:url'
 import {getPlatformProxy} from 'wrangler'
+const fileRecords=path=>readArchive(Readable.toWeb(createReadStream(path)))
+
 const require=createRequire(await import.meta.resolve('wrangler/package.json'))
 const {build}=require('esbuild'),{Miniflare,convertV4MiniflareOptions}=require('miniflare')
 const source=process.cwd(),dir=await mkdtemp(join(tmpdir(),'linen-transfer-')),root=join(dir,'seed'),archive=join(dir,'before.rer'),later=join(root,'exports','after.rer')

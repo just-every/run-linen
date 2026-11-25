@@ -1,3 +1,4 @@
+import { requireOutboundMail } from '../../platform/outbound-mail';
 import { ApiError, id, now } from '../../platform/http';
 import { assertAdoptionEffectAllowed } from '../adoption/authority';
 import { MailboxSendError, mailboxAccess, sendRaw } from '../connections/mailbox-provider';
@@ -48,6 +49,7 @@ export async function deliverMailReply(ctx: WorkContext, workId: string, message
     return { id: deliveryId, state, error };
   };
   try {
+    requireOutboundMail(ctx.env);
     const settings = JSON.parse((await db.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id=?').bind(w).first<{ settings_json: string }>())?.settings_json || '{}');
     if (settings.executionHeld) throw new ApiError(409, 'execution_held', 'Mail is held');
     await assertAdoptionEffectAllowed(ctx, { resource: workId, action: 'notification.send' });

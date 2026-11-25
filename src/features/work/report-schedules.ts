@@ -1,3 +1,4 @@
+import { requireOutboundMail } from '../../platform/outbound-mail';
 import {assertAdoptionEffectAllowed} from '../adoption/authority';
 import {assertPlatformAdmission} from '../../platform/privacy';
 import type { Env } from '../../platform/types';
@@ -30,6 +31,7 @@ export async function createReportSchedule(ctx:WorkContext,key:string,input:Reco
   if(input.channel==='slack')throw new ApiError(422,'needs_configuration','Slack report delivery requires the unbuilt CHANNEL-001 adapter');
   if(input.channel!=='email'||input.consent!==true||!['weekly','nightly'].includes(String(input.frequency)))throw new ApiError(422,'report_schedule','Email, weekly or nightly frequency and explicit destination consent required');
   const userId=requiredString(input.recipientUserId,'recipientUserId',200);await recipient(ctx,key,userId);
+  requireOutboundMail(ctx.env);
   if(ctx.env.MAIL_PROVIDER!=='sendgrid'||!ctx.env.MAIL_API_KEY||!ctx.env.MAIL_FROM)throw new ApiError(503,'needs_configuration','Scheduled email reports require a configured SendGrid sender');
   const scheduleId=id(),frequency=String(input.frequency);
   await reportWrite(ctx,[ctx.env.DB.prepare('INSERT INTO work_report_schedules VALUES(?,?,?,?,?,?,?,1,1,?)').bind(scheduleId,ctx.principal.workspaceId,report.id,ctx.principal.userId,userId,frequency,next(frequency),now()),reportAudit(ctx,'report.destination_consented',scheduleId,{reportId:key,recipientId:userId,channel:'email',frequency})]);
@@ -46,6 +48,7 @@ export async function runReportSchedule(ctx:WorkContext,key:string) {
   await reportOwner(ctx);
   const row=await ctx.env.DB.prepare('SELECT * FROM work_report_schedules WHERE workspace_id=? AND id=? AND owner_id=? AND active=1').bind(ctx.principal.workspaceId,key,ctx.principal.userId).first<Schedule>();
   if(!row)throw new ApiError(404,'not_found','Active schedule unavailable');
+  requireOutboundMail(ctx.env);
   if(ctx.env.MAIL_PROVIDER!=='sendgrid'||!ctx.env.MAIL_API_KEY||!ctx.env.MAIL_FROM)throw new ApiError(503,'needs_configuration','Scheduled email reports require a configured SendGrid sender');
   if(await ctx.env.DB.prepare("SELECT 1 FROM work_report_deliveries WHERE schedule_id=? AND state IN ('dispatching','unknown')").bind(key).first())throw new ApiError(409,'report_reconcile','Prior mail submission is uncertain; automatic resend is held');
   const target=await recipient(ctx,row.report_id,row.recipient_id),result=await buildReport(target.target,JSON.parse(target.report.definition_json));

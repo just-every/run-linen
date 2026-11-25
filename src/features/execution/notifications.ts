@@ -1,6 +1,7 @@
+import { requireOutboundMail } from '../../platform/outbound-mail';
 import { providerFetch } from "./transport";
 import type { Env } from "../../platform/types";
-import { id, now } from "../../platform/http";
+import { ApiError, id, now } from "../../platform/http";
 import { notificationRuleMessage } from './notification-dispatch';
 import { assert, membership, privileged } from "./authority";
 import { getWork } from "../work/core";
@@ -135,6 +136,7 @@ export async function processNotifications(ctx: CoreContext) {
         resource: o.work_id,
         action: "notification.send",
       });
+      requireOutboundMail(ctx.env);
       const c = await connection(ctx, o.connection_id, "sendgrid", true, configured?.connectionRevision ?? undefined);
       assert(c.config.from && c.secret.apiKey, "needs_configuration", 503);
       const claim = await ctx.env.DB.prepare(
@@ -198,7 +200,7 @@ export async function processNotifications(ctx: CoreContext) {
           o.workspace_id,
         )
         .run();
-      results.push({ id: o.id, state });
+      results.push({ id: o.id, state, ...(e instanceof ApiError && e.code === "mail_off" ? { error: e.code } : {}) });
     }
   }
   return results;

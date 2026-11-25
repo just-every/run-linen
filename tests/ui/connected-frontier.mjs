@@ -77,6 +77,10 @@ export async function connectedFrontier(env) {
     await api('/connections/'+model.id,{revision:model.revision,name:'Fixture reasoning revised',config:{...JSON.parse((await api('/connections')).find(x=>x.id===model.id).config_json),model:'fixture-model-revised'}},'PATCH');
     await page.reload();
     const drift=await action(page,'Apply this verified repair to a matching commitment',{commitmentId,plan:{steps:[step]},versions:packageData.versions},'/apply');assert.equal(drift.state,'fresh_research');assert.ok(drift.admission.reasons.includes('version_drift'));
+    // The apply response arrives before the refreshed capability replaces the submitted form.
+    const workspace=page.getByRole('region',{name:'Workspace content'});
+    await workspace.locator('.hero').getByText('invalidated',{exact:true}).waitFor();
+    await workspace.focus();
     await captureJourney(page,{path:out+'/J6-drift-fresh-investigation.png',fullPage:true});
     return {commitmentId,serviceId,issuerApi,step,config,receipt,issuerContext:ctx};
   }catch(error){await ctx.close();throw error}finally{await rm(dir,{recursive:true,force:true})}

@@ -19,7 +19,7 @@ const lifecycle=localInstaller({
 export const adapter={...lifecycle,localPrerequisites}
 export const install=(root,input,store,onApp,signal)=>installOperator(root,input,store,onApp,signal,lifecycle.hooks)
 export const commandAdapter=createCommandAdapter(adapter,{
- dev:developmentTarget,preview:previewTarget,verify:['pnpm',['run','verify:app']],deploy:freshOwnerDeploy(lifecycle),portability,
+ dev:developmentTarget,preview:previewTarget,verify:['pnpm',['run','verify:app']],deploy:freshOwnerDeploy(lifecycle),portability,mailOffSignIn:'rer signin',
  setup:{manifestFile:'rer-setup.json'},site:{entry:'src/site/pages.tsx',output:'dist/site',declaration:'deploy-site.json',config:'vite.site.config.ts'},browserModule:'scripts/installer/ui/seed.mjs',publicPages:['/','/app','/signin','/setup'],
  devIdentity:{entry:'src/server.dev.ts',output:['dist'],emailLinkTest:'tests/platform/base-auth-runtime.mjs'},
  localOnlyKeys:['RER_DEV_KEY','RER_DEV_ORIGIN','RER_DEV_IDENTITY','RER_DEMO','RER_DEMO_EXPIRES','RER_STATE_DIR'],product:'Linen',input:{names:{email:'OWNER_EMAIL',name:'displayName'}},

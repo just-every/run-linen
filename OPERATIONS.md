@@ -223,13 +223,15 @@ workflow and Worker artifact. The artifact-only command is
 `node scripts/delivery/base/cli.mjs artifact --config packaging.json`. These
 commands prepare local files; hosting still requires an approved installation.
 
-Hosted sign-in mail supports RER managed mail, SendGrid, Resend and Cloudflare.
-RER assigns MAIL_PROVIDER, MAIL_FROM, MAIL_RELAY_URL and the private MAIL_API_KEY
-for Managed hosting. Assisted hosting asks for the selected provider's verified
-sender and credential; Cloudflare also needs MAIL_ACCOUNT_ID. The local
-development choice suppresses email and cannot deliver hosted sign-in messages.
-Service mailbox and external action connections retain their separate consent
-and credential requirements.
+A [fresh Cloudflare deploy](docs/deploy.md) can use `MAIL_PROVIDER=none`. The
+owner signs in with `rer signin`. Outbound email refuses with `mail_off`.
+
+Hosted sign-in mail also supports RER managed mail, SendGrid, Resend and
+Cloudflare. RER assigns MAIL_PROVIDER, MAIL_FROM, MAIL_RELAY_URL and the private
+MAIL_API_KEY for Managed hosting. Assisted hosting asks for the selected
+provider's verified sender and credential. Cloudflare also needs MAIL_ACCOUNT_ID.
+Service mailbox and external action connections have their own consent and
+credential requirements.
 
 
 ## Configuration sandboxes

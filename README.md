@@ -60,40 +60,9 @@ site's `/docs`, beside its homepage and the Run page (`src/site/`, declared in
 
 ### Deploy a fresh installation
 
-From a new checkout, run `rer install` and `rer setup` with your owner email.
-Create a Cloudflare API token for your account with Workers Scripts, D1 and R2
-edit permissions. Configure a real mail provider and a sender verified with it:
-
-```sh
-export CLOUDFLARE_ACCOUNT_ID=your-account-id
-export CLOUDFLARE_API_TOKEN=your-api-token
-export MAIL_PROVIDER=sendgrid
-export MAIL_FROM=your-verified-sender
-export MAIL_API_KEY='<provider-key>'
-rer deploy --environment production
-```
-
-`MAIL_PROVIDER` also accepts `resend`. RER generates the session, setup and
-encryption secrets, claims the owner selected in setup, removes the one-time
-setup token and prints the hosted address. Open it and sign in by real email.
-Use the same environment for every subsequent deployment. RER records and checks
-the created resource identities in `.rer/deploy/`; keep this private directory.
-
-Plain `rer deploy` creates a fresh installation in the `production` environment.
-Its Worker is `linen-<environment>`, D1 is `linen-<environment>-db`, and private R2 is
-`linen-<environment>-attachments`. The runtime uses bindings `DB` and
-`ATTACHMENTS`; their physical names need not be fixed. Local resource names and
-applied migrations stay unchanged.
-
-The hook recognises a legacy installation from a configured remote D1 ID, a
-matching retained deployment record, or the target account's Worker `linen`
-bound to D1 `linen`. It stops before changing those resources: keep Worker
-`linen`, D1 `linen` and R2 `linen-attachments`, their actual IDs, data and original
-`wrangler.jsonc`, and continue using the existing deployment workflow. The pinned
-deploy kit cannot adopt those fixed names. When identity cannot be confirmed,
-the hook chooses fresh names and prints this legacy guidance. A retained RER
-environment continues using its recorded resources, even if a separate legacy
-installation exists in that account.
+Follow the [Linen deployment guide](docs/deploy.md) to plan and set up a Cloudflare
+Workers installation with outbound email disabled. Use `rer signin` to open the
+owner’s session without email.
 
 To permanently delete an environment and its data, using its retained deployment
 record and the same Cloudflare credentials:
@@ -113,7 +82,7 @@ A development companion is not endpoint management.
 
 Linen's source is developed in the public repository
 [just-every/run-linen](https://github.com/just-every/run-linen). The RER package is
-`@runeditrun/rer` version `0.2.94`. Publishing source does not deploy Linen,
+`@runeditrun/rer` version `0.2.134`. Publishing source does not deploy Linen,
 configure a provider, or satisfy an acceptance gate.
 
 ## Preserved product requirements

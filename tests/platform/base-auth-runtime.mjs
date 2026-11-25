@@ -3,7 +3,7 @@ import {mcpToolCases} from './mcp-tools-cases.mjs'
 import {agentPolicyFixture,agentRpc,ticketCall,ticketTools} from './agent-door-fixture.mjs'
 import {mailEdge} from './mail-edge.mjs'
 import assert from 'node:assert/strict'
-import {createHash} from 'node:crypto'
+import {createHash,randomBytes,randomUUID} from 'node:crypto'
 import {spawn,spawnSync} from 'node:child_process'
 import {mkdtemp,writeFile,readFile,readdir,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
@@ -14,7 +14,7 @@ const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r))
 const origin=`http://127.0.0.1:${port}`,config=join(dir,'wrangler.json'),entry=join(dir,'worker.ts')
 const policyFixture=await agentPolicyFixture(origin)
 const key='synthetic-dev-key-000000000000000000000000000000000000',secret='synthetic-session-secret-0000000000000000000000000000'
-await writeFile(entry,`${mailEdge}import {baseAuthResponse} from ${JSON.stringify(resolve('src/platform/base-auth/http.ts'))};import {createApplication} from ${JSON.stringify(resolve('src/application.ts'))};import {originBindings} from ${JSON.stringify(resolve('src/platform/base-auth/service.ts'))};import {withNativeDevIdentity} from ${JSON.stringify(resolve('src/platform/base-auth/dev.ts'))};const app=createApplication();const production={async fetch(r,e,c){const fixture=mailFixture(r);if(fixture)return fixture;e=originBindings(e);return await baseAuthResponse(r,e)??app.fetch(r,e,c)}};const development=withNativeDevIdentity(production);export default {fetch(r,e,c){return r.headers.get('x-test-production')==='yes'?production.fetch(r,{...e,AUTH_LOCAL:'false'},c):development.fetch(r,e,c)}}`)
+await writeFile(entry,`${mailEdge}import {baseAuthResponse} from ${JSON.stringify(resolve('src/platform/base-auth/http.ts'))};import {createApplication} from ${JSON.stringify(resolve('src/application.ts'))};import {originBindings} from ${JSON.stringify(resolve('src/platform/base-auth/service.ts'))};import {withNativeDevIdentity} from ${JSON.stringify(resolve('src/platform/base-auth/dev.ts'))};const app=createApplication();const production={async fetch(r,e,c){const fixture=mailFixture(r);if(fixture)return fixture;e=originBindings(e);return await baseAuthResponse(r,e)??app.fetch(r,e,c)}};const development=withNativeDevIdentity(production);export default {fetch(r,e,c){if(r.headers.get('x-test-mail-off')==='yes')return production.fetch(r,{...e,MAIL_PROVIDER:'none',MAIL_FROM:undefined,MAIL_API_KEY:undefined},c);return r.headers.get('x-test-production')==='yes'?production.fetch(r,{...e,AUTH_LOCAL:'false'},c):development.fetch(r,e,c)}}`)
 await writeFile(config,JSON.stringify({name:'linen-base-auth-test',main:entry,compatibility_date:'2026-09-08',compatibility_flags:['nodejs_compat'],d1_databases:[{binding:'DB',database_name:'linen',database_id:'local-linen'}],r2_buckets:[{binding:'ATTACHMENTS',bucket_name:'linen-base-auth-fixture'}],vars:{RER_BUSINESS_TRUST:policyFixture.trust,SESSION_SECRET:secret,SETUP_TOKEN:secret,ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64'),OWNER_EMAIL:'owner@example.test',AUTH_ORIGIN:origin,APP_ORIGIN:'http://localhost:1',AUTH_LOCAL:'true',MAIL_PROVIDER:'resend',MAIL_API_KEY:'synthetic-provider-key',MAIL_FROM:'auth@localhost.test',RER_DEV_KEY:key}}))
 const file=join(dir,'schema.sql');await writeFile(file,(await Promise.all((await readdir('migrations')).filter(f=>f.endsWith('.sql')).sort().map(f=>readFile('migrations/'+f,'utf8')))).join('\n'))
 const migrate=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--config',config,'--local','--persist-to',dir,'--file',file],{encoding:'utf8'});assert.equal(migrate.status,0,migrate.stdout+migrate.stderr)
@@ -125,6 +125,30 @@ try{
   assert.equal((await request('/api/v1'+path,{cookie:ownerCookie,headers:{Authorization:'Bearer '+credential.secret}})).status,401,'API-003 MCP audience is refused at REST even with a session cookie');
  proxy=await getPlatformProxy({configPath:config,persist:{path:join(dir,'v3')},remoteBindings:false});
  const sql=async command=>(await proxy.env.DB.prepare(command).all()).results;
+ // Hosted owner setup with mail off: the Cloudflare D1 edge supplies the same grant that rer signin writes.
+ const mailOff={'x-test-mail-off':'yes'};
+ const previousMail=await (await request('/fixtures/mail')).text();
+ for(const email of ['owner@example.test','unknown@example.test']) {
+  const refused=await request('/auth/magic-link',{method:'POST',body:{email},headers:mailOff});
+  assert.equal(refused.status,503);
+  assert.deepEqual(await refused.json(),{error:'mail_off'});
+ }
+ assert.equal(await (await request('/fixtures/mail')).text(),previousMail,'Mail-off requests never reach the sender');
+ const grantToken=randomBytes(32).toString('base64url'),minted=Date.now();
+ await proxy.env.DB.prepare(`INSERT INTO oa_owner_signins(id,token_hash,operator_id,operator_version,created_at,expires_at)
+   SELECT ?,?,o.id,o.version,?,? FROM oa_operators o LEFT JOIN oa_bootstrap b ON b.claim_id=o.id
+   WHERE o.role='owner' AND o.status='active' ORDER BY b.claim_id IS NULL,o.created_at,o.id LIMIT 1`)
+  .bind(randomUUID(),createHash('sha256').update('owner-signin\0'+grantToken).digest('hex'),minted,minted+900_000).run();
+ const ownerLink='/auth/owner-signin';
+ const preview=await request(ownerLink+'?token='+grantToken,{headers:mailOff});
+ assert.equal(preview.status,200);
+ assert.equal(preview.headers.get('set-cookie'),null,'A preview cannot consume a grant');
+ const confirmOwner=()=>request(ownerLink,{method:'POST',body:{token:grantToken},headers:mailOff});
+ const ownerConfirmations=await Promise.all([confirmOwner(),confirmOwner()]);
+ assert.deepEqual(ownerConfirmations.map(r=>r.status).sort(),[303,400]);
+ const grantCookie=cookieOf(ownerConfirmations.find(r=>r.status===303));
+ const grantedSession=await read(await request('/api/v1/session',{cookie:grantCookie,headers:mailOff}));
+ assert.equal(grantedSession.principal.userId,session.principal.userId,'The CLI grant opens the native owner’s session');
  // API-001 REST authority through the same native owner and real HTTP doors.
  const restGrant={principalId:bot.id,name:'Ticket filer',scopes:['work.create'],expiresAt:new Date(Date.now()+30*86400000).toISOString()};
  const mintRest=async(patch={})=>ownerApi('/rest-credentials',{...restGrant,...patch});

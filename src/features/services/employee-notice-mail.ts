@@ -1,3 +1,4 @@
+import { requireOutboundMail } from '../../platform/outbound-mail';
 import { notificationEvent } from './notification-history';
 import { getService } from './store';
 import type { Env, Principal } from '../../platform/types';
@@ -17,6 +18,7 @@ export async function deliverNoticeMail(env: Env, principal: Principal) {
     let claimed = false;
     try {
       const { actor, notice } = await noticeMailGate(env, p, job);
+      requireOutboundMail(env);
       const ctx = { env, principal: actor };
       const settings = await env.DB.prepare('SELECT settings_json FROM workspace_settings WHERE workspace_id=?').bind(p.workspaceId).first<{settings_json:string}>();
       if (JSON.parse(settings?.settings_json || '{}').executionHeld) throw new ApiError(409, 'execution_held', 'Delivery is held');
@@ -42,7 +44,7 @@ export async function deliverNoticeMail(env: Env, principal: Principal) {
     } catch (error) {
       const code = error instanceof ApiError ? error.code : 'mail_unavailable';
       const state = error instanceof SendGridSendError ? (error.outcome === 'ambiguous' ? 'unknown' : 'failed')
-        : claimed ? 'unknown' : code === 'needs_configuration' || code === 'execution_held' || code === 'connection_not_active' ? 'pending' : 'access_revoked';
+        : claimed ? 'unknown' : code === 'mail_off' ? 'failed' : code === 'needs_configuration' || code === 'execution_held' || code === 'connection_not_active' ? 'pending' : 'access_revoked';
       const record=await env.DB.prepare('SELECT kind,visibility,owner_id,participants_json FROM svc_records WHERE workspace_id=? AND id=?').bind(p.workspaceId,job.record_id).first<{kind:import('./store').Kind;visibility:string;owner_id:string;participants_json:string}>();
       const writes=[env.DB.prepare('UPDATE svc_outbox SET state=?,error=? WHERE workspace_id=? AND id=? AND state=? AND state<>?').bind(state,error instanceof SendGridSendError?error.message:code,p.workspaceId,job.id,claimed?'sending':job.state,state)];
       if(record)writes.push(notificationEvent(env.DB,p,{id:job.record_id,kind:record.kind,visibility:record.visibility,ownerId:record.owner_id,participants:JSON.parse(record.participants_json)},job,claimed?'sending':job.state,state));

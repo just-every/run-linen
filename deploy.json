@@ -12,7 +12,8 @@
   ],
   "originVar": "AUTH_ORIGIN",
   "vars": {
-    "AUTH_LOCAL": "false"
+    "AUTH_LOCAL": "false",
+    "MAIL_PROVIDER": ""
   },
   "secrets": [
     {
@@ -29,11 +30,22 @@
     },
     {
       "binding": "MAIL_API_KEY",
-      "environment": "MAIL_API_KEY"
+      "environment": "MAIL_API_KEY",
+      "optional": true
     },
     {
       "binding": "ENCRYPTION_KEY",
       "environment": "ENCRYPTION_KEY"
+    },
+    {
+      "binding": "MAIL_PROVIDER",
+      "environment": "MAIL_PROVIDER",
+      "optional": true
+    },
+    {
+      "binding": "MAIL_FROM",
+      "environment": "MAIL_FROM",
+      "optional": true
     }
   ],
   "crons": [
@@ -47,5 +59,8 @@
     {
       "binding": "ATTACHMENTS"
     }
+  ],
+  "publicSettings": [
+    "MAIL_PROVIDER"
   ]
 }

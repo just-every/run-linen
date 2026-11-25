@@ -1,3 +1,4 @@
+import { requireOutboundMail } from '../../platform/outbound-mail';
 import {fulfilmentRequiresManager,fulfilmentManagerSql} from './fulfilment-configuration';
 import { ApiError, id, now } from '../../platform/http';
 import { hashToken } from '../../platform/crypto';
@@ -63,6 +64,7 @@ export async function sendApprovalMail(ctx: WorkContext, at: string) {
       .bind(tokenId, w, p.work.id, p.f.id, p.stageKey, p.approverId, await hashToken(token), p.work.revision, p.f.revision, p.catalog.revision, user.email.trim().toLowerCase(), new Date(Date.parse(at) + TOKEN_LIFETIME_MS).toISOString(), at, config.revision).run();
     if(!issued.meta.changes)continue;
     try {
+      requireOutboundMail(ctx.env);
       const c = await connection(ctx, config.sending_connection_id, 'sendgrid');
       if (!c.config.from || !c.secret.apiKey) throw new ApiError(503, 'needs_configuration', 'Mail connection required');
       await assertAdoptionEffectAllowed(ctx,{resource:p.work.id,action:'notification.send'});

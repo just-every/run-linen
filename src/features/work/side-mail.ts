@@ -1,3 +1,4 @@
+import { requireOutboundMail } from '../../platform/outbound-mail';
 import { ApiError, id, now, requiredString } from '../../platform/http';
 import { hashToken } from '../../platform/crypto';
 import { connection } from '../execution/connectors';
@@ -22,6 +23,7 @@ async function sideFor(ctx: WorkContext, workId: string, sideId: string) {
 /** The creator's continuing ownership, the exact connection version, holds and ticket scope gate each effect. */
 async function mailGate(ctx: WorkContext, side: Side) {
   await collaborationOwner(ctx,side.work_id);
+  requireOutboundMail(ctx.env);
   if(side.closed_at)throw new ApiError(409,'side_closed','Side conversation is closed');
   const owner=await ctx.env.DB.prepare("SELECT 1 FROM memberships m,json_each(m.roles_json) r WHERE m.workspace_id=? AND m.user_id=? AND m.active=1 AND r.value='owner'")
     .bind(ctx.principal.workspaceId,side.actor_id).first();
