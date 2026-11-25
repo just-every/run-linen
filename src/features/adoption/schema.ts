@@ -156,6 +156,7 @@ export const excludedTables: Record<string,string> = {
  memberships:'live membership authority', sessions:'session credentials', bootstrap_lock:'installation lock',
  connections:'provider credentials and configuration require reconnection', workspace_settings:'local execution and configuration policy', login_limits:'local login limiter',
  platform_scheduler_leases:'runtime lease', platform_scheduler_runs:'local scheduler diagnostics',
+ work_list_clock:'local queue validator counter; never portable', svc_detection_state:'local scheduler bookkeeping for problem detection',
  work_restore_records:'derived materialization index', work_erasure_guards:'transient erasure guard', work_blob_erasure:'local blob deletion queue; tombstones retained', work_fulfilment_link_guards:'transient link guard',
  execution_secrets:'private execution credentials', execution_erasure_permits:'local immutable-history erasure permit', intelligence_restore_records:'derived materialization index',
  adoption_import_erasures:'local durable import erasure obligations; tombstones retained', adoption_exports:'generated export jobs', adoption_snapshot:'generated snapshot', sqlite_sequence:'sqlite sequence', adoption_chunks:'import bytes projected as adoption_artifacts',

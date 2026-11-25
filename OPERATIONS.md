@@ -87,8 +87,21 @@ Missing configuration remains pending rather than generating runtime fixtures.
 intelligence and adoption with separate leases/failure records. Cloudflare cron
 is configured in the Worker declaration. Local due work advances while `rer dev`
 is running and stops when that process stops.
-`GET /api/v1/runtime-status` exposes recent cycles to owner/operator/auditor;
+Each minute it first asks [one indexed probe per lane](src/scheduler-due.ts)
+whether anything is there to look at; a lane with nothing takes no lease and
+writes nothing, so an idle installation on Workers Free (5,000,000 rows read and
+100,000 written a day, shared by everything the account runs) reads about 30 rows
+and writes one heartbeat row a minute. A lane that runs rewrites its single
+`platform_scheduler_runs` row. Reads per run and per queue poll do not grow with
+stored history: `tests/work/read-budget-runtime.mjs` holds them to a ceiling
+after 30 days of tickets. Installations that ran earlier versions keep their old
+per-run rows, which are never read; `DELETE FROM platform_scheduler_runs WHERE id
+NOT LIKE '%:%'` removes them when the write allowance has room.
+`GET /api/v1/runtime-status` exposes the latest cycle per lane to
+owner/operator/auditor, with `checkedAt` from the scheduler heartbeat;
 cycle completion does not prove a service outcome. `GET /health` is HTTP liveness.
+`GET /api/v1/work` answers a conditional poll from one row until the service
+accepts a write or five minutes pass.
 
 Public request/reply intake is durable and deduplicated. Default-model reasoning
 resolves supported catalogue work into existing granted execution, then linked

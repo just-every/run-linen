@@ -74,18 +74,27 @@ export function createApplication() {
   registerConnectionRoutes(authenticated)
   authenticated.get('/runtime-status', async c => {
     const principal = requireRole(c, 'owner', 'operator', 'auditor')
-    const rows = await c.env.DB.prepare(`
-      SELECT lane,state,started_at,finished_at,error_code FROM platform_scheduler_runs
-      WHERE workspace_id=? OR workspace_id IS NULL ORDER BY started_at DESC LIMIT 200
-    `).bind(principal.workspaceId).all<{
-      lane: string; state: string; started_at: string; finished_at: string | null; error_code: string | null
-    }>()
-    const latest = new Map<string, typeof rows.results[number]>()
-    for (const row of rows.results) if (!latest.has(row.lane)) latest.set(row.lane, row)
+    type Row = { lane: string; state: string; started_at: string; finished_at: string | null; error_code: string | null }
+    // Two indexed reads of the newest rows each; the table keeps one row per lane, so history never widens them.
+    const [own, shared] = await Promise.all([
+      c.env.DB.prepare(`SELECT lane,state,started_at,finished_at,error_code FROM platform_scheduler_runs
+        WHERE workspace_id=? ORDER BY started_at DESC LIMIT 200`).bind(principal.workspaceId).all<Row>(),
+      c.env.DB.prepare(`SELECT lane,state,started_at,finished_at,error_code FROM platform_scheduler_runs
+        WHERE workspace_id IS NULL ORDER BY started_at DESC LIMIT 200`).all<Row>(),
+    ])
+    const latest = new Map<string, Row>()
+    let tickAt: string | null = null
+    for (const row of [...own.results, ...shared.results].sort((a, b) => b.started_at.localeCompare(a.started_at))) {
+      if (row.lane === 'scheduler') { tickAt ??= row.started_at; continue }
+      if (!latest.has(row.lane)) latest.set(row.lane, row)
+    }
+    // A lane with nothing due keeps its last cycle; the scheduler's own tick says it is still being looked at.
+    const alive = tickAt !== null && Date.now() - Date.parse(tickAt) <= 180_000
     return c.json({
       observedAt: new Date().toISOString(),
       meaning: 'Background processing cycles; service outcomes and provider coverage are recorded separately.',
-      lanes: [...latest.values()].map(row => ({ ...row, stale: Date.now() - Date.parse(row.started_at) > 180_000 })),
+      checkedAt: tickAt,
+      lanes: [...latest.values()].map(row => ({ ...row, stale: !alive && Date.now() - Date.parse(row.started_at) > 180_000 })),
     })
   })
   app.route('/api/v1', authenticated)

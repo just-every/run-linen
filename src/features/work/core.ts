@@ -131,11 +131,12 @@ export async function listWork(ctx: WorkContext, filter: WorkFilter = {}) {
   // Each row carries the same progress projection its conversation shows, so the queue and the open
   // request read one state. Only rows with a responsibility or an unfinished assessment need reading.
   const db = ctx.env.DB, ids = JSON.stringify(rows.map((row: any) => row.id));
-  const flagged = new Set((await db.prepare(`SELECT r.id FROM work_records r WHERE r.workspace_id=? AND r.id IN (SELECT value FROM json_each(?))
-    AND (EXISTS(SELECT 1 FROM work_obligations o WHERE o.workspace_id=r.workspace_id AND o.work_id=r.id)
+  // The ids are the rows just read for this workspace, so the lookup starts from them rather than from the ticket table.
+  const flagged = new Set((await db.prepare(`SELECT j.value id FROM json_each(?) j
+    WHERE (EXISTS(SELECT 1 FROM work_obligations o WHERE o.workspace_id=?2 AND o.work_id=j.value)
       OR COALESCE((SELECT i.state<>'interpreted' OR COALESCE(i.result_json,'') LIKE '%necessary_question%' FROM work_intake_events i
-        WHERE i.workspace_id=r.workspace_id AND i.work_id=r.id AND i.connection_id='' ORDER BY i.created_at DESC,i.rowid DESC LIMIT 1),0))`)
-    .bind(p.workspaceId, ids).all<{ id: string }>()).results.map(row => row.id));
+        WHERE i.workspace_id=?2 AND i.work_id=j.value AND i.connection_id='' ORDER BY i.created_at DESC,i.rowid DESC LIMIT 1),0))`)
+    .bind(ids, p.workspaceId).all<{ id: string }>()).results.map(row => row.id));
   // The catalogue services recorded on each request (name and kind), for the spaces that list them.
   const services = (await db.prepare(`SELECT f.work_id,c.name,c.kind FROM work_fulfilments f JOIN work_catalog c ON c.workspace_id=f.workspace_id AND c.id=f.catalog_id
     WHERE f.workspace_id=? AND f.work_id IN (SELECT value FROM json_each(?))

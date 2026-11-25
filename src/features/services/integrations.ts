@@ -159,11 +159,17 @@ export async function deliverNotifications(env: Env, p: Principal) {
 }
 /** Receipts are replayed in admitted order, including failure followed by recovery between ticks. */
 async function applyMonitorObservations(env: Env, p: Principal, monitor: ReturnType<typeof dto>) {
-    const rows = await env.DB.prepare("SELECT * FROM svc_records WHERE workspace_id=? AND kind='incident' AND json_extract(data_json,'$.monitorId')=? ORDER BY created_at,rowid")
-        .bind(p.workspaceId, monitor.id).all<RecordRow>();
-    const incidents = rows.results.map(dto);
     const observations = monitor.data.observations || [];
     const cursor = observations.findIndex((o: any) => o.id === monitor.data.projectionCursor);
+    const unseen = observations.slice(cursor + 1).some((o: any) => !(o.stale || o.outOfOrder || o.status === 'unknown'));
+    // With no new observation only an open incident still waiting for on-call routing needs reading, not the monitor's whole history.
+    const rows = unseen
+        ? await env.DB.prepare("SELECT * FROM svc_records WHERE workspace_id=? AND kind='incident' AND json_extract(data_json,'$.monitorId')=? ORDER BY created_at,rowid")
+            .bind(p.workspaceId, monitor.id).all<RecordRow>()
+        : await env.DB.prepare(`SELECT * FROM svc_records INDEXED BY svc_incident_open WHERE workspace_id=? AND kind='incident' AND COALESCE(json_extract(data_json,'$.status'),'')<>'closed'
+            AND json_extract(data_json,'$.monitorId')=? AND (json_extract(data_json,'$.routing') IS NULL OR json_extract(data_json,'$.routing') IN ('','needs_configuration')) ORDER BY created_at,rowid`)
+            .bind(p.workspaceId, monitor.id).all<RecordRow>();
+    const incidents = rows.results.map(dto);
     for (const observation of observations.slice(cursor + 1)) {
         if (observation.stale || observation.outOfOrder || observation.status === 'unknown') continue;
         if (incidents.some(r => (r.data.monitorEvents || []).some((e: any) => e.id === observation.id))) continue;
@@ -204,13 +210,22 @@ async function applyMonitorObservations(env: Env, p: Principal, monitor: ReturnT
         await mutate(env.DB, p, current, current.revision, { ...current.data, projectionCursor: observations.at(-1).id }, 'monitor-projected');
     }
 }
-export async function processDueServices(env: Env, p: Principal) {
+export async function processDueServices(env: Env, p: Principal, options: { detect?: boolean } = {}) {
     const failures: {
         id: string;
         error: string;
     }[] = [];
-    const rows = await env.DB.prepare("SELECT * FROM svc_records WHERE workspace_id=? AND kind IN ('monitor','incident','supplier','decision')").bind(p.workspaceId).all<RecordRow>();
-    for (const raw of rows.results) {
+    // A closed incident has nothing left to observe or notify once its last update was queued, so only
+    // open incidents and those touched within the last week are swept; history does not widen the run.
+    const sweepFrom = new Date(Date.now() - 7 * 86_400_000).toISOString();
+    const [live, openIncidents, recentIncidents] = await Promise.all([
+        env.DB.prepare("SELECT * FROM svc_records WHERE workspace_id=? AND kind IN ('monitor','supplier','decision')").bind(p.workspaceId).all<RecordRow>(),
+        env.DB.prepare("SELECT * FROM svc_records INDEXED BY svc_incident_open WHERE workspace_id=? AND kind='incident' AND COALESCE(json_extract(data_json,'$.status'),'')<>'closed'").bind(p.workspaceId).all<RecordRow>(),
+        env.DB.prepare("SELECT * FROM svc_records WHERE workspace_id=? AND kind='incident' AND updated_at>=?").bind(p.workspaceId, sweepFrom).all<RecordRow>(),
+    ]);
+    const swept = new Map<string, RecordRow>();
+    for (const raw of [...live.results, ...openIncidents.results, ...recentIncidents.results]) swept.set(raw.id, raw);
+    for (const raw of swept.values()) {
         let r = dto(raw);
         if (!readable(p, r))
             continue;
@@ -257,7 +272,7 @@ export async function processDueServices(env: Env, p: Principal) {
         }
     }
     try { await queueNoticeCadence(env, p); } catch (error) { failures.push({ id: 'employee-notices', error: error instanceof ApiError ? error.code : 'notice_cadence_failed' }); }
-    return { noticeMail: await deliverNoticeMail(env, p), notifications: await deliverNotifications(env, p), failures, problemProposals: await detectProblemProposals(env, p) };
+    return { noticeMail: await deliverNoticeMail(env, p), notifications: await deliverNotifications(env, p), failures, problemProposals: options.detect === false ? undefined : await detectProblemProposals(env, p) };
 }
 export async function reconcileNotification(env: Env, p: Principal, notificationId: string) { const job = await env.DB.prepare('SELECT * FROM svc_outbox WHERE workspace_id=? AND id=?').bind(p.workspaceId, notificationId).first<any>(); if (!job)
     throw new ApiError(404, 'not_found', 'Notification not found'); const record=await getService(env.DB,p,job.record_id); if (job.kind === 'employee-notice') throw new ApiError(409, 'mail_receipt', 'SendGrid acceptance is not a delivered receipt; generic webhook reconciliation cannot establish it'); if (!['sending', 'submitted', 'unknown'].includes(job.state))

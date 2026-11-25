@@ -137,9 +137,11 @@ export async function publishNotice(env: Env, principal: Principal, sourceId: st
 }
 
 /** Repeat only a generic link at the chosen cadence; never invent a fresh progress or recovery report. */
+/** Matches the svc_records_notices partial index: only records that ever carried an employee notice. */
+const NOTICED = { index: 'svc_records_notices', where: "json_extract(data_json,'$.employeeNotices') IS NOT NULL" };
 export async function queueNoticeCadence(env: Env, principal: Principal) {
   const p = await noticePublisher(env, principal);
-  for (const initial of [...await list(env.DB, p, 'incident'), ...await list(env.DB, p, 'change'), ...await list(env.DB, p, 'release')]) {
+  for (const initial of [...await list(env.DB, p, 'incident', NOTICED), ...await list(env.DB, p, 'change', NOTICED), ...await list(env.DB, p, 'release', NOTICED)]) {
     for (const due of notices(initial).filter(n => n.state === 'open' && n.emailConnectionId && n.nextUpdateAt && n.nextUpdateAt <= now())) {
       const r = await source(env, p, initial.id), n = notices(r).find(n => n.id === due.id)!;
       if (n.eventKey !== due.eventKey) continue;

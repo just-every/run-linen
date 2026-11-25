@@ -150,8 +150,10 @@ export async function processFollowups(ctx: WorkContext, at = now()) {
     ctx.env.DB.prepare("SELECT * FROM work_escalation_levels WHERE workspace_id=? ORDER BY level").bind(ws).all<Level>(),
     ctx.env.DB.prepare("SELECT remind_business_days,resolve_business_days FROM work_waiting_rules WHERE workspace_id=?").bind(ws).first<{ remind_business_days: number; resolve_business_days: number }>(),
   ]);
-  const works = (await ctx.env.DB.prepare("SELECT * FROM work_records WHERE workspace_id=? AND state IN ('open','paused') ORDER BY created_at LIMIT 500")
-    .bind(ws).all<WorkRecord>()).results;
+  // Nothing to plan, fire or stop on a ticket unless the workspace (or a ticket's retained snapshot) configures escalation or a waiting rule.
+  const configured = levels.results.length || rule || await ctx.env.DB.prepare("SELECT 1 FROM work_followup_versions WHERE workspace_id=? AND kind IN ('escalation','waiting') LIMIT 1").bind(ws).first();
+  const works = configured ? (await ctx.env.DB.prepare("SELECT * FROM work_records WHERE workspace_id=? AND state IN ('open','paused') ORDER BY created_at LIMIT 500")
+    .bind(ws).all<WorkRecord>()).results : [];
   const results = [];
   for (const work of works) {
     try {

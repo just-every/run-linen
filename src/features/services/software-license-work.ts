@@ -89,7 +89,7 @@ export async function queueSoftwareRenewals(ctx:SoftwareContext,key:string,revis
 }
 export async function processSoftwareRenewals(ctx:SoftwareContext) {
   const results=[];
-  for(const r of await list(ctx.env.DB,ctx.principal,'asset')) {
+  for(const r of await list(ctx.env.DB,ctx.principal,'asset',{ index: 'svc_records_software', where: "json_extract(data_json,'$.softwareLicense') IS NOT NULL" })) {
     if(!r.data.softwareLicense||r.data.adoption||Date.parse(r.data.renewalAt)<=Date.now()||Date.parse(r.data.renewalAt)>Date.now()+90*86400000)continue;
     try {results.push({id:r.id,...await queueSoftwareRenewals(ctx,r.id,r.revision)});}
     catch(error){results.push({id:r.id,state:'held',reason:error instanceof Error?error.message:'software_renewal_unavailable'});}

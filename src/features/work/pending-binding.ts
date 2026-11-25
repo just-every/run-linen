@@ -5,16 +5,13 @@ import { platformAdmissionGuard } from '../../platform/privacy';
 import { bindingErasureGuard } from './person-binding';
 import { requestFulfilment } from './requests';
 import { pendingPerson } from './pending-people';
+import { bumpListClock } from '../../platform/list-clock';
 
 /** Called only after normal authentication. A current persisted session and
  * credential version are checked again in the binding transaction. Neither
  * member creation nor a reviewed name/email alone admits an account link. */
 export async function authenticatePendingPerson(env:Env,input:{workspaceId:string;userId:string;sessionId:string}) {
  const db=env.DB,w=input.workspaceId,uid=input.userId,t=now();
- // Retained installations can prove their existing sessions while the additive
- // feature migration is still being applied. Pending-person routes require it;
- // ordinary authentication must not depend on tables that do not exist yet.
- if(!await db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='work_pending_people'").first())return;
  const account=await db.prepare(`SELECT u.email,m.roles_json FROM users u JOIN memberships m ON m.user_id=u.id
  JOIN platform_auth_versions v ON v.user_id=u.id JOIN sessions s ON s.user_id=u.id AND s.workspace_id=m.workspace_id
  JOIN platform_auth_session_proofs proof ON proof.session_id=s.id AND proof.version=v.version
@@ -41,7 +38,7 @@ export async function authenticatePendingPerson(env:Env,input:{workspaceId:strin
    ...linked.flatMap(work=>[db.prepare('UPDATE work_records SET beneficiary_id=?,revision=revision+1,updated_at=? WHERE workspace_id=? AND id=? AND revision=?').bind(uid,t,w,work.id,work.revision),ticketHistory(ctx,work,'work.requested_for_updated',{beneficiaryId:work.beneficiary_id},{beneficiaryId:uid},t)]),
    db.prepare('INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)').bind(id(),w,uid,'work.pending_person_bound',person.id,JSON.stringify({memberId:uid,bindingId,revision:person.revision+1}),t),
    db.prepare('DELETE FROM work_fulfilment_link_guards WHERE id=?').bind(guard),
-  ]);}catch(error){
+  ]);await bumpListClock(env);}catch(error){
    // A racing withdrawal, another sign-in, or an existing reviewed account link
    // must leave its holds intact. Do not replace an existing reviewed person.
    if(!/constraint|person_binding_invalid/i.test(String(error)))throw error;
@@ -76,6 +73,7 @@ async function releaseBoundServices(env:Env,w:string,memberId:string) {
     db.prepare(`UPDATE work_pending_services SET state='released',reason=?,released_at=? WHERE workspace_id=? AND work_id=? AND catalog_id=? AND state='held'`).bind(result.reason||'Account verified; normal service fulfilment checks apply',now(),w,row.work_id,row.catalog_id),
     db.prepare(`INSERT INTO audit_events SELECT ?,?,?,'work.pending_service_released',?,?,? WHERE changes()=1`).bind(id(),w,memberId,row.work_id,JSON.stringify({personId:row.person_id,catalogId:row.catalog_id,requesterId:row.requester_id,state:result.state}),now()),
    ]);
+   await bumpListClock(env);
   }catch(error){
    await db.prepare("UPDATE work_pending_services SET reason=? WHERE workspace_id=? AND work_id=? AND catalog_id=? AND state='held'").bind(error instanceof Error?error.message:'Normal fulfilment requires review',w,row.work_id,row.catalog_id).run();
   }

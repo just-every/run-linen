@@ -7,6 +7,7 @@ import { getFulfilment, amendFulfilment } from "./fulfilment-amend";
 import type { Hono } from "hono";
 import type { AppEnv } from "../../platform/types";
 import { jsonBody, requiredString } from "../../platform/http";
+import { queueValidator, validatorMatches } from "../../platform/list-clock";
 import {
   permit,
   listWork,
@@ -87,11 +88,16 @@ export function registerConversationRoutes(app: Hono<AppEnv>) {
       ),
     }),
   );
-  app.get("/work", async (c) =>
-    c.json({
-      items: await listWork({ env: c.env, principal: c.get("principal") }, {departmentId:c.req.query("departmentId")===undefined?undefined:["","legacy"].includes(c.req.query("departmentId")!)?null:c.req.query("departmentId")}),
-    }),
-  );
+  app.get("/work", async (c) => {
+    // The queue is polled; an unchanged validator answers from one row instead of re-reading the queue.
+    const departmentId = c.req.query("departmentId"), principal = c.get("principal");
+    const validator = await queueValidator(c.env, principal, `work:${departmentId ?? ""}`);
+    const headers = { ETag: validator, "Cache-Control": "private, no-cache" };
+    if (validatorMatches(c.req.header("if-none-match"), validator)) return c.body(null, 304, headers);
+    return c.json({
+      items: await listWork({ env: c.env, principal }, {departmentId:departmentId===undefined?undefined:["","legacy"].includes(departmentId)?null:departmentId}),
+    }, 200, headers);
+  });
   app.get("/work/:id", async (c) =>
     c.json(
       await conversation(

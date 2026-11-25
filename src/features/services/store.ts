@@ -40,8 +40,9 @@ export async function getService(db: D1Database, p: Principal, id: string, kind?
     if (r.kind === 'problem' && r.data.sourceProposalId) await assertProblemSources(db,p,r);
     return r;
 }
-export async function list(db: D1Database, p: Principal, kind: Kind) {
-    const rows = await db.prepare('SELECT * FROM svc_records WHERE workspace_id=? AND kind=? ORDER BY updated_at DESC LIMIT 1000').bind(p.workspaceId, kind).all<RecordRow>();
+/** The scheduler's sweeps list only the records that can have work: `only` names a partial index and the predicate it holds, such as the notice or software-licence marker. */
+export async function list(db: D1Database, p: Principal, kind: Kind, only?: { where: string; index: string }) {
+    const rows = await db.prepare(`SELECT * FROM svc_records${only ? ` INDEXED BY ${only.index}` : ''} WHERE workspace_id=? AND kind=?${only ? ` AND ${only.where}` : ''} ORDER BY updated_at DESC LIMIT 1000`).bind(p.workspaceId, kind).all<RecordRow>();
     const visible = [];
     for (const record of rows.results.map(dto).filter(r=>readable(p,r))) {
         try { if (record.kind==='problem' && record.data.sourceProposalId) await assertProblemSources(db,p,record); visible.push(record); }
