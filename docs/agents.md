@@ -2,9 +2,15 @@
 
 Linen uses Base's shared agent door for its currently supported ticket automation.
 The same signed company policy governs Business credentials and native automation
-credentials. Start with `server/discover` at `/mcp` or `/api/mcp`; use MCP
-`2026-07-28` or `2025-11-25`. The person who sponsors the work uses `/agents` to
-review calls, decide pending approvals and pause agents.
+credentials. Send a bearer credential with every MCP POST at `/mcp` or `/api/mcp`,
+including `initialize` and `server/discover`. Linen supports `2026-07-28`,
+`2025-11-25`, and `2025-06-18`. An `initialize` request can negotiate its version
+through `params.protocolVersion` without a version header. Other requests without
+a version header use `2025-06-18`. Missing or invalid credentials receive a 401
+resource metadata challenge before version validation. An unsupported version
+returns `UnsupportedProtocolVersion` with the supported versions and an
+explanation. The person who sponsors the work uses `/agents` to review calls,
+decide pending approvals and pause agents.
 
 | Tool | Supported work | Native authority | Class | Contract |
 | --- | --- | --- | --- | --- |
@@ -50,14 +56,28 @@ request, 50-result pages, 200-character queries, 500-character titles and
 20,000-character bodies. All returned messages remain untrusted source data.
 
 The shared door runtime is pinned to Base
-`e881e6f66ce7cd737d17dbeb945995aab83c30d8`; the command dependency is
-released RER 0.2.94. Its conformance supports changed-email refusal and retained
+`e3e4d8af972f951a5afe38cb72f6de447ff83398` with released RER 0.2.134.
+Its conformance supports changed-email refusal and retained
 review and replay checks. This seed uses the native setup-token bootstrap and
 first-run confirmation through a verification owner initializer. The ticket
 tools reach no outbound provider, so no network fixture is declared.
 
 Business owner binding is supported. Native admin/member account mappings are
 read only when already durable; receiving a Business team roster is refused as
-`business_team_not_supported`. Inactive and excluded Business sponsor fixtures
-are not declared, so their optional conformance probes are not counted as passes.
+`business_team_not_supported`. Detachment ends Business token access, held
+Business calls, Business approver references, and relay pulls. Existing subject
+bindings still resolve when Linen receives signed policy after detachment.
+Inactive and excluded Business sponsor fixtures are not declared, so their
+optional conformance probes are not counted as passes.
 Resources, events, subscriptions and prompts remain undeclared.
+
+The paired Business sends signed pulls to `POST /api/rer/agent-decisions` for
+MCP decisions made under its consent. Only the Business owner can read the
+external copy. It holds Base's limited decision projection, including approval
+and review state and up to eight raw resource URIs for the records touched.
+Linen keeps its native audit and one relay entry per decision recorded after
+the relay is installed. Earlier audit rows stay in Linen. Base's custody
+contract requires the Business to replace an erased decision's live projection
+with a tombstone on pull and to purge the installation's copy on unpairing,
+re-pairing or stop. Full cross-seed audit acceptance remains pending.
+[Base relay contract](../src/modules/agent-door/README.md#business-decision-relay-w-r1w-r5)

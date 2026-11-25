@@ -31,12 +31,12 @@ const project = (person: NativePerson, doorRole: DoorPerson['doorRole'] = null):
 export function createPeople(env: Env): PeopleAdapter {
   const store = nativeStore(env);
   async function binding() {
-    return env.DB.prepare('SELECT owner_id FROM bs_settings WHERE singleton=1 AND stopped=0')
-      .first<{ owner_id: string | null }>();
+    return env.DB.prepare('SELECT owner_id,stopped FROM bs_settings WHERE singleton=1')
+      .first<{ owner_id: string | null; stopped: number }>();
   }
   async function businessMember(person: NativePerson) {
     const [settings, owner] = await Promise.all([binding(), installationOwner(env)]);
-    if (!settings || !owner || person.workspaceId !== owner.workspaceId) return null;
+    if (settings?.stopped !== 0 || !owner || person.workspaceId !== owner.workspaceId) return null;
     if (settings.owner_id && person.id === owner.id) return { id: settings.owner_id, role: 'owner' as const };
     const member = await env.DB.prepare(`SELECT business_id,business_role FROM bs_team
       WHERE operator_id=? AND state='active' AND business_id IS NOT NULL`).bind(person.id)
@@ -54,11 +54,15 @@ export function createPeople(env: Env): PeopleAdapter {
   };
   return {
     person: read,
+    async businessStopped() {
+      return (await binding())?.stopped !== 0;
+    },
     async session(request) {
       const session = await store.getSession(request, { now: Date.now() });
       return session ? read(session.operator.id, (session.operator as NativePerson).workspaceId) : null;
     },
     async sponsor({ sub }) {
+      // Signed policy still resolves durable subjects after Business detaches.
       const [settings, owner] = await Promise.all([binding(), installationOwner(env)]);
       if (!settings || !owner) return null;
       if (settings.owner_id === sub) return read(owner.id, owner.workspaceId);

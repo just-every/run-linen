@@ -83,10 +83,14 @@ try{
  };
  const rpc=agentRpc(request);
  for(const bearer of [undefined,'linen_rest_synthetic-other-audience','linen_mcp_wrong']) {
-  const denied=await rpc(bearer);
+  const denied=await request('/api/mcp',{method:'POST',
+   headers:{'MCP-Protocol-Version':'2099-01-01','Mcp-Method':'tools/list',...(bearer?{Authorization:'Bearer '+bearer}:{})},
+   body:{jsonrpc:'2.0',id:1,method:'server/discover'}});
+  const value=await denied.json();
   assert.equal(denied.status,401,'API-003 unauthenticated discovery is refused');
-  assert.deepEqual(denied.value.error,{code:-32001,message:'Unauthorized'},'API-003 auth error discloses no resource or tool names');
-  assert.equal(denied.value.result,undefined);
+  assert.equal(denied.headers.get('www-authenticate'),`Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource/mcp"`,'API-003 challenges before validating protocol headers');
+  assert.deepEqual(value.error,{code:-32001,message:'Unauthorized'},'API-003 auth error discloses no resource or tool names');
+  assert.equal(value.result,undefined);
  }
  assert.equal((await rpc(undefined,'tools/list',{}, {Cookie:ownerCookie})).status,401,'API-003 an owner session is not an MCP grant');
  const bot=(await ownerApi('/automation-principals',{name:'Desk bot',idempotencyKey:'synthetic-API-003-desk-bot'})).value;
@@ -110,12 +114,23 @@ try{
  await policyFixture.adopt(request);
  assert.equal((await rpc(credential.secret,'initialize')).value.result.serverInfo.name,'Linen','API-003 authenticated MCP initialize');
  assert.deepEqual((await rpc(credential.secret)).value.result.tools.map(t=>t.name).sort(),ticketTools,'API-003 discovery lists the published four-tool registry; calls retain selected-subverb grants');
- assert.deepEqual((await rpc(credential.secret,'initialize')).value.result.capabilities,{tools:{listChanged:false}},'CORE advertises only tools');
+ const legacyVersion='2025-06-18';
+ const legacy=await request('/api/mcp',{method:'POST',headers:{Authorization:'Bearer '+credential.secret},
+  body:{jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:legacyVersion,capabilities:{},clientInfo:{name:'linen-native-check',version:'1'}}}});
+ assert.equal(legacy.status,200);
+ const {result:initialized}=await legacy.json();
+ assert.equal(initialized.protocolVersion,legacyVersion,'API-003 negotiates the legacy body version without a version header');
+ assert.deepEqual(initialized.capabilities,{tools:{listChanged:false}},'CORE advertises only tools');
  assert.deepEqual((await rpc(credential.secret,'resources/templates/list')).value.result.resourceTemplates,[]);
  assert.deepEqual((await rpc(credential.secret,'prompts/list')).value.result.prompts,[]);
- const oldVersion=await rpc(credential.secret,'tools/list',{}, {'MCP-Protocol-Version':'2025-03-26'});
- assert.equal(oldVersion.status,400);assert.equal(oldVersion.value.error.message,'UnsupportedProtocolVersion');
- assert.deepEqual(oldVersion.value.error.data,{supported:['2026-07-28','2025-11-25'],requested:'2025-03-26'});
+ const unsupportedVersion='2025-03-26';
+ const oldVersion=await rpc(credential.secret,'tools/list',{}, {'MCP-Protocol-Version':unsupportedVersion});
+ assert.equal(oldVersion.status,400);
+ const versionError=oldVersion.value.error;
+ assert.equal(versionError.code,-32022);assert.equal(versionError.message,'UnsupportedProtocolVersion');
+ const {requested,supported,message:explanation}=versionError.data;
+ assert.equal(requested,unsupportedVersion);
+ assert.ok(supported.includes(legacyVersion) && supported.every(version=>explanation.includes(version)));
  assert.ok((await ownerApi('/mcp-credentials')).value.items.find(row=>row.id===credential.id).last_used_at,'API-003 last use is visible');
  for(const method of ['work.create','approve','credentials.mint','grants.create','export','restore','erase','connector.dispatch','task.plan','bulk']) {
   const refusal=await rpc(credential.secret,method,{name:'approve-PRIVATE-ARGUMENT',arguments:{text:'PRIVATE-ARGUMENT',secret:credential.secret}});
