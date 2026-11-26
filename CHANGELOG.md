@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1 (26 Nov 2026)
+
+Linen's first release since 0.1.0 (14 Oct 2026). Existing project and archive identities are preserved, every shipped migration is unchanged, and the new ones are additive.
+
+- Mail off: Linen can be set up for a Business with outbound email disabled. Sends are refused, and rer owner grants are redeemed as native Linen sessions; the mail-off setup guide ships with the source.
+- Runs on the current rer deployment kit, with the agent door on Base's current protocol and the signed Business relay, keeping Linen's own account and stop state. Historical audits stay local and direct restores from the older schema still work.
+- Service desk and assets: pending people, asset contracts, financials and custody certificates, work classification and time, recurring work, canned responses, knowledge drafts and import-kit steps.
+- Configuration sandboxes for the catalog with reviewed promotion and masked copies; Okta and Microsoft Graph account effects read back through native doors; persistent service commitments observed against read-only GitHub evidence.
+- Ticket history can be analysed into inert automation drafts, and a native auditor reader with transactional grant-version audits was added.
+
 ## 28 October 2026 — reconcile current-main contract evidence
 
 Main `1a401858c1e58f8392cffdccf7dd3ff0e7e6e4a7` records the conservative mailbox semantic as ct approved with riders on 23 October 2026 (RL-103). Its mailbox evidence now includes owner-only mapping and dismissal with atomic audits and rollback, dismissed senders held again, no re-reading after mapping, a fresh mapped resend, held body/file/threading exclusion, held-mail erasure and unknown sends never repeated. Trusted receiving-provider Authentication-Results provenance, live mailbox/OAuth receipts and Exchange Message-ID behavior remain unproved.
